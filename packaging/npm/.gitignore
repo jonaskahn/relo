@@ -1,0 +1,6 @@
+# The daemon binary the postinstall downloads for this host, and the cache
+# npm pack writes when make npm-pack runs.
+/bin/relo-*
+/.npm-cache/
+node_modules/
+*.tgz

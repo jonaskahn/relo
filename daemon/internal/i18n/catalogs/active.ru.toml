@@ -1,0 +1,675 @@
+[cli.root.short]
+description = "One-line summary of the relo command"
+other = "Локальный ИИ-прокси с общим пулом учётных данных"
+
+[cli.root.home]
+description = "Usage of the --home flag"
+other = "каталог состояния (по умолчанию $RELO_HOME, затем ~/.relo)"
+
+[cli.root.lang]
+description = "Usage of the --lang flag"
+other = "язык для этого запуска (auto или тег вроде en, de, ja)"
+
+[cli.usage.title]
+description = "Heading above the usage line of a help screen"
+other = "Использование:"
+
+[cli.usage.aliases]
+description = "Heading above the aliases of a command"
+other = "Псевдонимы:"
+
+[cli.usage.examples]
+description = "Heading above the examples of a command"
+other = "Примеры:"
+
+[cli.usage.commands]
+description = "Heading above the list of commands"
+other = "Доступные команды:"
+
+[cli.usage.more_commands]
+description = "Heading above commands that belong to no group"
+other = "Дополнительные команды:"
+
+[cli.usage.flags]
+description = "Heading above the flags of one command"
+other = "Флаги:"
+
+[cli.usage.global_flags]
+description = "Heading above the flags every command shares"
+other = "Глобальные флаги:"
+
+[cli.usage.topics]
+description = "Heading above extra help topics"
+other = "Дополнительные темы справки:"
+
+[cli.usage.footer]
+description = "Closing hint of a help screen; {{.CommandPath}} is the command path and [command] --help stays literal"
+other = "Чтобы узнать больше о команде, используй «{{.CommandPath}} [command] --help»."
+
+[cli.help.short]
+description = "One-line summary of relo help"
+other = "Справка по любой команде"
+
+[cli.help.long]
+description = "Long description of relo help; {{.Name}} is the program name"
+other = "Справка описывает любую команду приложения.\nВведи {{.Name}} help [путь к команде], чтобы увидеть все подробности."
+
+[cli.help.flag]
+description = "Usage of the -h/--help flag; {{.Name}} is the command name"
+other = "справка по {{.Name}}"
+
+[cli.completion.short]
+description = "One-line summary of relo completion"
+other = "Создать скрипт автодополнения для указанной оболочки"
+
+[cli.completion.long]
+description = "Long description of relo completion; {{.Name}} is the program name"
+other = "Создать скрипт автодополнения {{.Name}} для указанной оболочки.\nСправка каждой подкоманды объясняет, как использовать созданный скрипт."
+
+[cli.completion.shell]
+description = "One-line summary of relo completion for one shell; {{.Shell}} is the shell name"
+other = "Создать скрипт автодополнения для {{.Shell}}"
+
+[cli.completion.no_descriptions]
+description = "Usage of the completion --no-descriptions flag"
+other = "отключить описания в автодополнении"
+
+[cli.version.short]
+description = "One-line summary of relo version"
+other = "Показать версию и платформу"
+
+[cli.daemon.short]
+description = "One-line summary of relo daemon"
+other = "Запустить службу и управлять ей"
+
+[cli.daemon.status.short]
+description = "One-line summary of relo daemon status"
+other = "Показать, работает ли служба"
+
+[cli.daemon.status.json]
+description = "Usage of the status --json flag"
+other = "вывести отчёт в формате JSON"
+
+[cli.daemon.status.not_running]
+description = "What status prints when nothing answers on the listen port"
+other = "Relo не работает"
+
+[cli.daemon.status.running]
+description = "Header status prints for a running daemon"
+other = "Relo работает"
+
+[cli.daemon.status.version]
+description = "Status field label"
+other = "Версия"
+
+[cli.daemon.status.uptime]
+description = "Status field label"
+other = "Время работы"
+
+[cli.daemon.status.address]
+description = "Status field label"
+other = "Адрес"
+
+[cli.daemon.status.data_plane]
+description = "Status field label for the port each client protocol answers on"
+other = "Прокси"
+
+[cli.daemon.status.secret_mode]
+description = "Status field label"
+other = "Режим секретов"
+
+[cli.daemon.status.schema_version]
+description = "Status field label"
+other = "Версия схемы"
+
+[cli.daemon.status.client_keys]
+description = "Status field label"
+other = "Клиентские ключи"
+
+[cli.daemon.status.key_count]
+description = "How many client keys exist, and how many still authenticate"
+other = "{{.Count}} (активно: {{.Active}})"
+
+[cli.daemon.status.no_keys]
+description = "Warning under the status report when no client key is active"
+other = "Нет активного клиентского ключа. Прокси отклоняет все запросы."
+
+[cli.daemon.run.short]
+description = "One-line summary of relo daemon run"
+other = "Запустить прокси Relo на переднем плане"
+
+[cli.daemon.run.port]
+description = "Usage of the daemon run --port flag"
+other = "переопределить порт прослушивания"
+
+[cli.autostart.short]
+description = "One-line summary of relo autostart"
+other = "Управлять запуском Relo при входе"
+
+[cli.autostart.enable.short]
+description = "One-line summary of relo autostart enable"
+other = "запускать десктопное приложение и службу при входе"
+
+[cli.autostart.disable.short]
+description = "One-line summary of relo autostart disable"
+other = "удалить регистрацию запуска при входе"
+
+[cli.autostart.added]
+description = "Confirmation after registering the login items"
+other = "relo будет запускаться при входе"
+
+[cli.autostart.removed]
+description = "Confirmation after removing the login items"
+other = "relo больше не будет запускаться при входе"
+
+[language.auto]
+description = "The language choice that follows the system locale"
+other = "Как в системе"
+
+[language.name.en]
+description = "English, named in English"
+other = "English"
+
+[language.name.de]
+description = "German, named in German"
+other = "Deutsch"
+
+[language.name.zh-Hans]
+description = "Simplified Chinese, named in Simplified Chinese"
+other = "简体中文"
+
+[language.name.ar]
+description = "Arabic, named in Arabic"
+other = "العربية"
+
+[language.name.cs]
+description = "Czech, named in Czech"
+other = "Čeština"
+
+[language.name.es]
+description = "Spanish, named in Spanish"
+other = "Español"
+
+[language.name.fr]
+description = "French, named in French"
+other = "Français"
+
+[language.name.hi]
+description = "Hindi, named in Hindi"
+other = "हिन्दी"
+
+[language.name.id]
+description = "Indonesian, named in Indonesian"
+other = "Bahasa Indonesia"
+
+[language.name.it]
+description = "Italian, named in Italian"
+other = "Italiano"
+
+[language.name.ja]
+description = "Japanese, named in Japanese"
+other = "日本語"
+
+[language.name.ko]
+description = "Korean, named in Korean"
+other = "한국어"
+
+[language.name.nl]
+description = "Dutch, named in Dutch"
+other = "Nederlands"
+
+[language.name.pl]
+description = "Polish, named in Polish"
+other = "Polski"
+
+[language.name.pt-BR]
+description = "Brazilian Portuguese, named in Brazilian Portuguese"
+other = "Português (Brasil)"
+
+[language.name.ro]
+description = "Romanian, named in Romanian"
+other = "Română"
+
+[language.name.ru]
+description = "Russian, named in Russian"
+other = "Русский"
+
+[language.name.sv]
+description = "Swedish, named in Swedish"
+other = "Svenska"
+
+[language.name.th]
+description = "Thai, named in Thai"
+other = "ไทย"
+
+[language.name.tr]
+description = "Turkish, named in Turkish"
+other = "Türkçe"
+
+[language.name.uk]
+description = "Ukrainian, named in Ukrainian"
+other = "Українська"
+
+[language.name.vi]
+description = "Vietnamese, named in Vietnamese"
+other = "Tiếng Việt"
+
+[language.name.zh-Hant]
+description = "Traditional Chinese, named in Traditional Chinese"
+other = "繁體中文"
+
+[api.auth.loopback_only]
+description = "Sign-in refusal for a request that did not arrive over loopback"
+other = "вход доступен только с этой машины"
+
+[api.auth.invalid_token]
+description = "Sign-in refusal for a wrong admin token"
+other = "неверный токен администратора"
+
+[api.auth.session_failed]
+description = "Sign-in failure when no session could be started"
+other = "консоль не смогла начать сессию"
+
+[api.auth.session_missing]
+description = "Refusal of a management request without a live session"
+other = "сессия панели отсутствует или истекла"
+
+[api.body.invalid]
+description = "Refusal of a body that does not parse, with the parser's detail"
+other = "неверное тело запроса: {{.Detail}}"
+
+[api.body.single_object]
+description = "Refusal of a body that carries more than one JSON object"
+other = "неверное тело запроса: ожидается один JSON-объект"
+
+[api.callback.heading]
+description = "Title of the page a browser lands on after a provider redirect"
+other = "Завершение входа"
+
+[api.callback.summary]
+description = "Summary of the callback page while the authorization is exchanged"
+other = "Relo получил авторизацию и сохраняет аккаунт."
+
+[api.callback.marker_working]
+description = "Status marker of a login that is still running"
+other = "Выполняется"
+
+[api.callback.marker_connected]
+description = "Status marker of a login that stored an account"
+other = "Подключено"
+
+[api.callback.marker_failed]
+description = "Status marker of a login that did not finish"
+other = "Не подключено"
+
+[api.callback.steps_label]
+description = "Accessible label of the progress list on the callback page"
+other = "Этапы входа"
+
+[api.callback.step_authorized]
+description = "First step of a login: the provider authorized the request"
+other = "Авторизация от {{.Provider}}"
+
+[api.callback.step_exchanging]
+description = "Second step of a login: the authorization is traded for tokens"
+other = "Обмен авторизации"
+
+[api.callback.step_stored]
+description = "Third step of a login: the account is stored"
+other = "Аккаунт сохранён"
+
+[api.callback.connected_title]
+description = "Title of the callback page for a login that finished"
+other = "Подключено"
+
+[api.callback.connected_body]
+description = "Summary of the callback page for a login that finished"
+other = "Relo сохранил аккаунт и отправляет через него запросы."
+
+[api.callback.failed_title]
+description = "Title of the callback page for a login that did not finish"
+other = "Вход не завершён"
+
+[api.callback.expired_title]
+description = "Title of the callback page for a login this process no longer tracks"
+other = "Этот вход больше не открыт"
+
+[api.callback.expired_body]
+description = "Summary of the callback page for a login this process no longer tracks"
+other = "Relo больше не отслеживает этот вход. Начни его заново в консоли."
+
+[api.callback.expired]
+description = "Refusal of a callback status poll for a login that is gone"
+other = "этот вход больше не открыт"
+
+[api.callback.failure_denied]
+description = "Callback failure: the provider refused the authorization"
+other = "Провайдер отклонил авторизацию."
+
+[api.callback.failure_state]
+description = "Callback failure: the callback did not match the login Relo started"
+other = "Обратный вызов не совпал со входом, который начал Relo, или уже использован."
+
+[api.callback.failure_timeout]
+description = "Callback failure: the provider did not answer in time"
+other = "Провайдер не ответил вовремя."
+
+[api.callback.failure_exchange]
+description = "Callback failure: the provider would not exchange the authorization"
+other = "Провайдер не обменял авторизацию на токен."
+
+[api.callback.account_label]
+description = "Label of the stored account on the callback page"
+other = "Аккаунт"
+
+[api.callback.close_hint]
+description = "What the callback page tells an operator once the login finished"
+other = "Можешь закрыть эту вкладку."
+
+[api.callback.closing_in]
+description = "Countdown shown on the callback page before it closes itself"
+other = "Закрытие через {{.Seconds}} с…"
+
+[api.callback.console_link]
+description = "Link from the callback page to the console page that lists accounts"
+other = "Открыть консоль"
+
+[api.dashboard.missing]
+description = "Refusal of a console request in a build without one"
+other = "в этой сборке нет панели"
+
+[api.events.unknown]
+description = "Refusal of an event stream for a channel that does not exist"
+other = "нет такого канала событий"
+
+[api.events.cannot_stream]
+description = "Refusal of an event stream over a listener that cannot stream"
+other = "этот слушатель не может отдавать поток"
+
+[api.events.too_many]
+description = "Refusal of an event stream when too many are already open"
+other = "открыто слишком много потоков событий"
+
+[api.inference.retired]
+description = "Refusal of an inference path that moved to the port of its protocol"
+other = "эндпоинты инференса переехали на {{.BaseURL}}"
+
+[api.keys.invalid]
+description = "Refusal of an inference request with a key that does not authenticate"
+other = "неверный ключ API"
+
+[api.keys.missing_header]
+description = "Refusal of an inference request without a credential"
+other = "заголовок Authorization отсутствует или неверен"
+
+[api.keys.store_unavailable]
+description = "Refusal of an inference request when the key store is down"
+other = "хранилище ключей API недоступно"
+
+[api.logs.event_id_number]
+description = "Refusal of a log request whose event id is not a number"
+other = "идентификатор события должен быть числом"
+
+[api.logs.capture_id_number]
+description = "Refusal of a capture read whose capture id is not a number"
+other = "идентификатор записи должен быть числом"
+
+[api.logs.capture_missing]
+description = "Refusal of a capture read that names no stored capture"
+other = "нет сохранённой записи с таким идентификатором"
+
+[api.oauth.unknown]
+description = "Refusal of a login operation that does not exist"
+other = "нет операции входа с таким идентификатором"
+
+[api.oauth.port_busy]
+description = "Refusal of a sign-in whose callback port another process holds"
+other = "{{process}} занимает порт {{port}}; завершите его, чтобы войти"
+
+[api.integration.action_in_progress]
+description = "Refusal of a second run of an action the first has not finished"
+other = "это действие уже выполняется; дождитесь завершения"
+
+[api.route.missing]
+description = "Refusal of a management path that matches no route"
+other = "нет подходящего маршрута"
+
+[api.route.unavailable]
+description = "Refusal of a management endpoint that is not implemented"
+other = "этот эндпоинт пока недоступен"
+
+[api.service.unavailable]
+description = "Refusal of a management request when the service is missing"
+other = "служба управления недоступна"
+
+[api.settings.retention.invalid]
+description = "Refusal of a retention budget below the floor the ledger keeps"
+other = "request details are kept for at least a {{.Min}}-day window; use 0 to keep everything"
+
+[api.settings.sweep.busy]
+description = "Refusal of a maintenance sweep while another one is running"
+other = "a maintenance sweep is already running; wait for it to finish"
+
+[api.account.status_required]
+description = "Refusal of an account update that named neither status nor priority"
+other = "нужен статус или приоритет"
+
+[tray.tooltip]
+description = "Tooltip of the tray icon"
+other = "Relo — локальный ИИ-прокси"
+
+[tray.menu.open_dashboard]
+description = "Tray menu item that opens the console in a browser"
+other = "Открыть панель"
+
+[tray.menu.restart]
+description = "Tray menu item that restarts the daemon"
+other = "Перезапустить сервер"
+
+[tray.menu.force_restart]
+description = "Tray menu item that kills the daemon and starts it again"
+other = "Принудительный перезапуск"
+
+[tray.menu.autostart]
+description = "Tray menu item that toggles the login item"
+other = "Запускать при входе"
+
+[tray.menu.language]
+description = "Tray submenu that chooses the language"
+other = "Язык"
+
+[tray.menu.quit]
+description = "Tray submenu that quits the desktop app"
+other = "Выйти"
+
+[tray.menu.quit_hide]
+description = "Tray menu item that hides the icon and leaves the proxy serving"
+other = "Скрыть значок (прокси продолжает работать)"
+
+[tray.menu.quit_shutdown]
+description = "Tray menu item that quits the desktop app and stops the daemon"
+other = "Выйти и остановить демон"
+
+[tray.notify.failed]
+description = "Notification when a proxy run failed"
+other = "Прокси не запустился. {{.Detail}}"
+
+[tray.status.running]
+description = "Tray menu status row for a running daemon"
+other = "Работает · {{.Addr}}"
+
+[tray.status.stopped]
+description = "Tray menu status row for a stopped daemon"
+other = "Остановлен"
+
+[tray.status.failed]
+description = "Tray menu status row for a daemon that failed"
+other = "Сбой · {{.Detail}}"
+
+[tray.info.requests]
+description = "Tray menu row that charts the last day of requests"
+other = "Запросы {{.Value}}"
+
+[tray.info.tokens]
+description = "Tray menu row that charts the last day of tokens"
+other = "Токены {{.Value}}"
+
+[tray.info.spend]
+description = "Tray menu row that charts the last day of spend"
+other = "Расходы {{.Value}}"
+
+[tray.error.unknown]
+description = "Placeholder when a failure carried no message"
+other = "неизвестная ошибка"
+
+[tray.notify.browser_failed]
+description = "Notification when no browser could be opened"
+other = "Не удалось открыть браузер"
+
+[tray.notify.autostart_failed]
+description = "Notification when the login item could not be changed"
+other = "Не удалось изменить элемент автозапуска"
+
+[tray.notify.language_failed]
+description = "Notification when a language choice could not be stored"
+other = "Не удалось сохранить язык"
+
+[cli.daemon.start.short]
+description = "One-line summary of relo daemon start"
+other = "Запустить прокси Relo в фоне"
+
+[cli.daemon.start.port]
+description = "Usage of the start --port flag"
+other = "переопределить порт прослушивания"
+
+[cli.daemon.start.started]
+description = "Confirmation after a start"
+other = "Relo работает на {{.Addr}}"
+
+[cli.daemon.start.already]
+description = "What start prints when the daemon is already up"
+other = "Relo уже работает на {{.Addr}}"
+
+[cli.daemon.start.failed]
+description = "What start prints when the daemon never became healthy"
+other = "служба не запустилась: {{.Detail}}"
+
+[cli.daemon.start.log]
+description = "Where a started daemon writes what it logs"
+other = "журнал службы — {{.Path}}"
+
+[cli.daemon.stop.short]
+description = "One-line summary of relo daemon stop"
+other = "Остановить прокси Relo, которым управляют команды жизненного цикла"
+
+[cli.daemon.stop.stopped]
+description = "Confirmation after a stop"
+other = "Relo остановлен"
+
+[cli.daemon.stop.not_running]
+description = "What stop prints when nothing is running"
+other = "Relo не работает"
+
+[cli.daemon.restart.short]
+description = "One-line summary of relo daemon restart"
+other = "Перезапустить прокси Relo"
+
+[cli.daemon.restart.port]
+description = "Usage of the restart --port flag"
+other = "переопределить порт прослушивания"
+
+[cli.daemon.restart.force]
+description = "Usage of the restart --force flag"
+other = "завершить работающий процесс и запустить новую службу"
+
+[cli.daemon.restart.restarted]
+description = "Confirmation after a restart"
+other = "Relo работает на {{.Addr}}"
+
+[cli.daemon.status.no_keys_hint]
+description = "How to create the first client key"
+other = "Создай на странице « Ключи » в консоли."
+
+[api.daemon.not_headless]
+description = "Refusal of a stop request when this process is not a headless daemon"
+other = "этот процесс не принимает запрос на остановку"
+
+[api.daemon.instance_mismatch]
+description = "Refusal of a stop request naming another instance"
+other = "запрос на остановку относится к другому экземпляру"
+
+[tray.menu.version]
+description = "Tray menu version label"
+other = "Версия {{.Version}}"
+
+[tray.menu.update_version]
+description = "Tray menu update action"
+other = "Обновить до {{.Version}}"
+
+[tray.error.not_ready]
+description = "Daemon not ready error"
+other = "Не готово"
+
+[tray.error.port_in_use]
+description = "Port conflict error"
+other = "Порт занят"
+
+[tray.error.timed_out]
+description = "Timeout error"
+other = "Время истекло"
+
+[tray.error.database]
+description = "Database availability error"
+other = "База данных недоступна"
+
+[tray.error.start_failed]
+description = "Daemon start error"
+other = "Не удалось запустить"
+
+[cli.daemon.stop.force]
+description = "Usage of the stop --force flag"
+other = "завершить работающий процесс и освободить порты, которые обслуживает Relo"
+
+[cli.uninstall.short]
+description = "One-line summary of relo uninstall"
+other = "удалить Relo с этого компьютера"
+
+[cli.uninstall.keep_data]
+description = "Usage of the uninstall --keep-data flag"
+other = "сохранить данные Relo (конфигурация, учётные данные, журналы)"
+
+[cli.uninstall.wipe]
+description = "Usage of the uninstall --wipe flag"
+other = "удалить данные Relo (конфигурация, учётные данные, журналы)"
+
+[cli.uninstall.prepare]
+description = "Usage of the hidden uninstall --prepare flag"
+other = "остановить службу и отключить автозапуск, оставив программу на месте"
+
+[cli.uninstall.ask_data]
+description = "The question an interactive uninstall asks about the Relo data"
+other = "Удалить данные Relo (конфигурация, учётные данные, журналы)? [д/Н]"
+
+[cli.uninstall.kept]
+description = "What an uninstall reports when the Relo data stays"
+other = "Ваши данные Relo находятся в {{.Home}}"
+
+[cli.uninstall.wiped]
+description = "What an uninstall reports after the Relo data is removed"
+other = "Ваши данные Relo удалены"
+
+[cli.uninstall.removing]
+description = "What an uninstall says as it hands the program to its installer"
+other = "Удаление Relo…"
+
+[cli.uninstall.manual]
+description = "What an uninstall says when nothing on the machine removes Relo"
+other = "удалите программу Relo вручную"
+
+[cli.uninstall.trash]
+description = "What an uninstall says when the macOS app bundle could not be deleted"
+other = "переместите {{.Bundle}} в корзину"
+
+[cli.uninstall.run]
+description = "The command to run when a removal could not be started"
+other = "выполните это, чтобы завершить удаление Relo: {{.Command}}"

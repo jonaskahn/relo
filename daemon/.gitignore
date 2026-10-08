@@ -1,0 +1,42 @@
+# Binaries for programs and plugins
+/relo
+/relo.exe
+/genicons
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Dependencies
+/vendor/
+
+# The compiled console is synced here before a build; see
+# scripts/sync-console.sh.
+/internal/dashboard/dist/*
+!/internal/dashboard/dist/.gitkeep
+
+# Test artifacts. Do not ignore coverage.* — tests/coverage.tsv is source.
+coverage.out
+cover.out
+coverage.html
+*.out
+*.test
+*.prof
+*.pprof
+*.coverprofile
+profile.cov
+
+# Go workspace (this module is standalone)
+go.work
+go.work.sum
+
+# Debug builds
+cmd/relo/__debug_bin*
+__debug_bin*
+
+# Env
+.env
+
+# OS
+.DS_Store

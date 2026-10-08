@@ -1,0 +1,24 @@
+# pnpm reads build approvals from here. The three packages below ship an
+# install script that fetches or links a platform binary, so skipping them
+# leaves vite without its lightningcss binary and esbuild without its shim.
+# npm gates the same scripts through allow-scripts in ~/.npmrc instead.
+allowBuilds:
+  es5-ext: true
+  esbuild: true
+  fsevents: true
+
+minimumReleaseAgeExclude:
+  - '@vitest/mocker@5.0.3'
+  - '@vitest/spy@5.0.3'
+  - vitest@5.0.3
+  - '@typescript-eslint/eslint-plugin@8.71.1'
+  - '@typescript-eslint/parser@8.71.1'
+  - '@typescript-eslint/project-service@8.71.1'
+  - '@typescript-eslint/scope-manager@8.71.1'
+  - '@typescript-eslint/tsconfig-utils@8.71.1'
+  - '@typescript-eslint/type-utils@8.71.1'
+  - '@typescript-eslint/types@8.71.1'
+  - '@typescript-eslint/typescript-estree@8.71.1'
+  - '@typescript-eslint/utils@8.71.1'
+  - '@typescript-eslint/visitor-keys@8.71.1'
+  - typescript-eslint@8.71.1

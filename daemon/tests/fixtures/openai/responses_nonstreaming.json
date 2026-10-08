@@ -1,0 +1,39 @@
+{
+  "id": "resp_4",
+  "object": "response",
+  "created_at": 1740000000,
+  "status": "completed",
+  "model": "gpt-5",
+  "output": [
+    {
+      "id": "rs_1",
+      "type": "reasoning",
+      "summary": [{ "type": "summary_text", "text": "Read the question" }],
+      "encrypted_content": "gAAAA-encrypted-state-=="
+    },
+    {
+      "id": "msg_1",
+      "type": "message",
+      "status": "completed",
+      "role": "assistant",
+      "content": [
+        { "type": "output_text", "text": "Hi there", "annotations": [] }
+      ]
+    },
+    {
+      "type": "function_call",
+      "id": "fc_1",
+      "call_id": "call_1",
+      "name": "get_weather",
+      "arguments": "{\"city\":\"Hanoi\"}",
+      "status": "completed"
+    }
+  ],
+  "usage": {
+    "input_tokens": 12,
+    "output_tokens": 5,
+    "total_tokens": 17,
+    "input_tokens_details": { "cached_tokens": 2 },
+    "output_tokens_details": { "reasoning_tokens": 3 }
+  }
+}

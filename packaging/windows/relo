@@ -1,0 +1,4 @@
+#!/bin/sh
+# The relo command for POSIX shells on Windows, where an extensionless name
+# resolves before relo.cmd.
+exec "$(dirname "$0")/../relo.exe" "$@"

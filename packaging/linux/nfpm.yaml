@@ -1,0 +1,49 @@
+# nfpm packaging for Relo: the daemon, the launcher, and the tray, installed
+# as /usr/bin/relo. scripts/package-linux.sh passes VERSION, ARCH, and BINARY
+# through the environment.
+name: relo
+arch: ${ARCH}
+platform: linux
+version: ${VERSION}
+section: net
+priority: optional
+maintainer: Relo <relo@localhost>
+description: |
+  Relo is a local AI proxy with multi-account credential pooling.
+  Run `relo daemon start` for the app with its tray icon, or `relo daemon run`
+  to keep it in the foreground.
+homepage: https://github.com/jonaskahn/relo
+license: MIT
+# An update must not leave the old daemon holding the ports, and a removal has
+# to stop the service and unregister autostart before the binary is gone.
+scripts:
+  preinstall: packaging/linux/preinstall.sh
+  preremove: packaging/linux/preremove.sh
+contents:
+  - src: ${BINARY}
+    dst: /usr/bin/relo
+    expand: true
+    file_info:
+      mode: 0o755
+  - src: packaging/linux/relo.desktop
+    dst: /usr/share/applications/relo.desktop
+  # The hicolor ladder, one directory per size: a desktop at 150% or 200%
+  # scaling asks for the next size up instead of upscaling a smaller icon.
+  - src: packaging/linux/icons/16x16/apps/relo.png
+    dst: /usr/share/icons/hicolor/16x16/apps/relo.png
+  - src: packaging/linux/icons/24x24/apps/relo.png
+    dst: /usr/share/icons/hicolor/24x24/apps/relo.png
+  - src: packaging/linux/icons/32x32/apps/relo.png
+    dst: /usr/share/icons/hicolor/32x32/apps/relo.png
+  - src: packaging/linux/icons/48x48/apps/relo.png
+    dst: /usr/share/icons/hicolor/48x48/apps/relo.png
+  - src: packaging/linux/icons/64x64/apps/relo.png
+    dst: /usr/share/icons/hicolor/64x64/apps/relo.png
+  - src: packaging/linux/icons/128x128/apps/relo.png
+    dst: /usr/share/icons/hicolor/128x128/apps/relo.png
+  - src: packaging/linux/icons/256x256/apps/relo.png
+    dst: /usr/share/icons/hicolor/256x256/apps/relo.png
+  - src: packaging/linux/icons/512x512/apps/relo.png
+    dst: /usr/share/icons/hicolor/512x512/apps/relo.png
+  - src: packaging/linux/icons/1024x1024/apps/relo.png
+    dst: /usr/share/icons/hicolor/1024x1024/apps/relo.png

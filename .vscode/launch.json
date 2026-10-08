@@ -1,0 +1,111 @@
+{
+  // Every configuration runs against the state directory make dev-setup
+  // writes (.dev/relo, console port 10201, no login item), so a debug run
+  // never disturbs a daemon on ~/.relo.
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "backend: debug daemon run",
+      "type": "go",
+      "request": "launch",
+      "mode": "debug",
+      "program": "${workspaceFolder}/daemon/cmd/relo",
+      "args": ["daemon", "run"],
+      "console": "integratedTerminal",
+      "preLaunchTask": "relo: dev setup",
+      "env": {
+        "CGO_ENABLED": "0",
+        "RELO_HOME": "${workspaceFolder}/.dev/relo"
+      }
+    },
+    {
+      // start detaches the daemon it spawns, so this steps through the
+      // command that starts one. Use the run configuration to step through
+      // the daemon itself.
+      "name": "backend: debug daemon start",
+      "type": "go",
+      "request": "launch",
+      "mode": "debug",
+      "program": "${workspaceFolder}/daemon/cmd/relo",
+      "args": ["daemon", "start"],
+      "console": "integratedTerminal",
+      "preLaunchTask": "relo: dev setup",
+      "env": {
+        "CGO_ENABLED": "0",
+        "RELO_HOME": "${workspaceFolder}/.dev/relo"
+      }
+    },
+    {
+      "name": "backend: run built relo daemon run",
+      "type": "go",
+      "request": "launch",
+      "mode": "exec",
+      "program": "${workspaceFolder}/relo",
+      "args": ["daemon", "run"],
+      "preLaunchTask": "relo: build",
+      "console": "integratedTerminal",
+      "env": {
+        "CGO_ENABLED": "0",
+        "RELO_HOME": "${workspaceFolder}/.dev/relo"
+      }
+    },
+    {
+      "name": "backend: debug daemon status",
+      "type": "go",
+      "request": "launch",
+      "mode": "debug",
+      "program": "${workspaceFolder}/daemon/cmd/relo",
+      "args": ["daemon", "status"],
+      "console": "integratedTerminal",
+      "env": {
+        "CGO_ENABLED": "0",
+        "RELO_HOME": "${workspaceFolder}/.dev/relo"
+      }
+    },
+    {
+      "name": "backend: debug current package tests",
+      "type": "go",
+      "request": "launch",
+      "mode": "test",
+      "program": "${fileDirname}",
+      "args": ["-test.count=1"],
+      "console": "integratedTerminal",
+      "env": {
+        "CGO_ENABLED": "0",
+        "RELO_HOME": "${workspaceFolder}/.dev/relo"
+      }
+    },
+    {
+      // The console the Vite dev server serves: hot reload, and /api
+      // proxied to the debug daemon on 10201.
+      "name": "console: chrome (dev server)",
+      "type": "chrome",
+      "request": "launch",
+      "url": "http://localhost:5173",
+      "webRoot": "${workspaceFolder}/console",
+      "preLaunchTask": "relo: console dev server"
+    },
+    {
+      // The console the daemon itself serves, which is the shell the Go
+      // server injects the language tag into. It opens against a daemon
+      // that is already listening on 10201: start one with the daemon
+      // configuration or with make dev-backend, and reload the page if it
+      // loses the race with the daemon coming up.
+      "name": "console: chrome (daemon)",
+      "type": "chrome",
+      "request": "launch",
+      "url": "http://127.0.0.1:10201",
+      "webRoot": "${workspaceFolder}/console"
+    }
+  ],
+  "compounds": [
+    {
+      "name": "full stack: daemon + console",
+      "configurations": ["backend: debug daemon run", "console: chrome (dev server)"]
+    },
+    {
+      "name": "app: tray + console",
+      "configurations": ["backend: debug daemon run", "console: chrome (daemon)"]
+    }
+  ]
+}

@@ -1,0 +1,679 @@
+# The messages Relo speaks, in English. This file is the source every
+# other catalog mirrors: the same IDs, and the same plural forms wherever
+# English has them.
+
+[cli.root.short]
+description = "One-line summary of the relo command"
+other = "Místní AI proxy s fondem přihlašovacích údajů z více účtů"
+
+[cli.root.home]
+description = "Usage of the --home flag"
+other = "stavový adresář (výchozí $RELO_HOME, pak ~/.relo)"
+
+[cli.root.lang]
+description = "Usage of the --lang flag"
+other = "jazyk pro toto spuštění (auto nebo tag jako en, de, ja)"
+
+[cli.usage.title]
+description = "Heading above the usage line of a help screen"
+other = "Použití:"
+
+[cli.usage.aliases]
+description = "Heading above the aliases of a command"
+other = "Aliasy:"
+
+[cli.usage.examples]
+description = "Heading above the examples of a command"
+other = "Příklady:"
+
+[cli.usage.commands]
+description = "Heading above the list of commands"
+other = "Dostupné příkazy:"
+
+[cli.usage.more_commands]
+description = "Heading above commands that belong to no group"
+other = "Další příkazy:"
+
+[cli.usage.flags]
+description = "Heading above the flags of one command"
+other = "Přepínače:"
+
+[cli.usage.global_flags]
+description = "Heading above the flags every command shares"
+other = "Globální přepínače:"
+
+[cli.usage.topics]
+description = "Heading above extra help topics"
+other = "Další témata nápovědy:"
+
+[cli.usage.footer]
+description = "Closing hint of a help screen; {{.CommandPath}} is the command path and [command] --help stays literal"
+other = "Použij „{{.CommandPath}} [command] --help“, pokud chceš vědět víc o příkazu."
+
+[cli.help.short]
+description = "One-line summary of relo help"
+other = "Nápověda k libovolnému příkazu"
+
+[cli.help.long]
+description = "Long description of relo help; {{.Name}} is the program name"
+other = "Nápověda popisuje každý příkaz aplikace.\nNapiš {{.Name}} help [cesta k příkazu] a zobrazí se všechny podrobnosti."
+
+[cli.help.flag]
+description = "Usage of the -h/--help flag; {{.Name}} is the command name"
+other = "nápověda pro {{.Name}}"
+
+[cli.completion.short]
+description = "One-line summary of relo completion"
+other = "Vygeneruj skript automatického doplňování pro zadaný shell"
+
+[cli.completion.long]
+description = "Long description of relo completion; {{.Name}} is the program name"
+other = "Vygeneruj skript automatického doplňování {{.Name}} pro zadaný shell.\nNápověda každého podpříkazu ukazuje, jak vygenerovaný skript použít."
+
+[cli.completion.shell]
+description = "One-line summary of relo completion for one shell; {{.Shell}} is the shell name"
+other = "Vygeneruj skript automatického doplňování pro {{.Shell}}"
+
+[cli.completion.no_descriptions]
+description = "Usage of the completion --no-descriptions flag"
+other = "vypni popisy při doplňování"
+
+[cli.version.short]
+description = "One-line summary of relo version"
+other = "Vypsat verzi a platformu"
+
+[cli.daemon.short]
+description = "One-line summary of relo daemon"
+other = "Spustit a spravovat daemon"
+
+[cli.daemon.status.short]
+description = "One-line summary of relo daemon status"
+other = "Zobrazit, zda daemon běží"
+
+[cli.daemon.status.json]
+description = "Usage of the status --json flag"
+other = "vypsat hlášení jako JSON"
+
+[cli.daemon.status.not_running]
+description = "What status prints when nothing answers on the listen port"
+other = "Relo neběží"
+
+[cli.daemon.status.running]
+description = "Header status prints for a running daemon"
+other = "Relo běží"
+
+[cli.daemon.status.version]
+description = "Status field label"
+other = "Verze"
+
+[cli.daemon.status.uptime]
+description = "Status field label"
+other = "Doba provozu"
+
+[cli.daemon.status.address]
+description = "Status field label"
+other = "Adresa"
+
+[cli.daemon.status.data_plane]
+description = "Status field label for the port each client protocol answers on"
+other = "Data plane"
+
+[cli.daemon.status.secret_mode]
+description = "Status field label"
+other = "Tajný režim"
+
+[cli.daemon.status.schema_version]
+description = "Status field label"
+other = "Verze schématu"
+
+[cli.daemon.status.client_keys]
+description = "Status field label"
+other = "Klientské klíče"
+
+[cli.daemon.status.key_count]
+description = "How many client keys exist, and how many still authenticate"
+other = "{{.Count}} ({{.Active}} aktivních)"
+
+[cli.daemon.status.no_keys]
+description = "Warning under the status report when no client key is active"
+other = "Žádný aktivní klientský klíč. Data plane odmítá každý požadavek na inference."
+
+[cli.daemon.status.no_keys_hint]
+description = "How to create the first client key"
+other = "Vytvoř ho na stránce Klíče v konzoli."
+
+[cli.daemon.run.short]
+description = "One-line summary of relo daemon run"
+other = "Spustit proxy Relo v popředí"
+
+[cli.daemon.run.port]
+description = "Usage of the daemon run --port flag"
+other = "přepsat naslouchací port"
+
+[cli.daemon.start.short]
+description = "One-line summary of relo daemon start"
+other = "Spustit proxy Relo na pozadí"
+
+[cli.daemon.start.port]
+description = "Usage of the start --port flag"
+other = "přepsat naslouchací port"
+
+[cli.daemon.start.started]
+description = "Confirmation after a start"
+other = "Relo běží na {{.Addr}}"
+
+[cli.daemon.start.already]
+description = "What start prints when the daemon is already up"
+other = "Relo už běží na {{.Addr}}"
+
+[cli.daemon.start.failed]
+description = "What start prints when the daemon never became healthy"
+other = "daemon se nespustil: {{.Detail}}"
+
+[cli.daemon.start.log]
+description = "Where a started daemon writes what it logs"
+other = "log daemona je v {{.Path}}"
+
+[cli.daemon.stop.short]
+description = "One-line summary of relo daemon stop"
+other = "Zastavit proxy Relo řízenou příkazy životního cyklu"
+
+[cli.daemon.stop.stopped]
+description = "Confirmation after a stop"
+other = "Relo zastaveno"
+
+[cli.daemon.stop.not_running]
+description = "What stop prints when nothing is running"
+other = "Relo neběží"
+
+[cli.daemon.restart.short]
+description = "One-line summary of relo daemon restart"
+other = "Restartovat proxy Relo"
+
+[cli.daemon.restart.port]
+description = "Usage of the restart --port flag"
+other = "přepsat naslouchací port"
+
+[cli.daemon.restart.force]
+description = "Usage of the restart --force flag"
+other = "ukončit běžící proces a spustit nový daemon"
+
+[cli.daemon.restart.restarted]
+description = "Confirmation after a restart"
+other = "Relo běží na {{.Addr}}"
+
+[cli.autostart.short]
+description = "One-line summary of relo autostart"
+other = "Spravovat, zda se Relo spouští při přihlášení"
+
+[cli.autostart.enable.short]
+description = "One-line summary of relo autostart enable"
+other = "spustit desktopovou aplikaci a daemon při přihlášení"
+
+[cli.autostart.disable.short]
+description = "One-line summary of relo autostart disable"
+other = "odebrat registraci spouštění při přihlášení"
+
+[cli.autostart.added]
+description = "Confirmation after registering the login items"
+other = "Relo se bude spouštět při přihlášení"
+
+[cli.autostart.removed]
+description = "Confirmation after removing the login items"
+other = "Relo se už nebude spouštět při přihlášení"
+
+[language.auto]
+description = "The language choice that follows the system locale"
+other = "Podle systému"
+
+[language.name.en]
+description = "English, named in English"
+other = "English"
+
+[language.name.de]
+description = "German, named in German"
+other = "Deutsch"
+
+[language.name.zh-Hans]
+description = "Simplified Chinese, named in Simplified Chinese"
+other = "简体中文"
+
+[language.name.ar]
+description = "Arabic, named in Arabic"
+other = "العربية"
+
+[language.name.cs]
+description = "Czech, named in Czech"
+other = "Čeština"
+
+[language.name.es]
+description = "Spanish, named in Spanish"
+other = "Español"
+
+[language.name.fr]
+description = "French, named in French"
+other = "Français"
+
+[language.name.hi]
+description = "Hindi, named in Hindi"
+other = "हिन्दी"
+
+[language.name.id]
+description = "Indonesian, named in Indonesian"
+other = "Bahasa Indonesia"
+
+[language.name.it]
+description = "Italian, named in Italian"
+other = "Italiano"
+
+[language.name.ja]
+description = "Japanese, named in Japanese"
+other = "日本語"
+
+[language.name.ko]
+description = "Korean, named in Korean"
+other = "한국어"
+
+[language.name.nl]
+description = "Dutch, named in Dutch"
+other = "Nederlands"
+
+[language.name.pl]
+description = "Polish, named in Polish"
+other = "Polski"
+
+[language.name.pt-BR]
+description = "Brazilian Portuguese, named in Brazilian Portuguese"
+other = "Português (Brasil)"
+
+[language.name.ro]
+description = "Romanian, named in Romanian"
+other = "Română"
+
+[language.name.ru]
+description = "Russian, named in Russian"
+other = "Русский"
+
+[language.name.sv]
+description = "Swedish, named in Swedish"
+other = "Svenska"
+
+[language.name.th]
+description = "Thai, named in Thai"
+other = "ไทย"
+
+[language.name.tr]
+description = "Turkish, named in Turkish"
+other = "Türkçe"
+
+[language.name.uk]
+description = "Ukrainian, named in Ukrainian"
+other = "Українська"
+
+[language.name.vi]
+description = "Vietnamese, named in Vietnamese"
+other = "Tiếng Việt"
+
+[language.name.zh-Hant]
+description = "Traditional Chinese, named in Traditional Chinese"
+other = "繁體中文"
+
+[api.auth.loopback_only]
+description = "Sign-in refusal for a request that did not arrive over loopback"
+other = "přihlášení je možné jen z tohoto počítače"
+
+[api.auth.invalid_token]
+description = "Sign-in refusal for a wrong admin token"
+other = "neplatný token správce"
+
+[api.auth.session_failed]
+description = "Sign-in failure when no session could be started"
+other = "konzole nemohla zahájit relaci"
+
+[api.auth.session_missing]
+description = "Refusal of a management request without a live session"
+other = "relace přehledu chybí nebo vypršela"
+
+[api.body.invalid]
+description = "Refusal of a body that does not parse, with the parser's detail"
+other = "neplatné tělo požadavku: {{.Detail}}"
+
+[api.body.single_object]
+description = "Refusal of a body that carries more than one JSON object"
+other = "neplatné tělo požadavku: očekáván jeden objekt JSON"
+
+[api.callback.heading]
+description = "Title of the page a browser lands on after a provider redirect"
+other = "Dokončení přihlášení"
+
+[api.callback.summary]
+description = "Summary of the callback page while the authorization is exchanged"
+other = "Relo má autorizaci a ukládá účet."
+
+[api.callback.marker_working]
+description = "Status marker of a login that is still running"
+other = "Probíhá"
+
+[api.callback.marker_connected]
+description = "Status marker of a login that stored an account"
+other = "Připojeno"
+
+[api.callback.marker_failed]
+description = "Status marker of a login that did not finish"
+other = "Nepřipojeno"
+
+[api.callback.steps_label]
+description = "Accessible label of the progress list on the callback page"
+other = "Průběh přihlášení"
+
+[api.callback.step_authorized]
+description = "First step of a login: the provider authorized the request"
+other = "Autorizováno poskytovatelem {{.Provider}}"
+
+[api.callback.step_exchanging]
+description = "Second step of a login: the authorization is traded for tokens"
+other = "Výměna autorizace"
+
+[api.callback.step_stored]
+description = "Third step of a login: the account is stored"
+other = "Účet uložen"
+
+[api.callback.connected_title]
+description = "Title of the callback page for a login that finished"
+other = "Připojeno"
+
+[api.callback.connected_body]
+description = "Summary of the callback page for a login that finished"
+other = "Relo uložil účet a směruje přes něj požadavky."
+
+[api.callback.failed_title]
+description = "Title of the callback page for a login that did not finish"
+other = "Přihlášení se nedokončilo"
+
+[api.callback.expired_title]
+description = "Title of the callback page for a login this process no longer tracks"
+other = "Toto přihlášení už není otevřené"
+
+[api.callback.expired_body]
+description = "Summary of the callback page for a login this process no longer tracks"
+other = "Relo toto přihlášení už nesleduje. Zahájí ho znovu v konzoli."
+
+[api.callback.expired]
+description = "Refusal of a callback status poll for a login that is gone"
+other = "toto přihlášení už není otevřené"
+
+[api.callback.failure_denied]
+description = "Callback failure: the provider refused the authorization"
+other = "Poskytovatel autorizaci odmítl."
+
+[api.callback.failure_state]
+description = "Callback failure: the callback did not match the login Relo started"
+other = "Zpětné volání neodpovídalo přihlášení, které Relo zahájil, nebo už bylo použito."
+
+[api.callback.failure_timeout]
+description = "Callback failure: the provider did not answer in time"
+other = "Poskytovatel včas neodpověděl."
+
+[api.callback.failure_exchange]
+description = "Callback failure: the provider would not exchange the authorization"
+other = "Poskytovatel nevyměnil autorizaci za token."
+
+[api.callback.account_label]
+description = "Label of the stored account on the callback page"
+other = "Účet"
+
+[api.callback.close_hint]
+description = "What the callback page tells an operator once the login finished"
+other = "Tahle kartu můžeš zavřít."
+
+[api.callback.closing_in]
+description = "Countdown shown on the callback page before it closes itself"
+other = "Zavírání za {{.Seconds}} s…"
+
+[api.callback.console_link]
+description = "Link from the callback page to the console page that lists accounts"
+other = "Otevřít konzoli"
+
+[api.dashboard.missing]
+description = "Refusal of a console request in a build without one"
+other = "toto sestavení nemá přehled"
+
+[api.events.unknown]
+description = "Refusal of an event stream for a channel that does not exist"
+other = "žádný takový kanál událostí"
+
+[api.events.cannot_stream]
+description = "Refusal of an event stream over a listener that cannot stream"
+other = "tento listener neumí streamovat"
+
+[api.events.too_many]
+description = "Refusal of an event stream when too many are already open"
+other = "je otevřeno příliš mnoho streamů událostí"
+
+[api.inference.retired]
+description = "Refusal of an inference path that moved to the port of its protocol"
+other = "porty pro inference se přesunuly na {{.BaseURL}}"
+
+[api.keys.invalid]
+description = "Refusal of an inference request with a key that does not authenticate"
+other = "neplatný klíč API"
+
+[api.keys.missing_header]
+description = "Refusal of an inference request without a credential"
+other = "chybějící nebo neplatná hlavička Authorization"
+
+[api.keys.store_unavailable]
+description = "Refusal of an inference request when the key store is down"
+other = "úložiště klíčů API je nedostupné"
+
+[api.logs.event_id_number]
+description = "Refusal of a log request whose event id is not a number"
+other = "id události musí být číslo"
+
+[api.logs.capture_id_number]
+description = "Refusal of a capture read whose capture id is not a number"
+other = "id záznamu musí být číslo"
+
+[api.logs.capture_missing]
+description = "Refusal of a capture read that names no stored capture"
+other = "žádný uložený záznam nemá toto id"
+
+[api.oauth.unknown]
+description = "Refusal of a login operation that does not exist"
+other = "žádná operace přihlášení nemá toto id"
+
+[api.oauth.port_busy]
+description = "Refusal of a sign-in whose callback port another process holds"
+other = "{{process}} používá port {{port}}; ukončete ho pro přihlášení"
+
+[api.integration.action_in_progress]
+description = "Refusal of a second run of an action the first has not finished"
+other = "akce už běží; počkejte na její dokončení"
+
+[api.route.missing]
+description = "Refusal of a management path that matches no route"
+other = "žádná odpovídající trasa"
+
+[api.route.unavailable]
+description = "Refusal of a management endpoint that is not implemented"
+other = "tento endpoint zatím není dostupný"
+
+[api.service.unavailable]
+description = "Refusal of a management request when the service is missing"
+other = "služba pro správu není dostupná"
+
+[api.settings.retention.invalid]
+description = "Refusal of a retention budget below the floor the ledger keeps"
+other = "request details are kept for at least a {{.Min}}-day window; use 0 to keep everything"
+
+[api.settings.sweep.busy]
+description = "Refusal of a maintenance sweep while another one is running"
+other = "a maintenance sweep is already running; wait for it to finish"
+
+[api.account.status_required]
+description = "Refusal of an account update that named neither status nor priority"
+other = "je vyžadován stav nebo priorita"
+
+[api.daemon.not_headless]
+description = "Refusal of a stop request when this process is not a headless daemon"
+other = "tento proces nepřijímá žádost o zastavení"
+
+[api.daemon.instance_mismatch]
+description = "Refusal of a stop request naming another instance"
+other = "žádost o zastavení uvádí jinou instanci"
+
+[tray.tooltip]
+description = "Tooltip of the tray icon"
+other = "Relo — místní AI proxy"
+
+[tray.menu.open_dashboard]
+description = "Tray menu item that opens the console in a browser"
+other = "Otevřít přehled"
+
+[tray.menu.restart]
+description = "Tray menu item that restarts the daemon"
+other = "Restartovat server"
+
+[tray.menu.force_restart]
+description = "Tray menu item that kills the daemon and starts it again"
+other = "Vynutit restart serveru"
+
+[tray.menu.autostart]
+description = "Tray menu item that toggles the login item"
+other = "Spouštět při přihlášení"
+
+[tray.menu.language]
+description = "Tray submenu that chooses the language"
+other = "Jazyk"
+
+[tray.menu.quit]
+description = "Tray submenu that quits the desktop app"
+other = "Ukončit"
+
+[tray.menu.quit_hide]
+description = "Tray menu item that hides the icon and leaves the proxy serving"
+other = "Skrýt ikonu (proxy běží dál)"
+
+[tray.menu.quit_shutdown]
+description = "Tray menu item that quits the desktop app and stops the daemon"
+other = "Ukončit a vypnout démona"
+
+[tray.notify.failed]
+description = "Notification when a proxy run failed"
+other = "Proxy se nespustilo. {{.Detail}}"
+
+[tray.status.running]
+description = "Tray menu status row for a running daemon"
+other = "Běží · {{.Addr}}"
+
+[tray.status.stopped]
+description = "Tray menu status row for a stopped daemon"
+other = "Zastaveno"
+
+[tray.status.failed]
+description = "Tray menu status row for a daemon that failed"
+other = "Selhalo · {{.Detail}}"
+
+[tray.info.requests]
+description = "Tray menu row that charts the last day of requests"
+other = "Požadavky {{.Value}}"
+
+[tray.info.tokens]
+description = "Tray menu row that charts the last day of tokens"
+other = "Tokeny {{.Value}}"
+
+[tray.info.spend]
+description = "Tray menu row that charts the last day of spend"
+other = "Náklady {{.Value}}"
+
+[tray.error.unknown]
+description = "Placeholder when a failure carried no message"
+other = "neznámá chyba"
+
+[tray.notify.browser_failed]
+description = "Notification when no browser could be opened"
+other = "Prohlížeč se nepodařilo otevřít"
+
+[tray.notify.autostart_failed]
+description = "Notification when the login item could not be changed"
+other = "Přihlašovací položku se nepodařilo změnit"
+
+[tray.notify.language_failed]
+description = "Notification when a language choice could not be stored"
+other = "Jazyk se nepodařilo uložit"
+
+[tray.menu.version]
+description = "Tray menu version label"
+other = "Verze {{.Version}}"
+
+[tray.menu.update_version]
+description = "Tray menu update action"
+other = "Aktualizovat na {{.Version}}"
+
+[tray.error.not_ready]
+description = "Daemon not ready error"
+other = "Nepřipraveno"
+
+[tray.error.port_in_use]
+description = "Port conflict error"
+other = "Port je obsazený"
+
+[tray.error.timed_out]
+description = "Timeout error"
+other = "Vypršel časový limit"
+
+[tray.error.database]
+description = "Database availability error"
+other = "Databáze není dostupná"
+
+[tray.error.start_failed]
+description = "Daemon start error"
+other = "Spuštění se nezdařilo"
+
+[cli.daemon.stop.force]
+description = "Usage of the stop --force flag"
+other = "ukončit běžící proces a uvolnit porty, které Relo obsluhuje"
+
+[cli.uninstall.short]
+description = "One-line summary of relo uninstall"
+other = "odebrat Relo z tohoto počítače"
+
+[cli.uninstall.keep_data]
+description = "Usage of the uninstall --keep-data flag"
+other = "ponechat data Relo (konfigurace, přihlašovací údaje, protokoly)"
+
+[cli.uninstall.wipe]
+description = "Usage of the uninstall --wipe flag"
+other = "odstranit data Relo (konfigurace, přihlašovací údaje, protokoly)"
+
+[cli.uninstall.prepare]
+description = "Usage of the hidden uninstall --prepare flag"
+other = "zastavit službu a vypnout automatické spuštění, program nechat na místě"
+
+[cli.uninstall.ask_data]
+description = "The question an interactive uninstall asks about the Relo data"
+other = "Odebrat data Relo (konfigurace, přihlašovací údaje, protokoly)? [a/N]"
+
+[cli.uninstall.kept]
+description = "What an uninstall reports when the Relo data stays"
+other = "Data Relo zůstala v {{.Home}}"
+
+[cli.uninstall.wiped]
+description = "What an uninstall reports after the Relo data is removed"
+other = "Data Relo byla odebrána"
+
+[cli.uninstall.removing]
+description = "What an uninstall says as it hands the program to its installer"
+other = "Relo se odebírá…"
+
+[cli.uninstall.manual]
+description = "What an uninstall says when nothing on the machine removes Relo"
+other = "Odeberte program Relo ručně"
+
+[cli.uninstall.trash]
+description = "What an uninstall says when the macOS app bundle could not be deleted"
+other = "Přesuňte {{.Bundle}} do Koše"
+
+[cli.uninstall.run]
+description = "The command to run when a removal could not be started"
+other = "Spusťte to pro odebrání Relo: {{.Command}}"

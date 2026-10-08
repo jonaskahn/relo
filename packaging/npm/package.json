@@ -1,0 +1,62 @@
+{
+	"name": "relo",
+	"version": "0.1.0",
+	"description": "One loopback proxy. Codex, Claude Code, Cursor, and Grok keep their own config and still reach any upstream.",
+	"license": "MIT",
+	"type": "module",
+	"homepage": "https://github.com/jonaskahn/relo#readme",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/jonaskahn/relo.git"
+	},
+	"bugs": {
+		"url": "https://github.com/jonaskahn/relo/issues"
+	},
+	"keywords": [
+		"llm",
+		"proxy",
+		"gateway",
+		"openai",
+		"anthropic",
+		"codex",
+		"claude-code",
+		"cursor",
+		"cli"
+	],
+	"bin": {
+		"relo": "bin/relo.mjs"
+	},
+	"os": [
+		"darwin",
+		"linux",
+		"win32"
+	],
+	"cpu": [
+		"x64",
+		"arm64"
+	],
+	"engines": {
+		"node": ">=18"
+	},
+	"files": [
+		"bin/relo.mjs",
+		"lib/checksums.mjs",
+		"lib/conflict.mjs",
+		"lib/daemon.mjs",
+		"lib/download.mjs",
+		"lib/install.mjs",
+		"lib/platform.mjs",
+		"lib/release.mjs",
+		"lib/uninstall.mjs",
+		"README.md"
+	],
+	"scripts": {
+		"postinstall": "node lib/install.mjs",
+		"preuninstall": "node lib/uninstall.mjs",
+		"test": "node --test"
+	},
+	"publishConfig": {
+		"access": "public",
+		"registry": "https://registry.npmjs.org"
+	}
+}

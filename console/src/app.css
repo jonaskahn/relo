@@ -1,0 +1,1259 @@
+@import 'tailwindcss';
+
+@font-face {
+	font-family: 'JetBrains Mono';
+	font-style: normal;
+	font-weight: 400;
+	font-display: swap;
+	src: url('/fonts/jetbrains-mono-regular.ttf') format('truetype');
+}
+@font-face {
+	font-family: 'JetBrains Mono';
+	font-style: normal;
+	font-weight: 600;
+	font-display: swap;
+	src: url('/fonts/jetbrains-mono-semibold.ttf') format('truetype');
+}
+
+@custom-variant dark (&:is(.dark *));
+
+:root {
+	/* 3.0 foundation: layered neutral surfaces, one accent the operator
+	   chooses, one control height. Legacy names below alias these so pages
+	   that have not migrated yet keep rendering. */
+	color-scheme: light;
+	--canvas: #f5f5f7;
+	--surface: #ffffff;
+	--raised: #ffffff;
+	--sunken: #f5f5f7;
+	--ink: #17171c;
+	--muted: #6b6b78;
+	--faint: #858592;
+	--line: rgb(0 0 0 / 0.09);
+	--line-strong: rgb(0 0 0 / 0.16);
+	--hover: color-mix(in srgb, var(--ink) 4%, var(--surface));
+	--shadow: rgb(20 20 40 / 0.1);
+	--ok: #19774e;
+	--warn: #9b5800;
+	--danger: #bd342a;
+	--chrome: rgb(245 245 247 / 0.82);
+	--scrim: rgb(10 10 14 / 0.55);
+	/* Theme previews show both themes at once, so they read fixed mini
+	   values rather than the live tokens. */
+	--preview-light: #f4f4f7;
+	--preview-dark: #111116;
+	--preview-light-line: rgb(0 0 0 / 0.14);
+	--preview-dark-line: rgb(255 255 255 / 0.22);
+	/* One accent base per choice; every tint derives from it. */
+	--accent-base: #c8102e;
+	--on-accent: #fff;
+	--shade: #000;
+	--mixbase: var(--surface);
+	--t50: 7%;
+	--t100: 14%;
+	--t200: 26%;
+	--accent: var(--accent-base);
+	--accent-50: color-mix(in oklab, var(--accent) var(--t50), var(--mixbase));
+	--accent-100: color-mix(in oklab, var(--accent) var(--t100), var(--mixbase));
+	--accent-200: color-mix(in oklab, var(--accent) var(--t200), var(--mixbase));
+	--accent-300: color-mix(in oklab, var(--accent) 44%, var(--mixbase));
+	--accent-400: color-mix(in oklab, var(--accent) 70%, var(--mixbase));
+	--accent-500: var(--accent);
+	--accent-600: color-mix(in oklab, var(--accent) 86%, var(--shade));
+	--accent-700: color-mix(in oklab, var(--accent) 72%, var(--shade));
+	--accent-800: color-mix(in oklab, var(--accent) 56%, var(--shade));
+	--accent-soft: var(--accent-50);
+	--accent-ink: var(--accent-800);
+	--accent-border: color-mix(in oklab, var(--accent) 32%, var(--mixbase));
+	--accent-glow: color-mix(in srgb, var(--accent) 30%, transparent);
+	/* The 3.0 radius steps: controls 10, panels 12, cards 16, popovers 18. */
+	--radius-control: 0.625rem;
+	--radius-panel: 0.75rem;
+	--radius-card: 1rem;
+	--radius-popover: 1.125rem;
+	/* Page rhythm. */
+	--gutter: 1.75rem;
+	--section: 1.625rem;
+	--grid-gap: 1.125rem;
+	--card-pad: 1.125rem;
+	/* One height for every control an operator presses or types into; a
+	   coarse pointer raises it in the base layer. */
+	--control-h: 2.375rem;
+	--control-h-sm: 2rem;
+	/* Elevation shadows from the surfaces-borders table. */
+	--shadow-1: 0 1px 2px rgb(20 20 30 / 0.04);
+	--shadow-hover: 0 10px 28px var(--shadow);
+	--shadow-pop: 0 18px 48px var(--shadow);
+	--shadow-modal: 0 24px 60px var(--shadow);
+	/* A sliding edge lifts with a whisper: tiny offset, long feather, a
+	   fraction of the elevation alpha. */
+	--shadow-edge: 2px 0 24px -6px color-mix(in srgb, var(--shadow) 55%, transparent);
+	/* Legacy aliases: pages still read these until their own migration. */
+	--radius: 0.5rem;
+	--background: var(--canvas);
+	--foreground: var(--ink);
+	--card: var(--surface);
+	--card-foreground: var(--ink);
+	--popover: var(--raised);
+	--popover-foreground: var(--ink);
+	--muted-bg: #f0f0f5;
+	--muted-foreground: var(--muted);
+	--hover-var: #f0f0f5;
+	--accent-foreground: var(--ink);
+	--destructive: var(--danger);
+	--destructive-foreground: #ffffff;
+	--border: var(--line);
+	--border-strong: var(--line-strong);
+	--input: rgba(0, 0, 0, 0.12);
+	--ring: var(--accent);
+	--primary: var(--accent);
+	--primary-foreground: var(--on-accent);
+	--secondary: #e8e8ed;
+	--secondary-foreground: var(--ink);
+	--surface-elevated: #ffffff;
+	--chrome-bg: var(--chrome);
+	--node-idle: rgba(0, 0, 0, 0.06);
+	--node-active: var(--accent);
+	--node-ring: rgba(0, 0, 0, 0.12);
+	--flow-idle: rgba(0, 0, 0, 0.05);
+	--flow-active: var(--accent-400);
+	--glow-active: color-mix(in srgb, var(--accent) 15%, transparent);
+}
+
+@media (max-width: 640px) {
+	:root {
+		--gutter: 1rem;
+	}
+}
+/* Light bases and on-accent per choice. Dark theme lifts every accent and
+   uses near-black text, so the dark block comes after these. */
+[data-accent='red'] {
+	--accent-base: #c8102e;
+	--on-accent: #fff;
+}
+[data-accent='orange'] {
+	--accent-base: #d9622b;
+	--on-accent: #17171c;
+}
+[data-accent='amber'] {
+	--accent-base: #cc7c2e;
+	--on-accent: #17171c;
+}
+[data-accent='green'] {
+	--accent-base: #43946c;
+	--on-accent: #17171c;
+}
+[data-accent='teal'] {
+	--accent-base: #439288;
+	--on-accent: #17171c;
+}
+[data-accent='cyan'] {
+	--accent-base: #418fae;
+	--on-accent: #17171c;
+}
+[data-accent='blue'] {
+	--accent-base: #3662e3;
+	--on-accent: #fff;
+}
+[data-accent='indigo'] {
+	--accent-base: #4e46dc;
+	--on-accent: #fff;
+}
+[data-accent='purple'] {
+	--accent-base: #743ee4;
+	--on-accent: #fff;
+}
+[data-accent='rose'] {
+	--accent-base: #cf364c;
+	--on-accent: #fff;
+}
+
+.dark,
+:root[data-theme='dark'] {
+	color-scheme: dark;
+	--canvas: #0a0a0a;
+	--surface: #111113;
+	--raised: #1a1a1d;
+	--sunken: #0a0a0a;
+	--ink: #f2f2f5;
+	--muted: #a3a3b0;
+	--faint: #6f6f7c;
+	--line: rgb(255 255 255 / 0.08);
+	--line-strong: rgb(255 255 255 / 0.16);
+	--shadow: rgb(0 0 0 / 0.55);
+	--ok: #4cc38a;
+	--warn: #f0a93b;
+	--danger: #ff7468;
+	--chrome: rgb(10 10 10 / 0.72);
+	--shade: #fff;
+	--t50: 12%;
+	--t100: 22%;
+	--t200: 34%;
+	--accent: color-mix(in oklab, var(--accent-base) 72%, #fff);
+	--on-accent: #0a0a0a;
+	--muted-bg: #1a1a1d;
+	--hover-var: #1a1a1d;
+	--input: rgba(255, 255, 255, 0.1);
+	--secondary: #1a1a1d;
+	--surface-elevated: #1a1a1d;
+	--destructive-foreground: #0a0a0a;
+	--node-idle: rgba(255, 255, 255, 0.06);
+	--node-ring: rgba(255, 255, 255, 0.1);
+	--flow-idle: rgba(255, 255, 255, 0.05);
+	--glow-active: color-mix(in srgb, var(--accent) 18%, transparent);
+}
+
+::view-transition-old(root),
+::view-transition-new(root) {
+	animation: none;
+	mix-blend-mode: normal;
+}
+html[data-theme-dir]::view-transition-old(root) {
+	z-index: 0;
+}
+html[data-theme-dir]::view-transition-new(root) {
+	z-index: 1;
+	-webkit-mask-repeat: no-repeat;
+	mask-repeat: no-repeat;
+	-webkit-mask-size: 100% 300%;
+	mask-size: 100% 300%;
+}
+html[data-theme-dir='sunrise']::view-transition-new(root) {
+	-webkit-mask-image: linear-gradient(to top, #000 0 40%, transparent 60% 100%);
+	mask-image: linear-gradient(to top, #000 0 40%, transparent 60% 100%);
+	animation: theme-sunrise 700ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+html[data-theme-dir='sunset']::view-transition-new(root) {
+	-webkit-mask-image: linear-gradient(to bottom, #000 0 40%, transparent 60% 100%);
+	mask-image: linear-gradient(to bottom, #000 0 40%, transparent 60% 100%);
+	animation: theme-sunset 700ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+@keyframes theme-sunrise {
+	from {
+		-webkit-mask-position: 0 0;
+		mask-position: 0 0;
+	}
+	to {
+		-webkit-mask-position: 0 100%;
+		mask-position: 0 100%;
+	}
+}
+@keyframes theme-sunset {
+	from {
+		-webkit-mask-position: 0 100%;
+		mask-position: 0 100%;
+	}
+	to {
+		-webkit-mask-position: 0 0;
+		mask-position: 0 0;
+	}
+}
+
+@theme inline {
+	--radius-sm: var(--radius);
+	--radius-md: var(--radius);
+	--radius-lg: var(--radius);
+	--radius-xl: var(--radius);
+	--radius-2xl: var(--radius);
+	--radius-3xl: var(--radius);
+	/* The 3.0 radius steps: controls 10, panels 12, cards 16, popovers 18. */
+	--radius-control: 0.625rem;
+	--radius-panel: 0.75rem;
+	--radius-card: 1rem;
+	--radius-popover: 1.125rem;
+	/* One height for every control the operator types in or presses, so a
+	   row of an input, a select and a button lines up. */
+	--height-control: var(--control-h);
+	--shadow-1: var(--shadow-1);
+	--shadow-hover: var(--shadow-hover);
+	--shadow-pop: var(--shadow-pop);
+	--shadow-modal: var(--shadow-modal);
+	--shadow-edge: var(--shadow-edge);
+	--font-sans: system-ui, -apple-system, 'Segoe UI', sans-serif;
+	--font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+	--color-background: var(--background);
+	--color-foreground: var(--foreground);
+	--color-card: var(--card);
+	--color-card-foreground: var(--card-foreground);
+	--color-popover: var(--popover);
+	--color-popover-foreground: var(--popover-foreground);
+	--color-primary: var(--primary);
+	--color-primary-foreground: var(--primary-foreground);
+	--color-secondary: var(--secondary);
+	--color-secondary-foreground: var(--secondary-foreground);
+	--color-muted: var(--muted-bg);
+	--color-muted-foreground: var(--muted-foreground);
+	--color-accent: var(--hover-var);
+	--color-accent-foreground: var(--accent-foreground);
+	--color-destructive: var(--destructive);
+	--color-destructive-foreground: var(--destructive-foreground);
+	--color-border: var(--border);
+	--color-input: var(--input);
+	--color-ring: var(--ring);
+	--color-border-strong: var(--border-strong);
+	--color-warn: var(--warn);
+	--color-surface: var(--surface);
+	--color-surface-elevated: var(--surface-elevated);
+	--color-accent-soft: var(--accent-soft);
+	--color-accent-line: var(--accent-100);
+	--color-accent-border: var(--accent-border);
+	--color-accent-bright: var(--accent-400);
+	--color-accent-strong: var(--accent-600);
+	--color-accent-deep: var(--accent-700);
+	--color-accent-ink: var(--accent-ink);
+	/* 3.0 names, so migrated surfaces never read a legacy alias. */
+	--color-canvas: var(--canvas);
+	--color-raised: var(--raised);
+	--color-sunken: var(--sunken);
+	--color-ink: var(--ink);
+	--color-faint: var(--faint);
+	--color-line: var(--line);
+	--color-line-strong: var(--line-strong);
+	--color-hover: var(--hover);
+	--color-ok: var(--ok);
+	--color-danger: var(--danger);
+	--color-on-accent: var(--on-accent);
+	--color-accent-base: var(--accent-base);
+}
+
+@layer base {
+	* {
+		@apply border-border outline-ring/50;
+	}
+	html,
+	body {
+		height: 100%;
+		overflow: hidden;
+	}
+	body {
+		@apply bg-background text-foreground;
+		font-family:
+			system-ui,
+			-apple-system,
+			'Segoe UI',
+			sans-serif;
+		font-size: 15px;
+		line-height: 1.5;
+		-webkit-tap-highlight-color: transparent;
+		-webkit-font-smoothing: antialiased;
+		-moz-osx-font-smoothing: grayscale;
+	}
+	button,
+	[role='button'],
+	summary {
+		touch-action: manipulation;
+	}
+	input,
+	select,
+	textarea {
+		caret-color: var(--accent-600);
+	}
+	a {
+		text-underline-offset: 0.2em;
+	}
+	:disabled {
+		cursor: not-allowed;
+	}
+	/* A coarse pointer is any touch surface, so a phone, a tablet and a
+	   touchscreen laptop all get the larger control and the 16px input font
+	   that keeps a mobile browser from zooming on focus. */
+	@media (pointer: coarse) {
+		:root {
+			--control-h: 2.75rem;
+			--control-h-sm: 2.75rem;
+		}
+		input,
+		select,
+		textarea {
+			font-size: 16px;
+		}
+	}
+	:focus-visible {
+		box-shadow: 0 0 0 2px var(--ring);
+		outline: none;
+	}
+	::selection {
+		background: var(--accent-100);
+		color: var(--foreground);
+	}
+	@media (prefers-reduced-motion: reduce) {
+		*,
+		*::before,
+		*::after {
+			animation-duration: 0.01ms !important;
+			animation-iteration-count: 1 !important;
+			transition-duration: 0.01ms !important;
+			scroll-behavior: auto !important;
+		}
+		[data-reduced-motion-fade] {
+			animation-duration: 140ms !important;
+		}
+	}
+	@media (prefers-reduced-transparency: reduce) {
+		.chrome {
+			background: var(--surface) !important;
+			backdrop-filter: none !important;
+		}
+	}
+	@media (prefers-contrast: more) {
+		:root {
+			--border: rgba(0, 0, 0, 0.28);
+			--border-strong: rgba(0, 0, 0, 0.5);
+		}
+		.dark {
+			--border: rgba(255, 255, 255, 0.22);
+			--border-strong: rgba(255, 255, 255, 0.4);
+		}
+	}
+}
+
+@layer components {
+	/* page-frame is the shared column every page sits in: centred, capped at
+	   1360px, with the gutter widening as the window does. */
+	.page-frame {
+		margin-inline: auto;
+		width: 100%;
+		max-width: 85rem;
+		padding-inline: var(--gutter);
+	}
+	/* page-frame-flush joins a workspace body to the frame edges, so the two
+	   panes of the connections screen meet the column without inner padding. */
+	.page-frame-flush {
+		padding-inline: 0;
+	}
+	/* badge is the one size every non-interactive label shares. */
+	.badge {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.25rem;
+		height: 1.25rem;
+		border-radius: var(--radius);
+		padding-inline: 0.375rem;
+		font-size: 0.6875rem;
+		font-weight: 550;
+		line-height: 1;
+		white-space: nowrap;
+	}
+	.page-stack {
+		display: flex;
+		flex-direction: column;
+		gap: var(--section);
+		padding-bottom: 2rem;
+	}
+	.page-heading {
+		margin-bottom: 1.5rem;
+	}
+	.page-heading h1 {
+		font-size: 1.5rem;
+		font-weight: 650;
+		letter-spacing: -0.025em;
+		line-height: 1.2;
+	}
+	.page-heading p {
+		max-width: 68ch;
+		color: var(--muted-foreground);
+		line-height: 1.55;
+	}
+	/* page-title is the 30px heading every page opens with; tracking is a
+	   Latin-only flourish, so it resets where the script does not use it. */
+	.page-title {
+		letter-spacing: -0.025em;
+	}
+	:lang(ja) .page-title,
+	:lang(ko) .page-title,
+	:lang(zh) .page-title,
+	:lang(th) .page-title,
+	:lang(hi) .page-title {
+		letter-spacing: 0;
+	}
+	.section-surface {
+		border: 1px solid var(--line);
+		border-radius: var(--radius-card);
+		background: var(--surface);
+	}
+	/* surface-pop is the level-3 look for a popover, menu or select list:
+	   raised fill, full hairline border, popover radius and shadow. */
+	.surface-pop {
+		background: var(--raised);
+		border: 1px solid var(--line);
+		border-radius: var(--radius-popover);
+		box-shadow: var(--shadow-pop);
+		color: var(--ink);
+	}
+	.section-heading {
+		font-size: 0.9375rem;
+		font-weight: 650;
+		letter-spacing: -0.01em;
+		line-height: 1.3;
+	}
+	/* filter-grid is the fields one toggle opens: two columns on a phone and
+	   wider with the window, so a page's fields fill their rows instead of
+	   stacking one per line. .filter-toolbar is the always-on control row
+	   beside it (search boxes and menus that do not collapse). */
+	.filter-toolbar {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: end;
+		gap: 0.75rem;
+	}
+	.filter-grid {
+		display: grid;
+		gap: 0.75rem 1rem;
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+	}
+	@media (min-width: 640px) {
+		.filter-grid-3,
+		.filter-grid-4 {
+			grid-template-columns: repeat(3, minmax(0, 1fr));
+		}
+	}
+	@media (min-width: 1024px) {
+		.filter-grid-4 {
+			grid-template-columns: repeat(4, minmax(0, 1fr));
+		}
+	}
+	.empty-panel {
+		display: flex;
+		min-height: 12rem;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+		gap: 0.75rem;
+		padding: 2rem;
+		text-align: center;
+		color: var(--muted-foreground);
+	}
+	.data-surface {
+		overflow-x: auto;
+		border: 1px solid var(--border);
+		border-radius: var(--radius);
+		background: var(--surface);
+	}
+	.data-surface {
+		overscroll-behavior-x: contain;
+	}
+	.data-surface table {
+		width: 100%;
+		border-collapse: collapse;
+	}
+	.data-surface tbody tr {
+		border-top: 1px solid var(--border);
+	}
+	.data-surface tbody tr:hover {
+		background: var(--muted);
+	}
+	.data-surface th {
+		font-size: 0.75rem;
+		font-weight: 600;
+		letter-spacing: 0.02em;
+	}
+	.data-surface td {
+		font-size: 0.8125rem;
+	}
+	.form-section {
+		display: flex;
+		flex-direction: column;
+		gap: 1rem;
+	}
+	/* field is one labelled control: label, input and hint. Inside a
+	   field-grid the three rows are shared across the row, so inputs line up
+	   whatever the length of a hint or the wrap of a label. */
+	.field {
+		display: flex;
+		flex-direction: column;
+		gap: 0.375rem;
+		min-width: 0;
+	}
+	.field-grid {
+		display: grid;
+		gap: 0.875rem 1rem;
+		grid-template-columns: repeat(auto-fit, minmax(min(100%, 14rem), 1fr));
+		align-items: start;
+	}
+	@supports (grid-template-rows: subgrid) {
+		.field-grid > .field {
+			grid-row: span 3;
+			display: grid;
+			grid-template-rows: subgrid;
+			align-content: start;
+			gap: 0;
+		}
+		.field-grid > .field > .field-label {
+			padding-bottom: 0.375rem;
+		}
+		.field-grid > .field > .field-hint,
+		.field-grid > .field > .field-error {
+			padding-top: 0.25rem;
+		}
+	}
+	.field-label {
+		display: flex;
+		align-items: center;
+		gap: 0.375rem;
+		font-size: 0.8125rem;
+		font-weight: 550;
+		line-height: 1.3;
+		color: var(--foreground);
+	}
+	.field-hint {
+		font-size: 0.75rem;
+		line-height: 1.45;
+		color: var(--muted-foreground);
+	}
+	.field-error {
+		display: flex;
+		align-items: center;
+		gap: 0.25rem;
+		font-size: 0.75rem;
+		line-height: 1.45;
+		color: var(--destructive);
+	}
+	.field-switch {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 1rem;
+	}
+	/* The switch primitive renders a bare button, so the track and thumb are
+	   drawn here and the whole control keeps the accent when checked. */
+	[role='switch'] {
+		position: relative;
+		flex-shrink: 0;
+		width: 2.25rem;
+		height: 1.25rem;
+		border-radius: 999px;
+		border: 1px solid var(--border-strong);
+		background: var(--secondary);
+		transition:
+			background-color 0.15s,
+			border-color 0.15s;
+	}
+	[role='switch'][aria-checked='true'] {
+		border-color: var(--accent-600);
+		background: var(--accent-600);
+	}
+	[role='switch']::after {
+		content: '';
+		position: absolute;
+		top: 50%;
+		left: 0.125rem;
+		width: 1rem;
+		height: 1rem;
+		border-radius: 999px;
+		background: var(--surface);
+		box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+		transform: translateY(-50%);
+		transition: left 0.15s;
+	}
+	[role='switch'][aria-checked='true']::after {
+		left: calc(100% - 1.125rem);
+	}
+	[role='switch']:disabled {
+		opacity: 0.5;
+		cursor: not-allowed;
+	}
+	@media (pointer: coarse) {
+		[role='switch'] {
+			touch-action: manipulation;
+		}
+		[role='switch']::before {
+			content: '';
+			position: absolute;
+			inset: -0.5rem;
+		}
+	}
+	/* modal-footer holds a dialog's actions. On a sheet the buttons stack
+	   full-width with the primary action on top and clear the home indicator. */
+	/* tab-track is the one capsule every segmented choice and tab strip
+	   shares: a card-like surface with the button radius, a full hairline
+	   border, a redesigned shadow, and a thumb that slides under the active
+	   segment. The strip scrolls instead of wrapping, so six tabs stay
+	   reachable on a phone. */
+	.tab-track {
+		position: relative;
+		display: inline-flex;
+		align-items: stretch;
+		gap: 0.125rem;
+		max-width: 100%;
+		height: var(--control-h);
+		overflow-x: auto;
+		overflow-y: hidden;
+		border: 1px solid var(--line);
+		border-radius: var(--radius-control);
+		background: var(--surface);
+		box-shadow:
+			var(--shadow-1),
+			0 8px 20px -16px var(--shadow);
+		padding: 3px;
+		scrollbar-width: none;
+	}
+	.tab-track::-webkit-scrollbar {
+		display: none;
+	}
+	.tab-thumb {
+		position: absolute;
+		top: 3px;
+		bottom: 3px;
+		left: 0;
+		width: 0;
+		border: 1px solid var(--accent-border);
+		border-radius: calc(var(--radius-control) - 3px);
+		background: var(--accent-50);
+		box-shadow: var(--shadow-1);
+		pointer-events: none;
+	}
+	.tab-seg {
+		position: relative;
+		z-index: 1;
+		display: inline-flex;
+		flex-shrink: 0;
+		align-items: center;
+		gap: 0.375rem;
+		height: 100%;
+		border: 1px solid transparent;
+		border-radius: calc(var(--radius-control) - 3px);
+		padding-inline: 0.625rem;
+		font-size: 0.8125rem;
+		font-weight: 500;
+		white-space: nowrap;
+		color: var(--muted);
+		transition: color 150ms ease;
+	}
+	.tab-seg:hover {
+		color: var(--ink);
+	}
+	.tab-seg:active {
+		transform: scale(0.985);
+	}
+	.tab-seg[data-active='true'] {
+		color: var(--accent-ink);
+		font-weight: 550;
+	}
+	.tab-seg:disabled {
+		opacity: 0.5;
+		pointer-events: none;
+	}
+	/* toolbar-row lines one filter toggle, one tab strip and one action up in
+	   one row: the strip stays centred on the screen while the sides hold the
+	   filter and the live or range control. On a phone the sides share the
+	   first row and the strip takes the second full-width row. */
+	.toolbar-row {
+		display: grid;
+		grid-template-columns: 1fr auto 1fr;
+		align-items: center;
+		gap: 0.75rem;
+	}
+	.toolbar-start {
+		display: flex;
+		justify-content: flex-start;
+		align-items: center;
+		gap: 0.5rem;
+		min-width: 0;
+		overflow-x: auto;
+		scrollbar-width: none;
+	}
+	.toolbar-start::-webkit-scrollbar {
+		display: none;
+	}
+	.toolbar-center {
+		display: flex;
+		justify-content: center;
+		align-items: center;
+		gap: 0.5rem;
+		min-width: 0;
+	}
+	.toolbar-end {
+		display: flex;
+		justify-content: flex-end;
+		align-items: center;
+		gap: 0.5rem;
+		min-width: 0;
+	}
+	/* toolbar-swap is the contextual control beside Back (Add account, or
+	   model search with its filter menu): it fades in beside the button
+	   instead of pushing the tabs. */
+	.toolbar-swap {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		min-width: 0;
+		flex: 1 1 auto;
+		animation: toolbar-swap-in 160ms ease;
+	}
+	@keyframes toolbar-swap-in {
+		from {
+			opacity: 0;
+			transform: translateX(-6px);
+		}
+		to {
+			opacity: 1;
+			transform: none;
+		}
+	}
+	/* attention-marquee runs the overview attention items as a ticker on
+	   desktop: the count stays fixed while the items scroll in place. */
+	.attention-marquee {
+		overflow: hidden;
+	}
+	.attention-viewport {
+		min-width: 0;
+		flex: 1 1 auto;
+		overflow: hidden;
+		mask-image: linear-gradient(
+			to right,
+			transparent,
+			#000 1.5rem,
+			#000 calc(100% - 1.5rem),
+			transparent
+		);
+	}
+	.attention-track {
+		display: flex;
+		align-items: center;
+		gap: 1rem;
+		width: max-content;
+		animation: attention-scroll 32s linear infinite;
+	}
+	.attention-marquee:hover .attention-track,
+	.attention-marquee:focus-within .attention-track {
+		animation-play-state: paused;
+	}
+	@keyframes attention-scroll {
+		from {
+			transform: translateX(0);
+		}
+		to {
+			transform: translateX(-50%);
+		}
+	}
+	/* provider-toolbar keeps Back with the tab strip on the left and the
+	   contextual search/add with the connection actions on the right. On a
+	   phone the first row is Back with the actions (Add stays beside Back on
+	   the accounts tab), the tabs take the second full-width row and model
+	   search takes its own third full-width row. */
+	.provider-toolbar {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 0.5rem 0.75rem;
+	}
+	.provider-toolbar .pt-back {
+		flex: 0 0 auto;
+	}
+	.provider-toolbar .pt-tabs {
+		display: flex;
+		align-items: center;
+		min-width: 0;
+		flex: 1 1 auto;
+	}
+	.provider-toolbar .pt-context {
+		min-width: 0;
+	}
+	.provider-toolbar .pt-context-search {
+		display: flex;
+		flex: 1 1 8rem;
+		max-width: 16rem;
+	}
+	.provider-toolbar .pt-context-search .models-search {
+		flex: 1 1 auto;
+		max-width: none;
+		min-width: 0;
+	}
+	.provider-toolbar .pt-context-add {
+		display: flex;
+		flex: 0 0 auto;
+		max-width: 100%;
+	}
+	.provider-toolbar .pt-actions {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		flex: 0 0 auto;
+		margin-left: auto;
+	}
+	@media (max-width: 639.98px) {
+		.provider-toolbar {
+			display: grid;
+			grid-template-columns: auto minmax(0, 1fr) auto;
+			gap: 0.5rem;
+			align-items: center;
+		}
+		.provider-toolbar .pt-back {
+			grid-column: 1;
+			grid-row: 1;
+		}
+		.provider-toolbar .pt-tabs {
+			grid-column: 1 / -1;
+			grid-row: 2;
+		}
+		.provider-toolbar .pt-tabs .tab-track {
+			width: 100%;
+		}
+		.provider-toolbar .pt-tabs .tab-track .tab-seg {
+			flex: 1 1 0;
+			justify-content: center;
+		}
+		.provider-toolbar .pt-actions {
+			grid-row: 1;
+			margin-left: 0;
+			justify-self: end;
+		}
+		.provider-toolbar[data-tab='models'] .pt-actions,
+		.provider-toolbar[data-tab='settings'] .pt-actions {
+			grid-column: 2 / 4;
+		}
+		.provider-toolbar[data-tab='accounts'] .pt-actions {
+			grid-column: 3;
+		}
+		.provider-toolbar[data-tab='models'] .pt-context-search {
+			grid-column: 1 / -1;
+			grid-row: 3;
+			max-width: none;
+			margin: 0;
+		}
+		.provider-toolbar[data-tab='accounts'] .pt-context-add {
+			grid-column: 2;
+			grid-row: 1;
+			justify-self: start;
+			margin: 0;
+		}
+	}
+	/* logs-toolbar stretches the section strip across its column with one
+	   third per section. */
+	.logs-toolbar .toolbar-center {
+		flex: 1 1 auto;
+	}
+	.logs-toolbar .toolbar-center .tab-track {
+		width: 100%;
+	}
+	.logs-toolbar .toolbar-center .tab-seg {
+		flex: 1 1 0;
+		justify-content: center;
+	}
+	/* tab-panel replays its entrance whenever bits-ui unhides it, so a tab
+	   switch reads as motion without remounting the lists behind it. */
+	.tab-panel {
+		animation: tab-panel-in 160ms ease;
+	}
+	@keyframes tab-panel-in {
+		from {
+			opacity: 0;
+			transform: translateY(4px);
+		}
+		to {
+			opacity: 1;
+			transform: none;
+		}
+	}
+	@media (prefers-reduced-motion: reduce) {
+		.toolbar-swap,
+		.tab-panel,
+		.attention-track {
+			animation: none;
+		}
+	}
+	@media (max-width: 639.98px) {
+		.toolbar-row {
+			grid-template-columns: 1fr auto;
+		}
+		.toolbar-center {
+			grid-column: 1 / -1;
+			grid-row: 2;
+			justify-content: stretch;
+		}
+		.toolbar-center > :first-child {
+			width: 100%;
+		}
+	}
+	/* models-toolbar lines Back, the all-models title and the model controls
+	   in one row: Back left, the title centred, search with the filter menus
+	   right. On a phone Back shares the first row with the title and the menus
+	   while search takes its own second row. */
+	.models-toolbar {
+		display: grid;
+		grid-template-columns: auto minmax(0, 1fr) auto;
+		align-items: center;
+		gap: 0.75rem;
+	}
+	.models-toolbar .models-end {
+		display: contents;
+	}
+	.models-toolbar .models-search {
+		grid-column: 1 / -1;
+		grid-row: 2;
+	}
+	@media (min-width: 640px) {
+		.models-toolbar {
+			grid-template-columns: 1fr auto 1fr;
+		}
+		.models-toolbar .models-start {
+			justify-self: start;
+		}
+		.models-toolbar .models-center {
+			justify-self: center;
+		}
+		.models-toolbar .models-end {
+			display: flex;
+			justify-content: flex-end;
+			align-items: center;
+			gap: 0.5rem;
+			min-width: 0;
+		}
+		.models-toolbar .models-end > * {
+			min-width: 0;
+		}
+		.models-toolbar .models-search {
+			grid-column: auto;
+			grid-row: auto;
+			width: auto;
+			flex: 1 1 8rem;
+			max-width: 16rem;
+		}
+	}
+	.modal-footer {
+		display: flex;
+		justify-content: flex-end;
+		gap: 0.5rem;
+	}
+	.sheet-handle {
+		cursor: grab;
+		touch-action: none;
+		user-select: none;
+	}
+	@media (max-width: 639.98px) {
+		.modal-footer {
+			flex-direction: column-reverse;
+			padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
+		}
+		.modal-footer > *:not([class*='size-control']) {
+			width: 100%;
+		}
+	}
+	.provider-settings {
+		container-type: inline-size;
+	}
+	.settings-rows > .settings-row {
+		display: grid;
+		gap: 0.75rem 2rem;
+		padding: 1.25rem 0;
+	}
+	.settings-rows > .settings-row + .settings-row {
+		border-top: 1px solid var(--border);
+	}
+	/* settings-field is every row of a settings page card: the label and its
+	   hint share the left third, the control or the value the two thirds right
+	   of it, where it sits flush against the card's right edge. Switches,
+	   inputs, read-only values and action rows therefore share one line down
+	   the right of every card, full-width or paired. Below 768px the two areas
+	   stack, so a translated label never squeezes a control. */
+	.settings-field {
+		display: grid;
+		gap: 0.75rem 2rem;
+		grid-template-columns: minmax(0, 1fr);
+		align-items: start;
+	}
+	.settings-field-action {
+		min-width: 0;
+	}
+	@media (min-width: 768px) {
+		.settings-field {
+			grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
+		}
+		/* The value cell ends on the card's right edge: a control with a width
+		   of its own hugs that edge, a group that fills the column ends on it. */
+		.settings-field > :last-child {
+			display: flex;
+			flex-direction: column;
+			align-items: flex-end;
+		}
+		/* settings-field-action puts a save row or a card-level message with the
+		   values it belongs to, level with them. */
+		.settings-field-action {
+			display: flex;
+			flex-wrap: wrap;
+			justify-content: flex-end;
+		}
+	}
+	.settings-disclosure-toggle {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.375rem;
+		min-height: 2.75rem;
+		font-size: 0.875rem;
+		font-weight: 500;
+	}
+	.settings-disclosure-body {
+		display: grid;
+		grid-template-rows: 0fr;
+		transition: grid-template-rows 220ms ease;
+	}
+	.settings-disclosure.open .settings-disclosure-body {
+		grid-template-rows: 1fr;
+	}
+	/* disclosure-pad carries the top spacing of a disclosure body. The
+	   spacing lives on the content, not on the collapsing box, so a closed
+	   body measures zero and the padding still eases in with the row. */
+	.settings-disclosure-body > .disclosure-pad {
+		padding-top: 0.75rem;
+		transition: padding-top 220ms ease;
+	}
+	.settings-disclosure:not(.open) .settings-disclosure-body > .disclosure-pad {
+		padding-top: 0;
+	}
+	.settings-savebar {
+		position: sticky;
+		bottom: 0;
+		z-index: 10;
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		justify-content: space-between;
+		gap: 0.75rem;
+		margin-top: 1rem;
+		padding: 0.75rem 0;
+		padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
+		background: color-mix(in srgb, var(--background) 82%, transparent);
+		backdrop-filter: blur(20px) saturate(180%);
+		border-top: 1px solid var(--border);
+		animation: settings-savebar-in 180ms ease;
+	}
+	@keyframes settings-savebar-in {
+		from {
+			opacity: 0;
+			transform: translateY(6px);
+		}
+		to {
+			opacity: 1;
+			transform: none;
+		}
+	}
+	@media (prefers-reduced-transparency: reduce) {
+		.settings-savebar {
+			background: var(--background);
+			backdrop-filter: none;
+		}
+	}
+	@media (prefers-reduced-motion: reduce) {
+		.settings-disclosure-body {
+			transition: none;
+		}
+		.settings-savebar {
+			animation: none;
+		}
+	}
+	@media (max-width: 639.98px) {
+		.provider-settings input,
+		.provider-settings select {
+			min-height: 2.75rem;
+		}
+	}
+	.signin-switches {
+		display: grid;
+		gap: 1rem;
+	}
+	/* Each sign-in switch keeps its label on the left and its switch on the
+	   right edge, top-aligned so a hint that wraps in the half-width column
+	   never leaves the switch floating mid-block. */
+	.signin-switches > .field-switch {
+		align-items: start;
+	}
+	/* A lone switch (ChatGPT today) spans the full row, so the card reads
+	   the same as Claude's pair: label on the left, switch on the right. */
+	.signin-switches > .field-switch:only-child {
+		grid-column: 1 / -1;
+	}
+	@container (min-width: 48rem) {
+		/* The connection settings read as a 2x2 card grid on a wide pane:
+		   general beside routing, waits beside advanced, the sign-in
+		   choices full-width below. Cards in a row share the taller card's
+		   height in every state; their content stays top-pinned. The
+		   sign-in switches pair in one row on the wide pane. A narrow pane
+		   keeps the stacked rows. */
+		.settings-rows {
+			display: grid;
+			grid-template-columns: repeat(2, minmax(0, 1fr));
+			gap: 1rem;
+			align-content: start;
+		}
+		.settings-rows > .settings-row {
+			grid-template-columns: minmax(0, 1fr);
+			align-items: start;
+			align-content: start;
+			border: 1px solid var(--border);
+			border-radius: var(--radius-card);
+			background: var(--surface);
+			padding: 1.25rem;
+		}
+		.settings-rows > [data-section='signin'] {
+			grid-column: 1 / -1;
+		}
+		.signin-switches {
+			grid-template-columns: repeat(2, minmax(0, 1fr));
+		}
+	}
+}
+
+/* The card hover and press live outside every layer on purpose: the card
+   shell wears `border-line` and `shadow-1` utilities, and only an unlayered
+   rule can take the border and the shadow from them. Every card in the
+   console carries .section-surface, so a new one inherits the standard: the
+   border and the shadow change, the card never lifts. Surfaces that are not
+   cards (a band, a form panel, a skeleton) opt out with .flat-surface, and
+   .empty-panel is never a card. */
+.section-surface {
+	transition:
+		border-color 150ms ease,
+		box-shadow 150ms ease;
+}
+.section-surface:hover:not(:is(.flat-surface, .empty-panel)) {
+	border-color: var(--accent-border);
+	box-shadow: var(--shadow-hover);
+}
+/* A card that carries a state border keeps it on hover: the state is a fact,
+   the hover is only an affordance. */
+.section-surface.card-limit,
+.section-surface.card-limit:hover {
+	border-color: color-mix(in srgb, var(--danger) 30%, var(--line));
+}
+/* Press: a clickable card settles under the finger, unless the press began
+   on a control inside it, which keeps its own feedback. */
+.card-press {
+	cursor: pointer;
+	transition:
+		border-color 150ms ease,
+		box-shadow 150ms ease,
+		transform 80ms ease;
+}
+.card-press:active {
+	transform: scale(0.985);
+}
+.card-press:has(button:active),
+.card-press:has(a:active),
+.card-press:has(input:active) {
+	transform: none;
+}
+
+@utility mono-data {
+	font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+	font-size: 12px;
+	line-height: 1.625;
+}
+
+/* h-control, size-control and min-h-control are the one height every
+   pressed or typed control shares. */
+@utility h-control {
+	height: var(--control-h);
+}
+@utility size-control {
+	width: var(--control-h);
+	height: var(--control-h);
+}
+@utility min-h-control {
+	min-height: var(--control-h);
+}
+
+@utility chrome {
+	background: var(--chrome);
+	backdrop-filter: blur(20px) saturate(180%);
+	-webkit-backdrop-filter: blur(20px) saturate(180%);
+}

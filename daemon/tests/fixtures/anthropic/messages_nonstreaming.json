@@ -1,0 +1,27 @@
+{
+  "id": "msg_2",
+  "type": "message",
+  "role": "assistant",
+  "model": "claude-sonnet-4",
+  "content": [
+    {
+      "type": "thinking",
+      "thinking": "Considering the question",
+      "signature": "sig-xyz"
+    },
+    { "type": "text", "text": "Hi there" },
+    {
+      "type": "tool_use",
+      "id": "toolu_9",
+      "name": "get_weather",
+      "input": { "city": "Hanoi" }
+    }
+  ],
+  "stop_reason": "tool_use",
+  "stop_sequence": null,
+  "usage": {
+    "input_tokens": 20,
+    "output_tokens": 6,
+    "cache_read_input_tokens": 4
+  }
+}

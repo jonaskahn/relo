@@ -1,0 +1,204 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "relo: build",
+      "type": "shell",
+      "command": "make build",
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "problemMatcher": ["$go"]
+    },
+    {
+      "label": "relo: build-all",
+      "type": "shell",
+      "command": "make build-all",
+      "problemMatcher": ["$go"]
+    },
+    {
+      "label": "relo: test",
+      "type": "shell",
+      "command": "make test",
+      "group": {
+        "kind": "test",
+        "isDefault": true
+      },
+      "problemMatcher": ["$go"]
+    },
+    {
+      "label": "relo: test-race",
+      "type": "shell",
+      "command": "make test-race",
+      "problemMatcher": ["$go"]
+    },
+    {
+      "label": "relo: vet",
+      "type": "shell",
+      "command": "make vet",
+      "problemMatcher": ["$go"]
+    },
+    {
+      "label": "relo: lint",
+      "type": "shell",
+      "command": "make lint",
+      "problemMatcher": ["$go"]
+    },
+    {
+      "label": "relo: fmt-check",
+      "type": "shell",
+      "command": "make fmt-check",
+      "problemMatcher": ["$go"]
+    },
+    {
+      "label": "relo: cover",
+      "type": "shell",
+      "command": "make cover",
+      "problemMatcher": ["$go"]
+    },
+    {
+      "label": "relo: ci",
+      "type": "shell",
+      "command": "make ci",
+      "problemMatcher": ["$go"]
+    },
+    {
+      "label": "relo: tidy",
+      "type": "shell",
+      "command": "make tidy"
+    },
+    {
+      "label": "relo: dev setup",
+      "type": "shell",
+      "command": "make dev-setup",
+      "windows": {
+        "command": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/dev-setup.ps1"
+      }
+    },
+    {
+      "label": "relo: dev backend",
+      "type": "shell",
+      "command": "make dev-backend",
+      "presentation": {
+        "panel": "dedicated",
+        "reveal": "always",
+        "clear": true
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "relo: sync console",
+      "type": "shell",
+      "command": "make build-console sync-console"
+    },
+    {
+      "label": "relo: build console",
+      "type": "shell",
+      "command": "make build-console"
+    },
+    {
+      // The same dev server as the npm task below, so it declares itself a
+      // background task the same way and can be awaited too.
+      "label": "relo: dev console",
+      "type": "shell",
+      "command": "make dev-console",
+      "isBackground": true,
+      "presentation": {
+        "panel": "dedicated",
+        "reveal": "always",
+        "clear": true
+      },
+      "problemMatcher": {
+        "owner": "vite",
+        "pattern": {
+          "regexp": "^\\s*(.+?):(\\d+):(\\d+):\\s+(.+)$",
+          "file": 1,
+          "line": 2,
+          "column": 3,
+          "message": 4
+        },
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": "^.*$",
+          "endsPattern": "(ready in|Local:)"
+        }
+      }
+    },
+    {
+      // Background so a launch configuration can wait for it: the console
+      // is ready once Vite prints its address. The ends pattern has to
+      // match a line after the begins pattern did, so begins matches
+      // every line rather than the Vite banner, which carries both the
+      // version and the ready time on one line.
+      "label": "relo: console dev server",
+      "type": "npm",
+      "script": "dev",
+      "path": "console",
+      "isBackground": true,
+      "options": {
+        "env": {
+          "RELO_BACKEND_URL": "http://127.0.0.1:10201"
+        }
+      },
+      "presentation": {
+        "panel": "dedicated",
+        "reveal": "always",
+        "clear": true
+      },
+      "problemMatcher": {
+        "owner": "vite",
+        "pattern": {
+          "regexp": "^\\s*(.+?):(\\d+):(\\d+):\\s+(.+)$",
+          "file": 1,
+          "line": 2,
+          "column": 3,
+          "message": 4
+        },
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": "^.*$",
+          "endsPattern": "(ready in|Local:)"
+        }
+      }
+    },
+    {
+      "label": "relo: icons",
+      "type": "shell",
+      "command": "make icons"
+    },
+    {
+      "label": "relo: icons-check",
+      "type": "shell",
+      "command": "make icons-check"
+    },
+    {
+      "label": "relo: clean",
+      "type": "shell",
+      "command": "make clean"
+    },
+    {
+      "label": "relo: run daemon",
+      "type": "shell",
+      "command": "./relo daemon run",
+      "dependsOn": ["relo: dev setup", "relo: build"],
+      "options": {
+        "env": {
+          "CGO_ENABLED": "0",
+          "RELO_HOME": "${workspaceFolder}/.dev/relo"
+        }
+      },
+      "presentation": {
+        "panel": "dedicated",
+        "reveal": "always",
+        "clear": true
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "relo: install delve",
+      "type": "shell",
+      "command": "go install github.com/go-delve/delve/cmd/dlv@latest"
+    }
+  ]
+}

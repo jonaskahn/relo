@@ -1,0 +1,1 @@
+{"catalog_url":"https://models.example.test/api.json","failover_cooldown_seconds":0,"proxy_url":"","retry_backoff":[[1,3],[3,5],[5,10]],"timeout_seconds":300}

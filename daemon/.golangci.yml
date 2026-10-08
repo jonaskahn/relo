@@ -1,0 +1,335 @@
+version: "2"
+
+run:
+  timeout: 5m
+
+linters:
+  default: none
+  enable:
+    - errcheck
+    - govet
+    - ineffassign
+    - staticcheck
+    - unused
+    - depguard
+    - funlen
+    - nestif
+    - revive
+  settings:
+    depguard:
+      rules:
+        # Feature packages own the rules. They read the world through the
+        # ports they declare, so they never reach for an adapter, a
+        # composition root, or the startup file.
+        feature-packages:
+          files:
+            - "!$test"
+            - "**/internal/catalog/**"
+            - "**/internal/account/**"
+            - "**/internal/routing/**"
+            - "**/internal/inference/**"
+            - "**/internal/activity/**"
+            - "**/internal/access/**"
+          deny:
+            - pkg: github.com/jonaskahn/relo/internal/adapters
+              desc: a feature package declares the port it needs; an adapter implements it
+            - pkg: github.com/jonaskahn/relo/internal/platform
+              desc: the composition root wires feature packages; they do not reach back
+            - pkg: github.com/jonaskahn/relo/internal/cli
+              desc: a command line layer sits above the composition root
+            - pkg: github.com/jonaskahn/relo/internal/desktop
+              desc: the desktop surface sits above the composition root
+            - pkg: github.com/jonaskahn/relo/internal/config
+              desc: the startup file is read by the composition root, never by a rule
+            - pkg: database/sql
+              desc: only the storage adapter opens a database
+        # The composition root wires everything and is wired by nothing.
+        composition-root:
+          files:
+            - "!$test"
+            - "**/internal/platform/**"
+          deny:
+            - pkg: github.com/jonaskahn/relo/internal/cli
+              desc: the command line builds the root, not the other way round
+            - pkg: github.com/jonaskahn/relo/internal/desktop
+              desc: the desktop surface builds the root, not the other way round
+        # A transport exposes use cases over HTTP; it is built by the
+        # composition root and never reaches for one itself.
+        transport:
+          files:
+            - "!$test"
+            - "**/internal/server/**"
+          deny:
+            - pkg: github.com/jonaskahn/relo/internal/platform
+              desc: the composition root wires the transport; the transport never reaches back
+            - pkg: github.com/jonaskahn/relo/internal/cli
+              desc: a command line layer sits above the composition root
+            - pkg: github.com/jonaskahn/relo/internal/desktop
+              desc: the desktop surface sits above the composition root
+        # Adapters translate between feature contracts and the outside world.
+        # They are called from above, so they never reach back up into a
+        # transport, a use case, or the composition root that built them.
+        adapters:
+          files:
+            - "!$test"
+            - "**/internal/adapters/**"
+          deny:
+            - pkg: github.com/jonaskahn/relo/internal/platform
+              desc: the composition root wires an adapter; the adapter never reaches back
+            - pkg: github.com/jonaskahn/relo/internal/cli
+              desc: a command line layer sits above the composition root
+            - pkg: github.com/jonaskahn/relo/internal/desktop
+              desc: the desktop surface sits above the composition root
+            - pkg: github.com/jonaskahn/relo/internal/server
+              desc: a transport calls an adapter; the adapter never reaches up into one
+            - pkg: github.com/jonaskahn/relo/internal/application
+              desc: an application use case is served by an adapter, never the other way round
+        # A use case that needs no adapter names the ports it reads through,
+        # so it never reaches for a concrete store or client.
+        application-without-adapters:
+          files:
+            - "!$test"
+            - "**/internal/application/access/**"
+            - "**/internal/application/account/**"
+            - "**/internal/application/activity/**"
+            - "**/internal/application/catalog/**"
+            - "**/internal/application/settings/**"
+            - "**/internal/application/status/**"
+            - "**/internal/application/routing/**"
+          deny:
+            - pkg: github.com/jonaskahn/relo/internal/adapters
+              desc: this use case declares the port it needs; an adapter implements it
+            - pkg: github.com/jonaskahn/relo/internal/server
+              desc: the transport calls a use case, never the other way round
+        # The transport reads every adapter through a port the composition
+        # root injects. The codec interfaces live in adapters/wire itself,
+        # so that one import stays; every concrete family is denied.
+        server-no-adapters:
+          files:
+            - "!$test"
+            - "**/internal/server/**"
+          deny:
+            - pkg: github.com/jonaskahn/relo/internal/adapters/sqlite
+              desc: the transport reads persistence through a port, never directly
+            - pkg: github.com/jonaskahn/relo/internal/adapters/secrets
+              desc: the transport reads credential storage through a port, never directly
+            - pkg: github.com/jonaskahn/relo/internal/adapters/oauth
+              desc: the transport reads sign-in flows through a port, never directly
+            - pkg: github.com/jonaskahn/relo/internal/adapters/upstream
+              desc: the transport relays through the Relay port, never directly
+            - pkg: github.com/jonaskahn/relo/internal/adapters/templates
+              desc: the transport reads templates through the Templates port, never directly
+            - pkg: github.com/jonaskahn/relo/internal/adapters/discovery
+              desc: the transport matches listing refusals on the catalog vocabulary, never on the adapter
+            - pkg: github.com/jonaskahn/relo/internal/adapters/modelsdev
+              desc: the transport never reads the model index directly
+            - pkg: github.com/jonaskahn/relo/internal/adapters/wire/openaichat
+              desc: the transport resolves inbound codecs through the InboundRegistry port
+            - pkg: github.com/jonaskahn/relo/internal/adapters/wire/openairesponses
+              desc: the transport resolves inbound codecs through the InboundRegistry port
+            - pkg: github.com/jonaskahn/relo/internal/adapters/wire/anthropic
+              desc: the transport resolves inbound codecs through the InboundRegistry port
+            - pkg: github.com/jonaskahn/relo/internal/adapters/wire/bedrock
+              desc: the transport resolves outbound codecs through the FormatRegistry port
+            - pkg: github.com/jonaskahn/relo/internal/adapters/wire/google
+              desc: the transport resolves outbound codecs through the FormatRegistry port
+            - pkg: github.com/jonaskahn/relo/internal/adapters/wire/kiro
+              desc: the transport resolves outbound codecs through the FormatRegistry port
+            - pkg: github.com/jonaskahn/relo/internal/adapters/wire/formats
+              desc: the composition root builds the registry and injects it
+            - pkg: github.com/jonaskahn/relo/internal/adapters/wire/eventstream
+              desc: the transport never reaches past the codec interfaces
+            - pkg: github.com/jonaskahn/relo/internal/adapters/wire/sse
+              desc: the transport never reaches past the codec interfaces
+        # The startup file is read by the composition root, so it never
+        # reaches for an adapter itself.
+        config-no-adapters:
+          files:
+            - "!$test"
+            - "**/internal/config/**"
+          deny:
+            - pkg: github.com/jonaskahn/relo/internal/adapters
+              desc: startup settings never reach for an adapter
+        # The tray renders what the command line hands it, so it never opens
+        # the state database itself.
+        desktop-no-sqlite:
+          files:
+            - "!$test"
+            - "**/internal/desktop/**"
+          deny:
+            - pkg: github.com/jonaskahn/relo/internal/adapters/sqlite
+              desc: the tray reads activity through the injected source, never the database
+        # The integration workflows read client files through their ports, so
+        # they never reach for the file adapter or a codec family.
+        application-integration-no-adapters:
+          files:
+            - "!$test"
+            - "**/internal/application/integration/**"
+          deny:
+            - pkg: github.com/jonaskahn/relo/internal/adapters
+              desc: this use case declares the port it needs; an adapter implements it
+        # The template-settings workflows already read through consumer ports,
+        # so they never reach for an adapter either.
+        application-templatesettings-no-adapters:
+          files:
+            - "!$test"
+            - "**/internal/application/templatesettings/**"
+          deny:
+            - pkg: github.com/jonaskahn/relo/internal/adapters
+              desc: this use case declares the port it needs; an adapter implements it
+
+    funlen:
+      # Transitional ceiling: the guide aspires to 5–8 lines per function.
+      lines: 30
+      statements: 0
+    nestif:
+      # Transitional ceiling: the guide nests no deeper than two levels.
+      min-complexity: 5
+    revive:
+      rules:
+        - name: exported
+        - name: argument-limit
+          arguments: [4]
+  exclusions:
+    rules:
+      - path: _test\.go
+        linters: [funlen, nestif, revive]
+      - path: tools/
+        linters: [funlen, nestif, revive]
+      - path: forks/
+        linters: [funlen, nestif, revive]
+      - path: internal/desktop/(window|objc_darwin)\.go
+        linters: [funlen, nestif, revive]
+      # Package-prefixed type names are the product vocabulary callers read
+      # across packages (access.AccessKey, account.AccountContext): renaming
+      # them is API churn, so only the stutter hint is silenced.
+      - linters: [revive]
+        text: 'stutters; consider calling this'
+      # Transitional T-18 residuals: each named function keeps its
+      # positional arguments until its file is next touched (see the
+      # T-18 evidence for the full list and reasons). T-37 tracks
+      # raising these into full conformance.
+      - path: internal/adapters/codingclients/codex_daemon\.go
+        linters: [revive]
+        source: 'func .*(codexLauncherForDaemon)\('
+      - path: internal/adapters/codingclients/merge\.go
+        linters: [revive]
+        source: 'func .*(MergeCodexConfig)\('
+      - path: internal/platform/integration_clients\.go
+        linters: [revive]
+        source: 'func .*(MergeCodexConfig)\('
+      - path: internal/adapters/modelsdev/parse\.go
+        linters: [revive]
+        source: 'func .*(guessCategory)\('
+      - path: internal/adapters/oauth/authcode\.go
+        linters: [revive]
+        source: 'func .*(authorizationCode)\('
+      - path: internal/adapters/oauth/devin\.go
+        linters: [revive]
+        source: 'func .*(authorizationCode)\('
+      - path: internal/adapters/oauth/github_copilot\.go
+        linters: [revive]
+        source: 'func .*(mintCopilotToken)\('
+      - path: internal/adapters/sqlite/catalog\.go
+        linters: [revive]
+        source: 'func .*(finishProviderRow)\('
+      - path: internal/adapters/sqlite/catalog_write\.go
+        linters: [revive]
+        source: 'func .*(CommitProbe|RefreshProviderModels|markModelsUnavailable|saveRefreshModels|stampRefreshProvider)\('
+      - path: internal/adapters/sqlite/credential_model_store\.go
+        linters: [revive]
+        source: 'func .*(SetRoster)\('
+      - path: internal/adapters/sqlite/credential_models\.go
+        linters: [revive]
+        source: 'func .*(SetRoster)\('
+      - path: internal/adapters/sqlite/template_settings\.go
+        linters: [revive]
+        source: 'func .*(Save)\('
+      - path: internal/adapters/sqlite/usage_daily\.go
+        linters: [revive]
+        source: 'func .*(addDaily|sealFinalizedDay)\('
+      - path: internal/adapters/sqlite/usage_query\.go
+        linters: [revive]
+        source: 'func .*(archiveRollup|finishLogRow)\('
+      - path: internal/adapters/wire/google/assist\.go
+        linters: [revive]
+        source: 'func .*(appendContentPart|encodeAssistMessage|storeSignature)\('
+      - path: internal/adapters/wire/openaichat/family_codec\.go
+        linters: [revive]
+        source: 'func .*(applyQwenThinking)\('
+      - path: internal/application/account/context\.go
+        linters: [revive]
+        source: 'func .*(advertiseHostContexts)\('
+      - path: internal/application/catalog/modelsdev\.go
+        linters: [revive]
+        source: 'func .*(layerForRef|modelsDevLayer)\('
+      - path: internal/application/catalog/probe\.go
+        linters: [revive]
+        source: 'func .*(appendListingChecks|authorizeProbe|fetchProbeListing|finishCredentialProbe|newProbeSession|storeProbe)\('
+      - path: internal/application/catalog/refresh\.go
+        linters: [revive]
+        source: 'func .*(add|assembleRefreshModels|assembleRefreshRoster|recordRefreshFailure)\('
+      - path: internal/application/catalog/writes\.go
+        linters: [revive]
+        source: 'func .*(applyModelPatch|saveClone)\('
+      - path: internal/application/integration/orchestrator\.go
+        linters: [revive]
+        source: 'func .*(describeChatAnswer)\('
+      - path: internal/application/settings/settings\.go
+        linters: [revive]
+        source: 'func .*(writeProviderConfig)\('
+      - path: internal/application/status/process_logs\.go
+        linters: [revive]
+        source: 'func .*(readBeforeLines)\('
+      - path: internal/catalog/catalog\.go
+        linters: [revive]
+        source: 'func .*(finishResolvedModel|resolveModelCapabilities|resolvedIdentity)\('
+      - path: internal/cli/serve\.go
+        linters: [revive]
+        source: 'func .*(desktopOptions|runDesktop|serveTray)\('
+      - path: internal/cli/uninstall\.go
+        linters: [revive]
+        source: 'func .*(decideData)\('
+      - path: internal/config/proxy\.go
+        linters: [revive]
+        source: 'func .*(finishProxyWrite)\('
+      - path: internal/config/table_key\.go
+        linters: [revive]
+        source: 'func .*(rewriteTableKey)\('
+      - path: internal/desktop/fetch\.go
+        linters: [revive]
+        source: 'func .*(getJSON)\('
+      - path: internal/platform/lifecycle\.go
+        linters: [revive]
+        source: 'func .*(daemonCommand)\('
+      - path: internal/platform/serve\.go
+        linters: [revive]
+        source: 'func .*(claimHeadless|executeServe|serveWired)\('
+      - path: internal/platform/supervisor\.go
+        linters: [revive]
+        source: 'func .*(watchStart)\('
+      - path: internal/platform/wire\.go
+        linters: [revive]
+        source: 'func .*(Save|buildDeps|newQuotaWorker|newSettings)\('
+      - path: internal/routing/router\.go
+        linters: [revive]
+        source: 'func .*(withWarnings)\('
+      - path: internal/server/accesskeys\.go
+        linters: [revive]
+        source: 'func .*(guardPresentedKey)\('
+      - path: internal/server/chat\.go
+        linters: [revive]
+        source: 'func .*(runChatTurn|testCanonical)\('
+      - path: internal/server/claude_login\.go
+        linters: [revive]
+        source: 'func .*(relayClaudeAlias)\('
+      - path: internal/server/inference\.go
+        linters: [revive]
+        source: 'func .*(handleAttemptFailure|handleMemberFallback|handleSameProviderRetry|relayOverLimit|relayUnrouted|routeRetryableFailure)\('
+formatters:
+  enable:
+    - gofmt
+
+issues:
+  max-issues-per-linter: 0
+  max-same-issues: 0

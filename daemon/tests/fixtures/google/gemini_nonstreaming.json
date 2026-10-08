@@ -1,0 +1,29 @@
+{
+  "candidates": [
+    {
+      "content": {
+        "role": "model",
+        "parts": [
+          { "text": "Hi there" },
+          {
+            "functionCall": {
+              "name": "get_weather",
+              "args": { "city": "Hanoi" }
+            }
+          }
+        ]
+      },
+      "finishReason": "STOP",
+      "safetyRatings": [
+        { "category": "HARM_CATEGORY_HARASSMENT", "probability": "NEGLIGIBLE" }
+      ]
+    }
+  ],
+  "usageMetadata": {
+    "promptTokenCount": 9,
+    "candidatesTokenCount": 4,
+    "thoughtsTokenCount": 2,
+    "totalTokenCount": 15,
+    "cachedContentTokenCount": 3
+  }
+}

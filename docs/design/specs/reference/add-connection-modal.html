@@ -1,0 +1,934 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta content="width=device-width, initial-scale=1" name="viewport">
+    <title>Add connection modal</title>
+    <style>
+        :root {
+            --accent: #c8102e;
+            --accent-600: color-mix(in oklab, var(--accent) 86%, #000);
+            --accent-800: color-mix(in oklab, var(--accent) 56%, #000);
+            --accent-50: color-mix(in oklab, var(--accent) 7%, #fff);
+            --accent-100: color-mix(in oklab, var(--accent) 14%, #fff);
+            --accent-border: color-mix(in oklab, var(--accent) 32%, #fff);
+            --ink: #17171c;
+            --muted: #6b6b78;
+            --faint: #858592;
+            --line: rgb(0 0 0 / .09);
+            --line-strong: rgb(0 0 0 / .16);
+            --canvas: #f5f5f7;
+            --surface: #fff;
+            --sunken: #f5f5f7;
+            --muted-bg: #f0f0f5;
+            --ok: #19774e;
+            --warn: #9b5800;
+            --danger: #bd342a;
+            --radius-control: .625rem;
+            --radius-card: 1rem;
+            --control-h: 2.375rem;
+            --sans: system-ui, -apple-system, 'Segoe UI', sans-serif;
+            --mono: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+        }
+
+        * {
+            box-sizing: border-box
+        }
+
+        html, body {
+            height: 100%;
+            margin: 0
+        }
+
+        body {
+            font-family: var(--sans);
+            color: var(--ink);
+            background: #939399;
+            font-size: 14px;
+            -webkit-font-smoothing: antialiased
+        }
+
+        button {
+            font: inherit;
+            color: inherit;
+            cursor: pointer;
+            background: none;
+            border: 0;
+            padding: 0
+        }
+
+        :focus-visible {
+            outline: 2px solid var(--accent);
+            outline-offset: 2px
+        }
+
+        svg {
+            display: block;
+            flex: none
+        }
+
+        .mono {
+            font-family: var(--mono);
+            font-size: 12px
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: .25rem;
+            height: 1.25rem;
+            border-radius: .5rem;
+            padding-inline: .375rem;
+            font-size: .6875rem;
+            font-weight: 550;
+            line-height: 1;
+            border: 1px solid var(--line);
+            color: var(--muted)
+        }
+
+        .demo {
+            display: grid;
+            place-items: center;
+            height: 100%
+        }
+
+        .overlay {
+            position: fixed;
+            inset: 0;
+            background: rgb(10 10 14 / .55);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px
+        }
+
+        .modal {
+            width: min(72rem, 100%);
+            height: min(780px, 100%);
+            background: var(--surface);
+            border-radius: var(--radius-card);
+            box-shadow: 0 24px 60px rgb(20 20 40 / .28);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden
+        }
+
+        .m-head {
+            display: flex;
+            justify-content: space-between;
+            gap: 16px;
+            padding: 20px 28px 12px
+        }
+
+        .m-head h2 {
+            margin: 0;
+            font-size: 18px;
+            font-weight: 600
+        }
+
+        .m-head p {
+            margin: 3px 0 0;
+            color: var(--muted)
+        }
+
+        .icon-btn {
+            width: 34px;
+            height: 34px;
+            border-radius: var(--radius-control);
+            display: grid;
+            place-items: center;
+            color: var(--muted);
+            flex: none
+        }
+
+        .icon-btn:hover {
+            background: var(--canvas);
+            color: var(--ink)
+        }
+
+        .stepper {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 0 28px 14px
+        }
+
+        .step {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: var(--faint);
+            font-weight: 500
+        }
+
+        .step .dot {
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            display: grid;
+            place-items: center;
+            font-size: 12px;
+            font-weight: 600;
+            border: 1.5px solid var(--line);
+            background: #fff
+        }
+
+        .step[aria-current="step"] {
+            color: var(--ink)
+        }
+
+        .step[aria-current="step"] .dot {
+            border-color: var(--accent);
+            background: var(--accent);
+            color: #fff
+        }
+
+        .step.done {
+            color: var(--ink)
+        }
+
+        .step.done .dot {
+            border-color: var(--accent);
+            background: var(--accent-50);
+            color: var(--accent-800)
+        }
+
+        .step[disabled] {
+            cursor: default
+        }
+
+        .bar {
+            flex: 1;
+            height: 2px;
+            border-radius: 999px;
+            background: var(--line);
+            position: relative;
+            overflow: hidden;
+            min-width: 16px
+        }
+
+        .bar::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: var(--accent);
+            transform: scaleX(0);
+            transform-origin: left;
+            transition: transform .3s
+        }
+
+        .bar.fill::after {
+            transform: scaleX(1)
+        }
+
+        .m-body {
+            flex: 1;
+            min-height: 0;
+            overflow: auto;
+            padding: 8px 28px 20px
+        }
+
+        .m-foot {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            background: var(--canvas);
+            padding: 12px 28px
+        }
+
+        .pill {
+            display: inline-flex;
+            align-items: center;
+            gap: .375rem;
+            border-radius: 999px;
+            padding: .25rem .625rem;
+            font-size: 12px;
+            white-space: nowrap
+        }
+
+        .pill.accent {
+            background: var(--accent-50);
+            color: var(--accent-800)
+        }
+
+        .pill.muted {
+            background: var(--muted-bg);
+            color: var(--muted)
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: .5rem;
+            height: var(--control-h);
+            padding: 0 16px;
+            border-radius: var(--radius-control);
+            border: 1px solid var(--line);
+            background: var(--surface);
+            font-weight: 500
+        }
+
+        .btn.primary {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: #fff
+        }
+
+        .btn.primary:hover {
+            background: var(--accent-600)
+        }
+
+        .btn.ghost {
+            border-color: transparent;
+            color: var(--muted)
+        }
+
+        .btn[disabled] {
+            opacity: .4;
+            pointer-events: none
+        }
+
+        /* provider step */
+        .search {
+            position: relative;
+            margin-bottom: 14px
+        }
+
+        .search input {
+            width: 100%;
+            height: var(--control-h);
+            padding: 0 12px 0 34px;
+            border: 1px solid var(--line);
+            border-radius: var(--radius-control);
+            font: inherit;
+            background: var(--surface)
+        }
+
+        .search svg {
+            position: absolute;
+            left: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--faint)
+        }
+
+        .section-h {
+            display: flex;
+            align-items: baseline;
+            gap: 8px;
+            margin: 14px 0 6px
+        }
+
+        .section-h b {
+            font-size: 13px;
+            color: var(--muted)
+        }
+
+        .section-h small {
+            color: var(--faint)
+        }
+
+        .pgrid {
+            display: grid;
+            grid-template-columns:1fr 1fr;
+            gap: 8px
+        }
+
+        .prow {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border: 1px solid var(--line);
+            border-radius: .75rem;
+            padding: 12px 14px;
+            text-align: left;
+            background: var(--surface)
+        }
+
+        .prow:hover {
+            border-color: var(--line-strong)
+        }
+
+        .prow[aria-checked="true"] {
+            border-color: var(--accent);
+            background: var(--accent-50)
+        }
+
+        .prow .tile {
+            width: 32px;
+            height: 32px;
+            border-radius: .5rem;
+            border: 1px solid var(--line);
+            display: grid;
+            place-items: center;
+            font-weight: 700;
+            background: #fff
+        }
+
+        .prow .who {
+            flex: 1;
+            min-width: 0
+        }
+
+        .prow .who b {
+            display: block;
+            font-size: 14px;
+            font-weight: 500;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap
+        }
+
+        .prow .who span {
+            display: block;
+            font-family: var(--mono);
+            font-size: 11px;
+            color: var(--muted);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap
+        }
+
+        .prow .check {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: var(--accent);
+            color: #fff;
+            display: none;
+            place-items: center;
+            flex: none
+        }
+
+        .prow[aria-checked="true"] .check {
+            display: grid
+        }
+
+        .note {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 14px;
+            border-radius: .75rem;
+            background: var(--sunken);
+            padding: 8px 12px;
+            font-size: 11px;
+            color: var(--muted)
+        }
+
+        /* connect step */
+        .form {
+            max-width: 36rem;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            gap: 16px
+        }
+
+        .grid2 {
+            display: grid;
+            grid-template-columns:1fr 1fr;
+            gap: 16px
+        }
+
+        .field {
+            display: flex;
+            flex-direction: column;
+            gap: 6px
+        }
+
+        .field label {
+            font-size: 13px;
+            font-weight: 550
+        }
+
+        .field input, .field select {
+            height: var(--control-h);
+            padding: 0 12px;
+            border: 1px solid var(--line);
+            border-radius: var(--radius-control);
+            font: inherit;
+            background: var(--surface)
+        }
+
+        .field .hint {
+            font-size: 12px;
+            color: var(--muted)
+        }
+
+        /* verify rail */
+        .rail {
+            display: flex;
+            flex-direction: column;
+            max-width: 44rem;
+            margin: 0 auto
+        }
+
+        .rstep {
+            display: flex;
+            gap: 12px
+        }
+
+        .rcol {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 24px;
+            flex: none
+        }
+
+        .badgecir {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: grid;
+            place-items: center;
+            font-size: 12px;
+            font-weight: 600
+        }
+
+        .badgecir.pass {
+            background: var(--accent-50);
+            color: var(--accent-800)
+        }
+
+        .badgecir.warn {
+            background: color-mix(in srgb, var(--warn) 12%, #fff);
+            color: var(--warn)
+        }
+
+        .badgecir.fail {
+            background: var(--danger);
+            color: #fff
+        }
+
+        .rcol .line {
+            width: 2px;
+            flex: 1;
+            background: repeating-linear-gradient(to bottom, var(--accent-100) 0 4px, transparent 4px 8px);
+            min-height: 12px
+        }
+
+        .rcard {
+            flex: 1;
+            border: 1px solid var(--line);
+            border-radius: .75rem;
+            padding: 10px 12px;
+            margin-bottom: 12px
+        }
+
+        .rcard.warn {
+            border-color: color-mix(in srgb, var(--warn) 35%, #fff);
+            background: color-mix(in srgb, var(--warn) 4%, #fff)
+        }
+
+        .rcard .top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px
+        }
+
+        .rcard .top b {
+            font-size: 14px
+        }
+
+        .rcard .state {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 12px
+        }
+
+        .rcard .state.pass {
+            color: var(--accent-800)
+        }
+
+        .rcard .state.warn {
+            color: var(--warn)
+        }
+
+        .rcard p {
+            margin: 4px 0 0;
+            font-size: 13px
+        }
+
+        .rcard p.detail {
+            font-family: var(--mono);
+            font-size: 11px;
+            color: var(--muted)
+        }
+
+        /* review step */
+        .review {
+            display: grid;
+            grid-template-columns:5fr 6fr;
+            gap: 20px
+        }
+
+        .card {
+            border: 1px solid var(--line);
+            border-radius: var(--radius-card);
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px
+        }
+
+        .card .k {
+            font-size: 12px;
+            color: var(--muted)
+        }
+
+        .card .v {
+            font-size: 14px;
+            font-weight: 500
+        }
+
+        .list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            max-height: 320px;
+            overflow: auto
+        }
+
+        .lrow {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border: 1px solid var(--line);
+            border-radius: .75rem;
+            padding: 8px 12px
+        }
+
+        .lrow input {
+            width: 16px;
+            height: 16px;
+            flex: none
+        }
+
+        .lrow .who {
+            flex: 1;
+            min-width: 0
+        }
+
+        .lrow .who b {
+            display: block;
+            font-size: 13px;
+            font-weight: 500
+        }
+
+        .lrow .who span {
+            display: block;
+            font-family: var(--mono);
+            font-size: 11px;
+            color: var(--muted)
+        }
+
+        .hidden {
+            display: none !important
+        }
+
+        @media (max-width: 860px) {
+            .pgrid, .grid2, .review {
+                grid-template-columns:1fr
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            * {
+                transition: none !important;
+                animation: none !important
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="demo"><span style="color:#fff">Add connection modal</span></div>
+
+<div class="overlay">
+    <div aria-labelledby="mTitle" aria-modal="true" class="modal" role="dialog">
+        <div class="m-head">
+            <div>
+                <h2 id="mTitle">Add connection</h2>
+                <p>Pick a provider, prove the credential, then choose what it adds.</p>
+            </div>
+            <button aria-label="Close" class="icon-btn">
+                <svg fill="none" height="16" stroke="currentColor" stroke-linecap="round" stroke-width="2"
+                     viewBox="0 0 24 24"
+                     width="16">
+                    <path d="M6 6l12 12M18 6 6 18"/>
+                </svg>
+            </button>
+        </div>
+
+        <nav aria-label="Progress" class="stepper" id="stepper"></nav>
+
+        <div class="m-body">
+            <!-- Step 1: Provider -->
+            <section id="step-provider">
+                <label class="search">
+                    <svg fill="none" height="15" stroke="currentColor" stroke-linecap="round" stroke-width="2"
+                         viewBox="0 0 24 24"
+                         width="15">
+                        <circle cx="11" cy="11" r="7"/>
+                        <path d="m20 20-3.5-3.5"/>
+                    </svg>
+                    <input aria-label="Search providers" id="psearch" placeholder="Search providers">
+                </label>
+                <div class="section-h"><b>Accounts</b><span>2</span><small>Sign in to the provider</small></div>
+                <div class="pgrid">
+                    <button aria-checked="false" class="prow" data-id="claude" data-label="Claude.ai" role="radio">
+                        <span class="tile" style="color:#c4693d">✳</span>
+                        <span class="who"><b>Claude.ai</b><span>Sign in with browser or code · 13 models</span></span>
+                        <span class="check"><svg fill="none" height="13" stroke="currentColor" stroke-linecap="round"
+                                                 stroke-width="3" viewBox="0 0 24 24" width="13"><path
+                                d="M5 12l5 5 9-10"/></svg></span>
+                    </button>
+                    <button aria-checked="true" class="prow" data-id="openai-codex" data-label="ChatGPT" role="radio">
+                        <span class="tile">◎</span>
+                        <span class="who"><b>ChatGPT</b><span>Sign in with browser · 8 models</span></span>
+                        <span class="check"><svg fill="none" height="13" stroke="currentColor" stroke-linecap="round"
+                                                 stroke-width="3" viewBox="0 0 24 24" width="13"><path
+                                d="M5 12l5 5 9-10"/></svg></span>
+                    </button>
+                </div>
+                <div class="section-h"><b>Keys</b><span>3</span><small>An API key from the provider's dashboard</small>
+                </div>
+                <div class="pgrid">
+                    <button aria-checked="false" class="prow" data-id="deepseek" data-label="DeepSeek" role="radio">
+                        <span class="tile">D</span>
+                        <span class="who"><b>DeepSeek</b><span>API key · 2 models</span></span>
+                        <span class="check"><svg fill="none" height="13" stroke="currentColor" stroke-linecap="round"
+                                                 stroke-width="3" viewBox="0 0 24 24" width="13"><path
+                                d="M5 12l5 5 9-10"/></svg></span>
+                    </button>
+                    <button aria-checked="false" class="prow" data-id="orcarouter" data-label="OrcaRouter API"
+                            role="radio">
+                        <span class="tile">O</span>
+                        <span class="who"><b>OrcaRouter API</b><span>API key · 206 models <span
+                                class="badge">Added</span></span></span>
+                        <span class="check"><svg fill="none" height="13" stroke="currentColor" stroke-linecap="round"
+                                                 stroke-width="3" viewBox="0 0 24 24" width="13"><path
+                                d="M5 12l5 5 9-10"/></svg></span>
+                    </button>
+                </div>
+                <div class="section-h"><b>Local</b><span>1</span><small>A server on this machine or the network it
+                    reaches</small></div>
+                <div class="pgrid">
+                    <button aria-checked="false" class="prow" data-id="custom" data-label="Custom endpoint" role="radio"
+                            style="border-style:dashed">
+                        <span class="tile">+</span>
+                        <span class="who"><b>Custom endpoint</b><span>Any OpenAI- or Anthropic-compatible URL</span></span>
+                        <span class="check"><svg fill="none" height="13" stroke="currentColor" stroke-linecap="round"
+                                                 stroke-width="3" viewBox="0 0 24 24" width="13"><path
+                                d="M5 12l5 5 9-10"/></svg></span>
+                    </button>
+                </div>
+                <div class="note"><span>Models from models.dev · fetched 3 hours ago</span><span
+                        style="margin-left:auto">9 providers</span></div>
+            </section>
+
+            <!-- Step 2: Connect -->
+            <section class="hidden" id="step-connect">
+                <div class="form">
+                    <div class="field"><label>Sign-in method</label>
+                        <div class="pgrid">
+                            <button aria-checked="true" class="prow" role="radio"><span class="tile">⇱</span><span
+                                    class="who"><b>Browser</b><span>Open a page and approve</span></span><span
+                                    class="check" style="display:grid"><svg fill="none" height="13"
+                                                                            stroke="currentColor"
+                                                                            stroke-linecap="round" stroke-width="3"
+                                                                            viewBox="0 0 24 24" width="13"><path
+                                    d="M5 12l5 5 9-10"/></svg></span></button>
+                            <button aria-checked="false" class="prow" role="radio"><span class="tile">⌨</span><span
+                                    class="who"><b>Device code</b><span>Type a code on another device</span></span><span
+                                    class="check"><svg fill="none" height="13" stroke="currentColor"
+                                                       stroke-linecap="round"
+                                                       stroke-width="3" viewBox="0 0 24 24" width="13"><path
+                                    d="M5 12l5 5 9-10"/></svg></span></button>
+                        </div>
+                        <span class="hint">The sign-in opens in a new tab; this window waits for it to finish.</span>
+                    </div>
+                    <div class="grid2">
+                        <div class="field"><label for="c-label">Label</label><input id="c-label" value="Claude.ai">
+                        </div>
+                        <div class="field"><label for="c-id">Connection id</label><input class="mono" id="c-id"
+                                                                                         value="claude"></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Step 3: Verify -->
+            <section class="hidden" id="step-verify">
+                <div class="rail">
+                    <div class="rstep">
+                        <div class="rcol"><span class="badgecir pass">✓</span><span class="line"></span></div>
+                        <div class="rcard">
+                            <div class="top"><b>Credential</b><span class="state pass">Passed ✓</span></div>
+                            <p>Signed in as tuyen@plugilo.com.</p>
+                        </div>
+                    </div>
+                    <div class="rstep">
+                        <div class="rcol"><span class="badgecir pass">✓</span><span class="line"></span></div>
+                        <div class="rcard">
+                            <div class="top"><b>Model list</b><span class="state pass">Passed ✓</span></div>
+                            <p>13 models listed.</p>
+                        </div>
+                    </div>
+                    <div class="rstep">
+                        <div class="rcol"><span class="badgecir warn">!</span></div>
+                        <div class="rcard warn">
+                            <div class="top"><b>Pricing</b><span class="state warn">Warning ⚠</span></div>
+                            <p>11 of 13 models matched models.dev.</p>
+                            <p class="detail">2 models have no catalog entry; set their rates after adding.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Step 4: Review -->
+            <section class="hidden" id="step-review">
+                <div class="review">
+                    <div class="card">
+                        <div>
+                            <div class="k">Connection id</div>
+                            <div class="v mono" style="font-family:var(--mono);font-size:13px">claude</div>
+                        </div>
+                        <div>
+                            <div class="k">Label</div>
+                            <div class="v">Claude.ai</div>
+                        </div>
+                        <div>
+                            <div class="k">Base URL</div>
+                            <div class="v mono"
+                                 style="font-family:var(--mono);font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">
+                                https://api.anthropic.com
+                            </div>
+                        </div>
+                        <div>
+                            <div class="k">API format</div>
+                            <div class="v">anthropic</div>
+                        </div>
+                        <div>
+                            <div class="k">Account</div>
+                            <div class="v">tuyen@plugilo.com</div>
+                        </div>
+                        <div>
+                            <div class="k">Source</div>
+                            <div class="v"><span class="pill muted">13 from listing</span></div>
+                        </div>
+                    </div>
+                    <div>
+                        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px">
+                            <b style="font-size:14px">Models this connection will serve</b>
+                            <div style="display:flex;gap:8px">
+                                <button class="btn ghost" style="height:2rem;font-size:12px">Turn all on</button>
+                                <button class="btn ghost" style="height:2rem;font-size:12px">Turn all off</button>
+                            </div>
+                        </div>
+                        <p style="font-size:11px;color:var(--muted);margin:0 0 8px">Price per 1M tokens, in / out</p>
+                        <div class="list">
+                            <label class="lrow"><input checked type="checkbox"><span class="who"><b>Claude Fable 5.1</b><span>claude-fable-5-1</span></span><span
+                                    class="mono" style="color:var(--muted)">$10.00 / $50.00</span><span class="badge">listing</span></label>
+                            <label class="lrow"><input checked type="checkbox"><span
+                                    class="who"><b>Claude Opus 4.6</b><span>claude-opus-4-6</span></span><span
+                                    class="mono" style="color:var(--muted)">$5.00 / $25.00</span><span class="badge">listing</span></label>
+                            <label class="lrow"><input checked type="checkbox"><span
+                                    class="who"><b>Claude Sonnet 5.5</b><span>claude-sonnet-5-5</span></span><span
+                                    class="mono" style="color:var(--muted)">$2.00 / $10.00</span><span class="badge">listing</span></label>
+                            <label class="lrow"><input type="checkbox"><span class="who"><b>Claude Haiku 4.5</b><span>claude-haiku-4-5</span></span><span
+                                    class="mono" style="color:var(--muted)">$1.00 / $5.00</span><span class="badge">listing</span></label>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <div class="m-foot">
+            <div role="status" style="display:flex;align-items:center;gap:8px;min-width:0">
+                <span class="tile" id="sumTile"
+                      style="width:26px;height:26px;border-radius:.5rem;border:1px solid var(--line);display:grid;place-items:center;font-weight:700;background:#fff">◎</span>
+                <span id="sumLabel" style="font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">ChatGPT</span>
+                <span class="pill accent" id="sumFormat">anthropic</span>
+                <span class="pill muted hidden" id="sumModels">13 models</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px">
+                <button class="btn ghost" id="backBtn">✕ Cancel</button>
+                <button class="btn primary" id="nextBtn">Next →</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const STEPS = ['provider', 'connect', 'verify', 'review'];
+    const LABELS = {provider: 'Provider', connect: 'Connect', verify: 'Verify', review: 'Review'};
+    let step = 'provider';
+    let selected = {id: 'openai-codex', label: 'ChatGPT', tile: '◎'};
+
+    function renderStepper() {
+        const index = STEPS.indexOf(step);
+        document.getElementById('stepper').innerHTML = STEPS.map((s, i) => {
+            const cls = s === step ? 'step current' : (i < index ? 'step done' : 'step');
+            const dot = i < index ? '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M5 12l5 5 9-10"/></svg>' : (i + 1);
+            return (i ? `<span class="bar ${i <= index ? 'fill' : ''}"></span>` : '') +
+                `<span class="${cls}" ${s === step ? 'aria-current="step"' : ''} ${i > index ? 'disabled' : ''}><span class="dot">${dot}</span><span>${LABELS[s]}</span></span>`;
+        }).join('');
+    }
+
+    function render() {
+        for (const s of STEPS) document.getElementById('step-' + s).classList.toggle('hidden', s !== step);
+        renderStepper();
+        const index = STEPS.indexOf(step);
+        const back = document.getElementById('backBtn');
+        const next = document.getElementById('nextBtn');
+        back.innerHTML = step === 'provider' ? '✕ Cancel' : '← Back';
+        if (step === 'provider') {
+            next.innerHTML = 'Next →';
+            next.disabled = !selected;
+        } else if (step === 'connect') {
+            next.innerHTML = 'Verify connection';
+            next.disabled = false;
+        } else if (step === 'verify') {
+            next.innerHTML = 'Continue';
+            next.disabled = false;
+        } else {
+            next.innerHTML = 'Add connection';
+            next.disabled = false;
+        }
+        document.getElementById('sumLabel').textContent = selected ? selected.label : 'Choose a provider';
+        document.getElementById('sumTile').textContent = selected ? selected.tile : '?';
+        document.getElementById('sumFormat').textContent = step === 'provider' ? 'Sign in' : 'anthropic';
+        document.getElementById('sumModels').classList.toggle('hidden', step === 'provider');
+    }
+
+    document.querySelectorAll('.prow').forEach(row => row.addEventListener('click', () => {
+        document.querySelectorAll('#step-provider .prow').forEach(r => r.setAttribute('aria-checked', 'false'));
+        row.setAttribute('aria-checked', 'true');
+        selected = {id: row.dataset.id, label: row.dataset.label, tile: row.querySelector('.tile').textContent.trim()};
+        render();
+    }));
+    document.getElementById('nextBtn').addEventListener('click', () => {
+        const index = STEPS.indexOf(step);
+        if (index < STEPS.length - 1) {
+            step = STEPS[index + 1];
+            render();
+        } else {
+            document.querySelector('.m-foot div[role="status"] span:nth-child(2)').textContent = 'Added Claude.ai — 13 models';
+        }
+    });
+    document.getElementById('backBtn').addEventListener('click', () => {
+        const index = STEPS.indexOf(step);
+        if (index > 0) {
+            step = STEPS[index - 1];
+            render();
+        }
+    });
+    render();
+</script>
+</body>
+</html>

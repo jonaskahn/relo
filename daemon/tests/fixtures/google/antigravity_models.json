@@ -1,0 +1,28 @@
+{
+  "models": {
+    "gemini-3.8-flash": {
+      "displayName": "Gemini 3.8 Flash",
+      "quotaInfo": {
+        "remainingFraction": 0.8,
+        "resetTime": "2026-09-22T10:00:00Z"
+      }
+    },
+    "claude-sonnet-4.5": {
+      "displayName": "Claude Sonnet 4.5",
+      "quotaInfo": {
+        "remainingPercentage": 25,
+        "resetTime": "2026-09-22T11:00:00Z"
+      }
+    },
+    "gpt-oss-120b": {
+      "displayName": "GPT-OSS 120b",
+      "quotaInfoByTier": {
+        "free-tier": {
+          "remaining": {
+            "remainingFraction": 0.5
+          }
+        }
+      }
+    }
+  }
+}

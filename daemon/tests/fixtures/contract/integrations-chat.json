@@ -1,0 +1,1 @@
+{"duration_ms":0,"error":"the provider returned a completion with no token usage","error_code":"upstream_error","input_tokens":0,"model":"gpt-4o","ok":false,"output_tokens":0,"provider":"openai","request_id":"<volatile>","route_reason":"qualified","status":429,"text":""}

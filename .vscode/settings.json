@@ -1,0 +1,33 @@
+{
+  // Every terminal in this workspace develops against the dev state
+  // directory, which is also where the debug configurations point.
+  "terminal.integrated.env.osx": {
+    "RELO_HOME": "${workspaceFolder}/.dev/relo"
+  },
+  "terminal.integrated.env.linux": {
+    "RELO_HOME": "${workspaceFolder}/.dev/relo"
+  },
+  "terminal.integrated.env.windows": {
+    "RELO_HOME": "${workspaceFolder}\\.dev\\relo"
+  },
+  "go.toolsEnvVars": {
+    "CGO_ENABLED": "0"
+  },
+  "go.testEnvVars": {
+    "CGO_ENABLED": "1"
+  },
+  "go.testFlags": ["-race", "-count=1"],
+  "search.exclude": {
+    "**/dist": true,
+    "**/.dev": true,
+    "**/node_modules": true,
+    "**/.svelte-kit": true,
+    "cover.out": true
+  },
+  "files.watcherExclude": {
+    "**/dist/**": true,
+    "**/.dev/**": true,
+    "**/node_modules/**": true,
+    "**/.svelte-kit/**": true
+  }
+}

@@ -1,0 +1,677 @@
+# Relo 使用的介面文案。
+
+[cli.root.short]
+description = "One-line summary of the relo command"
+other = "本機 AI 代理，整合多帳戶憑證池"
+
+[cli.root.home]
+description = "Usage of the --home flag"
+other = "狀態目錄（預設 $RELO_HOME，其次是 ~/.relo）"
+
+[cli.root.lang]
+description = "Usage of the --lang flag"
+other = "本次執行的語言（auto，或 en、de、ja 這類語言標籤）"
+
+[cli.usage.title]
+description = "Heading above the usage line of a help screen"
+other = "用法："
+
+[cli.usage.aliases]
+description = "Heading above the aliases of a command"
+other = "別名："
+
+[cli.usage.examples]
+description = "Heading above the examples of a command"
+other = "範例："
+
+[cli.usage.commands]
+description = "Heading above the list of commands"
+other = "可用指令："
+
+[cli.usage.more_commands]
+description = "Heading above commands that belong to no group"
+other = "更多指令："
+
+[cli.usage.flags]
+description = "Heading above the flags of one command"
+other = "旗標："
+
+[cli.usage.global_flags]
+description = "Heading above the flags every command shares"
+other = "全域旗標："
+
+[cli.usage.topics]
+description = "Heading above extra help topics"
+other = "更多說明主題："
+
+[cli.usage.footer]
+description = "Closing hint of a help screen; {{.CommandPath}} is the command path and [command] --help stays literal"
+other = "使用「{{.CommandPath}} [command] --help」查看指令的更多資訊"
+
+[cli.help.short]
+description = "One-line summary of relo help"
+other = "查看任何指令的說明"
+
+[cli.help.long]
+description = "Long description of relo help; {{.Name}} is the program name"
+other = "查看應用程式中任何指令的說明。\n輸入 {{.Name}} help [指令路徑] 查看完整內容。"
+
+[cli.help.flag]
+description = "Usage of the -h/--help flag; {{.Name}} is the command name"
+other = "{{.Name}} 的說明"
+
+[cli.completion.short]
+description = "One-line summary of relo completion"
+other = "為指定的 shell 產生自動完成指令碼"
+
+[cli.completion.long]
+description = "Long description of relo completion; {{.Name}} is the program name"
+other = "為指定的 shell 產生 {{.Name}} 的自動完成指令碼。\n各子指令的說明會介紹如何使用產生的指令碼。"
+
+[cli.completion.shell]
+description = "One-line summary of relo completion for one shell; {{.Shell}} is the shell name"
+other = "為 {{.Shell}} 產生自動完成指令碼"
+
+[cli.completion.no_descriptions]
+description = "Usage of the completion --no-descriptions flag"
+other = "關閉完成說明"
+
+[cli.version.short]
+description = "One-line summary of relo version"
+other = "列印版本與平台"
+
+[cli.daemon.short]
+description = "One-line summary of relo daemon"
+other = "執行與管理常駐程式"
+
+[cli.daemon.status.short]
+description = "One-line summary of relo daemon status"
+other = "顯示常駐程式是否在執行"
+
+[cli.daemon.status.json]
+description = "Usage of the status --json flag"
+other = "以 JSON 輸出報告"
+
+[cli.daemon.status.not_running]
+description = "What status prints when nothing answers on the listen port"
+other = "Relo 未在執行"
+
+[cli.daemon.status.running]
+description = "Header status prints for a running daemon"
+other = "Relo 正在執行"
+
+[cli.daemon.status.version]
+description = "Status field label"
+other = "版本"
+
+[cli.daemon.status.uptime]
+description = "Status field label"
+other = "運行時間"
+
+[cli.daemon.status.address]
+description = "Status field label"
+other = "位址"
+
+[cli.daemon.status.data_plane]
+description = "Status field label for the port each client protocol answers on"
+other = "Data plane"
+
+[cli.daemon.status.secret_mode]
+description = "Status field label"
+other = "機密模式"
+
+[cli.daemon.status.schema_version]
+description = "Status field label"
+other = "結構版本"
+
+[cli.daemon.status.client_keys]
+description = "Status field label"
+other = "用戶端金鑰"
+
+[cli.daemon.status.key_count]
+description = "How many client keys exist, and how many still authenticate"
+other = "{{.Count}} 個（{{.Active}} 個啟用）"
+
+[cli.daemon.status.no_keys]
+description = "Warning under the status report when no client key is active"
+other = "沒有啟用中的用戶端金鑰，代理會拒絕所有請求"
+
+[cli.daemon.run.short]
+description = "One-line summary of relo daemon run"
+other = "在前臺啟動 Relo 代理"
+
+[cli.daemon.run.port]
+description = "Usage of the daemon run --port flag"
+other = "覆寫監聽埠"
+
+[cli.autostart.short]
+description = "One-line summary of relo autostart"
+other = "管理 Relo 是否在登入時啟動"
+
+[cli.autostart.enable.short]
+description = "One-line summary of relo autostart enable"
+other = "讓桌面應用程式與常駐程式在登入時啟動"
+
+[cli.autostart.disable.short]
+description = "One-line summary of relo autostart disable"
+other = "移除登入時啟動的設定"
+
+[cli.autostart.added]
+description = "Confirmation after registering the login items"
+other = "Relo 將在登入時啟動"
+
+[cli.autostart.removed]
+description = "Confirmation after removing the login items"
+other = "Relo 不再在登入時啟動"
+
+[language.auto]
+description = "The language choice that follows the system locale"
+other = "跟隨系統"
+
+[language.name.en]
+description = "English, named in English"
+other = "English"
+
+[language.name.de]
+description = "German, named in German"
+other = "Deutsch"
+
+[language.name.zh-Hans]
+description = "Simplified Chinese, named in Simplified Chinese"
+other = "简体中文"
+
+[language.name.ar]
+description = "Arabic, named in Arabic"
+other = "العربية"
+
+[language.name.cs]
+description = "Czech, named in Czech"
+other = "Čeština"
+
+[language.name.es]
+description = "Spanish, named in Spanish"
+other = "Español"
+
+[language.name.fr]
+description = "French, named in French"
+other = "Français"
+
+[language.name.hi]
+description = "Hindi, named in Hindi"
+other = "हिन्दी"
+
+[language.name.id]
+description = "Indonesian, named in Indonesian"
+other = "Bahasa Indonesia"
+
+[language.name.it]
+description = "Italian, named in Italian"
+other = "Italiano"
+
+[language.name.ja]
+description = "Japanese, named in Japanese"
+other = "日本語"
+
+[language.name.ko]
+description = "Korean, named in Korean"
+other = "한국어"
+
+[language.name.nl]
+description = "Dutch, named in Dutch"
+other = "Nederlands"
+
+[language.name.pl]
+description = "Polish, named in Polish"
+other = "Polski"
+
+[language.name.pt-BR]
+description = "Brazilian Portuguese, named in Brazilian Portuguese"
+other = "Português (Brasil)"
+
+[language.name.ro]
+description = "Romanian, named in Romanian"
+other = "Română"
+
+[language.name.ru]
+description = "Russian, named in Russian"
+other = "Русский"
+
+[language.name.sv]
+description = "Swedish, named in Swedish"
+other = "Svenska"
+
+[language.name.th]
+description = "Thai, named in Thai"
+other = "ไทย"
+
+[language.name.tr]
+description = "Turkish, named in Turkish"
+other = "Türkçe"
+
+[language.name.uk]
+description = "Ukrainian, named in Ukrainian"
+other = "Українська"
+
+[language.name.vi]
+description = "Vietnamese, named in Vietnamese"
+other = "Tiếng Việt"
+
+[language.name.zh-Hant]
+description = "Traditional Chinese, named in Traditional Chinese"
+other = "繁體中文"
+
+[api.auth.loopback_only]
+description = "Sign-in refusal for a request that did not arrive over loopback"
+other = "只能從本機登入"
+
+[api.auth.invalid_token]
+description = "Sign-in refusal for a wrong admin token"
+other = "管理員權杖 無效"
+
+[api.auth.session_failed]
+description = "Sign-in failure when no session could be started"
+other = "主控台無法啟動工作階段"
+
+[api.auth.session_missing]
+description = "Refusal of a management request without a live session"
+other = "主控台工作階段不存在或已過期"
+
+[api.body.invalid]
+description = "Refusal of a body that does not parse, with the parser's detail"
+other = "請求主體無效：{{.Detail}}"
+
+[api.body.single_object]
+description = "Refusal of a body that carries more than one JSON object"
+other = "請求主體無效：應為單一 JSON 物件"
+
+[api.callback.heading]
+description = "Title of the page a browser lands on after a provider redirect"
+other = "完成登入"
+
+[api.callback.summary]
+description = "Summary of the callback page while the authorization is exchanged"
+other = "Relo 已取得授權，正在儲存帳戶。"
+
+[api.callback.marker_working]
+description = "Status marker of a login that is still running"
+other = "進行中"
+
+[api.callback.marker_connected]
+description = "Status marker of a login that stored an account"
+other = "已連線"
+
+[api.callback.marker_failed]
+description = "Status marker of a login that did not finish"
+other = "未連線"
+
+[api.callback.steps_label]
+description = "Accessible label of the progress list on the callback page"
+other = "登入進度"
+
+[api.callback.step_authorized]
+description = "First step of a login: the provider authorized the request"
+other = "{{.Provider}} 已授權"
+
+[api.callback.step_exchanging]
+description = "Second step of a login: the authorization is traded for tokens"
+other = "正在兌換授權"
+
+[api.callback.step_stored]
+description = "Third step of a login: the account is stored"
+other = "帳戶已儲存"
+
+[api.callback.connected_title]
+description = "Title of the callback page for a login that finished"
+other = "已連線"
+
+[api.callback.connected_body]
+description = "Summary of the callback page for a login that finished"
+other = "Relo 已儲存帳戶，並透過它轉送請求。"
+
+[api.callback.failed_title]
+description = "Title of the callback page for a login that did not finish"
+other = "登入未完成"
+
+[api.callback.expired_title]
+description = "Title of the callback page for a login this process no longer tracks"
+other = "此登入已失效"
+
+[api.callback.expired_body]
+description = "Summary of the callback page for a login this process no longer tracks"
+other = "Relo 已不再追蹤此登入。請從主控台重新發起登入。"
+
+[api.callback.expired]
+description = "Refusal of a callback status poll for a login that is gone"
+other = "此登入已失效"
+
+[api.callback.failure_denied]
+description = "Callback failure: the provider refused the authorization"
+other = "供應商拒絕了授權。"
+
+[api.callback.failure_state]
+description = "Callback failure: the callback did not match the login Relo started"
+other = "回呼與 Relo 發起的登入不符，或已被使用。"
+
+[api.callback.failure_timeout]
+description = "Callback failure: the provider did not answer in time"
+other = "供應商未及時回應。"
+
+[api.callback.failure_exchange]
+description = "Callback failure: the provider would not exchange the authorization"
+other = "供應商未將授權兌換成權杖。"
+
+[api.callback.account_label]
+description = "Label of the stored account on the callback page"
+other = "帳戶"
+
+[api.callback.close_hint]
+description = "What the callback page tells an operator once the login finished"
+other = "可以關閉此分頁。"
+
+[api.callback.closing_in]
+description = "Countdown shown on the callback page before it closes itself"
+other = "{{.Seconds}} 秒後關閉…"
+
+[api.callback.console_link]
+description = "Link from the callback page to the console page that lists accounts"
+other = "開啟主控台"
+
+[api.dashboard.missing]
+description = "Refusal of a console request in a build without one"
+other = "此版本沒有主控台"
+
+[api.events.unknown]
+description = "Refusal of an event stream for a channel that does not exist"
+other = "沒有這個事件通道"
+
+[api.events.cannot_stream]
+description = "Refusal of an event stream over a listener that cannot stream"
+other = "此監聽器無法串流"
+
+[api.events.too_many]
+description = "Refusal of an event stream when too many are already open"
+other = "開啟的事件串流過多"
+
+[api.inference.retired]
+description = "Refusal of an inference path that moved to the port of its protocol"
+other = "介面已移至 {{.BaseURL}}"
+
+[api.keys.invalid]
+description = "Refusal of an inference request with a key that does not authenticate"
+other = "API 金鑰無效"
+
+[api.keys.missing_header]
+description = "Refusal of an inference request without a credential"
+other = "缺少 Authorization 標頭，或格式無效"
+
+[api.keys.store_unavailable]
+description = "Refusal of an inference request when the key store is down"
+other = "API 金鑰存放區無法使用"
+
+[api.logs.event_id_number]
+description = "Refusal of a log request whose event id is not a number"
+other = "事件 ID 必須是數字"
+
+[api.logs.capture_id_number]
+description = "Refusal of a capture read whose capture id is not a number"
+other = "擷取 ID 必須是數字"
+
+[api.logs.capture_missing]
+description = "Refusal of a capture read that names no stored capture"
+other = "沒有這個 ID 的擷取記錄"
+
+[api.oauth.unknown]
+description = "Refusal of a login operation that does not exist"
+other = "沒有這個 ID 的登入操作"
+
+[api.oauth.port_busy]
+description = "Refusal of a sign-in whose callback port another process holds"
+other = "{{process}} 正在使用連接埠 {{port}}，請先結束它再登入"
+
+[api.integration.action_in_progress]
+description = "Refusal of a second run of an action the first has not finished"
+other = "該操作已在執行中，請等待其完成"
+
+[api.route.missing]
+description = "Refusal of a management path that matches no route"
+other = "沒有符合的路由"
+
+[api.route.unavailable]
+description = "Refusal of a management endpoint that is not implemented"
+other = "此端點尚未提供"
+
+[api.service.unavailable]
+description = "Refusal of a management request when the service is missing"
+other = "管理服務無法使用"
+
+[api.settings.retention.invalid]
+description = "Refusal of a retention budget below the floor the ledger keeps"
+other = "request details are kept for at least a {{.Min}}-day window; use 0 to keep everything"
+
+[api.settings.sweep.busy]
+description = "Refusal of a maintenance sweep while another one is running"
+other = "a maintenance sweep is already running; wait for it to finish"
+
+[api.account.status_required]
+description = "Refusal of an account update that named neither status nor priority"
+other = "必須提供 status 或 priority"
+
+[tray.tooltip]
+description = "Tooltip of the tray icon"
+other = "Relo — 本機 AI 代理"
+
+[tray.menu.open_dashboard]
+description = "Tray menu item that opens the console in a browser"
+other = "開啟主控台"
+
+[tray.menu.restart]
+description = "Tray menu item that restarts the daemon"
+other = "重啟伺服器"
+
+[tray.menu.force_restart]
+description = "Tray menu item that kills the daemon and starts it again"
+other = "強制重啟伺服器"
+
+[tray.menu.autostart]
+description = "Tray menu item that toggles the login item"
+other = "登入時啟動"
+
+[tray.menu.language]
+description = "Tray submenu that chooses the language"
+other = "語言"
+
+[tray.menu.quit]
+description = "Tray submenu that quits the desktop app"
+other = "結束"
+
+[tray.menu.quit_hide]
+description = "Tray menu item that hides the icon and leaves the proxy serving"
+other = "隱藏托盤圖示（代理繼續運作）"
+
+[tray.menu.quit_shutdown]
+description = "Tray menu item that quits the desktop app and stops the daemon"
+other = "結束並關閉守護行程"
+
+[tray.notify.failed]
+description = "Notification when a proxy run failed"
+other = "代理未能啟動。{{.Detail}}"
+
+[tray.status.running]
+description = "Tray menu status row for a running daemon"
+other = "執行中 · {{.Addr}}"
+
+[tray.status.stopped]
+description = "Tray menu status row for a stopped daemon"
+other = "已停止"
+
+[tray.status.failed]
+description = "Tray menu status row for a daemon that failed"
+other = "失敗 · {{.Detail}}"
+
+[tray.info.requests]
+description = "Tray menu row that charts the last day of requests"
+other = "請求 {{.Value}}"
+
+[tray.info.tokens]
+description = "Tray menu row that charts the last day of tokens"
+other = "權杖 {{.Value}}"
+
+[tray.info.spend]
+description = "Tray menu row that charts the last day of spend"
+other = "花費 {{.Value}}"
+
+[tray.error.unknown]
+description = "Placeholder when a failure carried no message"
+other = "未知錯誤"
+
+[tray.notify.browser_failed]
+description = "Notification when no browser could be opened"
+other = "無法開啟瀏覽器"
+
+[tray.notify.autostart_failed]
+description = "Notification when the login item could not be changed"
+other = "無法變更登入項目"
+
+[tray.notify.language_failed]
+description = "Notification when a language choice could not be stored"
+other = "無法儲存語言設定"
+
+[cli.daemon.start.short]
+description = "One-line summary of relo daemon start"
+other = "在背景啟動 Relo 代理"
+
+[cli.daemon.start.port]
+description = "Usage of the start --port flag"
+other = "覆寫監聽埠"
+
+[cli.daemon.start.started]
+description = "Confirmation after a start"
+other = "Relo 執行於 {{.Addr}}"
+
+[cli.daemon.start.already]
+description = "What start prints when the daemon is already up"
+other = "Relo 已在 {{.Addr}} 執行"
+
+[cli.daemon.start.failed]
+description = "What start prints when the daemon never became healthy"
+other = "常駐程式未啟動：{{.Detail}}"
+
+[cli.daemon.start.log]
+description = "Where a started daemon writes what it logs"
+other = "常駐程式日誌檔位於 {{.Path}}"
+
+[cli.daemon.stop.short]
+description = "One-line summary of relo daemon stop"
+other = "停止生命週期命令所管理的 Relo 代理"
+
+[cli.daemon.stop.stopped]
+description = "Confirmation after a stop"
+other = "Relo 已停止"
+
+[cli.daemon.stop.not_running]
+description = "What stop prints when nothing is running"
+other = "Relo 未在執行"
+
+[cli.daemon.restart.short]
+description = "One-line summary of relo daemon restart"
+other = "重啟 Relo 代理"
+
+[cli.daemon.restart.port]
+description = "Usage of the restart --port flag"
+other = "覆寫監聽埠"
+
+[cli.daemon.restart.force]
+description = "Usage of the restart --force flag"
+other = "結束執行中的程序並啟動新的常駐程式"
+
+[cli.daemon.restart.restarted]
+description = "Confirmation after a restart"
+other = "Relo 執行於 {{.Addr}}"
+
+[cli.daemon.status.no_keys_hint]
+description = "How to create the first client key"
+other = "可在主控台的金鑰頁面建立"
+
+[api.daemon.not_headless]
+description = "Refusal of a stop request when this process is not a headless daemon"
+other = "此程序不接受停止請求"
+
+[api.daemon.instance_mismatch]
+description = "Refusal of a stop request naming another instance"
+other = "停止請求指向另一個執行個體"
+
+[tray.menu.version]
+description = "Tray menu version label"
+other = "版本 {{.Version}}"
+
+[tray.menu.update_version]
+description = "Tray menu update action"
+other = "更新至 {{.Version}}"
+
+[tray.error.not_ready]
+description = "Daemon not ready error"
+other = "尚未就緒"
+
+[tray.error.port_in_use]
+description = "Port conflict error"
+other = "連接埠使用中"
+
+[tray.error.timed_out]
+description = "Timeout error"
+other = "已逾時"
+
+[tray.error.database]
+description = "Database availability error"
+other = "資料庫無法使用"
+
+[tray.error.start_failed]
+description = "Daemon start error"
+other = "無法啟動"
+
+[cli.daemon.stop.force]
+description = "Usage of the stop --force flag"
+other = "結束執行中的行程，並釋放 Relo 正在服務的連接埠"
+
+[cli.uninstall.short]
+description = "One-line summary of relo uninstall"
+other = "從這台電腦移除 Relo"
+
+[cli.uninstall.keep_data]
+description = "Usage of the uninstall --keep-data flag"
+other = "保留 Relo 資料（設定、憑證、日誌）"
+
+[cli.uninstall.wipe]
+description = "Usage of the uninstall --wipe flag"
+other = "刪除 Relo 資料（設定、憑證、日誌）"
+
+[cli.uninstall.prepare]
+description = "Usage of the hidden uninstall --prepare flag"
+other = "停止服務並關閉自動啟動，程式本身保留不動"
+
+[cli.uninstall.ask_data]
+description = "The question an interactive uninstall asks about the Relo data"
+other = "要刪除 Relo 資料（設定、憑證、日誌）嗎？[y/N]"
+
+[cli.uninstall.kept]
+description = "What an uninstall reports when the Relo data stays"
+other = "你的 Relo 資料位於 {{.Home}}"
+
+[cli.uninstall.wiped]
+description = "What an uninstall reports after the Relo data is removed"
+other = "你的 Relo 資料已刪除"
+
+[cli.uninstall.removing]
+description = "What an uninstall says as it hands the program to its installer"
+other = "正在移除 Relo…"
+
+[cli.uninstall.manual]
+description = "What an uninstall says when nothing on the machine removes Relo"
+other = "請手動移除 Relo 程式"
+
+[cli.uninstall.trash]
+description = "What an uninstall says when the macOS app bundle could not be deleted"
+other = "請將 {{.Bundle}} 移到廢紙簍"
+
+[cli.uninstall.run]
+description = "The command to run when a removal could not be started"
+other = "執行以下指令以完成移除 Relo：{{.Command}}"
