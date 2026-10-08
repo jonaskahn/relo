@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rss version="2.0" xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle">
+  <channel>
+    <title>Relo Updates</title>
+    <link>https://jonaskahn.github.io/relo/appcast.xml</link>
+    <description>Relo release feed</description>
+    <language>en</language>
+    <item>
+      <title>Version 0.1.0</title>
+      <pubDate>Wed, 30 Sep 2026 00:00:00 +0000</pubDate>
+      <sparkle:version>1</sparkle:version>
+      <sparkle:shortVersionString>0.1.0</sparkle:shortVersionString>
+      <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+      <enclosure
+        url="https://github.com/jonaskahn/relo/releases/download/v0.1.0/Relo-0.1.0-universal.zip"
+        sparkle:version="1"
+        sparkle:shortVersionString="0.1.0"
+        type="application/octet-stream"/>
+    </item>
+  </channel>
+</rss>

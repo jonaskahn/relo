@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Relo - local LLM gateway</title>
+  <meta name="description" content="Relo is a local LLM gateway. Codex, Claude Code, Cursor, and Grok keep their own config and still reach any upstream." data-i18n-attr="content:desc">
+  <meta name="theme-color" content="#f5f5f7" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#0a0a0a" media="(prefers-color-scheme: dark)">
+  <link rel="canonical" href="https://jonaskahn.github.io/relo/">
+  <link rel="icon" href="media/logo.png" type="image/png">
+  <link rel="preload" as="image" href="media/dashboard.webp" type="image/webp" media="(min-width: 768px)" fetchpriority="high">
+  <link rel="preload" as="image" href="media/dashboard-mobile.webp" type="image/webp" media="(max-width: 767px)" fetchpriority="high">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Relo">
+  <meta property="og:title" content="Relo - local LLM gateway">
+  <meta property="og:description" content="Relo is a local LLM gateway. Codex, Claude Code, Cursor, and Grok keep their own config and still reach any upstream.">
+  <meta property="og:url" content="https://jonaskahn.github.io/relo/">
+  <meta property="og:image" content="https://jonaskahn.github.io/relo/media/logo.png">
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="Relo - local LLM gateway">
+  <meta name="twitter:description" content="Relo is a local LLM gateway. Codex, Claude Code, Cursor, and Grok keep their own config and still reach any upstream.">
+  <meta name="twitter:image" content="https://jonaskahn.github.io/relo/media/logo.png">
+  <style>
+    body { font-size: 16px; }
+    h1 { font-size: 4.5rem; }
+    h2 { font-size: 2.25rem; }
+    h3 { font-size: 1.25rem; }
+  </style>
+  <link rel="stylesheet" href="style.css">
+  <script>
+    (function () {
+      var root = document.documentElement;
+      var stored = localStorage.getItem('relo-theme');
+      var dark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      root.dataset.theme = stored === 'light' || stored === 'dark' ? stored : (dark ? 'dark' : 'light');
+      var langs = ['en', 'zh', 'hi', 'es', 'ar', 'fr', 'bn', 'pt', 'ru', 'ur', 'id', 'de', 'ja', 'vi', 'tr', 'ko', 'it', 'th', 'pl', 'nl'];
+      var lang = localStorage.getItem('relo-lang');
+      if (langs.indexOf(lang) < 0) {
+        lang = 'en';
+        var prefs = navigator.languages || [navigator.language || 'en'];
+        for (var i = 0; i < prefs.length; i++) {
+          var code = String(prefs[i]).toLowerCase().split('-')[0];
+          if (langs.indexOf(code) >= 0) { lang = code; break; }
+        }
+      }
+      root.lang = lang === 'zh' ? 'zh-Hans' : lang;
+      root.dir = lang === 'ar' || lang === 'ur' ? 'rtl' : 'ltr';
+      root.classList.add('js');
+      var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      var seen = false;
+      try { seen = sessionStorage.getItem('relo-intro') === '1'; } catch (e) {}
+      if (reduced || seen) root.classList.add('skip-intro');
+      window.setTimeout(function () { root.classList.add('intro-done'); }, 6000);
+    })();
+  </script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "Relo",
+    "alternateName": "local LLM gateway",
+    "description": "A local LLM proxy between AI coding clients and upstream providers. Clients keep their native protocol while one local installation routes requests, pools accounts, and records usage.",
+    "url": "https://jonaskahn.github.io/relo/",
+    "image": "https://jonaskahn.github.io/relo/media/logo.png",
+    "applicationCategory": "DeveloperApplication",
+    "operatingSystem": "macOS, Windows, Linux",
+    "downloadUrl": "https://github.com/jonaskahn/relo/releases/latest",
+    "softwareHelp": {
+      "@type": "WebPage",
+      "url": "https://github.com/jonaskahn/relo"
+    }
+  }
+  </script>
+</head>
+<body data-nav="light">
+  <a class="skip-link" href="#main" data-i18n="skip">Skip to content</a>
+
+  <div class="preloader" id="preloader" aria-hidden="true">
+    <div class="pre-word" id="preWord"></div>
+  </div>
+
+  <header class="nav">
+    <a class="nav-logo" href="#top" aria-label="Relo home" data-i18n-attr="aria-label:home">Relo<span class="dot">.</span></a>
+    <div class="nav-actions">
+      <noscript><a class="nav-plain" href="#install">Install</a></noscript>
+      <select class="nav-lang" id="lang" aria-label="Language" data-i18n-attr="aria-label:lang"></select>
+      <button type="button" class="nav-theme" data-theme-toggle aria-pressed="false">
+        <span data-theme-label>Dark</span>
+      </button>
+      <button type="button" class="nav-toggle" id="navToggle" aria-expanded="false" aria-controls="menu" aria-label="Menu">
+        <span class="ln top"></span><span class="ln bot"></span>
+      </button>
+    </div>
+  </header>
+
+  <div class="menu" id="menu" inert>
+    <nav aria-label="Page" data-i18n-attr="aria-label:page">
+      <a href="#top" style="--i:0" data-i18n="overview">Overview</a>
+      <a href="#ports" style="--i:1" data-i18n="ports">Ports</a>
+      <a href="#install" style="--i:2" data-i18n="install">Install</a>
+      <a href="https://github.com/jonaskahn/relo" style="--i:3">GitHub</a>
+    </nav>
+  </div>
+
+  <main id="main">
+    <section class="scene" id="top">
+      <div class="stage">
+        <div class="hero-text">
+          <div class="hero-enter">
+            <h1 class="hero-title">
+              <span class="h-small" data-i18n="heroSmall">One loopback</span>
+              <span class="h-huge">Proxy<span class="dot">.</span></span>
+            </h1>
+            <div class="hero-side">
+              <p class="hero-lead" data-i18n="lead">Codex, Claude Code, Cursor, and Grok keep their own config and still reach any upstream.</p>
+              <div class="hero-actions">
+                <a class="btn primary" href="#install" data-i18n="install">Install</a>
+                <a class="btn ghost" href="https://github.com/jonaskahn/relo" data-i18n="btnGithub">View on GitHub</a>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <figure class="dash">
+          <picture>
+            <source media="(max-width: 767px)" srcset="media/dashboard-mobile.webp" type="image/webp" width="910" height="1886">
+            <img
+              src="media/dashboard.webp"
+              width="3212"
+              height="2638"
+              fetchpriority="high"
+              alt="Relo console dashboard showing request volume, spend, latency, account health, and the routing map."
+              data-i18n-attr="alt:dashAlt"
+            >
+          </picture>
+        </figure>
+
+        <div class="curtain" data-dark>
+          <div class="curtain-copy">
+            <h2 class="statement" data-i18n="statement">Relo is a local LLM gateway. It sits between your coding clients and upstream providers, routes requests, pools accounts, and records usage.</h2>
+            <ul class="stats">
+              <li><span class="stat-num" data-end="3">3</span><span class="stat-label" data-i18n="s1">Loopback ports</span></li>
+              <li><span class="stat-num" data-end="4">4</span><span class="stat-label" data-i18n="s2">Clients tested</span></li>
+              <li><span class="stat-num" data-end="3">3</span><span class="stat-label" data-i18n="s3">Console languages</span></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="ports" id="ports" data-dark aria-labelledby="ports-heading">
+      <div class="ticker" aria-hidden="true">
+        <div class="ticker-track">
+          <span>Relo.&nbsp;&nbsp;&nbsp;Relo.&nbsp;&nbsp;&nbsp;Relo.&nbsp;&nbsp;&nbsp;Relo.&nbsp;&nbsp;&nbsp;Relo.&nbsp;&nbsp;&nbsp;Relo.&nbsp;&nbsp;</span>
+          <span>Relo.&nbsp;&nbsp;&nbsp;Relo.&nbsp;&nbsp;&nbsp;Relo.&nbsp;&nbsp;&nbsp;Relo.&nbsp;&nbsp;&nbsp;Relo.&nbsp;&nbsp;&nbsp;Relo.&nbsp;&nbsp;</span>
+        </div>
+      </div>
+      <div class="ports-inner">
+        <h2 id="ports-heading" class="ports-title" data-i18n="s1">Loopback ports</h2>
+        <ul class="ports-row">
+          <li class="port">
+            <div class="port-in">
+              <p class="port-num"><code>10101</code></p>
+              <div>
+                <h3 data-i18n="p1t">Console and management API</h3>
+                <p data-i18n="p1d">Opens at <code>http://127.0.0.1:10101</code>. With <code>[admin] login = true</code>, sign in with the admin token.</p>
+              </div>
+            </div>
+          </li>
+          <li class="port">
+            <div class="port-in">
+              <p class="port-num"><code>10201</code></p>
+              <div>
+                <h3 data-i18n="p2t">OpenAI-compatible <code>/v1/*</code></h3>
+                <p data-i18n="p2d">Clients that speak the OpenAI API point here and authenticate with a client key.</p>
+              </div>
+            </div>
+          </li>
+          <li class="port">
+            <div class="port-in">
+              <p class="port-num"><code>10202</code></p>
+              <div>
+                <h3>Anthropic <code>/v1/*</code></h3>
+                <p data-i18n="p3d">Clients that speak the Anthropic API point here and authenticate with a client key.</p>
+              </div>
+            </div>
+          </li>
+        </ul>
+        <p class="ports-note" data-i18n="note">Client keys hit the data plane. The admin token hits the console. Provider credentials go upstream only.</p>
+      </div>
+    </section>
+
+    <section class="install" id="install" aria-labelledby="install-heading">
+      <div class="install-grid">
+        <h2 class="display" id="install-heading" data-i18n="installTitle">Install</h2>
+        <div class="install-body">
+          <ul class="install-list">
+            <li>
+              <p class="os">macOS</p>
+              <div class="command">
+                <pre><code data-copy>brew install --cask jonaskahn/tap/relo</code></pre>
+                <button type="button" class="copy" data-copy-btn aria-label="Copy command" title="Copy command" data-i18n-attr="aria-label:copy;title:copy">
+                  <svg class="i-copy" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 0 1 2-2h9"/></svg>
+                  <svg class="i-check" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>
+                  <svg class="i-fail" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+                </button>
+              </div>
+            </li>
+            <li>
+              <p class="os">Windows</p>
+              <p class="hint" data-i18n="win"><code>Relo-Setup-&lt;version&gt;-amd64.exe</code> from <a href="https://github.com/jonaskahn/relo/releases">releases</a></p>
+            </li>
+            <li>
+              <p class="os">Linux</p>
+              <p class="hint" data-i18n="linux"><code>.deb</code> or <code>.rpm</code> on the same <a href="https://github.com/jonaskahn/relo/releases">releases</a> page</p>
+            </li>
+            <li>
+              <p class="os" data-i18n="daemon">Daemon only</p>
+              <div class="command">
+                <pre><code data-copy>curl -fsSL https://github.com/jonaskahn/relo/releases/latest/download/install.sh | sh</code></pre>
+                <button type="button" class="copy" data-copy-btn aria-label="Copy command" title="Copy command" data-i18n-attr="aria-label:copy;title:copy">
+                  <svg class="i-copy" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 0 1 2-2h9"/></svg>
+                  <svg class="i-check" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>
+                  <svg class="i-fail" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+                </button>
+              </div>
+              <div class="command">
+                <pre><code data-copy>irm https://github.com/jonaskahn/relo/releases/latest/download/install.ps1 | iex</code></pre>
+                <button type="button" class="copy" data-copy-btn aria-label="Copy command" title="Copy command" data-i18n-attr="aria-label:copy;title:copy">
+                  <svg class="i-copy" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 0 1 2-2h9"/></svg>
+                  <svg class="i-check" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>
+                  <svg class="i-fail" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+                </button>
+              </div>
+            </li>
+          </ul>
+          <h3 class="start-title" data-i18n="startTitle">Start</h3>
+          <p class="hint" data-i18n="startHint"><code>relo daemon start</code> runs the proxy. The console is at <a href="http://127.0.0.1:10101">http://127.0.0.1:10101</a>. Set <code>desktop.hide = true</code> when you want the daemon without a tray.</p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <p data-i18n="foot1"><code>Relo.app</code> updates through Sparkle from <a href="appcast.xml">appcast.xml</a>.</p>
+    <p data-i18n="foot2">Windows, Linux, and the daemon-only binary open the <a href="https://github.com/jonaskahn/relo/releases/latest">latest GitHub release</a>.</p>
+  </footer>
+
+  <script src="i18n.js" defer></script>
+  <script src="script.js" defer></script>
+</body>
+</html>
