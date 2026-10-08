@@ -1,0 +1,679 @@
+# The messages Relo speaks, in English. This file is the source every
+# other catalog mirrors: the same IDs, and the same plural forms wherever
+# English has them.
+
+[cli.root.short]
+description = "One-line summary of the relo command"
+other = "Çoklu hesap kimlik bilgisi havuzu olan yerel AI proxy"
+
+[cli.root.home]
+description = "Usage of the --home flag"
+other = "durum dizini (varsayılan $RELO_HOME, ardından ~/.relo)"
+
+[cli.root.lang]
+description = "Usage of the --lang flag"
+other = "bu çalıştırma için dil (auto ya da en, de, ja gibi bir etiket)"
+
+[cli.usage.title]
+description = "Heading above the usage line of a help screen"
+other = "Kullanım:"
+
+[cli.usage.aliases]
+description = "Heading above the aliases of a command"
+other = "Takma adlar:"
+
+[cli.usage.examples]
+description = "Heading above the examples of a command"
+other = "Örnekler:"
+
+[cli.usage.commands]
+description = "Heading above the list of commands"
+other = "Kullanılabilir komutlar:"
+
+[cli.usage.more_commands]
+description = "Heading above commands that belong to no group"
+other = "Ek komutlar:"
+
+[cli.usage.flags]
+description = "Heading above the flags of one command"
+other = "Bayraklar:"
+
+[cli.usage.global_flags]
+description = "Heading above the flags every command shares"
+other = "Genel bayraklar:"
+
+[cli.usage.topics]
+description = "Heading above extra help topics"
+other = "Ek yardım konuları:"
+
+[cli.usage.footer]
+description = "Closing hint of a help screen; {{.CommandPath}} is the command path and [command] --help stays literal"
+other = "Bir komut hakkında daha fazla bilgi için “{{.CommandPath}} [command] --help” kullan."
+
+[cli.help.short]
+description = "One-line summary of relo help"
+other = "Herhangi bir komut için yardım"
+
+[cli.help.long]
+description = "Long description of relo help; {{.Name}} is the program name"
+other = "Yardım, uygulamadaki her komutu açıklar.\nTüm ayrıntılar için {{.Name}} help [komut yolu] yaz."
+
+[cli.help.flag]
+description = "Usage of the -h/--help flag; {{.Name}} is the command name"
+other = "{{.Name}} için yardım"
+
+[cli.completion.short]
+description = "One-line summary of relo completion"
+other = "Belirtilen kabuk için otomatik tamamlama betiği üret"
+
+[cli.completion.long]
+description = "Long description of relo completion; {{.Name}} is the program name"
+other = "{{.Name}} için otomatik tamamlama betiğini belirtilen kabuk için üret.\nÜretilen betiği nasıl kullanacağın her alt komutun yardımında yazar."
+
+[cli.completion.shell]
+description = "One-line summary of relo completion for one shell; {{.Shell}} is the shell name"
+other = "{{.Shell}} için otomatik tamamlama betiği üret"
+
+[cli.completion.no_descriptions]
+description = "Usage of the completion --no-descriptions flag"
+other = "tamamlama açıklamalarını kapat"
+
+[cli.version.short]
+description = "One-line summary of relo version"
+other = "Sürümü ve platformu yazdır"
+
+[cli.daemon.short]
+description = "One-line summary of relo daemon"
+other = "Daemon'u çalıştır ve yönet"
+
+[cli.daemon.status.short]
+description = "One-line summary of relo daemon status"
+other = "Daemon'un çalışıp çalışmadığını göster"
+
+[cli.daemon.status.json]
+description = "Usage of the status --json flag"
+other = "raporu JSON olarak yazdır"
+
+[cli.daemon.status.not_running]
+description = "What status prints when nothing answers on the listen port"
+other = "Relo çalışmıyor"
+
+[cli.daemon.status.running]
+description = "Header status prints for a running daemon"
+other = "Relo çalışıyor"
+
+[cli.daemon.status.version]
+description = "Status field label"
+other = "Sürüm"
+
+[cli.daemon.status.uptime]
+description = "Status field label"
+other = "Çalışma süresi"
+
+[cli.daemon.status.address]
+description = "Status field label"
+other = "Adres"
+
+[cli.daemon.status.data_plane]
+description = "Status field label for the port each client protocol answers on"
+other = "Data plane"
+
+[cli.daemon.status.secret_mode]
+description = "Status field label"
+other = "Gizli mod"
+
+[cli.daemon.status.schema_version]
+description = "Status field label"
+other = "Şema sürümü"
+
+[cli.daemon.status.client_keys]
+description = "Status field label"
+other = "İstemci anahtarları"
+
+[cli.daemon.status.key_count]
+description = "How many client keys exist, and how many still authenticate"
+other = "{{.Count}} ({{.Active}} etkin)"
+
+[cli.daemon.status.no_keys]
+description = "Warning under the status report when no client key is active"
+other = "Etkin istemci anahtarı yok. Data plane her isteği reddediyor."
+
+[cli.daemon.run.short]
+description = "One-line summary of relo daemon run"
+other = "Relo proxy'sini ön planda başlat"
+
+[cli.daemon.run.port]
+description = "Usage of the daemon run --port flag"
+other = "dinleme portunu geçersiz kıl"
+
+[cli.autostart.short]
+description = "One-line summary of relo autostart"
+other = "Relo'nun oturum açılışında başlayıp başlamayacağını yönet"
+
+[cli.autostart.enable.short]
+description = "One-line summary of relo autostart enable"
+other = "masaüstü uygulamasını ve daemon'u oturum açılışında başlat"
+
+[cli.autostart.disable.short]
+description = "One-line summary of relo autostart disable"
+other = "oturum açılışı kaydını kaldır"
+
+[cli.autostart.added]
+description = "Confirmation after registering the login items"
+other = "Relo oturum açılışında başlayacak"
+
+[cli.autostart.removed]
+description = "Confirmation after removing the login items"
+other = "Relo artık oturum açılışında başlamayacak"
+
+[language.auto]
+description = "The language choice that follows the system locale"
+other = "Sistemi izle"
+
+[language.name.en]
+description = "English, named in English"
+other = "English"
+
+[language.name.de]
+description = "German, named in German"
+other = "Deutsch"
+
+[language.name.zh-Hans]
+description = "Simplified Chinese, named in Simplified Chinese"
+other = "简体中文"
+
+[language.name.ar]
+description = "Arabic, named in Arabic"
+other = "العربية"
+
+[language.name.cs]
+description = "Czech, named in Czech"
+other = "Čeština"
+
+[language.name.es]
+description = "Spanish, named in Spanish"
+other = "Español"
+
+[language.name.fr]
+description = "French, named in French"
+other = "Français"
+
+[language.name.hi]
+description = "Hindi, named in Hindi"
+other = "हिन्दी"
+
+[language.name.id]
+description = "Indonesian, named in Indonesian"
+other = "Bahasa Indonesia"
+
+[language.name.it]
+description = "Italian, named in Italian"
+other = "Italiano"
+
+[language.name.ja]
+description = "Japanese, named in Japanese"
+other = "日本語"
+
+[language.name.ko]
+description = "Korean, named in Korean"
+other = "한국어"
+
+[language.name.nl]
+description = "Dutch, named in Dutch"
+other = "Nederlands"
+
+[language.name.pl]
+description = "Polish, named in Polish"
+other = "Polski"
+
+[language.name.pt-BR]
+description = "Brazilian Portuguese, named in Brazilian Portuguese"
+other = "Português (Brasil)"
+
+[language.name.ro]
+description = "Romanian, named in Romanian"
+other = "Română"
+
+[language.name.ru]
+description = "Russian, named in Russian"
+other = "Русский"
+
+[language.name.sv]
+description = "Swedish, named in Swedish"
+other = "Svenska"
+
+[language.name.th]
+description = "Thai, named in Thai"
+other = "ไทย"
+
+[language.name.tr]
+description = "Turkish, named in Turkish"
+other = "Türkçe"
+
+[language.name.uk]
+description = "Ukrainian, named in Ukrainian"
+other = "Українська"
+
+[language.name.vi]
+description = "Vietnamese, named in Vietnamese"
+other = "Tiếng Việt"
+
+[language.name.zh-Hant]
+description = "Traditional Chinese, named in Traditional Chinese"
+other = "繁體中文"
+
+[api.auth.loopback_only]
+description = "Sign-in refusal for a request that did not arrive over loopback"
+other = "oturum açma yalnızca bu makineden yapılabilir"
+
+[api.auth.invalid_token]
+description = "Sign-in refusal for a wrong admin token"
+other = "geçersiz yönetici tokenı"
+
+[api.auth.session_failed]
+description = "Sign-in failure when no session could be started"
+other = "konsol bir oturum başlatamadı"
+
+[api.auth.session_missing]
+description = "Refusal of a management request without a live session"
+other = "dashboard oturumu eksik veya süresi dolmuş"
+
+[api.body.invalid]
+description = "Refusal of a body that does not parse, with the parser's detail"
+other = "geçersiz istek gövdesi: {{.Detail}}"
+
+[api.body.single_object]
+description = "Refusal of a body that carries more than one JSON object"
+other = "geçersiz istek gövdesi: tek bir JSON nesnesi bekleniyor"
+
+[api.callback.heading]
+description = "Title of the page a browser lands on after a provider redirect"
+other = "Oturum açma tamamlanıyor"
+
+[api.callback.summary]
+description = "Summary of the callback page while the authorization is exchanged"
+other = "Relo yetkilendirmeyi aldı, hesabı kaydediyor."
+
+[api.callback.marker_working]
+description = "Status marker of a login that is still running"
+other = "Çalışıyor"
+
+[api.callback.marker_connected]
+description = "Status marker of a login that stored an account"
+other = "Bağlandı"
+
+[api.callback.marker_failed]
+description = "Status marker of a login that did not finish"
+other = "Bağlanmadı"
+
+[api.callback.steps_label]
+description = "Accessible label of the progress list on the callback page"
+other = "Oturum açma ilerlemesi"
+
+[api.callback.step_authorized]
+description = "First step of a login: the provider authorized the request"
+other = "{{.Provider}} tarafından yetkilendirildi"
+
+[api.callback.step_exchanging]
+description = "Second step of a login: the authorization is traded for tokens"
+other = "Yetkilendirme değiştiriliyor"
+
+[api.callback.step_stored]
+description = "Third step of a login: the account is stored"
+other = "Hesap kaydedildi"
+
+[api.callback.connected_title]
+description = "Title of the callback page for a login that finished"
+other = "Bağlandı"
+
+[api.callback.connected_body]
+description = "Summary of the callback page for a login that finished"
+other = "Relo hesabı kaydetti ve istekleri bu hesap üzerinden yönlendiriyor."
+
+[api.callback.failed_title]
+description = "Title of the callback page for a login that did not finish"
+other = "Oturum açma tamamlanmadı"
+
+[api.callback.expired_title]
+description = "Title of the callback page for a login this process no longer tracks"
+other = "Bu oturum açma artık açık değil"
+
+[api.callback.expired_body]
+description = "Summary of the callback page for a login this process no longer tracks"
+other = "Relo bu oturum açmayı artık izlemiyor. Konsoldan yeniden başlat."
+
+[api.callback.expired]
+description = "Refusal of a callback status poll for a login that is gone"
+other = "bu oturum açma artık açık değil"
+
+[api.callback.failure_denied]
+description = "Callback failure: the provider refused the authorization"
+other = "Sağlayıcı yetkilendirmeyi reddetti."
+
+[api.callback.failure_state]
+description = "Callback failure: the callback did not match the login Relo started"
+other = "Callback, Relo'nun başlattığı oturum açmayla eşleşmedi veya zaten kullanıldı."
+
+[api.callback.failure_timeout]
+description = "Callback failure: the provider did not answer in time"
+other = "Sağlayıcı zamanında yanıt vermedi."
+
+[api.callback.failure_exchange]
+description = "Callback failure: the provider would not exchange the authorization"
+other = "Sağlayıcı, yetkilendirmeyi token ile değiştirmedi."
+
+[api.callback.account_label]
+description = "Label of the stored account on the callback page"
+other = "Hesap"
+
+[api.callback.close_hint]
+description = "What the callback page tells an operator once the login finished"
+other = "Bu sekmeyi kapatabilirsin."
+
+[api.callback.closing_in]
+description = "Countdown shown on the callback page before it closes itself"
+other = "{{.Seconds}} sn sonra kapanıyor…"
+
+[api.callback.console_link]
+description = "Link from the callback page to the console page that lists accounts"
+other = "Konsolu aç"
+
+[api.dashboard.missing]
+description = "Refusal of a console request in a build without one"
+other = "bu derlemede dashboard yok"
+
+[api.events.unknown]
+description = "Refusal of an event stream for a channel that does not exist"
+other = "böyle bir olay kanalı yok"
+
+[api.events.cannot_stream]
+description = "Refusal of an event stream over a listener that cannot stream"
+other = "bu dinleyici akış yapamaz"
+
+[api.events.too_many]
+description = "Refusal of an event stream when too many are already open"
+other = "çok fazla olay akışı açık"
+
+[api.inference.retired]
+description = "Refusal of an inference path that moved to the port of its protocol"
+other = "inference portları {{.BaseURL}} adresine taşındı"
+
+[api.keys.invalid]
+description = "Refusal of an inference request with a key that does not authenticate"
+other = "geçersiz API anahtarı"
+
+[api.keys.missing_header]
+description = "Refusal of an inference request without a credential"
+other = "Authorization başlığı eksik veya geçersiz"
+
+[api.keys.store_unavailable]
+description = "Refusal of an inference request when the key store is down"
+other = "API anahtarı deposu kullanılamıyor"
+
+[api.logs.event_id_number]
+description = "Refusal of a log request whose event id is not a number"
+other = "olay kimliği bir sayı olmalı"
+
+[api.logs.capture_id_number]
+description = "Refusal of a capture read whose capture id is not a number"
+other = "yakalama kimliği bir sayı olmalı"
+
+[api.logs.capture_missing]
+description = "Refusal of a capture read that names no stored capture"
+other = "bu kimliğe sahip kayıtlı yakalama yok"
+
+[api.oauth.unknown]
+description = "Refusal of a login operation that does not exist"
+other = "bu kimliğe sahip oturum açma işlemi yok"
+
+[api.oauth.port_busy]
+description = "Refusal of a sign-in whose callback port another process holds"
+other = "{{process}} {{port}} portunu kullanıyor; giriş yapmak için kapatın"
+
+[api.integration.action_in_progress]
+description = "Refusal of a second run of an action the first has not finished"
+other = "bu işlem zaten çalışıyor; bitmesini bekleyin"
+
+[api.route.missing]
+description = "Refusal of a management path that matches no route"
+other = "eşleşen yol yok"
+
+[api.route.unavailable]
+description = "Refusal of a management endpoint that is not implemented"
+other = "bu uç nokta henüz kullanılabilir değil"
+
+[api.service.unavailable]
+description = "Refusal of a management request when the service is missing"
+other = "yönetim hizmeti kullanılamıyor"
+
+[api.settings.retention.invalid]
+description = "Refusal of a retention budget below the floor the ledger keeps"
+other = "request details are kept for at least a {{.Min}}-day window; use 0 to keep everything"
+
+[api.settings.sweep.busy]
+description = "Refusal of a maintenance sweep while another one is running"
+other = "a maintenance sweep is already running; wait for it to finish"
+
+[api.account.status_required]
+description = "Refusal of an account update that named neither status nor priority"
+other = "durum veya öncelik gerekli"
+
+[tray.tooltip]
+description = "Tooltip of the tray icon"
+other = "Relo — yerel AI proxy"
+
+[tray.menu.open_dashboard]
+description = "Tray menu item that opens the console in a browser"
+other = "Dashboard'u aç"
+
+[tray.menu.restart]
+description = "Tray menu item that restarts the daemon"
+other = "Sunucuyu yeniden başlat"
+
+[tray.menu.force_restart]
+description = "Tray menu item that kills the daemon and starts it again"
+other = "Zorla yeniden başlat"
+
+[tray.menu.autostart]
+description = "Tray menu item that toggles the login item"
+other = "Oturum açılışında başlat"
+
+[tray.menu.language]
+description = "Tray submenu that chooses the language"
+other = "Dil"
+
+[tray.menu.quit]
+description = "Tray submenu that quits the desktop app"
+other = "Çık"
+
+[tray.menu.quit_hide]
+description = "Tray menu item that hides the icon and leaves the proxy serving"
+other = "Simgeyi gizle (vekil çalışmaya devam eder)"
+
+[tray.menu.quit_shutdown]
+description = "Tray menu item that quits the desktop app and stops the daemon"
+other = "Çık ve daemon'u kapat"
+
+[tray.notify.failed]
+description = "Notification when a proxy run failed"
+other = "Proxy başlamadı. {{.Detail}}"
+
+[tray.status.running]
+description = "Tray menu status row for a running daemon"
+other = "Çalışıyor · {{.Addr}}"
+
+[tray.status.stopped]
+description = "Tray menu status row for a stopped daemon"
+other = "Durduruldu"
+
+[tray.status.failed]
+description = "Tray menu status row for a daemon that failed"
+other = "Başarısız · {{.Detail}}"
+
+[tray.info.requests]
+description = "Tray menu row that charts the last day of requests"
+other = "İstekler {{.Value}}"
+
+[tray.info.tokens]
+description = "Tray menu row that charts the last day of tokens"
+other = "Token {{.Value}}"
+
+[tray.info.spend]
+description = "Tray menu row that charts the last day of spend"
+other = "Harcama {{.Value}}"
+
+[tray.error.unknown]
+description = "Placeholder when a failure carried no message"
+other = "bilinmeyen hata"
+
+[tray.notify.browser_failed]
+description = "Notification when no browser could be opened"
+other = "Tarayıcı açılamadı"
+
+[tray.notify.autostart_failed]
+description = "Notification when the login item could not be changed"
+other = "Oturum açılışı öğesi değiştirilemedi"
+
+[tray.notify.language_failed]
+description = "Notification when a language choice could not be stored"
+other = "Dil kaydedilemedi"
+
+[cli.daemon.start.short]
+description = "One-line summary of relo daemon start"
+other = "Relo proxy'sini arka planda başlat"
+
+[cli.daemon.start.port]
+description = "Usage of the start --port flag"
+other = "dinleme portunu geçersiz kıl"
+
+[cli.daemon.start.started]
+description = "Confirmation after a start"
+other = "Relo {{.Addr}} adresinde çalışıyor"
+
+[cli.daemon.start.already]
+description = "What start prints when the daemon is already up"
+other = "Relo zaten {{.Addr}} adresinde çalışıyor"
+
+[cli.daemon.start.failed]
+description = "What start prints when the daemon never became healthy"
+other = "daemon başlamadı: {{.Detail}}"
+
+[cli.daemon.start.log]
+description = "Where a started daemon writes what it logs"
+other = "daemon günlüğü: {{.Path}}"
+
+[cli.daemon.stop.short]
+description = "One-line summary of relo daemon stop"
+other = "Yaşam döngüsü komutlarının yönettiği Relo proxy'sini durdur"
+
+[cli.daemon.stop.stopped]
+description = "Confirmation after a stop"
+other = "Relo durduruldu"
+
+[cli.daemon.stop.not_running]
+description = "What stop prints when nothing is running"
+other = "Relo çalışmıyor"
+
+[cli.daemon.restart.short]
+description = "One-line summary of relo daemon restart"
+other = "Relo proxy'sini yeniden başlat"
+
+[cli.daemon.restart.port]
+description = "Usage of the restart --port flag"
+other = "dinleme portunu geçersiz kıl"
+
+[cli.daemon.restart.force]
+description = "Usage of the restart --force flag"
+other = "çalışan süreci sonlandır ve yeni bir daemon başlat"
+
+[cli.daemon.restart.restarted]
+description = "Confirmation after a restart"
+other = "Relo {{.Addr}} adresinde çalışıyor"
+
+[cli.daemon.status.no_keys_hint]
+description = "How to create the first client key"
+other = "Konsolun Anahtarlar sayfasında bir tane oluştur."
+
+[api.daemon.not_headless]
+description = "Refusal of a stop request when this process is not a headless daemon"
+other = "bu süreç bir durdurma isteğini kabul etmiyor"
+
+[api.daemon.instance_mismatch]
+description = "Refusal of a stop request naming another instance"
+other = "durdurma isteği farklı bir örneği belirtiyor"
+
+[tray.menu.version]
+description = "Tray menu version label"
+other = "Sürüm {{.Version}}"
+
+[tray.menu.update_version]
+description = "Tray menu update action"
+other = "Güncelle: {{.Version}}"
+
+[tray.error.not_ready]
+description = "Daemon not ready error"
+other = "Hazır değil"
+
+[tray.error.port_in_use]
+description = "Port conflict error"
+other = "Port kullanımda"
+
+[tray.error.timed_out]
+description = "Timeout error"
+other = "Zaman aşımı"
+
+[tray.error.database]
+description = "Database availability error"
+other = "Veritabanı kullanılamıyor"
+
+[tray.error.start_failed]
+description = "Daemon start error"
+other = "Başlatılamadı"
+
+[cli.daemon.stop.force]
+description = "Usage of the stop --force flag"
+other = "çalışan süreci sonlandır ve Relo'nun sunduğu portları boşalt"
+
+[cli.uninstall.short]
+description = "One-line summary of relo uninstall"
+other = "Relo'yu bu bilgisayardan kaldır"
+
+[cli.uninstall.keep_data]
+description = "Usage of the uninstall --keep-data flag"
+other = "Relo verilerini koru (yapılandırma, kimlik bilgileri, günlükler)"
+
+[cli.uninstall.wipe]
+description = "Usage of the uninstall --wipe flag"
+other = "Relo verilerini sil (yapılandırma, kimlik bilgileri, günlükler)"
+
+[cli.uninstall.prepare]
+description = "Usage of the hidden uninstall --prepare flag"
+other = "hizmeti durdur ve otomatik başlatmayı kapat, programı yerinde bırak"
+
+[cli.uninstall.ask_data]
+description = "The question an interactive uninstall asks about the Relo data"
+other = "Relo verileri (yapılandırma, kimlik bilgileri, günlükler) silinsin mi? [e/H]"
+
+[cli.uninstall.kept]
+description = "What an uninstall reports when the Relo data stays"
+other = "Relo verileriniz {{.Home}} içinde"
+
+[cli.uninstall.wiped]
+description = "What an uninstall reports after the Relo data is removed"
+other = "Relo verileriniz silindi"
+
+[cli.uninstall.removing]
+description = "What an uninstall says as it hands the program to its installer"
+other = "Relo kaldırılıyor…"
+
+[cli.uninstall.manual]
+description = "What an uninstall says when nothing on the machine removes Relo"
+other = "Relo programını elle kaldır"
+
+[cli.uninstall.trash]
+description = "What an uninstall says when the macOS app bundle could not be deleted"
+other = "{{.Bundle}} uygulamasını Çöp'e at"
+
+[cli.uninstall.run]
+description = "The command to run when a removal could not be started"
+other = "Relo'yu kaldırmayı tamamlamak için bunu çalıştır: {{.Command}}"

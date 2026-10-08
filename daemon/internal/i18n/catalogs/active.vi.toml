@@ -1,0 +1,679 @@
+# The messages Relo speaks, in English. This file is the source every
+# other catalog mirrors: the same IDs, and the same plural forms wherever
+# English has them.
+
+[cli.root.short]
+description = "One-line summary of the relo command"
+other = "Proxy AI cục bộ, gom nhóm thông tin xác thực đa tài khoản"
+
+[cli.root.home]
+description = "Usage of the --home flag"
+other = "thư mục trạng thái (mặc định $RELO_HOME, sau đó là ~/.relo)"
+
+[cli.root.lang]
+description = "Usage of the --lang flag"
+other = "ngôn ngữ cho lần chạy này (auto, hoặc thẻ như en, de, ja)"
+
+[cli.usage.title]
+description = "Heading above the usage line of a help screen"
+other = "Cách dùng:"
+
+[cli.usage.aliases]
+description = "Heading above the aliases of a command"
+other = "Bí danh:"
+
+[cli.usage.examples]
+description = "Heading above the examples of a command"
+other = "Ví dụ:"
+
+[cli.usage.commands]
+description = "Heading above the list of commands"
+other = "Lệnh khả dụng:"
+
+[cli.usage.more_commands]
+description = "Heading above commands that belong to no group"
+other = "Lệnh bổ sung:"
+
+[cli.usage.flags]
+description = "Heading above the flags of one command"
+other = "Cờ:"
+
+[cli.usage.global_flags]
+description = "Heading above the flags every command shares"
+other = "Cờ toàn cục:"
+
+[cli.usage.topics]
+description = "Heading above extra help topics"
+other = "Chủ đề trợ giúp bổ sung:"
+
+[cli.usage.footer]
+description = "Closing hint of a help screen; {{.CommandPath}} is the command path and [command] --help stays literal"
+other = "Dùng \"{{.CommandPath}} [command] --help\" để xem thêm về một lệnh."
+
+[cli.help.short]
+description = "One-line summary of relo help"
+other = "Trợ giúp về mọi lệnh"
+
+[cli.help.long]
+description = "Long description of relo help; {{.Name}} is the program name"
+other = "Trợ giúp giải thích mọi lệnh trong ứng dụng.\nGõ {{.Name}} help [đường dẫn lệnh] để xem đầy đủ chi tiết."
+
+[cli.help.flag]
+description = "Usage of the -h/--help flag; {{.Name}} is the command name"
+other = "trợ giúp cho {{.Name}}"
+
+[cli.completion.short]
+description = "One-line summary of relo completion"
+other = "Tạo tập lệnh tự động hoàn thành cho shell được chỉ định"
+
+[cli.completion.long]
+description = "Long description of relo completion; {{.Name}} is the program name"
+other = "Tạo tập lệnh tự động hoàn thành của {{.Name}} cho shell được chỉ định.\nTrợ giúp của từng lệnh con cho biết cách dùng tập lệnh đã tạo."
+
+[cli.completion.shell]
+description = "One-line summary of relo completion for one shell; {{.Shell}} is the shell name"
+other = "Tạo tập lệnh tự động hoàn thành cho {{.Shell}}"
+
+[cli.completion.no_descriptions]
+description = "Usage of the completion --no-descriptions flag"
+other = "tắt mô tả khi hoàn thành"
+
+[cli.version.short]
+description = "One-line summary of relo version"
+other = "In phiên bản và nền tảng"
+
+[cli.daemon.short]
+description = "One-line summary of relo daemon"
+other = "Chạy và quản lý daemon"
+
+[cli.daemon.status.short]
+description = "One-line summary of relo daemon status"
+other = "Kiểm tra xem daemon có đang chạy không"
+
+[cli.daemon.status.json]
+description = "Usage of the status --json flag"
+other = "in báo cáo dưới dạng JSON"
+
+[cli.daemon.status.not_running]
+description = "What status prints when nothing answers on the listen port"
+other = "Relo không chạy"
+
+[cli.daemon.status.running]
+description = "Header status prints for a running daemon"
+other = "Relo đang chạy"
+
+[cli.daemon.status.version]
+description = "Status field label"
+other = "Phiên bản"
+
+[cli.daemon.status.uptime]
+description = "Status field label"
+other = "Thời gian hoạt động"
+
+[cli.daemon.status.address]
+description = "Status field label"
+other = "Địa chỉ"
+
+[cli.daemon.status.data_plane]
+description = "Status field label for the port each client protocol answers on"
+other = "Đường dữ liệu"
+
+[cli.daemon.status.secret_mode]
+description = "Status field label"
+other = "Chế độ bí mật"
+
+[cli.daemon.status.schema_version]
+description = "Status field label"
+other = "Phiên bản schema"
+
+[cli.daemon.status.client_keys]
+description = "Status field label"
+other = "Client key"
+
+[cli.daemon.status.key_count]
+description = "How many client keys exist, and how many still authenticate"
+other = "{{.Count}} ({{.Active}} đang hoạt động)"
+
+[cli.daemon.status.no_keys]
+description = "Warning under the status report when no client key is active"
+other = "Không có client key đang hoạt động. Đường dữ liệu từ chối mọi yêu cầu."
+
+[cli.daemon.run.short]
+description = "One-line summary of relo daemon run"
+other = "Chạy proxy Relo ở tiền cảnh"
+
+[cli.daemon.run.port]
+description = "Usage of the daemon run --port flag"
+other = "ghi đè cổng nghe"
+
+[cli.autostart.short]
+description = "One-line summary of relo autostart"
+other = "Quản lý việc Relo có tự chạy khi đăng nhập hay không"
+
+[cli.autostart.enable.short]
+description = "One-line summary of relo autostart enable"
+other = "đăng ký chạy ứng dụng desktop và daemon khi đăng nhập"
+
+[cli.autostart.disable.short]
+description = "One-line summary of relo autostart disable"
+other = "xóa đăng ký tự chạy khi đăng nhập"
+
+[cli.autostart.added]
+description = "Confirmation after registering the login items"
+other = "Relo sẽ tự chạy khi đăng nhập"
+
+[cli.autostart.removed]
+description = "Confirmation after removing the login items"
+other = "Relo sẽ không còn tự chạy khi đăng nhập"
+
+[language.auto]
+description = "The language choice that follows the system locale"
+other = "Theo hệ thống"
+
+[language.name.en]
+description = "English, named in English"
+other = "English"
+
+[language.name.de]
+description = "German, named in German"
+other = "Deutsch"
+
+[language.name.zh-Hans]
+description = "Simplified Chinese, named in Simplified Chinese"
+other = "简体中文"
+
+[language.name.ar]
+description = "Arabic, named in Arabic"
+other = "العربية"
+
+[language.name.cs]
+description = "Czech, named in Czech"
+other = "Čeština"
+
+[language.name.es]
+description = "Spanish, named in Spanish"
+other = "Español"
+
+[language.name.fr]
+description = "French, named in French"
+other = "Français"
+
+[language.name.hi]
+description = "Hindi, named in Hindi"
+other = "हिन्दी"
+
+[language.name.id]
+description = "Indonesian, named in Indonesian"
+other = "Bahasa Indonesia"
+
+[language.name.it]
+description = "Italian, named in Italian"
+other = "Italiano"
+
+[language.name.ja]
+description = "Japanese, named in Japanese"
+other = "日本語"
+
+[language.name.ko]
+description = "Korean, named in Korean"
+other = "한국어"
+
+[language.name.nl]
+description = "Dutch, named in Dutch"
+other = "Nederlands"
+
+[language.name.pl]
+description = "Polish, named in Polish"
+other = "Polski"
+
+[language.name.pt-BR]
+description = "Brazilian Portuguese, named in Brazilian Portuguese"
+other = "Português (Brasil)"
+
+[language.name.ro]
+description = "Romanian, named in Romanian"
+other = "Română"
+
+[language.name.ru]
+description = "Russian, named in Russian"
+other = "Русский"
+
+[language.name.sv]
+description = "Swedish, named in Swedish"
+other = "Svenska"
+
+[language.name.th]
+description = "Thai, named in Thai"
+other = "ไทย"
+
+[language.name.tr]
+description = "Turkish, named in Turkish"
+other = "Türkçe"
+
+[language.name.uk]
+description = "Ukrainian, named in Ukrainian"
+other = "Українська"
+
+[language.name.vi]
+description = "Vietnamese, named in Vietnamese"
+other = "Tiếng Việt"
+
+[language.name.zh-Hant]
+description = "Traditional Chinese, named in Traditional Chinese"
+other = "繁體中文"
+
+[api.auth.loopback_only]
+description = "Sign-in refusal for a request that did not arrive over loopback"
+other = "chỉ có thể đăng nhập từ máy này"
+
+[api.auth.invalid_token]
+description = "Sign-in refusal for a wrong admin token"
+other = "token quản trị không hợp lệ"
+
+[api.auth.session_failed]
+description = "Sign-in failure when no session could be started"
+other = "bảng điều khiển không thể tạo phiên"
+
+[api.auth.session_missing]
+description = "Refusal of a management request without a live session"
+other = "phiên của bảng điều khiển bị thiếu hoặc đã hết hạn"
+
+[api.body.invalid]
+description = "Refusal of a body that does not parse, with the parser's detail"
+other = "nội dung yêu cầu không hợp lệ: {{.Detail}}"
+
+[api.body.single_object]
+description = "Refusal of a body that carries more than one JSON object"
+other = "nội dung yêu cầu không hợp lệ: cần đúng một đối tượng JSON"
+
+[api.callback.heading]
+description = "Title of the page a browser lands on after a provider redirect"
+other = "Hoàn tất đăng nhập"
+
+[api.callback.summary]
+description = "Summary of the callback page while the authorization is exchanged"
+other = "Relo đã nhận được ủy quyền và đang lưu tài khoản."
+
+[api.callback.marker_working]
+description = "Status marker of a login that is still running"
+other = "Đang xử lý"
+
+[api.callback.marker_connected]
+description = "Status marker of a login that stored an account"
+other = "Đã kết nối"
+
+[api.callback.marker_failed]
+description = "Status marker of a login that did not finish"
+other = "Chưa kết nối"
+
+[api.callback.steps_label]
+description = "Accessible label of the progress list on the callback page"
+other = "Tiến độ đăng nhập"
+
+[api.callback.step_authorized]
+description = "First step of a login: the provider authorized the request"
+other = "Được {{.Provider}} ủy quyền"
+
+[api.callback.step_exchanging]
+description = "Second step of a login: the authorization is traded for tokens"
+other = "Đang trao đổi ủy quyền"
+
+[api.callback.step_stored]
+description = "Third step of a login: the account is stored"
+other = "Đã lưu tài khoản"
+
+[api.callback.connected_title]
+description = "Title of the callback page for a login that finished"
+other = "Đã kết nối"
+
+[api.callback.connected_body]
+description = "Summary of the callback page for a login that finished"
+other = "Relo đã lưu tài khoản và định tuyến các yêu cầu qua tài khoản đó."
+
+[api.callback.failed_title]
+description = "Title of the callback page for a login that did not finish"
+other = "Đăng nhập không hoàn tất"
+
+[api.callback.expired_title]
+description = "Title of the callback page for a login this process no longer tracks"
+other = "Phiên đăng nhập này không còn hiệu lực"
+
+[api.callback.expired_body]
+description = "Summary of the callback page for a login this process no longer tracks"
+other = "Relo không còn theo dõi phiên đăng nhập này. Hãy bắt đầu lại từ bảng điều khiển."
+
+[api.callback.expired]
+description = "Refusal of a callback status poll for a login that is gone"
+other = "phiên đăng nhập này không còn hiệu lực"
+
+[api.callback.failure_denied]
+description = "Callback failure: the provider refused the authorization"
+other = "Nhà cung cấp đã từ chối cấp ủy quyền."
+
+[api.callback.failure_state]
+description = "Callback failure: the callback did not match the login Relo started"
+other = "Callback không khớp với phiên đăng nhập Relo đã bắt đầu, hoặc nó đã được dùng."
+
+[api.callback.failure_timeout]
+description = "Callback failure: the provider did not answer in time"
+other = "Nhà cung cấp không phản hồi kịp thời."
+
+[api.callback.failure_exchange]
+description = "Callback failure: the provider would not exchange the authorization"
+other = "Nhà cung cấp không trao đổi ủy quyền lấy token."
+
+[api.callback.account_label]
+description = "Label of the stored account on the callback page"
+other = "Tài khoản"
+
+[api.callback.close_hint]
+description = "What the callback page tells an operator once the login finished"
+other = "Bạn có thể đóng tab này."
+
+[api.callback.closing_in]
+description = "Countdown shown on the callback page before it closes itself"
+other = "Đóng sau {{.Seconds}} giây…"
+
+[api.callback.console_link]
+description = "Link from the callback page to the console page that lists accounts"
+other = "Mở bảng điều khiển"
+
+[api.dashboard.missing]
+description = "Refusal of a console request in a build without one"
+other = "bản dựng này không có bảng điều khiển"
+
+[api.events.unknown]
+description = "Refusal of an event stream for a channel that does not exist"
+other = "không có kênh sự kiện đó"
+
+[api.events.cannot_stream]
+description = "Refusal of an event stream over a listener that cannot stream"
+other = "listener này không hỗ trợ streaming"
+
+[api.events.too_many]
+description = "Refusal of an event stream when too many are already open"
+other = "quá nhiều luồng sự kiện đang mở"
+
+[api.inference.retired]
+description = "Refusal of an inference path that moved to the port of its protocol"
+other = "các cổng inference đã chuyển sang {{.BaseURL}}"
+
+[api.keys.invalid]
+description = "Refusal of an inference request with a key that does not authenticate"
+other = "API key không hợp lệ"
+
+[api.keys.missing_header]
+description = "Refusal of an inference request without a credential"
+other = "thiếu hoặc không hợp lệ header Authorization"
+
+[api.keys.store_unavailable]
+description = "Refusal of an inference request when the key store is down"
+other = "kho API key không khả dụng"
+
+[api.logs.event_id_number]
+description = "Refusal of a log request whose event id is not a number"
+other = "id sự kiện phải là số"
+
+[api.logs.capture_id_number]
+description = "Refusal of a capture read whose capture id is not a number"
+other = "id capture phải là số"
+
+[api.logs.capture_missing]
+description = "Refusal of a capture read that names no stored capture"
+other = "không có capture nào đã lưu với id đó"
+
+[api.oauth.unknown]
+description = "Refusal of a login operation that does not exist"
+other = "không có thao tác đăng nhập nào với id đó"
+
+[api.oauth.port_busy]
+description = "Refusal of a sign-in whose callback port another process holds"
+other = "{{process}} đang dùng cổng {{port}}; hãy kết thúc nó để đăng nhập"
+
+[api.integration.action_in_progress]
+description = "Refusal of a second run of an action the first has not finished"
+other = "thao tác đó đang chạy; hãy đợi cho đến khi xong"
+
+[api.route.missing]
+description = "Refusal of a management path that matches no route"
+other = "không có route phù hợp"
+
+[api.route.unavailable]
+description = "Refusal of a management endpoint that is not implemented"
+other = "endpoint này chưa khả dụng"
+
+[api.service.unavailable]
+description = "Refusal of a management request when the service is missing"
+other = "dịch vụ quản lý không khả dụng"
+
+[api.settings.retention.invalid]
+description = "Refusal of a retention budget below the floor the ledger keeps"
+other = "request details are kept for at least a {{.Min}}-day window; use 0 to keep everything"
+
+[api.settings.sweep.busy]
+description = "Refusal of a maintenance sweep while another one is running"
+other = "a maintenance sweep is already running; wait for it to finish"
+
+[api.account.status_required]
+description = "Refusal of an account update that named neither status nor priority"
+other = "phải có status hoặc priority"
+
+[tray.tooltip]
+description = "Tooltip of the tray icon"
+other = "Relo — proxy AI cục bộ"
+
+[tray.menu.open_dashboard]
+description = "Tray menu item that opens the console in a browser"
+other = "Mở bảng điều khiển"
+
+[tray.menu.restart]
+description = "Tray menu item that restarts the daemon"
+other = "Khởi động lại server"
+
+[tray.menu.force_restart]
+description = "Tray menu item that kills the daemon and starts it again"
+other = "Buộc khởi động lại server"
+
+[tray.menu.autostart]
+description = "Tray menu item that toggles the login item"
+other = "Tự chạy khi đăng nhập"
+
+[tray.menu.language]
+description = "Tray submenu that chooses the language"
+other = "Ngôn ngữ"
+
+[tray.menu.quit]
+description = "Tray submenu that quits the desktop app"
+other = "Thoát"
+
+[tray.menu.quit_hide]
+description = "Tray menu item that hides the icon and leaves the proxy serving"
+other = "Ẩn biểu tượng (proxy vẫn tiếp tục chạy)"
+
+[tray.menu.quit_shutdown]
+description = "Tray menu item that quits the desktop app and stops the daemon"
+other = "Thoát và tắt daemon"
+
+[tray.notify.failed]
+description = "Notification when a proxy run failed"
+other = "Proxy không khởi động. {{.Detail}}"
+
+[tray.status.running]
+description = "Tray menu status row for a running daemon"
+other = "Đang chạy · {{.Addr}}"
+
+[tray.status.stopped]
+description = "Tray menu status row for a stopped daemon"
+other = "Đã dừng"
+
+[tray.status.failed]
+description = "Tray menu status row for a daemon that failed"
+other = "Thất bại · {{.Detail}}"
+
+[tray.info.requests]
+description = "Tray menu row that charts the last day of requests"
+other = "Yêu cầu {{.Value}}"
+
+[tray.info.tokens]
+description = "Tray menu row that charts the last day of tokens"
+other = "Token {{.Value}}"
+
+[tray.info.spend]
+description = "Tray menu row that charts the last day of spend"
+other = "Chi tiêu {{.Value}}"
+
+[tray.error.unknown]
+description = "Placeholder when a failure carried no message"
+other = "lỗi không xác định"
+
+[tray.notify.browser_failed]
+description = "Notification when no browser could be opened"
+other = "Không thể mở trình duyệt"
+
+[tray.notify.autostart_failed]
+description = "Notification when the login item could not be changed"
+other = "Không thể thay đổi mục đăng nhập"
+
+[tray.notify.language_failed]
+description = "Notification when a language choice could not be stored"
+other = "Không thể lưu ngôn ngữ"
+
+[cli.daemon.start.short]
+description = "One-line summary of relo daemon start"
+other = "Chạy proxy Relo ở nền"
+
+[cli.daemon.start.port]
+description = "Usage of the start --port flag"
+other = "ghi đè cổng nghe"
+
+[cli.daemon.start.started]
+description = "Confirmation after a start"
+other = "Relo đang chạy tại {{.Addr}}"
+
+[cli.daemon.start.already]
+description = "What start prints when the daemon is already up"
+other = "Relo đã chạy tại {{.Addr}}"
+
+[cli.daemon.start.failed]
+description = "What start prints when the daemon never became healthy"
+other = "daemon không khởi động được: {{.Detail}}"
+
+[cli.daemon.start.log]
+description = "Where a started daemon writes what it logs"
+other = "nhật ký daemon nằm ở {{.Path}}"
+
+[cli.daemon.stop.short]
+description = "One-line summary of relo daemon stop"
+other = "Dừng proxy Relo do các lệnh vòng đời quản lý"
+
+[cli.daemon.stop.stopped]
+description = "Confirmation after a stop"
+other = "Đã dừng Relo"
+
+[cli.daemon.stop.not_running]
+description = "What stop prints when nothing is running"
+other = "Relo không chạy"
+
+[cli.daemon.restart.short]
+description = "One-line summary of relo daemon restart"
+other = "Khởi động lại proxy Relo"
+
+[cli.daemon.restart.port]
+description = "Usage of the restart --port flag"
+other = "ghi đè cổng nghe"
+
+[cli.daemon.restart.force]
+description = "Usage of the restart --force flag"
+other = "huỷ tiến trình đang chạy và khởi động daemon mới"
+
+[cli.daemon.restart.restarted]
+description = "Confirmation after a restart"
+other = "Relo đang chạy tại {{.Addr}}"
+
+[cli.daemon.status.no_keys_hint]
+description = "How to create the first client key"
+other = "Tạo một cái ở trang Keys của bảng điều khiển."
+
+[api.daemon.not_headless]
+description = "Refusal of a stop request when this process is not a headless daemon"
+other = "tiến trình này không nhận yêu cầu dừng"
+
+[api.daemon.instance_mismatch]
+description = "Refusal of a stop request naming another instance"
+other = "yêu cầu dừng trỏ tới một instance khác"
+
+[tray.menu.version]
+description = "Tray menu version label"
+other = "Phiên bản {{.Version}}"
+
+[tray.menu.update_version]
+description = "Tray menu update action"
+other = "Cập nhật lên {{.Version}}"
+
+[tray.error.not_ready]
+description = "Daemon not ready error"
+other = "Chưa sẵn sàng"
+
+[tray.error.port_in_use]
+description = "Port conflict error"
+other = "Cổng đang được dùng"
+
+[tray.error.timed_out]
+description = "Timeout error"
+other = "Hết thời gian"
+
+[tray.error.database]
+description = "Database availability error"
+other = "Cơ sở dữ liệu không khả dụng"
+
+[tray.error.start_failed]
+description = "Daemon start error"
+other = "Không thể khởi động"
+
+[cli.daemon.stop.force]
+description = "Usage of the stop --force flag"
+other = "kết thúc tiến trình đang chạy và giải phóng các cổng do Relo phục vụ"
+
+[cli.uninstall.short]
+description = "One-line summary of relo uninstall"
+other = "gỡ Relo khỏi máy này"
+
+[cli.uninstall.keep_data]
+description = "Usage of the uninstall --keep-data flag"
+other = "giữ dữ liệu Relo (cấu hình, thông tin xác thực, nhật ký)"
+
+[cli.uninstall.wipe]
+description = "Usage of the uninstall --wipe flag"
+other = "xóa dữ liệu Relo (cấu hình, thông tin xác thực, nhật ký)"
+
+[cli.uninstall.prepare]
+description = "Usage of the hidden uninstall --prepare flag"
+other = "dừng dịch vụ và tắt khởi động tự động, giữ nguyên chương trình tại chỗ"
+
+[cli.uninstall.ask_data]
+description = "The question an interactive uninstall asks about the Relo data"
+other = "Xóa dữ liệu Relo (cấu hình, thông tin xác thực, nhật ký)? [c/K]"
+
+[cli.uninstall.kept]
+description = "What an uninstall reports when the Relo data stays"
+other = "Dữ liệu Relo của bạn nằm ở {{.Home}}"
+
+[cli.uninstall.wiped]
+description = "What an uninstall reports after the Relo data is removed"
+other = "Dữ liệu Relo của bạn đã được xóa"
+
+[cli.uninstall.removing]
+description = "What an uninstall says as it hands the program to its installer"
+other = "Đang gỡ Relo…"
+
+[cli.uninstall.manual]
+description = "What an uninstall says when nothing on the machine removes Relo"
+other = "gỡ chương trình Relo theo cách thủ công"
+
+[cli.uninstall.trash]
+description = "What an uninstall says when the macOS app bundle could not be deleted"
+other = "chuyển {{.Bundle}} vào Thùng rác"
+
+[cli.uninstall.run]
+description = "The command to run when a removal could not be started"
+other = "chạy lệnh này để hoàn tất gỡ Relo: {{.Command}}"

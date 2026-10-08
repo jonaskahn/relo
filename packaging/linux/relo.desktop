@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=Relo
+Comment=Local AI proxy with multi-account credential pooling
+Exec=relo daemon start
+Icon=relo
+Terminal=false
+Categories=Network;Utility;

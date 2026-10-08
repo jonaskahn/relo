@@ -1,0 +1,69 @@
+# Per-package coverage gate. One row per internal package:
+#
+#   <source package>	<test packages, comma separated>	[floor]
+#
+# The gate fails when a mapped test package is missing, when a source package
+# under daemon/internal is neither mapped nor declared exempt, when a mapped
+# test run fails, or when a package measures below its floor.
+#
+# The floor is 90 unless a row names its own. A row that names a lower floor
+# measured below the target when this mapping was written, so the number
+# records where the package actually stands; the target for every package
+# stays 90, and a row is raised as its tests catch up.
+#
+# A package no test measures is listed as
+#   exempt	<source package>	<reason>
+# so leaving one unmeasured stays a visible decision.
+internal/access	tests/unit/access/...
+internal/account	tests/unit/account/...
+internal/activity	tests/unit/activity/...,tests/unit/sqlite/...,tests/unit/service/...	89
+internal/adapters/awsauth	internal/adapters/awsauth/...	80
+internal/adapters/gcpauth	internal/adapters/gcpauth/...	81
+internal/adapters/modelsdev	internal/adapters/modelsdev/...	55
+internal/adapters/oauth	tests/unit/oauth/...,internal/adapters/oauth/...
+internal/adapters/quota	tests/unit/quota/...	79
+internal/adapters/secrets	tests/unit/secrets/...	85
+internal/adapters/sqlite	tests/unit/sqlite/...	63
+internal/adapters/upstream	tests/unit/upstream/...	37
+internal/adapters/wire	tests/unit/wire/...	12
+internal/adapters/wire/anthropic	tests/unit/wire/anthropic/...
+internal/adapters/wire/bedrock	internal/adapters/wire/bedrock/...	56
+internal/adapters/wire/eventstream	internal/adapters/wire/eventstream/...	81
+internal/adapters/wire/formats	tests/unit/wire/formats/...
+internal/adapters/wire/google	tests/unit/wire/google/...	86
+internal/adapters/wire/kiro	internal/adapters/wire/kiro/...	68
+internal/adapters/wire/openaichat	tests/unit/wire/...	47
+internal/adapters/wire/openairesponses	tests/unit/wire/openairesponses/...
+internal/adapters/wire/sse	tests/unit/wire/sse/...
+internal/adapters/antigravity	tests/unit/quota/...	79
+internal/platform	tests/unit/cli/...,tests/unit/platform/...,internal/platform/...	53
+internal/catalog	tests/unit/routing/...,tests/unit/service/...,tests/unit/sqlite/...	70
+internal/cli	tests/unit/cli/...	79
+internal/clock	tests/unit/clock/...
+internal/config	tests/unit/config/...	85
+internal/dashboard	tests/unit/dashboard/...
+internal/desktop	tests/unit/desktop/...,internal/desktop/...	46
+internal/platform/autostart	tests/unit/platform/autostart/...	81
+internal/i18n	tests/unit/i18n/...	81
+internal/adapters/codingclients	tests/unit/codingclients/...,tests/unit/integration/...	78
+internal/application/integration	tests/unit/integration/...,tests/unit/service/...,internal/application/integration/...	71
+internal/application/access	tests/unit/access/...,tests/unit/service/...,tests/unit/server/...	78
+internal/application/account	tests/unit/service/...,tests/unit/server/...	82
+internal/application/activity	tests/unit/service/...,tests/unit/server/...
+internal/application/settings	tests/unit/service/...,tests/unit/server/...,tests/unit/cli/...	88
+internal/application/routing	tests/unit/service/...,tests/unit/server/...,tests/unit/routing/...	66
+internal/application/status	tests/unit/service/...,tests/unit/server/...	76
+internal/application/templatesettings	tests/unit/service/...	85
+internal/routing	tests/unit/routing/...	33
+internal/server	tests/unit/server/...,tests/integration/contract/...	60
+internal/updates	tests/unit/updates/...	79
+internal/application/catalog	tests/unit/service/...,tests/unit/server/...	80
+internal/adapters/templates	internal/adapters/templates/...	35
+# internal/inference is the canonical request and event vocabulary: plain data
+# with no behavior of its own to measure.
+exempt	internal/inference	canonical data types only
+# internal/adapters/discovery is exercised through the catalog refresh the
+# management integration suite drives, which this gate does not run.
+exempt	internal/adapters/discovery	covered by tests/integration/management
+exempt	internal/adapters/codex	client identity constants only
+internal/contentencoding	internal/contentencoding/...	90

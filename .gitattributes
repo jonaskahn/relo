@@ -1,0 +1,3 @@
+# cmd is happiest with CRLF; the POSIX shim must never be checked out CRLF.
+packaging/windows/relo.cmd text eol=crlf
+packaging/windows/relo     text eol=lf

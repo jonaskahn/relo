@@ -1,0 +1,4 @@
+data: {"id":"chatcmpl-2","object":"chat.completion.chunk","created":2,"model":"gpt-4o","choices":[{"index":0,"delta":{"content":"partial"},"finish_reason":null}]}
+
+data: {"error":{"message":"the upstream stream failed","type":"server_error","code":"server_error"}}
+

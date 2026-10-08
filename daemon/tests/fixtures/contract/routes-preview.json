@@ -1,0 +1,1 @@
+{"candidates":[{"eligible":true,"model_id":"gpt-4o","prices":{"cache_read":null,"cache_write":null,"ext_cache_read":null,"ext_cache_write":null,"ext_input":null,"ext_output":null,"ext_threshold":null,"input":null,"output":null},"provider_id":"openai"}],"kind":"bare","model":"gpt-4o"}

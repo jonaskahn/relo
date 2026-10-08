@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="300" height="300" viewBox="0 0 512 512" fill="none" role="img"
+     aria-label="Relo Proxy Router">
+    <g stroke="#c8102e" stroke-width="32" stroke-linecap="round" fill="none">
+        <path d="M256 91 A165 165 0 0 1 421 256"/>
+        <path d="M256 421 A165 165 0 0 1 91 256"/>
+    </g>
+    <circle cx="256" cy="256" r="64" fill="#c8102e"/>
+</svg>

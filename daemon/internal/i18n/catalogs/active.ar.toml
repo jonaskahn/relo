@@ -1,0 +1,679 @@
+# The messages Relo speaks, in English. This file is the source every
+# other catalog mirrors: the same IDs, and the same plural forms wherever
+# English has them.
+
+[cli.root.short]
+description = "One-line summary of the relo command"
+other = "proxy ذكاء اصطناعي محلي مع تجميع بيانات اعتماد متعددة الحسابات"
+
+[cli.root.home]
+description = "Usage of the --home flag"
+other = "مجلد الحالة (الافتراضي $RELO_HOME، ثم ~/.relo)"
+
+[cli.root.lang]
+description = "Usage of the --lang flag"
+other = "لغة هذا التشغيل (auto، أو وسم مثل en، de، ja)"
+
+[cli.usage.title]
+description = "Heading above the usage line of a help screen"
+other = "الاستخدام:"
+
+[cli.usage.aliases]
+description = "Heading above the aliases of a command"
+other = "الأسماء البديلة:"
+
+[cli.usage.examples]
+description = "Heading above the examples of a command"
+other = "أمثلة:"
+
+[cli.usage.commands]
+description = "Heading above the list of commands"
+other = "الأوامر المتاحة:"
+
+[cli.usage.more_commands]
+description = "Heading above commands that belong to no group"
+other = "أوامر إضافية:"
+
+[cli.usage.flags]
+description = "Heading above the flags of one command"
+other = "الخيارات:"
+
+[cli.usage.global_flags]
+description = "Heading above the flags every command shares"
+other = "الخيارات العامة:"
+
+[cli.usage.topics]
+description = "Heading above extra help topics"
+other = "مواضيع مساعدة إضافية:"
+
+[cli.usage.footer]
+description = "Closing hint of a help screen; {{.CommandPath}} is the command path and [command] --help stays literal"
+other = "استخدم \"{{.CommandPath}} [command] --help\" لمعرفة المزيد عن أي أمر."
+
+[cli.help.short]
+description = "One-line summary of relo help"
+other = "مساعدة حول أي أمر"
+
+[cli.help.long]
+description = "Long description of relo help; {{.Name}} is the program name"
+other = "تشرح المساعدة أي أمر في التطبيق.\nاكتب {{.Name}} help [مسار الأمر] لعرض التفاصيل كاملة."
+
+[cli.help.flag]
+description = "Usage of the -h/--help flag; {{.Name}} is the command name"
+other = "مساعدة {{.Name}}"
+
+[cli.completion.short]
+description = "One-line summary of relo completion"
+other = "أنشئ سكربت الإكمال التلقائي لبيئة shell المحددة"
+
+[cli.completion.long]
+description = "Long description of relo completion; {{.Name}} is the program name"
+other = "أنشئ سكربت الإكمال التلقائي لبيئة shell المحددة من {{.Name}}.\nتشرح مساعدة كل أمر فرعي طريقة استخدام السكربت الذي أُنشئ."
+
+[cli.completion.shell]
+description = "One-line summary of relo completion for one shell; {{.Shell}} is the shell name"
+other = "أنشئ سكربت الإكمال التلقائي لبيئة shell: {{.Shell}}"
+
+[cli.completion.no_descriptions]
+description = "Usage of the completion --no-descriptions flag"
+other = "عطّل أوصاف الإكمال"
+
+[cli.version.short]
+description = "One-line summary of relo version"
+other = "اطبع الإصدار والمنصة"
+
+[cli.daemon.short]
+description = "One-line summary of relo daemon"
+other = "شغّل daemon وأدِره"
+
+[cli.daemon.status.short]
+description = "One-line summary of relo daemon status"
+other = "اعرض ما إذا كان daemon قيد التشغيل"
+
+[cli.daemon.status.json]
+description = "Usage of the status --json flag"
+other = "اطبع التقرير بصيغة JSON"
+
+[cli.daemon.status.not_running]
+description = "What status prints when nothing answers on the listen port"
+other = "Relo لا يعمل"
+
+[cli.daemon.status.running]
+description = "Header status prints for a running daemon"
+other = "Relo قيد التشغيل"
+
+[cli.daemon.status.version]
+description = "Status field label"
+other = "الإصدار"
+
+[cli.daemon.status.uptime]
+description = "Status field label"
+other = "مدة التشغيل"
+
+[cli.daemon.status.address]
+description = "Status field label"
+other = "العنوان"
+
+[cli.daemon.status.data_plane]
+description = "Status field label for the port each client protocol answers on"
+other = "مسار البيانات"
+
+[cli.daemon.status.secret_mode]
+description = "Status field label"
+other = "الوضع السري"
+
+[cli.daemon.status.schema_version]
+description = "Status field label"
+other = "إصدار المخطط"
+
+[cli.daemon.status.client_keys]
+description = "Status field label"
+other = "مفاتيح العميل"
+
+[cli.daemon.status.key_count]
+description = "How many client keys exist, and how many still authenticate"
+other = "{{.Count}} ({{.Active}} نشط)"
+
+[cli.daemon.status.no_keys]
+description = "Warning under the status report when no client key is active"
+other = "لا يوجد مفتاح عميل نشط. يرفض proxy كل الطلبات."
+
+[cli.daemon.run.short]
+description = "One-line summary of relo daemon run"
+other = "شغّل proxy Relo في المقدمة"
+
+[cli.daemon.run.port]
+description = "Usage of the daemon run --port flag"
+other = "غيّر منفذ الاستماع"
+
+[cli.autostart.short]
+description = "One-line summary of relo autostart"
+other = "أدر ما إذا كان Relo يبدأ عند تسجيل الدخول"
+
+[cli.autostart.enable.short]
+description = "One-line summary of relo autostart enable"
+other = "شغّل تطبيق سطح المكتب و daemon عند تسجيل الدخول"
+
+[cli.autostart.disable.short]
+description = "One-line summary of relo autostart disable"
+other = "أزل تسجيل البدء عند تسجيل الدخول"
+
+[cli.autostart.added]
+description = "Confirmation after registering the login items"
+other = "سيبدأ Relo عند تسجيل الدخول"
+
+[cli.autostart.removed]
+description = "Confirmation after removing the login items"
+other = "لن يبدأ Relo عند تسجيل الدخول"
+
+[language.auto]
+description = "The language choice that follows the system locale"
+other = "اتبع النظام"
+
+[language.name.en]
+description = "English, named in English"
+other = "English"
+
+[language.name.de]
+description = "German, named in German"
+other = "Deutsch"
+
+[language.name.zh-Hans]
+description = "Simplified Chinese, named in Simplified Chinese"
+other = "简体中文"
+
+[language.name.ar]
+description = "Arabic, named in Arabic"
+other = "العربية"
+
+[language.name.cs]
+description = "Czech, named in Czech"
+other = "Čeština"
+
+[language.name.es]
+description = "Spanish, named in Spanish"
+other = "Español"
+
+[language.name.fr]
+description = "French, named in French"
+other = "Français"
+
+[language.name.hi]
+description = "Hindi, named in Hindi"
+other = "हिन्दी"
+
+[language.name.id]
+description = "Indonesian, named in Indonesian"
+other = "Bahasa Indonesia"
+
+[language.name.it]
+description = "Italian, named in Italian"
+other = "Italiano"
+
+[language.name.ja]
+description = "Japanese, named in Japanese"
+other = "日本語"
+
+[language.name.ko]
+description = "Korean, named in Korean"
+other = "한국어"
+
+[language.name.nl]
+description = "Dutch, named in Dutch"
+other = "Nederlands"
+
+[language.name.pl]
+description = "Polish, named in Polish"
+other = "Polski"
+
+[language.name.pt-BR]
+description = "Brazilian Portuguese, named in Brazilian Portuguese"
+other = "Português (Brasil)"
+
+[language.name.ro]
+description = "Romanian, named in Romanian"
+other = "Română"
+
+[language.name.ru]
+description = "Russian, named in Russian"
+other = "Русский"
+
+[language.name.sv]
+description = "Swedish, named in Swedish"
+other = "Svenska"
+
+[language.name.th]
+description = "Thai, named in Thai"
+other = "ไทย"
+
+[language.name.tr]
+description = "Turkish, named in Turkish"
+other = "Türkçe"
+
+[language.name.uk]
+description = "Ukrainian, named in Ukrainian"
+other = "Українська"
+
+[language.name.vi]
+description = "Vietnamese, named in Vietnamese"
+other = "Tiếng Việt"
+
+[language.name.zh-Hant]
+description = "Traditional Chinese, named in Traditional Chinese"
+other = "繁體中文"
+
+[api.auth.loopback_only]
+description = "Sign-in refusal for a request that did not arrive over loopback"
+other = "تسجيل الدخول متاح من هذا الجهاز فقط"
+
+[api.auth.invalid_token]
+description = "Sign-in refusal for a wrong admin token"
+other = "admin token غير صالح"
+
+[api.auth.session_failed]
+description = "Sign-in failure when no session could be started"
+other = "تعذّر على وحدة التحكم بدء جلسة"
+
+[api.auth.session_missing]
+description = "Refusal of a management request without a live session"
+other = "جلسة dashboard مفقودة أو منتهية الصلاحية"
+
+[api.body.invalid]
+description = "Refusal of a body that does not parse, with the parser's detail"
+other = "جسم الطلب غير صالح: {{.Detail}}"
+
+[api.body.single_object]
+description = "Refusal of a body that carries more than one JSON object"
+other = "جسم الطلب غير صالح: يُتوقع كائن JSON واحد"
+
+[api.callback.heading]
+description = "Title of the page a browser lands on after a provider redirect"
+other = "إتمام تسجيل الدخول"
+
+[api.callback.summary]
+description = "Summary of the callback page while the authorization is exchanged"
+other = "حصل Relo على التفويض ويخزّن الحساب."
+
+[api.callback.marker_working]
+description = "Status marker of a login that is still running"
+other = "قيد التنفيذ"
+
+[api.callback.marker_connected]
+description = "Status marker of a login that stored an account"
+other = "تم الاتصال"
+
+[api.callback.marker_failed]
+description = "Status marker of a login that did not finish"
+other = "لم يتم الاتصال"
+
+[api.callback.steps_label]
+description = "Accessible label of the progress list on the callback page"
+other = "تقدّم تسجيل الدخول"
+
+[api.callback.step_authorized]
+description = "First step of a login: the provider authorized the request"
+other = "تم التفويض من {{.Provider}}"
+
+[api.callback.step_exchanging]
+description = "Second step of a login: the authorization is traded for tokens"
+other = "استبدال التفويض بـ token"
+
+[api.callback.step_stored]
+description = "Third step of a login: the account is stored"
+other = "تم تخزين الحساب"
+
+[api.callback.connected_title]
+description = "Title of the callback page for a login that finished"
+other = "تم الاتصال"
+
+[api.callback.connected_body]
+description = "Summary of the callback page for a login that finished"
+other = "خزّن Relo الحساب ويوجّه الطلبات عبره."
+
+[api.callback.failed_title]
+description = "Title of the callback page for a login that did not finish"
+other = "لم يكتمل تسجيل الدخول"
+
+[api.callback.expired_title]
+description = "Title of the callback page for a login this process no longer tracks"
+other = "تسجيل الدخول هذا لم يعد مفتوحًا"
+
+[api.callback.expired_body]
+description = "Summary of the callback page for a login this process no longer tracks"
+other = "لم يعد Relo يتابع تسجيل الدخول هذا. ابدأه من جديد من وحدة التحكم."
+
+[api.callback.expired]
+description = "Refusal of a callback status poll for a login that is gone"
+other = "تسجيل الدخول هذا لم يعد مفتوحًا"
+
+[api.callback.failure_denied]
+description = "Callback failure: the provider refused the authorization"
+other = "رفض المزوّد التفويض."
+
+[api.callback.failure_state]
+description = "Callback failure: the callback did not match the login Relo started"
+other = "لم يطابق الرد تسجيل الدخول الذي بدأه Relo، أو استُخدم من قبل."
+
+[api.callback.failure_timeout]
+description = "Callback failure: the provider did not answer in time"
+other = "لم يرد المزوّد في الوقت المحدد."
+
+[api.callback.failure_exchange]
+description = "Callback failure: the provider would not exchange the authorization"
+other = "رفض المزوّد استبدال التفويض بـ token."
+
+[api.callback.account_label]
+description = "Label of the stored account on the callback page"
+other = "الحساب"
+
+[api.callback.close_hint]
+description = "What the callback page tells an operator once the login finished"
+other = "يمكنك إغلاق علامة التبويب هذه."
+
+[api.callback.closing_in]
+description = "Countdown shown on the callback page before it closes itself"
+other = "الإغلاق خلال {{.Seconds}} ثانية…"
+
+[api.callback.console_link]
+description = "Link from the callback page to the console page that lists accounts"
+other = "افتح وحدة التحكم"
+
+[api.dashboard.missing]
+description = "Refusal of a console request in a build without one"
+other = "لا يتوفر dashboard في هذا البناء"
+
+[api.events.unknown]
+description = "Refusal of an event stream for a channel that does not exist"
+other = "لا توجد قناة أحداث بهذا الاسم"
+
+[api.events.cannot_stream]
+description = "Refusal of an event stream over a listener that cannot stream"
+other = "لا يدعم هذا المستمع البث"
+
+[api.events.too_many]
+description = "Refusal of an event stream when too many are already open"
+other = "عدد تدفقات الأحداث المفتوحة كبير جدًا"
+
+[api.inference.retired]
+description = "Refusal of an inference path that moved to the port of its protocol"
+other = "انتقل منفذ الطلبات إلى {{.BaseURL}}"
+
+[api.keys.invalid]
+description = "Refusal of an inference request with a key that does not authenticate"
+other = "مفتاح API غير صالح"
+
+[api.keys.missing_header]
+description = "Refusal of an inference request without a credential"
+other = "ترويسة Authorization مفقودة أو غير صالحة"
+
+[api.keys.store_unavailable]
+description = "Refusal of an inference request when the key store is down"
+other = "مخزن مفاتيح API غير متوفر"
+
+[api.logs.event_id_number]
+description = "Refusal of a log request whose event id is not a number"
+other = "يجب أن يكون معرّف الحدث رقمًا"
+
+[api.logs.capture_id_number]
+description = "Refusal of a capture read whose capture id is not a number"
+other = "يجب أن يكون معرّف الالتقاط رقمًا"
+
+[api.logs.capture_missing]
+description = "Refusal of a capture read that names no stored capture"
+other = "لا يوجد التقاط مخزّن بهذا المعرّف"
+
+[api.oauth.unknown]
+description = "Refusal of a login operation that does not exist"
+other = "لا توجد عملية تسجيل دخول بهذا المعرّف"
+
+[api.oauth.port_busy]
+description = "Refusal of a sign-in whose callback port another process holds"
+other = "{{process}} يستخدم المنفذ {{port}}؛ أنهِه لتسجيل الدخول"
+
+[api.integration.action_in_progress]
+description = "Refusal of a second run of an action the first has not finished"
+other = "هذا الإجراء قيد التنفيذ بالفعل؛ انتظر حتى ينتهي"
+
+[api.route.missing]
+description = "Refusal of a management path that matches no route"
+other = "لا يوجد مسار مطابق"
+
+[api.route.unavailable]
+description = "Refusal of a management endpoint that is not implemented"
+other = "لا يتوفر endpoint هنا بعد"
+
+[api.service.unavailable]
+description = "Refusal of a management request when the service is missing"
+other = "خدمة الإدارة غير متوفرة"
+
+[api.settings.retention.invalid]
+description = "Refusal of a retention budget below the floor the ledger keeps"
+other = "request details are kept for at least a {{.Min}}-day window; use 0 to keep everything"
+
+[api.settings.sweep.busy]
+description = "Refusal of a maintenance sweep while another one is running"
+other = "a maintenance sweep is already running; wait for it to finish"
+
+[api.account.status_required]
+description = "Refusal of an account update that named neither status nor priority"
+other = "الحالة أو الأولوية مطلوبة"
+
+[tray.tooltip]
+description = "Tooltip of the tray icon"
+other = "Relo — proxy محلي للذكاء الاصطناعي"
+
+[tray.menu.open_dashboard]
+description = "Tray menu item that opens the console in a browser"
+other = "افتح dashboard"
+
+[tray.menu.restart]
+description = "Tray menu item that restarts the daemon"
+other = "إعادة تشغيل الخادم"
+
+[tray.menu.force_restart]
+description = "Tray menu item that kills the daemon and starts it again"
+other = "إعادة تشغيل إجبارية"
+
+[tray.menu.autostart]
+description = "Tray menu item that toggles the login item"
+other = "البدء عند تسجيل الدخول"
+
+[tray.menu.language]
+description = "Tray submenu that chooses the language"
+other = "اللغة"
+
+[tray.menu.quit]
+description = "Tray submenu that quits the desktop app"
+other = "إنهاء"
+
+[tray.menu.quit_hide]
+description = "Tray menu item that hides the icon and leaves the proxy serving"
+other = "إخفاء الأيقونة (يستمر الوكيل في العمل)"
+
+[tray.menu.quit_shutdown]
+description = "Tray menu item that quits the desktop app and stops the daemon"
+other = "إنهاء وإيقاف الخادم"
+
+[tray.notify.failed]
+description = "Notification when a proxy run failed"
+other = "لم يبدأ الوكيل. {{.Detail}}"
+
+[tray.status.running]
+description = "Tray menu status row for a running daemon"
+other = "قيد التشغيل · {{.Addr}}"
+
+[tray.status.stopped]
+description = "Tray menu status row for a stopped daemon"
+other = "متوقف"
+
+[tray.status.failed]
+description = "Tray menu status row for a daemon that failed"
+other = "فشل · {{.Detail}}"
+
+[tray.info.requests]
+description = "Tray menu row that charts the last day of requests"
+other = "الطلبات {{.Value}}"
+
+[tray.info.tokens]
+description = "Tray menu row that charts the last day of tokens"
+other = "tokens {{.Value}}"
+
+[tray.info.spend]
+description = "Tray menu row that charts the last day of spend"
+other = "الإنفاق {{.Value}}"
+
+[tray.error.unknown]
+description = "Placeholder when a failure carried no message"
+other = "خطأ غير معروف"
+
+[tray.notify.browser_failed]
+description = "Notification when no browser could be opened"
+other = "تعذّر فتح المتصفح"
+
+[tray.notify.autostart_failed]
+description = "Notification when the login item could not be changed"
+other = "تعذّر تغيير عنصر تسجيل الدخول"
+
+[tray.notify.language_failed]
+description = "Notification when a language choice could not be stored"
+other = "تعذّر حفظ اللغة"
+
+[cli.daemon.start.short]
+description = "One-line summary of relo daemon start"
+other = "شغّل proxy Relo في الخلفية"
+
+[cli.daemon.start.port]
+description = "Usage of the start --port flag"
+other = "غيّر منفذ الاستماع"
+
+[cli.daemon.start.started]
+description = "Confirmation after a start"
+other = "Relo يعمل على {{.Addr}}"
+
+[cli.daemon.start.already]
+description = "What start prints when the daemon is already up"
+other = "Relo يعمل بالفعل على {{.Addr}}"
+
+[cli.daemon.start.failed]
+description = "What start prints when the daemon never became healthy"
+other = "لم يبدأ daemon: {{.Detail}}"
+
+[cli.daemon.start.log]
+description = "Where a started daemon writes what it logs"
+other = "سجل daemon في {{.Path}}"
+
+[cli.daemon.stop.short]
+description = "One-line summary of relo daemon stop"
+other = "أوقف proxy Relo الذي تديره أوامر دورة الحياة"
+
+[cli.daemon.stop.stopped]
+description = "Confirmation after a stop"
+other = "توقف Relo"
+
+[cli.daemon.stop.not_running]
+description = "What stop prints when nothing is running"
+other = "Relo لا يعمل"
+
+[cli.daemon.restart.short]
+description = "One-line summary of relo daemon restart"
+other = "أعد تشغيل proxy Relo"
+
+[cli.daemon.restart.port]
+description = "Usage of the restart --port flag"
+other = "غيّر منفذ الاستماع"
+
+[cli.daemon.restart.force]
+description = "Usage of the restart --force flag"
+other = "أنهِ العملية الجارية وابدأ daemon جديدًا"
+
+[cli.daemon.restart.restarted]
+description = "Confirmation after a restart"
+other = "Relo يعمل على {{.Addr}}"
+
+[cli.daemon.status.no_keys_hint]
+description = "How to create the first client key"
+other = "أنشئ مفتاحًا في صفحة المفاتيح بوحدة التحكم."
+
+[api.daemon.not_headless]
+description = "Refusal of a stop request when this process is not a headless daemon"
+other = "لا تقبل هذه العملية طلب إيقاف"
+
+[api.daemon.instance_mismatch]
+description = "Refusal of a stop request naming another instance"
+other = "طلب الإيقاف يشير إلى نسخة مختلفة"
+
+[tray.menu.version]
+description = "Tray menu version label"
+other = "الإصدار {{.Version}}"
+
+[tray.menu.update_version]
+description = "Tray menu update action"
+other = "حدّث إلى {{.Version}}"
+
+[tray.error.not_ready]
+description = "Daemon not ready error"
+other = "غير جاهز"
+
+[tray.error.port_in_use]
+description = "Port conflict error"
+other = "المنفذ مستخدم"
+
+[tray.error.timed_out]
+description = "Timeout error"
+other = "انتهت المهلة"
+
+[tray.error.database]
+description = "Database availability error"
+other = "قاعدة البيانات غير متاحة"
+
+[tray.error.start_failed]
+description = "Daemon start error"
+other = "تعذّر التشغيل"
+
+[cli.daemon.stop.force]
+description = "Usage of the stop --force flag"
+other = "إنهاء العملية الجارية وتحرير المنافذ التي يخدمها Relo"
+
+[cli.uninstall.short]
+description = "One-line summary of relo uninstall"
+other = "إزالة Relo من هذا الجهاز"
+
+[cli.uninstall.keep_data]
+description = "Usage of the uninstall --keep-data flag"
+other = "الإبقاء على بيانات Relo (الإعدادات وبيانات الاعتماد والسجلات)"
+
+[cli.uninstall.wipe]
+description = "Usage of the uninstall --wipe flag"
+other = "حذف بيانات Relo (الإعدادات وبيانات الاعتماد والسجلات)"
+
+[cli.uninstall.prepare]
+description = "Usage of the hidden uninstall --prepare flag"
+other = "إيقاف الخدمة وتعطيل البدء التلقائي مع الإبقاء على البرنامج في مكانه"
+
+[cli.uninstall.ask_data]
+description = "The question an interactive uninstall asks about the Relo data"
+other = "هل تريد إزالة بيانات Relo (الإعدادات وبيانات الاعتماد والسجلات)؟ [ن/ي]"
+
+[cli.uninstall.kept]
+description = "What an uninstall reports when the Relo data stays"
+other = "بيانات Relo موجودة في {{.Home}}"
+
+[cli.uninstall.wiped]
+description = "What an uninstall reports after the Relo data is removed"
+other = "تمت إزالة بيانات Relo"
+
+[cli.uninstall.removing]
+description = "What an uninstall says as it hands the program to its installer"
+other = "جارٍ إزالة Relo…"
+
+[cli.uninstall.manual]
+description = "What an uninstall says when nothing on the machine removes Relo"
+other = "أزل برنامج Relo يدويًا"
+
+[cli.uninstall.trash]
+description = "What an uninstall says when the macOS app bundle could not be deleted"
+other = "انقل {{.Bundle}} إلى سلة المحذوفات"
+
+[cli.uninstall.run]
+description = "The command to run when a removal could not be started"
+other = "نفّذ هذا لإكمال إزالة Relo: {{.Command}}"

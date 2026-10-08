@@ -1,0 +1,44 @@
+{
+  "model": "gpt-5",
+  "instructions": "be brief",
+  "stream": true,
+  "max_output_tokens": 256,
+  "reasoning": { "effort": "low", "summary": "auto" },
+  "tools": [
+    {
+      "type": "function",
+      "name": "get_weather",
+      "description": "look it up",
+      "parameters": {
+        "type": "object",
+        "properties": { "city": { "type": "string" } }
+      }
+    }
+  ],
+  "input": [
+    {
+      "role": "user",
+      "content": [
+        { "type": "input_text", "text": "weather?" },
+        { "type": "input_image", "image_url": "https://example.invalid/a.png" }
+      ]
+    },
+    {
+      "type": "reasoning",
+      "id": "rs_1",
+      "summary": [],
+      "encrypted_content": "gAAAA-encrypted-state-=="
+    },
+    {
+      "type": "function_call",
+      "call_id": "call_1",
+      "name": "get_weather",
+      "arguments": "{\"city\":\"Hanoi\"}"
+    },
+    {
+      "type": "function_call_output",
+      "call_id": "call_1",
+      "output": "{\"temp\":31}"
+    }
+  ]
+}

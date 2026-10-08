@@ -1,0 +1,36 @@
+node_modules/
+
+# Output
+.output
+/.svelte-kit/
+/build/
+/package
+
+# Vite
+.vite/
+vite.config.js.timestamp-*
+vite.config.ts.timestamp-*
+
+# Vitest
+.vitest/
+coverage/
+test-results/
+*.lcov
+
+# TypeScript
+*.tsbuildinfo
+
+# Logs
+*.log
+npm-debug.log*
+
+# Environment
+.env
+.env.*
+!.env.example
+!.env.test
+
+# Editor and OS
+*.local
+.DS_Store
+Thumbs.db

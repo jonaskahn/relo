@@ -1,0 +1,63 @@
+# Build output
+/dist/
+/relo
+/relo.exe
+
+# Merge leftovers. Git stops before applying a merge that conflicts, and the
+# resolve is manual, so these survive a rebase or a rebase --abort.
+*.orig
+*.rej
+
+# Local dev state (VS Code debug home, repo-local state root)
+/.dev/
+/.relo/
+/config.toml
+
+# Secrets
+.env
+.env.*
+
+# Python (root packaging scripts)
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+
+# IDE / editor
+.idea/
+.fleet/
+.cursor/
+*.code-workspace
+*.swp
+*.swo
+*~
+
+# VS Code: commit the shared config, ignore everything else
+.vscode/*
+!.vscode/extensions.json
+!.vscode/launch.json
+!.vscode/settings.json
+!.vscode/tasks.json
+
+# OS
+.DS_Store
+._*
+.AppleDouble
+Desktop.ini
+Thumbs.db
+
+# State (never commit user data)
+*.sqlite
+*.sqlite-wal
+*.sqlite-shm
+
+# Local indexes / agent tooling
+.codegraph/
+.impeccable/
+
+# Logs
+*.log
+npm-debug.log*
+.pnpm-store/
+node_modules/

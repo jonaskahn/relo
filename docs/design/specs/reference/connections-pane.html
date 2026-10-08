@@ -1,0 +1,996 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta content="width=device-width, initial-scale=1" name="viewport">
+    <title>Connection pane and model modal</title>
+    <style>
+        :root {
+            --accent: #c8102e;
+            --accent-600: color-mix(in oklab, var(--accent) 86%, #000);
+            --accent-800: color-mix(in oklab, var(--accent) 56%, #000);
+            --accent-50: color-mix(in oklab, var(--accent) 7%, #fff);
+            --accent-100: color-mix(in oklab, var(--accent) 14%, #fff);
+            --accent-border: color-mix(in oklab, var(--accent) 32%, #fff);
+            --ink: #17171c;
+            --muted: #6b6b78;
+            --faint: #858592;
+            --line: rgb(0 0 0 / .09);
+            --line-strong: rgb(0 0 0 / .16);
+            --canvas: #f5f5f7;
+            --surface: #fff;
+            --sunken: #f5f5f7;
+            --muted-bg: #f0f0f5;
+            --ok: #19774e;
+            --warn: #9b5800;
+            --danger: #bd342a;
+            --radius-control: .625rem;
+            --radius-panel: .75rem;
+            --radius-card: 1rem;
+            --radius-popover: 1.125rem;
+            --control-h: 2.375rem;
+            --sans: system-ui, -apple-system, 'Segoe UI', sans-serif;
+            --mono: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+        }
+
+        * {
+            box-sizing: border-box
+        }
+
+        html, body {
+            margin: 0
+        }
+
+        body {
+            font-family: var(--sans);
+            font-size: 15px;
+            color: var(--ink);
+            background: var(--canvas);
+            -webkit-font-smoothing: antialiased
+        }
+
+        button {
+            font: inherit;
+            color: inherit;
+            cursor: pointer;
+            background: none;
+            border: 0;
+            padding: 0
+        }
+
+        :focus-visible {
+            outline: 2px solid var(--accent);
+            outline-offset: 2px
+        }
+
+        svg {
+            display: block;
+            flex: none
+        }
+
+        .mono {
+            font-family: var(--mono);
+            font-size: 12px
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: .25rem;
+            height: 1.25rem;
+            border-radius: .5rem;
+            padding-inline: .375rem;
+            font-size: .6875rem;
+            font-weight: 550;
+            line-height: 1;
+            white-space: nowrap;
+            border: 1px solid var(--line);
+            color: var(--muted)
+        }
+
+        .scrim {
+            position: fixed;
+            inset: 0;
+            background: rgb(10 10 14 / .55);
+            z-index: 20
+        }
+
+        .wrap {
+            max-width: 85rem;
+            margin: 0 auto;
+            padding: 22px 28px
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: .5rem;
+            height: var(--control-h);
+            padding: 0 16px;
+            border-radius: var(--radius-control);
+            border: 1px solid var(--line);
+            background: var(--surface);
+            font-weight: 500
+        }
+
+        .btn.primary {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: #fff
+        }
+
+        .btn.ghost {
+            border-color: transparent;
+            color: var(--muted)
+        }
+
+        .btn.danger {
+            color: var(--danger)
+        }
+
+        .icon-btn {
+            width: var(--control-h);
+            height: var(--control-h);
+            border-radius: var(--radius-control);
+            border: 1px solid var(--line);
+            background: var(--surface);
+            display: grid;
+            place-items: center;
+            color: var(--muted)
+        }
+
+        .pill {
+            display: inline-flex;
+            align-items: center;
+            gap: .375rem;
+            border-radius: 999px;
+            padding: .25rem .625rem;
+            font-size: 12px;
+            font-weight: 500
+        }
+
+        .pill.ok {
+            background: color-mix(in srgb, var(--ok) 12%, #fff);
+            color: var(--ok)
+        }
+
+        .pill.warn {
+            background: color-mix(in srgb, var(--warn) 12%, #fff);
+            color: var(--warn)
+        }
+
+        /* pane */
+        .pane {
+            background: var(--surface);
+            border: 1px solid var(--line);
+            border-radius: var(--radius-card)
+        }
+
+        .pane-head {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: flex-start;
+            gap: 14px;
+            padding: 18px
+        }
+
+        .logo {
+            width: 46px;
+            height: 46px;
+            border-radius: .75rem;
+            border: 1px solid var(--line);
+            display: grid;
+            place-items: center;
+            font-weight: 700;
+            font-size: 17px;
+            background: var(--surface);
+            flex: none
+        }
+
+        .pane-head h1 {
+            margin: 0;
+            font-size: 16px;
+            font-weight: 650
+        }
+
+        .pane-head .slug {
+            font-family: var(--mono);
+            font-size: 12px;
+            color: var(--muted)
+        }
+
+        .pane-head .url {
+            display: block;
+            font-family: var(--mono);
+            font-size: 12px;
+            color: var(--muted);
+            margin-top: 4px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            max-width: 44ch
+        }
+
+        .tabs {
+            display: flex;
+            gap: 8px;
+            padding: 0 18px
+        }
+
+        .tab {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 10px 2px;
+            font-size: 14px;
+            color: var(--muted);
+            border-bottom: 2px solid transparent
+        }
+
+        .tab[aria-selected="true"] {
+            color: var(--ink);
+            border-color: var(--accent)
+        }
+
+        .toolbar {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 10px;
+            padding: 14px 18px
+        }
+
+        .search {
+            position: relative;
+            min-width: 220px;
+            flex: 1
+        }
+
+        .search input {
+            width: 100%;
+            height: var(--control-h);
+            padding: 0 12px 0 34px;
+            border: 1px solid var(--line);
+            border-radius: var(--radius-control);
+            background: var(--surface);
+            font: inherit;
+            font-size: 14px
+        }
+
+        .search svg {
+            position: absolute;
+            left: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--faint)
+        }
+
+        .seg {
+            display: inline-flex;
+            gap: 2px;
+            border: 1px solid var(--line);
+            border-radius: .625rem;
+            padding: 2px;
+            background: color-mix(in srgb, var(--muted-bg) 50%, #fff)
+        }
+
+        .seg button {
+            padding: 0 10px;
+            height: 2rem;
+            border-radius: .4rem;
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--muted)
+        }
+
+        .seg button[aria-pressed="true"] {
+            background: var(--surface);
+            color: var(--ink);
+            border: 1px solid var(--line)
+        }
+
+        .chip {
+            height: 2rem;
+            padding: 0 12px;
+            border-radius: 999px;
+            border: 1px solid var(--line);
+            background: var(--surface);
+            color: var(--muted);
+            font-size: 13px;
+            font-weight: 500;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px
+        }
+
+        .chip[aria-pressed="true"] {
+            background: var(--accent-50);
+            border-color: var(--accent-border);
+            color: var(--accent-800)
+        }
+
+        /* model rows */
+        .rows {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            padding: 6px 18px 20px
+        }
+
+        .mrow {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 16px;
+            border: 1px solid var(--line);
+            border-radius: var(--radius-card);
+            background: var(--surface);
+            padding: 12px 16px
+        }
+
+        .mrow .id {
+            flex: 2;
+            min-width: 220px
+        }
+
+        .mrow .name {
+            font-size: 14px
+        }
+
+        .mrow .mid {
+            display: block;
+            font-family: var(--mono);
+            font-size: 11.5px;
+            color: var(--muted)
+        }
+
+        .mrow .tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-top: 5px
+        }
+
+        .cell {
+            display: flex;
+            flex-direction: column;
+            gap: 2px
+        }
+
+        .cell .cap {
+            font-size: 10.5px;
+            color: var(--faint)
+        }
+
+        .cell .val {
+            font-family: var(--mono);
+            font-size: 12px
+        }
+
+        .cell .dots {
+            color: var(--faint);
+            font-size: 13px;
+            line-height: 1;
+            letter-spacing: 1px
+        }
+
+        .price {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 4px
+        }
+
+        .price .val {
+            font-size: 12px
+        }
+
+        .switch {
+            width: 36px;
+            height: 20px;
+            border-radius: 999px;
+            border: 1px solid var(--line-strong);
+            background: var(--muted-bg);
+            position: relative;
+            flex: none
+        }
+
+        .switch::after {
+            content: "";
+            position: absolute;
+            top: 1.5px;
+            left: 2px;
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: #fff;
+            box-shadow: 0 1px 2px rgb(0 0 0 / .2)
+        }
+
+        .switch[aria-checked="true"] {
+            background: var(--accent-600);
+            border-color: var(--accent-600)
+        }
+
+        .switch[aria-checked="true"]::after {
+            left: calc(100% - 16px)
+        }
+
+        /* modal */
+        .modal {
+            position: fixed;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 30;
+            width: min(56rem, calc(100% - 24px));
+            height: min(720px, 100%);
+            background: var(--surface);
+            border-radius: var(--radius-card);
+            box-shadow: 0 24px 60px rgb(20 20 40 / .25);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden
+        }
+
+        .m-head {
+            display: flex;
+            justify-content: space-between;
+            gap: 16px;
+            padding: 16px 20px 12px
+        }
+
+        .m-head h2 {
+            margin: 0;
+            font-size: 18px;
+            font-weight: 600
+        }
+
+        .m-head p {
+            margin: 2px 0 0;
+            font-family: var(--mono);
+            font-size: 12px;
+            color: var(--muted)
+        }
+
+        .m-body {
+            flex: 1;
+            overflow: auto;
+            padding: 6px 20px 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 22px
+        }
+
+        .m-foot {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            background: var(--canvas);
+            padding: 12px 20px
+        }
+
+        .section-title {
+            font-size: .9375rem;
+            font-weight: 650;
+            margin: 0 0 10px
+        }
+
+        .kv {
+            display: grid;
+            grid-template-columns:repeat(4, 1fr);
+            gap: 12px
+        }
+
+        .kv .tile {
+            background: color-mix(in srgb, var(--muted-bg) 60%, #fff);
+            border-radius: .75rem;
+            padding: 12px
+        }
+
+        .kv .tile .k {
+            font-size: 12px;
+            color: var(--muted)
+        }
+
+        .kv .tile .v {
+            margin-top: 4px;
+            font-size: 14px;
+            font-weight: 500;
+            font-variant-numeric: tabular-nums
+        }
+
+        .prices {
+            display: grid;
+            grid-template-columns:1fr 1fr;
+            gap: 12px
+        }
+
+        .prices .tile .v {
+            font-family: var(--mono);
+            font-size: 16px;
+            font-weight: 600
+        }
+
+        .caps {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px
+        }
+
+        .caps .badge {
+            border: 1px solid var(--line);
+            padding: .25rem .5rem;
+            height: auto;
+            color: var(--ink)
+        }
+
+        .src {
+            display: grid;
+            grid-template-columns:repeat(3, 1fr);
+            gap: 8px 24px
+        }
+
+        .src .item {
+            background: color-mix(in srgb, var(--muted-bg) 50%, #fff);
+            border-radius: .5rem;
+            padding: 8px 12px
+        }
+
+        .src .item .k {
+            font-size: 11px;
+            color: var(--muted)
+        }
+
+        .src .item .v {
+            font-size: 13px;
+            margin-top: 2px
+        }
+
+        details {
+            background: color-mix(in srgb, var(--muted-bg) 40%, #fff);
+            border-radius: .75rem;
+            padding: 8px 12px
+        }
+
+        summary {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            padding: 4px 0
+        }
+
+        .fields {
+            display: grid;
+            grid-template-columns:repeat(auto-fit, minmax(min(100%, 14rem), 1fr));
+            gap: 14px 16px
+        }
+
+        .field {
+            display: flex;
+            flex-direction: column;
+            gap: 6px
+        }
+
+        .field label {
+            font-size: 13px;
+            font-weight: 550
+        }
+
+        .field input, .field select {
+            height: var(--control-h);
+            padding: 0 12px;
+            border: 1px solid var(--line);
+            border-radius: var(--radius-control);
+            font: inherit;
+            font-size: 14px;
+            background: var(--surface)
+        }
+
+        .hidden {
+            display: none !important
+        }
+
+        @media (max-width: 760px) {
+            .kv {
+                grid-template-columns:1fr 1fr
+            }
+
+            .src {
+                grid-template-columns:1fr
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            * {
+                transition: none !important;
+                animation: none !important
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="wrap">
+    <section class="pane">
+        <header class="pane-head">
+            <button aria-label="Back" class="icon-btn">
+                <svg fill="none" height="16" stroke="currentColor" stroke-linecap="round" stroke-width="2"
+                     viewBox="0 0 24 24"
+                     width="16">
+                    <path d="M19 12H5M11 6l-6 6 6 6"/>
+                </svg>
+            </button>
+            <span class="logo" style="color:#c4693d;font-size:22px">✳</span>
+            <div style="min-width:0;flex:1">
+                <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+                    <h1>Claude.ai</h1>
+                    <span class="pill ok">● Ready</span>
+                </div>
+                <span class="slug">claude</span>
+                <span class="url" title="https://api.anthropic.com">https://api.anthropic.com</span>
+            </div>
+            <div style="display:flex;gap:8px">
+                <button aria-label="Pause" class="icon-btn">
+                    <svg fill="none" height="16" stroke="currentColor" stroke-linecap="round" stroke-width="2"
+                         viewBox="0 0 24 24"
+                         width="16">
+                        <path d="M9 5v14M15 5v14"/>
+                    </svg>
+                </button>
+                <button aria-label="Refresh models" class="icon-btn">
+                    <svg fill="none" height="16" stroke="currentColor" stroke-linecap="round" stroke-width="2"
+                         viewBox="0 0 24 24"
+                         width="16">
+                        <path d="M20 12a8 8 0 1 1-2.3-5.6"/>
+                        <path d="M20 4v4h-4"/>
+                    </svg>
+                </button>
+                <button aria-label="More actions" class="icon-btn">
+                    <svg fill="currentColor" height="16" viewBox="0 0 24 24" width="16">
+                        <circle cx="5" cy="12" r="1.6"/>
+                        <circle cx="12" cy="12" r="1.6"/>
+                        <circle cx="19" cy="12" r="1.6"/>
+                    </svg>
+                </button>
+            </div>
+        </header>
+        <nav class="tabs" role="tablist">
+            <button aria-selected="true" class="tab" role="tab">Models <span class="mono"
+                                                                             style="color:var(--muted)">13</span>
+            </button>
+            <button aria-selected="false" class="tab" role="tab">Accounts <span class="mono" style="color:var(--muted)">2</span>
+            </button>
+            <button aria-selected="false" class="tab" role="tab">Settings</button>
+        </nav>
+        <div class="toolbar">
+            <label class="search">
+                <svg fill="none" height="15" stroke="currentColor" stroke-linecap="round" stroke-width="2"
+                     viewBox="0 0 24 24"
+                     width="15">
+                    <circle cx="11" cy="11" r="7"/>
+                    <path d="m20 20-3.5-3.5"/>
+                </svg>
+                <input aria-label="Search models" placeholder="Search models">
+            </label>
+            <div aria-label="Status" class="seg" role="group">
+                <button aria-pressed="true">All</button>
+                <button aria-pressed="false">On</button>
+                <button aria-pressed="false">Off</button>
+            </div>
+            <button aria-pressed="false" class="chip">Unpriced <span class="mono" style="opacity:.7">1</span></button>
+            <button aria-pressed="false" class="chip">Overridden <span class="mono" style="opacity:.7">0</span></button>
+        </div>
+        <div class="rows">
+            <article class="mrow">
+                <button aria-checked="true" aria-label="Turn Claude Opus 4.6 off" class="switch" role="switch"></button>
+                <div class="id">
+                    <button aria-label="Open Claude Opus 4.6"
+                            onclick="document.getElementById('modelModal').classList.remove('hidden')"
+                            style="text-align:left">
+                        <span class="name">Claude Opus 4.6</span>
+                        <span class="mid">claude-opus-4-6</span>
+                    </button>
+                    <div class="tags"><span class="badge">2 of 3 accounts</span></div>
+                </div>
+                <div class="cell"><span class="cap">Context</span><span class="val">1M <span style="color:var(--faint)">*</span></span><span
+                        aria-hidden="true" class="dots">⋯</span></div>
+                <div class="cell"><span class="cap">Max output</span><span class="val">64K</span><span
+                        aria-hidden="true"
+                        class="dots">⋯</span>
+                </div>
+                <div class="cell"><span class="cap">Tools · Reasoning · Vision</span><span class="val">✓ ✓ —</span>
+                </div>
+                <div class="price"><span class="val mono">$5.00 / $25.00</span><span class="badge">Provider</span></div>
+                <div style="display:flex;gap:4px">
+                    <button aria-label="Edit Claude Opus 4.6" class="icon-btn">
+                        <svg fill="none" height="15" stroke="currentColor" stroke-linecap="round" stroke-width="2"
+                             viewBox="0 0 24 24" width="15">
+                            <path d="M4 20h4L19 9l-4-4L4 16z"/>
+                        </svg>
+                    </button>
+                    <button aria-label="Model actions" class="icon-btn">
+                        <svg fill="currentColor" height="15" viewBox="0 0 24 24" width="15">
+                            <circle cx="5" cy="12" r="1.6"/>
+                            <circle cx="12" cy="12" r="1.6"/>
+                            <circle cx="19" cy="12" r="1.6"/>
+                        </svg>
+                    </button>
+                </div>
+            </article>
+            <article class="mrow" style="opacity:.9">
+                <button aria-checked="false" aria-label="Turn Claude Haiku 4.5 on" class="switch"
+                        role="switch"></button>
+                <div class="id">
+                    <button style="text-align:left"><span class="name">Claude Haiku 4.5</span><span class="mid">claude-haiku-4-5</span>
+                    </button>
+                </div>
+                <div class="cell"><span class="cap">Context</span><span class="val">200K</span><span aria-hidden="true"
+                                                                                                     class="dots">⋯</span>
+                </div>
+                <div class="cell"><span class="cap">Max output</span><span class="val">32K</span><span
+                        aria-hidden="true"
+                        class="dots">⋯</span>
+                </div>
+                <div class="cell"><span class="cap">Tools · Reasoning · Vision</span><span class="val">✓ ✓ ✓</span>
+                </div>
+                <div class="price"><span class="val mono">$1.00 / $5.00</span><span class="badge">models.dev</span>
+                </div>
+                <div style="display:flex;gap:4px">
+                    <button aria-label="Edit Claude Haiku 4.5" class="icon-btn">
+                        <svg fill="none" height="15" stroke="currentColor" stroke-linecap="round" stroke-width="2"
+                             viewBox="0 0 24 24" width="15">
+                            <path d="M4 20h4L19 9l-4-4L4 16z"/>
+                        </svg>
+                    </button>
+                    <button aria-label="Model actions" class="icon-btn">
+                        <svg fill="currentColor" height="15" viewBox="0 0 24 24" width="15">
+                            <circle cx="5" cy="12" r="1.6"/>
+                            <circle cx="12" cy="12" r="1.6"/>
+                            <circle cx="19" cy="12" r="1.6"/>
+                        </svg>
+                    </button>
+                </div>
+            </article>
+            <article class="mrow">
+                <button aria-checked="true" aria-label="Turn Claude Fable 5.1 off" class="switch"
+                        role="switch"></button>
+                <div class="id">
+                    <button style="text-align:left"><span class="name">Claude Fable 5.1 (internal)</span><span
+                            class="mid">claude-fable-5-1</span></button>
+                    <div class="tags"><span class="badge">Clone of claude-opus-4-6</span><span class="badge"
+                                                                                               style="color:var(--warn);border-color:color-mix(in srgb,var(--warn) 30%,#fff)">No price</span>
+                    </div>
+                </div>
+                <div class="cell"><span class="cap">Context</span><span class="val">1M</span><span aria-hidden="true"
+                                                                                                   class="dots">⋯</span>
+                </div>
+                <div class="cell"><span class="cap">Max output</span><span class="val">64K</span><span
+                        aria-hidden="true"
+                        class="dots">⋯</span>
+                </div>
+                <div class="cell"><span class="cap">Tools · Reasoning · Vision</span><span class="val">✓ ✓ —</span>
+                </div>
+                <div class="price"><span class="val" style="color:var(--muted)">—</span></div>
+                <div style="display:flex;gap:4px">
+                    <button aria-label="Edit Claude Fable 5.1" class="icon-btn">
+                        <svg fill="none" height="15" stroke="currentColor" stroke-linecap="round" stroke-width="2"
+                             viewBox="0 0 24 24" width="15">
+                            <path d="M4 20h4L19 9l-4-4L4 16z"/>
+                        </svg>
+                    </button>
+                    <button aria-label="Model actions" class="icon-btn">
+                        <svg fill="currentColor" height="15" viewBox="0 0 24 24" width="15">
+                            <circle cx="5" cy="12" r="1.6"/>
+                            <circle cx="12" cy="12" r="1.6"/>
+                            <circle cx="19" cy="12" r="1.6"/>
+                        </svg>
+                    </button>
+                </div>
+            </article>
+        </div>
+    </section>
+</div>
+
+<!-- Model modal: the footer's Edit swaps the body to the form. -->
+<div class="scrim" id="scrim"></div>
+<div aria-labelledby="mmTitle" aria-modal="true" class="modal" id="modelModal" role="dialog">
+    <div class="m-head">
+        <div><h2 id="mmTitle">Claude Opus 4.6</h2>
+            <p>Claude.ai · claude-opus-4-6</p></div>
+        <button aria-label="Close" class="icon-btn"
+                onclick="document.getElementById('modelModal').classList.add('hidden');document.getElementById('scrim').classList.add('hidden')">
+            <svg fill="none" height="16" stroke="currentColor" stroke-linecap="round" stroke-width="2"
+                 viewBox="0 0 24 24"
+                 width="16">
+                <path d="M6 6l12 12M18 6 6 18"/>
+            </svg>
+        </button>
+    </div>
+    <div class="m-body">
+        <div id="readView">
+            <section>
+                <h3 class="section-title">Overview</h3>
+                <div class="kv">
+                    <div class="tile">
+                        <div class="k">Category</div>
+                        <div class="v">chat</div>
+                    </div>
+                    <div class="tile">
+                        <div class="k">Context window</div>
+                        <div class="v">1M</div>
+                    </div>
+                    <div class="tile">
+                        <div class="k">Max input</div>
+                        <div class="v">200K</div>
+                    </div>
+                    <div class="tile">
+                        <div class="k">Max output</div>
+                        <div class="v">64K</div>
+                    </div>
+                </div>
+                <div class="caps" style="margin-top:12px"><span class="badge">Tools</span><span
+                        class="badge">Reasoning</span><span class="badge">Vision</span></div>
+                <p style="font-size:12px;color:var(--muted);margin:10px 0 0">Served by 2 of 3 accounts</p>
+            </section>
+            <section style="margin-top:22px">
+                <h3 class="section-title">Pricing <span class="badge">models.dev</span></h3>
+                <div class="prices">
+                    <div class="tile">
+                        <div class="k">Input</div>
+                        <div class="v">$5.00</div>
+                        <div class="k" style="margin-top:4px">models.dev</div>
+                    </div>
+                    <div class="tile">
+                        <div class="k">Output</div>
+                        <div class="v">$25.00</div>
+                    </div>
+                </div>
+                <p style="font-size:12px;color:var(--muted);margin:8px 0 0">$ per 1M</p>
+            </section>
+            <section style="margin-top:22px">
+                <h3 class="section-title">Overrides <span class="badge">Overridden</span></h3>
+                <div class="src" style="margin-top:8px">
+                    <div class="item">
+                        <div class="k">Context window</div>
+                        <div class="v">1M</div>
+                    </div>
+                    <div class="item">
+                        <div class="k">Tools</div>
+                        <div class="v">Yes</div>
+                    </div>
+                </div>
+            </section>
+            <section style="margin-top:22px">
+                <h3 class="section-title">Sources</h3>
+                <div class="src">
+                    <div class="item">
+                        <div class="k">Name</div>
+                        <div class="v">Claude Opus 4.6 <span style="color:var(--muted);font-size:11px">provider</span>
+                        </div>
+                    </div>
+                    <div class="item">
+                        <div class="k">Context window</div>
+                        <div class="v">1M <span style="color:var(--muted);font-size:11px">you</span></div>
+                    </div>
+                    <div class="item">
+                        <div class="k">Max output</div>
+                        <div class="v">64K <span style="color:var(--muted);font-size:11px">provider</span></div>
+                    </div>
+                    <div class="item">
+                        <div class="k">Tools</div>
+                        <div class="v">Yes <span style="color:var(--muted);font-size:11px">models.dev</span></div>
+                    </div>
+                    <div class="item">
+                        <div class="k">Reasoning</div>
+                        <div class="v">Yes <span style="color:var(--muted);font-size:11px">provider</span></div>
+                    </div>
+                    <div class="item">
+                        <div class="k">Status</div>
+                        <div class="v">active <span style="color:var(--muted);font-size:11px">provider</span></div>
+                    </div>
+                </div>
+            </section>
+            <details style="margin-top:18px">
+                <summary>Compare sources</summary>
+                <p style="font-size:12px;color:var(--muted)">Override / provider / models.dev layers, one row per
+                    field.</p></details>
+        </div>
+
+        <div class="hidden" id="editView">
+            <section>
+                <h3 class="section-title">Identity</h3>
+                <div class="fields">
+                    <div class="field"><label for="f-name">Display name</label><input id="f-name"
+                                                                                      value="Claude Opus 4.6"></div>
+                    <div class="field"><label for="f-cat">Category</label><select id="f-cat">
+                        <option>chat</option>
+                        <option>reasoning</option>
+                    </select></div>
+                    <div class="field"><label for="f-desc">Description</label><input id="f-desc"
+                                                                                     value="Most capable Claude model">
+                    </div>
+                </div>
+            </section>
+            <section style="margin-top:20px">
+                <h3 class="section-title">Pricing <span style="font-weight:400;font-size:12px;color:var(--muted)">$ per 1M</span>
+                </h3>
+                <div class="fields">
+                    <div class="field"><label for="f-in">Input</label><input id="f-in" inputmode="decimal" value="5">
+                    </div>
+                    <div class="field"><label for="f-out">Output</label><input id="f-out" inputmode="decimal"
+                                                                               value="25"></div>
+                </div>
+            </section>
+            <section style="margin-top:20px">
+                <h3 class="section-title">Limits</h3>
+                <div class="fields">
+                    <div class="field"><label for="f-ctx">Context window</label><input id="f-ctx" value="1M"></div>
+                    <div class="field"><label for="f-maxi">Max input</label><input id="f-maxi" value="200K"></div>
+                    <div class="field"><label for="f-maxo">Max output</label><input id="f-maxo" value="64K"></div>
+                </div>
+            </section>
+            <section style="margin-top:20px">
+                <h3 class="section-title">Capabilities</h3>
+                <div class="fields">
+                    <div class="field"><label for="f-tools">Tools</label><select id="f-tools">
+                        <option>No override</option>
+                        <option selected>On</option>
+                        <option>Off</option>
+                    </select></div>
+                    <div class="field"><label for="f-reason">Reasoning</label><select id="f-reason">
+                        <option>No override</option>
+                        <option selected>On</option>
+                        <option>Off</option>
+                    </select></div>
+                    <div class="field"><label for="f-vision">Vision</label><select id="f-vision">
+                        <option selected>No override</option>
+                        <option>On</option>
+                        <option>Off</option>
+                    </select></div>
+                </div>
+            </section>
+        </div>
+    </div>
+    <div class="m-foot">
+        <div role="status" style="display:flex;align-items:center;gap:8px">
+            <span class="mono" style="font-size:14px">$5.00 / $25.00</span>
+            <span class="badge">models.dev</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px">
+            <button class="btn ghost" id="backBtn" onclick="showRead()" style="display:none">← Back</button>
+            <button class="btn ghost" id="cloneBtn">Clone</button>
+            <button class="btn danger" id="deleteBtn">Delete model…</button>
+            <button class="btn primary" id="editBtn" onclick="showEdit()">Edit</button>
+            <button class="btn primary" id="saveBtn" onclick="showRead()" style="display:none">Save changes</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    function showEdit() {
+        document.getElementById('readView').classList.add('hidden');
+        document.getElementById('editView').classList.remove('hidden');
+        document.getElementById('editBtn').style.display = 'none';
+        document.getElementById('cloneBtn').style.display = 'none';
+        document.getElementById('deleteBtn').style.display = 'none';
+        document.getElementById('backBtn').style.display = '';
+        document.getElementById('saveBtn').style.display = '';
+    }
+
+    function showRead() {
+        document.getElementById('editView').classList.add('hidden');
+        document.getElementById('readView').classList.remove('hidden');
+        document.getElementById('editBtn').style.display = '';
+        document.getElementById('cloneBtn').style.display = '';
+        document.getElementById('deleteBtn').style.display = '';
+        document.getElementById('backBtn').style.display = 'none';
+        document.getElementById('saveBtn').style.display = 'none';
+    }
+</script>
+</body>
+</html>

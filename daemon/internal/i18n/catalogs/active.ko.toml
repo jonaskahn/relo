@@ -1,0 +1,677 @@
+# Relo가 말하는 메시지.
+
+[cli.root.short]
+description = "One-line summary of the relo command"
+other = "다중 계정 자격 증명 풀링을 지원하는 로컬 AI 프록시"
+
+[cli.root.home]
+description = "Usage of the --home flag"
+other = "상태 디렉터리(기본값 $RELO_HOME, 그다음 ~/.relo)"
+
+[cli.root.lang]
+description = "Usage of the --lang flag"
+other = "이번 실행에 사용할 언어(auto 또는 en, de, ja 같은 태그)"
+
+[cli.usage.title]
+description = "Heading above the usage line of a help screen"
+other = "사용법:"
+
+[cli.usage.aliases]
+description = "Heading above the aliases of a command"
+other = "별칭:"
+
+[cli.usage.examples]
+description = "Heading above the examples of a command"
+other = "예시:"
+
+[cli.usage.commands]
+description = "Heading above the list of commands"
+other = "사용 가능한 명령:"
+
+[cli.usage.more_commands]
+description = "Heading above commands that belong to no group"
+other = "추가 명령:"
+
+[cli.usage.flags]
+description = "Heading above the flags of one command"
+other = "플래그:"
+
+[cli.usage.global_flags]
+description = "Heading above the flags every command shares"
+other = "전역 플래그:"
+
+[cli.usage.topics]
+description = "Heading above extra help topics"
+other = "추가 도움말 주제:"
+
+[cli.usage.footer]
+description = "Closing hint of a help screen; {{.CommandPath}} is the command path and [command] --help stays literal"
+other = "명령에 대한 자세한 내용은 “{{.CommandPath}} [command] --help”로 확인해요"
+
+[cli.help.short]
+description = "One-line summary of relo help"
+other = "모든 명령에 대한 도움말"
+
+[cli.help.long]
+description = "Long description of relo help; {{.Name}} is the program name"
+other = "앱의 모든 명령에 대한 도움말을 보여줘요.\n{{.Name}} help [명령 경로]를 입력하면 자세한 내용을 볼 수 있어요."
+
+[cli.help.flag]
+description = "Usage of the -h/--help flag; {{.Name}} is the command name"
+other = "{{.Name}} 도움말"
+
+[cli.completion.short]
+description = "One-line summary of relo completion"
+other = "지정한 셸의 자동 완성 스크립트를 만들어요"
+
+[cli.completion.long]
+description = "Long description of relo completion; {{.Name}} is the program name"
+other = "지정한 셸에 쓸 {{.Name}} 자동 완성 스크립트를 만들어요.\n만든 스크립트를 쓰는 방법은 각 하위 명령의 도움말에서 볼 수 있어요."
+
+[cli.completion.shell]
+description = "One-line summary of relo completion for one shell; {{.Shell}} is the shell name"
+other = "{{.Shell}} 자동 완성 스크립트를 만들어요"
+
+[cli.completion.no_descriptions]
+description = "Usage of the completion --no-descriptions flag"
+other = "자동 완성 설명을 꺼요"
+
+[cli.version.short]
+description = "One-line summary of relo version"
+other = "버전과 플랫폼 출력"
+
+[cli.daemon.short]
+description = "One-line summary of relo daemon"
+other = "데몬 실행 및 관리"
+
+[cli.daemon.status.short]
+description = "One-line summary of relo daemon status"
+other = "데몬 실행 여부 표시"
+
+[cli.daemon.status.json]
+description = "Usage of the status --json flag"
+other = "보고서를 JSON으로 출력"
+
+[cli.daemon.status.not_running]
+description = "What status prints when nothing answers on the listen port"
+other = "Relo가 실행 중이 아니에요"
+
+[cli.daemon.status.running]
+description = "Header status prints for a running daemon"
+other = "Relo가 실행 중이에요"
+
+[cli.daemon.status.version]
+description = "Status field label"
+other = "버전"
+
+[cli.daemon.status.uptime]
+description = "Status field label"
+other = "가동 시간"
+
+[cli.daemon.status.address]
+description = "Status field label"
+other = "주소"
+
+[cli.daemon.status.data_plane]
+description = "Status field label for the port each client protocol answers on"
+other = "데이터 경로"
+
+[cli.daemon.status.secret_mode]
+description = "Status field label"
+other = "시크릿 모드"
+
+[cli.daemon.status.schema_version]
+description = "Status field label"
+other = "스키마 버전"
+
+[cli.daemon.status.client_keys]
+description = "Status field label"
+other = "클라이언트 키"
+
+[cli.daemon.status.key_count]
+description = "How many client keys exist, and how many still authenticate"
+other = "{{.Count}}개 중 {{.Active}}개 활성"
+
+[cli.daemon.status.no_keys]
+description = "Warning under the status report when no client key is active"
+other = "활성 클라이언트 키가 없어요. 데이터 경로가 모든 요청을 거부해요"
+
+[cli.daemon.run.short]
+description = "One-line summary of relo daemon run"
+other = "Relo 프록시를 포그라운드에서 실행"
+
+[cli.daemon.run.port]
+description = "Usage of the daemon run --port flag"
+other = "수신 포트 재지정"
+
+[cli.autostart.short]
+description = "One-line summary of relo autostart"
+other = "로그인 시 Relo 자동 시작 여부 관리"
+
+[cli.autostart.enable.short]
+description = "One-line summary of relo autostart enable"
+other = "데스크톱 앱과 데몬을 로그인 시 자동 시작에 등록"
+
+[cli.autostart.disable.short]
+description = "One-line summary of relo autostart disable"
+other = "로그인 시 자동 시작 등록 제거"
+
+[cli.autostart.added]
+description = "Confirmation after registering the login items"
+other = "이제 로그인 시 Relo가 시작돼요"
+
+[cli.autostart.removed]
+description = "Confirmation after removing the login items"
+other = "이제 로그인 시 Relo가 시작되지 않아요"
+
+[language.auto]
+description = "The language choice that follows the system locale"
+other = "시스템 설정 따르기"
+
+[language.name.en]
+description = "English, named in English"
+other = "English"
+
+[language.name.de]
+description = "German, named in German"
+other = "Deutsch"
+
+[language.name.zh-Hans]
+description = "Simplified Chinese, named in Simplified Chinese"
+other = "简体中文"
+
+[language.name.ar]
+description = "Arabic, named in Arabic"
+other = "العربية"
+
+[language.name.cs]
+description = "Czech, named in Czech"
+other = "Čeština"
+
+[language.name.es]
+description = "Spanish, named in Spanish"
+other = "Español"
+
+[language.name.fr]
+description = "French, named in French"
+other = "Français"
+
+[language.name.hi]
+description = "Hindi, named in Hindi"
+other = "हिन्दी"
+
+[language.name.id]
+description = "Indonesian, named in Indonesian"
+other = "Bahasa Indonesia"
+
+[language.name.it]
+description = "Italian, named in Italian"
+other = "Italiano"
+
+[language.name.ja]
+description = "Japanese, named in Japanese"
+other = "日本語"
+
+[language.name.ko]
+description = "Korean, named in Korean"
+other = "한국어"
+
+[language.name.nl]
+description = "Dutch, named in Dutch"
+other = "Nederlands"
+
+[language.name.pl]
+description = "Polish, named in Polish"
+other = "Polski"
+
+[language.name.pt-BR]
+description = "Brazilian Portuguese, named in Brazilian Portuguese"
+other = "Português (Brasil)"
+
+[language.name.ro]
+description = "Romanian, named in Romanian"
+other = "Română"
+
+[language.name.ru]
+description = "Russian, named in Russian"
+other = "Русский"
+
+[language.name.sv]
+description = "Swedish, named in Swedish"
+other = "Svenska"
+
+[language.name.th]
+description = "Thai, named in Thai"
+other = "ไทย"
+
+[language.name.tr]
+description = "Turkish, named in Turkish"
+other = "Türkçe"
+
+[language.name.uk]
+description = "Ukrainian, named in Ukrainian"
+other = "Українська"
+
+[language.name.vi]
+description = "Vietnamese, named in Vietnamese"
+other = "Tiếng Việt"
+
+[language.name.zh-Hant]
+description = "Traditional Chinese, named in Traditional Chinese"
+other = "繁體中文"
+
+[api.auth.loopback_only]
+description = "Sign-in refusal for a request that did not arrive over loopback"
+other = "로그인은 이 컴퓨터에서만 가능해요"
+
+[api.auth.invalid_token]
+description = "Sign-in refusal for a wrong admin token"
+other = "관리자 토큰이 유효하지 않아요"
+
+[api.auth.session_failed]
+description = "Sign-in failure when no session could be started"
+other = "콘솔이 세션을 시작하지 못했어요"
+
+[api.auth.session_missing]
+description = "Refusal of a management request without a live session"
+other = "대시보드 세션이 없거나 만료됐어요"
+
+[api.body.invalid]
+description = "Refusal of a body that does not parse, with the parser's detail"
+other = "요청 본문이 유효하지 않아요: {{.Detail}}"
+
+[api.body.single_object]
+description = "Refusal of a body that carries more than one JSON object"
+other = "요청 본문이 유효하지 않아요: JSON 객체 하나가 필요해요"
+
+[api.callback.heading]
+description = "Title of the page a browser lands on after a provider redirect"
+other = "로그인 마무리 중"
+
+[api.callback.summary]
+description = "Summary of the callback page while the authorization is exchanged"
+other = "Relo가 인증을 받아 계정을 저장하고 있어요"
+
+[api.callback.marker_working]
+description = "Status marker of a login that is still running"
+other = "진행 중"
+
+[api.callback.marker_connected]
+description = "Status marker of a login that stored an account"
+other = "연결됨"
+
+[api.callback.marker_failed]
+description = "Status marker of a login that did not finish"
+other = "연결 안 됨"
+
+[api.callback.steps_label]
+description = "Accessible label of the progress list on the callback page"
+other = "로그인 진행 상황"
+
+[api.callback.step_authorized]
+description = "First step of a login: the provider authorized the request"
+other = "{{.Provider}} 승인 완료"
+
+[api.callback.step_exchanging]
+description = "Second step of a login: the authorization is traded for tokens"
+other = "인증 교환 중"
+
+[api.callback.step_stored]
+description = "Third step of a login: the account is stored"
+other = "계정 저장 완료"
+
+[api.callback.connected_title]
+description = "Title of the callback page for a login that finished"
+other = "연결 완료"
+
+[api.callback.connected_body]
+description = "Summary of the callback page for a login that finished"
+other = "Relo가 계정을 저장했고 이제 요청을 이 계정으로 보내요"
+
+[api.callback.failed_title]
+description = "Title of the callback page for a login that did not finish"
+other = "로그인이 끝나지 않았어요"
+
+[api.callback.expired_title]
+description = "Title of the callback page for a login this process no longer tracks"
+other = "이 로그인은 더 이상 유효하지 않아요"
+
+[api.callback.expired_body]
+description = "Summary of the callback page for a login this process no longer tracks"
+other = "Relo가 이 로그인을 더 이상 추적하지 않아요. 콘솔에서 다시 시작해 주세요"
+
+[api.callback.expired]
+description = "Refusal of a callback status poll for a login that is gone"
+other = "이 로그인은 더 이상 유효하지 않아요"
+
+[api.callback.failure_denied]
+description = "Callback failure: the provider refused the authorization"
+other = "제공업체가 인증을 거부했어요"
+
+[api.callback.failure_state]
+description = "Callback failure: the callback did not match the login Relo started"
+other = "콜백이 Relo가 시작한 로그인과 일치하지 않거나 이미 사용됐어요"
+
+[api.callback.failure_timeout]
+description = "Callback failure: the provider did not answer in time"
+other = "제공업체가 제때 응답하지 않았어요"
+
+[api.callback.failure_exchange]
+description = "Callback failure: the provider would not exchange the authorization"
+other = "제공업체가 인증을 토큰으로 교환하지 않았어요"
+
+[api.callback.account_label]
+description = "Label of the stored account on the callback page"
+other = "계정"
+
+[api.callback.close_hint]
+description = "What the callback page tells an operator once the login finished"
+other = "이 탭을 닫아도 돼요"
+
+[api.callback.closing_in]
+description = "Countdown shown on the callback page before it closes itself"
+other = "{{.Seconds}}초 후 닫아요…"
+
+[api.callback.console_link]
+description = "Link from the callback page to the console page that lists accounts"
+other = "콘솔 열기"
+
+[api.dashboard.missing]
+description = "Refusal of a console request in a build without one"
+other = "이 빌드에는 대시보드가 없어요"
+
+[api.events.unknown]
+description = "Refusal of an event stream for a channel that does not exist"
+other = "그런 이벤트 채널이 없어요"
+
+[api.events.cannot_stream]
+description = "Refusal of an event stream over a listener that cannot stream"
+other = "이 리스너는 스트리밍할 수 없어요"
+
+[api.events.too_many]
+description = "Refusal of an event stream when too many are already open"
+other = "이벤트 스트림이 너무 많이 열려 있어요"
+
+[api.inference.retired]
+description = "Refusal of an inference path that moved to the port of its protocol"
+other = "추론 포트가 {{.BaseURL}}로 옮겨졌어요"
+
+[api.keys.invalid]
+description = "Refusal of an inference request with a key that does not authenticate"
+other = "API 키가 유효하지 않아요"
+
+[api.keys.missing_header]
+description = "Refusal of an inference request without a credential"
+other = "Authorization 헤더가 없거나 유효하지 않아요"
+
+[api.keys.store_unavailable]
+description = "Refusal of an inference request when the key store is down"
+other = "API 키 저장소를 사용할 수 없어요"
+
+[api.logs.event_id_number]
+description = "Refusal of a log request whose event id is not a number"
+other = "이벤트 ID는 숫자여야 해요"
+
+[api.logs.capture_id_number]
+description = "Refusal of a capture read whose capture id is not a number"
+other = "캡처 ID는 숫자여야 해요"
+
+[api.logs.capture_missing]
+description = "Refusal of a capture read that names no stored capture"
+other = "해당 ID의 저장된 캡처가 없어요"
+
+[api.oauth.unknown]
+description = "Refusal of a login operation that does not exist"
+other = "해당 ID의 로그인 작업이 없어요"
+
+[api.oauth.port_busy]
+description = "Refusal of a sign-in whose callback port another process holds"
+other = "{{process}}이(가) 포트 {{port}}을(를) 사용 중입니다. 종료 후 로그인하세요"
+
+[api.integration.action_in_progress]
+description = "Refusal of a second run of an action the first has not finished"
+other = "해당 작업이 이미 실행 중입니다. 완료될 때까지 기다려 주세요"
+
+[api.route.missing]
+description = "Refusal of a management path that matches no route"
+other = "일치하는 라우트가 없어요"
+
+[api.route.unavailable]
+description = "Refusal of a management endpoint that is not implemented"
+other = "이 엔드포인트는 아직 사용할 수 없어요"
+
+[api.service.unavailable]
+description = "Refusal of a management request when the service is missing"
+other = "관리 서비스를 사용할 수 없어요"
+
+[api.settings.retention.invalid]
+description = "Refusal of a retention budget below the floor the ledger keeps"
+other = "request details are kept for at least a {{.Min}}-day window; use 0 to keep everything"
+
+[api.settings.sweep.busy]
+description = "Refusal of a maintenance sweep while another one is running"
+other = "a maintenance sweep is already running; wait for it to finish"
+
+[api.account.status_required]
+description = "Refusal of an account update that named neither status nor priority"
+other = "상태 또는 우선순위가 필요해요"
+
+[tray.tooltip]
+description = "Tooltip of the tray icon"
+other = "Relo — 로컬 AI 프록시"
+
+[tray.menu.open_dashboard]
+description = "Tray menu item that opens the console in a browser"
+other = "대시보드 열기"
+
+[tray.menu.restart]
+description = "Tray menu item that restarts the daemon"
+other = "서버 재시작"
+
+[tray.menu.force_restart]
+description = "Tray menu item that kills the daemon and starts it again"
+other = "서버 강제 재시작"
+
+[tray.menu.autostart]
+description = "Tray menu item that toggles the login item"
+other = "로그인 시 시작"
+
+[tray.menu.language]
+description = "Tray submenu that chooses the language"
+other = "언어"
+
+[tray.menu.quit]
+description = "Tray submenu that quits the desktop app"
+other = "종료"
+
+[tray.menu.quit_hide]
+description = "Tray menu item that hides the icon and leaves the proxy serving"
+other = "트레이 아이콘 숨기기(프록시는 계속 실행됩니다)"
+
+[tray.menu.quit_shutdown]
+description = "Tray menu item that quits the desktop app and stops the daemon"
+other = "종료하고 데몬 중지"
+
+[tray.notify.failed]
+description = "Notification when a proxy run failed"
+other = "프록시가 시작되지 않았습니다. {{.Detail}}"
+
+[tray.status.running]
+description = "Tray menu status row for a running daemon"
+other = "실행 중 · {{.Addr}}"
+
+[tray.status.stopped]
+description = "Tray menu status row for a stopped daemon"
+other = "중지됨"
+
+[tray.status.failed]
+description = "Tray menu status row for a daemon that failed"
+other = "실패 · {{.Detail}}"
+
+[tray.info.requests]
+description = "Tray menu row that charts the last day of requests"
+other = "요청 {{.Value}}"
+
+[tray.info.tokens]
+description = "Tray menu row that charts the last day of tokens"
+other = "토큰 {{.Value}}"
+
+[tray.info.spend]
+description = "Tray menu row that charts the last day of spend"
+other = "지출 {{.Value}}"
+
+[tray.error.unknown]
+description = "Placeholder when a failure carried no message"
+other = "알 수 없는 오류"
+
+[tray.notify.browser_failed]
+description = "Notification when no browser could be opened"
+other = "브라우저를 열 수 없었어요"
+
+[tray.notify.autostart_failed]
+description = "Notification when the login item could not be changed"
+other = "로그인 항목을 변경할 수 없었어요"
+
+[tray.notify.language_failed]
+description = "Notification when a language choice could not be stored"
+other = "언어를 저장할 수 없었어요"
+
+[cli.daemon.start.short]
+description = "One-line summary of relo daemon start"
+other = "Relo 프록시를 백그라운드에서 실행"
+
+[cli.daemon.start.port]
+description = "Usage of the start --port flag"
+other = "수신 포트 재지정"
+
+[cli.daemon.start.started]
+description = "Confirmation after a start"
+other = "Relo가 {{.Addr}}에서 실행 중이에요"
+
+[cli.daemon.start.already]
+description = "What start prints when the daemon is already up"
+other = "Relo가 이미 {{.Addr}}에서 실행 중이에요"
+
+[cli.daemon.start.failed]
+description = "What start prints when the daemon never became healthy"
+other = "데몬이 시작되지 않았어요: {{.Detail}}"
+
+[cli.daemon.start.log]
+description = "Where a started daemon writes what it logs"
+other = "데몬 로그 경로: {{.Path}}"
+
+[cli.daemon.stop.short]
+description = "One-line summary of relo daemon stop"
+other = "라이프사이클 명령이 관리하는 Relo 프록시 중지"
+
+[cli.daemon.stop.stopped]
+description = "Confirmation after a stop"
+other = "Relo가 중지됐어요"
+
+[cli.daemon.stop.not_running]
+description = "What stop prints when nothing is running"
+other = "Relo가 실행 중이 아니에요"
+
+[cli.daemon.restart.short]
+description = "One-line summary of relo daemon restart"
+other = "Relo 프록시 재시작"
+
+[cli.daemon.restart.port]
+description = "Usage of the restart --port flag"
+other = "수신 포트 재지정"
+
+[cli.daemon.restart.force]
+description = "Usage of the restart --force flag"
+other = "실행 중인 프로세스 강제 종료 후 새 데몬 시작"
+
+[cli.daemon.restart.restarted]
+description = "Confirmation after a restart"
+other = "Relo가 {{.Addr}}에서 실행 중이에요"
+
+[cli.daemon.status.no_keys_hint]
+description = "How to create the first client key"
+other = "콘솔의 키 페이지에서 하나 만들면 돼요"
+
+[api.daemon.not_headless]
+description = "Refusal of a stop request when this process is not a headless daemon"
+other = "이 프로세스는 중지 요청을 받지 않아요"
+
+[api.daemon.instance_mismatch]
+description = "Refusal of a stop request naming another instance"
+other = "중지 요청이 다른 인스턴스를 가리키고 있어요"
+
+[tray.menu.version]
+description = "Tray menu version label"
+other = "버전 {{.Version}}"
+
+[tray.menu.update_version]
+description = "Tray menu update action"
+other = "업데이트 {{.Version}}"
+
+[tray.error.not_ready]
+description = "Daemon not ready error"
+other = "준비 안 됨"
+
+[tray.error.port_in_use]
+description = "Port conflict error"
+other = "포트 사용 중"
+
+[tray.error.timed_out]
+description = "Timeout error"
+other = "시간 초과"
+
+[tray.error.database]
+description = "Database availability error"
+other = "데이터베이스 사용 불가"
+
+[tray.error.start_failed]
+description = "Daemon start error"
+other = "시작할 수 없음"
+
+[cli.daemon.stop.force]
+description = "Usage of the stop --force flag"
+other = "실행 중인 프로세스를 종료하고 Relo가 사용하는 포트를 해제"
+
+[cli.uninstall.short]
+description = "One-line summary of relo uninstall"
+other = "이 컴퓨터에서 Relo 제거"
+
+[cli.uninstall.keep_data]
+description = "Usage of the uninstall --keep-data flag"
+other = "Relo 데이터 유지(설정, 자격 증명, 로그)"
+
+[cli.uninstall.wipe]
+description = "Usage of the uninstall --wipe flag"
+other = "Relo 데이터 삭제(설정, 자격 증명, 로그)"
+
+[cli.uninstall.prepare]
+description = "Usage of the hidden uninstall --prepare flag"
+other = "서비스를 중지하고 자동 시작을 끄되 프로그램은 그대로 둡니다"
+
+[cli.uninstall.ask_data]
+description = "The question an interactive uninstall asks about the Relo data"
+other = "Relo 데이터(설정, 자격 증명, 로그)를 삭제할까요? [y/N]"
+
+[cli.uninstall.kept]
+description = "What an uninstall reports when the Relo data stays"
+other = "Relo 데이터는 {{.Home}}에 있습니다"
+
+[cli.uninstall.wiped]
+description = "What an uninstall reports after the Relo data is removed"
+other = "Relo 데이터를 삭제했습니다"
+
+[cli.uninstall.removing]
+description = "What an uninstall says as it hands the program to its installer"
+other = "Relo를 제거하는 중…"
+
+[cli.uninstall.manual]
+description = "What an uninstall says when nothing on the machine removes Relo"
+other = "Relo 프로그램을 직접 삭제하세요"
+
+[cli.uninstall.trash]
+description = "What an uninstall says when the macOS app bundle could not be deleted"
+other = "{{.Bundle}}을(를) 휴지통으로 옮기세요"
+
+[cli.uninstall.run]
+description = "The command to run when a removal could not be started"
+other = "Relo 제거를 마무리하려면 다음을 실행하세요: {{.Command}}"

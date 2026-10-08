@@ -1,0 +1,74 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" role="img" aria-label="Relo">
+    <!-- The Relo logo: the squircle plate carrying the mark. This file and
+         assets/logo-mark.svg are the only artwork a designer edits; make icons
+         derives every icon, favicon and installer tile from them.
+
+         The plate is a superellipse of exponent 5.5 filling the canvas, sampled
+         rather than drawn as a rounded rect so its silhouette matches the macOS
+         icon grid. Its coordinates run 0 to 512 rather than straddling the
+         origin: the SVG rasteriser stops a path at its first negative number, so
+         a plate centred on zero renders as one quarter of itself.
+
+         The mark sits at 66% of the plate width and is the same geometry as
+         logo-mark.svg with the scale into the page written out, because the
+         SVG rasteriser drops elements carrying a transform attribute. The tray
+         reads logo-mark.svg on its own, so the two must never disagree about
+         the geometry.
+
+         The sheen and depth washes are the Liquid Glass finish. They are
+         ordinary vertical gradients with no geometry of their own, so editing
+         the brand colour above updates the whole plate. -->
+    <title>Relo</title>
+    <defs>
+        <linearGradient id="plate" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#e01833"/>
+            <stop offset="1" stop-color="#b00d22"/>
+        </linearGradient>
+        <linearGradient id="sheen" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0.00" stop-opacity="0.139"/>
+            <stop offset="0.04" stop-opacity="0.158"/>
+            <stop offset="0.08" stop-opacity="0.158"/>
+            <stop offset="0.12" stop-opacity="0.139"/>
+            <stop offset="0.16" stop-opacity="0.108"/>
+            <stop offset="0.20" stop-opacity="0.074"/>
+            <stop offset="0.24" stop-opacity="0.045"/>
+            <stop offset="0.28" stop-opacity="0.024"/>
+            <stop offset="0.32" stop-opacity="0.011"/>
+            <stop offset="0.36" stop-opacity="0.005"/>
+            <stop offset="0.40" stop-opacity="0.002"/>
+            <stop offset="0.44" stop-opacity="0.000"/>
+            <stop offset="1.00" stop-opacity="0.000"/>
+        </linearGradient>
+        <linearGradient id="depth" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0.00" stop-opacity="0.000"/>
+            <stop offset="0.60" stop-opacity="0.000"/>
+            <stop offset="0.64" stop-opacity="0.000"/>
+            <stop offset="0.68" stop-opacity="0.002"/>
+            <stop offset="0.72" stop-opacity="0.007"/>
+            <stop offset="0.76" stop-opacity="0.014"/>
+            <stop offset="0.80" stop-opacity="0.022"/>
+            <stop offset="0.84" stop-opacity="0.034"/>
+            <stop offset="0.88" stop-opacity="0.047"/>
+            <stop offset="0.92" stop-opacity="0.062"/>
+            <stop offset="0.96" stop-opacity="0.080"/>
+            <stop offset="1.00" stop-opacity="0.100"/>
+        </linearGradient>
+        <clipPath id="squircle">
+            <path d="M512.00 256.00L511.89 341.54L511.55 366.01L510.99 383.40L510.20 397.30L509.18 409.04L507.94 419.27L506.45 428.35L504.73 436.53L502.77 443.96L500.57 450.75L498.10 456.99L495.38 462.74L492.39 468.05L489.12 472.96L485.56 477.49L481.69 481.69L477.49 485.56L472.96 489.12L468.05 492.39L462.74 495.38L456.99 498.10L450.75 500.57L443.96 502.77L436.53 504.73L428.35 506.45L419.27 507.94L409.04 509.18L397.30 510.20L383.40 510.99L366.01 511.55L341.54 511.89L256.00 512.00L170.46 511.89L145.99 511.55L128.60 510.99L114.70 510.20L102.96 509.18L92.73 507.94L83.65 506.45L75.47 504.73L68.04 502.77L61.25 500.57L55.01 498.10L49.26 495.38L43.95 492.39L39.04 489.12L34.51 485.56L30.31 481.69L26.44 477.49L22.88 472.96L19.61 468.05L16.62 462.74L13.90 456.99L11.43 450.75L9.23 443.96L7.27 436.53L5.55 428.35L4.06 419.27L2.82 409.04L1.80 397.30L1.01 383.40L0.45 366.01L0.11 341.54L0.00 256.00L0.11 170.46L0.45 145.99L1.01 128.60L1.80 114.70L2.82 102.96L4.06 92.73L5.55 83.65L7.27 75.47L9.23 68.04L11.43 61.25L13.90 55.01L16.62 49.26L19.61 43.95L22.88 39.04L26.44 34.51L30.31 30.31L34.51 26.44L39.04 22.88L43.95 19.61L49.26 16.62L55.01 13.90L61.25 11.43L68.04 9.23L75.47 7.27L83.65 5.55L92.73 4.06L102.96 2.82L114.70 1.80L128.60 1.01L145.99 0.45L170.46 0.11L256.00 0.00L341.54 0.11L366.01 0.45L383.40 1.01L397.30 1.80L409.04 2.82L419.27 4.06L428.35 5.55L436.53 7.27L443.96 9.23L450.75 11.43L456.99 13.90L462.74 16.62L468.05 19.61L472.96 22.88L477.49 26.44L481.69 30.31L485.56 34.51L489.12 39.04L492.39 43.95L495.38 49.26L498.10 55.01L500.57 61.25L502.77 68.04L504.73 75.47L506.45 83.65L507.94 92.73L509.18 102.96L510.20 114.70L510.99 128.60L511.55 145.99L511.89 170.46Z"/>
+        </clipPath>
+    </defs>
+    <path d="M512.00 256.00L511.89 341.54L511.55 366.01L510.99 383.40L510.20 397.30L509.18 409.04L507.94 419.27L506.45 428.35L504.73 436.53L502.77 443.96L500.57 450.75L498.10 456.99L495.38 462.74L492.39 468.05L489.12 472.96L485.56 477.49L481.69 481.69L477.49 485.56L472.96 489.12L468.05 492.39L462.74 495.38L456.99 498.10L450.75 500.57L443.96 502.77L436.53 504.73L428.35 506.45L419.27 507.94L409.04 509.18L397.30 510.20L383.40 510.99L366.01 511.55L341.54 511.89L256.00 512.00L170.46 511.89L145.99 511.55L128.60 510.99L114.70 510.20L102.96 509.18L92.73 507.94L83.65 506.45L75.47 504.73L68.04 502.77L61.25 500.57L55.01 498.10L49.26 495.38L43.95 492.39L39.04 489.12L34.51 485.56L30.31 481.69L26.44 477.49L22.88 472.96L19.61 468.05L16.62 462.74L13.90 456.99L11.43 450.75L9.23 443.96L7.27 436.53L5.55 428.35L4.06 419.27L2.82 409.04L1.80 397.30L1.01 383.40L0.45 366.01L0.11 341.54L0.00 256.00L0.11 170.46L0.45 145.99L1.01 128.60L1.80 114.70L2.82 102.96L4.06 92.73L5.55 83.65L7.27 75.47L9.23 68.04L11.43 61.25L13.90 55.01L16.62 49.26L19.61 43.95L22.88 39.04L26.44 34.51L30.31 30.31L34.51 26.44L39.04 22.88L43.95 19.61L49.26 16.62L55.01 13.90L61.25 11.43L68.04 9.23L75.47 7.27L83.65 5.55L92.73 4.06L102.96 2.82L114.70 1.80L128.60 1.01L145.99 0.45L170.46 0.11L256.00 0.00L341.54 0.11L366.01 0.45L383.40 1.01L397.30 1.80L409.04 2.82L419.27 4.06L428.35 5.55L436.53 7.27L443.96 9.23L450.75 11.43L456.99 13.90L462.74 16.62L468.05 19.61L472.96 22.88L477.49 26.44L481.69 30.31L485.56 34.51L489.12 39.04L492.39 43.95L495.38 49.26L498.10 55.01L500.57 61.25L502.77 68.04L504.73 75.47L506.45 83.65L507.94 92.73L509.18 102.96L510.20 114.70L510.99 128.60L511.55 145.99L511.89 170.46Z"
+          fill="url(#plate)"/>
+    <g clip-path="url(#squircle)">
+        <rect width="512" height="512" fill="url(#sheen)"/>
+        <rect width="512" height="512" fill="url(#depth)"/>
+    </g>
+    <!-- The brand mark, scaled to 66% of the plate and centred. The numbers are
+         logo-mark.svg with the scale and offset applied by hand, because the SVG
+         rasteriser drops every element that carries a transform attribute. -->
+    <g stroke="#ffffff" stroke-width="21.12" stroke-linecap="round" fill="none">
+        <path d="M256.00 147.10 A108.90 108.90 0 0 1 364.90 256.00"/>
+        <path d="M256.00 364.90 A108.90 108.90 0 0 1 147.10 256.00"/>
+    </g>
+    <circle cx="256" cy="256" r="42.24" fill="#ffffff"/>
+</svg>

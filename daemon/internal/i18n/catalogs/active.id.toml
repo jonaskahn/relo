@@ -1,0 +1,658 @@
+# Pesan-pesan yang disampaikan Relo, dalam Bahasa Indonesia.
+
+[cli.root.short]
+description = "One-line summary of the relo command"
+other = "Proxy AI lokal dengan pengumpulan kredensial multi-akun"
+
+[cli.root.home]
+description = "Usage of the --home flag"
+other = "direktori state (default $RELO_HOME, lalu ~/.relo)"
+
+[cli.root.lang]
+description = "Usage of the --lang flag"
+other = "bahasa untuk eksekusi ini (otomatis, atau tag seperti en, de, ja)"
+
+[cli.usage.title]
+description = "Heading above the usage line of a help screen"
+other = "Penggunaan:"
+
+[cli.usage.aliases]
+description = "Heading above the aliases of a command"
+other = "Alias:"
+
+[cli.usage.examples]
+description = "Heading above the examples of a command"
+other = "Contoh:"
+
+[cli.usage.commands]
+description = "Heading above the list of commands"
+other = "Perintah yang tersedia:"
+
+[cli.usage.more_commands]
+description = "Heading above commands that belong to no group"
+other = "Perintah tambahan:"
+
+[cli.usage.flags]
+description = "Heading above the flags of one command"
+other = "Flag:"
+
+[cli.usage.global_flags]
+description = "Heading above the flags every command shares"
+other = "Flag global:"
+
+[cli.usage.topics]
+description = "Heading above extra help topics"
+other = "Topik bantuan tambahan:"
+
+[cli.usage.footer]
+description = "Closing hint of a help screen; {{.CommandPath}} is the command path and [command] --help stays literal"
+other = "Gunakan \"{{.CommandPath}} [command] --help\" untuk info lebih lanjut tentang sebuah perintah."
+
+[cli.help.short]
+description = "One-line summary of relo help"
+other = "Bantuan untuk perintah apa pun"
+
+[cli.help.long]
+description = "Long description of relo help; {{.Name}} is the program name"
+other = "Bantuan menjelaskan setiap perintah di aplikasi.\nKetik {{.Name}} help [jalur perintah] untuk detail lengkap."
+
+[cli.help.flag]
+description = "Usage of the -h/--help flag; {{.Name}} is the command name"
+other = "bantuan untuk {{.Name}}"
+
+[cli.completion.short]
+description = "One-line summary of relo completion"
+other = "Buat skrip pelengkapan otomatis untuk shell yang ditentukan"
+
+[cli.completion.long]
+description = "Long description of relo completion; {{.Name}} is the program name"
+other = "Buat skrip pelengkapan otomatis {{.Name}} untuk shell yang ditentukan.\nBantuan tiap subperintah menjelaskan cara memakai skrip yang dibuat."
+
+[cli.completion.shell]
+description = "One-line summary of relo completion for one shell; {{.Shell}} is the shell name"
+other = "Buat skrip pelengkapan otomatis untuk {{.Shell}}"
+
+[cli.completion.no_descriptions]
+description = "Usage of the completion --no-descriptions flag"
+other = "matikan deskripsi pada pelengkapan otomatis"
+
+[cli.version.short]
+description = "One-line summary of relo version"
+other = "Cetak versi dan platform"
+
+[cli.daemon.short]
+description = "One-line summary of relo daemon"
+other = "Jalankan dan kelola daemon"
+
+[cli.daemon.status.short]
+description = "One-line summary of relo daemon status"
+other = "Tunjukkan apakah daemon berjalan"
+
+[cli.daemon.status.json]
+description = "Usage of the status --json flag"
+other = "cetak laporan sebagai JSON"
+
+[cli.daemon.status.not_running]
+description = "What status prints when nothing answers on the listen port"
+other = "Relo tidak berjalan"
+
+[cli.daemon.status.running]
+description = "Header status prints for a running daemon"
+other = "Relo sedang berjalan"
+
+[cli.daemon.status.version]
+description = "Status field label"
+other = "Versi"
+
+[cli.daemon.status.uptime]
+description = "Status field label"
+other = "Waktu aktif"
+
+[cli.daemon.status.address]
+description = "Status field label"
+other = "Alamat"
+
+[cli.daemon.status.data_plane]
+description = "Status field label for the port each client protocol answers on"
+other = "Data plane"
+
+[cli.daemon.status.secret_mode]
+description = "Status field label"
+other = "Mode rahasia"
+
+[cli.daemon.status.schema_version]
+description = "Status field label"
+other = "Versi skema"
+
+[cli.daemon.status.client_keys]
+description = "Status field label"
+other = "Kunci klien"
+
+[cli.daemon.status.key_count]
+description = "How many client keys exist, and how many still authenticate"
+other = "{{.Count}} ({{.Active}} aktif)"
+
+[cli.daemon.status.no_keys]
+description = "Warning under the status report when no client key is active"
+other = "Tidak ada kunci klien aktif. Data plane menolak setiap permintaan."
+
+[cli.daemon.run.short]
+description = "One-line summary of relo daemon run"
+other = "Jalankan proxy Relo di latar depan"
+
+[cli.daemon.run.port]
+description = "Usage of the daemon run --port flag"
+other = "timpa port listener"
+
+[cli.autostart.short]
+description = "One-line summary of relo autostart"
+other = "Kelola apakah Relo berjalan saat login"
+
+[cli.autostart.enable.short]
+description = "One-line summary of relo autostart enable"
+other = "mulai aplikasi desktop dan daemon saat login"
+
+[cli.autostart.disable.short]
+description = "One-line summary of relo autostart disable"
+other = "hapus registrasi mulai saat login"
+
+[cli.autostart.added]
+description = "Confirmation after registering the login items"
+other = "relo akan mulai saat login"
+
+[cli.autostart.removed]
+description = "Confirmation after removing the login items"
+other = "relo tidak akan mulai lagi saat login"
+
+[language.auto]
+description = "The language choice that follows the system locale"
+other = "Ikuti sistem"
+
+[language.name.en]
+description = "English, named in English"
+other = "English"
+
+[language.name.de]
+description = "German, named in German"
+other = "Deutsch"
+
+[language.name.zh-Hans]
+description = "Simplified Chinese, named in Simplified Chinese"
+other = "简体中文"
+
+[language.name.ar]
+description = "Arabic, named in Arabic"
+other = "العربية"
+
+[language.name.cs]
+other = "Čeština"
+
+[language.name.es]
+other = "Español"
+
+[language.name.fr]
+other = "Français"
+
+[language.name.hi]
+other = "हिन्दी"
+
+[language.name.id]
+other = "Bahasa Indonesia"
+
+[language.name.it]
+other = "Italiano"
+
+[language.name.ja]
+other = "日本語"
+
+[language.name.ko]
+other = "한국어"
+
+[language.name.nl]
+other = "Nederlands"
+
+[language.name.pl]
+other = "Polski"
+
+[language.name.pt-BR]
+other = "Português (Brasil)"
+
+[language.name.ro]
+other = "Română"
+
+[language.name.ru]
+other = "Русский"
+
+[language.name.sv]
+other = "Svenska"
+
+[language.name.th]
+other = "ไทย"
+
+[language.name.tr]
+other = "Türkçe"
+
+[language.name.uk]
+other = "Українська"
+
+[language.name.vi]
+other = "Tiếng Việt"
+
+[language.name.zh-Hant]
+other = "繁體中文"
+
+[api.auth.loopback_only]
+description = "Sign-in refusal for a request that did not arrive over loopback"
+other = "masuk hanya tersedia dari mesin ini"
+
+[api.auth.invalid_token]
+description = "Sign-in refusal for a wrong admin token"
+other = "token admin tidak valid"
+
+[api.auth.session_failed]
+description = "Sign-in failure when no session could be started"
+other = "konsol tidak dapat memulai sesi"
+
+[api.auth.session_missing]
+description = "Refusal of a management request without a live session"
+other = "sesi dasbor hilang atau kedaluwarsa"
+
+[api.body.invalid]
+description = "Refusal of a body that does not parse, with the parser's detail"
+other = "isi permintaan tidak valid: {{.Detail}}"
+
+[api.body.single_object]
+description = "Refusal of a body that carries more than one JSON object"
+other = "isi permintaan tidak valid: harus satu objek JSON"
+
+[api.callback.heading]
+description = "Title of the page a browser lands on after a provider redirect"
+other = "Menyelesaikan login"
+
+[api.callback.summary]
+description = "Summary of the callback page while the authorization is exchanged"
+other = "Relo sudah mendapat otorisasi dan sedang menyimpan akun"
+
+[api.callback.marker_working]
+description = "Status marker of a login that is still running"
+other = "Sedang berjalan"
+
+[api.callback.marker_connected]
+description = "Status marker of a login that stored an account"
+other = "Terhubung"
+
+[api.callback.marker_failed]
+description = "Status marker of a login that did not finish"
+other = "Tidak terhubung"
+
+[api.callback.steps_label]
+description = "Accessible label of the progress list on the callback page"
+other = "Progres login"
+
+[api.callback.step_authorized]
+description = "First step of a login: the provider authorized the request"
+other = "Diotorisasi oleh {{.Provider}}"
+
+[api.callback.step_exchanging]
+description = "Second step of a login: the authorization is traded for tokens"
+other = "Menukar otorisasi"
+
+[api.callback.step_stored]
+description = "Third step of a login: the account is stored"
+other = "Akun disimpan"
+
+[api.callback.connected_title]
+description = "Title of the callback page for a login that finished"
+other = "Terhubung"
+
+[api.callback.connected_body]
+description = "Summary of the callback page for a login that finished"
+other = "Relo menyimpan akun dan meneruskan permintaan lewat akun itu"
+
+[api.callback.failed_title]
+description = "Title of the callback page for a login that did not finish"
+other = "Login tidak selesai"
+
+[api.callback.expired_title]
+description = "Title of the callback page for a login this process no longer tracks"
+other = "Login ini sudah tidak berlaku"
+
+[api.callback.expired_body]
+description = "Summary of the callback page for a login this process no longer tracks"
+other = "Relo tidak lagi melacak login ini. Mulai lagi dari konsol."
+
+[api.callback.expired]
+description = "Refusal of a callback status poll for a login that is gone"
+other = "login ini sudah tidak berlaku"
+
+[api.callback.failure_denied]
+description = "Callback failure: the provider refused the authorization"
+other = "Penyedia menolak otorisasi"
+
+[api.callback.failure_state]
+description = "Callback failure: the callback did not match the login Relo started"
+other = "Callback tidak cocok dengan login yang dimulai Relo, atau sudah dipakai"
+
+[api.callback.failure_timeout]
+description = "Callback failure: the provider did not answer in time"
+other = "Penyedia tidak menjawab tepat waktu"
+
+[api.callback.failure_exchange]
+description = "Callback failure: the provider would not exchange the authorization"
+other = "Penyedia tidak menukar otorisasi menjadi token"
+
+[api.callback.account_label]
+description = "Label of the stored account on the callback page"
+other = "Akun"
+
+[api.callback.close_hint]
+description = "What the callback page tells an operator once the login finished"
+other = "Kamu bisa menutup tab ini"
+
+[api.callback.closing_in]
+description = "Countdown shown on the callback page before it closes itself"
+other = "Ditutup dalam {{.Seconds}} dtk…"
+
+[api.callback.console_link]
+description = "Link from the callback page to the console page that lists accounts"
+other = "Buka konsol"
+
+[api.dashboard.missing]
+description = "Refusal of a console request in a build without one"
+other = "build ini tidak punya dasbor"
+
+[api.events.unknown]
+description = "Refusal of an event stream for a channel that does not exist"
+other = "tidak ada channel acara itu"
+
+[api.events.cannot_stream]
+description = "Refusal of an event stream over a listener that cannot stream"
+other = "listener ini tidak bisa streaming"
+
+[api.events.too_many]
+description = "Refusal of an event stream when too many are already open"
+other = "terlalu banyak stream acara terbuka"
+
+[api.inference.retired]
+description = "Refusal of an inference path that moved to the port of its protocol"
+other = "port inferensi pindah ke {{.BaseURL}}"
+
+[api.keys.invalid]
+description = "Refusal of an inference request with a key that does not authenticate"
+other = "kunci API tidak valid"
+
+[api.keys.missing_header]
+description = "Refusal of an inference request without a credential"
+other = "header Authorization hilang atau tidak valid"
+
+[api.keys.store_unavailable]
+description = "Refusal of an inference request when the key store is down"
+other = "penyimpanan kunci API tidak tersedia"
+
+[api.logs.event_id_number]
+description = "Refusal of a log request whose event id is not a number"
+other = "ID acara harus berupa angka"
+
+[api.logs.capture_id_number]
+description = "Refusal of a capture read whose capture id is not a number"
+other = "ID capture harus berupa angka"
+
+[api.logs.capture_missing]
+description = "Refusal of a capture read that names no stored capture"
+other = "tidak ada capture tersimpan dengan ID itu"
+
+[api.oauth.unknown]
+description = "Refusal of a login operation that does not exist"
+other = "tidak ada operasi login dengan ID itu"
+
+[api.oauth.port_busy]
+description = "Refusal of a sign-in whose callback port another process holds"
+other = "{{process}} menggunakan port {{port}}; akhiri untuk masuk"
+
+[api.integration.action_in_progress]
+description = "Refusal of a second run of an action the first has not finished"
+other = "tindakan itu sedang berjalan; tunggu hingga selesai"
+
+[api.route.missing]
+description = "Refusal of a management path that matches no route"
+other = "tidak ada route yang cocok"
+
+[api.route.unavailable]
+description = "Refusal of a management endpoint that is not implemented"
+other = "endpoint ini belum tersedia"
+
+[api.service.unavailable]
+description = "Refusal of a management request when the service is missing"
+other = "layanan manajemen tidak tersedia"
+
+[api.settings.retention.invalid]
+description = "Refusal of a retention budget below the floor the ledger keeps"
+other = "request details are kept for at least a {{.Min}}-day window; use 0 to keep everything"
+
+[api.settings.sweep.busy]
+description = "Refusal of a maintenance sweep while another one is running"
+other = "a maintenance sweep is already running; wait for it to finish"
+
+[api.account.status_required]
+description = "Refusal of an account update that named neither status nor priority"
+other = "status atau prioritas wajib diisi"
+
+[tray.tooltip]
+description = "Tooltip of the tray icon"
+other = "Relo — proxy AI lokal"
+
+[tray.menu.open_dashboard]
+description = "Tray menu item that opens the console in a browser"
+other = "Buka dasbor"
+
+[tray.menu.restart]
+description = "Tray menu item that restarts the daemon"
+other = "Mulai ulang server"
+
+[tray.menu.force_restart]
+description = "Tray menu item that kills the daemon and starts it again"
+other = "Paksa mulai ulang server"
+
+[tray.menu.autostart]
+description = "Tray menu item that toggles the login item"
+other = "Mulai saat login"
+
+[tray.menu.language]
+description = "Tray submenu that chooses the language"
+other = "Bahasa"
+
+[tray.menu.quit]
+description = "Tray submenu that quits the desktop app"
+other = "Keluar"
+
+[tray.menu.quit_hide]
+description = "Tray menu item that hides the icon and leaves the proxy serving"
+other = "Sembunyikan ikon (proksi tetap berjalan)"
+
+[tray.menu.quit_shutdown]
+description = "Tray menu item that quits the desktop app and stops the daemon"
+other = "Keluar dan matikan daemon"
+
+[tray.notify.failed]
+description = "Notification when a proxy run failed"
+other = "Proksi tidak berjalan. {{.Detail}}"
+
+[tray.status.running]
+description = "Tray menu status row for a running daemon"
+other = "Berjalan · {{.Addr}}"
+
+[tray.status.stopped]
+description = "Tray menu status row for a stopped daemon"
+other = "Berhenti"
+
+[tray.status.failed]
+description = "Tray menu status row for a daemon that failed"
+other = "Gagal · {{.Detail}}"
+
+[tray.info.requests]
+description = "Tray menu row that charts the last day of requests"
+other = "Permintaan {{.Value}}"
+
+[tray.info.tokens]
+description = "Tray menu row that charts the last day of tokens"
+other = "Token {{.Value}}"
+
+[tray.info.spend]
+description = "Tray menu row that charts the last day of spend"
+other = "Biaya {{.Value}}"
+
+[tray.error.unknown]
+description = "Placeholder when a failure carried no message"
+other = "kesalahan tidak dikenal"
+
+[tray.notify.browser_failed]
+description = "Notification when no browser could be opened"
+other = "Tidak bisa membuka browser"
+
+[tray.notify.autostart_failed]
+description = "Notification when the login item could not be changed"
+other = "Tidak bisa mengubah item login"
+
+[tray.notify.language_failed]
+description = "Notification when a language choice could not be stored"
+other = "Tidak bisa menyimpan bahasa"
+
+[cli.daemon.start.short]
+description = "One-line summary of relo daemon start"
+other = "Jalankan proxy Relo di latar belakang"
+
+[cli.daemon.start.port]
+description = "Usage of the start --port flag"
+other = "timpa port listener"
+
+[cli.daemon.start.started]
+description = "Confirmation after a start"
+other = "Relo berjalan di {{.Addr}}"
+
+[cli.daemon.start.already]
+description = "What start prints when the daemon is already up"
+other = "Relo sudah berjalan di {{.Addr}}"
+
+[cli.daemon.start.failed]
+description = "What start prints when the daemon never became healthy"
+other = "daemon gagal dimulai: {{.Detail}}"
+
+[cli.daemon.start.log]
+description = "Where a started daemon writes what it logs"
+other = "log daemon ada di {{.Path}}"
+
+[cli.daemon.stop.short]
+description = "One-line summary of relo daemon stop"
+other = "Hentikan proxy Relo yang dikelola perintah siklus hidup"
+
+[cli.daemon.stop.stopped]
+description = "Confirmation after a stop"
+other = "Relo berhenti"
+
+[cli.daemon.stop.not_running]
+description = "What stop prints when nothing is running"
+other = "Relo tidak berjalan"
+
+[cli.daemon.restart.short]
+description = "One-line summary of relo daemon restart"
+other = "Mulai ulang proxy Relo"
+
+[cli.daemon.restart.port]
+description = "Usage of the restart --port flag"
+other = "timpa port listener"
+
+[cli.daemon.restart.force]
+description = "Usage of the restart --force flag"
+other = "matikan proses yang berjalan dan mulai daemon baru"
+
+[cli.daemon.restart.restarted]
+description = "Confirmation after a restart"
+other = "Relo berjalan di {{.Addr}}"
+
+[cli.daemon.status.no_keys_hint]
+description = "How to create the first client key"
+other = "Buat satu di halaman Kunci di konsol."
+
+[api.daemon.not_headless]
+description = "Refusal of a stop request when this process is not a headless daemon"
+other = "proses ini tidak menerima permintaan berhenti"
+
+[api.daemon.instance_mismatch]
+description = "Refusal of a stop request naming another instance"
+other = "permintaan berhenti menunjuk instance lain"
+
+[tray.menu.version]
+description = "Tray menu version label"
+other = "Versi {{.Version}}"
+
+[tray.menu.update_version]
+description = "Tray menu update action"
+other = "Perbarui ke {{.Version}}"
+
+[tray.error.not_ready]
+description = "Daemon not ready error"
+other = "Belum siap"
+
+[tray.error.port_in_use]
+description = "Port conflict error"
+other = "Port sedang dipakai"
+
+[tray.error.timed_out]
+description = "Timeout error"
+other = "Waktu habis"
+
+[tray.error.database]
+description = "Database availability error"
+other = "Database tidak tersedia"
+
+[tray.error.start_failed]
+description = "Daemon start error"
+other = "Tidak dapat memulai"
+
+[cli.daemon.stop.force]
+description = "Usage of the stop --force flag"
+other = "hentikan proses yang berjalan dan bebaskan port yang dilayani Relo"
+
+[cli.uninstall.short]
+description = "One-line summary of relo uninstall"
+other = "hapus Relo dari komputer ini"
+
+[cli.uninstall.keep_data]
+description = "Usage of the uninstall --keep-data flag"
+other = "pertahankan data Relo (konfigurasi, kredensial, log)"
+
+[cli.uninstall.wipe]
+description = "Usage of the uninstall --wipe flag"
+other = "hapus data Relo (konfigurasi, kredensial, log)"
+
+[cli.uninstall.prepare]
+description = "Usage of the hidden uninstall --prepare flag"
+other = "hentikan layanan dan matikan mulai otomatis, biarkan program di tempatnya"
+
+[cli.uninstall.ask_data]
+description = "The question an interactive uninstall asks about the Relo data"
+other = "Hapus data Relo (konfigurasi, kredensial, log)? [y/T]"
+
+[cli.uninstall.kept]
+description = "What an uninstall reports when the Relo data stays"
+other = "Data Relo Anda ada di {{.Home}}"
+
+[cli.uninstall.wiped]
+description = "What an uninstall reports after the Relo data is removed"
+other = "Data Relo Anda telah dihapus"
+
+[cli.uninstall.removing]
+description = "What an uninstall says as it hands the program to its installer"
+other = "Menghapus Relo…"
+
+[cli.uninstall.manual]
+description = "What an uninstall says when nothing on the machine removes Relo"
+other = "hapus program Relo secara manual"
+
+[cli.uninstall.trash]
+description = "What an uninstall says when the macOS app bundle could not be deleted"
+other = "pindahkan {{.Bundle}} ke Sampah"
+
+[cli.uninstall.run]
+description = "The command to run when a removal could not be started"
+other = "jalankan ini untuk menyelesaikan penghapusan Relo: {{.Command}}"

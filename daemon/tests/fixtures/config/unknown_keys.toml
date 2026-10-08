@@ -1,0 +1,10 @@
+title = "unknown top-level key"
+
+[server]
+bind = "127.0.0.1"
+port = 12000
+retries = 3
+
+[system.logging]
+level = "warn"
+format = "json"

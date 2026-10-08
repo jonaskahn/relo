@@ -1,0 +1,9 @@
+[server]
+bind = "127.0.0.1"
+port = 12000
+
+[secrets]
+keychain = true
+
+[system.logging]
+level = "debug"

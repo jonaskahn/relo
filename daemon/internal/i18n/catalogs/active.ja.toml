@@ -1,0 +1,677 @@
+# Reloが話すメッセージ。
+
+[cli.root.short]
+description = "One-line summary of the relo command"
+other = "複数アカウントの認証情報プールを備えたローカルAIプロキシ"
+
+[cli.root.home]
+description = "Usage of the --home flag"
+other = "状態ディレクトリ（既定は$RELO_HOME、次に~/.relo）"
+
+[cli.root.lang]
+description = "Usage of the --lang flag"
+other = "今回の実行言語（auto、またはen・de・jaなどのタグ）"
+
+[cli.usage.title]
+description = "Heading above the usage line of a help screen"
+other = "使い方:"
+
+[cli.usage.aliases]
+description = "Heading above the aliases of a command"
+other = "エイリアス:"
+
+[cli.usage.examples]
+description = "Heading above the examples of a command"
+other = "例:"
+
+[cli.usage.commands]
+description = "Heading above the list of commands"
+other = "使えるコマンド:"
+
+[cli.usage.more_commands]
+description = "Heading above commands that belong to no group"
+other = "その他のコマンド:"
+
+[cli.usage.flags]
+description = "Heading above the flags of one command"
+other = "フラグ:"
+
+[cli.usage.global_flags]
+description = "Heading above the flags every command shares"
+other = "グローバルフラグ:"
+
+[cli.usage.topics]
+description = "Heading above extra help topics"
+other = "その他のヘルプトピック:"
+
+[cli.usage.footer]
+description = "Closing hint of a help screen; {{.CommandPath}} is the command path and [command] --help stays literal"
+other = "コマンドの詳細は「{{.CommandPath}} [command] --help」で確認する"
+
+[cli.help.short]
+description = "One-line summary of relo help"
+other = "任意のコマンドのヘルプ"
+
+[cli.help.long]
+description = "Long description of relo help; {{.Name}} is the program name"
+other = "アプリの全コマンドのヘルプを表示する。\n{{.Name}} help [コマンドのパス] と入力すると詳細を確認できる。"
+
+[cli.help.flag]
+description = "Usage of the -h/--help flag; {{.Name}} is the command name"
+other = "{{.Name}}のヘルプ"
+
+[cli.completion.short]
+description = "One-line summary of relo completion"
+other = "指定したシェル用の自動補完スクリプトを生成する"
+
+[cli.completion.long]
+description = "Long description of relo completion; {{.Name}} is the program name"
+other = "指定したシェル用に{{.Name}}の自動補完スクリプトを生成する。\n生成したスクリプトの使い方は各サブコマンドのヘルプを参照する。"
+
+[cli.completion.shell]
+description = "One-line summary of relo completion for one shell; {{.Shell}} is the shell name"
+other = "{{.Shell}}用の自動補完スクリプトを生成する"
+
+[cli.completion.no_descriptions]
+description = "Usage of the completion --no-descriptions flag"
+other = "補完の説明を無効にする"
+
+[cli.version.short]
+description = "One-line summary of relo version"
+other = "バージョンとプラットフォームを表示"
+
+[cli.daemon.short]
+description = "One-line summary of relo daemon"
+other = "デーモンの実行と管理"
+
+[cli.daemon.status.short]
+description = "One-line summary of relo daemon status"
+other = "デーモンが動いているかどうかを表示"
+
+[cli.daemon.status.json]
+description = "Usage of the status --json flag"
+other = "レポートをJSONで出力"
+
+[cli.daemon.status.not_running]
+description = "What status prints when nothing answers on the listen port"
+other = "Reloが動いていません"
+
+[cli.daemon.status.running]
+description = "Header status prints for a running daemon"
+other = "Reloが動いています"
+
+[cli.daemon.status.version]
+description = "Status field label"
+other = "バージョン"
+
+[cli.daemon.status.uptime]
+description = "Status field label"
+other = "稼働時間"
+
+[cli.daemon.status.address]
+description = "Status field label"
+other = "アドレス"
+
+[cli.daemon.status.data_plane]
+description = "Status field label for the port each client protocol answers on"
+other = "data plane"
+
+[cli.daemon.status.secret_mode]
+description = "Status field label"
+other = "シークレットモード"
+
+[cli.daemon.status.schema_version]
+description = "Status field label"
+other = "スキーマバージョン"
+
+[cli.daemon.status.client_keys]
+description = "Status field label"
+other = "クライアントキー"
+
+[cli.daemon.status.key_count]
+description = "How many client keys exist, and how many still authenticate"
+other = "{{.Count}}件（有効{{.Active}}件）"
+
+[cli.daemon.status.no_keys]
+description = "Warning under the status report when no client key is active"
+other = "有効なクライアントキーがありません。data planeはすべてのリクエストを拒否します。"
+
+[cli.daemon.run.short]
+description = "One-line summary of relo daemon run"
+other = "Reloプロキシをフォアグラウンドで起動"
+
+[cli.daemon.run.port]
+description = "Usage of the daemon run --port flag"
+other = "リッスンポートを上書き"
+
+[cli.autostart.short]
+description = "One-line summary of relo autostart"
+other = "Reloをログイン時に起動するかどうかを管理"
+
+[cli.autostart.enable.short]
+description = "One-line summary of relo autostart enable"
+other = "デスクトップアプリとデーモンをログイン時起動に登録"
+
+[cli.autostart.disable.short]
+description = "One-line summary of relo autostart disable"
+other = "ログイン時起動の登録を削除"
+
+[cli.autostart.added]
+description = "Confirmation after registering the login items"
+other = "Reloはログイン時に起動します"
+
+[cli.autostart.removed]
+description = "Confirmation after removing the login items"
+other = "Reloはログイン時に起動しなくなります"
+
+[language.auto]
+description = "The language choice that follows the system locale"
+other = "システムに従う"
+
+[language.name.en]
+description = "English, named in English"
+other = "English"
+
+[language.name.de]
+description = "German, named in German"
+other = "Deutsch"
+
+[language.name.zh-Hans]
+description = "Simplified Chinese, named in Simplified Chinese"
+other = "简体中文"
+
+[language.name.ar]
+description = "Arabic, named in Arabic"
+other = "العربية"
+
+[language.name.cs]
+description = "Czech, named in Czech"
+other = "Čeština"
+
+[language.name.es]
+description = "Spanish, named in Spanish"
+other = "Español"
+
+[language.name.fr]
+description = "French, named in French"
+other = "Français"
+
+[language.name.hi]
+description = "Hindi, named in Hindi"
+other = "हिन्दी"
+
+[language.name.id]
+description = "Indonesian, named in Indonesian"
+other = "Bahasa Indonesia"
+
+[language.name.it]
+description = "Italian, named in Italian"
+other = "Italiano"
+
+[language.name.ja]
+description = "Japanese, named in Japanese"
+other = "日本語"
+
+[language.name.ko]
+description = "Korean, named in Korean"
+other = "한국어"
+
+[language.name.nl]
+description = "Dutch, named in Dutch"
+other = "Nederlands"
+
+[language.name.pl]
+description = "Polish, named in Polish"
+other = "Polski"
+
+[language.name.pt-BR]
+description = "Brazilian Portuguese, named in Brazilian Portuguese"
+other = "Português (Brasil)"
+
+[language.name.ro]
+description = "Romanian, named in Romanian"
+other = "Română"
+
+[language.name.ru]
+description = "Russian, named in Russian"
+other = "Русский"
+
+[language.name.sv]
+description = "Swedish, named in Swedish"
+other = "Svenska"
+
+[language.name.th]
+description = "Thai, named in Thai"
+other = "ไทย"
+
+[language.name.tr]
+description = "Turkish, named in Turkish"
+other = "Türkçe"
+
+[language.name.uk]
+description = "Ukrainian, named in Ukrainian"
+other = "Українська"
+
+[language.name.vi]
+description = "Vietnamese, named in Vietnamese"
+other = "Tiếng Việt"
+
+[language.name.zh-Hant]
+description = "Traditional Chinese, named in Traditional Chinese"
+other = "繁體中文"
+
+[api.auth.loopback_only]
+description = "Sign-in refusal for a request that did not arrive over loopback"
+other = "サインインはこのマシンからのみ可能です"
+
+[api.auth.invalid_token]
+description = "Sign-in refusal for a wrong admin token"
+other = "管理者トークンが不正です"
+
+[api.auth.session_failed]
+description = "Sign-in failure when no session could be started"
+other = "コンソールがセッションを開始できませんでした"
+
+[api.auth.session_missing]
+description = "Refusal of a management request without a live session"
+other = "ダッシュボードのセッションがないか、期限切れです"
+
+[api.body.invalid]
+description = "Refusal of a body that does not parse, with the parser's detail"
+other = "リクエスト本文が無効です：{{.Detail}}"
+
+[api.body.single_object]
+description = "Refusal of a body that carries more than one JSON object"
+other = "リクエスト本文が無効です：JSONオブジェクトが1つ必要です"
+
+[api.callback.heading]
+description = "Title of the page a browser lands on after a provider redirect"
+other = "ログインを完了しています"
+
+[api.callback.summary]
+description = "Summary of the callback page while the authorization is exchanged"
+other = "Reloが認証を受け取り、アカウントを保存しています。"
+
+[api.callback.marker_working]
+description = "Status marker of a login that is still running"
+other = "処理中"
+
+[api.callback.marker_connected]
+description = "Status marker of a login that stored an account"
+other = "接続済み"
+
+[api.callback.marker_failed]
+description = "Status marker of a login that did not finish"
+other = "未接続"
+
+[api.callback.steps_label]
+description = "Accessible label of the progress list on the callback page"
+other = "ログインの進捗"
+
+[api.callback.step_authorized]
+description = "First step of a login: the provider authorized the request"
+other = "{{.Provider}}で認証済み"
+
+[api.callback.step_exchanging]
+description = "Second step of a login: the authorization is traded for tokens"
+other = "認証情報を交換中"
+
+[api.callback.step_stored]
+description = "Third step of a login: the account is stored"
+other = "アカウントを保存済み"
+
+[api.callback.connected_title]
+description = "Title of the callback page for a login that finished"
+other = "接続しました"
+
+[api.callback.connected_body]
+description = "Summary of the callback page for a login that finished"
+other = "Reloがアカウントを保存しました。リクエストはこのアカウント経由でルーティングされます。"
+
+[api.callback.failed_title]
+description = "Title of the callback page for a login that did not finish"
+other = "ログインは完了しませんでした"
+
+[api.callback.expired_title]
+description = "Title of the callback page for a login this process no longer tracks"
+other = "このログインはもう有効ではありません"
+
+[api.callback.expired_body]
+description = "Summary of the callback page for a login this process no longer tracks"
+other = "Reloはこのログインを追跡していません。コンソールからやり直してください。"
+
+[api.callback.expired]
+description = "Refusal of a callback status poll for a login that is gone"
+other = "このログインはもう有効ではありません"
+
+[api.callback.failure_denied]
+description = "Callback failure: the provider refused the authorization"
+other = "プロバイダーが認証を拒否しました。"
+
+[api.callback.failure_state]
+description = "Callback failure: the callback did not match the login Relo started"
+other = "コールバックがReloが開始したログインと一致しないか、すでに使用されています。"
+
+[api.callback.failure_timeout]
+description = "Callback failure: the provider did not answer in time"
+other = "プロバイダーが時間内に応答しませんでした。"
+
+[api.callback.failure_exchange]
+description = "Callback failure: the provider would not exchange the authorization"
+other = "プロバイダーが認証をトークンと交換しませんでした。"
+
+[api.callback.account_label]
+description = "Label of the stored account on the callback page"
+other = "アカウント"
+
+[api.callback.close_hint]
+description = "What the callback page tells an operator once the login finished"
+other = "このタブを閉じてかまいません。"
+
+[api.callback.closing_in]
+description = "Countdown shown on the callback page before it closes itself"
+other = "{{.Seconds}}秒後に閉じます…"
+
+[api.callback.console_link]
+description = "Link from the callback page to the console page that lists accounts"
+other = "コンソールを開く"
+
+[api.dashboard.missing]
+description = "Refusal of a console request in a build without one"
+other = "このビルドにはダッシュボードがありません"
+
+[api.events.unknown]
+description = "Refusal of an event stream for a channel that does not exist"
+other = "そのようなイベントチャネルがありません"
+
+[api.events.cannot_stream]
+description = "Refusal of an event stream over a listener that cannot stream"
+other = "このリスナーはストリーミングできません"
+
+[api.events.too_many]
+description = "Refusal of an event stream when too many are already open"
+other = "開いているイベントストリームが多すぎます"
+
+[api.inference.retired]
+description = "Refusal of an inference path that moved to the port of its protocol"
+other = "推論ポートは{{.BaseURL}}に移動しました"
+
+[api.keys.invalid]
+description = "Refusal of an inference request with a key that does not authenticate"
+other = "APIキーが無効です"
+
+[api.keys.missing_header]
+description = "Refusal of an inference request without a credential"
+other = "Authorizationヘッダーがないか無効です"
+
+[api.keys.store_unavailable]
+description = "Refusal of an inference request when the key store is down"
+other = "APIキーストアを利用できません"
+
+[api.logs.event_id_number]
+description = "Refusal of a log request whose event id is not a number"
+other = "イベントIDは数値である必要があります"
+
+[api.logs.capture_id_number]
+description = "Refusal of a capture read whose capture id is not a number"
+other = "キャプチャIDは数値である必要があります"
+
+[api.logs.capture_missing]
+description = "Refusal of a capture read that names no stored capture"
+other = "そのIDの保存済みキャプチャはありません"
+
+[api.oauth.unknown]
+description = "Refusal of a login operation that does not exist"
+other = "そのIDのログイン操作はありません"
+
+[api.oauth.port_busy]
+description = "Refusal of a sign-in whose callback port another process holds"
+other = "{{process}} がポート {{port}} を使用しています。終了してからサインインしてください"
+
+[api.integration.action_in_progress]
+description = "Refusal of a second run of an action the first has not finished"
+other = "その操作はすでに実行中です。完了をお待ちください"
+
+[api.route.missing]
+description = "Refusal of a management path that matches no route"
+other = "一致するルートがありません"
+
+[api.route.unavailable]
+description = "Refusal of a management endpoint that is not implemented"
+other = "このエンドポイントはまだ利用できません"
+
+[api.service.unavailable]
+description = "Refusal of a management request when the service is missing"
+other = "管理サービスを利用できません"
+
+[api.settings.retention.invalid]
+description = "Refusal of a retention budget below the floor the ledger keeps"
+other = "request details are kept for at least a {{.Min}}-day window; use 0 to keep everything"
+
+[api.settings.sweep.busy]
+description = "Refusal of a maintenance sweep while another one is running"
+other = "a maintenance sweep is already running; wait for it to finish"
+
+[api.account.status_required]
+description = "Refusal of an account update that named neither status nor priority"
+other = "statusまたはpriorityの指定が必要です"
+
+[tray.tooltip]
+description = "Tooltip of the tray icon"
+other = "Relo — ローカルAIプロキシ"
+
+[tray.menu.open_dashboard]
+description = "Tray menu item that opens the console in a browser"
+other = "ダッシュボードを開く"
+
+[tray.menu.restart]
+description = "Tray menu item that restarts the daemon"
+other = "サーバーを再起動"
+
+[tray.menu.force_restart]
+description = "Tray menu item that kills the daemon and starts it again"
+other = "サーバーを強制再起動"
+
+[tray.menu.autostart]
+description = "Tray menu item that toggles the login item"
+other = "ログイン時に起動"
+
+[tray.menu.language]
+description = "Tray submenu that chooses the language"
+other = "言語"
+
+[tray.menu.quit]
+description = "Tray submenu that quits the desktop app"
+other = "終了"
+
+[tray.menu.quit_hide]
+description = "Tray menu item that hides the icon and leaves the proxy serving"
+other = "トレイアイコンを隠す（プロキシは稼働を続けます）"
+
+[tray.menu.quit_shutdown]
+description = "Tray menu item that quits the desktop app and stops the daemon"
+other = "終了してデーモンを停止する"
+
+[tray.notify.failed]
+description = "Notification when a proxy run failed"
+other = "プロキシは起動しませんでした。{{.Detail}}"
+
+[tray.status.running]
+description = "Tray menu status row for a running daemon"
+other = "稼働中・{{.Addr}}"
+
+[tray.status.stopped]
+description = "Tray menu status row for a stopped daemon"
+other = "停止"
+
+[tray.status.failed]
+description = "Tray menu status row for a daemon that failed"
+other = "失敗・{{.Detail}}"
+
+[tray.info.requests]
+description = "Tray menu row that charts the last day of requests"
+other = "リクエスト {{.Value}}"
+
+[tray.info.tokens]
+description = "Tray menu row that charts the last day of tokens"
+other = "トークン {{.Value}}"
+
+[tray.info.spend]
+description = "Tray menu row that charts the last day of spend"
+other = "費用 {{.Value}}"
+
+[tray.error.unknown]
+description = "Placeholder when a failure carried no message"
+other = "不明なエラー"
+
+[tray.notify.browser_failed]
+description = "Notification when no browser could be opened"
+other = "ブラウザーを開けませんでした"
+
+[tray.notify.autostart_failed]
+description = "Notification when the login item could not be changed"
+other = "ログイン項目を変更できませんでした"
+
+[tray.notify.language_failed]
+description = "Notification when a language choice could not be stored"
+other = "言語を保存できませんでした"
+
+[cli.daemon.start.short]
+description = "One-line summary of relo daemon start"
+other = "Reloプロキシをバックグラウンドで起動"
+
+[cli.daemon.start.port]
+description = "Usage of the start --port flag"
+other = "リッスンポートを上書き"
+
+[cli.daemon.start.started]
+description = "Confirmation after a start"
+other = "Reloが{{.Addr}}で動いています"
+
+[cli.daemon.start.already]
+description = "What start prints when the daemon is already up"
+other = "Reloはすでに{{.Addr}}で動いています"
+
+[cli.daemon.start.failed]
+description = "What start prints when the daemon never became healthy"
+other = "デーモンを起動できませんでした：{{.Detail}}"
+
+[cli.daemon.start.log]
+description = "Where a started daemon writes what it logs"
+other = "デーモンのログは{{.Path}}です"
+
+[cli.daemon.stop.short]
+description = "One-line summary of relo daemon stop"
+other = "ライフサイクルコマンドが管理するReloプロキシを停止"
+
+[cli.daemon.stop.stopped]
+description = "Confirmation after a stop"
+other = "Reloを停止しました"
+
+[cli.daemon.stop.not_running]
+description = "What stop prints when nothing is running"
+other = "Reloが動いていません"
+
+[cli.daemon.restart.short]
+description = "One-line summary of relo daemon restart"
+other = "Reloプロキシを再起動"
+
+[cli.daemon.restart.port]
+description = "Usage of the restart --port flag"
+other = "リッスンポートを上書き"
+
+[cli.daemon.restart.force]
+description = "Usage of the restart --force flag"
+other = "実行中のプロセスを強制終了して新しいデーモンを起動"
+
+[cli.daemon.restart.restarted]
+description = "Confirmation after a restart"
+other = "Reloが{{.Addr}}で動いています"
+
+[cli.daemon.status.no_keys_hint]
+description = "How to create the first client key"
+other = "コンソールのキーページで作成してください"
+
+[api.daemon.not_headless]
+description = "Refusal of a stop request when this process is not a headless daemon"
+other = "このプロセスは停止リクエストを受け付けません"
+
+[api.daemon.instance_mismatch]
+description = "Refusal of a stop request naming another instance"
+other = "停止リクエストが別のインスタンスを指定しています"
+
+[tray.menu.version]
+description = "Tray menu version label"
+other = "バージョン {{.Version}}"
+
+[tray.menu.update_version]
+description = "Tray menu update action"
+other = "{{.Version}}に更新"
+
+[tray.error.not_ready]
+description = "Daemon not ready error"
+other = "準備未完了"
+
+[tray.error.port_in_use]
+description = "Port conflict error"
+other = "ポート使用中"
+
+[tray.error.timed_out]
+description = "Timeout error"
+other = "タイムアウト"
+
+[tray.error.database]
+description = "Database availability error"
+other = "データベース利用不可"
+
+[tray.error.start_failed]
+description = "Daemon start error"
+other = "起動できない"
+
+[cli.daemon.stop.force]
+description = "Usage of the stop --force flag"
+other = "実行中のプロセスを終了し、Relo が使用しているポートを解放する"
+
+[cli.uninstall.short]
+description = "One-line summary of relo uninstall"
+other = "このマシンからReloを削除する"
+
+[cli.uninstall.keep_data]
+description = "Usage of the uninstall --keep-data flag"
+other = "Relo のデータを残す（設定、認証情報、ログ）"
+
+[cli.uninstall.wipe]
+description = "Usage of the uninstall --wipe flag"
+other = "Relo のデータを削除する（設定、認証情報、ログ）"
+
+[cli.uninstall.prepare]
+description = "Usage of the hidden uninstall --prepare flag"
+other = "サービスを停止し、自動起動を無効にして、プログラムはそのまま残す"
+
+[cli.uninstall.ask_data]
+description = "The question an interactive uninstall asks about the Relo data"
+other = "Relo のデータ（設定、認証情報、ログ）を削除しますか？ [y/N]"
+
+[cli.uninstall.kept]
+description = "What an uninstall reports when the Relo data stays"
+other = "Relo のデータは{{.Home}}にあります"
+
+[cli.uninstall.wiped]
+description = "What an uninstall reports after the Relo data is removed"
+other = "Relo のデータを削除しました"
+
+[cli.uninstall.removing]
+description = "What an uninstall says as it hands the program to its installer"
+other = "Reloを削除しています…"
+
+[cli.uninstall.manual]
+description = "What an uninstall says when nothing on the machine removes Relo"
+other = "Reloプログラムを手動で削除してください"
+
+[cli.uninstall.trash]
+description = "What an uninstall says when the macOS app bundle could not be deleted"
+other = "{{.Bundle}} をゴミ箱に入れてください"
+
+[cli.uninstall.run]
+description = "The command to run when a removal could not be started"
+other = "Relo の削除を完了するには次を実行してください: {{.Command}}"

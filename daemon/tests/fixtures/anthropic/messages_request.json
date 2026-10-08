@@ -1,0 +1,60 @@
+{
+  "model": "claude-sonnet-4",
+  "max_tokens": 512,
+  "stream": true,
+  "system": [{ "type": "text", "text": "be brief" }],
+  "thinking": { "type": "enabled", "budget_tokens": 16384 },
+  "tools": [
+    {
+      "name": "get_weather",
+      "description": "look it up",
+      "input_schema": {
+        "type": "object",
+        "properties": { "city": { "type": "string" } }
+      }
+    }
+  ],
+  "messages": [
+    {
+      "role": "user",
+      "content": [
+        { "type": "text", "text": "weather?" },
+        {
+          "type": "image",
+          "source": {
+            "type": "base64",
+            "media_type": "image/png",
+            "data": "aGVsbG8="
+          }
+        }
+      ]
+    },
+    {
+      "role": "assistant",
+      "content": [
+        {
+          "type": "thinking",
+          "thinking": "weighing options",
+          "signature": "sig-1"
+        },
+        {
+          "type": "tool_use",
+          "id": "toolu_1",
+          "name": "get_weather",
+          "input": { "city": "Hanoi" }
+        }
+      ]
+    },
+    {
+      "role": "user",
+      "content": [
+        { "type": "tool_result", "tool_use_id": "toolu_1", "content": "31C" },
+        {
+          "type": "tool_result",
+          "tool_use_id": "toolu_2",
+          "content": [{ "type": "text", "text": "sunny" }]
+        }
+      ]
+    }
+  ]
+}

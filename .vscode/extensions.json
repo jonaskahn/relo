@@ -1,0 +1,8 @@
+{
+  "recommendations": [
+    "golang.go",
+    "golang.golangci-lint",
+    "svelte.svelte-vscode",
+    "bradlc.vscode-tailwindcss"
+  ]
+}
