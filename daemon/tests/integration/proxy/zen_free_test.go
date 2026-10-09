@@ -499,6 +499,81 @@ func TestZenFreeServesACompleteAnswerFromAStreamOnlyGateway(t *testing.T) {
 	})
 }
 
+// TestZenFreeDeclaresToolsForAToolFreeTurn covers the plain-chat symptom:
+// the client sent no tools, so Relo declares the names the lane inspects
+// rather than forwarding the refusal the gateway would answer.
+func TestZenFreeDeclaresToolsForAToolFreeTurn(t *testing.T) {
+	t.Run("a chat model answers a tool-free turn", func(t *testing.T) {
+		gateway := newZenGateway(t, zenChatStream)
+		daemon := startZenFreeDaemon(t, gateway.URL(), zenFreeModel{ID: "mimo-v2.6-flash-free"})
+		response := send(t, daemon.dataPlane, "/v1/chat/completions", dataPlaneToken,
+			`{"model":"mimo-v2.6-flash-free","stream":false,"messages":[{"role":"user","content":"Say OK."}]}`)
+		defer func() { _ = response.Body.Close() }()
+		if response.StatusCode != http.StatusOK {
+			body, _ := io.ReadAll(response.Body)
+			t.Fatalf("status = %d, body = %s", response.StatusCode, body)
+		}
+		declared, _ := gateway.last.body["tools"].([]any)
+		for _, want := range zenLaneTools {
+			if !zenDeclares(declared, want) {
+				t.Fatalf("upstream tools = %v, want the declaration the lane inspects", gateway.last.body["tools"])
+			}
+		}
+		if choice, _ := gateway.last.body["tool_choice"].(string); choice != "none" {
+			t.Fatalf("tool_choice = %v, want tool calls forbidden", gateway.last.body["tool_choice"])
+		}
+		body, _ := io.ReadAll(response.Body)
+		if !strings.Contains(string(body), "OK") {
+			t.Fatalf("body = %s, want the answer read out of the stream", body)
+		}
+	})
+
+	t.Run("a responses model answers a tool-free turn", func(t *testing.T) {
+		gateway := newZenGateway(t, zenResponsesStream)
+		daemon := startZenFreeDaemon(t, gateway.URL(), zenFreeModel{
+			ID: "muse-spark-1.3-contributor-free", Format: catalog.FormatOpenAIResp,
+		})
+		response := send(t, daemon.dataPlane, "/v1/chat/completions", dataPlaneToken,
+			`{"model":"muse-spark-1.3-contributor-free","stream":false,"messages":[{"role":"user","content":"Say OK."}]}`)
+		defer func() { _ = response.Body.Close() }()
+		if response.StatusCode != http.StatusOK {
+			body, _ := io.ReadAll(response.Body)
+			t.Fatalf("status = %d, body = %s", response.StatusCode, body)
+		}
+		if gateway.last.path != responsesWire {
+			t.Fatalf("path = %q, want the responses wire this model serves", gateway.last.path)
+		}
+		if !zenToolsSatisfyLane(gateway.last.body) {
+			t.Fatalf("upstream tools = %v, want the declarations the lane inspects", gateway.last.body["tools"])
+		}
+	})
+
+	t.Run("capitalized client tools gain the lowercase declarations", func(t *testing.T) {
+		gateway := newZenGateway(t, zenChatStream)
+		daemon := startZenFreeDaemon(t, gateway.URL(), zenFreeModel{ID: "mimo-v2.6-flash-free"})
+		declarations := []string{}
+		for _, name := range []string{"Bash", "Glob", "Grep", "Read"} {
+			declarations = append(declarations,
+				`{"type":"function","function":{"name":"`+name+`","description":"`+name+` tool",`+
+					`"parameters":{"type":"object","properties":{}}}}`)
+		}
+		response := send(t, daemon.dataPlane, "/v1/chat/completions", dataPlaneToken,
+			`{"model":"mimo-v2.6-flash-free","stream":false,"messages":[{"role":"user","content":"Say OK."}],`+
+				`"tools":[`+strings.Join(declarations, ",")+`]}`)
+		defer func() { _ = response.Body.Close() }()
+		if response.StatusCode != http.StatusOK {
+			body, _ := io.ReadAll(response.Body)
+			t.Fatalf("status = %d, body = %s", response.StatusCode, body)
+		}
+		declared, _ := gateway.last.body["tools"].([]any)
+		for _, want := range append([]string{"Bash", "Glob", "Grep", "Read"}, zenLaneTools...) {
+			if !zenDeclares(declared, want) {
+				t.Fatalf("upstream tools = %v, want originals kept and lowercase appended", gateway.last.body["tools"])
+			}
+		}
+	})
+}
+
 // zenFreeModel is one model on the keyless lane, with the upstream wire it
 // answers on. An empty format means the connection's own default applies.
 type zenFreeModel struct {

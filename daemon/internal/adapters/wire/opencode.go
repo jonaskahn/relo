@@ -5,10 +5,14 @@ import (
 	"crypto/rand"
 	"crypto/sha256"
 	"encoding/hex"
+	"encoding/json"
 	"fmt"
 	"net/url"
 	"regexp"
 	"strings"
+
+	"github.com/jonaskahn/relo/internal/catalog"
+	"github.com/jonaskahn/relo/internal/inference"
 )
 
 var openCodeSession = regexp.MustCompile(`^ses_[0-9a-f]{12}[0-9A-Za-z]{14}$`)
@@ -66,6 +70,46 @@ func freeIdentifierTail(digest []byte) string {
 		out.WriteByte(freeIdentifierAlphabet[int(b)%len(freeIdentifierAlphabet)])
 	}
 	return out.String()
+}
+
+// freeLaneTools are the declarations the signed-out gateway inspects on every
+// model except the one it answers without tools. A plain chat turn carries
+// none of them, so the adaptation below declares exactly these.
+var freeLaneTools = []string{"bash", "glob", "grep", "read"}
+
+// OpenCodeFreeRequest returns the request the signed-out gateway accepts. A
+// turn without the declarations it inspects is refused, so missing names are
+// appended as unavailable tools on a copy; the caller's request is never
+// mutated because it is shared between route candidates. Only the exact
+// lowercase names satisfy the lane, so differently-cased client tools stay
+// and the missing lowercase declarations are still appended. Real tools and
+// an explicit tool choice are left alone, and a tool-free chat turn forbids
+// tool calls the way the working client does.
+func OpenCodeFreeRequest(req *inference.Request, format catalog.APIFormat) *inference.Request {
+	if req == nil {
+		return nil
+	}
+	copied := *req
+	copied.Tools = append([]inference.Tool(nil), req.Tools...)
+	present := make(map[string]bool, len(req.Tools))
+	for _, tool := range req.Tools {
+		present[tool.Name] = true
+	}
+	for _, want := range freeLaneTools {
+		if present[want] {
+			continue
+		}
+		copied.Tools = append(copied.Tools, inference.Tool{
+			Name:        want,
+			Description: "This tool is currently unavailable and must not be used.",
+			Parameters:  json.RawMessage(`{"type":"object","properties":{}}`),
+		})
+	}
+	if len(req.Tools) == 0 && len(copied.Tools) > 0 && req.ToolChoice == nil &&
+		format == catalog.FormatOpenAIChat {
+		copied.ToolChoice = &inference.ToolChoice{Mode: inference.ToolChoiceNone}
+	}
+	return &copied
 }
 
 // OpenCodeGoSessionHeader is the header the OpenCode Go gateway requires
