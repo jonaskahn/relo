@@ -528,6 +528,7 @@ type inboundRequest struct {
 	Instructions    string          `json:"instructions"`
 	Input           json.RawMessage `json:"input"`
 	Tools           []toolDef       `json:"tools"`
+	ToolChoice      json.RawMessage `json:"tool_choice"`
 	Stream          bool            `json:"stream"`
 	MaxOutputTokens int             `json:"max_output_tokens"`
 	Temperature     *float64        `json:"temperature"`
@@ -554,6 +555,7 @@ func (r inboundRequest) toCanonical() (*inference.Request, map[string]bool, erro
 		Model:       r.Model,
 		Messages:    collector.messages,
 		Tools:       tools,
+		ToolChoice:  decodeToolChoice(r.ToolChoice),
 		Stream:      r.Stream,
 		MaxTokens:   r.MaxOutputTokens,
 		Temperature: r.Temperature,

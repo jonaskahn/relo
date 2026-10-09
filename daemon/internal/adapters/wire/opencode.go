@@ -9,51 +9,22 @@ import (
 	"net/url"
 	"regexp"
 	"strings"
-	"sync"
-	"time"
 )
 
-type openCodeIdentifiers struct {
-	mu        sync.Mutex
-	sessions  map[string]string
-	timestamp int64
-	counter   uint64
-}
-
-// newIdentifiers opens an empty lane-to-session table.
-func newIdentifiers() *openCodeIdentifiers {
-	return &openCodeIdentifiers{sessions: make(map[string]string)}
-}
-
-// freeIdentifiers is the process-wide lane table the gateway headers read.
-// All access goes through its methods, so the lock discipline lives in one place.
-var freeIdentifiers = newIdentifiers()
-
 var openCodeSession = regexp.MustCompile(`^ses_[0-9a-f]{12}[0-9A-Za-z]{14}$`)
+
+// freeIdentifierAlphabet is the character set the gateway accepts in the tail
+// of an identifier.
+const freeIdentifierAlphabet = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
+
+// freeSessionDomain separates Relo's session names from any other producer's,
+// so two clients that name the same conversation cannot land on one session.
+const freeSessionDomain = "relo/opencode-free/session/v1\x00"
 
 // OpenCodeFreeHeaders returns the signed-out CLI headers, with one session
 // per conversation lane and a fresh message identifier for each attempt.
 func OpenCodeFreeHeaders(lane, inboundSession string) (map[string]string, error) {
-	return freeIdentifiers.headers(lane, inboundSession)
-}
-
-// headers resolves one lane to its session and mints its request identifier.
-func (ids *openCodeIdentifiers) headers(lane, inboundSession string) (map[string]string, error) {
-	ids.mu.Lock()
-	defer ids.mu.Unlock()
-	session := inboundSession
-	if !openCodeSession.MatchString(session) {
-		session = ids.sessions[lane]
-		if session == "" {
-			var err error
-			session, err = ids.identifier("ses_", true)
-			if err != nil {
-				return nil, err
-			}
-			ids.sessions[lane] = session
-		}
-	}
-	request, err := ids.identifier("msg_", false)
+	request, err := freeRequestID()
 	if err != nil {
 		return nil, err
 	}
@@ -62,30 +33,39 @@ func (ids *openCodeIdentifiers) headers(lane, inboundSession string) (map[string
 		"User-Agent":         "opencode/1.18.33",
 		"x-opencode-client":  "cli",
 		"x-opencode-project": "global",
-		"x-opencode-session": session,
+		"x-opencode-session": freeSessionID(lane, inboundSession),
 		"x-opencode-request": request,
 	}, nil
 }
 
-func (ids *openCodeIdentifiers) identifier(prefix string, descending bool) (string, error) {
-	now := time.Now().UnixMilli()
-	if now != ids.timestamp {
-		ids.timestamp, ids.counter = now, 0
+// freeSessionID is the session one conversation is sent on. It is derived from
+// the lane rather than remembered for it, because a daemon that outlives many
+// conversations would otherwise hold a session for every one it ever served.
+func freeSessionID(lane, inboundSession string) string {
+	if openCodeSession.MatchString(inboundSession) {
+		return inboundSession
 	}
-	ids.counter++
-	value := uint64(now)*0x1000 + ids.counter
-	if descending {
-		value = ^value
-	}
-	var random [14]byte
+	digest := sha256.Sum256([]byte(freeSessionDomain + lane))
+	return "ses_" + hex.EncodeToString(digest[:6]) + freeIdentifierTail(digest[6:20])
+}
+
+// freeRequestID names one attempt. Every attempt gets its own, so a retry is
+// never mistaken for the request it replaces.
+func freeRequestID() (string, error) {
+	var random [20]byte
 	if _, err := rand.Read(random[:]); err != nil {
 		return "", fmt.Errorf("create an OpenCode identifier: %w", err)
 	}
-	const alphabet = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
-	for i, b := range random {
-		random[i] = alphabet[int(b)%len(alphabet)]
+	return "msg_" + hex.EncodeToString(random[:6]) + freeIdentifierTail(random[6:20]), nil
+}
+
+func freeIdentifierTail(digest []byte) string {
+	var out strings.Builder
+	out.Grow(len(digest))
+	for _, b := range digest {
+		out.WriteByte(freeIdentifierAlphabet[int(b)%len(freeIdentifierAlphabet)])
 	}
-	return fmt.Sprintf("%s%012x%s", prefix, value&0xffffffffffff, random[:]), nil
+	return out.String()
 }
 
 // OpenCodeGoSessionHeader is the header the OpenCode Go gateway requires

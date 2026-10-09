@@ -55,6 +55,7 @@ Thumbs.db
 # Local indexes / agent tooling
 .codegraph/
 .impeccable/
+.claude/
 
 # Logs
 *.log

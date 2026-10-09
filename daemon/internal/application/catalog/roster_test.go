@@ -113,6 +113,33 @@ func TestBuildRosterAppliesTheTemplateFilterToBothSources(t *testing.T) {
 	}
 }
 
+// TestBuildRosterRecordsTheFormatEachModelAnswersOn covers a provider that
+// publishes one model list across several protocols: the wire format belongs to
+// the model, and a template that says nothing about a model leaves the
+// connection's own format in place.
+func TestBuildRosterRecordsTheFormatEachModelAnswersOn(t *testing.T) {
+	template := listingTemplate()
+	template.FormatForModel = func(id string) catalog.APIFormat {
+		if id == "reaches-via-responses" {
+			return catalog.FormatOpenAIResp
+		}
+		return ""
+	}
+
+	rows := buildRoster(template, rosterModeFor(template),
+		[]catalog.Listed{{ID: "reaches-via-responses"}, {ID: "exo-free"}}, nil)
+
+	if len(rows) != 2 {
+		t.Fatalf("roster = %v, want both listed ids", sourcesOf(rows))
+	}
+	if rows[0].ID != "reaches-via-responses" || rows[0].Format != catalog.FormatOpenAIResp {
+		t.Fatalf("first row = %+v, want the Responses format the template declared", rows[0])
+	}
+	if rows[1].Format != "" {
+		t.Fatalf("second row = %+v, want the connection's own format to stand", rows[1])
+	}
+}
+
 // TestBuildRosterKeepsOnlyTypedModelsWhenTheProviderServesDeployments covers
 // the connection a listing cannot describe: whatever a dialect answers with,
 // the roster is what the operator typed.

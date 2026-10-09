@@ -200,6 +200,57 @@ func startDaemon(t *testing.T, upstreamURL string) daemon {
 // them, and the credential is the one account the pool holds.
 func startDaemonWith(t *testing.T, format catalog.APIFormat, baseURL string, modelIDs ...string) daemon {
 	t.Helper()
+	return startDaemonSeeded(t, seed{
+		Provider: sqlite.ProviderRow{
+			ID: "openai", Origin: string(catalog.OriginCustom), Label: "OpenAI",
+			Auth: string(catalog.AuthAPIKey), APIFormat: string(format), BaseURL: baseURL,
+			ModelsFormat: string(catalog.ModelsNone),
+			Headers:      map[string]string{}, Variables: map[string]string{},
+			Enabled: true, Rank: 100, PoolStrategy: sqlite.StrategyLeastLoaded,
+		},
+		Format:  format,
+		Models:  modelIDs,
+		Account: "sk-test",
+	})
+}
+
+// seed describes the one provider a test daemon serves, so a test can relay
+// through a connection that keeps no account as well as one that does.
+type seed struct {
+	Provider sqlite.ProviderRow
+	Format   catalog.APIFormat
+	// ModelRows are the stored models, each with the wire it answers on. A
+	// nil slice falls back to one model per id on Format.
+	Models []string
+	// ModelRows is the stored roster, which a test needs to state per model.
+	ModelRows []seedModel
+	// Account is the secret the provider's single credential holds. An empty
+	// value means the connection keeps none, which is what a keyless
+	// connection serves.
+	Account string
+}
+
+// seedModel is one stored model and the upstream wire it answers on.
+type seedModel struct {
+	ID     string
+	Format catalog.APIFormat
+}
+
+// storedModels is the roster this seed writes, so a test states per-model
+// wires when it needs them and bare ids when it does not.
+func (s seed) storedModels() []seedModel {
+	if len(s.ModelRows) > 0 {
+		return s.ModelRows
+	}
+	models := make([]seedModel, 0, len(s.Models))
+	for _, id := range s.Models {
+		models = append(models, seedModel{ID: id, Format: s.Format})
+	}
+	return models
+}
+
+func startDaemonSeeded(t *testing.T, s seed) daemon {
+	t.Helper()
 	logger, _ := testkit.TestLogger(t)
 	cfg := config.DefaultConfig()
 	cfg.Server.Bind = "127.0.0.1"
@@ -216,38 +267,34 @@ func startDaemonWith(t *testing.T, format catalog.APIFormat, baseURL string, mod
 
 	ctx := context.Background()
 	repo := sqlite.NewCatalogRepo(db)
-	if err := repo.SaveProvider(ctx, sqlite.ProviderRow{
-		ID: "openai", Origin: string(catalog.OriginCustom), Label: "OpenAI",
-		Auth: string(catalog.AuthAPIKey), APIFormat: string(format), BaseURL: baseURL,
-		ModelsFormat: string(catalog.ModelsNone),
-		Headers:      map[string]string{}, Variables: map[string]string{},
-		Enabled: true, Rank: 100, PoolStrategy: sqlite.StrategyLeastLoaded,
-	}); err != nil {
+	if err := repo.SaveProvider(ctx, s.Provider); err != nil {
 		t.Fatalf("save the provider: %v", err)
 	}
-	for _, id := range modelIDs {
+	for _, model := range s.storedModels() {
 		if err := repo.SaveModel(ctx, sqlite.ModelRow{
-			ProviderID: "openai", ModelID: id, Source: "manual",
-			APIFormat: string(format), Enabled: true,
+			ProviderID: s.Provider.ID, ModelID: model.ID, Source: "listing",
+			APIFormat: string(model.Format), Enabled: true,
 		}); err != nil {
-			t.Fatalf("save model %s: %v", id, err)
+			t.Fatalf("save model %s: %v", model.ID, err)
 		}
-		name, category, status := id, string(catalog.CategoryChat), "active"
+		name, category, status := model.ID, string(catalog.CategoryChat), "active"
 		if err := repo.SaveModelFacts(ctx, sqlite.ModelFactsRow{
-			ProviderID: "openai", ModelID: id, Layer: "override",
+			ProviderID: s.Provider.ID, ModelID: model.ID, Layer: "override",
 			Name: &name, Category: &category, Status: &status,
 		}); err != nil {
-			t.Fatalf("save model facts %s: %v", id, err)
+			t.Fatalf("save model facts %s: %v", model.ID, err)
 		}
 	}
 
 	secrets := testkit.SecretStore(map[string]string{credentialRef: "sk-test"})
 	store := sqlite.NewCredentialStore(db)
-	if err := store.Insert(ctx, account.PoolEntry{
-		ID: "one", ProviderID: "openai", Kind: "api_key",
-		Label: "default", SecretRef: credentialRef, Status: account.StatusActive,
-	}); err != nil {
-		t.Fatalf("store the credential: %v", err)
+	if s.Account != "" {
+		if err := store.Insert(ctx, account.PoolEntry{
+			ID: "one", ProviderID: s.Provider.ID, Kind: "api_key",
+			Label: "default", SecretRef: credentialRef, Status: account.StatusActive,
+		}); err != nil {
+			t.Fatalf("store the credential: %v", err)
+		}
 	}
 	pools := account.NewManager(store, secrets)
 	if err := pools.LoadFromDB(ctx); err != nil {
@@ -487,6 +534,14 @@ func streamingRequest() string {
 
 func completeRequest() string {
 	return `{"model":"gpt-4o","stream":false,"messages":[{"role":"user","content":"hello"}]}`
+}
+
+func zenCompleteRequest() string {
+	return `{"model":"space-bunny-free","stream":false,"messages":[{"role":"user","content":"Say OK."}]}`
+}
+
+func zenStreamingRequest() string {
+	return `{"model":"space-bunny-free","stream":true,"messages":[{"role":"user","content":"Say OK."}]}`
 }
 
 func send(t *testing.T, addr, path, token, body string) *http.Response {

@@ -370,6 +370,7 @@ type inboundRequest struct {
 	System       json.RawMessage  `json:"system"`
 	Messages     []inboundMessage `json:"messages"`
 	Tools        []wireTool       `json:"tools"`
+	ToolChoice   json.RawMessage  `json:"tool_choice"`
 	Stream       bool             `json:"stream"`
 	Temperature  *float64         `json:"temperature"`
 	Thinking     *thinkingDef     `json:"thinking"`
@@ -414,11 +415,49 @@ func (r inboundRequest) toCanonical() (*inference.Request, error) {
 		Model:       r.Model,
 		Messages:    messages,
 		Tools:       decodeTools(r.Tools),
+		ToolChoice:  decodeToolChoice(r.ToolChoice),
 		Stream:      r.Stream,
 		MaxTokens:   tokenLimit(r.MaxTokens),
 		Temperature: r.Temperature,
 		Reasoning:   decodeThinking(r.Thinking, r.OutputConfig),
 	}, nil
+}
+
+// The tool-choice modes the Messages wire names, which are its own names rather
+// than the Chat wire's.
+const (
+	choiceAuto     = "auto"
+	choiceNone     = "none"
+	choiceAny      = "any"
+	choiceToolType = "tool"
+)
+
+// decodeToolChoice reads the Messages wire's tool choice. A shape this wire
+// does not define leaves the choice unset rather than guessing at what the
+// client meant.
+func decodeToolChoice(raw json.RawMessage) *inference.ToolChoice {
+	if len(raw) == 0 {
+		return nil
+	}
+	var selector struct {
+		Type string `json:"type"`
+		Name string `json:"name"`
+	}
+	if err := json.Unmarshal(raw, &selector); err != nil {
+		return nil
+	}
+	switch selector.Type {
+	case choiceAuto:
+		return &inference.ToolChoice{Mode: inference.ToolChoiceAuto}
+	case choiceNone:
+		return &inference.ToolChoice{Mode: inference.ToolChoiceNone}
+	case choiceAny:
+		return &inference.ToolChoice{Mode: inference.ToolChoiceRequired}
+	case choiceToolType:
+		return &inference.ToolChoice{Mode: inference.ToolChoiceTool, Name: selector.Name}
+	default:
+		return nil
+	}
 }
 
 func (r inboundRequest) systemPrompt() (string, error) {

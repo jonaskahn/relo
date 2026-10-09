@@ -514,6 +514,7 @@ func (a *probeAssembly) appendProbeRow(entry rosterEntry, pm ProbeModel) {
 	a.rows = append(a.rows, catalog.ModelRecord{
 		ModelID:      entry.ID,
 		Source:       entry.Source,
+		APIFormat:    string(entry.Format),
 		ModelsDevRef: pm.ModelsDevRef,
 		Match:        pm.Match,
 		Enabled:      pm.Enabled,

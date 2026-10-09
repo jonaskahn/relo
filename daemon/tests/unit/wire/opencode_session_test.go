@@ -102,3 +102,80 @@ func TestOpenCodeFreeHeadersMatchTheSignedOutCLI(t *testing.T) {
 		t.Fatalf("session = %q, want the inbound ses_ id", kept["x-opencode-session"])
 	}
 }
+
+// TestOpenCodeFreeSessionIsDerivedRatherThanRemembered covers a daemon that
+// outlives many conversations: a lane maps to its session without anything
+// keeping the mapping, so no conversation is retained once it ends.
+func TestOpenCodeFreeSessionIsDerivedRatherThanRemembered(t *testing.T) {
+	first, err := wire.OpenCodeFreeHeaders("lane-a", "")
+	if err != nil {
+		t.Fatalf("OpenCodeFreeHeaders() error = %v", err)
+	}
+	other, err := wire.OpenCodeFreeHeaders("lane-a", "")
+	if err != nil {
+		t.Fatalf("OpenCodeFreeHeaders() error = %v", err)
+	}
+	if first["x-opencode-session"] != other["x-opencode-session"] {
+		t.Fatalf("session = %q, again = %q, want the same lane on one session",
+			first["x-opencode-session"], other["x-opencode-session"])
+	}
+
+	distinct := map[string]bool{}
+	for _, lane := range []string{"lane-a", "lane-b", "lane-c", "codex-thread:t\x00u"} {
+		headers, err := wire.OpenCodeFreeHeaders(lane, "")
+		if err != nil {
+			t.Fatalf("OpenCodeFreeHeaders() error = %v", err)
+		}
+		session := headers["x-opencode-session"]
+		if !openCodeSession.MatchString(session) {
+			t.Fatalf("session = %q, want the shape the gateway accepts", session)
+		}
+		distinct[session] = true
+	}
+	if len(distinct) != 4 {
+		t.Fatalf("sessions = %v, want one session per lane", distinct)
+	}
+}
+
+// TestOpenCodeFreeHeadersAreSafeUnderConcurrency covers the callers that read
+// these headers from every request at once: nothing they share is mutable.
+func TestOpenCodeFreeHeadersAreSafeUnderConcurrency(t *testing.T) {
+	const callers = 32
+	sessions := make(chan string, callers)
+	requests := make(chan string, callers)
+	for range callers {
+		go func() {
+			headers, err := wire.OpenCodeFreeHeaders("lane-shared", "")
+			if err != nil {
+				t.Errorf("OpenCodeFreeHeaders() error = %v", err)
+				return
+			}
+			sessions <- headers["x-opencode-session"]
+			requests <- headers["x-opencode-request"]
+		}()
+	}
+
+	// Concurrent callers on one lane share that lane's session, which is the
+	// point of deriving it, and each still gets its own request identifier.
+	var shared string
+	for range callers {
+		session := <-sessions
+		if shared == "" {
+			shared = session
+		}
+		if session != shared {
+			t.Fatalf("session = %q, want the lane's own %q", session, shared)
+		}
+	}
+	requestIDs := map[string]bool{}
+	for range callers {
+		request := <-requests
+		if !openCodeRequest.MatchString(request) {
+			t.Fatalf("request = %q, want the shape the gateway accepts", request)
+		}
+		if requestIDs[request] {
+			t.Fatalf("request %q was reused", request)
+		}
+		requestIDs[request] = true
+	}
+}

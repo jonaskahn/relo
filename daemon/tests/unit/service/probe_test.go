@@ -424,15 +424,14 @@ func TestProbeOpenCodeFreeKeepsFreeModels(t *testing.T) {
 		authorization = r.Header.Get("Authorization")
 		userAgent = r.Header.Get("User-Agent")
 		w.Header().Set("Content-Type", "application/json")
-		_, _ = io.WriteString(w, `{"data":[{"id":"free"},{"id":"paid"},{"id":"mystery"}]}`)
+		_, _ = io.WriteString(w, `{"data":[{"id":"exo-free"},{"id":"big-pickle"},{"id":"gpt-5.5"},{"id":"jev-1.13-free"}]}`)
 	}))
 	t.Cleanup(listing.Close)
 	catalog := catalogServer(t, map[string]map[string]any{
 		"opencode": {
 			"id": "opencode", "name": "OpenCode",
 			"models": map[string]any{
-				"free": map[string]any{"id": "free", "name": "Free", "cost": map[string]any{"input": 0, "output": 0}},
-				"paid": map[string]any{"id": "paid", "name": "Paid", "cost": map[string]any{"input": 1, "output": 1}},
+				"gpt-5.5": map[string]any{"id": "gpt-5.5", "name": "GPT 5.5", "cost": map[string]any{"input": 1, "output": 2}},
 			},
 		},
 	})
@@ -455,8 +454,8 @@ func TestProbeOpenCodeFreeKeepsFreeModels(t *testing.T) {
 		t.Fatalf("ProbeProvider() error = %v", err)
 	}
 	got := sourcesOf(result)
-	if len(got) != 1 || got[0] != "free=listing" {
-		t.Fatalf("roster = %v, want the free model", got)
+	if len(got) != 2 || got[0] != "big-pickle=listing" || got[1] != "exo-free=listing" {
+		t.Fatalf("roster = %v, want the two free models the listing published", got)
 	}
 	if authorization != "Bearer public" || userAgent != "opencode/1.18.33" {
 		t.Fatalf("authorization = %q, user agent = %q", authorization, userAgent)

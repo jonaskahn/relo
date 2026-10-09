@@ -36,7 +36,6 @@ func All(idx *modelsdev.Index) []Template {
 
 	for _, t := range curatedTemplates {
 		seen[t.ID] = true
-		t = withModelFilter(t, idx)
 		t.Normalize()
 		t.ModelsDevModels = modelsDevModelCount(idx, t.ModelsDevProviderID)
 		list = append(list, t)
@@ -72,7 +71,6 @@ func dynamicTemplates(idx *modelsdev.Index, seen map[string]bool) []Template {
 func Get(id string, idx *modelsdev.Index) (Template, bool) {
 	for _, t := range curatedTemplates {
 		if t.ID == id {
-			t = withModelFilter(t, idx)
 			t.Normalize()
 			t.ModelsDevModels = modelsDevModelCount(idx, t.ModelsDevProviderID)
 			return t, true
