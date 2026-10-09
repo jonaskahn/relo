@@ -425,7 +425,8 @@
           "addTileHint": "Account, API key or endpoint",
           "noMatch": "No connections match your search or filters.",
           "filters": "Connection filters",
-          "filterOption": "{label} ({count})"
+          "filterOption": "{label} ({count})",
+          "tagFree": "Free"
         },
         "status": {
           "ready": "Ready",

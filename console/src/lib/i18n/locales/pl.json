@@ -425,7 +425,8 @@
           "addTileHint": "Konto, klucz API lub endpoint",
           "noMatch": "Żadne połączenie nie pasuje do wyszukiwania ani filtrów.",
           "filters": "Filtry połączeń",
-          "filterOption": "{label} ({count})"
+          "filterOption": "{label} ({count})",
+          "tagFree": "Bezpłatne"
         },
         "status": {
           "ready": "Gotowe",

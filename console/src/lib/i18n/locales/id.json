@@ -425,7 +425,8 @@
           "addTileHint": "Akun, kunci API, atau endpoint",
           "noMatch": "Tidak ada koneksi yang cocok dengan pencarian atau filter.",
           "filters": "Filter koneksi",
-          "filterOption": "{label} ({count})"
+          "filterOption": "{label} ({count})",
+          "tagFree": "Gratis"
         },
         "status": {
           "ready": "Siap",

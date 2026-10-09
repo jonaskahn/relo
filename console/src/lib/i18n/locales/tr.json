@@ -425,7 +425,8 @@
           "addTileHint": "Hesap, API anahtarı veya uç nokta",
           "noMatch": "Aramanızla veya filtrelerinizle eşleşen bağlantı yok.",
           "filters": "Bağlantı filtreleri",
-          "filterOption": "{label} ({count})"
+          "filterOption": "{label} ({count})",
+          "tagFree": "Ücretsiz"
         },
         "status": {
           "ready": "Hazır",

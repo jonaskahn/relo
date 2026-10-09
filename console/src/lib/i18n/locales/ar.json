@@ -425,7 +425,8 @@
           "addTileHint": "حساب أو مفتاح API أو نقطة نهاية",
           "noMatch": "لا يوجد اتصال يطابق بحثك أو عوامل التصفية.",
           "filters": "عوامل تصفية الاتصالات",
-          "filterOption": "{label} ({count})"
+          "filterOption": "{label} ({count})",
+          "tagFree": "مجاني"
         },
         "status": {
           "ready": "جاهز",

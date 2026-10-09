@@ -425,7 +425,8 @@
           "addTileHint": "บัญชี คีย์ API หรือปลายทาง",
           "noMatch": "ไม่มีการเชื่อมต่อที่ตรงกับการค้นหาหรือตัวกรอง",
           "filters": "ตัวกรองการเชื่อมต่อ",
-          "filterOption": "{label} ({count})"
+          "filterOption": "{label} ({count})",
+          "tagFree": "ฟรี"
         },
         "status": {
           "ready": "พร้อมใช้งาน",

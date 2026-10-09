@@ -425,7 +425,8 @@
           "addTileHint": "खाता, API कुंजी या एंडपॉइंट",
           "noMatch": "कोई कनेक्शन आपकी खोज या फ़िल्टर से मेल नहीं खाता।",
           "filters": "कनेक्शन फ़िल्टर",
-          "filterOption": "{label} ({count})"
+          "filterOption": "{label} ({count})",
+          "tagFree": "मुफ़्त"
         },
         "status": {
           "ready": "तैयार",

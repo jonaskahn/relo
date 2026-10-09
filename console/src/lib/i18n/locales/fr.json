@@ -425,7 +425,8 @@
           "addTileHint": "Compte, clé API ou point de terminaison",
           "noMatch": "Aucune connexion ne correspond à votre recherche ou à vos filtres.",
           "filters": "Filtres de connexion",
-          "filterOption": "{label} ({count})"
+          "filterOption": "{label} ({count})",
+          "tagFree": "Gratuit"
         },
         "status": {
           "ready": "Prêt",

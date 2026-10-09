@@ -425,7 +425,8 @@
           "addTileHint": "Обліковий запис, ключ API або ендпоінт",
           "noMatch": "Жодне підключення не відповідає пошуку чи фільтрам.",
           "filters": "Фільтри підключень",
-          "filterOption": "{label} ({count})"
+          "filterOption": "{label} ({count})",
+          "tagFree": "Безкоштовно"
         },
         "status": {
           "ready": "Готово",

@@ -425,7 +425,8 @@
           "addTileHint": "Conta, chave de API ou endpoint",
           "noMatch": "Nenhuma conexão corresponde à sua busca ou aos filtros.",
           "filters": "Filtros de conexões",
-          "filterOption": "{label} ({count})"
+          "filterOption": "{label} ({count})",
+          "tagFree": "Grátis"
         },
         "status": {
           "ready": "Pronta",

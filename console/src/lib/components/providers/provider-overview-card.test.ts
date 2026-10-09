@@ -77,6 +77,28 @@ describe('the connection overview card', () => {
 		expect(html).toContain('∞');
 	});
 
+	// A keyless pool bills nothing because it accepts no account, so the card
+	// says so rather than leaving the operator to infer it from the price.
+	it('chips a keyless pool as free and leaves a metered one bare', () => {
+		const free = render(ProviderOverviewCard, {
+			props: {
+				provider: providerOf({
+					id: 'kilo',
+					label: 'Kilo Free',
+					template_id: 'kilo-free',
+					auth: 'none'
+				}),
+				onopen: () => {}
+			}
+		}).body;
+		expect(free).toContain('data-free-chip');
+
+		const metered = render(ProviderOverviewCard, {
+			props: { provider: providerOf({ id: 'openai', label: 'OpenAI' }), onopen: () => {} }
+		}).body;
+		expect(metered).not.toContain('data-free-chip');
+	});
+
 	it('raises the status pill with the account quota', () => {
 		const html = render(ProviderOverviewCard, {
 			props: {

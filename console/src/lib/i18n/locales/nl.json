@@ -425,7 +425,8 @@
           "addTileHint": "Account, API-sleutel of endpoint",
           "noMatch": "Geen enkele verbinding komt overeen met je zoekopdracht of filters.",
           "filters": "Verbindingsfilters",
-          "filterOption": "{label} ({count})"
+          "filterOption": "{label} ({count})",
+          "tagFree": "Gratis"
         },
         "status": {
           "ready": "Klaar",

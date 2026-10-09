@@ -425,7 +425,8 @@
           "addTileHint": "Konto, API-Schlüssel oder Endpunkt",
           "noMatch": "Keine Verbindung passt zu deiner Suche oder deinen Filtern.",
           "filters": "Verbindungsfilter",
-          "filterOption": "{label} ({count})"
+          "filterOption": "{label} ({count})",
+          "tagFree": "Kostenlos"
         },
         "status": {
           "ready": "Bereit",

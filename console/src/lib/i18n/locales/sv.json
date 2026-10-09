@@ -425,7 +425,8 @@
           "addTileHint": "Konto, API-nyckel eller slutpunkt",
           "noMatch": "Ingen anslutning matchar din sökning eller dina filter.",
           "filters": "Anslutningsfilter",
-          "filterOption": "{label} ({count})"
+          "filterOption": "{label} ({count})",
+          "tagFree": "Gratis"
         },
         "status": {
           "ready": "Redo",

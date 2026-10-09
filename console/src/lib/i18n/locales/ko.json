@@ -425,7 +425,8 @@
           "addTileHint": "계정, API 키 또는 엔드포인트",
           "noMatch": "검색어나 필터와 일치하는 연결이 없습니다.",
           "filters": "연결 필터",
-          "filterOption": "{label} ({count})"
+          "filterOption": "{label} ({count})",
+          "tagFree": "무료"
         },
         "status": {
           "ready": "준비됨",

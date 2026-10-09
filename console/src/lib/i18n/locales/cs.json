@@ -425,7 +425,8 @@
           "addTileHint": "Účet, API klíč nebo endpoint",
           "noMatch": "Žádné připojení neodpovídá hledání nebo filtrům.",
           "filters": "Filtry připojení",
-          "filterOption": "{label} ({count})"
+          "filterOption": "{label} ({count})",
+          "tagFree": "Zdarma"
         },
         "status": {
           "ready": "Připraveno",

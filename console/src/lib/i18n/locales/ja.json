@@ -425,7 +425,8 @@
           "addTileHint": "アカウント、APIキー、エンドポイント",
           "noMatch": "検索やフィルターに一致する接続はありません。",
           "filters": "接続フィルター",
-          "filterOption": "{label} ({count})"
+          "filterOption": "{label} ({count})",
+          "tagFree": "無料"
         },
         "status": {
           "ready": "準備完了",

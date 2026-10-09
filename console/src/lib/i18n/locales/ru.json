@@ -425,7 +425,8 @@
           "addTileHint": "Аккаунт, ключ API или эндпоинт",
           "noMatch": "Ни одно подключение не соответствует поиску или фильтрам.",
           "filters": "Фильтры подключений",
-          "filterOption": "{label} ({count})"
+          "filterOption": "{label} ({count})",
+          "tagFree": "Бесплатно"
         },
         "status": {
           "ready": "Готов",

@@ -425,7 +425,8 @@
           "addTileHint": "Cont, cheie API sau endpoint",
           "noMatch": "Nicio conexiune nu corespunde căutării sau filtrelor.",
           "filters": "Filtre conexiuni",
-          "filterOption": "{label} ({count})"
+          "filterOption": "{label} ({count})",
+          "tagFree": "Gratuit"
         },
         "status": {
           "ready": "Pregătit",

@@ -425,7 +425,8 @@
           "addTileHint": "帳戶、API 金鑰或端點",
           "noMatch": "沒有連接符合你的搜尋或篩選條件。",
           "filters": "連接篩選",
-          "filterOption": "{label} ({count})"
+          "filterOption": "{label} ({count})",
+          "tagFree": "免費"
         },
         "status": {
           "ready": "就緒",

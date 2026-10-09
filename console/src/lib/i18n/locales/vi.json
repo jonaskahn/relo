@@ -425,7 +425,8 @@
           "addTileHint": "Tài khoản, khóa API hoặc endpoint",
           "noMatch": "Không có kết nối nào khớp với tìm kiếm hoặc bộ lọc.",
           "filters": "Bộ lọc kết nối",
-          "filterOption": "{label} ({count})"
+          "filterOption": "{label} ({count})",
+          "tagFree": "Miễn phí"
         },
         "status": {
           "ready": "Sẵn sàng",
