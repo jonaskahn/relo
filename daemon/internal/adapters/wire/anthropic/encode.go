@@ -64,10 +64,16 @@ type requestPayload struct {
 	System       json.RawMessage `json:"system,omitempty"`
 	Messages     []wireMessage   `json:"messages"`
 	Tools        []wireTool      `json:"tools,omitempty"`
+	ToolChoice   *toolChoiceDef  `json:"tool_choice,omitempty"`
 	Stream       bool            `json:"stream,omitempty"`
 	Temperature  *float64        `json:"temperature,omitempty"`
 	Thinking     *thinkingDef    `json:"thinking,omitempty"`
 	OutputConfig *outputConfig   `json:"output_config,omitempty"`
+}
+
+type toolChoiceDef struct {
+	Type string `json:"type"`
+	Name string `json:"name,omitempty"`
 }
 
 type outputConfig struct {
@@ -118,11 +124,36 @@ func newPayload(req *inference.Request, oauth bool, opts wire.CodecOpts) request
 		System:      systemField(systemPrompt(req.Messages), oauth, firstUserText(req.Messages)),
 		Messages:    encodeMessages(req.Messages, oauth),
 		Tools:       encodeTools(req.Tools, oauth),
+		ToolChoice:  encodeToolChoice(req.ToolChoice),
 		Stream:      req.Stream,
 		Temperature: req.Temperature,
 	}
 	applyThinking(&payload, req, opts)
 	return payload
+}
+
+// encodeToolChoice renders the canonical choice the way the Messages wire names
+// it. A client that said nothing about it gets no field, which this wire
+// already treats as its own default.
+func encodeToolChoice(choice *inference.ToolChoice) *toolChoiceDef {
+	if choice == nil {
+		return nil
+	}
+	switch choice.Mode {
+	case inference.ToolChoiceAuto:
+		return &toolChoiceDef{Type: choiceAuto}
+	case inference.ToolChoiceNone:
+		return &toolChoiceDef{Type: choiceNone}
+	case inference.ToolChoiceRequired:
+		return &toolChoiceDef{Type: choiceAny}
+	case inference.ToolChoiceTool:
+		if choice.Name == "" {
+			return nil
+		}
+		return &toolChoiceDef{Type: choiceToolType, Name: choice.Name}
+	default:
+		return nil
+	}
 }
 
 func tokenLimit(maxTokens int) int {

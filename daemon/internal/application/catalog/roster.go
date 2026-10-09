@@ -35,21 +35,29 @@ type rosterEntry struct {
 	catalog.Listed
 	// Source is the source the id came from.
 	Source string
+	// Format is the upstream wire format this model answers on, empty when the
+	// connection's own format already applies.
+	Format catalog.APIFormat
 }
 
 func buildRoster(t catalog.Template, mode rosterMode, listed, typed []catalog.Listed) []rosterEntry {
 	rows := make([]rosterEntry, 0, len(listed)+len(typed))
 	seen := make(map[string]bool, len(listed)+len(typed))
 
-	claim := func(id string) bool {
+	// A claimed id carries the format the template declares for it, and an
+	// empty one so the connection's own format still applies.
+	claim := func(id string) (catalog.APIFormat, bool) {
 		if id == "" || seen[id] {
-			return false
+			return "", false
 		}
 		if t.FilterModels != nil && !t.FilterModels(id) {
-			return false
+			return "", false
 		}
 		seen[id] = true
-		return true
+		if t.FormatForModel == nil {
+			return "", true
+		}
+		return t.FormatForModel(id), true
 	}
 
 	if mode != modeManual {
@@ -58,11 +66,13 @@ func buildRoster(t catalog.Template, mode rosterMode, listed, typed []catalog.Li
 	return appendRosterRows(rows, typed, SourceManual, claim)
 }
 
-func appendRosterRows(rows []rosterEntry, listed []catalog.Listed, source string, claim func(string) bool) []rosterEntry {
+func appendRosterRows(rows []rosterEntry, listed []catalog.Listed, source string, claim func(string) (catalog.APIFormat, bool)) []rosterEntry {
 	for _, l := range listed {
-		if claim(l.ID) {
-			rows = append(rows, rosterEntry{Listed: l, Source: source})
+		format, claimed := claim(l.ID)
+		if !claimed {
+			continue
 		}
+		rows = append(rows, rosterEntry{Listed: l, Source: source, Format: format})
 	}
 	return rows
 }

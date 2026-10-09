@@ -12,6 +12,7 @@ type chatWireRequest struct {
 	Model               string             `json:"model"`
 	Messages            []chatWireMessage  `json:"messages"`
 	Tools               []chatWireTool     `json:"tools"`
+	ToolChoice          json.RawMessage    `json:"tool_choice"`
 	Stream              bool               `json:"stream"`
 	MaxTokens           int                `json:"max_tokens"`
 	MaxCompletionTokens int                `json:"max_completion_tokens"`
@@ -71,11 +72,46 @@ func (w chatWireRequest) toCanonical() (*inference.Request, error) {
 		Model:       w.Model,
 		Messages:    messages,
 		Tools:       decodeTools(w.Tools),
+		ToolChoice:  decodeToolChoice(w.ToolChoice),
 		Stream:      w.Stream,
 		MaxTokens:   w.maxTokens(),
 		Temperature: w.Temperature,
 		Reasoning:   w.reasoning(),
 	}, nil
+}
+
+// decodeToolChoice reads the Chat wire's tool choice, which is either one of
+// its own names or an object naming a tool. A shape this wire does not define
+// leaves the choice unset rather than guessing at what the client meant.
+func decodeToolChoice(raw json.RawMessage) *inference.ToolChoice {
+	var name string
+	if err := json.Unmarshal(raw, &name); err == nil {
+		return namedToolChoice(name)
+	}
+	var selector struct {
+		Type     string `json:"type"`
+		Function struct {
+			Name string `json:"name"`
+		} `json:"function"`
+	}
+	if err := json.Unmarshal(raw, &selector); err != nil {
+		return nil
+	}
+	if selector.Type == functionType {
+		return &inference.ToolChoice{Mode: inference.ToolChoiceTool, Name: selector.Function.Name}
+	}
+	return namedToolChoice(selector.Type)
+}
+
+func namedToolChoice(name string) *inference.ToolChoice {
+	switch name {
+	case "":
+		return nil
+	case inference.ToolChoiceAuto, inference.ToolChoiceNone, inference.ToolChoiceRequired:
+		return &inference.ToolChoice{Mode: name}
+	default:
+		return &inference.ToolChoice{Mode: inference.ToolChoiceTool, Name: name}
+	}
 }
 
 func (w chatWireRequest) maxTokens() int {

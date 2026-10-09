@@ -98,6 +98,10 @@ type Template struct {
 	// FilterModels narrows the ids a roster keeps when the provider's list
 	// carries entries the connection does not serve.
 	FilterModels func(string) bool
+	// FormatForModel names the upstream wire format one model answers on, for a
+	// provider that serves different models over different protocols. It returns
+	// an empty format to leave the connection's own default in place.
+	FormatForModel func(string) APIFormat
 }
 
 // FormatOption returns the declared option for one format, which is what a

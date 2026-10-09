@@ -38,6 +38,38 @@ func decodeTools(tools []toolDef) ([]inference.Tool, map[string]bool) {
 	return decoded, custom
 }
 
+// decodeToolChoice reads the Responses wire's tool choice, which is either one
+// of its own names or an object naming a tool. A shape this wire does not
+// define leaves the choice unset rather than guessing at what the client meant.
+func decodeToolChoice(raw json.RawMessage) *inference.ToolChoice {
+	var name string
+	if err := json.Unmarshal(raw, &name); err == nil {
+		return namedToolChoice(name)
+	}
+	var selector struct {
+		Type string `json:"type"`
+		Name string `json:"name"`
+	}
+	if err := json.Unmarshal(raw, &selector); err != nil {
+		return nil
+	}
+	if selector.Type == toolTypeFunction {
+		return &inference.ToolChoice{Mode: inference.ToolChoiceTool, Name: selector.Name}
+	}
+	return namedToolChoice(selector.Type)
+}
+
+func namedToolChoice(name string) *inference.ToolChoice {
+	switch name {
+	case "":
+		return nil
+	case inference.ToolChoiceAuto, inference.ToolChoiceNone, inference.ToolChoiceRequired:
+		return &inference.ToolChoice{Mode: name}
+	default:
+		return &inference.ToolChoice{Mode: inference.ToolChoiceTool, Name: name}
+	}
+}
+
 func schemaOrEmpty(schema json.RawMessage) json.RawMessage {
 	if len(schema) == 0 || string(schema) == "null" {
 		return json.RawMessage(emptyObjectSchema)

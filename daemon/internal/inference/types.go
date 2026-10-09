@@ -36,9 +36,13 @@ func SpokenText(parts []ContentPart) []ContentPart {
 
 // Request is the internal representation of any LLM request.
 type Request struct {
-	Model       string           `json:"model"`
-	Messages    []Message        `json:"messages"`
-	Tools       []Tool           `json:"tools,omitempty"`
+	Model    string    `json:"model"`
+	Messages []Message `json:"messages"`
+	Tools    []Tool    `json:"tools,omitempty"`
+	// ToolChoice carries the client's constraint on which tool the model calls.
+	// An empty value leaves the choice to the model, which is what a client
+	// that said nothing about it meant.
+	ToolChoice  *ToolChoice      `json:"tool_choice,omitempty"`
 	Stream      bool             `json:"stream"`
 	MaxTokens   int              `json:"max_tokens,omitempty"`
 	Temperature *float64         `json:"temperature,omitempty"`
@@ -63,6 +67,27 @@ type ContentPart struct {
 	ImageURL  string `json:"image_url,omitempty"`
 	Signature string `json:"signature,omitempty"`
 }
+
+// ToolChoice is how a client constrains which tool the model calls. It is the
+// canonical form every wire translates through, because a family that cannot
+// express the choice must say so rather than answer with a different
+// instruction than the client gave.
+type ToolChoice struct {
+	// Mode names the constraint: an empty Mode leaves the choice to the model,
+	// ToolChoiceAuto lets it decide, ToolChoiceNone forbids every tool,
+	// ToolChoiceRequired demands one, and ToolChoiceTool demands a named one.
+	Mode string
+	// Name is the tool a ToolChoiceTool demand names.
+	Name string
+}
+
+// The tool-choice modes a client can ask for.
+const (
+	ToolChoiceAuto     = "auto"
+	ToolChoiceNone     = "none"
+	ToolChoiceRequired = "required"
+	ToolChoiceTool     = "tool"
+)
 
 // Tool describes a function the model may call.
 type Tool struct {

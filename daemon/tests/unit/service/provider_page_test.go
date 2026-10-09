@@ -769,6 +769,75 @@ func TestRefreshMarksTheRosterUnavailableWhenTheListIsEmpty(t *testing.T) {
 	}
 }
 
+// TestRefreshOpenCodeFreeKeepsTheFreeRosterWithoutCatalogPrices covers the
+// refresh of a keyless Zen connection: the lane's eligibility is read from the
+// ids the gateway publishes, so a catalog copy that says nothing about them
+// costs the connection no models.
+func TestRefreshOpenCodeFreeKeepsTheFreeRosterWithoutCatalogPrices(t *testing.T) {
+	h := newHarness(t)
+	listing := listingServer(t, http.StatusOK,
+		`{"data":[{"id":"exo-free"},{"id":"big-pickle"},{"id":"muse-spark-1.3-contributor-free"},`+
+			`{"id":"union-alpha"},{"id":"gpt-5.5"},{"id":"jev-1.13-free"}]}`)
+	manager := pageService(t, h, catalogServer(t, map[string]map[string]any{
+		"opencode": {
+			"id": "opencode", "name": "OpenCode",
+			"models": map[string]any{
+				"gpt-5.5": map[string]any{
+					"id": "gpt-5.5", "name": "GPT 5.5",
+					"cost": map[string]any{"input": 1.0, "output": 2.0},
+				},
+			},
+		},
+	}).URL)
+	seedRow(t, h, sqlite.ProviderRow{
+		ID: "opencode-free", TemplateID: catalog.OpenCodeFreeTemplate, Origin: string(catalog.OriginTemplate),
+		Label: "Opencode Free", Auth: string(catalog.AuthNone),
+		APIFormat: string(catalog.FormatOpenAIChat), BaseURL: listing.URL + "/v1",
+		ModelsSource: "listing", ModelsFormat: string(catalog.ModelsOpenAI), ModelsDevProviderID: "opencode",
+		Enabled: true, Rank: 100,
+	})
+
+	result, err := manager.RefreshProviderModels(context.Background(), "opencode-free")
+	if err != nil {
+		t.Fatalf("RefreshProviderModels() error = %v", err)
+	}
+	if result.Listed != 6 || result.Added != 3 {
+		t.Fatalf("result = %+v, want six published ids kept down to the three free ones", result)
+	}
+
+	models, _, err := manager.Models(context.Background(), appcatalog.ModelQuery{Provider: "opencode-free"})
+	if err != nil {
+		t.Fatalf("Models() error = %v", err)
+	}
+	wantFormats := map[string]catalog.APIFormat{
+		"exo-free":                        catalog.FormatOpenAIChat,
+		"big-pickle":                      catalog.FormatOpenAIChat,
+		"muse-spark-1.3-contributor-free": catalog.FormatOpenAIResp,
+	}
+	seen := map[string]bool{}
+	for _, entry := range models {
+		want, kept := wantFormats[entry.ModelID]
+		if !kept {
+			// The provider no longer names it, so the row stays for the routes
+			// that reference it and stops being routable.
+			if entry.Available == nil || *entry.Available {
+				t.Fatalf("model %q is routable after the listing dropped it", entry.ModelID)
+			}
+			continue
+		}
+		seen[entry.ModelID] = true
+		if entry.Available == nil || !*entry.Available {
+			t.Fatalf("model %q is on the roster but switched off", entry.ModelID)
+		}
+		if entry.APIFormat != string(want) {
+			t.Fatalf("model %q answers on %q, want %q", entry.ModelID, entry.APIFormat, want)
+		}
+	}
+	if len(seen) != len(wantFormats) {
+		t.Fatalf("kept %v, want every free id the listing published", seen)
+	}
+}
+
 // modelByIDInto finds one model in a page of stored models.
 func modelByIDInto(models []appcatalog.Model, id string) (appcatalog.Model, bool) {
 	for _, model := range models {

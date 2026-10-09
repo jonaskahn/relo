@@ -31,16 +31,17 @@ const (
 const instructionSeparator = `` + "\n\n" + ``
 
 type requestPayload struct {
-	Model           string        `json:"model"`
-	Input           []inputItem   `json:"input"`
-	Instructions    string        `json:"instructions,omitempty"`
-	Tools           []toolDef     `json:"tools,omitempty"`
-	Stream          bool          `json:"stream,omitempty"`
-	Store           bool          `json:"store"`
-	MaxOutputTokens int           `json:"max_output_tokens,omitempty"`
-	Temperature     *float64      `json:"temperature,omitempty"`
-	Reasoning       *reasoningDef `json:"reasoning,omitempty"`
-	Include         []string      `json:"include,omitempty"`
+	Model           string          `json:"model"`
+	Input           []inputItem     `json:"input"`
+	Instructions    string          `json:"instructions,omitempty"`
+	Tools           []toolDef       `json:"tools,omitempty"`
+	ToolChoice      json.RawMessage `json:"tool_choice,omitempty"`
+	Stream          bool            `json:"stream,omitempty"`
+	Store           bool            `json:"store"`
+	MaxOutputTokens int             `json:"max_output_tokens,omitempty"`
+	Temperature     *float64        `json:"temperature,omitempty"`
+	Reasoning       *reasoningDef   `json:"reasoning,omitempty"`
+	Include         []string        `json:"include,omitempty"`
 }
 
 type inputItem struct {
@@ -104,6 +105,7 @@ func newPayload(req *inference.Request, opts wire.CodecOpts) requestPayload {
 		Input:           placeReasoning(items, req.Reasoning),
 		Instructions:    instructions,
 		Tools:           encodeTools(req.Tools),
+		ToolChoice:      encodeToolChoice(req.ToolChoice),
 		Stream:          req.Stream,
 		Store:           false,
 		MaxOutputTokens: req.MaxTokens,
@@ -216,6 +218,30 @@ func functionCallItems(calls []inference.ToolCall) []inputItem {
 		items = append(items, inputItem{Type: itemFunctionCall, CallID: call.ID, Name: call.Name, Arguments: call.Arguments})
 	}
 	return items
+}
+
+// encodeToolChoice renders the canonical choice the way the Responses wire
+// names it. A client that said nothing about it gets no field, which this wire
+// already treats as its own default.
+func encodeToolChoice(choice *inference.ToolChoice) json.RawMessage {
+	if choice == nil {
+		return nil
+	}
+	if choice.Mode == inference.ToolChoiceTool {
+		if choice.Name == "" {
+			return nil
+		}
+		encoded, err := json.Marshal(map[string]string{"type": toolTypeFunction, "name": choice.Name})
+		if err != nil {
+			return nil
+		}
+		return encoded
+	}
+	encoded, err := json.Marshal(choice.Mode)
+	if err != nil {
+		return nil
+	}
+	return encoded
 }
 
 func encodeTools(tools []inference.Tool) []toolDef {

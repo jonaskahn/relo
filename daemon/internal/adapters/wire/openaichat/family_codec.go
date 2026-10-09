@@ -132,17 +132,18 @@ func (c *Codec) endpoint(opts wire.CodecOpts) string {
 }
 
 type chatRequestPayload struct {
-	Model           string         `json:"model"`
-	Messages        []chatMessage  `json:"messages"`
-	Tools           []chatTool     `json:"tools,omitempty"`
-	Stream          bool           `json:"stream,omitempty"`
-	StreamOptions   *streamOptions `json:"stream_options,omitempty"`
-	MaxTokens       int            `json:"max_tokens,omitempty"`
-	Temperature     *float64       `json:"temperature,omitempty"`
-	ReasoningEffort string         `json:"reasoning_effort,omitempty"`
-	Thinking        *chatThinking  `json:"thinking,omitempty"`
-	EnableThinking  *bool          `json:"enable_thinking,omitempty"`
-	ThinkingBudget  *int           `json:"thinking_budget,omitempty"`
+	Model           string          `json:"model"`
+	Messages        []chatMessage   `json:"messages"`
+	Tools           []chatTool      `json:"tools,omitempty"`
+	ToolChoice      json.RawMessage `json:"tool_choice,omitempty"`
+	Stream          bool            `json:"stream,omitempty"`
+	StreamOptions   *streamOptions  `json:"stream_options,omitempty"`
+	MaxTokens       int             `json:"max_tokens,omitempty"`
+	Temperature     *float64        `json:"temperature,omitempty"`
+	ReasoningEffort string          `json:"reasoning_effort,omitempty"`
+	Thinking        *chatThinking   `json:"thinking,omitempty"`
+	EnableThinking  *bool           `json:"enable_thinking,omitempty"`
+	ThinkingBudget  *int            `json:"thinking_budget,omitempty"`
 }
 
 type streamOptions struct {
@@ -195,6 +196,7 @@ func newPayload(req *inference.Request, opts wire.CodecOpts, baseURL string) cha
 		Model:       req.Model,
 		Messages:    encodeMessages(req.Messages, replayDeepSeekReasoning(baseURL, req, opts)),
 		Tools:       encodeTools(req.Tools, baseURL),
+		ToolChoice:  encodeToolChoice(req.ToolChoice),
 		Stream:      req.Stream,
 		MaxTokens:   req.MaxTokens,
 		Temperature: req.Temperature,
@@ -362,6 +364,31 @@ func encodeToolCalls(calls []inference.ToolCall) []chatToolCall {
 		entry.Function.Name = call.Name
 		entry.Function.Arguments = call.Arguments
 		encoded = append(encoded, entry)
+	}
+	return encoded
+}
+
+// encodeToolChoice renders the canonical choice the way the Chat wire names it.
+// A client that said nothing about it gets no field, which is what every
+// provider on this wire already treats as its own default.
+func encodeToolChoice(choice *inference.ToolChoice) json.RawMessage {
+	if choice == nil {
+		return nil
+	}
+	if choice.Mode == inference.ToolChoiceTool {
+		if choice.Name == "" {
+			return nil
+		}
+		encoded, err := json.Marshal(map[string]any{"type": functionType,
+			"function": map[string]string{"name": choice.Name}})
+		if err != nil {
+			return nil
+		}
+		return encoded
+	}
+	encoded, err := json.Marshal(choice.Mode)
+	if err != nil {
+		return nil
 	}
 	return encoded
 }

@@ -925,6 +925,119 @@ func conversationEvents() []inference.Event {
 	}
 }
 
+// TestMessagesToolChoiceTranslation covers the client's constraint on which
+// tool the model calls: the Messages wire names the same decision differently
+// from the other wires, and a shape it does not define must leave the choice
+// unset rather than guess at what the caller meant.
+func TestMessagesToolChoiceTranslation(t *testing.T) {
+	t.Run("each mode reaches the body under the Messages name", func(t *testing.T) {
+		for _, entry := range []struct {
+			mode string
+			name string
+			want string
+		}{
+			{mode: inference.ToolChoiceAuto, want: "auto"},
+			{mode: inference.ToolChoiceNone, want: "none"},
+			{mode: inference.ToolChoiceRequired, want: "any"},
+			{mode: inference.ToolChoiceTool, name: "read", want: "tool"},
+		} {
+			t.Run(entry.mode, func(t *testing.T) {
+				choice := &inference.ToolChoice{Mode: entry.mode, Name: entry.name}
+				body := encodeBody(t, &inference.Request{Model: "claude-sonnet-5", ToolChoice: choice},
+					wire.CodecOpts{CredentialRef: "sk-ant"})
+				selector, ok := body["tool_choice"].(map[string]any)
+				if !ok {
+					t.Fatalf("body = %v, want a tool_choice selector", body)
+				}
+				if selector["type"] != entry.want {
+					t.Fatalf("tool_choice = %v, want the %q selector", selector, entry.want)
+				}
+				if entry.name != "" && selector["name"] != entry.name {
+					t.Fatalf("tool_choice = %v, want the named tool", selector)
+				}
+			})
+		}
+	})
+
+	t.Run("a choice this wire cannot name is left off", func(t *testing.T) {
+		body := encodeBody(t, &inference.Request{Model: "claude-sonnet-5",
+			ToolChoice: &inference.ToolChoice{Mode: "something-else"}},
+			wire.CodecOpts{CredentialRef: "sk-ant"})
+		if _, present := body["tool_choice"]; present {
+			t.Fatalf("body = %v, want no selector invented for an unnamed mode", body)
+		}
+	})
+
+	t.Run("a named demand without a name is left off", func(t *testing.T) {
+		body := encodeBody(t, &inference.Request{Model: "claude-sonnet-5",
+			ToolChoice: &inference.ToolChoice{Mode: inference.ToolChoiceTool}},
+			wire.CodecOpts{CredentialRef: "sk-ant"})
+		if _, present := body["tool_choice"]; present {
+			t.Fatalf("body = %v, want no selector naming no tool", body)
+		}
+	})
+
+	t.Run("a client request's own choice reaches the canonical form", func(t *testing.T) {
+		for _, entry := range []struct {
+			body     string
+			mode     string
+			toolName string
+		}{
+			{body: `{"type":"auto"}`, mode: inference.ToolChoiceAuto},
+			{body: `{"type":"none"}`, mode: inference.ToolChoiceNone},
+			{body: `{"type":"any"}`, mode: inference.ToolChoiceRequired},
+			{body: `{"type":"tool","name":"read"}`, mode: inference.ToolChoiceTool, toolName: "read"},
+		} {
+			t.Run(entry.body, func(t *testing.T) {
+				decoded := decodeMessagesRequest(t, `{"model":"claude-sonnet-5","max_tokens":64,`+
+					`"messages":[{"role":"user","content":"go"}],"tool_choice":`+entry.body+`}`)
+				if decoded.ToolChoice == nil || decoded.ToolChoice.Mode != entry.mode {
+					t.Fatalf("tool choice = %+v, want %q", decoded.ToolChoice, entry.mode)
+				}
+				if decoded.ToolChoice.Name != entry.toolName {
+					t.Fatalf("tool choice = %+v, want the named tool", decoded.ToolChoice)
+				}
+			})
+		}
+	})
+
+	t.Run("a shape this wire does not define leaves the choice unset", func(t *testing.T) {
+		for _, body := range []string{`{"type":"whatever"}`, `"none"`, `{"name":"read"}`, `{}`} {
+			decoded := decodeMessagesRequest(t, `{"model":"claude-sonnet-5","max_tokens":64,`+
+				`"messages":[{"role":"user","content":"go"}],"tool_choice":`+body+`}`)
+			if decoded.ToolChoice != nil {
+				t.Fatalf("tool choice = %+v, want unset for %s", decoded.ToolChoice, body)
+			}
+		}
+	})
+
+	t.Run("a request naming no choice keeps none", func(t *testing.T) {
+		decoded := decodeMessagesRequest(t,
+			`{"model":"claude-sonnet-5","max_tokens":64,"messages":[{"role":"user","content":"go"}]}`)
+		if decoded.ToolChoice != nil {
+			t.Fatalf("tool choice = %+v, want unset", decoded.ToolChoice)
+		}
+		body := encodeBody(t, decoded, wire.CodecOpts{CredentialRef: "sk-ant"})
+		if _, present := body["tool_choice"]; present {
+			t.Fatalf("body = %v, want no selector for a client that sent none", body)
+		}
+	})
+}
+
+// decodeMessagesRequest reads a client request the way the Messages surface does.
+func decodeMessagesRequest(t *testing.T, body string) *inference.Request {
+	t.Helper()
+	request, err := http.NewRequest(http.MethodPost, "/v1/messages", strings.NewReader(body))
+	if err != nil {
+		t.Fatalf("build the request: %v", err)
+	}
+	decoded, err := anthropic.NewInbound().DecodeRequest(request)
+	if err != nil {
+		t.Fatalf("DecodeRequest() error = %v", err)
+	}
+	return decoded
+}
+
 func encodeBody(t *testing.T, request *inference.Request, opts wire.CodecOpts) map[string]any {
 	t.Helper()
 	return decodeBody(t, newTestRequest(t, request, opts))
