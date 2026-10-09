@@ -66,6 +66,15 @@ purpose-drawn silhouette of the same mark, which is what the console draws.
 
 ## Marks models.dev does not publish
 
+- `kilo.svg` — models.dev _does_ publish a `kilo` entry, but what it serves there is a
+  generic chevron that is not the vendor's mark, so the glyph was taken from the Kilo Code
+  brand export (supplied by the project, light and dark variants identical in geometry and
+  differing only in `fill`) and saved as seven `currentColor` paths in the original
+  `0 0 32 32` viewBox. It does not go in through `scripts/reduce-mark.mjs`: that script keeps
+  only `<path>`, and this export also draws with `<rect>` and `<polygon>`, so lifting it
+  verbatim needed those rewritten into path data. `fetch:logos` skips this id (see
+  `keepCommitted` in `scripts/fetch-provider-logos.mjs`) so regenerating the marks cannot put
+  the generic chevron back.
 - `cursor.svg` — Cursor publishes no mark on models.dev, so the glyph was taken from
   `https://cursor.com/favicon.svg` (fetched 2026-09-28) and reduced to its own cube path.
   The file that ships is Cursor's geometry verbatim; the dark plate behind it was dropped,

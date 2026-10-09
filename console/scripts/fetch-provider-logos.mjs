@@ -39,7 +39,7 @@ const available = readdirSync(output)
 // Ids whose committed mark is better than the one models.dev serves. OrcaRouter
 // publishes its mark only as a raster, which the console cannot mask and cannot
 // theme, so the vector committed by hand wins and the fetch leaves it alone.
-const keepCommitted = new Set(['orcarouter']);
+const keepCommitted = new Set(['kilo', 'orcarouter']);
 for (let start = 0; start < ids.length; start += 12) {
 	await Promise.all(
 		ids.slice(start, start + 12).map(async (id) => {
