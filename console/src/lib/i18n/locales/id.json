@@ -425,7 +425,8 @@
           "addTileHint": "Akun, kunci API, atau endpoint",
           "noMatch": "Tidak ada koneksi yang cocok dengan pencarian atau filter.",
           "filters": "Filter koneksi",
-          "filterOption": "{label} ({count})"
+          "filterOption": "{label} ({count})",
+          "tagFree": "Gratis"
         },
         "status": {
           "ready": "Siap",
@@ -878,7 +879,8 @@
           "search": "Cari model",
           "commitFailed": "Gagal menambahkan penyedia: {detail}",
           "keyAdded": "Kunci ditambahkan ke {label}.",
-          "legend": "Harga per 1 juta token, masuk / keluar"
+          "legend": "Harga per 1 juta token, masuk / keluar",
+          "retainsPrompts": "Pool gratis ini tidak memerlukan akun. Prompt yang Anda kirim dapat dicatat oleh penyedia."
         },
         "format": {
           "openaiChat": "OpenAI Chat Completions; cocok dengan sebagian besar klien dan gateway",

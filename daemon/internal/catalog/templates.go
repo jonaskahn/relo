@@ -39,6 +39,11 @@ type LoginKind string
 // OpenCodeFreeTemplate is the signed-out OpenCode Zen connection.
 const OpenCodeFreeTemplate = "opencode-free"
 
+// KiloFreeTemplate is the keyless Kilo gateway connection. Every model it
+// serves logs the prompt at the vendor, so it is offered for throwaway work
+// and never for anything an operator would not hand the vendor.
+const KiloFreeTemplate = "kilo-free"
+
 const (
 	// LoginBrowser opens a page the operator signs in on.
 	LoginBrowser LoginKind = "browser"
@@ -96,8 +101,10 @@ type Template struct {
 	// the templates are read, because it depends on the saved copy.
 	ModelsDevModels int
 	// FilterModels narrows the ids a roster keeps when the provider's list
-	// carries entries the connection does not serve.
-	FilterModels func(string) bool
+	// carries entries the connection does not serve. It takes the whole entry
+	// because a provider may mark an entry free or paid in a field its name
+	// does not repeat.
+	FilterModels func(Listed) bool
 	// FormatForModel names the upstream wire format one model answers on, for a
 	// provider that serves different models over different protocols. It returns
 	// an empty format to leave the connection's own default in place.

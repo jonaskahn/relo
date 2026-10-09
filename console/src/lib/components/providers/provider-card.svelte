@@ -5,6 +5,7 @@
 	import Icon, { type IconName } from '$lib/components/ui/icon.svelte';
 	import { Switch } from 'bits-ui';
 	import { providerStatus, type ProviderStatusName } from '$lib/provider-status';
+	import { isFreeConnection } from '$lib/provider-free';
 
 	interface Props {
 		provider: Provider;
@@ -17,6 +18,7 @@
 	let { provider, selected = false, onselect, ontoggle, onrowkey }: Props = $props();
 
 	const status = $derived(providerStatus(provider));
+	const free = $derived(isFreeConnection(provider));
 
 	// Status is never carried by color alone: every word has an icon beside it.
 	const icons: Record<ProviderStatusName, IconName> = {
@@ -62,7 +64,14 @@
 				<ProviderLogo id={provider.template_id || provider.id} label={provider.label} size="sm" />
 			</span>
 			<span class="min-w-0 flex-1">
-				<span class="block truncate text-sm font-medium leading-5">{provider.label}</span>
+				<span class="flex min-w-0 items-center gap-1.5">
+					<span class="truncate text-sm font-medium leading-5">{provider.label}</span>
+					{#if free}
+						<span data-free-chip class="badge shrink-0 border border-ok/40 bg-ok/10 text-ok">
+							{$t('ui.pages.providersPage.list.tagFree')}
+						</span>
+					{/if}
+				</span>
 				<span class="block truncate font-mono text-[0.7rem] text-muted-foreground"
 					>{provider.id}</span
 				>

@@ -425,7 +425,8 @@
           "addTileHint": "Cont, cheie API sau endpoint",
           "noMatch": "Nicio conexiune nu corespunde căutării sau filtrelor.",
           "filters": "Filtre conexiuni",
-          "filterOption": "{label} ({count})"
+          "filterOption": "{label} ({count})",
+          "tagFree": "Gratuit"
         },
         "status": {
           "ready": "Pregătit",
@@ -878,7 +879,8 @@
           "search": "Caută modele",
           "commitFailed": "Furnizorul nu a putut fi adăugat: {detail}",
           "keyAdded": "Cheie adăugată la {label}.",
-          "legend": "Preț per 1M de tokenuri, intrare / ieșire"
+          "legend": "Preț per 1M de tokenuri, intrare / ieșire",
+          "retainsPrompts": "Acest pool gratuit nu necesită un cont. Solicitările trimise pot fi înregistrate de furnizor."
         },
         "format": {
           "openaiChat": "OpenAI Chat Completions; funcționează cu majoritatea clienților și gateway-urilor",

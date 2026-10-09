@@ -425,7 +425,8 @@
           "addTileHint": "Compte, clé API ou point de terminaison",
           "noMatch": "Aucune connexion ne correspond à votre recherche ou à vos filtres.",
           "filters": "Filtres de connexion",
-          "filterOption": "{label} ({count})"
+          "filterOption": "{label} ({count})",
+          "tagFree": "Gratuit"
         },
         "status": {
           "ready": "Prêt",
@@ -878,7 +879,8 @@
           "search": "Rechercher des modèles",
           "commitFailed": "Impossible d’ajouter le provider : {detail}",
           "keyAdded": "Clé ajoutée à {label}.",
-          "legend": "Prix par million de tokens, entrée / sortie"
+          "legend": "Prix par million de tokens, entrée / sortie",
+          "retainsPrompts": "Ce pool gratuit ne demande aucun compte. Le fournisseur peut enregistrer les requêtes que vous lui envoyez."
         },
         "format": {
           "openaiChat": "OpenAI Chat Completions ; fonctionne avec la plupart des clients et des passerelles",

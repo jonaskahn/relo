@@ -425,7 +425,8 @@
           "addTileHint": "حساب أو مفتاح API أو نقطة نهاية",
           "noMatch": "لا يوجد اتصال يطابق بحثك أو عوامل التصفية.",
           "filters": "عوامل تصفية الاتصالات",
-          "filterOption": "{label} ({count})"
+          "filterOption": "{label} ({count})",
+          "tagFree": "مجاني"
         },
         "status": {
           "ready": "جاهز",
@@ -878,7 +879,8 @@
           "search": "ابحث في النماذج",
           "commitFailed": "تعذّرت إضافة المزوّد: {detail}",
           "keyAdded": "تمت إضافة المفتاح إلى {label}.",
-          "legend": "السعر لكل مليون رمز، إدخال / إخراج"
+          "legend": "السعر لكل مليون رمز، إدخال / إخراج",
+          "retainsPrompts": "لا تحتاج هذه المجموعة المجانية إلى حساب. قد يسجّل المزوّد الطلبات التي ترسلها إليه."
         },
         "format": {
           "openaiChat": "OpenAI Chat Completions؛ يعمل مع معظم العملاء والبوابات",

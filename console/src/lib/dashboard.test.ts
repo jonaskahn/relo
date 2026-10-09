@@ -5,6 +5,7 @@ import {
 	deltaPercent,
 	formatCountdown,
 	healthCards,
+	isKiloFree,
 	isTokenPlan,
 	isWindowPeriod,
 	paidProviders,
@@ -167,6 +168,16 @@ describe('paidProviders', () => {
 		]);
 		expect(rows.map((row) => row.provider.id)).toEqual(['openai']);
 		expect(rows[0].costMicros).toBe(100);
+	});
+
+	it('leaves the keyless Kilo pool out of paid spend', () => {
+		const list = [
+			provider('openai', 'key'),
+			{ ...provider('kilo', 'key'), template_id: 'kilo-free', modelsdev_provider_id: 'kilo' }
+		];
+		expect(paidProviders(list).map((p) => p.id)).toEqual(['openai']);
+		expect(planProviders(list).map((p) => p.id)).toEqual(['kilo']);
+		expect(isKiloFree(provider('kilo', 'key'))).toBe(false);
 	});
 
 	it('classifies sign-in accounts, token plans, and OpenCode as plan usage', () => {

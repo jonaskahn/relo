@@ -30,6 +30,7 @@ type openAIModelEntry struct {
 	ContextLength *int64 `json:"context_length"`
 	ContextWindow *int64 `json:"context_window"`
 	MaxOutput     *int64 `json:"max_output_tokens"`
+	IsFree        *bool  `json:"isFree"`
 	Pricing       *struct {
 		Prompt          string `json:"prompt"`
 		Completion      string `json:"completion"`
@@ -73,6 +74,7 @@ func openAIModel(entry openAIModelEntry) (Listed, bool) {
 		ContextWindow: firstOf(entry.ContextWindow, entry.ContextLength),
 		MaxOutput:     maxOutput,
 		Prices:        openAIModelPrices(entry),
+		IsFree:        entry.IsFree,
 	}, true
 }
 

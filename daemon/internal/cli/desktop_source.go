@@ -74,7 +74,8 @@ func usageRows(rows []activity.UsageRollupRow) []desktop.UsageRow {
 }
 
 func planConnection(row sqlite.ProviderRow) bool {
-	return row.Origin == string(catalog.OriginSignIn) || tokenPlanConnection(row) || openCodeConnection(row)
+	return row.Origin == string(catalog.OriginSignIn) || tokenPlanConnection(row) ||
+		openCodeConnection(row) || row.TemplateID == catalog.KiloFreeTemplate
 }
 
 func paidConnection(row sqlite.ProviderRow) bool {

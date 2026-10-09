@@ -46,11 +46,12 @@ func buildRoster(t catalog.Template, mode rosterMode, listed, typed []catalog.Li
 
 	// A claimed id carries the format the template declares for it, and an
 	// empty one so the connection's own format still applies.
-	claim := func(id string) (catalog.APIFormat, bool) {
+	claim := func(entry catalog.Listed) (catalog.APIFormat, bool) {
+		id := entry.ID
 		if id == "" || seen[id] {
 			return "", false
 		}
-		if t.FilterModels != nil && !t.FilterModels(id) {
+		if t.FilterModels != nil && !t.FilterModels(entry) {
 			return "", false
 		}
 		seen[id] = true
@@ -66,13 +67,13 @@ func buildRoster(t catalog.Template, mode rosterMode, listed, typed []catalog.Li
 	return appendRosterRows(rows, typed, SourceManual, claim)
 }
 
-func appendRosterRows(rows []rosterEntry, listed []catalog.Listed, source string, claim func(string) (catalog.APIFormat, bool)) []rosterEntry {
-	for _, l := range listed {
-		format, claimed := claim(l.ID)
+func appendRosterRows(rows []rosterEntry, listed []catalog.Listed, source string, claim func(catalog.Listed) (catalog.APIFormat, bool)) []rosterEntry {
+	for _, entry := range listed {
+		format, claimed := claim(entry)
 		if !claimed {
 			continue
 		}
-		rows = append(rows, rosterEntry{Listed: l, Source: source, Format: format})
+		rows = append(rows, rosterEntry{Listed: entry, Source: source, Format: format})
 	}
 	return rows
 }

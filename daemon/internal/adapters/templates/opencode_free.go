@@ -36,8 +36,8 @@ var freeModelSuffix = regexp.MustCompile(`(?:^|[-_])free(?:$|[-_.])`)
 // conversational one, and its answer is not a chat completion.
 var unsupportedFree = regexp.MustCompile(`^jev-`)
 
-func freeModel(id string) bool {
-	id = strings.ToLower(strings.TrimSpace(id))
+func freeModel(model catalog.Listed) bool {
+	id := strings.ToLower(strings.TrimSpace(model.ID))
 	if unsupportedFree.MatchString(id) {
 		return false
 	}

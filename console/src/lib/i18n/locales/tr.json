@@ -425,7 +425,8 @@
           "addTileHint": "Hesap, API anahtarı veya uç nokta",
           "noMatch": "Aramanızla veya filtrelerinizle eşleşen bağlantı yok.",
           "filters": "Bağlantı filtreleri",
-          "filterOption": "{label} ({count})"
+          "filterOption": "{label} ({count})",
+          "tagFree": "Ücretsiz"
         },
         "status": {
           "ready": "Hazır",
@@ -878,7 +879,8 @@
           "search": "Modellerde ara",
           "commitFailed": "Sağlayıcı eklenemedi: {detail}",
           "keyAdded": "Anahtar {label} bağlantısına eklendi.",
-          "legend": "1M token başına fiyat, giriş / çıkış"
+          "legend": "1M token başına fiyat, giriş / çıkış",
+          "retainsPrompts": "Bu ücretsiz havuz hesap gerektirmez. Gönderdiğiniz istemler sağlayıcı tarafından kaydedilebilir."
         },
         "format": {
           "openaiChat": "OpenAI Chat Completions; çoğu istemci ve gateway ile çalışır",

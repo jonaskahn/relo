@@ -425,7 +425,8 @@
           "addTileHint": "Účet, API klíč nebo endpoint",
           "noMatch": "Žádné připojení neodpovídá hledání nebo filtrům.",
           "filters": "Filtry připojení",
-          "filterOption": "{label} ({count})"
+          "filterOption": "{label} ({count})",
+          "tagFree": "Zdarma"
         },
         "status": {
           "ready": "Připraveno",
@@ -878,7 +879,8 @@
           "search": "Hledat modely",
           "commitFailed": "Poskytovatele se nepodařilo přidat: {detail}",
           "keyAdded": "Klíč přidán k {label}.",
-          "legend": "Cena za 1M tokenů, vstup / výstup"
+          "legend": "Cena za 1M tokenů, vstup / výstup",
+          "retainsPrompts": "Tento bezplatný fond nevyžaduje účet. Prompty, které mu pošlete, může poskytovatel evidovat."
         },
         "format": {
           "openaiChat": "OpenAI Chat Completions; funguje s většinou klientů a bran",

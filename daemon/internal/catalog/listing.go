@@ -24,6 +24,10 @@ type Listed struct {
 	ContextWindow *int64
 	MaxOutput     *int64
 	Prices        *Prices
+	// IsFree is the provider's own mark that the entry needs no payment. It is
+	// a pointer because a listing that never states the flag says nothing, and
+	// a name that mentions no price proves neither way.
+	IsFree *bool
 }
 
 // ListTarget names the endpoint and credential one listing runs against.

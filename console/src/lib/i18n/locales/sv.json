@@ -425,7 +425,8 @@
           "addTileHint": "Konto, API-nyckel eller slutpunkt",
           "noMatch": "Ingen anslutning matchar din sökning eller dina filter.",
           "filters": "Anslutningsfilter",
-          "filterOption": "{label} ({count})"
+          "filterOption": "{label} ({count})",
+          "tagFree": "Gratis"
         },
         "status": {
           "ready": "Redo",
@@ -878,7 +879,8 @@
           "search": "Sök modeller",
           "commitFailed": "Kunde inte lägga till leverantören: {detail}",
           "keyAdded": "Nyckeln lades till i {label}.",
-          "legend": "Pris per 1M token, in / ut"
+          "legend": "Pris per 1M token, in / ut",
+          "retainsPrompts": "Den här fria poolen kräver inget konto. Promptar du skickar kan loggas av leverantören."
         },
         "format": {
           "openaiChat": "OpenAI Chat Completions; fungerar med de flesta klienter och gateways",

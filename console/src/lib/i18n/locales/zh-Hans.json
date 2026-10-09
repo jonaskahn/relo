@@ -425,7 +425,8 @@
           "addTileHint": "账户、API 密钥或端点",
           "noMatch": "没有连接符合你的搜索或筛选条件。",
           "filters": "连接筛选",
-          "filterOption": "{label} ({count})"
+          "filterOption": "{label} ({count})",
+          "tagFree": "免费"
         },
         "status": {
           "ready": "就绪",
@@ -878,7 +879,8 @@
           "search": "搜索模型",
           "commitFailed": "无法添加提供商：{detail}",
           "keyAdded": "已为 {label} 添加密钥。",
-          "legend": "每 100 万 token 的价格（输入 / 输出）"
+          "legend": "每 100 万 token 的价格（输入 / 输出）",
+          "retainsPrompts": "此免费池无需账户。您发送给它的提示词可能被服务商记录。"
         },
         "format": {
           "openaiChat": "OpenAI Chat Completions；兼容大多数客户端和网关",

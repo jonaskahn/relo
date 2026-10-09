@@ -425,7 +425,8 @@
           "addTileHint": "アカウント、APIキー、エンドポイント",
           "noMatch": "検索やフィルターに一致する接続はありません。",
           "filters": "接続フィルター",
-          "filterOption": "{label} ({count})"
+          "filterOption": "{label} ({count})",
+          "tagFree": "無料"
         },
         "status": {
           "ready": "準備完了",
@@ -878,7 +879,8 @@
           "search": "モデルを検索",
           "commitFailed": "プロバイダーを追加できませんでした（{detail}）",
           "keyAdded": "「{label}」にキーを追加しました。",
-          "legend": "100万トークンあたりの料金（入力 / 出力）"
+          "legend": "100万トークンあたりの料金（入力 / 出力）",
+          "retainsPrompts": "この無料プールにアカウントは不要です。送信したプロンプトはプロバイダーが記録する場合があります。"
         },
         "format": {
           "openaiChat": "OpenAI Chat Completions：ほとんどのクライアントとゲートウェイで使える",

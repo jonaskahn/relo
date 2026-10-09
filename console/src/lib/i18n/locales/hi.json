@@ -425,7 +425,8 @@
           "addTileHint": "खाता, API कुंजी या एंडपॉइंट",
           "noMatch": "कोई कनेक्शन आपकी खोज या फ़िल्टर से मेल नहीं खाता।",
           "filters": "कनेक्शन फ़िल्टर",
-          "filterOption": "{label} ({count})"
+          "filterOption": "{label} ({count})",
+          "tagFree": "मुफ़्त"
         },
         "status": {
           "ready": "तैयार",
@@ -878,7 +879,8 @@
           "search": "मॉडल खोजें",
           "commitFailed": "provider जोड़ा नहीं जा सका: {detail}",
           "keyAdded": "{label} में key जोड़ दी गई।",
-          "legend": "प्रति 1M टोकन मूल्य, इन / आउट"
+          "legend": "प्रति 1M टोकन मूल्य, इन / आउट",
+          "retainsPrompts": "इस मुक्त पूल के लिए खाता आवश्यक नहीं है। आपके द्वारा भेजे गए प्रॉम्प्ट प्रदाता द्वारा दर्ज किए जा सकते हैं।"
         },
         "format": {
           "openaiChat": "OpenAI Chat Completions; ज़्यादातर client और gateway के साथ चलता है",

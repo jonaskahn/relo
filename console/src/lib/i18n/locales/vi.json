@@ -425,7 +425,8 @@
           "addTileHint": "Tài khoản, khóa API hoặc endpoint",
           "noMatch": "Không có kết nối nào khớp với tìm kiếm hoặc bộ lọc.",
           "filters": "Bộ lọc kết nối",
-          "filterOption": "{label} ({count})"
+          "filterOption": "{label} ({count})",
+          "tagFree": "Miễn phí"
         },
         "status": {
           "ready": "Sẵn sàng",
@@ -878,7 +879,8 @@
           "search": "Tìm kiếm mô hình",
           "commitFailed": "Không thể thêm nhà cung cấp: {detail}",
           "keyAdded": "Đã thêm khóa vào {label}.",
-          "legend": "Giá mỗi 1 triệu token, vào / ra"
+          "legend": "Giá mỗi 1 triệu token, vào / ra",
+          "retainsPrompts": "Nhóm miễn phí này không cần tài khoản. Nhà cung cấp có thể ghi lại các lời nhắc bạn gửi đến."
         },
         "format": {
           "openaiChat": "OpenAI Chat Completions; chạy với hầu hết client và gateway",

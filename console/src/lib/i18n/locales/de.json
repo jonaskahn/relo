@@ -425,7 +425,8 @@
           "addTileHint": "Konto, API-Schlüssel oder Endpunkt",
           "noMatch": "Keine Verbindung passt zu deiner Suche oder deinen Filtern.",
           "filters": "Verbindungsfilter",
-          "filterOption": "{label} ({count})"
+          "filterOption": "{label} ({count})",
+          "tagFree": "Kostenlos"
         },
         "status": {
           "ready": "Bereit",
@@ -878,7 +879,8 @@
           "search": "Modelle suchen",
           "commitFailed": "Der Anbieter konnte nicht hinzugefügt werden: {detail}",
           "keyAdded": "Schlüssel zu {label} hinzugefügt.",
-          "legend": "Preis pro 1M Token, in / out"
+          "legend": "Preis pro 1M Token, in / out",
+          "retainsPrompts": "Dieser kostenlose Pool braucht kein Konto. Die Prompts, die du ihm sendest, können vom Anbieter protokolliert werden."
         },
         "format": {
           "openaiChat": "OpenAI Chat Completions; funktioniert mit den meisten Clients und Gateways",

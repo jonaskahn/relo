@@ -23,7 +23,7 @@ func TestOpenCodeFreeKeepsModelsTheGatewayMarksFree(t *testing.T) {
 		{"", false, "a blank id is not a model"},
 		{"jev-1.13-free", false, "Jev answers on an endpoint Relo does not speak"},
 	} {
-		if got := freeModel(entry.id); got != entry.kept {
+		if got := freeModel(catalog.Listed{ID: entry.id}); got != entry.kept {
 			t.Errorf("freeModel(%q) = %t, want %t: %s", entry.id, got, entry.kept, entry.why)
 		}
 	}
@@ -64,10 +64,10 @@ func TestOpenCodeFreeFilterRunsWithoutTheModelCatalog(t *testing.T) {
 	if !found || template.FilterModels == nil {
 		t.Fatal("opencode-free has no model filter")
 	}
-	if !template.FilterModels("big-pickle") {
+	if !template.FilterModels(catalog.Listed{ID: "big-pickle"}) {
 		t.Fatal("a free model was dropped without a catalog copy")
 	}
-	if template.FilterModels("gpt-5.5") {
+	if template.FilterModels(catalog.Listed{ID: "gpt-5.5"}) {
 		t.Fatal("a paid model was kept without a catalog copy")
 	}
 }
