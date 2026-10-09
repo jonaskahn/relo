@@ -41,6 +41,10 @@
 	let portBusy = $state<OAuthPortStatus | null>(null);
 	let confirmKill = $state(false);
 	let killing = $state(false);
+	// blocked says whether the browser refused to open the sign-in window. A
+	// refused popup leaves the operator here, so the panel says so rather than
+	// waiting on a login they have not started.
+	let blocked = $state(false);
 
 	const running = $derived(operation?.state === 'running');
 	// The conflict text names the process the operator would end, read from
@@ -92,6 +96,36 @@
 			working = false;
 		}
 	}
+
+	/** Sends the operator to the provider in a window this page opened. A tab
+	 *  opened by a link cannot be closed by a script afterwards, and the page it
+	 *  lands on closes itself when the login finishes, so the sign-in has to
+	 *  travel through a script-opened window for that to work.
+	 *
+	 *  A blocked popup is a state of its own: the operator never left the
+	 *  console, and a panel still saying it is waiting would wait forever, so
+	 *  the address stays on screen to open by hand. */
+	function openProvider() {
+		const url = operation?.url;
+		if (!url) return;
+		blocked = false;
+		const opened = window.open(url, 'relo-signin', popupFeatures);
+		if (!opened) {
+			blocked = true;
+			return;
+		}
+		opened.focus();
+	}
+
+	/** A named target reuses one window across a second sign-in rather than
+	 *  stacking tabs, and the size gives the provider room for a consent screen
+	 *  it renders poorly in a small one.
+	 *
+	 *  No noopener: a popup opened with it always reports itself as blocked, and
+	 *  the block is the one state this panel has to recognise. The callback page
+	 *  drops its own opener on arrival, so the back-reference the provider could
+	 *  otherwise reach through does not outlive the redirect. */
+	const popupFeatures = 'noreferrer,width=620,height=760';
 
 	async function checkPort() {
 		if (flow === '') return;
@@ -192,6 +226,13 @@
 			<p class="text-sm text-muted-foreground">{$t('ui.pages.providersPage.add.signInRunning')}</p>
 			{#if operation?.url}
 				<div class="flex flex-wrap items-center gap-2">
+					<Button type="button" variant="outline" size="sm" onclick={openProvider}>
+						<Icon name="external-link" size={14} />
+						{$t('ui.pages.providersPage.add.openLink')}
+					</Button>
+					<!-- The address stays on screen: it is the way through when the
+					     browser refuses to open the window, and the way to reach the
+					     sign-in on a device the popup cannot reach. -->
 					<a
 						class="min-w-0 break-all font-mono text-xs underline"
 						href={operation.url}
@@ -200,16 +241,12 @@
 					>
 						{operation.url}
 					</a>
-					<a
-						class="inline-flex items-center gap-1.5 text-sm font-medium text-primary underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-						href={operation.url}
-						target="_blank"
-						rel="external noreferrer"
-					>
-						<Icon name="external-link" size={14} />
-						{$t('ui.pages.providersPage.add.openLink')}
-					</a>
 				</div>
+				{#if blocked}
+					<p class="text-xs text-warn" role="status">
+						{$t('ui.pages.providersPage.add.signInPopupBlocked')}
+					</p>
+				{/if}
 			{/if}
 			{#if operation?.device_code}
 				<div class="flex flex-wrap items-center gap-2">

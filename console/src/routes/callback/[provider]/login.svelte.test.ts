@@ -1,12 +1,16 @@
 import { describe, expect, it } from 'vitest';
 
+import type { CallbackStatus } from '$lib/types';
+
 import {
 	expiredState,
 	initialState,
 	isFinal,
 	pollCallback,
 	stateFromStatus,
+	readMs,
 	statusPath,
+	windMs,
 	type CallbackState
 } from './login.svelte';
 
@@ -16,7 +20,7 @@ import {
  *  which is what stops an unanswered poll from recursing forever. */
 function harness(answers: (Partial<CallbackStatus> | null | Error)[]) {
 	const seen: CallbackState[] = [];
-	const waits: number[] =[];
+	const waits: number[] = [];
 	let index = 0;
 	pollCallback({
 		ticket: 'ticket-1',
@@ -39,9 +43,9 @@ function harness(answers: (Partial<CallbackStatus> | null | Error)[]) {
 
 describe('stateFromStatus', () => {
 	it('reads a stored account as connected and names it', () => {
-		expect(stateFromStatus({ provider: 'chatgpt', phase: 'connected', account: 'a@b.test' })).toEqual(
-			{ phase: 'connected', account: 'a@b.test', error: '' }
-		);
+		expect(
+			stateFromStatus({ provider: 'chatgpt', phase: 'connected', account: 'a@b.test' })
+		).toEqual({ phase: 'connected', account: 'a@b.test', error: '' });
 	});
 
 	it('reads a connected login that named no account', () => {
@@ -123,5 +127,28 @@ describe('statusPath', () => {
 
 	it('escapes a provider and a ticket that carry address characters', () => {
 		expect(statusPath('a/b', 'x y')).toBe('/callback/a%2Fb/status?ticket=x%20y');
+	});
+});
+
+describe("the page's wait before it leaves", () => {
+	it('reads the result, then dissolves, before the tab goes', () => {
+		// There is no wait before the result: it is the only thing this tab has
+		// left to say. What follows it is the one stretch in which the operator
+		// can read it, and then the page comes apart. The three are asserted
+		// together because together they are the whole of the page's life.
+		expect(readMs + windMs).toBe(4200);
+	});
+
+	it('dissolves slowly enough that the edge reads as pixels rather than a wipe', () => {
+		// Over the 400ms every other moment is capped at
+		// (docs/design/specs/foundations/motion.md). Below roughly this, the
+		// quantised rows have too few frames to be seen.
+		expect(windMs).toBeGreaterThan(600);
+	});
+
+	it('leaves the operator long enough to read what happened', () => {
+		// A tab that closes itself has no time to explain, so this stretch is the
+		// only one in which the result can be taken in.
+		expect(readMs).toBeGreaterThanOrEqual(1000);
 	});
 });

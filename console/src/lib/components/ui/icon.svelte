@@ -79,6 +79,7 @@
 		| 'grip-vertical'
 		| 'wrench'
 		| 'x'
+		| 'celebrate'
 		| 'world';
 
 	// paths holds one outline per icon, which is the whole icon set.
@@ -187,6 +188,7 @@
 		world:
 			'M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0M3 12h18M12 3c2.5 2.5 2.5 15 0 18M12 3c-2.5 2.5 -2.5 15 0 18',
 		wrench: 'M7 10h3v-3l-3.5 -3.5a6 6 0 0 1 8 8l6 6a2 2 0 0 1 -3 3l-6 -6a6 6 0 0 1 -8 -8l3.5 3.5',
+		celebrate: 'M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0M8.5 12.2l2.4 2.4l4.6 -5',
 		x: 'M18 6l-12 12M6 6l12 12'
 	};
 

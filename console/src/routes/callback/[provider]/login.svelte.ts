@@ -18,8 +18,20 @@ export interface CallbackState {
 export const pollIntervalMs = 700;
 export const retryIntervalMs = 1500;
 
-/** How long a finished login counts down before it stops saying so. */
-export const closeSeconds = 3;
+/** How long the panel sits still once it has arrived, in milliseconds. This is
+ *  the one stretch in which the operator can read which account was stored, so
+ *  it is short enough not to drag and long enough to be read at a glance. */
+export const readMs = 1200;
+
+/** How long the page takes to come apart, in milliseconds. The close waits for
+ *  exactly this long.
+ *
+ *  Deliberately over the 400ms every other moment in the console is capped at
+ *  (docs/design/specs/foundations/motion.md): an edge quantised into visible
+ *  rows needs enough frames for a cell to flicker through, and below ~600ms it
+ *  reads as a wipe rather than as the page coming apart. It runs once, on the
+ *  way out, and it is the longest moment on the page. */
+export const windMs = 3000;
 
 /** The state a login starts in, before the first poll answers. */
 export function initialState(): CallbackState {

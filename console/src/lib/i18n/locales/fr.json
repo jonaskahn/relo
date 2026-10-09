@@ -181,9 +181,10 @@
         "exchange": "Le fournisseur n’a pas voulu échanger l’autorisation contre un jeton."
       },
       "accountLabel": "Compte",
-      "closeHint": "Vous pouvez fermer cet onglet.",
-      "closingIn": "Fermeture dans {seconds}s…",
-      "consoleLink": "Ouvrir la console"
+      "enjoyTitle": "Profitez",
+      "enjoyBody": "Relo est connecté à {account}.",
+      "enjoyRetry": "Cela n'a pas fonctionné. Relancez la connexion depuis la console.",
+      "closeHint": "Vous pouvez fermer cet onglet."
     },
     "common": {
       "window24h": "24 h",
@@ -831,6 +832,7 @@
           "deploymentsRequired": "Indiquez au moins un nom de déploiement.",
           "startSignIn": "Démarrer la connexion",
           "signInMethod": "Méthode de connexion",
+          "signInPopupBlocked": "Votre navigateur a bloqué la fenêtre de connexion. Ouvrez le lien pour continuer.",
           "signInRunning": "En attente de la fin de la connexion…",
           "openLink": "Ouvrir",
           "copyCode": "Copier le code",

@@ -181,9 +181,10 @@
         "exchange": "Sağlayıcı yetkilendirmeyi bir jetonla değiştirmedi."
       },
       "accountLabel": "Hesap",
-      "closeHint": "Bu sekmeyi kapatabilirsiniz.",
-      "closingIn": "{seconds}s sonra kapanıyor…",
-      "consoleLink": "Konsolu aç"
+      "enjoyTitle": "Keyfini çıkar",
+      "enjoyBody": "Relo {account} hesabına bağlandı.",
+      "enjoyRetry": "Bu işe yaramadı. Oturum açmayı konsoldan yeniden başlat.",
+      "closeHint": "Bu sekmeyi kapatabilirsiniz."
     },
     "common": {
       "window24h": "24 saat",
@@ -831,6 +832,7 @@
           "deploymentsRequired": "En az bir dağıtım adı listele.",
           "startSignIn": "Oturum açmayı başlat",
           "signInMethod": "Oturum açma yöntemi",
+          "signInPopupBlocked": "Tarayıcın giriş penceresini engelledi. Devam etmek için bağlantıyı açın.",
           "signInRunning": "Oturum açma bitene kadar bekleniyor…",
           "openLink": "Aç",
           "copyCode": "Kodu kopyala",

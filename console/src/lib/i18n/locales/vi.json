@@ -181,9 +181,10 @@
         "exchange": "Nhà cung cấp không muốn đổi ủy quyền lấy token."
       },
       "accountLabel": "Tài khoản",
-      "closeHint": "Bạn có thể đóng thẻ này.",
-      "closingIn": "Đóng sau {seconds}s…",
-      "consoleLink": "Mở bảng điều khiển"
+      "enjoyTitle": "Tận hưởng",
+      "enjoyBody": "Relo đã kết nối với {account}.",
+      "enjoyRetry": "Không thành công. Hãy bắt đầu đăng nhập lại từ console.",
+      "closeHint": "Bạn có thể đóng thẻ này."
     },
     "common": {
       "window24h": "24 giờ",
@@ -831,6 +832,7 @@
           "deploymentsRequired": "Liệt kê ít nhất một tên triển khai.",
           "startSignIn": "Bắt đầu đăng nhập",
           "signInMethod": "Cách đăng nhập",
+          "signInPopupBlocked": "Trình duyệt của bạn đã chặn cửa sổ đăng nhập. Mở liên kết để tiếp tục.",
           "signInRunning": "Đang đợi đăng nhập hoàn tất…",
           "openLink": "Mở",
           "copyCode": "Sao chép mã",

@@ -181,9 +181,10 @@
         "exchange": "Penyedia tidak mau menukar otorisasi dengan token."
       },
       "accountLabel": "Akun",
-      "closeHint": "Anda bisa menutup tab ini.",
-      "closingIn": "Ditutup dalam {seconds}s…",
-      "consoleLink": "Buka konsol"
+      "enjoyTitle": "Nikmati",
+      "enjoyBody": "Relo terhubung ke {account}.",
+      "enjoyRetry": "Itu tidak berhasil. Mulai masuk lagi dari konsol.",
+      "closeHint": "Anda bisa menutup tab ini."
     },
     "common": {
       "window24h": "24 jam",
@@ -831,6 +832,7 @@
           "deploymentsRequired": "Cantumkan setidaknya satu nama deployment.",
           "startSignIn": "Mulai masuk",
           "signInMethod": "Metode masuk",
+          "signInPopupBlocked": "Peramban Anda memblokir jendela masuk. Buka tautan untuk melanjutkan.",
           "signInRunning": "Menunggu proses masuk selesai…",
           "openLink": "Buka",
           "copyCode": "Salin kode",

@@ -181,9 +181,10 @@
         "exchange": "O provedor não quis trocar a autorização por um token."
       },
       "accountLabel": "Conta",
-      "closeHint": "Você pode fechar esta aba.",
-      "closingIn": "Fechando em {seconds}s…",
-      "consoleLink": "Abrir o console"
+      "enjoyTitle": "Aproveite",
+      "enjoyBody": "O Relo está conectado com {account}.",
+      "enjoyRetry": "Não funcionou. Inicie o login novamente pelo console.",
+      "closeHint": "Você pode fechar esta aba."
     },
     "common": {
       "window24h": "24 h",
@@ -831,6 +832,7 @@
           "deploymentsRequired": "Liste pelo menos um nome de deployment.",
           "startSignIn": "Iniciar login",
           "signInMethod": "Método de login",
+          "signInPopupBlocked": "Seu navegador bloqueou a janela de login. Abra o link para continuar.",
           "signInRunning": "Aguardando o login terminar…",
           "openLink": "Abrir",
           "copyCode": "Copiar código",

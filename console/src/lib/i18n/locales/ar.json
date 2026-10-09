@@ -181,9 +181,10 @@
         "exchange": "لم يرد المزوّد استبدال التفويض برمز وصول."
       },
       "accountLabel": "الحساب",
-      "closeHint": "يمكنك إغلاق علامة التبويب هذه.",
-      "closingIn": "يُغلق خلال {seconds}s…",
-      "consoleLink": "افتح وحدة التحكم"
+      "enjoyTitle": "استمتع",
+      "enjoyBody": "Relo متصل بالحساب {account}.",
+      "enjoyRetry": "لم ينجح ذلك. ابدأ تسجيل الدخول مجددًا من Console.",
+      "closeHint": "يمكنك إغلاق علامة التبويب هذه."
     },
     "common": {
       "window24h": "24 ساعة",
@@ -831,6 +832,7 @@
           "deploymentsRequired": "أدرج اسم نشر واحدًا على الأقل.",
           "startSignIn": "ابدأ تسجيل الدخول",
           "signInMethod": "طريقة تسجيل الدخول",
+          "signInPopupBlocked": "حظر متصفحك نافذة تسجيل الدخول. افتح الرابط للمتابعة.",
           "signInRunning": "في انتظار انتهاء تسجيل الدخول…",
           "openLink": "فتح",
           "copyCode": "نسخ الرمز",

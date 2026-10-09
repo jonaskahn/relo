@@ -181,9 +181,10 @@
         "exchange": "Leverantören ville inte byta behörigheten mot en token."
       },
       "accountLabel": "Konto",
-      "closeHint": "Du kan stänga den här fliken.",
-      "closingIn": "Stängs om {seconds}s…",
-      "consoleLink": "Öppna konsolen"
+      "enjoyTitle": "Njut",
+      "enjoyBody": "Relo är anslutet till {account}.",
+      "enjoyRetry": "Det funkade inte. Starta inloggningen igen från konsolen.",
+      "closeHint": "Du kan stänga den här fliken."
     },
     "common": {
       "window24h": "24 h",
@@ -831,6 +832,7 @@
           "deploymentsRequired": "Lista minst ett deploymentsnamn.",
           "startSignIn": "Starta inloggning",
           "signInMethod": "Inloggningsmetod",
+          "signInPopupBlocked": "Din webbläsare blockerade inloggningsfönstret. Öppna länken för att fortsätta.",
           "signInRunning": "Väntar på att inloggningen slutförs…",
           "openLink": "Öppna",
           "copyCode": "Kopiera kod",

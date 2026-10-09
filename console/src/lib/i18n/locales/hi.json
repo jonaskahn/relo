@@ -181,9 +181,10 @@
         "exchange": "प्रदाता ने प्राधिकरण को टोकन में बदलने से मना कर दिया।"
       },
       "accountLabel": "खाता",
-      "closeHint": "आप यह टैब बंद कर सकते हैं।",
-      "closingIn": "{seconds}s में बंद हो रहा है…",
-      "consoleLink": "कंसोल खोलें"
+      "enjoyTitle": "आनंद लें",
+      "enjoyBody": "Relo अब {account} से जुड़ा है।",
+      "enjoyRetry": "यह काम नहीं आया। Console से साइन-इन फिर से शुरू करें।",
+      "closeHint": "आप यह टैब बंद कर सकते हैं।"
     },
     "common": {
       "window24h": "24 घंटे",
@@ -831,6 +832,7 @@
           "deploymentsRequired": "कम से कम एक deployment नाम लिखें।",
           "startSignIn": "लॉगिन शुरू करें",
           "signInMethod": "लॉगिन तरीका",
+          "signInPopupBlocked": "आपके ब्राउज़र ने साइन-इन विंडो अवरुद्ध कर दी। जारी रखने के लिए लिंक खोलें।",
           "signInRunning": "लॉगिन पूरा होने की इंतज़ार…",
           "openLink": "खोलें",
           "copyCode": "कोड कॉपी करें",

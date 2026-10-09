@@ -181,9 +181,10 @@
         "exchange": "Furnizorul nu a vrut să schimbe autorizarea cu un token."
       },
       "accountLabel": "Cont",
-      "closeHint": "Puteți închide această filă.",
-      "closingIn": "Se închide în {seconds}s…",
-      "consoleLink": "Deschide consola"
+      "enjoyTitle": "Bucură-te",
+      "enjoyBody": "Relo este conectat la {account}.",
+      "enjoyRetry": "Nu a mers. Repornește autentificarea din consolă.",
+      "closeHint": "Puteți închide această filă."
     },
     "common": {
       "window24h": "24 h",
@@ -831,6 +832,7 @@
           "deploymentsRequired": "Adaugă cel puțin un nume de deployment.",
           "startSignIn": "Autentifică-te",
           "signInMethod": "Metodă de autentificare",
+          "signInPopupBlocked": "Browserul tău a blocat fereastra de autentificare. Deschide linkul pentru a continua.",
           "signInRunning": "Se așteaptă finalizarea autentificării…",
           "openLink": "Deschide",
           "copyCode": "Copiază codul",

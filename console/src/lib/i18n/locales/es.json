@@ -181,9 +181,10 @@
         "exchange": "El proveedor no quiso canjear la autorización por un token."
       },
       "accountLabel": "Cuenta",
-      "closeHint": "Puedes cerrar esta pestaña.",
-      "closingIn": "Cierra en {seconds}s…",
-      "consoleLink": "Abrir la consola"
+      "enjoyTitle": "Disfruta",
+      "enjoyBody": "Relo está conectado con {account}.",
+      "enjoyRetry": "Eso no funcionó. Inicia el inicio de sesión de nuevo desde la consola.",
+      "closeHint": "Puedes cerrar esta pestaña."
     },
     "common": {
       "window24h": "24 h",
@@ -831,6 +832,7 @@
           "deploymentsRequired": "Escribe al menos un nombre de despliegue.",
           "startSignIn": "Iniciar sesión",
           "signInMethod": "Método de inicio de sesión",
+          "signInPopupBlocked": "Tu navegador bloqueó la ventana de inicio de sesión. Abre el enlace para continuar.",
           "signInRunning": "Esperando a que termine el inicio de sesión…",
           "openLink": "Abrir",
           "copyCode": "Copiar código",

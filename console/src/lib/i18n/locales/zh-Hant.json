@@ -181,9 +181,10 @@
         "exchange": "供應商拒絕將該授權交換成權杖。"
       },
       "accountLabel": "帳號",
-      "closeHint": "你可以關閉此分頁。",
-      "closingIn": "{seconds} 秒後關閉…",
-      "consoleLink": "開啟主控台"
+      "enjoyTitle": "請享用",
+      "enjoyBody": "Relo 已連線至 {account}。",
+      "enjoyRetry": "未能完成。請在 Console 中重新開始登入。",
+      "closeHint": "你可以關閉此分頁。"
     },
     "common": {
       "window24h": "24 小時",
@@ -831,6 +832,7 @@
           "deploymentsRequired": "至少列出一個部署名稱。",
           "startSignIn": "開始登入",
           "signInMethod": "登入方式",
+          "signInPopupBlocked": "瀏覽器封鎖了登入視窗。開啟連結以繼續。",
           "signInRunning": "正在等待登入完成…",
           "openLink": "開啟",
           "copyCode": "複製程式碼",

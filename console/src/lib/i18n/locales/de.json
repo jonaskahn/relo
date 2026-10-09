@@ -181,9 +181,10 @@
         "exchange": "Der Anbieter wollte die Autorisierung nicht gegen ein Token eintauschen."
       },
       "accountLabel": "Konto",
-      "closeHint": "Du kannst diesen Tab schließen.",
-      "closingIn": "Wird in {seconds}s geschlossen…",
-      "consoleLink": "Konsole öffnen"
+      "enjoyTitle": "Viel Spaß",
+      "enjoyBody": "Relo ist mit {account} verbunden.",
+      "enjoyRetry": "Das hat nicht geklappt. Starte die Anmeldung in der Konsole neu.",
+      "closeHint": "Du kannst diesen Tab schließen."
     },
     "common": {
       "window24h": "24 Std.",
@@ -831,6 +832,7 @@
           "deploymentsRequired": "Gib mindestens einen Deployment-Namen an.",
           "startSignIn": "Anmeldung starten",
           "signInMethod": "Anmeldeart",
+          "signInPopupBlocked": "Dein Browser hat das Anmeldefenster blockiert. Öffne den Link, um fortzufahren.",
           "signInRunning": "Warte auf das Ende der Anmeldung…",
           "openLink": "Öffnen",
           "copyCode": "Code kopieren",

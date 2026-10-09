@@ -181,9 +181,10 @@
         "exchange": "ผู้ให้บริการไม่ยอมแลกเปลี่ยนสิทธิ์เป็นโทเคน"
       },
       "accountLabel": "บัญชี",
-      "closeHint": "คุณปิดแท็บนี้ได้",
-      "closingIn": "ปิดในอีก {seconds} วินาที…",
-      "consoleLink": "เปิดคอนโซล"
+      "enjoyTitle": "สนุกกับการใช้งาน",
+      "enjoyBody": "Relo เชื่อมต่อกับ {account} แล้ว",
+      "enjoyRetry": "ไม่สำเร็จ เริ่มการเข้าสู่ระบบใหม่จาก Console",
+      "closeHint": "คุณปิดแท็บนี้ได้"
     },
     "common": {
       "window24h": "24 ชม.",
@@ -831,6 +832,7 @@
           "deploymentsRequired": "ระบุชื่อ deployment อย่างน้อยหนึ่งรายการ",
           "startSignIn": "เริ่มเข้าสู่ระบบ",
           "signInMethod": "วิธีเข้าสู่ระบบ",
+          "signInPopupBlocked": "เบราว์เซอร์บล็อกหน้าต่างเข้าสู่ระบบ เปิดลิงก์เพื่อดำเนินการต่อ",
           "signInRunning": "กำลังรอการเข้าสู่ระบบเสร็จ…",
           "openLink": "เปิด",
           "copyCode": "คัดลอกรหัส",

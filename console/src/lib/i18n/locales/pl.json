@@ -181,9 +181,10 @@
         "exchange": "Dostawca nie chciał wymienić autoryzacji na token."
       },
       "accountLabel": "Konto",
-      "closeHint": "Możesz zamknąć tę kartę.",
-      "closingIn": "Zamykanie za {seconds}s…",
-      "consoleLink": "Otwórz konsolę"
+      "enjoyTitle": "Przyjemnie",
+      "enjoyBody": "Relo połączono z {account}.",
+      "enjoyRetry": "To nie zadziałało. Rozpocznij logowanie ponownie w konsoli.",
+      "closeHint": "Możesz zamknąć tę kartę."
     },
     "common": {
       "window24h": "24 h",
@@ -831,6 +832,7 @@
           "deploymentsRequired": "Wymień co najmniej jedną nazwę wdrożenia.",
           "startSignIn": "Rozpocznij logowanie",
           "signInMethod": "Metoda logowania",
+          "signInPopupBlocked": "Twoja przeglądarka zablokowała okno logowania. Otwórz link, aby kontynuować.",
           "signInRunning": "Oczekiwanie na zakończenie logowania…",
           "openLink": "Otwórz",
           "copyCode": "Kopiuj kod",

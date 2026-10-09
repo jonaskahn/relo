@@ -181,9 +181,10 @@
         "exchange": "De provider wilde de autorisatie niet inwisselen voor een token."
       },
       "accountLabel": "Account",
-      "closeHint": "U kunt dit tabblad sluiten.",
-      "closingIn": "Sluit over {seconds}s…",
-      "consoleLink": "Console openen"
+      "enjoyTitle": "Geniet",
+      "enjoyBody": "Relo is verbonden met {account}.",
+      "enjoyRetry": "Dat werkte niet. Start het aanmelden opnieuw vanuit de console.",
+      "closeHint": "U kunt dit tabblad sluiten."
     },
     "common": {
       "window24h": "24 u",
@@ -831,6 +832,7 @@
           "deploymentsRequired": "Vermeld minstens één deploymentnaam.",
           "startSignIn": "Inloggen starten",
           "signInMethod": "Inlogmethode",
+          "signInPopupBlocked": "Je browser heeft het aanmeldvenster geblokkeerd. Open de link om verder te gaan.",
           "signInRunning": "Wachten tot het inloggen klaar is…",
           "openLink": "Openen",
           "copyCode": "Code kopiëren",

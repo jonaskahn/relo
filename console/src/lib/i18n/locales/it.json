@@ -181,9 +181,10 @@
         "exchange": "Il provider non ha voluto scambiare l’autorizzazione con un token."
       },
       "accountLabel": "Account",
-      "closeHint": "Puoi chiudere questa scheda.",
-      "closingIn": "Chiude tra {seconds}s…",
-      "consoleLink": "Apri la console"
+      "enjoyTitle": "Buon divertimento",
+      "enjoyBody": "Relo è connesso a {account}.",
+      "enjoyRetry": "Non ha funzionato. Riavvia l'accesso dalla console.",
+      "closeHint": "Puoi chiudere questa scheda."
     },
     "common": {
       "window24h": "24 h",
@@ -831,6 +832,7 @@
           "deploymentsRequired": "Elenca almeno un nome di deployment.",
           "startSignIn": "Inizia l’accesso",
           "signInMethod": "Metodo di accesso",
+          "signInPopupBlocked": "Il browser ha bloccato la finestra di accesso. Apri il link per continuare.",
           "signInRunning": "In attesa del termine dell’accesso…",
           "openLink": "Apri",
           "copyCode": "Copia il codice",

@@ -181,9 +181,10 @@
         "exchange": "제공자가 승인 권한을 토큰으로 교환하지 않았습니다."
       },
       "accountLabel": "계정",
-      "closeHint": "이 탭은 닫아도 됩니다.",
-      "closingIn": "{seconds}s 후 닫힘…",
-      "consoleLink": "콘솔 열기"
+      "enjoyTitle": "즐기세요",
+      "enjoyBody": "Relo가 {account}(으)로 연결되었습니다.",
+      "enjoyRetry": "실패했습니다. Console에서 다시 로그인하세요.",
+      "closeHint": "이 탭은 닫아도 됩니다."
     },
     "common": {
       "window24h": "24시간",
@@ -831,6 +832,7 @@
           "deploymentsRequired": "배포 이름을 하나 이상 입력하세요",
           "startSignIn": "로그인 시작",
           "signInMethod": "로그인 방식",
+          "signInPopupBlocked": "브라우저가 로그인 창을 차단했습니다. 계속하려면 링크를 여세요.",
           "signInRunning": "로그인이 끝나기를 기다리는 중…",
           "openLink": "열기",
           "copyCode": "코드 복사",

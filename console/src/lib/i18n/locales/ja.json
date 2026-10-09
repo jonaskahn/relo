@@ -181,9 +181,10 @@
         "exchange": "プロバイダーが認証情報をトークンに交換しませんでした。"
       },
       "accountLabel": "アカウント",
-      "closeHint": "このタブは閉じてもかまいません。",
-      "closingIn": "{seconds}s 後に閉じます…",
-      "consoleLink": "コンソールを開く"
+      "enjoyTitle": "お渡しします",
+      "enjoyBody": "Relo は {account} に接続されました。",
+      "enjoyRetry": "うまくいきませんでした。コンソールからサインインをやり直してください。",
+      "closeHint": "このタブは閉じてもかまいません。"
     },
     "common": {
       "window24h": "24時間",
@@ -831,6 +832,7 @@
           "deploymentsRequired": "デプロイ名を1つ以上入力してください",
           "startSignIn": "サインインを開始",
           "signInMethod": "サインイン方法",
+          "signInPopupBlocked": "ブラウザがサインインウィンドウをブロックしました。続けるにはリンクを開いてください。",
           "signInRunning": "サインインの完了を待っています…",
           "openLink": "開く",
           "copyCode": "コードをコピー",

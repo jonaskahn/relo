@@ -181,9 +181,10 @@
         "exchange": "提供方拒绝将该授权交换为令牌。"
       },
       "accountLabel": "账号",
-      "closeHint": "你可以关闭此标签页。",
-      "closingIn": "{seconds} 秒后关闭…",
-      "consoleLink": "打开控制台"
+      "enjoyTitle": "请享用",
+      "enjoyBody": "Relo 已连接到 {account}。",
+      "enjoyRetry": "未能完成。请在 Console 中重新开始登录。",
+      "closeHint": "你可以关闭此标签页。"
     },
     "common": {
       "window24h": "24 小时",
@@ -831,6 +832,7 @@
           "deploymentsRequired": "至少填写一个部署名称。",
           "startSignIn": "开始登录",
           "signInMethod": "登录方式",
+          "signInPopupBlocked": "浏览器拦截了登录窗口。打开链接以继续。",
           "signInRunning": "等待登录完成…",
           "openLink": "打开",
           "copyCode": "复制代码",
