@@ -321,7 +321,9 @@ func (s *Service) SetCodexContext(ctx context.Context, id string, enabled bool) 
 }
 
 // RepairIntegration rewrites everything Relo contributed, which is what a
-// client update that replaced a file needs.
+// client update that replaced a file needs. An existing key is reused, so a
+// repair never invalidates the secret a running agent already holds. A new
+// key is minted only when none is stored.
 func (s *Service) RepairIntegration(ctx context.Context, id string) (IntegrationResult, error) {
 	release, err := s.begin("repair", id)
 	if err != nil {
@@ -336,7 +338,7 @@ func (s *Service) RepairIntegration(ctx context.Context, id string) (Integration
 	if err != nil {
 		return IntegrationResult{}, err
 	}
-	token, err := s.mintIntegrationKey(ctx, agent)
+	token, minted, err := s.repairToken(ctx, agent)
 	if err != nil {
 		return IntegrationResult{}, err
 	}
@@ -348,7 +350,30 @@ func (s *Service) RepairIntegration(ctx context.Context, id string) (Integration
 	if err != nil {
 		return IntegrationResult{}, err
 	}
+	if !minted {
+		token = ""
+	}
 	return IntegrationResult{Integration: view, Token: token}, nil
+}
+
+func (s *Service) repairToken(ctx context.Context, agent Agent) (string, bool, error) {
+	token, err := s.storedIntegrationToken(agent.ID)
+	if err != nil || token != "" {
+		return token, false, err
+	}
+	minted, err := s.mintIntegrationKey(ctx, agent)
+	if err != nil {
+		return "", false, err
+	}
+	return minted, true, nil
+}
+
+func (s *Service) storedIntegrationToken(id string) (string, error) {
+	token, err := s.files.ReadFileOrEmpty(s.paths.KeyFile(id))
+	if err != nil {
+		return "", err
+	}
+	return strings.TrimSpace(token), nil
 }
 
 // RestartIntegration restarts the process one client keeps after Relo writes

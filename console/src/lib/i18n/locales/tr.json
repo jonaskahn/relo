@@ -158,6 +158,34 @@
       "submitting": "Oturum açılıyor…",
       "failure": "Konsol oturum açamadı."
     },
+    "callback": {
+      "documentTitle": "Oturum tamamlanıyor · Relo",
+      "heading": "Oturum tamamlanıyor",
+      "summary": "Relo yetkilendirmeyi aldı ve hesabı kaydediyor.",
+      "stepsLabel": "Oturum ilerlemesi",
+      "stepAuthorized": "{provider} tarafından yetkilendirildi",
+      "stepExchanging": "Yetkilendirme değiştiriliyor",
+      "stepStored": "Hesap kaydedildi",
+      "markerWorking": "Sürüyor",
+      "markerConnected": "Bağlandı",
+      "markerFailed": "Bağlanmadı",
+      "connectedTitle": "Bağlandı",
+      "connectedBody": "Relo hesabı kaydetti ve istekleri onun üzerinden yönlendiriyor.",
+      "failedTitle": "Oturum tamamlanmadı",
+      "expiredTitle": "Bu oturum artık açık değil",
+      "expiredBody": "Relo bu oturumu artık izlemiyor. Konsoldan yeniden başlatın.",
+      "failure": {
+        "denied": "Sağlayıcı yetkilendirmeyi reddetti.",
+        "state": "Geri dönüş çağrısı Relo’nun başlattığı oturumla eşleşmedi ya da zaten kullanılmıştı.",
+        "timeout": "Sağlayıcı zamanında yanıt vermedi.",
+        "exchange": "Sağlayıcı yetkilendirmeyi bir jetonla değiştirmedi."
+      },
+      "accountLabel": "Hesap",
+      "enjoyTitle": "Keyfini çıkar",
+      "enjoyBody": "Relo {account} hesabına bağlandı.",
+      "enjoyRetry": "Bu işe yaramadı. Oturum açmayı konsoldan yeniden başlat.",
+      "closeHint": "Bu sekmeyi kapatabilirsiniz."
+    },
     "common": {
       "window24h": "24 saat",
       "window7d": "Son 7 gün",
@@ -804,6 +832,7 @@
           "deploymentsRequired": "En az bir dağıtım adı listele.",
           "startSignIn": "Oturum açmayı başlat",
           "signInMethod": "Oturum açma yöntemi",
+          "signInPopupBlocked": "Tarayıcın giriş penceresini engelledi. Devam etmek için bağlantıyı açın.",
           "signInRunning": "Oturum açma bitene kadar bekleniyor…",
           "openLink": "Aç",
           "copyCode": "Kodu kopyala",

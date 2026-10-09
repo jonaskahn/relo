@@ -158,6 +158,34 @@
       "submitting": "Connexion…",
       "failure": "La console n’a pas pu se connecter."
     },
+    "callback": {
+      "documentTitle": "Finalisation de la connexion · Relo",
+      "heading": "Finalisation de la connexion",
+      "summary": "Relo a reçu l’autorisation et enregistre le compte.",
+      "stepsLabel": "Progression de la connexion",
+      "stepAuthorized": "Autorisé par {provider}",
+      "stepExchanging": "Échange de l’autorisation",
+      "stepStored": "Compte enregistré",
+      "markerWorking": "En cours",
+      "markerConnected": "Connecté",
+      "markerFailed": "Non connecté",
+      "connectedTitle": "Connecté",
+      "connectedBody": "Relo a enregistré le compte et achemine les requêtes par son intermédiaire.",
+      "failedTitle": "La connexion ne s’est pas terminée",
+      "expiredTitle": "Cette connexion n’est plus active",
+      "expiredBody": "Relo ne suit plus cette connexion. Recommencez-la depuis la console.",
+      "failure": {
+        "denied": "Le fournisseur a refusé l’autorisation.",
+        "state": "Le rappel ne correspondait pas à la connexion lancée par Relo, ou il avait déjà été utilisé.",
+        "timeout": "Le fournisseur n’a pas répondu à temps.",
+        "exchange": "Le fournisseur n’a pas voulu échanger l’autorisation contre un jeton."
+      },
+      "accountLabel": "Compte",
+      "enjoyTitle": "Profitez",
+      "enjoyBody": "Relo est connecté à {account}.",
+      "enjoyRetry": "Cela n'a pas fonctionné. Relancez la connexion depuis la console.",
+      "closeHint": "Vous pouvez fermer cet onglet."
+    },
     "common": {
       "window24h": "24 h",
       "window7d": "7 derniers jours",
@@ -804,6 +832,7 @@
           "deploymentsRequired": "Indiquez au moins un nom de déploiement.",
           "startSignIn": "Démarrer la connexion",
           "signInMethod": "Méthode de connexion",
+          "signInPopupBlocked": "Votre navigateur a bloqué la fenêtre de connexion. Ouvrez le lien pour continuer.",
           "signInRunning": "En attente de la fin de la connexion…",
           "openLink": "Ouvrir",
           "copyCode": "Copier le code",

@@ -158,6 +158,34 @@
       "submitting": "Signing in…",
       "failure": "The console could not sign in."
     },
+    "callback": {
+      "documentTitle": "Finishing the login · Relo",
+      "heading": "Finishing the login",
+      "summary": "Relo has the authorization and is storing the account.",
+      "stepsLabel": "Login progress",
+      "stepAuthorized": "Authorized by {provider}",
+      "stepExchanging": "Exchanging the authorization",
+      "stepStored": "Account stored",
+      "markerWorking": "Working",
+      "markerConnected": "Connected",
+      "markerFailed": "Not connected",
+      "connectedTitle": "Connected",
+      "connectedBody": "Relo stored the account and routes requests through it.",
+      "failedTitle": "The login did not finish",
+      "expiredTitle": "This login is no longer open",
+      "expiredBody": "Relo is no longer tracking this login. Start it again from the console.",
+      "failure": {
+        "denied": "The provider refused the authorization.",
+        "state": "The callback did not match the login Relo started, or it was already used.",
+        "timeout": "The provider did not answer in time.",
+        "exchange": "The provider would not exchange the authorization for a token."
+      },
+      "accountLabel": "Account",
+      "enjoyTitle": "Enjoy",
+      "enjoyBody": "Relo is connected to {account}.",
+      "enjoyRetry": "That did not work. Start the sign-in again from the console.",
+      "closeHint": "You can close this tab."
+    },
     "common": {
       "window24h": "24 h",
       "windowToday": "Today",
@@ -804,6 +832,7 @@
           "deploymentsRequired": "List at least one deployment name.",
           "startSignIn": "Start sign-in",
           "signInMethod": "Sign-in method",
+          "signInPopupBlocked": "Your browser blocked the sign-in window. Open the link to continue.",
           "signInRunning": "Waiting for the sign-in to finish…",
           "openLink": "Open",
           "copyCode": "Copy code",

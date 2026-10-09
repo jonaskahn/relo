@@ -158,6 +158,34 @@
       "submitting": "Se autentifică…",
       "failure": "Consola nu s-a putut autentifica."
     },
+    "callback": {
+      "documentTitle": "Finalizarea autentificării · Relo",
+      "heading": "Finalizarea autentificării",
+      "summary": "Relo a primit autorizarea și salvează contul.",
+      "stepsLabel": "Progresul autentificării",
+      "stepAuthorized": "Autorizat de {provider}",
+      "stepExchanging": "Schimbul autorizării",
+      "stepStored": "Cont salvat",
+      "markerWorking": "În curs",
+      "markerConnected": "Conectat",
+      "markerFailed": "Neconectat",
+      "connectedTitle": "Conectat",
+      "connectedBody": "Relo a salvat contul și dirijează cererile prin el.",
+      "failedTitle": "Autentificarea nu s-a încheiat",
+      "expiredTitle": "Această autentificare nu mai este deschisă",
+      "expiredBody": "Relo nu mai urmărește această autentificare. Porniți-o din nou din consolă.",
+      "failure": {
+        "denied": "Furnizorul a refuzat autorizarea.",
+        "state": "Callbackul nu corespundea autentificării pornite de Relo sau a fost deja folosit.",
+        "timeout": "Furnizorul nu a răspuns la timp.",
+        "exchange": "Furnizorul nu a vrut să schimbe autorizarea cu un token."
+      },
+      "accountLabel": "Cont",
+      "enjoyTitle": "Bucură-te",
+      "enjoyBody": "Relo este conectat la {account}.",
+      "enjoyRetry": "Nu a mers. Repornește autentificarea din consolă.",
+      "closeHint": "Puteți închide această filă."
+    },
     "common": {
       "window24h": "24 h",
       "window7d": "Ultimele 7 zile",
@@ -804,6 +832,7 @@
           "deploymentsRequired": "Adaugă cel puțin un nume de deployment.",
           "startSignIn": "Autentifică-te",
           "signInMethod": "Metodă de autentificare",
+          "signInPopupBlocked": "Browserul tău a blocat fereastra de autentificare. Deschide linkul pentru a continua.",
           "signInRunning": "Se așteaptă finalizarea autentificării…",
           "openLink": "Deschide",
           "copyCode": "Copiază codul",

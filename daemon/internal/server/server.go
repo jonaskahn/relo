@@ -185,6 +185,14 @@ func (s *Server) SetDashboard(handler http.Handler) {
 	s.dashboard = handler
 }
 
+// DashboardBuilt reports whether a console is attached. The callback page
+// asks, because a build without one renders its own document.
+func (s *Server) DashboardBuilt() bool {
+	s.dashboardMu.RLock()
+	defer s.dashboardMu.RUnlock()
+	return s.dashboard != nil
+}
+
 // OnReady registers a callback the server invokes once, with every address
 // it bound, before it answers the first request. A caller that needs the
 // bound address of a port-0 listener reads it here, because the configured

@@ -158,6 +158,34 @@
       "submitting": "Přihlášení…",
       "failure": "Konzole se nepodařilo přihlásit."
     },
+    "callback": {
+      "documentTitle": "Dokončení přihlášení · Relo",
+      "heading": "Dokončení přihlášení",
+      "summary": "Relo má autorizaci a ukládá účet.",
+      "stepsLabel": "Postup přihlášení",
+      "stepAuthorized": "Autorizováno poskytovatelem {provider}",
+      "stepExchanging": "Výměna autorizace",
+      "stepStored": "Účet uložen",
+      "markerWorking": "Probíhá",
+      "markerConnected": "Připojeno",
+      "markerFailed": "Nepřipojeno",
+      "connectedTitle": "Připojeno",
+      "connectedBody": "Relo uložil účet a směřuje přes něj požadavky.",
+      "failedTitle": "Přihlášení nebylo dokončeno",
+      "expiredTitle": "Toto přihlášení už není otevřené",
+      "expiredBody": "Relo už toto přihlášení nesleduje. Spusťte ho znovu z konzole.",
+      "failure": {
+        "denied": "Poskytovatel autorizaci odmítl.",
+        "state": "Zpětné volání neodpovídalo přihlášení, které Relo spustil, nebo už bylo použito.",
+        "timeout": "Poskytovatel včas neodpověděl.",
+        "exchange": "Poskytovatel nechtěl vyměnit autorizaci za token."
+      },
+      "accountLabel": "Účet",
+      "enjoyTitle": "Užijvejte si",
+      "enjoyBody": "Relo je připojen k {account}.",
+      "enjoyRetry": "To se nepovedlo. Spusťte přihlášení znovu z konzole.",
+      "closeHint": "Tuto kartu můžete zavřít."
+    },
     "common": {
       "window24h": "24 h",
       "window7d": "Posledních 7 dní",
@@ -804,6 +832,7 @@
           "deploymentsRequired": "Uveď aspoň jeden název nasazení.",
           "startSignIn": "Zahájit přihlášení",
           "signInMethod": "Metoda přihlášení",
+          "signInPopupBlocked": "Tvůj prohlížeč zablokoval přihlašovací okno. Pokračuj otevřením odkazu.",
           "signInRunning": "Čeká se na dokončení přihlášení…",
           "openLink": "Otevřít",
           "copyCode": "Kopírovat kód",

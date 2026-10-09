@@ -158,6 +158,34 @@
       "submitting": "Anmelden…",
       "failure": "Die Konsole konnte sich nicht anmelden."
     },
+    "callback": {
+      "documentTitle": "Anmeldung wird abgeschlossen · Relo",
+      "heading": "Anmeldung wird abgeschlossen",
+      "summary": "Relo hat die Autorisierung und speichert das Konto.",
+      "stepsLabel": "Anmeldefortschritt",
+      "stepAuthorized": "Von {provider} autorisiert",
+      "stepExchanging": "Autorisierung wird eingetauscht",
+      "stepStored": "Konto gespeichert",
+      "markerWorking": "Läuft",
+      "markerConnected": "Verbunden",
+      "markerFailed": "Nicht verbunden",
+      "connectedTitle": "Verbunden",
+      "connectedBody": "Relo hat das Konto gespeichert und leitet Anfragen darüber.",
+      "failedTitle": "Die Anmeldung wurde nicht abgeschlossen",
+      "expiredTitle": "Diese Anmeldung ist nicht mehr offen",
+      "expiredBody": "Relo verfolgt diese Anmeldung nicht mehr. Starte sie in der Konsole neu.",
+      "failure": {
+        "denied": "Der Anbieter hat die Autorisierung abgelehnt.",
+        "state": "Der Rückruf passte nicht zu der Anmeldung, die Relo gestartet hat, oder er war bereits verwendet.",
+        "timeout": "Der Anbieter hat nicht rechtzeitig geantwortet.",
+        "exchange": "Der Anbieter wollte die Autorisierung nicht gegen ein Token eintauschen."
+      },
+      "accountLabel": "Konto",
+      "enjoyTitle": "Viel Spaß",
+      "enjoyBody": "Relo ist mit {account} verbunden.",
+      "enjoyRetry": "Das hat nicht geklappt. Starte die Anmeldung in der Konsole neu.",
+      "closeHint": "Du kannst diesen Tab schließen."
+    },
     "common": {
       "window24h": "24 Std.",
       "window7d": "Letzte 7 Tage",
@@ -804,6 +832,7 @@
           "deploymentsRequired": "Gib mindestens einen Deployment-Namen an.",
           "startSignIn": "Anmeldung starten",
           "signInMethod": "Anmeldeart",
+          "signInPopupBlocked": "Dein Browser hat das Anmeldefenster blockiert. Öffne den Link, um fortzufahren.",
           "signInRunning": "Warte auf das Ende der Anmeldung…",
           "openLink": "Öffnen",
           "copyCode": "Code kopieren",

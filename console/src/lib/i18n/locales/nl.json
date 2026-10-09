@@ -158,6 +158,34 @@
       "submitting": "Inloggen…",
       "failure": "De console kon niet inloggen."
     },
+    "callback": {
+      "documentTitle": "Aanmelding afronden · Relo",
+      "heading": "Aanmelding afronden",
+      "summary": "Relo heeft de autorisatie en slaat het account op.",
+      "stepsLabel": "Voortgang van de aanmelding",
+      "stepAuthorized": "Geautoriseerd door {provider}",
+      "stepExchanging": "Autorisatie wordt ingewisseld",
+      "stepStored": "Account opgeslagen",
+      "markerWorking": "Bezig",
+      "markerConnected": "Verbonden",
+      "markerFailed": "Niet verbonden",
+      "connectedTitle": "Verbonden",
+      "connectedBody": "Relo heeft het account opgeslagen en stuurt verzoeken erdoorheen.",
+      "failedTitle": "De aanmelding is niet afgerond",
+      "expiredTitle": "Deze aanmelding is niet meer actief",
+      "expiredBody": "Relo volgt deze aanmelding niet meer. Start hem opnieuw vanuit de console.",
+      "failure": {
+        "denied": "De provider weigerde de autorisatie.",
+        "state": "De terugroep kwam niet overeen met de aanmelding die Relo startte, of hij was al gebruikt.",
+        "timeout": "De provider antwoordde niet op tijd.",
+        "exchange": "De provider wilde de autorisatie niet inwisselen voor een token."
+      },
+      "accountLabel": "Account",
+      "enjoyTitle": "Geniet",
+      "enjoyBody": "Relo is verbonden met {account}.",
+      "enjoyRetry": "Dat werkte niet. Start het aanmelden opnieuw vanuit de console.",
+      "closeHint": "U kunt dit tabblad sluiten."
+    },
     "common": {
       "window24h": "24 u",
       "window7d": "Laatste 7 dagen",
@@ -804,6 +832,7 @@
           "deploymentsRequired": "Vermeld minstens één deploymentnaam.",
           "startSignIn": "Inloggen starten",
           "signInMethod": "Inlogmethode",
+          "signInPopupBlocked": "Je browser heeft het aanmeldvenster geblokkeerd. Open de link om verder te gaan.",
           "signInRunning": "Wachten tot het inloggen klaar is…",
           "openLink": "Openen",
           "copyCode": "Code kopiëren",

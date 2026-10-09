@@ -158,6 +158,34 @@
       "submitting": "Logowanie…",
       "failure": "Nie udało się zalogować do konsoli."
     },
+    "callback": {
+      "documentTitle": "Kończenie logowania · Relo",
+      "heading": "Kończenie logowania",
+      "summary": "Relo otrzymał autoryzację i zapisuje konto.",
+      "stepsLabel": "Postęp logowania",
+      "stepAuthorized": "Autoryzowano przez {provider}",
+      "stepExchanging": "Wymiana autoryzacji",
+      "stepStored": "Konto zapisane",
+      "markerWorking": "W toku",
+      "markerConnected": "Połączono",
+      "markerFailed": "Niepołączono",
+      "connectedTitle": "Połączono",
+      "connectedBody": "Relo zapisał konto i kieruje przez nie żądania.",
+      "failedTitle": "Logowanie nie zostało zakończone",
+      "expiredTitle": "To logowanie nie jest już aktywne",
+      "expiredBody": "Relo nie śledzi już tego logowania. Rozpocznij je ponownie w konsoli.",
+      "failure": {
+        "denied": "Dostawca odrzucił autoryzację.",
+        "state": "Callback nie odpowiadał logowaniu uruchomionemu przez Relo albo został już użyty.",
+        "timeout": "Dostawca nie odpowiedział na czas.",
+        "exchange": "Dostawca nie chciał wymienić autoryzacji na token."
+      },
+      "accountLabel": "Konto",
+      "enjoyTitle": "Przyjemnie",
+      "enjoyBody": "Relo połączono z {account}.",
+      "enjoyRetry": "To nie zadziałało. Rozpocznij logowanie ponownie w konsoli.",
+      "closeHint": "Możesz zamknąć tę kartę."
+    },
     "common": {
       "window24h": "24 h",
       "window7d": "Ostatnie 7 dni",
@@ -804,6 +832,7 @@
           "deploymentsRequired": "Wymień co najmniej jedną nazwę wdrożenia.",
           "startSignIn": "Rozpocznij logowanie",
           "signInMethod": "Metoda logowania",
+          "signInPopupBlocked": "Twoja przeglądarka zablokowała okno logowania. Otwórz link, aby kontynuować.",
           "signInRunning": "Oczekiwanie na zakończenie logowania…",
           "openLink": "Otwórz",
           "copyCode": "Kopiuj kod",

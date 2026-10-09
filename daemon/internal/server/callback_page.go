@@ -140,6 +140,11 @@ func callbackFailureBody(wording callbackWording, category CallbackOutcome) stri
 // it in after rendering with the icon the platform injected.
 const callbackIconPlaceholder = "__RELO_CALLBACK_ICON__"
 
+// callbackTemplate and callbackDocument are the page a build without a console
+// renders. A build that embedded one serves the console's callback route
+// instead, which carries this page's wording in the console catalogs and its
+// motion in Svelte; what is here is what a binary compiled with no dashboard
+// still lands on.
 var callbackTemplate = template.Must(template.New("callback").Parse(callbackDocument))
 
 var callbackDocument = `<!doctype html>

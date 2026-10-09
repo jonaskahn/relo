@@ -158,6 +158,34 @@
       "submitting": "로그인하는 중…",
       "failure": "콘솔에 로그인할 수 없었어요"
     },
+    "callback": {
+      "documentTitle": "로그인 마무리 중 · Relo",
+      "heading": "로그인 마무리 중",
+      "summary": "Relo가 승인 권한을 받았고 계정을 저장하고 있습니다.",
+      "stepsLabel": "로그인 진행 상황",
+      "stepAuthorized": "{provider}에서 승인함",
+      "stepExchanging": "승인 권한 교환 중",
+      "stepStored": "계정 저장됨",
+      "markerWorking": "진행 중",
+      "markerConnected": "연결됨",
+      "markerFailed": "연결되지 않음",
+      "connectedTitle": "연결됨",
+      "connectedBody": "Relo가 계정을 저장했고 요청을 그 계정으로 전달합니다.",
+      "failedTitle": "로그인이 끝나지 않았습니다",
+      "expiredTitle": "이 로그인은 더 이상 열려 있지 않습니다",
+      "expiredBody": "Relo가 이 로그인을 더 이상 추적하지 않습니다. 콘솔에서 다시 시작하세요.",
+      "failure": {
+        "denied": "제공자가 승인 권한을 거부했습니다.",
+        "state": "콜백이 Relo가 시작한 로그인과 일치하지 않거나 이미 사용되었습니다.",
+        "timeout": "제공자가 제때 응답하지 않았습니다.",
+        "exchange": "제공자가 승인 권한을 토큰으로 교환하지 않았습니다."
+      },
+      "accountLabel": "계정",
+      "enjoyTitle": "즐기세요",
+      "enjoyBody": "Relo가 {account}(으)로 연결되었습니다.",
+      "enjoyRetry": "실패했습니다. Console에서 다시 로그인하세요.",
+      "closeHint": "이 탭은 닫아도 됩니다."
+    },
     "common": {
       "window24h": "24시간",
       "window7d": "지난 7일",
@@ -804,6 +832,7 @@
           "deploymentsRequired": "배포 이름을 하나 이상 입력하세요",
           "startSignIn": "로그인 시작",
           "signInMethod": "로그인 방식",
+          "signInPopupBlocked": "브라우저가 로그인 창을 차단했습니다. 계속하려면 링크를 여세요.",
           "signInRunning": "로그인이 끝나기를 기다리는 중…",
           "openLink": "열기",
           "copyCode": "코드 복사",

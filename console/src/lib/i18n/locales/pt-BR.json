@@ -158,6 +158,34 @@
       "submitting": "Entrando…",
       "failure": "Não foi possível entrar no console."
     },
+    "callback": {
+      "documentTitle": "Concluindo o login · Relo",
+      "heading": "Concluindo o login",
+      "summary": "O Relo recebeu a autorização e está guardando a conta.",
+      "stepsLabel": "Progresso do login",
+      "stepAuthorized": "Autorizado por {provider}",
+      "stepExchanging": "Trocando a autorização",
+      "stepStored": "Conta guardada",
+      "markerWorking": "Em curso",
+      "markerConnected": "Conectado",
+      "markerFailed": "Não conectado",
+      "connectedTitle": "Conectado",
+      "connectedBody": "O Relo guardou a conta e encaminha as solicitações por ela.",
+      "failedTitle": "O login não foi concluído",
+      "expiredTitle": "Este login não está mais ativo",
+      "expiredBody": "O Relo não está mais acompanhando este login. Comece-o de novo pelo console.",
+      "failure": {
+        "denied": "O provedor recusou a autorização.",
+        "state": "O retorno não correspondeu ao login iniciado pelo Relo, ou já havia sido usado.",
+        "timeout": "O provedor não respondeu a tempo.",
+        "exchange": "O provedor não quis trocar a autorização por um token."
+      },
+      "accountLabel": "Conta",
+      "enjoyTitle": "Aproveite",
+      "enjoyBody": "O Relo está conectado com {account}.",
+      "enjoyRetry": "Não funcionou. Inicie o login novamente pelo console.",
+      "closeHint": "Você pode fechar esta aba."
+    },
     "common": {
       "window24h": "24 h",
       "window7d": "Últimos 7 dias",
@@ -804,6 +832,7 @@
           "deploymentsRequired": "Liste pelo menos um nome de deployment.",
           "startSignIn": "Iniciar login",
           "signInMethod": "Método de login",
+          "signInPopupBlocked": "Seu navegador bloqueou a janela de login. Abra o link para continuar.",
           "signInRunning": "Aguardando o login terminar…",
           "openLink": "Abrir",
           "copyCode": "Copiar código",

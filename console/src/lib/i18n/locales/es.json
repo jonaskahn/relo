@@ -158,6 +158,34 @@
       "submitting": "Iniciando sesión…",
       "failure": "La consola no pudo iniciar sesión."
     },
+    "callback": {
+      "documentTitle": "Finalizando el inicio de sesión · Relo",
+      "heading": "Finalizando el inicio de sesión",
+      "summary": "Relo tiene la autorización y está guardando la cuenta.",
+      "stepsLabel": "Progreso del inicio de sesión",
+      "stepAuthorized": "Autorizado por {provider}",
+      "stepExchanging": "Canjeando la autorización",
+      "stepStored": "Cuenta guardada",
+      "markerWorking": "En curso",
+      "markerConnected": "Conectado",
+      "markerFailed": "Sin conexión",
+      "connectedTitle": "Conectado",
+      "connectedBody": "Relo guardó la cuenta y dirige las solicitudes a través de ella.",
+      "failedTitle": "El inicio de sesión no terminó",
+      "expiredTitle": "Este inicio de sesión ya no está activo",
+      "expiredBody": "Relo ya no sigue este inicio de sesión. Inícialo de nuevo desde la consola.",
+      "failure": {
+        "denied": "El proveedor rechazó la autorización.",
+        "state": "La devolución no coincidió con el inicio de sesión que lanzó Relo, o ya se había usado.",
+        "timeout": "El proveedor no respondió a tiempo.",
+        "exchange": "El proveedor no quiso canjear la autorización por un token."
+      },
+      "accountLabel": "Cuenta",
+      "enjoyTitle": "Disfruta",
+      "enjoyBody": "Relo está conectado con {account}.",
+      "enjoyRetry": "Eso no funcionó. Inicia el inicio de sesión de nuevo desde la consola.",
+      "closeHint": "Puedes cerrar esta pestaña."
+    },
     "common": {
       "window24h": "24 h",
       "window7d": "Últimos 7 días",
@@ -804,6 +832,7 @@
           "deploymentsRequired": "Escribe al menos un nombre de despliegue.",
           "startSignIn": "Iniciar sesión",
           "signInMethod": "Método de inicio de sesión",
+          "signInPopupBlocked": "Tu navegador bloqueó la ventana de inicio de sesión. Abre el enlace para continuar.",
           "signInRunning": "Esperando a que termine el inicio de sesión…",
           "openLink": "Abrir",
           "copyCode": "Copiar código",

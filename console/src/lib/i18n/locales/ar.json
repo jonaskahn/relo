@@ -158,6 +158,34 @@
       "submitting": "جارٍ تسجيل الدخول…",
       "failure": "تعذّر على الكونسول تسجيل الدخول."
     },
+    "callback": {
+      "documentTitle": "إتمام تسجيل الدخول · Relo",
+      "heading": "إتمام تسجيل الدخول",
+      "summary": "حصل Relo على التفويض وهو يحفظ الحساب.",
+      "stepsLabel": "تقدّم تسجيل الدخول",
+      "stepAuthorized": "مفوّض من {provider}",
+      "stepExchanging": "جارٍ استبدال التفويض",
+      "stepStored": "تم حفظ الحساب",
+      "markerWorking": "جارٍ العمل",
+      "markerConnected": "متصل",
+      "markerFailed": "غير متصل",
+      "connectedTitle": "متصل",
+      "connectedBody": "حفظ Relo الحساب ويوجّه الطلبات عبره.",
+      "failedTitle": "لم يكتمل تسجيل الدخول",
+      "expiredTitle": "تسجيل الدخول هذا لم يعد مفتوحًا",
+      "expiredBody": "لم يعد Relo يتابع تسجيل الدخول هذا. ابدأه من جديد من وحدة التحكم.",
+      "failure": {
+        "denied": "رفض المزوّد التفويض.",
+        "state": "لم يطابق الاستدعاء تسجيل الدخول الذي بدأه Relo، أو كان مستخدمًا من قبل.",
+        "timeout": "لم يستجب المزوّد في الوقت المناسب.",
+        "exchange": "لم يرد المزوّد استبدال التفويض برمز وصول."
+      },
+      "accountLabel": "الحساب",
+      "enjoyTitle": "استمتع",
+      "enjoyBody": "Relo متصل بالحساب {account}.",
+      "enjoyRetry": "لم ينجح ذلك. ابدأ تسجيل الدخول مجددًا من Console.",
+      "closeHint": "يمكنك إغلاق علامة التبويب هذه."
+    },
     "common": {
       "window24h": "24 ساعة",
       "window7d": "آخر 7 أيام",
@@ -804,6 +832,7 @@
           "deploymentsRequired": "أدرج اسم نشر واحدًا على الأقل.",
           "startSignIn": "ابدأ تسجيل الدخول",
           "signInMethod": "طريقة تسجيل الدخول",
+          "signInPopupBlocked": "حظر متصفحك نافذة تسجيل الدخول. افتح الرابط للمتابعة.",
           "signInRunning": "في انتظار انتهاء تسجيل الدخول…",
           "openLink": "فتح",
           "copyCode": "نسخ الرمز",

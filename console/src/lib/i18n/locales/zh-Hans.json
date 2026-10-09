@@ -158,6 +158,34 @@
       "submitting": "正在登录…",
       "failure": "控制台登录失败。"
     },
+    "callback": {
+      "documentTitle": "正在完成登录 · Relo",
+      "heading": "正在完成登录",
+      "summary": "Relo 已收到授权，正在保存该账号。",
+      "stepsLabel": "登录进度",
+      "stepAuthorized": "已由 {provider} 授权",
+      "stepExchanging": "正在交换授权",
+      "stepStored": "账号已保存",
+      "markerWorking": "进行中",
+      "markerConnected": "已连接",
+      "markerFailed": "未连接",
+      "connectedTitle": "已连接",
+      "connectedBody": "Relo 已保存该账号，并通过它转发请求。",
+      "failedTitle": "登录未完成",
+      "expiredTitle": "此登录已不再有效",
+      "expiredBody": "Relo 已不再跟踪此登录。请在控制台中重新开始。",
+      "failure": {
+        "denied": "提供方拒绝了该授权。",
+        "state": "回调与 Relo 开始的登录不匹配，或已被使用。",
+        "timeout": "提供方未及时响应。",
+        "exchange": "提供方拒绝将该授权交换为令牌。"
+      },
+      "accountLabel": "账号",
+      "enjoyTitle": "请享用",
+      "enjoyBody": "Relo 已连接到 {account}。",
+      "enjoyRetry": "未能完成。请在 Console 中重新开始登录。",
+      "closeHint": "你可以关闭此标签页。"
+    },
     "common": {
       "window24h": "24 小时",
       "window7d": "最近 7 天",
@@ -804,6 +832,7 @@
           "deploymentsRequired": "至少填写一个部署名称。",
           "startSignIn": "开始登录",
           "signInMethod": "登录方式",
+          "signInPopupBlocked": "浏览器拦截了登录窗口。打开链接以继续。",
           "signInRunning": "等待登录完成…",
           "openLink": "打开",
           "copyCode": "复制代码",

@@ -158,6 +158,34 @@
       "submitting": "Loggar in…",
       "failure": "Konsolen kunde inte logga in."
     },
+    "callback": {
+      "documentTitle": "Inloggningen slutförs · Relo",
+      "heading": "Inloggningen slutförs",
+      "summary": "Relo har behörigheten och sparar kontot.",
+      "stepsLabel": "Inloggningens förlopp",
+      "stepAuthorized": "Auktoriserad av {provider}",
+      "stepExchanging": "Byter behörighet",
+      "stepStored": "Kontot sparat",
+      "markerWorking": "Pågår",
+      "markerConnected": "Ansluten",
+      "markerFailed": "Inte ansluten",
+      "connectedTitle": "Ansluten",
+      "connectedBody": "Relo sparade kontot och skickar förfrågningar genom det.",
+      "failedTitle": "Inloggningen slutfördes inte",
+      "expiredTitle": "Den här inloggningen är inte längre öppen",
+      "expiredBody": "Relo följer inte längre den här inloggningen. Starta om den från konsolen.",
+      "failure": {
+        "denied": "Leverantören nekade behörigheten.",
+        "state": "Återanropet matchade inte den inloggning Relo startade, eller det hade redan använts.",
+        "timeout": "Leverantören svarade inte i tid.",
+        "exchange": "Leverantören ville inte byta behörigheten mot en token."
+      },
+      "accountLabel": "Konto",
+      "enjoyTitle": "Njut",
+      "enjoyBody": "Relo är anslutet till {account}.",
+      "enjoyRetry": "Det funkade inte. Starta inloggningen igen från konsolen.",
+      "closeHint": "Du kan stänga den här fliken."
+    },
     "common": {
       "window24h": "24 h",
       "window7d": "Senaste 7 dagarna",
@@ -804,6 +832,7 @@
           "deploymentsRequired": "Lista minst ett deploymentsnamn.",
           "startSignIn": "Starta inloggning",
           "signInMethod": "Inloggningsmetod",
+          "signInPopupBlocked": "Din webbläsare blockerade inloggningsfönstret. Öppna länken för att fortsätta.",
           "signInRunning": "Väntar på att inloggningen slutförs…",
           "openLink": "Öppna",
           "copyCode": "Kopiera kod",
