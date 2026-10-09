@@ -607,6 +607,7 @@
           "quotaTitle": "Kvóta",
           "contextTitle": "Kontext",
           "contextOverrideTitle": "Přepsání kontextu",
+          "edit": "Upravit",
           "contextOverrideHint": "Platí pro každý model, který tento účet obsluhuje.",
           "contextConfirmTitle": "Nastavit kontextové okno všem modelům účtu {label}?",
           "contextConfirmSet": "Každý model, který tento účet obsluhuje, dostane {value}.",

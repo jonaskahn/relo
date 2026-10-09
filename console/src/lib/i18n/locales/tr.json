@@ -607,6 +607,7 @@
           "quotaTitle": "Kota",
           "contextTitle": "Bağlam",
           "contextOverrideTitle": "Bağlamı geçersiz kıl",
+          "edit": "Düzenle",
           "contextOverrideHint": "Bu hesabın sunduğu her model için geçerlidir.",
           "contextConfirmTitle": "{label} bağlantısının her modelinde bağlam penceresi ayarlansın mı?",
           "contextConfirmSet": "Bu hesabın sunduğu her model {value} değerini alır.",

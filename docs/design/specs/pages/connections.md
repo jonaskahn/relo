@@ -59,7 +59,7 @@ alone: every pill keeps its icon or word.
 
 Header: 46px logo tile, name, and (640px and up) the status word with its refresh age, e.g. `Ready (Refreshed 54
 minutes ago)`; a stale quota reading shows its clock beside the status, opening Accounts. One toolbar row: **Back**
-with a contextual control (left, returns to the grid) — **Add account** on the Accounts tab, model search with the one
+with a contextual control (left, returns to the grid) — model search with the one
 filter menu on the Models tab — the Models / Accounts / Settings strip centred with the card-layout More/Less toggle
 beside it on the Accounts tab when accounts exist, and pause/enable (pause icon while on,
 play while paused), refresh models and metadata, and **Delete connection** (right, confirms first). One banner directly
@@ -134,11 +134,12 @@ the reason; closing with unsaved changes asks the discard AlertDialog.
 
 ## Accounts tab
 
-The same compact meters as the cards, with credential state, quota windows, and pause, resume,
-remove. **Add account** lives in the pane toolbar beside **Back**; the card-layout More/Less toggle sits beside the
-centred tab strip while accounts exist. Pause is offered before remove; remove is an AlertDialog after the pane's own
-dialogs close. Sign-in methods are
-radio cards; a running sign-in shows its code or link inline with copy.
+The same compact meters as the cards, with credential state and quota windows. A card's actions are icon buttons:
+**Edit** (renames the account), **Override context** and pause/resume on the left, and **Remove** on the right. The
+card-layout More/Less toggle sits beside the centred tab strip while accounts exist. Remove is an AlertDialog after the
+pane's own dialogs close. Another account is added from **Add connection**, which opens on the connect step with this
+connection already chosen. A sign-in is offered only when the account's own status asks for one, never because a model
+refresh failed on the network.
 
 ## Settings tab
 

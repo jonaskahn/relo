@@ -607,6 +607,7 @@
           "quotaTitle": "quota",
           "contextTitle": "บริบท",
           "contextOverrideTitle": "แทนที่บริบท",
+          "edit": "แก้ไข",
           "contextOverrideHint": "มีผลกับโมเดลทุกตัวที่บัญชีนี้ดูแล",
           "contextConfirmTitle": "ตั้งหน้าต่างบริบทให้ทุกโมเดลของ {label} หรือไม่?",
           "contextConfirmSet": "โมเดลทุกตัวที่บัญชีนี้ดูแลจะได้ {value}",

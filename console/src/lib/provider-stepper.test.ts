@@ -8,6 +8,7 @@ import {
 	emptyStepperState,
 	followFormatDefaults,
 	isDirty,
+	presetStepperState,
 	stepAfter,
 	stepBefore,
 	stepsFor,
@@ -25,6 +26,52 @@ describe('the add stepper', () => {
 		expect(stepsFor('new')).toEqual(['provider', 'connect', 'verify', 'review']);
 		expect(stepsFor('addKey')).toEqual(['provider', 'connect', 'verify']);
 		expect(stepsFor('custom')).toEqual(['provider', 'connect', 'verify', 'review']);
+	});
+
+	test('a connection already open starts on its connect step', () => {
+		const key = presetStepperState(
+			{
+				id: 'openai',
+				templateId: 'openai',
+				label: 'OpenAI',
+				baseURL: 'https://api.openai.com/v1',
+				variables: {}
+			},
+			templateOf()
+		);
+		expect(key.path).toBe('addKey');
+		expect(key.targetProviderId).toBe('openai');
+
+		const signIn = presetStepperState(
+			{
+				id: 'claude',
+				templateId: 'claude',
+				label: 'Claude',
+				baseURL: '',
+				variables: { region: 'kept' }
+			},
+			signInTemplate({
+				variables: [
+					{
+						name: 'region',
+						label: 'Region',
+						placeholder: '',
+						required: false,
+						options: ['default']
+					}
+				]
+			})
+		);
+		expect(signIn.path).toBe('signin');
+		expect(signIn.targetProviderId).toBe('claude');
+		expect(signIn.loginFlow).toBe('claude');
+		expect(signIn.variables).toEqual({ region: 'kept' });
+		expect(
+			presetStepperState(
+				{ id: 'gone', templateId: 'gone', label: 'Gone', baseURL: '', variables: {} },
+				null
+			).path
+		).toBe('new');
 	});
 
 	test('a sign-in ends at verify, because the login already saved the connection', () => {

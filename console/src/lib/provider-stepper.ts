@@ -85,6 +85,40 @@ export function emptyCredential(): CredentialDraft {
 	};
 }
 
+/** A connection the add flow opens already inside, so the provider step is
+ *  skipped and the connect step starts from what that connection holds. */
+export interface PresetProvider {
+	id: string;
+	templateId: string;
+	label: string;
+	baseURL: string;
+	variables: Record<string, string>;
+}
+
+/** Builds the connect step for a connection the operator is already inside.
+ *  A sign-in keeps that connection; a key is added to it. A connection whose
+ *  template the catalog no longer lists has nothing to open, so it stays blank. */
+export function presetStepperState(
+	provider: PresetProvider,
+	template: ProviderTemplate | null
+): StepperState {
+	if (template === null) return emptyStepperState();
+	const signIn = (template.login_methods ?? []).length > 0 || template.kind === 'signin';
+	return {
+		...emptyStepperState(),
+		path: signIn ? 'signin' : 'addKey',
+		templateId: provider.templateId,
+		// A sign-in stores its account on the connection it was opened from, so
+		// the id is set for both paths. A blank one would start a second connection.
+		targetProviderId: provider.id,
+		label: provider.label,
+		loginFlow: template.login_methods?.[0]?.flow ?? '',
+		apiFormat: template.default_format ?? '',
+		baseURL: provider.baseURL || template.default_base_url || '',
+		variables: { ...defaultVariables(template), ...provider.variables }
+	};
+}
+
 /** Builds a flow at its first step. */
 export function emptyStepperState(): StepperState {
 	return {

@@ -607,6 +607,7 @@
           "quotaTitle": "Quota",
           "contextTitle": "Ngữ cảnh",
           "contextOverrideTitle": "Ghi đè ngữ cảnh",
+          "edit": "Sửa",
           "contextOverrideHint": "Áp dụng cho mọi mô hình tài khoản này phục vụ.",
           "contextConfirmTitle": "Đặt cửa sổ ngữ cảnh cho mọi mô hình của {label}?",
           "contextConfirmSet": "Mọi mô hình tài khoản này phục vụ đều có {value}.",

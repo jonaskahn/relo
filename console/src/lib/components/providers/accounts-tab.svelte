@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { onDestroy, onMount, untrack } from 'svelte';
+	import { fade, scale } from 'svelte/transition';
 	import { t } from 'svelte-i18n';
 	import { ApiError, api } from '$lib/api';
 	import { consoleState } from '$lib/console-state.svelte';
@@ -10,6 +11,7 @@
 	import type { Account, LoginMethod, Provider, QuotaWindow } from '$lib/types';
 	import Button from '$lib/components/ui/button.svelte';
 	import Icon from '$lib/components/ui/icon.svelte';
+	import Input from '$lib/components/ui/input.svelte';
 	import StatusBadge from '$lib/components/ui/status-badge.svelte';
 	import ConfirmDialog from '$lib/components/ui/confirm-dialog.svelte';
 	import Card from '$lib/components/ui/card.svelte';
@@ -31,13 +33,8 @@
 		// the next probe or live response replaces it.
 		windows?: QuotaWindow[];
 		quotaRevision?: number;
-		// The connection pane renders the Add account trigger in its own
-		// toolbar next to Back, so it owns whether the panel is open.
-		adding?: boolean;
-		onaddingchange?: (next: boolean) => void;
 		onreload: () => void;
 		onremoved: () => void;
-		onaddkey: () => void;
 		onquotas?: () => void;
 	}
 
@@ -48,16 +45,17 @@
 		failed = '',
 		windows = [],
 		quotaRevision = 0,
-		adding = false,
-		onaddingchange,
 		onreload,
 		onremoved,
-		onaddkey,
 		onquotas
 	}: Props = $props();
 
 	let working = $state(false);
 	let notice = $state('');
+	// editing is the account whose name is open, and draft is what the field holds
+	// until Enter writes it or Escape throws it away.
+	let editing = $state('');
+	let draft = $state('');
 	let removing = $state<Account | null>(null);
 	let removingBusy = $state(false);
 	let removeFailed = $state('');
@@ -70,8 +68,19 @@
 	// Every live response can announce a fresh reading, so the windows reload
 	// once per burst rather than once per announcement.
 	const reloadQuotas = coalesceReload(() => loadQuotas());
+	// A rename fades the card's chrome out. Nothing slides, so the card keeps
+	// its height. Reduced motion drops the fade as well.
+	const reducedMotion = $derived(
+		typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches
+	);
+	const swap = $derived({ duration: reducedMotion ? 0 : 120 });
 
-	const signIn = $derived(provider.auth === 'oauth');
+	// What the rename field sits over stays in layout and blurs behind it, so
+	// the card keeps its height.
+	const fadeAway = (id: string) =>
+		'transition-[filter,opacity] duration-150 motion-reduce:transition-none ' +
+		(editing === id ? 'pointer-events-none opacity-50 blur-[3px] select-none' : '');
+
 	const needsCredential = $derived(provider.auth !== 'none');
 
 	// The daemon names the flows a provider signs in with; a provider stored
@@ -174,11 +183,56 @@
 		needs_reauth: 'ui.pages.providersPage.accounts.statusReauth'
 	};
 
-	// A sign-in whose token was refused, or whose connection could not refresh,
-	// is signed in again from the quota slot. The header badge stays the
-	// account's own status.
+	// A sign-in whose token was refused is signed in again from the quota slot.
+	// A refresh that failed on the network is not one of those. The header badge
+	// stays the account's own status.
 	function needsSignIn(account: Account): boolean {
-		return accountNeedsSignIn(account, provider.last_refresh_error);
+		return accountNeedsSignIn(account);
+	}
+
+	function startEdit(account: Account) {
+		editing = account.id;
+		draft = account.label;
+	}
+
+	// The button that opened the field holds focus until the click settles, so
+	// the field takes it a frame later and selects the name to type over.
+	function focusName(node: HTMLInputElement) {
+		node.focus();
+		const frame = requestAnimationFrame(() => {
+			node.focus();
+			node.select();
+		});
+		return () => cancelAnimationFrame(frame);
+	}
+
+	function cancelEdit() {
+		editing = '';
+		draft = '';
+	}
+
+	async function rename(account: Account) {
+		const label = draft.trim();
+		if (label === '' || label === account.label) {
+			cancelEdit();
+			return;
+		}
+		working = true;
+		notice = '';
+		try {
+			await api('/accounts/' + encodeURIComponent(account.id), {
+				method: 'PATCH',
+				body: JSON.stringify({ label })
+			});
+			cancelEdit();
+			onreload();
+		} catch (error) {
+			notice = $t('ui.pages.providersPage.accounts.failed', {
+				values: { detail: error instanceof Error ? error.message : String(error) }
+			});
+		} finally {
+			working = false;
+		}
 	}
 
 	async function setStatus(account: Account, status: string) {
@@ -232,42 +286,6 @@
 		</span>
 	</div>
 
-	{#if adding && signIn}
-		<div class="flex flex-col gap-2">
-			<p class="text-xs text-muted-foreground">
-				{$t('ui.pages.providersPage.add.signInTargetHint', { values: { label: provider.label } })}
-			</p>
-			<SignInPanel
-				methods={providerMethods}
-				ondone={() => {
-					onaddingchange?.(false);
-					void refreshModels();
-				}}
-				oncancel={() => onaddingchange?.(false)}
-			/>
-		</div>
-	{:else if adding}
-		<div class="flex flex-wrap items-center gap-2 rounded-lg border border-border p-3">
-			<p class="min-w-0 flex-1 text-xs text-muted-foreground">
-				{$t('ui.pages.providersPage.add.targetHint', { values: { label: provider.label } })}
-			</p>
-			<Button
-				size="sm"
-				onclick={() => {
-					onaddingchange?.(false);
-					onaddkey();
-				}}
-			>
-				<Icon name="key" size={14} />
-				{$t('ui.pages.providersPage.add.targetTitle', { values: { label: provider.label } })}
-			</Button>
-			<Button variant="ghost" size="sm" onclick={() => onaddingchange?.(false)}>
-				<Icon name="x" size={14} />
-				{$t('ui.common.cancel')}
-			</Button>
-		</div>
-	{/if}
-
 	{#if !needsCredential}
 		<p class="text-sm text-muted-foreground">
 			{$t('ui.pages.providersPage.accounts.noCredential')}
@@ -299,6 +317,12 @@
 			{/if}
 		{/snippet}
 
+		{#snippet accountName(account: Account)}
+			<CardTitle class="flex h-6 items-center truncate text-sm {fadeAway(account.id)}">
+				{account.label}
+			</CardTitle>
+		{/snippet}
+
 		{#snippet statusBadge(account: Account)}
 			<StatusBadge
 				kind={account.status === 'active' ? 'pass' : account.status === 'paused' ? 'warn' : 'fail'}
@@ -309,25 +333,47 @@
 		<div class={cardLayoutGrid(consoleState.settings.cardLayout)}>
 			{#each accounts as account (account.id)}
 				<Card class="section-surface {cardLayoutCard(consoleState.settings.cardLayout)} gap-3 py-3">
-					<CardHeader class="shrink-0 gap-1.5">
+					<CardHeader class="relative shrink-0 gap-1.5">
+						{#if editing === account.id}
+							<!-- The field covers the whole header, so it gets the room the
+							     badges and the secret line leave without moving the card. -->
+							<div
+								class="absolute inset-x-6 inset-y-0 z-10 flex"
+								transition:scale={{ start: 0.96, duration: reducedMotion ? 0 : 150 }}
+							>
+								<Input
+									class="h-full w-full min-w-0 text-sm"
+									aria-label={$t('ui.pages.providersPage.accounts.edit')}
+									bind:value={draft}
+									{@attach focusName}
+									onkeydown={(event) => {
+										if (event.key === 'Enter') {
+											event.preventDefault();
+											void rename(account);
+										} else if (event.key === 'Escape') cancelEdit();
+									}}
+								/>
+							</div>
+						{/if}
 						{#if consoleState.settings.cardLayout === 'horizontal'}
 							<div class="flex min-w-0 items-center justify-between gap-2">
-								<div class="flex min-w-0 items-center gap-2">
-									<CardTitle class="truncate text-sm">{account.label}</CardTitle>
-									{@render kindBadge(account)}
+								<div class="flex min-w-0 flex-1 items-center gap-2">
+									{@render accountName(account)}
+									<div class={fadeAway(account.id)}>{@render kindBadge(account)}</div>
 								</div>
-								{@render statusBadge(account)}
+								<div class={fadeAway(account.id)}>{@render statusBadge(account)}</div>
 							</div>
 						{:else}
 							<div class="flex min-w-0 flex-col gap-1.5">
-								<CardTitle class="truncate text-sm">{account.label}</CardTitle>
-								<div class="flex min-w-0 flex-wrap items-center gap-2">
-									{@render kindBadge(account)}
-									{@render statusBadge(account)}
+								{@render accountName(account)}
+								<div class="flex min-w-0 flex-wrap items-center gap-2 {fadeAway(account.id)}">
+									{@render kindBadge(account)}{@render statusBadge(account)}
 								</div>
 							</div>
 						{/if}
-						<CardDescription class="flex flex-wrap items-center gap-2 truncate text-xs">
+						<CardDescription
+							class="flex flex-wrap items-center gap-2 truncate text-xs {fadeAway(account.id)}"
+						>
 							<span class="truncate font-mono">{account.secret_mask ?? '••••'}</span>
 							{#if provider.models_per_account}
 								<span>·</span>
@@ -342,7 +388,7 @@
 						</CardDescription>
 					</CardHeader>
 					<CardContent class="flex flex-col gap-2 text-xs">
-						<div>
+						<div class={fadeAway(account.id)} inert={editing === account.id}>
 							{#if needsSignIn(account) && signingIn === account.id}
 								<div class="w-full">
 									<SignInPanel
@@ -378,47 +424,74 @@
 								</QuotaMeterRows>
 							{/if}
 						</div>
-						<!-- Row actions are icon buttons: what changes the account's
-						     state sits on the left, and what sizes or rereads it sits
-						     on the right, so the two groups never read as one. -->
-						<div class="flex items-center gap-1 border-t border-border pt-3">
-							<IconAction
-								icon={account.status === 'active' ? 'player-pause' : 'player-play'}
-								label={account.status === 'active'
-									? $t('ui.pages.providersPage.accounts.pause')
-									: $t('ui.pages.providersPage.accounts.resume')}
-								disabled={working}
-								onclick={() =>
-									setStatus(account, account.status === 'active' ? 'paused' : 'active')}
-							/>
-							<Button
-								variant="destructive"
-								size="sm"
-								disabled={working}
-								onclick={() => {
-									removeFailed = '';
-									removing = account;
-									removeOpen = true;
-								}}
+						<!-- What changes the account sits on the left: its name, its
+						     context, then whether it serves. Removing it stands alone
+						     on the right. -->
+						<div class="relative border-t border-border pt-3">
+							<div
+								class="flex items-center gap-1 transition-opacity duration-150 motion-reduce:transition-none {editing ===
+								account.id
+									? 'pointer-events-none opacity-0'
+									: ''}"
+								inert={editing === account.id}
 							>
-								<Icon name="trash" size={13} />
-								{$t('ui.pages.providersPage.accounts.remove')}
-							</Button>
-							<div class="ms-auto flex items-center gap-1">
+								<IconAction
+									variant="outline"
+									icon="pencil"
+									label={$t('ui.pages.providersPage.accounts.edit')}
+									disabled={working}
+									onclick={() => startEdit(account)}
+								/>
 								<AccountContextControl
 									{account}
 									disabled={working}
 									onnotify={(message) => (notice = message)}
 								/>
-								{#if provider.models_per_account}
+								<IconAction
+									variant="outline"
+									icon={account.status === 'active' ? 'player-pause' : 'player-play'}
+									label={account.status === 'active'
+										? $t('ui.pages.providersPage.accounts.pause')
+										: $t('ui.pages.providersPage.accounts.resume')}
+									disabled={working}
+									onclick={() =>
+										setStatus(account, account.status === 'active' ? 'paused' : 'active')}
+								/>
+								<div class="ms-auto flex items-center gap-1">
+									{#if provider.models_per_account}
+										<IconAction
+											variant="outline"
+											icon="refresh"
+											label={$t('ui.pages.providersPage.accounts.readModels')}
+											disabled={working}
+											onclick={() => readModels(account)}
+										/>
+									{/if}
 									<IconAction
-										icon="refresh"
-										label={$t('ui.pages.providersPage.accounts.readModels')}
+										variant="outline"
+										icon="trash"
+										tone="destructive"
+										label={$t('ui.pages.providersPage.accounts.remove')}
 										disabled={working}
-										onclick={() => readModels(account)}
+										onclick={() => {
+											removeFailed = '';
+											removing = account;
+											removeOpen = true;
+										}}
 									/>
-								{/if}
+								</div>
 							</div>
+							{#if editing === account.id}
+								<div class="absolute start-0 top-3" in:fade={swap}>
+									<IconAction
+										icon="check"
+										variant="outline"
+										label={$t('ui.common.save')}
+										disabled={working}
+										onclick={() => rename(account)}
+									/>
+								</div>
+							{/if}
 						</div>
 					</CardContent>
 				</Card>

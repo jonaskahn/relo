@@ -76,6 +76,7 @@ type createAccountRequest struct {
 type patchAccountRequest struct {
 	Status   *string `json:"status"`
 	Priority *int    `json:"priority"`
+	Label    *string `json:"label"`
 }
 
 type patchProviderRequest struct {
@@ -240,6 +241,11 @@ func (s *Server) handlePatchAccount(w http.ResponseWriter, r *http.Request) {
 }
 
 func patchAccount(r *http.Request, accounts *appaccount.Service, id string, request patchAccountRequest) error {
+	if request.Label != nil {
+		if err := accounts.RenameAccount(r.Context(), id, *request.Label); err != nil {
+			return err
+		}
+	}
 	if request.Status == nil {
 		return nil
 	}

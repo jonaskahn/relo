@@ -607,6 +607,7 @@
           "quotaTitle": "quota",
           "contextTitle": "السياق",
           "contextOverrideTitle": "تجاوز نافذة السياق",
+          "edit": "تحرير",
           "contextOverrideHint": "ينطبق على كل نموذج يقدّمه هذا الحساب.",
           "contextConfirmTitle": "أضبط نافذة السياق على كل نموذج في {label}؟",
           "contextConfirmSet": "يحصل كل نموذج يقدّمه هذا الحساب على {value}.",

@@ -607,6 +607,7 @@
           "quotaTitle": "Quota",
           "contextTitle": "Kontekst",
           "contextOverrideTitle": "Nadpisanie kontekstu",
+          "edit": "Edytuj",
           "contextOverrideHint": "Dotyczy każdego modelu obsługiwanego przez to konto.",
           "contextConfirmTitle": "Ustawić okno kontekstu dla każdego modelu konta {label}?",
           "contextConfirmSet": "Każdy model obsługiwany przez to konto otrzyma {value}.",

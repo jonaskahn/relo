@@ -607,6 +607,7 @@
           "quotaTitle": "Quota",
           "contextTitle": "Kontextfenster",
           "contextOverrideTitle": "Kontext-Override",
+          "edit": "Bearbeiten",
           "contextOverrideHint": "Gilt für alle Modelle, die dieses Konto bedient.",
           "contextConfirmTitle": "Kontextfenster für alle Modelle von {label} setzen?",
           "contextConfirmSet": "Alle Modelle, die dieses Konto bedient, bekommen {value}.",

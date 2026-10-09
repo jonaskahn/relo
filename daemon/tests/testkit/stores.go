@@ -37,6 +37,16 @@ func (r *memoryRepo) SetStatus(_ context.Context, id string, status string) erro
 	return nil
 }
 
+func (r *memoryRepo) SetLabel(_ context.Context, id string, label string) error {
+	for index := range r.entries {
+		if r.entries[index].ID == id {
+			r.entries[index].Label = label
+			return nil
+		}
+	}
+	return nil
+}
+
 func (r *memoryRepo) SetPriority(_ context.Context, id string, priority int) error {
 	for index := range r.entries {
 		if r.entries[index].ID == id {

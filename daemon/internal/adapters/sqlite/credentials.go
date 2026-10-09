@@ -20,6 +20,8 @@ const (
 	WHERE id = ? AND deleted_at IS NULL`
 	updateCredentialStatusSQL = `UPDATE credentials SET status = ?, updated_at = ?
 	WHERE id = ? AND deleted_at IS NULL`
+	updateCredentialLabelSQL = `UPDATE credentials SET label = ?, updated_at = ?
+	WHERE id = ? AND deleted_at IS NULL`
 	deleteCredentialSQL = `UPDATE credentials SET deleted_at = ?, updated_at = ?
 	WHERE id = ? AND deleted_at IS NULL`
 	listSecretRefsSQL = `SELECT DISTINCT secret_ref FROM credentials
@@ -64,6 +66,12 @@ func (r *CredentialRepo) Insert(ctx context.Context, row CredentialRow) error {
 func (r *CredentialRepo) SetStatus(ctx context.Context, id string, status string) error {
 	now := time.Now().Unix()
 	return r.execOne(ctx, updateCredentialStatusSQL, "update credential status", status, now, id)
+}
+
+// SetLabel renames a live credential.
+func (r *CredentialRepo) SetLabel(ctx context.Context, id string, label string) error {
+	now := time.Now().Unix()
+	return r.execOne(ctx, updateCredentialLabelSQL, "update credential label", label, now, id)
 }
 
 // SetPriority changes how the pool ranks a credential.

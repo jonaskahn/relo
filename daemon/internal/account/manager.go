@@ -16,6 +16,7 @@ type CredentialRepository interface {
 	List(ctx context.Context) ([]PoolEntry, error)
 	Insert(ctx context.Context, entry PoolEntry) error
 	SetStatus(ctx context.Context, id string, status string) error
+	SetLabel(ctx context.Context, id string, label string) error
 	SetPriority(ctx context.Context, id string, priority int) error
 	Remove(ctx context.Context, id string) error
 }
@@ -287,6 +288,23 @@ func (m *Manager) Pause(ctx context.Context, providerID, id string) error {
 // Resume stores an active credential and returns it to rotation.
 func (m *Manager) Resume(ctx context.Context, providerID, id string) error {
 	return m.changeStatus(ctx, providerID, id, StatusActive)
+}
+
+// SetLabel renames a credential and keeps the pool's copy of it in step,
+// which is what a request reads when it names the account it ran on.
+func (m *Manager) SetLabel(ctx context.Context, providerID, id, label string) error {
+	if err := m.repo.SetLabel(ctx, id, label); err != nil {
+		return err
+	}
+	pooled := m.GetPool(providerID)
+	for _, entry := range pooled.Entries() {
+		if entry.ID != id {
+			continue
+		}
+		entry.Label = label
+		pooled.Add(entry)
+	}
+	return nil
 }
 
 // SetPriority changes how the strategy ranks a credential.

@@ -607,6 +607,7 @@
           "quotaTitle": "配額",
           "contextTitle": "上下文視窗",
           "contextOverrideTitle": "覆寫上下文視窗",
+          "edit": "編輯",
           "contextOverrideHint": "套用到此帳戶提供的每個模型。",
           "contextConfirmTitle": "要把 {label} 的每個模型都設為上下文視窗嗎？",
           "contextConfirmSet": "此帳戶提供的每個模型都會設為 {value}。",

@@ -607,6 +607,7 @@
           "quotaTitle": "Квота",
           "contextTitle": "Контекст",
           "contextOverrideTitle": "Перевизначення контексту",
+          "edit": "Змінити",
           "contextOverrideHint": "Діє на всі моделі цього акаунта.",
           "contextConfirmTitle": "Задати вікно контексту всім моделям {label}?",
           "contextConfirmSet": "Усі моделі цього акаунта отримають {value}.",

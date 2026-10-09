@@ -514,6 +514,19 @@ func (r *fakeRepo) SetStatus(_ context.Context, id string, status string) error 
 	return nil
 }
 
+func (r *fakeRepo) SetLabel(_ context.Context, id string, label string) error {
+	if r.err != nil {
+		return r.err
+	}
+	for index := range r.entries {
+		if r.entries[index].ID == id {
+			r.entries[index].Label = label
+			return nil
+		}
+	}
+	return nil
+}
+
 func (r *fakeRepo) SetPriority(_ context.Context, id string, priority int) error {
 	if r.err != nil {
 		return r.err

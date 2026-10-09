@@ -607,6 +607,7 @@
           "quotaTitle": "Quota",
           "contextTitle": "Context",
           "contextOverrideTitle": "Override context",
+          "edit": "Edit",
           "contextOverrideHint": "Applies to every model this account serves.",
           "contextConfirmTitle": "Set the context window on every model of {label}?",
           "contextConfirmSet": "Every model this account serves gets {value}.",

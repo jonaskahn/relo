@@ -607,6 +607,7 @@
           "quotaTitle": "Quota",
           "contextTitle": "कॉन्टेक्स",
           "contextOverrideTitle": "कॉन्टेक्स ओवरराइड करें",
+          "edit": "संपादित करें",
           "contextOverrideHint": "खाते के सभी मॉडल पर लागू होगा।",
           "contextConfirmTitle": "{label} के लिए हर मॉडल पर कॉन्टेक्स विंडो सेट करें?",
           "contextConfirmSet": "इस खाते के हर मॉडल को {value} मिलेगा।",

@@ -413,6 +413,16 @@ func (s *Service) ResumeAccount(ctx context.Context, id string) error {
 	return s.setStatus(ctx, id, pool.StatusActive)
 }
 
+// RenameAccount changes the name a console shows for one credential. A blank
+// name falls back to the same default a new account gets.
+func (s *Service) RenameAccount(ctx context.Context, id, label string) error {
+	entry, err := s.lookup(ctx, id)
+	if err != nil {
+		return err
+	}
+	return s.storeLabel(ctx, entry, labelFor(label))
+}
+
 // SetAccountPriority changes how the pool ranks a credential.
 func (s *Service) SetAccountPriority(ctx context.Context, id string, priority int) error {
 	if priority < MinPriority || priority > MaxPriority {
@@ -496,6 +506,13 @@ func (s *Service) storeStatus(ctx context.Context, entry pool.PoolEntry, status 
 		return s.pools.Resume(ctx, entry.ProviderID, entry.ID)
 	}
 	return s.pools.Pause(ctx, entry.ProviderID, entry.ID)
+}
+
+func (s *Service) storeLabel(ctx context.Context, entry pool.PoolEntry, label string) error {
+	if s.pools == nil {
+		return s.entries.SetLabel(ctx, entry.ID, label)
+	}
+	return s.pools.SetLabel(ctx, entry.ProviderID, entry.ID, label)
 }
 
 func (s *Service) storePriority(ctx context.Context, entry pool.PoolEntry, priority int) error {

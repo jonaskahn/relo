@@ -488,6 +488,18 @@ func TestAccountStatusAndPriority(t *testing.T) {
 	if row, _ := harness.credentialRow(entry.ID); row.Priority != 7 {
 		t.Fatalf("priority = %d, want 7", row.Priority)
 	}
+	if err := harness.accounts.RenameAccount(ctx, entry.ID, "  desk  "); err != nil {
+		t.Fatalf("RenameAccount() error = %v", err)
+	}
+	if row, _ := harness.credentialRow(entry.ID); row.Label != "desk" {
+		t.Fatalf("label = %q, want desk", row.Label)
+	}
+	if err := harness.accounts.RenameAccount(ctx, entry.ID, "   "); err != nil {
+		t.Fatalf("RenameAccount() blank error = %v", err)
+	}
+	if row, _ := harness.credentialRow(entry.ID); row.Label != "default" {
+		t.Fatalf("label = %q, want default", row.Label)
+	}
 
 	t.Run("out of range", func(t *testing.T) {
 		for _, priority := range []int{-101, 101} {
@@ -522,9 +534,12 @@ func TestAccountsWithoutAPool(t *testing.T) {
 	if err := detached.accounts.SetAccountPriority(ctx, entry.ID, 3); err != nil {
 		t.Fatalf("SetAccountPriority() without a pool error = %v", err)
 	}
+	if err := detached.accounts.RenameAccount(ctx, entry.ID, "repo-2"); err != nil {
+		t.Fatalf("RenameAccount() without a pool error = %v", err)
+	}
 	row, _ := harness.credentialRow(entry.ID)
-	if row.Status != account.StatusPaused || row.Priority != 3 {
-		t.Fatalf("row = %+v, want the paused rank-3 credential", row)
+	if row.Status != account.StatusPaused || row.Priority != 3 || row.Label != "repo-2" {
+		t.Fatalf("row = %+v, want the paused rank-3 credential named repo-2", row)
 	}
 	if err := detached.accounts.RemoveAccount(ctx, entry.ID); err != nil {
 		t.Fatalf("RemoveAccount() without a pool error = %v", err)

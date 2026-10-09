@@ -20,6 +20,7 @@
 		defaultVariables,
 		emptyStepperState,
 		isDirty,
+		presetStepperState,
 		stepAfter,
 		stepBefore,
 		stepsFor,
@@ -39,6 +40,9 @@
 	interface Props {
 		open?: boolean;
 		templates: ProviderTemplate[];
+		// presetProviderId names a connection the operator is already inside, so
+		// the flow opens on the connect step with that provider chosen.
+		presetProviderId?: string;
 		modelsdev?: ModelsDevState | null;
 		providers: Provider[];
 		onadded: (providerId: string) => void;
@@ -52,6 +56,7 @@
 	let {
 		open = $bindable(false),
 		templates,
+		presetProviderId = '',
 		modelsdev = null,
 		providers,
 		onadded,
@@ -107,8 +112,28 @@
 	const formats = $derived(template?.available_formats ?? []);
 
 	function reset() {
-		step = 'provider';
-		draft = emptyStepperState();
+		const preset = providers.find((provider) => provider.id === presetProviderId);
+		const presetTemplate =
+			preset === undefined
+				? null
+				: (templates.find((entry) => entry.id === (preset.template_id || preset.id)) ?? null);
+		draft =
+			preset === undefined
+				? emptyStepperState()
+				: presetStepperState(
+						{
+							id: preset.id,
+							templateId: preset.template_id || preset.id,
+							label: preset.label,
+							baseURL: preset.base_url,
+							variables: preset.variables ?? {}
+						},
+						presetTemplate
+					);
+		step = preset === undefined || presetTemplate === null ? 'provider' : 'connect';
+		reviewId =
+			preset === undefined ? '' : suggestProviderId(preset.template_id || preset.id, takenIds);
+		reviewLabel = preset === undefined ? '' : suggestLabel(preset.label, takenLabels);
 		query = '';
 		selectedRow = null;
 		probe = null;
@@ -117,15 +142,13 @@
 		problems = {};
 		signedInAs = '';
 		refreshNote = '';
-		reviewId = '';
-		reviewLabel = '';
 		disabled = [];
 		addCompleted = false;
 		notified = false;
 	}
 
-	// Opening the flow starts it from the first step, so a second visit never
-	// shows what the previous one left behind.
+	// Opening the flow starts it clean. A connection the operator is already
+	// inside opens on its connect step; every other visit starts at the first.
 	$effect(() => {
 		if (open) reset();
 	});
@@ -376,6 +399,12 @@
 	}
 
 	function back() {
+		// A flow that opened inside one connection has no provider step to go
+		// back to, so Back leaves it.
+		if (step === 'connect' && presetProviderId !== '') {
+			requestClose();
+			return;
+		}
 		const previous = stepBefore(draft.path, step);
 		if (previous === '') {
 			requestClose();

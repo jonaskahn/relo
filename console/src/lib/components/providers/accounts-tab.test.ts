@@ -35,8 +35,7 @@ function markup(
 			accounts: [account],
 			windows,
 			onreload: () => {},
-			onremoved: () => {},
-			onaddkey: () => {}
+			onremoved: () => {}
 		}
 	}).body;
 }
@@ -50,7 +49,7 @@ describe('the account card', () => {
 		expect(html).not.toContain('No quota data yet');
 	});
 
-	it('offers sign in again when the connection’s last refresh failed', () => {
+	it('keeps the quota when a refresh failed on the network', () => {
 		const html = markup(
 			accountOf({ kind: 'oauth', status: 'active', label: 'work' }),
 			[],
@@ -61,8 +60,8 @@ describe('the account card', () => {
 		);
 
 		expect(html).toContain('Active');
-		expect(html.match(/Sign in again/g)?.length).toBe(1);
-		expect(html).not.toContain('role="progressbar"');
+		expect(html).not.toContain('Sign in again');
+		expect(html).toContain('No quota data yet');
 	});
 
 	it('reserves four quota tracks when an account has no windows', () => {

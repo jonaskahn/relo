@@ -769,9 +769,9 @@ html[data-theme-dir='sunset']::view-transition-new(root) {
 		gap: 0.5rem;
 		min-width: 0;
 	}
-	/* toolbar-swap is the contextual control beside Back (Add account, or
-	   model search with its filter menu): it fades in beside the button
-	   instead of pushing the tabs. */
+	/* toolbar-swap is the contextual control beside Back (model search with
+	   its filter menu): it fades in beside the button instead of pushing the
+	   tabs. */
 	.toolbar-swap {
 		display: flex;
 		align-items: center;
@@ -859,11 +859,6 @@ html[data-theme-dir='sunset']::view-transition-new(root) {
 		max-width: none;
 		min-width: 0;
 	}
-	.provider-toolbar .pt-context-add {
-		display: flex;
-		flex: 0 0 auto;
-		max-width: 100%;
-	}
 	.provider-toolbar .pt-actions {
 		display: flex;
 		align-items: center;
@@ -894,27 +889,15 @@ html[data-theme-dir='sunset']::view-transition-new(root) {
 			justify-content: center;
 		}
 		.provider-toolbar .pt-actions {
+			grid-column: 2 / 4;
 			grid-row: 1;
 			margin-left: 0;
 			justify-self: end;
-		}
-		.provider-toolbar[data-tab='models'] .pt-actions,
-		.provider-toolbar[data-tab='settings'] .pt-actions {
-			grid-column: 2 / 4;
-		}
-		.provider-toolbar[data-tab='accounts'] .pt-actions {
-			grid-column: 3;
 		}
 		.provider-toolbar[data-tab='models'] .pt-context-search {
 			grid-column: 1 / -1;
 			grid-row: 3;
 			max-width: none;
-			margin: 0;
-		}
-		.provider-toolbar[data-tab='accounts'] .pt-context-add {
-			grid-column: 2;
-			grid-row: 1;
-			justify-self: start;
 			margin: 0;
 		}
 	}

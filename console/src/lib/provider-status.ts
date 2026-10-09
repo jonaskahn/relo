@@ -105,13 +105,11 @@ export function needsCredential(provider: Provider): boolean {
 	return provider.auth !== 'none';
 }
 
-/** Reports whether an OAuth account has to sign in again: its own status says so, or the
- *  connection's last refresh failed. */
-export function accountNeedsSignIn(account: Account, lastRefreshError?: string): boolean {
-	return (
-		account.kind === 'oauth' &&
-		(account.status === 'needs_reauth' || (lastRefreshError ?? '') !== '')
-	);
+/** Reports whether an OAuth account has to sign in again. Only the account's own
+ *  status says so: a model list that failed to refresh, a timeout or a refused
+ *  connection, leaves the account signed in. */
+export function accountNeedsSignIn(account: Account): boolean {
+	return account.kind === 'oauth' && account.status === 'needs_reauth';
 }
 
 /** Names the one action a banner offers, so a banner always has a way out rather than only a

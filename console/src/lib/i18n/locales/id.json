@@ -607,6 +607,7 @@
           "quotaTitle": "Kuota",
           "contextTitle": "Konteks",
           "contextOverrideTitle": "Penggantian konteks",
+          "edit": "Edit",
           "contextOverrideHint": "Berlaku untuk semua model yang dilayani akun ini.",
           "contextConfirmTitle": "Pasang jendela konteks di semua model {label}?",
           "contextConfirmSet": "Semua model yang dilayani akun ini mendapat {value}.",

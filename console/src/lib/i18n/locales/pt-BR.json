@@ -607,6 +607,7 @@
           "quotaTitle": "Quota",
           "contextTitle": "Contexto",
           "contextOverrideTitle": "Substituir o contexto",
+          "edit": "Editar",
           "contextOverrideHint": "Vale para todos os modelos servidos por esta conta.",
           "contextConfirmTitle": "Definir a janela de contexto em todos os modelos de {label}?",
           "contextConfirmSet": "Todos os modelos servidos por esta conta passam a ter {value}.",

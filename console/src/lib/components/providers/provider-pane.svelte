@@ -40,8 +40,9 @@
 		onback: () => void;
 		onchanged: (updated: Provider) => void;
 		ondeleted: () => void;
-		onaddkey: () => void;
 		onquotas?: () => void;
+		// onaddaccount opens the add flow already inside this connection.
+		onaddaccount?: () => void;
 		ontab: (tab: string) => void;
 	}
 
@@ -55,8 +56,8 @@
 		onback,
 		onchanged,
 		ondeleted,
-		onaddkey,
 		onquotas,
+		onaddaccount,
 		ontab
 	}: Props = $props();
 
@@ -77,14 +78,8 @@
 
 	const status = $derived(providerStatus(provider));
 	const quotaStale = $derived(windows.some((window) => window.stale));
-	// needsCredential gates the Add account trigger beside Back: keyless
-	// connections have nothing to add.
-	const needsCredential = $derived(provider.auth !== 'none');
-	// addingAccount lives here so its trigger can sit beside Back while the
-	// sign-in panel stays in the accounts tab. modelFilters lives here so
-	// search and the one filter menu can sit beside Back on the models tab
-	// while the list below keeps filtering.
-	let addingAccount = $state(false);
+	// modelFilters lives here so search and the one filter menu can sit beside
+	// Back on the models tab while the list below keeps filtering.
 	let modelFilters = $state<ModelFilters>({ ...EMPTY_MODEL_FILTERS });
 	// The page may already have asked for one filter, such as unpriced after
 	// the attention strip named the count. That intent resets the list onto
@@ -209,10 +204,8 @@
 				ontab('settings');
 				return;
 			case 'noAccount':
-				ontab('accounts');
-				return;
 			case 'signInAgain':
-				ontab('accounts');
+				onaddaccount?.();
 				return;
 			case 'accountsPaused':
 				ontab('accounts');
@@ -352,17 +345,6 @@
 							/>
 						</div>
 					</div>
-				{:else if tab === 'accounts' && needsCredential && !addingAccount}
-					<div class="pt-context pt-context-add toolbar-swap">
-						<Button
-							variant="outline"
-							onclick={() => (addingAccount = true)}
-							class="max-w-full min-w-0 shrink-0 overflow-hidden"
-						>
-							<Icon name="plus" size={14} />
-							<span class="truncate">{$t('ui.pages.providersPage.accounts.addAccount')}</span>
-						</Button>
-					</div>
 				{/if}
 			{/key}
 			<div class="pt-actions">
@@ -428,12 +410,9 @@
 				{quotaRevision}
 				loading={accountsLoading}
 				failed={accountsFailed}
-				adding={addingAccount}
-				onaddingchange={(next) => (addingAccount = next)}
 				onreload={reloadAccounts}
 				onremoved={ondeleted}
 				onquotas={() => onquotas?.()}
-				{onaddkey}
 			/>
 		</Tabs.Content>
 

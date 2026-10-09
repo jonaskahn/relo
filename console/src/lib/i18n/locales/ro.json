@@ -607,6 +607,7 @@
           "quotaTitle": "Quota",
           "contextTitle": "Context",
           "contextOverrideTitle": "Suprascrierea contextului",
+          "edit": "Editează",
           "contextOverrideHint": "Se aplică tuturor modelelor servite de acest cont.",
           "contextConfirmTitle": "Setezi fereastra de context pe toate modelele contului {label}?",
           "contextConfirmSet": "Fiecare model servit de acest cont primește {value}.",

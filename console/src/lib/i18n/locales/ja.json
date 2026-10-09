@@ -607,6 +607,7 @@
           "quotaTitle": "クォータ",
           "contextTitle": "コンテキスト",
           "contextOverrideTitle": "コンテキストをオーバーライド",
+          "edit": "編集",
           "contextOverrideHint": "このアカウントが扱うすべてのモデルに適用されます",
           "contextConfirmTitle": "すべてのモデルにコンテキストウィンドウを設定しますか（{label}）",
           "contextConfirmSet": "このアカウントが扱うすべてのモデルに同じコンテキストウィンドウを設定します：{value}",

@@ -83,14 +83,15 @@
 	<Popover.Trigger>
 		{#snippet child({ props })}
 			<Button
-				variant="ghost"
+				variant="outline"
+				class="text-muted-foreground hover:text-foreground"
 				size="icon"
 				{...props}
 				{disabled}
 				title={$t('ui.pages.providersPage.accounts.contextOverrideTitle')}
 				aria-label={$t('ui.pages.providersPage.accounts.contextOverrideTitle')}
 			>
-				<Icon name="pencil" size={15} />
+				<Icon name="ruler-2" size={15} />
 			</Button>
 		{/snippet}
 	</Popover.Trigger>

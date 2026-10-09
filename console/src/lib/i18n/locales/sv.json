@@ -607,6 +607,7 @@
           "quotaTitle": "Kvot",
           "contextTitle": "Kontext",
           "contextOverrideTitle": "Åsidosätt kontext",
+          "edit": "Redigera",
           "contextOverrideHint": "Gäller varje modell som kontot betjänar.",
           "contextConfirmTitle": "Ställa in kontextfönstret på alla modeller i {label}?",
           "contextConfirmSet": "Alla modeller som kontot betjänar får {value}.",

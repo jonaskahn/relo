@@ -41,6 +41,11 @@ func (s *CredentialStore) SetStatus(ctx context.Context, id, status string) erro
 	return s.repo.SetStatus(ctx, id, status)
 }
 
+// SetLabel stores one credential's name.
+func (s *CredentialStore) SetLabel(ctx context.Context, id, label string) error {
+	return s.repo.SetLabel(ctx, id, label)
+}
+
 // SetPriority stores one credential's rank.
 func (s *CredentialStore) SetPriority(ctx context.Context, id string, priority int) error {
 	return s.repo.SetPriority(ctx, id, priority)

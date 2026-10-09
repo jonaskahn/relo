@@ -607,6 +607,7 @@
           "quotaTitle": "Quota",
           "contextTitle": "Context",
           "contextOverrideTitle": "Context overschrijven",
+          "edit": "Bewerken",
           "contextOverrideHint": "Geldt voor elk model dat dit account bedient.",
           "contextConfirmTitle": "Het contextvenster instellen op elk model van {label}?",
           "contextConfirmSet": "Elk model dat dit account bedient krijgt {value}.",

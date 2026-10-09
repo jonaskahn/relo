@@ -157,6 +157,9 @@
 		if (state.selectedId !== '') selectedId = state.selectedId;
 		paneOpen = state.paneOpen;
 		addOpen = state.addOpen;
+		// The URL only remembers that the flow was open, not which connection it
+		// was adding to, so a restored visit starts at the provider step.
+		if (state.addOpen) addPreset = '';
 	}
 
 	// replaceState keeps the URL honest without adding history entries for
@@ -170,6 +173,7 @@
 	// Closing the flow takes the flag that asked for it back out of the URL, so
 	// returning to the same page later does not open it again on its own.
 	function closeAddFlow() {
+		addPreset = '';
 		void refreshProviders();
 		if (new URLSearchParams(window.location.search).get('add') === '1') writeURL();
 	}
@@ -251,7 +255,11 @@
 		}
 	}
 
-	async function openAdd() {
+	let addPreset = $state('');
+
+	async function openAdd(providerId = '') {
+		// A click handler hands over its event, which is not a connection id.
+		addPreset = typeof providerId === 'string' ? providerId : '';
 		await readCatalog();
 		addOpen = true;
 		writeURL();
@@ -406,7 +414,10 @@
 			{/if}
 		{/snippet}
 		{#snippet actions()}
-			<Button id="add-connection-button" onclick={openAdd}>
+			<Button
+				id="add-connection-button"
+				onclick={() => void openAdd(view === 'provider' && paneOpen && selected ? selected.id : '')}
+			>
 				<Icon name="plus" size={14} />
 				{$t('ui.pages.providersPage.header.addProvider')}
 			</Button>
@@ -434,7 +445,7 @@
 				<p class="max-w-[46ch] text-sm text-muted-foreground">
 					{$t('ui.pages.providersPage.list.emptyBody')}
 				</p>
-				<Button onclick={openAdd}>
+				<Button onclick={() => void openAdd()}>
 					<Icon name="plus" size={14} />
 					{$t('ui.pages.providersPage.header.addProvider')}
 				</Button>
@@ -453,7 +464,7 @@
 							}}
 							onallmodels={selectAllModels}
 							onupdate={() => void updateCatalog()}
-							onadd={openAdd}
+							onadd={() => void openAdd()}
 						/>
 					{:else if view === 'models'}
 						<div class="flex flex-col">
@@ -507,9 +518,7 @@
 									void loadQuota();
 									void loadCatalog();
 								}}
-								onaddkey={() => {
-									addOpen = true;
-								}}
+								onaddaccount={() => void openAdd(selected.id)}
 							/>
 						{/key}
 					{:else}
@@ -525,6 +534,7 @@
 
 <AddProviderStepper
 	bind:open={addOpen}
+	presetProviderId={addPreset}
 	{templates}
 	{modelsdev}
 	{providers}

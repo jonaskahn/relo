@@ -607,6 +607,7 @@
           "quotaTitle": "쿼터",
           "contextTitle": "컨텍스트",
           "contextOverrideTitle": "컨텍스트 오버라이드",
+          "edit": "편집",
           "contextOverrideHint": "이 계정이 제공하는 모든 모델에 적용돼요",
           "contextConfirmTitle": "{label}의 모든 모델에 컨텍스트 윈도우를 설정할까요?",
           "contextConfirmSet": "이 계정이 제공하는 모든 모델에 적용되는 컨텍스트 윈도우: {value}",

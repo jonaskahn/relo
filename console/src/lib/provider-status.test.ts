@@ -80,7 +80,6 @@ describe('provider status', () => {
 
 	test('an oauth account that needs reauth has to sign in again', () => {
 		expect(accountNeedsSignIn(accountOf({ kind: 'oauth', status: 'needs_reauth' }))).toBe(true);
-		expect(accountNeedsSignIn(accountOf({ kind: 'oauth', status: 'active' }), '502')).toBe(true);
 		expect(accountNeedsSignIn(accountOf({ kind: 'oauth', status: 'active' }))).toBe(false);
 		expect(accountNeedsSignIn(accountOf({ kind: 'api_key', status: 'needs_reauth' }))).toBe(false);
 	});

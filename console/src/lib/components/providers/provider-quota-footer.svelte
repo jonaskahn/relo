@@ -54,9 +54,7 @@
 	const byCredential = $derived(windowsByCredential(windows));
 	const current = $derived(selectedAccount(accounts, picked));
 	const reported = $derived(current ? (byCredential.get(current.id) ?? []) : []);
-	const currentNeedsSignIn = $derived(
-		current ? accountNeedsSignIn(current, provider.last_refresh_error) : false
-	);
+	const currentNeedsSignIn = $derived(current ? accountNeedsSignIn(current) : false);
 
 	const providerMethods = $derived<LoginMethod[]>(
 		provider.login_methods && provider.login_methods.length > 0
@@ -66,7 +64,7 @@
 
 	function chipLabel(account: Account, index: number): string {
 		const values = { index: index + 1, label: account.label };
-		return accountNeedsSignIn(account, provider.last_refresh_error)
+		return accountNeedsSignIn(account)
 			? $t('ui.pages.providersPage.list.cardAccountChipReauth', { values })
 			: $t('ui.pages.providersPage.list.cardAccountChip', { values });
 	}
@@ -100,7 +98,7 @@
 						index={index + 1}
 						label={chipLabel(account, index)}
 						selected={current?.id === account.id}
-						warn={accountNeedsSignIn(account, provider.last_refresh_error)}
+						warn={accountNeedsSignIn(account)}
 						onclick={() => pick(index)}
 					/>
 				{/each}
