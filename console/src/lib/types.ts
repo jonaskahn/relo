@@ -916,6 +916,15 @@ export interface OAuthOperation {
 	readonly error?: string;
 }
 
+/** How far one provider login got, as the callback page polling it is told.
+ *  `phase` is the outcome; `error` names the refusal when the login did not finish. */
+export interface CallbackStatus {
+	readonly provider: string;
+	readonly phase: 'connected' | 'failed' | 'denied' | 'state' | 'timeout' | string;
+	readonly account?: string;
+	readonly error?: string;
+}
+
 /** The state of the loopback port one sign-in flow binds.
  *  A provider that registered its redirect address with its vendor can only receive the browser
  *  on that exact port, so a process already listening on it has to be ended before the sign-in

@@ -158,6 +158,33 @@
       "submitting": "サインイン中…",
       "failure": "コンソールにサインインできませんでした。"
     },
+    "callback": {
+      "documentTitle": "ログインを完了しています · Relo",
+      "heading": "ログインを完了しています",
+      "summary": "Relo は認証情報を受け取り、アカウントを保存しています。",
+      "stepsLabel": "ログインの進行状況",
+      "stepAuthorized": "{provider} が認証しました",
+      "stepExchanging": "認証情報を交換しています",
+      "stepStored": "アカウントを保存しました",
+      "markerWorking": "処理中",
+      "markerConnected": "接続済み",
+      "markerFailed": "未接続",
+      "connectedTitle": "接続済み",
+      "connectedBody": "Relo はアカウントを保存し、リクエストをそのアカウント経由で処理します。",
+      "failedTitle": "ログインが完了しませんでした",
+      "expiredTitle": "このログインはすでに開いていません",
+      "expiredBody": "Relo はこのログインを追跡しなくなりました。コンソールからもう一度開始してください。",
+      "failure": {
+        "denied": "プロバイダーが認証情報を拒否しました。",
+        "state": "コールバックが Relo が開始したログインと一致しませんでした。またはすでに使用されています。",
+        "timeout": "プロバイダーが時間内に応答しませんでした。",
+        "exchange": "プロバイダーが認証情報をトークンに交換しませんでした。"
+      },
+      "accountLabel": "アカウント",
+      "closeHint": "このタブは閉じてもかまいません。",
+      "closingIn": "{seconds}s 後に閉じます…",
+      "consoleLink": "コンソールを開く"
+    },
     "common": {
       "window24h": "24時間",
       "window7d": "過去7日間",

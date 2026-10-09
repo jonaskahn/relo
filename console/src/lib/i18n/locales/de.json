@@ -158,6 +158,33 @@
       "submitting": "Anmelden…",
       "failure": "Die Konsole konnte sich nicht anmelden."
     },
+    "callback": {
+      "documentTitle": "Anmeldung wird abgeschlossen · Relo",
+      "heading": "Anmeldung wird abgeschlossen",
+      "summary": "Relo hat die Autorisierung und speichert das Konto.",
+      "stepsLabel": "Anmeldefortschritt",
+      "stepAuthorized": "Von {provider} autorisiert",
+      "stepExchanging": "Autorisierung wird eingetauscht",
+      "stepStored": "Konto gespeichert",
+      "markerWorking": "Läuft",
+      "markerConnected": "Verbunden",
+      "markerFailed": "Nicht verbunden",
+      "connectedTitle": "Verbunden",
+      "connectedBody": "Relo hat das Konto gespeichert und leitet Anfragen darüber.",
+      "failedTitle": "Die Anmeldung wurde nicht abgeschlossen",
+      "expiredTitle": "Diese Anmeldung ist nicht mehr offen",
+      "expiredBody": "Relo verfolgt diese Anmeldung nicht mehr. Starte sie in der Konsole neu.",
+      "failure": {
+        "denied": "Der Anbieter hat die Autorisierung abgelehnt.",
+        "state": "Der Rückruf passte nicht zu der Anmeldung, die Relo gestartet hat, oder er war bereits verwendet.",
+        "timeout": "Der Anbieter hat nicht rechtzeitig geantwortet.",
+        "exchange": "Der Anbieter wollte die Autorisierung nicht gegen ein Token eintauschen."
+      },
+      "accountLabel": "Konto",
+      "closeHint": "Du kannst diesen Tab schließen.",
+      "closingIn": "Wird in {seconds}s geschlossen…",
+      "consoleLink": "Konsole öffnen"
+    },
     "common": {
       "window24h": "24 Std.",
       "window7d": "Letzte 7 Tage",

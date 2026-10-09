@@ -158,6 +158,33 @@
       "submitting": "Connexion…",
       "failure": "La console n’a pas pu se connecter."
     },
+    "callback": {
+      "documentTitle": "Finalisation de la connexion · Relo",
+      "heading": "Finalisation de la connexion",
+      "summary": "Relo a reçu l’autorisation et enregistre le compte.",
+      "stepsLabel": "Progression de la connexion",
+      "stepAuthorized": "Autorisé par {provider}",
+      "stepExchanging": "Échange de l’autorisation",
+      "stepStored": "Compte enregistré",
+      "markerWorking": "En cours",
+      "markerConnected": "Connecté",
+      "markerFailed": "Non connecté",
+      "connectedTitle": "Connecté",
+      "connectedBody": "Relo a enregistré le compte et achemine les requêtes par son intermédiaire.",
+      "failedTitle": "La connexion ne s’est pas terminée",
+      "expiredTitle": "Cette connexion n’est plus active",
+      "expiredBody": "Relo ne suit plus cette connexion. Recommencez-la depuis la console.",
+      "failure": {
+        "denied": "Le fournisseur a refusé l’autorisation.",
+        "state": "Le rappel ne correspondait pas à la connexion lancée par Relo, ou il avait déjà été utilisé.",
+        "timeout": "Le fournisseur n’a pas répondu à temps.",
+        "exchange": "Le fournisseur n’a pas voulu échanger l’autorisation contre un jeton."
+      },
+      "accountLabel": "Compte",
+      "closeHint": "Vous pouvez fermer cet onglet.",
+      "closingIn": "Fermeture dans {seconds}s…",
+      "consoleLink": "Ouvrir la console"
+    },
     "common": {
       "window24h": "24 h",
       "window7d": "7 derniers jours",

@@ -158,6 +158,33 @@
       "submitting": "登入中…",
       "failure": "主控台無法登入"
     },
+    "callback": {
+      "documentTitle": "正在完成登入 · Relo",
+      "heading": "正在完成登入",
+      "summary": "Relo 已收到授權，正在儲存該帳號。",
+      "stepsLabel": "登入進度",
+      "stepAuthorized": "已由 {provider} 授權",
+      "stepExchanging": "正在交換授權",
+      "stepStored": "帳號已儲存",
+      "markerWorking": "進行中",
+      "markerConnected": "已連線",
+      "markerFailed": "未連線",
+      "connectedTitle": "已連線",
+      "connectedBody": "Relo 已儲存該帳號，並透過它轉送請求。",
+      "failedTitle": "登入未完成",
+      "expiredTitle": "此登入已不再有效",
+      "expiredBody": "Relo 已不再追蹤此登入。請在主控台中重新開始。",
+      "failure": {
+        "denied": "供應商拒絕了該授權。",
+        "state": "回呼與 Relo 開始的登入不相符，或已被使用。",
+        "timeout": "供應商未及時回應。",
+        "exchange": "供應商拒絕將該授權交換成權杖。"
+      },
+      "accountLabel": "帳號",
+      "closeHint": "你可以關閉此分頁。",
+      "closingIn": "{seconds} 秒後關閉…",
+      "consoleLink": "開啟主控台"
+    },
     "common": {
       "window24h": "24 小時",
       "window7d": "最近 7 天",

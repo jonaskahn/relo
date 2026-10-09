@@ -32,6 +32,10 @@
 	// itself from content that moved under it.
 	let scrolled = $state(false);
 	const isSignInPage = $derived(page.url.pathname === '/login');
+	// A callback page is where a browser lands after a provider redirect. That
+	// browser carries no session, and asking for one would send it to the
+	// sign-in, so the page renders on its own with none of the chrome.
+	const isCallbackPage = $derived(page.url.pathname.startsWith('/callback/'));
 	// An error page stands on its own: the rail, the top bar and the palette
 	// are the ways into pages that worked, so a page that did not shows none
 	// of them and asks for the one action that can help.
@@ -73,6 +77,10 @@
 	}
 
 	onMount(() => {
+		// A callback page never had a session to check, and a check that fails
+		// would redirect a provider redirect to the sign-in. It also owns the
+		// viewport, so the dock has nothing to follow.
+		if (isCallbackPage) return;
 		void checkSession();
 		// The shell follows the dock breakpoint so the sidebar can decide between
 		// the docked rail and the overlay drawer.
@@ -84,7 +92,11 @@
 	});
 </script>
 
-{#if authenticated === null}
+{#if isCallbackPage}
+	<!-- A callback page is the browser's own surface: the rail, the top bar and
+	     the palette are the ways into pages this tab never asked for. -->
+	{@render children()}
+{:else if authenticated === null}
 	<div class="flex h-dvh items-center justify-center text-muted-foreground text-sm">
 		{$t('ui.session.checking')}
 	</div>

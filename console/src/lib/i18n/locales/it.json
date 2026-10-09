@@ -158,6 +158,33 @@
       "submitting": "Accesso in corso…",
       "failure": "Accesso alla console non riuscito."
     },
+    "callback": {
+      "documentTitle": "Completamento dell’accesso · Relo",
+      "heading": "Completamento dell’accesso",
+      "summary": "Relo ha l’autorizzazione e sta salvando l’account.",
+      "stepsLabel": "Avanzamento dell’accesso",
+      "stepAuthorized": "Autorizzato da {provider}",
+      "stepExchanging": "Scambio dell’autorizzazione",
+      "stepStored": "Account salvato",
+      "markerWorking": "In corso",
+      "markerConnected": "Connesso",
+      "markerFailed": "Non connesso",
+      "connectedTitle": "Connesso",
+      "connectedBody": "Relo ha salvato l’account e instrada le richieste tramite di esso.",
+      "failedTitle": "L’accesso non è stato completato",
+      "expiredTitle": "Questo accesso non è più attivo",
+      "expiredBody": "Relo non sta più seguendo questo accesso. Ricominciarlo dalla console.",
+      "failure": {
+        "denied": "Il provider ha rifiutato l’autorizzazione.",
+        "state": "Il callback non corrispondeva all’accesso avviato da Relo, oppure era già stato usato.",
+        "timeout": "Il provider non ha risposto in tempo.",
+        "exchange": "Il provider non ha voluto scambiare l’autorizzazione con un token."
+      },
+      "accountLabel": "Account",
+      "closeHint": "Puoi chiudere questa scheda.",
+      "closingIn": "Chiude tra {seconds}s…",
+      "consoleLink": "Apri la console"
+    },
     "common": {
       "window24h": "24 h",
       "window7d": "Ultimi 7 giorni",

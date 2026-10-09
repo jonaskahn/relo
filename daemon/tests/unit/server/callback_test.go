@@ -31,66 +31,59 @@ func callbackHarness(t *testing.T, broker *oauth.CallbackBroker) *harness {
 	return built
 }
 
+// callbackHarnessWithoutConsole returns a harness whose binary embedded no
+// console. It is the build the daemon falls back to its own callback document
+// in, so the sentences that document renders are still worth a test.
+func callbackHarnessWithoutConsole(t *testing.T, broker *oauth.CallbackBroker) *harness {
+	t.Helper()
+	built := newHarness(t)
+	built.server = built.newServerWithOptions(built.cfg, []account.PoolEntry{defaultEntry()},
+		func(options *server.Options) {
+			options.Callbacks = platform.NewCallbackBridge(broker)
+		})
+	built.server.SetDashboard(nil)
+	return built
+}
+
 func TestCallbackPage(t *testing.T) {
 	broker := callbackBroker(10101)
 	harness := callbackHarness(t, broker)
 	login := broker.Register("chatgpt", "state-1")
 	ticket := login.Ticket()
 
-	t.Run("the page names its provider and polls its own login", func(t *testing.T) {
+	t.Run("the page is the console shell", func(t *testing.T) {
 		response := harness.management(http.MethodGet, "/callback/chatgpt?ticket="+ticket, "", nil)
 		if response.Code != http.StatusOK {
 			t.Fatalf("status = %d, want 200", response.Code)
 		}
+		// A console carries the page: the route reads the ticket from the address
+		// and polls for itself, so the document holds no provider copy of its own.
 		body := response.Body.String()
-		for _, fragment := range []string{
-			"chatgpt",
-			"/callback/chatgpt/status?ticket=" + ticket,
-			"Finishing the login",
-			"Authorized by chatgpt",
-			"Exchanging the authorization",
-			"Account stored",
-			// The page counts down in the open before it closes itself, with the
-			// seconds left as the placeholder its script replaces each tick.
-			`data-close-seconds="3"`,
-			"Closing in __SECONDS__",
-			`id="countdown"`,
-		} {
-			if !strings.Contains(body, fragment) {
-				t.Fatalf("the page does not carry %q", fragment)
-			}
+		if !strings.Contains(body, "<!doctype html>") {
+			t.Fatalf("body = %q, want the console shell", body)
 		}
-		for _, header := range []string{"Content-Security-Policy", "Referrer-Policy", "Cache-Control", "X-Frame-Options"} {
+		if strings.Contains(body, "Finishing the login") {
+			t.Fatalf("the shell still carries the page's own copy: %s", body)
+		}
+	})
+
+	t.Run("the page carries the headers a callback page owes", func(t *testing.T) {
+		response := harness.management(http.MethodGet, "/callback/chatgpt?ticket="+ticket, "", nil)
+		for _, header := range []string{"Referrer-Policy", "Cache-Control", "X-Frame-Options", "X-Content-Type-Options"} {
 			if response.Header().Get(header) == "" {
 				t.Fatalf("the page carries no %s header", header)
 			}
+		}
+		// The shell loads the console's own module scripts, which the policy the
+		// fallback document carried could not permit.
+		if policy := response.Header().Get("Content-Security-Policy"); policy != "" {
+			t.Fatalf("content security policy = %q, want none on the console shell", policy)
 		}
 	})
 
 	t.Run("the page needs no session", func(t *testing.T) {
 		if response := harness.management(http.MethodGet, "/callback/chatgpt?ticket="+ticket, "", nil); response.Code != http.StatusOK {
 			t.Fatalf("status = %d, want the page without a session", response.Code)
-		}
-	})
-
-	t.Run("the page paints the current mark and carries its own icon", func(t *testing.T) {
-		body := harness.management(http.MethodGet, "/callback/chatgpt?ticket="+ticket, "", nil).Body.String()
-		// The brand mark is one node with two arcs around it. A page that
-		// paints anything else is showing a mark Relo no longer uses.
-		if !strings.Contains(body, "M256 91 A165 165 0 0 1 421 256") {
-			t.Fatalf("the page paints no brand mark: %s", body)
-		}
-		// The icon comes with the document, so the browser never falls back to
-		// a console icon or a cached one.
-		icon := callbackIconOf(t, body)
-		decoded, err := base64.StdEncoding.DecodeString(strings.TrimPrefix(icon, "data:image/svg+xml;base64,"))
-		if err != nil {
-			t.Fatalf("decode the page icon: %v", err)
-		}
-		// The page carries the plated logo, not a loose mark: the icon must
-		// carry the squircle plate's gradient, the mark baked at 0.66 of it.
-		if !strings.Contains(string(decoded), "<linearGradient") || !strings.Contains(string(decoded), "A108.90 108.90") {
-			t.Fatalf("the page icon is not the brand mark: %s", decoded)
 		}
 	})
 
@@ -135,6 +128,81 @@ func TestCallbackPage(t *testing.T) {
 		}
 	})
 
+	t.Run("an unknown ticket still renders the page", func(t *testing.T) {
+		response := harness.management(http.MethodGet, "/callback/chatgpt?ticket=nothing", "", nil)
+		if response.Code != http.StatusOK {
+			t.Fatalf("status = %d, want the page that explains it", response.Code)
+		}
+		if !strings.Contains(response.Body.String(), "<!doctype html>") {
+			t.Fatalf("body = %q, want the console shell", response.Body.String())
+		}
+	})
+}
+
+// TestCallbackPageWithoutAConssole covers the build that embedded no console.
+// It renders the daemon's own callback document, which still has to name the
+// provider, walk its steps and carry the brand mark.
+func TestCallbackPageWithoutAConssole(t *testing.T) {
+	broker := callbackBroker(10101)
+	harness := callbackHarnessWithoutConsole(t, broker)
+	login := broker.Register("chatgpt", "state-1")
+	ticket := login.Ticket()
+
+	t.Run("the document names its provider and polls its own login", func(t *testing.T) {
+		response := harness.management(http.MethodGet, "/callback/chatgpt?ticket="+ticket, "", nil)
+		if response.Code != http.StatusOK {
+			t.Fatalf("status = %d, want 200", response.Code)
+		}
+		body := response.Body.String()
+		for _, fragment := range []string{
+			"chatgpt",
+			"/callback/chatgpt/status?ticket=" + ticket,
+			"Finishing the login",
+			"Authorized by chatgpt",
+			"Exchanging the authorization",
+			"Account stored",
+			// The page counts down in the open before it closes itself, with the
+			// seconds left as the placeholder its script replaces each tick.
+			`data-close-seconds="3"`,
+			"Closing in __SECONDS__",
+			`id="countdown"`,
+		} {
+			if !strings.Contains(body, fragment) {
+				t.Fatalf("the document does not carry %q", fragment)
+			}
+		}
+	})
+
+	t.Run("the document paints the current mark and carries its own icon", func(t *testing.T) {
+		body := harness.management(http.MethodGet, "/callback/chatgpt?ticket="+ticket, "", nil).Body.String()
+		// The brand mark is one node with two arcs around it. A page that
+		// paints anything else is showing a mark Relo no longer uses.
+		if !strings.Contains(body, "M256 91 A165 165 0 0 1 421 256") {
+			t.Fatalf("the document paints no brand mark: %s", body)
+		}
+		// The icon comes with the document, so the browser never falls back to
+		// a console icon or a cached one.
+		icon := callbackIconOf(t, body)
+		decoded, err := base64.StdEncoding.DecodeString(strings.TrimPrefix(icon, "data:image/svg+xml;base64,"))
+		if err != nil {
+			t.Fatalf("decode the document icon: %v", err)
+		}
+		// The page carries the plated logo, not a loose mark: the icon must
+		// carry the squircle plate's gradient, the mark baked at 0.66 of it.
+		if !strings.Contains(string(decoded), "<linearGradient") || !strings.Contains(string(decoded), "A108.90 108.90") {
+			t.Fatalf("the document icon is not the brand mark: %s", decoded)
+		}
+	})
+
+	t.Run("the document carries its own headers", func(t *testing.T) {
+		response := harness.management(http.MethodGet, "/callback/chatgpt?ticket="+ticket, "", nil)
+		for _, header := range []string{"Content-Security-Policy", "Referrer-Policy", "Cache-Control", "X-Frame-Options"} {
+			if response.Header().Get(header) == "" {
+				t.Fatalf("the document carries no %s header", header)
+			}
+		}
+	})
+
 	t.Run("an unknown ticket renders the expired state", func(t *testing.T) {
 		response := harness.management(http.MethodGet, "/callback/chatgpt?ticket=nothing", "", nil)
 		if response.Code != http.StatusOK {
@@ -144,11 +212,21 @@ func TestCallbackPage(t *testing.T) {
 			t.Fatalf("body = %q, want the expired state", response.Body.String())
 		}
 	})
+
+	t.Run("a refusal is still a refusal", func(t *testing.T) {
+		response := callbackRedirect(harness, "/callback/cursor?code=abc&state=unknown")
+		if response.Code != http.StatusBadRequest {
+			t.Fatalf("status = %d, want 400", response.Code)
+		}
+		assertCallbackFailure(t, response.Body.String(), "This login is no longer open")
+	})
 }
 
 func TestCallbackRefusals(t *testing.T) {
 	broker := callbackBroker(10101)
-	harness := callbackHarness(t, broker)
+	// The sentences a refusal renders live in the document the daemon falls
+	// back to, so that is the build that shows them.
+	harness := callbackHarnessWithoutConsole(t, broker)
 
 	t.Run("a redirect for a provider nothing started is refused", func(t *testing.T) {
 		response := callbackRedirect(harness, "/callback/cursor?code=abc&state=unknown")
@@ -218,7 +296,7 @@ func TestCallbackPageNamesWhyALoginFailed(t *testing.T) {
 	for _, test := range cases {
 		t.Run(test.name, func(t *testing.T) {
 			broker := callbackBroker(10101)
-			harness := callbackHarness(t, broker)
+			harness := callbackHarnessWithoutConsole(t, broker)
 			login := broker.Register("claude", "state-1")
 			broker.Complete(login.Ticket(), "", test.cause)
 			page := harness.management(http.MethodGet, "/callback/claude?ticket="+login.Ticket(), "", nil)

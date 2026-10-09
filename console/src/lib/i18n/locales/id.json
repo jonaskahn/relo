@@ -158,6 +158,33 @@
       "submitting": "Sedang masuk…",
       "failure": "Konsol gagal masuk."
     },
+    "callback": {
+      "documentTitle": "Menyelesaikan masuk · Relo",
+      "heading": "Menyelesaikan masuk",
+      "summary": "Relo sudah menerima otorisasi dan sedang menyimpan akun.",
+      "stepsLabel": "Kemajuan masuk",
+      "stepAuthorized": "Diotorisasi oleh {provider}",
+      "stepExchanging": "Menukar otorisasi",
+      "stepStored": "Akun tersimpan",
+      "markerWorking": "Berjalan",
+      "markerConnected": "Terhubung",
+      "markerFailed": "Tidak terhubung",
+      "connectedTitle": "Terhubung",
+      "connectedBody": "Relo menyimpan akun dan meneruskan permintaan lewat akun itu.",
+      "failedTitle": "Masuk tidak selesai",
+      "expiredTitle": "Masuk ini sudah tidak terbuka",
+      "expiredBody": "Relo sudah tidak memantau masuk ini. Mulailah lagi dari konsol.",
+      "failure": {
+        "denied": "Penyedia menolak otorisasi.",
+        "state": "Panggilan balik tidak cocok dengan masuk yang dimulai Relo, atau sudah dipakai.",
+        "timeout": "Penyedia tidak menjawab tepat waktu.",
+        "exchange": "Penyedia tidak mau menukar otorisasi dengan token."
+      },
+      "accountLabel": "Akun",
+      "closeHint": "Anda bisa menutup tab ini.",
+      "closingIn": "Ditutup dalam {seconds}s…",
+      "consoleLink": "Buka konsol"
+    },
     "common": {
       "window24h": "24 jam",
       "window7d": "7 hari terakhir",

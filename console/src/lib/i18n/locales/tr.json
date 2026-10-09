@@ -158,6 +158,33 @@
       "submitting": "Oturum açılıyor…",
       "failure": "Konsol oturum açamadı."
     },
+    "callback": {
+      "documentTitle": "Oturum tamamlanıyor · Relo",
+      "heading": "Oturum tamamlanıyor",
+      "summary": "Relo yetkilendirmeyi aldı ve hesabı kaydediyor.",
+      "stepsLabel": "Oturum ilerlemesi",
+      "stepAuthorized": "{provider} tarafından yetkilendirildi",
+      "stepExchanging": "Yetkilendirme değiştiriliyor",
+      "stepStored": "Hesap kaydedildi",
+      "markerWorking": "Sürüyor",
+      "markerConnected": "Bağlandı",
+      "markerFailed": "Bağlanmadı",
+      "connectedTitle": "Bağlandı",
+      "connectedBody": "Relo hesabı kaydetti ve istekleri onun üzerinden yönlendiriyor.",
+      "failedTitle": "Oturum tamamlanmadı",
+      "expiredTitle": "Bu oturum artık açık değil",
+      "expiredBody": "Relo bu oturumu artık izlemiyor. Konsoldan yeniden başlatın.",
+      "failure": {
+        "denied": "Sağlayıcı yetkilendirmeyi reddetti.",
+        "state": "Geri dönüş çağrısı Relo’nun başlattığı oturumla eşleşmedi ya da zaten kullanılmıştı.",
+        "timeout": "Sağlayıcı zamanında yanıt vermedi.",
+        "exchange": "Sağlayıcı yetkilendirmeyi bir jetonla değiştirmedi."
+      },
+      "accountLabel": "Hesap",
+      "closeHint": "Bu sekmeyi kapatabilirsiniz.",
+      "closingIn": "{seconds}s sonra kapanıyor…",
+      "consoleLink": "Konsolu aç"
+    },
     "common": {
       "window24h": "24 saat",
       "window7d": "Son 7 gün",

@@ -48,6 +48,13 @@ func (s *Server) handleCallbackStatus(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) renderCallback(w http.ResponseWriter, r *http.Request, provider, ticket string) {
+	// The console carries the page, so a build with one hands the browser to
+	// the shell and lets the route read the ticket and poll for itself. A build
+	// without one renders the document below.
+	if s.DashboardBuilt() {
+		s.serveCallbackShell(w, r)
+		return
+	}
 	view := s.callbackView(r, provider, ticket)
 	status, found := s.opts.Callbacks.Status(ticket)
 	if !found {
@@ -72,6 +79,14 @@ func (s *Server) renderCallback(w http.ResponseWriter, r *http.Request, provider
 }
 
 func (s *Server) renderCallbackRefusal(w http.ResponseWriter, r *http.Request, provider string) {
+	// A refusal is still the page a browser lands on, so a build with a console
+	// hands it the shell and lets the route explain: it polls a ticket nothing
+	// was issued for, and renders the expired state. The status stays the
+	// refusal, because a caller watching this address reads it as the outcome.
+	if s.DashboardBuilt() {
+		s.serveCallbackStatus(w, r, http.StatusBadRequest)
+		return
+	}
 	view := s.callbackView(r, provider, "")
 	s.expireCallback(&view)
 	s.writeCallbackPage(w, view, http.StatusBadRequest)
@@ -108,4 +123,60 @@ func setCallbackPageHeaders(w http.ResponseWriter) {
 	w.Header().Set("Content-Security-Policy",
 		"default-src 'none'; base-uri 'none'; form-action 'none'; img-src 'self' data:; "+
 			"style-src 'unsafe-inline'; script-src 'unsafe-inline'; connect-src 'self'")
+}
+
+// setCallbackShellHeaders is what setCallbackPageHeaders carries over to a
+// console shell. The CSP does not travel: the shell loads the console's own
+// module scripts, which a `default-src 'none'` policy cannot permit, and no
+// other console response carries one.
+func setCallbackShellHeaders(w http.ResponseWriter) {
+	w.Header().Set("Cache-Control", "no-store")
+	w.Header().Set("Referrer-Policy", "no-referrer")
+	w.Header().Set("X-Content-Type-Options", "nosniff")
+	w.Header().Set("X-Frame-Options", "DENY")
+}
+
+// serveCallbackShell answers with the console shell, which the callback route
+// renders in the browser. The dashboard handler sets its own cache policy and
+// writes the status before this returns, and net/http drops a header set after
+// WriteHeader, so the headers a callback page owes go on through a writer that
+// reapplies them at the moment the status is written.
+func (s *Server) serveCallbackShell(w http.ResponseWriter, r *http.Request) {
+	s.serveCallbackStatus(w, r, http.StatusOK)
+}
+
+// serveCallbackStatus answers with the console shell under a chosen status. The
+// shell is what a browser reads either way; only the status differs.
+func (s *Server) serveCallbackStatus(w http.ResponseWriter, r *http.Request, status int) {
+	s.dashboardHandler().ServeHTTP(&callbackShellWriter{ResponseWriter: w, status: status}, r)
+}
+
+// callbackShellWriter reapplies the callback headers and the status as the
+// response is written, so they survive a handler that set its own first. A
+// handler that writes without naming a status gets the same treatment through
+// Write, which is the call that implies the 200.
+type callbackShellWriter struct {
+	http.ResponseWriter
+	status int
+	wrote  bool
+}
+
+func (w *callbackShellWriter) WriteHeader(_ int) {
+	w.writeHeader()
+	w.ResponseWriter.WriteHeader(w.status)
+}
+
+func (w *callbackShellWriter) Write(body []byte) (int, error) {
+	if !w.wrote {
+		w.writeHeader()
+	}
+	return w.ResponseWriter.Write(body)
+}
+
+func (w *callbackShellWriter) writeHeader() {
+	if w.wrote {
+		return
+	}
+	w.wrote = true
+	setCallbackShellHeaders(w.ResponseWriter)
 }

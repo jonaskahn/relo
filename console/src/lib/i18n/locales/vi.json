@@ -158,6 +158,33 @@
       "submitting": "Đang đăng nhập…",
       "failure": "Bảng điều khiển không thể đăng nhập."
     },
+    "callback": {
+      "documentTitle": "Hoàn tất đăng nhập · Relo",
+      "heading": "Hoàn tất đăng nhập",
+      "summary": "Relo đã nhận được ủy quyền và đang lưu tài khoản.",
+      "stepsLabel": "Tiến trình đăng nhập",
+      "stepAuthorized": "Được {provider} ủy quyền",
+      "stepExchanging": "Đang đổi ủy quyền",
+      "stepStored": "Đã lưu tài khoản",
+      "markerWorking": "Đang chạy",
+      "markerConnected": "Đã kết nối",
+      "markerFailed": "Chưa kết nối",
+      "connectedTitle": "Đã kết nối",
+      "connectedBody": "Relo đã lưu tài khoản và định tuyến các yêu cầu qua đó.",
+      "failedTitle": "Đăng nhập không hoàn tất",
+      "expiredTitle": "Phiên đăng nhập này không còn mở",
+      "expiredBody": "Relo không còn theo dõi phiên đăng nhập này. Hãy bắt đầu lại từ bảng điều khiển.",
+      "failure": {
+        "denied": "Nhà cung cấp đã từ chối ủy quyền.",
+        "state": "Lệnh gọi lại không khớp với phiên đăng nhập Relo đã bắt đầu, hoặc đã được dùng.",
+        "timeout": "Nhà cung cấp không phản hồi kịp thời.",
+        "exchange": "Nhà cung cấp không muốn đổi ủy quyền lấy token."
+      },
+      "accountLabel": "Tài khoản",
+      "closeHint": "Bạn có thể đóng thẻ này.",
+      "closingIn": "Đóng sau {seconds}s…",
+      "consoleLink": "Mở bảng điều khiển"
+    },
     "common": {
       "window24h": "24 giờ",
       "window7d": "7 ngày qua",

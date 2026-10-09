@@ -158,6 +158,33 @@
       "submitting": "लॉगिन हो रहा है…",
       "failure": "console लॉगिन नहीं कर सका।"
     },
+    "callback": {
+      "documentTitle": "साइन-इन पूरा हो रहा है · Relo",
+      "heading": "साइन-इन पूरा हो रहा है",
+      "summary": "Relo को प्राधिकरण मिल गया है और वह खाता सहेज रहा है।",
+      "stepsLabel": "साइन-इन की प्रगति",
+      "stepAuthorized": "{provider} द्वारा प्राधिकृत",
+      "stepExchanging": "प्राधिकरण का Exchange किया जा रहा है",
+      "stepStored": "खाता सहेजा गया",
+      "markerWorking": "चल रहा है",
+      "markerConnected": "कनेक्टेड",
+      "markerFailed": "कनेक्ट नहीं",
+      "connectedTitle": "कनेक्टेड",
+      "connectedBody": "Relo ने खाता सहेज लिया है और उसी के ज़रिए अनुरोध भेजता है।",
+      "failedTitle": "साइन-इन पूरा नहीं हुआ",
+      "expiredTitle": "यह साइन-इन अब खुला नहीं है",
+      "expiredBody": "Relo अब इस साइन-इन पर नज़र नहीं रखता। कंसोल से इसे फिर शुरू करें।",
+      "failure": {
+        "denied": "प्रदाता ने प्राधिकरण अस्वीकार कर दिया।",
+        "state": "कॉलबैक Relo द्वारा शुरू किए गए साइन-इन से मेल नहीं खाता, या पहले ही उपयोग हो चुका था।",
+        "timeout": "प्रदाता ने समय पर उत्तर नहीं दिया।",
+        "exchange": "प्रदाता ने प्राधिकरण को टोकन में बदलने से मना कर दिया।"
+      },
+      "accountLabel": "खाता",
+      "closeHint": "आप यह टैब बंद कर सकते हैं।",
+      "closingIn": "{seconds}s में बंद हो रहा है…",
+      "consoleLink": "कंसोल खोलें"
+    },
     "common": {
       "window24h": "24 घंटे",
       "window7d": "पिछले 7 दिन",

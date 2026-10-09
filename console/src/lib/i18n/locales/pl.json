@@ -158,6 +158,33 @@
       "submitting": "Logowanie…",
       "failure": "Nie udało się zalogować do konsoli."
     },
+    "callback": {
+      "documentTitle": "Kończenie logowania · Relo",
+      "heading": "Kończenie logowania",
+      "summary": "Relo otrzymał autoryzację i zapisuje konto.",
+      "stepsLabel": "Postęp logowania",
+      "stepAuthorized": "Autoryzowano przez {provider}",
+      "stepExchanging": "Wymiana autoryzacji",
+      "stepStored": "Konto zapisane",
+      "markerWorking": "W toku",
+      "markerConnected": "Połączono",
+      "markerFailed": "Niepołączono",
+      "connectedTitle": "Połączono",
+      "connectedBody": "Relo zapisał konto i kieruje przez nie żądania.",
+      "failedTitle": "Logowanie nie zostało zakończone",
+      "expiredTitle": "To logowanie nie jest już aktywne",
+      "expiredBody": "Relo nie śledzi już tego logowania. Rozpocznij je ponownie w konsoli.",
+      "failure": {
+        "denied": "Dostawca odrzucił autoryzację.",
+        "state": "Callback nie odpowiadał logowaniu uruchomionemu przez Relo albo został już użyty.",
+        "timeout": "Dostawca nie odpowiedział na czas.",
+        "exchange": "Dostawca nie chciał wymienić autoryzacji na token."
+      },
+      "accountLabel": "Konto",
+      "closeHint": "Możesz zamknąć tę kartę.",
+      "closingIn": "Zamykanie za {seconds}s…",
+      "consoleLink": "Otwórz konsolę"
+    },
     "common": {
       "window24h": "24 h",
       "window7d": "Ostatnie 7 dni",
