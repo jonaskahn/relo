@@ -504,6 +504,7 @@
 				{idProblem}
 				isAddKey={draft.path === 'addKey'}
 				targetLabel={template?.label ?? ''}
+				templateId={template?.id ?? ''}
 				onchange={(change) => {
 					if (change.providerId !== undefined) reviewId = change.providerId;
 					if (change.label !== undefined) reviewLabel = change.label;

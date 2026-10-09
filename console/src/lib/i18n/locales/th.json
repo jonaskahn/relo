@@ -878,7 +878,8 @@
           "search": "ค้นหาโมเดล",
           "commitFailed": "เพิ่ม provider ไม่ได้: {detail}",
           "keyAdded": "เพิ่มคีย์ให้ {label} แล้ว",
-          "legend": "ราคาต่อ 1 ล้านโทเคน รับ / ส่ง"
+          "legend": "ราคาต่อ 1 ล้านโทเคน รับ / ส่ง",
+          "retainsPrompts": "พูลฟรีนี้ไม่ต้องใช้บัญชี ผู้ให้บริการอาจบันทึกพรอมต์ที่คุณส่งไปยัง"
         },
         "format": {
           "openaiChat": "OpenAI Chat Completions ใช้ได้กับ client และ gateway ส่วนใหญ่",

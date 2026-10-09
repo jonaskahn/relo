@@ -878,7 +878,8 @@
           "search": "Buscar modelos",
           "commitFailed": "Não foi possível adicionar o provedor: {detail}",
           "keyAdded": "Chave adicionada a {label}.",
-          "legend": "Preço por 1M de tokens, entrada / saída"
+          "legend": "Preço por 1M de tokens, entrada / saída",
+          "retainsPrompts": "Este pool gratuito não exige conta. Os prompts enviados podem ser registrados pelo provedor."
         },
         "format": {
           "openaiChat": "OpenAI Chat Completions; funciona com a maioria dos clientes e gateways",

@@ -878,7 +878,8 @@
           "search": "Szukaj modeli",
           "commitFailed": "Nie udało się dodać dostawcy: {detail}",
           "keyAdded": "Dodano klucz do {label}.",
-          "legend": "Cena za 1 mln tokenów, wejście / wyjście"
+          "legend": "Cena za 1 mln tokenów, wejście / wyjście",
+          "retainsPrompts": "Ta darmowa pula nie wymaga konta. Wysyłane do niej prompty może zapisywać dostawca."
         },
         "format": {
           "openaiChat": "OpenAI Chat Completions; działa z większością klientów i bram",

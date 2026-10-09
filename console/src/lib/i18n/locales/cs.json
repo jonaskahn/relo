@@ -878,7 +878,8 @@
           "search": "Hledat modely",
           "commitFailed": "Poskytovatele se nepodařilo přidat: {detail}",
           "keyAdded": "Klíč přidán k {label}.",
-          "legend": "Cena za 1M tokenů, vstup / výstup"
+          "legend": "Cena za 1M tokenů, vstup / výstup",
+          "retainsPrompts": "Tento bezplatný fond nevyžaduje účet. Prompty, které mu pošlete, může poskytovatel evidovat."
         },
         "format": {
           "openaiChat": "OpenAI Chat Completions; funguje s většinou klientů a bran",

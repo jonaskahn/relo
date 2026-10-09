@@ -878,7 +878,8 @@
           "search": "Buscar modelos",
           "commitFailed": "No se pudo añadir el provider: {detail}",
           "keyAdded": "Clave añadida a {label}.",
-          "legend": "Precio por 1M de tokens, entrada / salida"
+          "legend": "Precio por 1M de tokens, entrada / salida",
+          "retainsPrompts": "Este conjunto gratuito no requiere cuenta. El proveedor puede registrar las consultas que le envíes."
         },
         "format": {
           "openaiChat": "OpenAI Chat Completions; funciona con casi todos los clientes y gateways",

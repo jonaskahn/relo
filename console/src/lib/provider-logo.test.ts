@@ -23,6 +23,12 @@ describe('providerLogoSrc', () => {
 		expect(providerLogoSrc('teamorouter')).toBe('/provider-logos/teamorouter.svg');
 	});
 
+	// The keyless lane is the same vendor with no account, so it wears that
+	// vendor's mark rather than one of its own.
+	it('resolves the keyless Kilo lane through the gateway mark', () => {
+		expect(providerLogoSrc('kilo-free')).toBe('/provider-logos/kilo.svg');
+	});
+
 	it('returns null when that id has no logo file', () => {
 		expect(providerLogoSrc('not-a-provider')).toBeNull();
 	});

@@ -19,6 +19,9 @@ const aliases: Record<string, string> = {
 	kimi: 'kimi-code-plan-cn',
 	'orcarouter-oauth': 'orcarouter',
 	'meta-muse': 'meta',
+	// The keyless lane wears the gateway's mark: it is the same vendor, and the
+	// free pool is not a product of its own.
+	'kilo-free': 'kilo',
 	// Claude Desktop has no mark of its own and wears the vendor it talks to.
 	// An agent that does have its own mark needs no entry here.
 	'claude-desktop': 'anthropic'

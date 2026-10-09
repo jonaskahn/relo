@@ -369,3 +369,42 @@ func TestListAntigravityWithoutBucketsKeepsWhatItLists(t *testing.T) {
 		}
 	}
 }
+
+// openAIRoster carries the three states a listing can leave the free flag in:
+// marked free, marked paid, and silent about it.
+const openAIRoster = `{
+  "data": [
+    {"id": "stealth/glyph-cluster", "isFree": true},
+    {"id": "anthropic/claude-opus-5.5", "isFree": false},
+    {"id": "vendor/unmarked"}
+  ]
+}`
+
+// TestListOpenAIReportsWhatTheProviderMarksFree asserts the dialect carries a
+// provider's own free flag through, because a gateway publishes free models
+// whose names state no price and a name test would drop them.
+func TestListOpenAIReportsWhatTheProviderMarksFree(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(openAIRoster))
+	}))
+	t.Cleanup(server.Close)
+
+	listed, err := New(server.Client()).List(context.Background(), Target{
+		Format: catalog.ModelsOpenAI, BaseURL: server.URL, Auth: upstream.Authorization{},
+	})
+	if err != nil {
+		t.Fatalf("List(openai) error = %v", err)
+	}
+	want := []*bool{new(true), new(false), nil}
+	if len(listed) != len(want) {
+		t.Fatalf("listed = %+v, want %d rows", listed, len(want))
+	}
+	for i, entry := range listed {
+		if free := listed[i].IsFree; free == nil != (want[i] == nil) {
+			t.Fatalf("%s IsFree = %v, want %v", entry.ID, free, want[i])
+		} else if free != nil && *free != *want[i] {
+			t.Fatalf("%s IsFree = %v, want %v", entry.ID, *free, *want[i])
+		}
+	}
+}

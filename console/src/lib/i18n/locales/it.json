@@ -878,7 +878,8 @@
           "search": "Cerca modelli",
           "commitFailed": "Impossibile aggiungere il provider: {detail}",
           "keyAdded": "Chiave aggiunta a {label}.",
-          "legend": "Prezzo per 1M token, input / output"
+          "legend": "Prezzo per 1M token, input / output",
+          "retainsPrompts": "Questo pool gratuito non richiede un account. Le richieste che invii possono essere registrate dal provider."
         },
         "format": {
           "openaiChat": "OpenAI Chat Completions; funziona con la maggior parte dei client e dei gateway",

@@ -878,7 +878,8 @@
           "search": "Modellen zoeken",
           "commitFailed": "Kon de provider niet toevoegen: {detail}",
           "keyAdded": "Sleutel toegevoegd aan {label}.",
-          "legend": "Prijs per 1M tokens, in / uit"
+          "legend": "Prijs per 1M tokens, in / uit",
+          "retainsPrompts": "Deze gratis pool vraagt geen account. De prompts die je hem stuurt kunnen door de aanbieder worden vastgelegd."
         },
         "format": {
           "openaiChat": "OpenAI Chat Completions; werkt met de meeste clients en gateways",

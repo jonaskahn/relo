@@ -878,7 +878,8 @@
           "search": "搜尋模型",
           "commitFailed": "無法新增供應商：{detail}",
           "keyAdded": "金鑰已加入 {label}。",
-          "legend": "每 100 萬 token 的價格（輸入 / 輸出）"
+          "legend": "每 100 萬 token 的價格（輸入 / 輸出）",
+          "retainsPrompts": "此免費池無需帳戶。您傳送給它的提示詞可能被服務商記錄。"
         },
         "format": {
           "openaiChat": "OpenAI Chat Completions；相容大多數用戶端與閘道器",

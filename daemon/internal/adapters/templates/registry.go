@@ -25,6 +25,7 @@ func buildCuratedTemplates() []Template {
 	list = append(list, cloudTemplates...)
 	list = append(list, dualFormatTemplates...)
 	list = append(list, freeTemplates...)
+	list = append(list, kiloFreeTemplates...)
 	list = append(list, localPresets...)
 	return list
 }

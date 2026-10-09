@@ -97,7 +97,7 @@ func TestBuildRosterKeepsOneRowPerId(t *testing.T) {
 // operator may type.
 func TestBuildRosterAppliesTheTemplateFilterToBothSources(t *testing.T) {
 	listing := listingTemplate()
-	listing.FilterModels = func(id string) bool { return len(id) > 4 }
+	listing.FilterModels = func(model catalog.Listed) bool { return len(model.ID) > 4 }
 	listed := buildRoster(listing, rosterModeFor(listing),
 		[]catalog.Listed{{ID: "a"}, {ID: "gpt-6.1"}}, nil)
 	if got := sourcesOf(listed); len(got) != 1 || got[0] != "gpt-6.1=listing" {
@@ -105,7 +105,7 @@ func TestBuildRosterAppliesTheTemplateFilterToBothSources(t *testing.T) {
 	}
 
 	typed := typedTemplate()
-	typed.FilterModels = func(id string) bool { return len(id) > 4 }
+	typed.FilterModels = func(model catalog.Listed) bool { return len(model.ID) > 4 }
 	typedRows := buildRoster(typed, rosterModeFor(typed), nil,
 		[]catalog.Listed{{ID: "ab"}, {ID: "my-deployment"}})
 	if got := sourcesOf(typedRows); len(got) != 1 || got[0] != "my-deployment=manual" {

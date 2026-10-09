@@ -878,7 +878,8 @@
           "search": "Search models",
           "commitFailed": "Couldn’t add the provider: {detail}",
           "keyAdded": "Key added to {label}.",
-          "legend": "Price per 1M tokens, in / out"
+          "legend": "Price per 1M tokens, in / out",
+          "retainsPrompts": "This free pool takes no account. Prompts you send to it may be logged by the provider."
         },
         "format": {
           "openaiChat": "OpenAI Chat Completions; works with most clients and gateways",

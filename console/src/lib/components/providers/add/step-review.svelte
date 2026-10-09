@@ -19,6 +19,7 @@
 		onchange: (patch: { providerId?: string; label?: string; disabled?: string[] }) => void;
 		isAddKey?: boolean;
 		targetLabel?: string;
+		templateId?: string;
 	}
 
 	let {
@@ -29,7 +30,8 @@
 		idProblem = '',
 		onchange,
 		isAddKey = false,
-		targetLabel = ''
+		targetLabel = '',
+		templateId = ''
 	}: Props = $props();
 
 	let search = $state('');
@@ -50,6 +52,10 @@
 	const counts = $derived(
 		probe?.counts ?? { listed: 0, matched: 0, priced: 0, from_listing: 0, from_manual: 0 }
 	);
+
+	// The keyless pool takes no account and logs what it is sent, so the
+	// operator reads that beside the models they are about to route to it.
+	const retainsPrompts = $derived(templateId === 'kilo-free');
 
 	function toggle(id: string, on: boolean) {
 		onchange({ disabled: on ? disabled.filter((entry) => entry !== id) : [...disabled, id] });
@@ -96,6 +102,12 @@
 	</div>
 
 	<div class="flex min-h-0 flex-col gap-3">
+		{#if retainsPrompts}
+			<p class="flex items-start gap-2 text-xs text-muted-foreground">
+				<Icon name="alert-triangle" size={14} class="mt-0.5 shrink-0 text-warn" />
+				<span>{$t('ui.pages.providersPage.review.retainsPrompts')}</span>
+			</p>
+		{/if}
 		<div class="flex flex-wrap items-center gap-2">
 			<Input
 				class="max-w-xs"

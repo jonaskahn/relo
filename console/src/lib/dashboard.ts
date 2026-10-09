@@ -28,19 +28,26 @@ export function paidProviders(providers: Provider[]): Provider[] {
 	return providers.filter((provider) => spendKindOf(provider) === 'paid');
 }
 
-/** Lists the connections a plan covers: sign-in accounts, token-plan APIs, and OpenCode, both Go
- *  and Free. */
+/** Lists the connections a plan covers: sign-in accounts, token-plan APIs, and the keyless free
+ *  lanes. */
 export function planProviders(providers: Provider[]): Provider[] {
 	return providers.filter((provider) => spendKindOf(provider) === 'plan');
 }
 
 /** Reports how one connection's cost counts. A plan covers sign-in accounts, token-plan APIs,
- *  and OpenCode; a local engine has no per-token price at all, and everything else is
+ *  the keyless free lanes; a local engine has no per-token price at all, and everything else is
  *  pay-as-you-go. */
 export function spendKindOf(
 	provider: Pick<Provider, 'kind' | 'id' | 'template_id' | 'modelsdev_provider_id' | 'base_url'>
 ): SpendKind {
-	if (provider.kind === 'signin' || isTokenPlan(provider) || isOpenCode(provider)) return 'plan';
+	if (
+		provider.kind === 'signin' ||
+		isTokenPlan(provider) ||
+		isOpenCode(provider) ||
+		isKiloFree(provider)
+	) {
+		return 'plan';
+	}
 	if (provider.kind === 'key' || provider.kind === 'cloud') return 'paid';
 	return 'local';
 }
@@ -77,6 +84,14 @@ function openCodeURL(baseURL: string): boolean {
 	} catch {
 		return false;
 	}
+}
+
+/** Reports a connection served by the keyless Kilo pool, which bills no token
+ *  because it accepts no account. */
+export function isKiloFree(
+	provider: Pick<Provider, 'template_id' | 'modelsdev_provider_id'>
+): boolean {
+	return provider.template_id === 'kilo-free' || provider.modelsdev_provider_id === 'kilo-free';
 }
 
 /** One connection on the spend board. */
