@@ -4,6 +4,8 @@ import (
 	"context"
 	"net"
 	"os"
+	"strconv"
+	"strings"
 	"testing"
 	"time"
 
@@ -64,6 +66,36 @@ func TestSupervisorServesAndStops(t *testing.T) {
 	}
 	if _, found := platform.ReadRuntime(home); found {
 		t.Fatal("a stopped supervisor left its runtime file behind")
+	}
+}
+
+func TestSupervisorStopLeavesForeignPortsAlone(t *testing.T) {
+	home := testkit.TempHome(t)
+	supervisor, port := startSupervisor(t, home)
+	_, held := spawnForeignHolder(t, "127.0.0.1:0")
+	writeIsolatedPorts(t, home, port)
+	appendDataPlanePort(t, home, held[0])
+	if err := supervisor.Stop(); err != nil {
+		t.Fatal(err)
+	}
+	if !portAccepts("127.0.0.1:" + strconv.Itoa(held[0])) {
+		t.Fatal("Stop ended a foreign listener")
+	}
+	if owned, err := supervisor.Start(); owned || err != nil {
+		t.Fatalf("terminal Stop allowed Start: %v, %v", owned, err)
+	}
+}
+
+func appendDataPlanePort(t *testing.T, home string, port int) {
+	t.Helper()
+	path := config.ConfigPath(home)
+	body, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatalf("read config: %v", err)
+	}
+	updated := strings.Replace(string(body), "openai = 0", "openai = "+strconv.Itoa(port), 1)
+	if err := os.WriteFile(path, []byte(updated), 0o600); err != nil {
+		t.Fatalf("write config: %v", err)
 	}
 }
 
@@ -182,5 +214,22 @@ func writeBrokenPortConfig(t *testing.T, home string) {
 	body := "[server]\nbind = \"127.0.0.1\"\nport = 70000\n"
 	if err := os.WriteFile(config.ConfigPath(home), []byte(body), 0o600); err != nil {
 		t.Fatalf("write config: %v", err)
+	}
+}
+
+func TestQuitWinsAgainstRestart(t *testing.T) {
+	for range 5 {
+		supervisor, _ := startSupervisor(t, testkit.TempHome(t))
+		restarted := make(chan error, 1)
+		go func() { restarted <- supervisor.Restart() }()
+		if err := supervisor.Stop(); err != nil {
+			t.Fatal(err)
+		}
+		if err := <-restarted; err != nil {
+			t.Fatal(err)
+		}
+		if state, _, _ := supervisor.State(); state != platform.StateStopped {
+			t.Fatalf("restart survived quit: %v", state)
+		}
 	}
 }

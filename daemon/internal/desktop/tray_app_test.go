@@ -84,7 +84,6 @@ type stubTray struct {
 	atooltip     string
 	notification string
 	removed      int
-	hidden       int
 }
 
 func (s *stubTray) Show() *systray.SystemTray { return nil }
@@ -95,12 +94,7 @@ func (s *stubTray) Remove() {
 	s.removed++
 }
 
-func (s *stubTray) Hide() *systray.SystemTray {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-	s.hidden++
-	return nil
-}
+func (s *stubTray) Hide() *systray.SystemTray { return nil }
 
 func (s *stubTray) SetTooltip(text string) *systray.SystemTray {
 	s.mu.Lock()
@@ -134,13 +128,6 @@ func (s *stubTray) removals() int {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	return s.removed
-}
-
-// hides counts the times the icon was taken out of the notification area.
-func (s *stubTray) hides() int {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-	return s.hidden
 }
 
 // testApp builds a tray app without an icon: the menu items live in memory,
@@ -178,9 +165,7 @@ func testAppWithTray(t *testing.T, control Control, opts Options) (*app, *stubTr
 	a.itemForce = menu.Add("force", nil)
 	a.itemAutostart = menu.AddCheckbox("autostart", false, nil)
 	a.itemLanguage = menu.AddSubmenu("language", systray.NewMenu())
-	a.itemQuit = menu.AddSubmenu("quit", systray.NewMenu())
-	a.itemQuitHide = menu.Add("quit-hide", nil)
-	a.itemQuitStop = menu.Add("quit-stop", nil)
+	a.itemQuit = menu.Add("quit", nil)
 	return a, stub
 }
 
@@ -541,8 +526,9 @@ func TestLeaveTakesTheIconDown(t *testing.T) {
 	}
 }
 
-// TestStopThenLeaveEndsTheProxy covers the shutdown item: a clean stop takes
-// the icon down, and a stop that failed keeps it and says why.
+// TestStopThenLeaveEndsTheProxy covers the shutdown item: quitting ends the
+// proxy and takes the icon down, even when
+// sweep reports a failure.
 func TestStopThenLeaveEndsTheProxy(t *testing.T) {
 	control := &fakeControl{}
 	a, stub := testAppWithTray(t, control, Options{Home: t.TempDir()})
@@ -551,14 +537,94 @@ func TestStopThenLeaveEndsTheProxy(t *testing.T) {
 		t.Fatalf("the icon was removed %d times after a clean stop, want once", got)
 	}
 
-	control.stop = errors.New("the proxy did not stop")
+	control.stop = errors.New("a listener would not end")
 	failed, failedStub := testAppWithTray(t, control, Options{Home: t.TempDir()})
 	failed.stopThenLeave()
-	if got := failedStub.removals(); got != 0 {
-		t.Fatalf("the icon was removed %d times after a failed stop, want none", got)
+	if got := failedStub.removals(); got != 1 {
+		t.Fatalf("the icon was removed %d times after a failed sweep, want once", got)
 	}
-	if got := failedStub.lastNotification(); !strings.Contains(got, "Relo") {
-		t.Fatalf("notification = %q, want the failure notification", got)
+
+}
+
+// TestQuitRunsOnce covers the operator clicking Quit twice: one shutdown
+// ends the proxy, and the second click changes nothing.
+func TestQuitRunsOnce(t *testing.T) {
+	control := &fakeControl{}
+	a, stub := testAppWithTray(t, control, Options{Home: t.TempDir()})
+	var wg sync.WaitGroup
+	for range 2 {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			a.stopThenLeave()
+		}()
+	}
+	wg.Wait()
+	if got := stub.removals(); got != 1 {
+		t.Fatalf("the icon was removed %d times, want once", got)
+	}
+}
+
+// TestQuitBlocksNewCycles covers a restart arriving while Quit runs: the
+// cycle is refused, so quitting never hands a fresh proxy to the sweep.
+func TestQuitBlocksNewCycles(t *testing.T) {
+	logger, logs := testkit.TestLogger(t)
+	control := &fakeControl{
+		state:   platform.StateRunning,
+		restart: errors.New("the listener is not ready"),
+		force:   errors.New("the listener is not ready"),
+	}
+	a, _ := testAppWithTray(t, control, Options{Home: t.TempDir(), Logger: logger, LogPath: "/tmp/relo.log"})
+	a.quitting.Store(true)
+	a.restartProxy()
+	a.forceRestartProxy()
+	// The refused cycles report nothing; the settle below is what makes the
+	// absence observable, since a cycle that ran reports from a goroutine.
+	deadline := time.Now().Add(200 * time.Millisecond)
+	for time.Now().Before(deadline) {
+		if got := logs.String(); got != "" {
+			t.Fatalf("log = %q, want no cycle while quitting", got)
+		}
+		time.Sleep(5 * time.Millisecond)
+	}
+}
+
+type drainingControl struct {
+	*fakeControl
+	started chan struct{}
+	drained chan struct{}
+}
+
+func (c *drainingControl) Stop() error {
+	close(c.started)
+	<-c.drained
+	return nil
+}
+
+func TestQuitWaitsForDaemonShutdown(t *testing.T) {
+	control := &drainingControl{fakeControl: &fakeControl{}, started: make(chan struct{}), drained: make(chan struct{})}
+	a, stub := testAppWithTray(t, control, Options{Home: t.TempDir()})
+	finished := make(chan struct{})
+	go func() {
+		a.stopThenLeave()
+		close(finished)
+	}()
+	select {
+	case <-control.started:
+	case <-time.After(5 * time.Second):
+		t.Fatal("Quit did not start daemon shutdown")
+	}
+	if got := stub.removals(); got != 0 {
+		t.Errorf("tray removed before daemon shutdown: %d", got)
+	}
+	close(control.drained)
+	select {
+	case <-finished:
+	case <-time.After(5 * time.Second):
+		t.Fatal("Quit did not finish after daemon shutdown")
+	}
+	if got := stub.removals(); got != 1 {
+		t.Fatalf("tray removals = %d, want one", got)
 	}
 }
 
@@ -666,19 +732,6 @@ func waitForLog(t *testing.T, logs *testkit.SyncBuffer, want string) {
 	}
 }
 
-// TestHideTrayLeavesTheProxyServing covers the hide item: the icon goes
-// away and the proxy is not touched.
-func TestHideTrayLeavesTheProxyServing(t *testing.T) {
-	a, stub := testAppWithTray(t, &fakeControl{}, Options{Home: t.TempDir(), URL: "http://127.0.0.1:10101"})
-	a.hideTray()
-	if got := stub.removals(); got != 0 {
-		t.Fatalf("the icon was removed %d times, want a hide", got)
-	}
-	if got := stub.hides(); got != 1 {
-		t.Fatalf("the icon was hidden %d times, want once", got)
-	}
-}
-
 // TestUpdateRowHidesWithoutARelease covers the version row with nothing to
 // show: a hidden row stays hidden when the build is current.
 func TestUpdateRowHidesWithoutARelease(t *testing.T) {
@@ -711,5 +764,34 @@ func TestLoopsStopWithTheApp(t *testing.T) {
 	case <-finished:
 	case <-time.After(10 * time.Second):
 		t.Fatal("a loop did not stop with the app")
+	}
+}
+
+func TestQuitFreezesEveryActionAndKeepsProcessingLabel(t *testing.T) {
+	control := &fakeControl{state: platform.StateRunning}
+	a, _ := testAppWithTray(t, control, Options{Home: t.TempDir()})
+	a.itemUpdate = systray.NewMenu().Add("update", nil)
+	a.languageItems = map[string]*systray.MenuItem{"en": systray.NewMenu().AddCheckbox("English", true, nil)}
+	a.beginQuit()
+	for _, item := range []*systray.MenuItem{a.itemDashboard, a.itemRestart, a.itemForce, a.itemAutostart, a.itemLanguage, a.itemUpdate, a.itemQuit, a.languageItems["en"]} {
+		if !item.IsDisabled() {
+			t.Fatal("Quit left an action enabled")
+		}
+	}
+	a.refresh()
+	a.relabel()
+	a.refreshUpdate()
+	a.refreshRows()
+	if !a.itemRestart.IsDisabled() || !a.itemUpdate.IsDisabled() {
+		t.Fatal("refresh unfroze an action")
+	}
+	if len(processingIcon()) == 0 {
+		t.Fatal("processing icon is empty")
+	}
+	calls := 0
+	a.opts.SetLanguage = func(string) error { calls++; return nil }
+	a.selectLanguage("en")
+	if calls != 0 {
+		t.Fatal("language action ran while quitting")
 	}
 }

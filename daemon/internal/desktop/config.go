@@ -8,6 +8,9 @@ import (
 )
 
 func (a *app) watchConfig() {
+	if a.quitting.Load() {
+		return
+	}
 	path := config.ConfigPath(a.opts.Home)
 	info, err := os.Stat(path)
 	if err != nil {

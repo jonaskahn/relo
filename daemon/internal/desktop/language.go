@@ -46,7 +46,13 @@ func (a *app) languageLabel(tag string) string {
 }
 
 func (a *app) selectLanguage(tag string) {
+	if a.quitting.Load() {
+		return
+	}
 	go func() {
+		if a.quitting.Load() {
+			return
+		}
 		if a.opts.SetLanguage == nil {
 			a.applyLanguage(tag)
 			return
@@ -61,6 +67,9 @@ func (a *app) selectLanguage(tag string) {
 }
 
 func (a *app) applyLanguage(tag string) {
+	if a.quitting.Load() {
+		return
+	}
 	if tag == "" {
 		return
 	}
@@ -75,6 +84,11 @@ func (a *app) applyLanguage(tag string) {
 }
 
 func (a *app) relabel() {
+	a.menuMu.Lock()
+	defer a.menuMu.Unlock()
+	if a.quitting.Load() {
+		return
+	}
 	localized := a.translator()
 	state, addr, lastErr := a.opts.Control.State()
 	a.itemDashboard.SetLabel(localized.Text("tray.menu.open_dashboard", nil))
@@ -84,11 +98,9 @@ func (a *app) relabel() {
 	a.itemAutostart.SetLabel(localized.Text("tray.menu.autostart", nil))
 	a.itemLanguage.SetLabel(localized.Text("tray.menu.language", nil))
 	a.itemQuit.SetLabel(localized.Text("tray.menu.quit", nil))
-	a.itemQuitHide.SetLabel(localized.Text("tray.menu.quit_hide", nil))
-	a.itemQuitStop.SetLabel(localized.Text("tray.menu.quit_shutdown", nil))
 	a.itemStatus.SetLabel(statusLine(state, addr, lastErr, localized))
 	a.tray.SetTooltip(localized.Text("tray.tooltip", nil))
-	a.refreshRows()
+	a.relabelMetricRows()
 	a.relabelLanguages()
 }
 

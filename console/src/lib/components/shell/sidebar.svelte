@@ -134,25 +134,32 @@
 			compact ? 'justify-center px-1' : 'gap-2.5 px-4'
 		)}
 	>
-		<LogoMark
-			class={cn(
-				'shrink-0 text-accent-strong transition-[width,height]',
-				railEase,
-				compact ? 'size-[22px]' : 'size-5'
-			)}
-		/>
-		<span
-			aria-hidden={compact}
-			class={cn(
-				'text-sm font-semibold tracking-tight transition-[opacity,transform]',
-				labelEase,
-				compact
-					? 'pointer-events-none absolute w-0 overflow-hidden opacity-0'
-					: 'translate-x-0 opacity-100'
-			)}
+		<a
+			href="/"
+			aria-label={$t('ui.sidebar.dashboard')}
+			onclick={() => navDrawer.close()}
+			class={cn('flex min-w-0 items-center gap-2.5 rounded-control', compact && 'justify-center')}
 		>
-			Relo
-		</span>
+			<LogoMark
+				class={cn(
+					'shrink-0 text-accent-strong transition-[width,height]',
+					railEase,
+					compact ? 'size-[22px]' : 'size-5'
+				)}
+			/>
+			<span
+				aria-hidden={compact}
+				class={cn(
+					'text-sm font-semibold tracking-tight transition-[opacity,transform]',
+					labelEase,
+					compact
+						? 'pointer-events-none absolute w-0 overflow-hidden opacity-0'
+						: 'translate-x-0 opacity-100'
+				)}
+			>
+				Relo
+			</span>
+		</a>
 		{#if overlay}
 			<Button
 				variant="ghost"

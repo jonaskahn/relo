@@ -23,3 +23,15 @@ func TestShouldStopDarwinApplication(t *testing.T) {
 		})
 	}
 }
+
+func TestDestroyedDarwinTrayRejectsLateUpdates(t *testing.T) {
+	tray := &darwinTray{destroying: true, pendingUpdates: make(map[uint32]menuItemSnapshot)}
+	if err := tray.updateItem(menuItemSnapshot{id: 1, label: "late"}); err != nil {
+		t.Fatal(err)
+	}
+	if len(tray.pendingUpdates) != 0 {
+		t.Fatal("destruction admitted a late update")
+	}
+	tray.destroyed = true
+	tray.applyPendingUpdates()
+}

@@ -147,7 +147,7 @@ func (w *managementWiring) newManagementCatalog(edges *AccountEdges) *appcatalog
 		Credentials: w.credentials, Direct: upstream.Direct,
 		Discover:  discovery.New(NewHTTPClient()),
 		ModelsDev: modelsdev.NewDirectory(filepath.Join(w.home, "cache"), w.cfg.Catalog.ModelsDevURL, nil),
-		Templates: TemplateRegistry{}, Logger: w.logger,
+		Templates: TemplateRegistry{}, Logger: w.logger, Lifetime: w.ctx,
 		ProxyURL: func() string {
 			raw, err := config.ReadProxyURL(config.ConfigPath(w.home))
 			if err != nil {

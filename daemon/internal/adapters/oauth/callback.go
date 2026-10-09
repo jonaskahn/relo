@@ -193,7 +193,12 @@ func (s *CallbackServer) forwardTo(broker *CallbackBroker, provider string) {
 // Wait returns the first callback the browser delivers and closes the
 // listener before returning either the result or an error.
 func (s *CallbackServer) Wait(ctx context.Context) (*CallbackResult, error) {
-	defer func() { _ = s.Close() }()
+	defer func() {
+		if ctx.Err() != nil {
+			_ = s.server.Close()
+		}
+		_ = s.Close()
+	}()
 	select {
 	case outcome := <-s.outcomes:
 		if outcome.err != nil {

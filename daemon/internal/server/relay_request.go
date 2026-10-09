@@ -67,7 +67,7 @@ func (s *Server) reportAttemptAsync(spec attemptSpec, result Result) {
 	// quota is written behind the response, so the answer never waits on
 	// those stores.
 	candidate, authorized := spec.candidate, spec.authorized
-	ctx := context.WithoutCancel(spec.request.Context())
+	ctx := s.recordContext(spec.request.Context())
 	s.bookkeeping.enqueue(func() {
 		s.reportCredential(ctx, candidate, authorized, result)
 		s.learnModelAccess(ctx, candidate, authorized, result)

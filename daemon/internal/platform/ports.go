@@ -34,21 +34,30 @@ func (portInspector) Owner(port int) (server.PortOwner, bool) {
 	return server.PortOwner{PID: pid, Name: processName(pid)}, true
 }
 
-// Terminate ends the process listening on a port. The caller has already
-// shown the operator which process that is, so this does not check what the
-// process is: a stale Relo, a vendor CLI, and a leftover login all need the
-// same ending.
+// Terminate ends every process listening on a port. The caller has already
+// shown the operator which process that is, or is quitting and ending
+// everything the configuration asked the run to serve, so this does not
+// check what a process is. The current process is spared either way: its own
+// listeners are about to be replaced, or it is the caller doing the ending.
 func (portInspector) Terminate(port int) error {
-	pid, found := portOwnerPID(port)
-	if !found {
+	pids := portOwnerPIDs(port)
+	if len(pids) == 0 {
 		return fmt.Errorf("port %d: %w", port, ErrNoPortOwner)
 	}
-	// A caller that frees the ports its own process serves (a restarted run)
-	// must never end itself: the listeners it holds are the ones it is about
-	// to replace.
-	if pid == os.Getpid() {
-		return nil
+	var failures []error
+	self := os.Getpid()
+	for _, pid := range pids {
+		if pid == self {
+			continue
+		}
+		if err := endListener(pid, port); err != nil {
+			failures = append(failures, err)
+		}
 	}
+	return errors.Join(failures...)
+}
+
+func endListener(pid, port int) error {
 	process, err := os.FindProcess(pid)
 	if err != nil {
 		return fmt.Errorf("find the process on port %d: %w", port, err)

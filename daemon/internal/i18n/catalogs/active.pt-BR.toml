@@ -485,14 +485,6 @@ other = "Idioma"
 description = "Tray submenu that quits the desktop app"
 other = "Sair"
 
-[tray.menu.quit_hide]
-description = "Tray menu item that hides the icon and leaves the proxy serving"
-other = "Ocultar o ícone (o proxy continua atendendo)"
-
-[tray.menu.quit_shutdown]
-description = "Tray menu item that quits the desktop app and stops the daemon"
-other = "Sair e desligar o daemon"
-
 [tray.notify.failed]
 description = "Notification when a proxy run failed"
 other = "O proxy não foi iniciado. {{.Detail}}"
@@ -676,3 +668,7 @@ other = "mova {{.Bundle}} para a Lixeira"
 [cli.uninstall.run]
 description = "The command to run when a removal could not be started"
 other = "execute isto para concluir a remoção do Relo: {{.Command}}"
+
+[tray.menu.quitting]
+description = "Tray quit action while final records are saved"
+other = "Sair — processando…"

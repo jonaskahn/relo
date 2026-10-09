@@ -38,10 +38,10 @@ import (
 	"github.com/tiktoken-go/tokenizer"
 )
 
-const (
-	shutdownTimeout   = 30 * time.Second
-	readHeaderTimeout = 10 * time.Second
-)
+// RecordSaveTimeout is the total allowance for final records after serving closes.
+const RecordSaveTimeout = 500 * time.Millisecond
+
+const readHeaderTimeout = 10 * time.Second
 
 // Options configures a Server. The relay, pools, templates, redactor, and
 // usage recorder are optional: without them the inference surfaces answer
@@ -218,16 +218,30 @@ type Server struct {
 	dashboardMu sync.RWMutex
 	dashboard   http.Handler
 
-	mu        sync.RWMutex
-	servers   []*http.Server
-	addr      string
-	dataPlane map[string]string
-	onReady   func(addrs Addrs)
+	mu                sync.RWMutex
+	servers           []*http.Server
+	addr              string
+	dataPlane         map[string]string
+	onReady           func(addrs Addrs)
+	lifetime          context.Context
+	cancel            context.CancelFunc
+	persistence       context.Context
+	cancelPersistence context.CancelFunc
+	stopping          bool
+	requests          sync.WaitGroup
+	closeOnce         sync.Once
+	shutdownOnce      sync.Once
+	shutdownDone      chan struct{}
+	shutdownErr       error
+	closeErr          error
+	stopDeadline      time.Time
 }
 
 // New creates a Server with the listener configured but not started.
 func New(opts Options) *Server {
 	opts = withServerDefaults(opts)
+	lifetime, cancel := context.WithCancel(context.Background())
+	persistence, cancelPersistence := context.WithCancel(context.Background())
 	built := &Server{
 		opts: opts, startedAt: opts.Clock.Now(), sessions: opts.Sessions,
 		oauth: newOAuthOperations(MaxSessions), events: opts.Events,
@@ -236,6 +250,8 @@ func New(opts Options) *Server {
 		dataPlane:    map[string]string{},
 		bookkeeping:  newBookkeeping(),
 		sweep:        sweepJob{state: sweepIdle},
+		lifetime:     lifetime, cancel: cancel, persistence: persistence, cancelPersistence: cancelPersistence,
+		shutdownDone: make(chan struct{}),
 	}
 	built.contextTokenizer, _ = tokenizer.Get(tokenizer.O200kBase)
 	return built
@@ -307,42 +323,14 @@ func (s *Server) handleDashboardUnavailable(w http.ResponseWriter, r *http.Reque
 // Start binds every listener and serves until ctx is cancelled or one of
 // them fails. The caller closes the database.
 func (s *Server) Start(ctx context.Context) error {
+	if ctx.Err() != nil || s.lifetime.Err() != nil {
+		return s.Shutdown(context.Background())
+	}
 	bound, err := s.bind()
 	if err != nil {
 		return err
 	}
 	return s.serve(ctx, bound)
-}
-
-// Shutdown drains every listener. The listen sockets close together, so a
-// data-plane port is not held until the management listener finishes draining.
-func (s *Server) Shutdown(ctx context.Context) error {
-	ctx, cancel := context.WithTimeout(ctx, shutdownTimeout)
-	defer cancel()
-	s.mu.RLock()
-	servers := append([]*http.Server{}, s.servers...)
-	s.mu.RUnlock()
-	var (
-		wg      sync.WaitGroup
-		mu      sync.Mutex
-		failure error
-	)
-	for _, server := range servers {
-		wg.Add(1)
-		go func(server *http.Server) {
-			defer wg.Done()
-			if err := shutdownListener(server, ctx); err != nil {
-				mu.Lock()
-				failure = err
-				mu.Unlock()
-			}
-		}(server)
-	}
-	wg.Wait()
-	if err := s.bookkeeping.stop(ctx); err != nil && failure == nil {
-		failure = err
-	}
-	return failure
 }
 
 // Addr returns the bound address, or an empty string before Start has bound
@@ -433,7 +421,12 @@ func closeListeners(bound []boundListener) {
 }
 
 func (s *Server) serve(ctx context.Context, bound []boundListener) error {
+	cancelled := context.AfterFunc(ctx, s.closeServing)
+	defer cancelled()
 	servers, onReady := s.publishListeners(bound)
+	if len(servers) == 0 {
+		return s.Shutdown(context.Background())
+	}
 	failures := make(chan error, len(bound))
 	for index, item := range bound {
 		go serveListener(servers[index], item.listener, failures)
@@ -442,8 +435,7 @@ func (s *Server) serve(ctx context.Context, bound []boundListener) error {
 		onReady(s.Addrs())
 	}
 	select {
-	case <-ctx.Done():
-		s.opts.Logger.Info("daemon stopping", "cause", "context cancelled")
+	case <-s.lifetime.Done():
 		return s.Shutdown(context.Background())
 	case err := <-failures:
 		s.opts.Logger.Warn("daemon stopping", "cause", "listener failed", "error", err)
@@ -457,7 +449,8 @@ func (s *Server) publishListeners(bound []boundListener) ([]*http.Server, func(A
 	dataPlane := map[string]string{}
 	management := ""
 	for _, item := range bound {
-		server := &http.Server{Handler: item.handler, ReadHeaderTimeout: readHeaderTimeout}
+		server := &http.Server{Handler: item.handler, ReadHeaderTimeout: readHeaderTimeout,
+			BaseContext: func(net.Listener) context.Context { return s.lifetime }}
 		servers = append(servers, server)
 		if item.name == ListenerManagement {
 			management = item.listener.Addr().String()
@@ -466,6 +459,11 @@ func (s *Server) publishListeners(bound []boundListener) ([]*http.Server, func(A
 		dataPlane[item.name] = item.listener.Addr().String()
 	}
 	s.mu.Lock()
+	if s.stopping {
+		s.mu.Unlock()
+		closeListeners(bound)
+		return nil, nil
+	}
 	s.servers = servers
 	s.addr = management
 	s.dataPlane = dataPlane
@@ -486,11 +484,4 @@ func listen(addr string) (net.Listener, error) {
 		return nil, fmt.Errorf("listen on %s: %w", addr, err)
 	}
 	return listener, nil
-}
-
-func shutdownListener(server *http.Server, ctx context.Context) error {
-	if server == nil {
-		return nil
-	}
-	return server.Shutdown(ctx)
 }

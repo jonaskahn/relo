@@ -219,7 +219,9 @@ type darwinTray struct {
 	menuActions    map[int]func()
 	nsItems        map[uint32]darwin.ID // item.ID() -> NSMenuItem handle (incl. submenus)
 	menuMu         sync.Mutex
-	pendingUpdates chan menuItemSnapshot // buffered channel for main-thread dispatch
+	pendingUpdates map[uint32]menuItemSnapshot
+	destroying     bool
+	destroyed      bool
 }
 
 // goSystrayTargetClass is the custom ObjC class registered once for click handling.
@@ -246,7 +248,7 @@ func NewPlatformTray(callbacks *Callbacks) PlatformTray {
 		callbacks:      callbacks,
 		menuActions:    make(map[int]func()),
 		nsItems:        make(map[uint32]darwin.ID),
-		pendingUpdates: make(chan menuItemSnapshot, 64),
+		pendingUpdates: make(map[uint32]menuItemSnapshot),
 	}
 }
 
@@ -380,14 +382,17 @@ func registerGoSystrayTarget() (darwin.Class, error) {
 			t.menuMu.Unlock()
 
 			if fn != nil {
-				fn()
+				// AppKit is tracking the menu on this thread. A callback that
+				// waits here (the Quit item drains the daemon) keeps the menu
+				// open and holds the removal until the next click.
+				go fn()
 			}
 			return 0
 		})
 		darwin.ClassAddMethod(cls, darwin.RegisterSelector("menuItemClicked:"), menuClickedIMP, "v@:@")
 
 		// Add drainUpdates: method — called on main thread via performSelectorOnMainThread.
-		// Drains the pendingUpdates channel and applies AppKit changes safely.
+		// Applies captured menu state on the main thread.
 		drainUpdatesIMP := ffi.NewCallback(func(self, sel, sender uintptr) uintptr {
 			trayRegistryMu.RLock()
 			t := trayRegistryMap[self]
@@ -611,6 +616,14 @@ func (t *darwinTray) ShowMenu() error {
 	if t.statusItem.IsNil() || t.nsMenu.IsNil() {
 		return nil
 	}
+	// AppKit's nested tracking loop bypasses the outer event pump. Service
+	// captured state there too, so disabled rows and removal update while open.
+	timer := darwin.NewTimer(0.02, t.target, darwin.RegisterSelector("drainUpdates:"))
+	runLoop := darwin.ID(darwin.GetClass("NSRunLoop")).Send(darwin.RegisterSelector("currentRunLoop"))
+	common := darwin.NewNSString("kCFRunLoopCommonModes")
+	darwin.MsgSendPtrPtr(runLoop, darwin.RegisterSelector("addTimer:forMode:"), timer.Ptr(), common.Ptr())
+	common.Send(darwinSels.release)
+	defer timer.Send(darwin.RegisterSelector("invalidate"))
 	t.statusItem.SendPtr(darwinSels.popUpStatusItemMenu, t.nsMenu.Ptr())
 	return nil
 }
@@ -637,6 +650,7 @@ func (t *darwinTray) buildNSMenu(title string, menu *Menu, counter *int) darwin.
 		return 0
 	}
 
+	nsMenu.SendBool(darwin.RegisterSelector("setAutoenablesItems:"), false)
 	menuClickedSel := darwin.RegisterSelector("menuItemClicked:")
 
 	for _, item := range menu.Items {
@@ -741,43 +755,50 @@ func (t *darwinTray) UpdateItem(item *MenuItem) error {
 }
 
 func (t *darwinTray) updateItem(item menuItemSnapshot) error {
-	if t.nsMenu.IsNil() || t.target.IsNil() {
-		return nil
-	}
-
 	t.menuMu.Lock()
-	_, ok := t.nsItems[item.id]
-	t.menuMu.Unlock()
-	if !ok {
+	defer t.menuMu.Unlock()
+	if t.destroying || t.destroyed || t.target.IsNil() {
 		return nil
 	}
-
-	// Queue the captured state for main-thread processing.
-	t.pendingUpdates <- item
-
-	// Dispatch to main thread: [target performSelectorOnMainThread:@selector(drainUpdates:) withObject:nil waitUntilDone:YES]
-	drainSel := darwin.RegisterSelector("drainUpdates:")
-	darwin.MsgSend3Ptr(t.target, darwinSels.performSelectorOnMainThread,
-		uintptr(drainSel), 0, 1) // waitUntilDone:YES
-
+	if _, ok := t.nsItems[item.id]; !ok {
+		return nil
+	}
+	t.pendingUpdates[item.id] = item
+	t.dispatchPendingUpdates()
 	return nil
 }
 
-// applyPendingUpdates drains the pendingUpdates channel and applies AppKit
-// changes. MUST be called on the main thread (via drainUpdates: ObjC callback).
-// A snapshot with a zero ID signals Destroy.
+func (t *darwinTray) dispatchPendingUpdates() {
+	// Common modes include menu tracking; no mouse event should be needed to drain.
+	common := darwin.NewNSString("kCFRunLoopCommonModes")
+	modes := darwin.ID(darwin.GetClass("NSArray")).SendPtr(darwin.RegisterSelector("arrayWithObject:"), common.Ptr())
+	darwin.MsgSend4Ptr(t.target, darwin.RegisterSelector("performSelectorOnMainThread:withObject:waitUntilDone:modes:"),
+		uintptr(darwin.RegisterSelector("drainUpdates:")), 0, 0, modes.Ptr())
+	common.Send(darwinSels.release)
+	trayRegistryMu.RLock()
+	nsApp := runningNSApp
+	trayRegistryMu.RUnlock()
+	darwin.PostAppDefinedEvent(nsApp)
+}
+
 func (t *darwinTray) applyPendingUpdates() {
-	for {
-		select {
-		case item := <-t.pendingUpdates:
-			if item.id == 0 {
-				t.destroyOnMainThread()
-				return
-			}
-			t.applyItemUpdate(item)
-		default:
-			return
-		}
+	t.menuMu.Lock()
+	if t.destroyed {
+		t.menuMu.Unlock()
+		return
+	}
+	if t.destroying {
+		t.destroyed = true
+		t.pendingUpdates = nil
+		t.menuMu.Unlock()
+		t.destroyOnMainThread()
+		return
+	}
+	updates := t.pendingUpdates
+	t.pendingUpdates = make(map[uint32]menuItemSnapshot)
+	t.menuMu.Unlock()
+	for _, item := range updates {
+		t.applyItemUpdate(item)
 	}
 }
 
@@ -808,9 +829,11 @@ func (t *darwinTray) applyItemUpdate(item menuItemSnapshot) {
 	nsItem.SendBool(darwinSels.setHidden, item.hidden)
 
 	if len(item.icon) > 0 {
-		nsImage := createNSImage(item.icon, false)
+		nsImage := createNSImage(item.icon, true)
 		if !nsImage.IsNil() {
+			nsImage.SendSize(darwinSels.setSize, darwin.NSSize{Width: 16, Height: 16})
 			nsItem.SendPtr(darwinSels.setImage, nsImage.Ptr())
+			nsImage.Send(darwinSels.release)
 		}
 	}
 }
@@ -919,8 +942,8 @@ func (t *darwinTray) Bounds() (int, int, int, int) {
 	return 0, 0, 0, 0
 }
 
-// Run blocks the calling goroutine, running the Cocoa event loop ([NSApp run]).
-// It returns when the loop is stopped after the last tray's Destroy() has run.
+// Run pumps Cocoa events and pending tray changes on the calling main thread.
+// It returns after the last tray's Destroy() has run.
 // Only call Run() once per process: the shared NSApplication event loop serves
 // all tray icons.
 func (t *darwinTray) Run() error {
@@ -939,10 +962,22 @@ func (t *darwinTray) Run() error {
 	// Finish launching is required before the event loop can process events.
 	nsApp.Send(darwinSels.finishLaunching)
 
-	// Run the Cocoa event loop. This blocks until [NSApp stop:] is sent and
-	// the wake event posted by Destroy() is processed.
-	// [NSApp run]
-	nsApp.Send(darwinSels.run)
+	// AppKit's selector queue was not serviced by NSApp.run through Go FFI.
+	// Drain from the event pump itself so removal never needs another click.
+	mode := darwin.NewNSString("kCFRunLoopDefaultMode")
+	defer mode.Send(darwinSels.release)
+	for drainDarwinTrays() {
+		pool := darwinClasses.NSAutoreleasePool.Send(darwinSels.alloc).Send(darwinSels.init)
+		event := darwin.MsgSend4Ptr(nsApp, darwinSels.nextEventMatchingMask, ^uintptr(0), darwinClasses.NSDate.Send(darwinSels.distantFuture).Ptr(), mode.Ptr(), 1)
+		remaining := drainDarwinTrays()
+		if remaining && !event.IsNil() {
+			nsApp.SendPtr(darwinSels.sendEvent, event.Ptr())
+		}
+		pool.Send(darwin.RegisterSelector("drain"))
+		if !remaining {
+			break
+		}
+	}
 
 	trayRegistryMu.Lock()
 	if runningNSApp == nsApp {
@@ -953,36 +988,24 @@ func (t *darwinTray) Run() error {
 	return nil
 }
 
-// Destroy releases all resources associated with the tray icon.
-// Safe to call from any goroutine, and never blocks the caller. The AppKit
-// cleanup and the event-loop stop are executed on the main thread
-// (drainUpdates:), so the ordering is deterministic:
-//
-//	final cleanup → [NSApp stop:] → wake event → [NSApp run] returns → Run() returns
-//
-// The drain is dispatched with waitUntilDone:NO because Destroy must never
-// block: if the shared event loop has already exited (e.g. another tray was
-// removed first), the performSelector would never be serviced and a blocking
-// wait would hang the caller. While the loop is running, the drain is
-// serviced before the wake event it posts, so cleanup always completes before
-// Run() returns.
+// Destroy queues main-thread removal without waiting on a menu or update queue.
+// Removing the final tray wakes the event pump so Run returns without another click.
 func (t *darwinTray) Destroy() {
-	if t.target.IsNil() {
+	t.menuMu.Lock()
+	defer t.menuMu.Unlock()
+	if t.target.IsNil() || t.destroying || t.destroyed {
 		return
 	}
-
-	// Queue cleanup for main thread execution.
-	t.pendingUpdates <- menuItemSnapshot{} // zero ID sentinel signals destroy
-
-	// Dispatch cleanup to main thread. waitUntilDone:NO.
-	drainSel := darwin.RegisterSelector("drainUpdates:")
-	darwin.MsgSend3Ptr(t.target, darwinSels.performSelectorOnMainThread,
-		uintptr(drainSel), 0, 0) // waitUntilDone:NO
+	t.destroying = true
+	t.dispatchPendingUpdates()
 }
 
 // destroyOnMainThread performs the actual AppKit cleanup.
 // MUST be called on the main thread.
 func (t *darwinTray) destroyOnMainThread() {
+	if !t.nsMenu.IsNil() {
+		t.nsMenu.Send(darwin.RegisterSelector("cancelTracking"))
+	}
 	// Remove the status item from the menu bar.
 	if !t.statusBar.IsNil() && !t.statusItem.IsNil() {
 		t.statusBar.SendPtr(darwinSels.removeStatusItem, t.statusItem.Ptr())
@@ -1002,6 +1025,8 @@ func (t *darwinTray) destroyOnMainThread() {
 	}
 
 	// Release ObjC objects.
+	t.menuMu.Lock()
+	defer t.menuMu.Unlock()
 	if !t.target.IsNil() {
 		t.target.Send(darwinSels.release)
 		t.target = 0
@@ -1011,17 +1036,26 @@ func (t *darwinTray) destroyOnMainThread() {
 	t.btn = 0
 	t.nsMenu = 0
 
-	// Stop the shared application and wake its event loop with a real event.
-	// [NSApp run] only re-checks the stop flag after processing an event; a
-	// bare CFRunLoopStop wake is insufficient (verified on macOS 14-26).
-	// stop: is thread-safe, and postEvent:atStart:YES delivers the wake event
-	// at the head of the queue (gogpu reference pattern).
 	if lastTray && !nsApp.IsNil() {
-		nsApp.SendPtr(darwinSels.stop, 0)
 		darwin.PostAppDefinedEvent(nsApp)
 	}
 }
 
 func shouldStopDarwinApplication(remainingTrays int) bool {
 	return remainingTrays == 0
+}
+
+func drainDarwinTrays() bool {
+	trayRegistryMu.RLock()
+	trays := make([]*darwinTray, 0, len(trayRegistryMap))
+	for _, tray := range trayRegistryMap {
+		trays = append(trays, tray)
+	}
+	trayRegistryMu.RUnlock()
+	for _, tray := range trays {
+		tray.applyPendingUpdates()
+	}
+	trayRegistryMu.RLock()
+	defer trayRegistryMu.RUnlock()
+	return len(trayRegistryMap) > 0
 }

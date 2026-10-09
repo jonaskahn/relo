@@ -66,6 +66,10 @@ type Options struct {
 	// own. Such a run publishes where it listens and accepts
 	// `relo daemon stop`.
 	Headless bool
+	// Stop, when set, routes API shutdown through the process supervisor.
+	Stop func()
+	// Restart cycles a supervised run without spawning a detached helper.
+	Restart func(force bool)
 
 	// instanceID and shutdown are filled in by Serve for a headless run.
 	instanceID string
@@ -130,6 +134,7 @@ func executeServe(ctx context.Context, options Options, cfg *config.Config, logg
 	if err != nil {
 		return err
 	}
+	defer func() { _ = wired.deps.usage.Close() }()
 	return serveWired(ctx, wired, cfg, logger, cause)
 }
 
@@ -167,6 +172,9 @@ func claimHeadless(ctx context.Context, options *Options, cfg *config.Config, lo
 	}
 	options.instanceID = newInstanceID()
 	options.shutdown = stop
+	if options.Stop != nil {
+		options.shutdown = options.Stop
+	}
 	ready := options.OnReady
 	options.OnReady = publishOnReady(*options, logger, claim, ready)
 	return func() {

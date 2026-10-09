@@ -3,6 +3,7 @@ package cli
 
 import (
 	"context"
+	"errors"
 	"log/slog"
 	"os/signal"
 	"syscall"
@@ -58,7 +59,10 @@ func serveTray(cmd *cobra.Command, home string, serving *serveSession, localized
 	supervisor := platform.NewSupervisor(platform.SupervisorOptions{
 		Home: home, Port: serving.port, Language: language,
 		Version: version, StartupLog: startupLog, Logger: serving.logger,
+		OnStopping: shutdownHook(cmd),
 	})
+	signalStop := context.AfterFunc(ctx, func() { _ = supervisor.Stop() })
+	defer signalStop()
 	owned, err := supervisor.Start()
 	if err != nil {
 		reportStartupError(err)
@@ -69,7 +73,9 @@ func serveTray(cmd *cobra.Command, home string, serving *serveSession, localized
 		// fight it for the menu bar.
 		return nil
 	}
-	return serving.runDesktop(ctx, home, supervisor, localized, startupLog, language)
+	err = serving.runDesktop(ctx, home, supervisor, localized, startupLog, language)
+	stopErr := supervisor.Stop()
+	return errors.Join(err, stopErr)
 }
 
 func (s *serveSession) runDesktop(ctx context.Context, home string, supervisor *platform.Supervisor, localized ui, startupLog, language string) error {
@@ -121,4 +127,9 @@ func (s *serveSession) desktopOptions(home string, supervisor *platform.Supervis
 		Logger:      s.logger,
 		Source:      NewDesktopActivitySource(home, s.logger),
 	}
+}
+
+func shutdownHook(cmd *cobra.Command) func() {
+	hook, _ := cmd.Context().Value(shutdownHookKey{}).(func())
+	return hook
 }

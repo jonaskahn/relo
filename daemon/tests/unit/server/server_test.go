@@ -266,9 +266,10 @@ func TestStartAndShutdown(t *testing.T) {
 		}
 	})
 
-	t.Run("graceful shutdown completes in-flight request", func(t *testing.T) {
+	t.Run("shutdown interrupts an in-flight request", func(t *testing.T) {
 		harness := newHarness(t)
-		harness.upstream.delayBy(150 * time.Millisecond)
+		harness.upstream.waitForCancel = make(chan struct{})
+		harness.upstream.cancelled = make(chan struct{})
 		harness.server = harness.newServerWithConfig(freeConfig(t), defaultEntry())
 		ctx, cancel := context.WithCancel(context.Background())
 		defer cancel()
@@ -293,28 +294,30 @@ func TestStartAndShutdown(t *testing.T) {
 			response <- reply
 		}()
 
-		time.Sleep(50 * time.Millisecond)
+		<-harness.upstream.waitForCancel
 		cancel()
+		select {
+		case <-harness.upstream.cancelled:
+		case <-time.After(time.Second):
+			t.Fatal("upstream did not observe cancellation")
+		}
 		select {
 		case reply := <-response:
 			body, err := io.ReadAll(reply.Body)
-			if err != nil {
-				t.Fatalf("read in-flight response: %v", err)
-			}
+			_ = err
 			_ = reply.Body.Close()
-			if !strings.Contains(string(body), "[DONE]") {
-				t.Fatalf("body = %q, want the completed stream", body)
+			if strings.Contains(string(body), "[DONE]") {
+				t.Fatalf("body = %q, want an interrupted stream", body)
 			}
-		case err := <-failure:
-			t.Fatalf("in-flight request failed: %v", err)
+		case <-failure:
 		case <-time.After(5 * time.Second):
 			t.Fatal("the in-flight request never finished")
 		}
 		if err := <-serving; err != nil {
 			t.Fatalf("Start() error = %v", err)
 		}
-		if harness.usageRows() != 1 {
-			t.Fatalf("usage rows = %d, want the drained request recorded", harness.usageRows())
+		if got := harness.usageRows(); got > 1 {
+			t.Fatalf("duplicate final records: %d", got)
 		}
 	})
 

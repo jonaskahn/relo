@@ -84,6 +84,7 @@ type deps struct {
 	// commands own, and are empty for a run that owns the proxy itself.
 	instanceID string
 	shutdown   func()
+	restart    func(force bool)
 	// drain reports when the data plane is idle, which a compaction waits
 	// for. It is bound to the server once there is one.
 	drain *lateDrain
@@ -110,6 +111,7 @@ func buildDeps(ctx context.Context, cfg *config.Config, options Options, db *sql
 	w.built.config, w.built.db, w.built.logger = cfg, db, logger
 	w.built.home, w.built.language, w.built.version = options.Home, options.Language, options.Version
 	w.built.onReady, w.built.instanceID, w.built.shutdown = options.OnReady, options.instanceID, options.shutdown
+	w.built.restart = options.Restart
 	if err := w.foundation(); err != nil {
 		return wired{}, err
 	}
@@ -207,7 +209,7 @@ func (w *wiring) newCatalogService(edges *AccountEdges, accounts *appaccount.Ser
 		Credentials: w.built.credentials, Direct: upstream.Direct,
 		Discover:  discovery.New(NewHTTPClient()),
 		ModelsDev: modelsdev.NewDirectory(filepath.Join(w.options.Home, "cache"), w.cfg.Catalog.ModelsDevURL, nil),
-		Templates: TemplateRegistry{}, Logger: w.logger,
+		Templates: TemplateRegistry{}, Logger: w.logger, Lifetime: w.ctx,
 		ProxyURL: func() string {
 			raw, err := config.ReadProxyURL(config.ConfigPath(w.options.Home))
 			if err != nil {
@@ -578,6 +580,10 @@ func attachServerAPIs(options *server.Options, built deps) {
 }
 
 func attachServerRestart(options *server.Options, built deps) {
+	if built.restart != nil {
+		options.Restart = built.restart
+		return
+	}
 	if built.shutdown == nil {
 		return
 	}

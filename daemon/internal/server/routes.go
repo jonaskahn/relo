@@ -79,7 +79,7 @@ func (s *Server) Handler() http.Handler {
 	mux.HandleFunc("GET "+healthPath, s.handleHealthz)
 	mux.HandleFunc("GET "+faviconPath, serveFavicon)
 	mux.Handle("/", s.managementHandler())
-	return LoggingMiddleware(s.opts.Logger, mux)
+	return s.trackRequests(LoggingMiddleware(s.opts.Logger, mux))
 }
 
 // DataPlaneHandler returns the handler of one protocol's listener, and
@@ -88,7 +88,7 @@ func (s *Server) Handler() http.Handler {
 func (s *Server) DataPlaneHandler(protocol string) (http.Handler, bool) {
 	for _, entry := range dataPlaneProtocols() {
 		if entry.id == protocol && len(entry.surfaces) > 0 {
-			return LoggingMiddleware(s.opts.Logger, s.dataPlaneHandler(entry)), true
+			return s.trackRequests(LoggingMiddleware(s.opts.Logger, s.dataPlaneHandler(entry))), true
 		}
 	}
 	return nil, false

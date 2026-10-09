@@ -22,7 +22,7 @@ func TestTrayMessagesSpeakEveryLanguage(t *testing.T) {
 	ids := []string{
 		"tray.tooltip", "tray.menu.open_dashboard", "tray.menu.restart", "tray.menu.force_restart",
 		"tray.menu.autostart", "tray.menu.language", "tray.menu.version", "tray.menu.update_version",
-		"tray.menu.quit", "tray.menu.quit_hide", "tray.menu.quit_shutdown",
+		"tray.menu.quit",
 		"tray.status.running", "tray.status.stopped", "tray.status.failed",
 		"tray.info.requests", "tray.info.tokens", "tray.info.spend",
 		"tray.error.unknown", "tray.error.not_ready", "tray.error.port_in_use",

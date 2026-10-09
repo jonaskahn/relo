@@ -24,6 +24,10 @@ func TestMain(m *testing.M) {
 		holdClaim()
 		return
 	}
+	if os.Getenv("RELO_TEST_HOLD_PORTS") != "" {
+		holdPorts(os.Getenv("RELO_TEST_HOLD_PORTS"))
+		return
+	}
 	os.Exit(m.Run())
 }
 
@@ -101,6 +105,9 @@ func TestWaitForShutdownHoldsUntilEveryListenerCloses(t *testing.T) {
 
 	if err := extra.Close(); err != nil {
 		t.Fatalf("close the extra listener: %v", err)
+	}
+	if err := management.Close(); err != nil {
+		t.Fatal(err)
 	}
 	freed, stop := context.WithTimeout(context.Background(), time.Second)
 	defer stop()

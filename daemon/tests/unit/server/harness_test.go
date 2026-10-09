@@ -592,8 +592,10 @@ type upstreamServer struct {
 	requests []string
 	// bodies keeps each request's payload, which is what proves what the
 	// relay actually asked the upstream for.
-	bodies []string
-	auths  []string
+	bodies        []string
+	auths         []string
+	waitForCancel chan struct{}
+	cancelled     chan struct{}
 }
 
 func newUpstreamServer(t *testing.T) *upstreamServer {
@@ -609,10 +611,17 @@ func (u *upstreamServer) serve(w http.ResponseWriter, r *http.Request) {
 	u.mu.Lock()
 	fixture, sse, status, delay := u.fixture, u.sse, u.status, u.delay
 	headers := u.headers
+	waitForCancel, cancelled := u.waitForCancel, u.cancelled
 	u.requests = append(u.requests, r.URL.Path)
 	u.bodies = append(u.bodies, string(payload))
 	u.auths = append(u.auths, r.Header.Get("Authorization"))
 	u.mu.Unlock()
+	if waitForCancel != nil {
+		close(waitForCancel)
+		<-r.Context().Done()
+		close(cancelled)
+		return
+	}
 	body, err := os.ReadFile(testkit.FixturePath(fixture))
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)

@@ -486,14 +486,6 @@ other = "Limbă"
 description = "Tray submenu that quits the desktop app"
 other = "Ieșire"
 
-[tray.menu.quit_hide]
-description = "Tray menu item that hides the icon and leaves the proxy serving"
-other = "Ascunde pictograma (proxy-ul continuă să ruleze)"
-
-[tray.menu.quit_shutdown]
-description = "Tray menu item that quits the desktop app and stops the daemon"
-other = "Închide și oprește daemonul"
-
 [tray.notify.failed]
 description = "Notification when a proxy run failed"
 other = "Proxy-ul nu a pornit. {{.Detail}}"
@@ -677,3 +669,7 @@ other = "mută {{.Bundle}} în Coș"
 [cli.uninstall.run]
 description = "The command to run when a removal could not be started"
 other = "rulează asta pentru a finaliza eliminarea lui Relo: {{.Command}}"
+
+[tray.menu.quitting]
+description = "Tray quit action while final records are saved"
+other = "Închidere — în curs…"

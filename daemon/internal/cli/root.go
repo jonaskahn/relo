@@ -7,6 +7,7 @@
 package cli
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"os"
@@ -83,7 +84,10 @@ func newRootCommand(localized ui) *cobra.Command {
 // Relo cannot speak is reported rather than quietly dropped. Commands that
 // print their own report return a silent failure, so nothing is written
 // twice.
-func Execute() error {
+func Execute() error { return ExecuteWithShutdown(nil) }
+
+// ExecuteWithShutdown installs the executable's final shutdown deadline hook.
+func ExecuteWithShutdown(onStopping func()) error {
 	// A Windows launch from Explorer, a shortcut, or the login item owns no
 	// console; attaching the parent one first keeps terminal output visible.
 	EnsureConsole()
@@ -102,6 +106,7 @@ func Execute() error {
 		return err
 	}
 	root := newRootCommand(localized)
+	root.SetContext(context.WithValue(context.Background(), shutdownHookKey{}, onStopping))
 	err = root.Execute()
 	if err == nil {
 		return nil
@@ -136,3 +141,5 @@ func homeFromFlags(cmd *cobra.Command) (string, error) {
 func languageFromFlags(cmd *cobra.Command) (string, error) {
 	return cmd.Flags().GetString(langFlag)
 }
+
+type shutdownHookKey struct{}

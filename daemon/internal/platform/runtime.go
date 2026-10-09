@@ -71,15 +71,17 @@ func RemoveRuntime(home string) {
 	_ = os.Remove(RuntimePath(home))
 }
 
-func removeOwnRuntime(home, instanceID string) {
+// RemoveInstanceRuntime removes metadata only if it still describes this run.
+func RemoveInstanceRuntime(home string, instance Runtime) {
 	published, found := ReadRuntime(home)
-	if !found {
-		return
-	}
-	if published.InstanceID != instanceID || published.PID != os.Getpid() {
+	if !found || published.InstanceID != instance.InstanceID || published.PID != instance.PID {
 		return
 	}
 	RemoveRuntime(home)
+}
+
+func removeOwnRuntime(home, instanceID string) {
+	RemoveInstanceRuntime(home, Runtime{InstanceID: instanceID, PID: os.Getpid()})
 }
 
 func publishRuntime(home string, published Runtime) error {

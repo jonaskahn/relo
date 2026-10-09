@@ -22,9 +22,8 @@ import (
 
 const (
 	startTimeout = 30 * time.Second
-	// stopTimeout bounds how long a stop waits for a daemon to drain, which is
-	// a little past the server's own shutdown budget.
-	stopTimeout           = 35 * time.Second
+	// stopTimeout bounds verification of a daemon's complete process exit.
+	stopTimeout           = 2 * time.Second
 	lifecyclePollInterval = 25 * time.Millisecond
 	healthTimeout         = 2 * time.Second
 )
@@ -132,15 +131,23 @@ func startAttachedDaemon(ctx context.Context, home string, port int) (Runtime, s
 // data-plane port in the startup configuration, and waits until those ports
 // stop accepting. The next start can bind them and publish a new runtime file.
 func ForceFreePorts(home string, port int) error {
-	ports := servicePorts(home, port)
+	return freePorts(servicePorts(home, port))
+}
+
+func freePorts(ports []int) error {
 	inspector := portInspector{}
+	var failures []error
 	for _, candidate := range ports {
-		err := inspector.Terminate(candidate)
-		if err != nil && !errors.Is(err, ErrNoPortOwner) {
-			return err
+		// A port nobody listens on needs no ending, so its report is not a
+		// failure an operator has to answer for.
+		if err := inspector.Terminate(candidate); err != nil && !errors.Is(err, ErrNoPortOwner) {
+			failures = append(failures, err)
 		}
 	}
-	return waitPortsReleased(ports)
+	if err := waitPortsReleased(ports); err != nil {
+		failures = append(failures, err)
+	}
+	return errors.Join(failures...)
 }
 
 // FreeOwnPorts ends the Relo processes listening on the management port and
@@ -178,7 +185,7 @@ func ForeignListener(home string, port int) error {
 	return nil
 }
 
-// StopRunning asks one daemon to drain. A daemon recognised from its port,
+// StopRunning asks one daemon to close serving and exit. A daemon recognised from its port,
 // with no published instance, is shut down from this machine.
 func StopRunning(ctx context.Context, home string, published Runtime) error {
 	var err error
@@ -348,10 +355,8 @@ func requestShutdown(ctx context.Context, home, address string) error {
 	return nil
 }
 
-// WaitForShutdown waits until a daemon stops answering and every extra
-// listener it published has released its port, which is how the caller
-// knows the next process can bind them. A runtime file with no extra
-// listeners waits only for the management health probe.
+// WaitForShutdown verifies listener release and process exit before a caller
+// reports a completed stop or starts another daemon.
 func WaitForShutdown(ctx context.Context, published Runtime) error {
 	if _, ok := ctx.Deadline(); !ok {
 		var cancel context.CancelFunc
@@ -359,7 +364,7 @@ func WaitForShutdown(ctx context.Context, published Runtime) error {
 		defer cancel()
 	}
 	for {
-		down := !HealthOf(ctx, published.Address) && listenersClosed(ctx, published)
+		down := !listenerAccepts(ctx, published.Address) && listenersClosed(ctx, published) && !runtimeProcessAlive(published)
 		if err := ctx.Err(); err != nil {
 			if errors.Is(err, context.DeadlineExceeded) {
 				return ErrDaemonStillUp
@@ -528,14 +533,26 @@ func servicePorts(home string, port int) []int {
 	if port > 0 {
 		cfg.Server.Port = port
 	}
-	ports := make([]int, 0, 1+len(cfg.DataPlaneListeners()))
-	if cfg.Server.Port > 0 {
-		ports = append(ports, cfg.Server.Port)
+	return collectServicePorts(servicePortCandidates(cfg, 0))
+}
+
+func servicePortCandidates(configured config.Config, override int) []int {
+	candidates := []int{configured.Server.Port, override}
+	for _, listener := range configured.DataPlaneListeners() {
+		candidates = append(candidates, listener.Port)
 	}
-	for _, listener := range cfg.DataPlaneListeners() {
-		if listener.Port > 0 {
-			ports = append(ports, listener.Port)
+	return candidates
+}
+
+func collectServicePorts(candidates []int) []int {
+	ports := make([]int, 0, len(candidates))
+	seen := map[int]bool{}
+	for _, candidate := range candidates {
+		if candidate <= 0 || candidate > 65535 || seen[candidate] {
+			continue
 		}
+		seen[candidate] = true
+		ports = append(ports, candidate)
 	}
 	return ports
 }
@@ -604,4 +621,12 @@ func sleepContext(ctx context.Context, delay time.Duration) bool {
 	case <-timer.C:
 		return true
 	}
+}
+
+func runtimeProcessAlive(published Runtime) bool {
+	if published.PID <= 0 || published.PID == os.Getpid() {
+		return false
+	}
+	path, err := processExecutable(published.PID)
+	return err == nil && sameExecutable(path, currentReloExecutable())
 }

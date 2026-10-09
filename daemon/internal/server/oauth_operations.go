@@ -232,7 +232,9 @@ func (s *Server) StartLogin(ctx context.Context, providerID, label string) (stri
 	if err != nil {
 		return "", err
 	}
-	go s.runLogin(catalogAPI, operation, LoginRequest{ProviderID: providerID, Flow: flow, Label: label})
+	s.runOperation(func(ctx context.Context) {
+		s.runLogin(ctx, catalogAPI, operation, LoginRequest{ProviderID: providerID, Flow: flow, Label: label})
+	})
 	return id, nil
 }
 
@@ -282,8 +284,8 @@ func (s *Server) LoginStatus(id string) (LoginState, bool) {
 	}, true
 }
 
-func (s *Server) runLogin(catalogAPI *appcatalog.Service, operation *loginOperation, request LoginRequest) {
-	ctx, cancel := context.WithTimeout(context.WithoutCancel(context.Background()), loginTimeout)
+func (s *Server) runLogin(parent context.Context, catalogAPI *appcatalog.Service, operation *loginOperation, request LoginRequest) {
+	ctx, cancel := context.WithTimeout(parent, loginTimeout)
 	defer cancel()
 	request.Callbacks = s.opts.Callbacks
 	request.Prompt = operation.setPrompt

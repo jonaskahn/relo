@@ -484,14 +484,6 @@ other = "언어"
 description = "Tray submenu that quits the desktop app"
 other = "종료"
 
-[tray.menu.quit_hide]
-description = "Tray menu item that hides the icon and leaves the proxy serving"
-other = "트레이 아이콘 숨기기(프록시는 계속 실행됩니다)"
-
-[tray.menu.quit_shutdown]
-description = "Tray menu item that quits the desktop app and stops the daemon"
-other = "종료하고 데몬 중지"
-
 [tray.notify.failed]
 description = "Notification when a proxy run failed"
 other = "프록시가 시작되지 않았습니다. {{.Detail}}"
@@ -675,3 +667,7 @@ other = "{{.Bundle}}을(를) 휴지통으로 옮기세요"
 [cli.uninstall.run]
 description = "The command to run when a removal could not be started"
 other = "Relo 제거를 마무리하려면 다음을 실행하세요: {{.Command}}"
+
+[tray.menu.quitting]
+description = "Tray quit action while final records are saved"
+other = "종료 — 처리 중…"

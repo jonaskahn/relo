@@ -18,6 +18,7 @@ type bookkeeping struct {
 	mu      sync.Mutex
 	started bool
 	stopped bool
+	aborted bool
 }
 
 func newBookkeeping() *bookkeeping {
@@ -45,17 +46,21 @@ func (b *bookkeeping) enqueue(job func()) {
 }
 
 func (b *bookkeeping) run() {
+	defer close(b.done)
 	for {
 		select {
 		case job := <-b.jobs:
-			job()
+			if !b.isAborted() {
+				job()
+			}
 		case <-b.quit:
 			for {
 				select {
 				case job := <-b.jobs:
-					job()
+					if !b.isAborted() {
+						job()
+					}
 				default:
-					close(b.done)
 					return
 				}
 			}
@@ -78,6 +83,15 @@ func (b *bookkeeping) stop(ctx context.Context) error {
 	case <-b.done:
 		return nil
 	case <-ctx.Done():
+		b.mu.Lock()
+		b.aborted = true
+		b.mu.Unlock()
 		return ctx.Err()
 	}
+}
+
+func (b *bookkeeping) isAborted() bool {
+	b.mu.Lock()
+	defer b.mu.Unlock()
+	return b.aborted
 }

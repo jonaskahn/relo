@@ -484,14 +484,6 @@ other = "ภาษา"
 description = "Tray submenu that quits the desktop app"
 other = "ออก"
 
-[tray.menu.quit_hide]
-description = "Tray menu item that hides the icon and leaves the proxy serving"
-other = "ซ่อนไอคอนถาด (พร็อกซียังทำงานต่อ)"
-
-[tray.menu.quit_shutdown]
-description = "Tray menu item that quits the desktop app and stops the daemon"
-other = "ออกและปิดดีมอน"
-
 [tray.notify.failed]
 description = "Notification when a proxy run failed"
 other = "พร็อกซีเริ่มทำงานไม่สำเร็จ {{.Detail}}"
@@ -675,3 +667,7 @@ other = "ย้าย {{.Bundle}} ไปยังถังขยะ"
 [cli.uninstall.run]
 description = "The command to run when a removal could not be started"
 other = "รันคำสั่งนี้เพื่อถอน Relo ให้เสร็จ: {{.Command}}"
+
+[tray.menu.quitting]
+description = "Tray quit action while final records are saved"
+other = "ออก — กำลังดำเนินการ…"

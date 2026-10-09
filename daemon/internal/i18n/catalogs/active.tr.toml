@@ -486,14 +486,6 @@ other = "Dil"
 description = "Tray submenu that quits the desktop app"
 other = "Çık"
 
-[tray.menu.quit_hide]
-description = "Tray menu item that hides the icon and leaves the proxy serving"
-other = "Simgeyi gizle (vekil çalışmaya devam eder)"
-
-[tray.menu.quit_shutdown]
-description = "Tray menu item that quits the desktop app and stops the daemon"
-other = "Çık ve daemon'u kapat"
-
 [tray.notify.failed]
 description = "Notification when a proxy run failed"
 other = "Proxy başlamadı. {{.Detail}}"
@@ -677,3 +669,7 @@ other = "{{.Bundle}} uygulamasını Çöp'e at"
 [cli.uninstall.run]
 description = "The command to run when a removal could not be started"
 other = "Relo'yu kaldırmayı tamamlamak için bunu çalıştır: {{.Command}}"
+
+[tray.menu.quitting]
+description = "Tray quit action while final records are saved"
+other = "Çıkış — işleniyor…"

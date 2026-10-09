@@ -16,6 +16,7 @@ import (
 	"os"
 	"runtime"
 	"sync"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -123,7 +124,7 @@ func waitForProxy(ctx context.Context, control Control) error {
 	ended := make(chan struct{}, 1)
 	control.OnStateChange(func() {
 		state, _, _ := control.State()
-		if state != platform.StateRunning {
+		if state == platform.StateStopped || state == platform.StateFailed {
 			select {
 			case ended <- struct{}{}:
 			default:
@@ -158,8 +159,6 @@ type app struct {
 	itemAutostart *systray.MenuItem
 	itemLanguage  *systray.MenuItem
 	itemQuit      *systray.MenuItem
-	itemQuitHide  *systray.MenuItem
-	itemQuitStop  *systray.MenuItem
 	itemUpdate    *systray.MenuItem
 	// The three rows carry the last day's numbers.
 	itemRequests *systray.MenuItem
@@ -190,7 +189,12 @@ type app struct {
 	// leaves with it. A failed run keeps the icon so it can be restarted.
 	ended   chan struct{}
 	endOnce sync.Once
-	quit    sync.Once
+	// quitting freezes actions until the bounded record save finishes.
+	quitting    atomic.Bool
+	quit        sync.Once
+	menuMu      sync.Mutex
+	stopPolling context.CancelFunc
+	pollContext context.Context
 }
 
 func newApp(opts Options) *app {
@@ -211,6 +215,10 @@ func newApp(opts Options) *app {
 }
 
 func (a *app) run(ctx context.Context) error {
+	pollCtx, stopPolling := context.WithCancel(ctx)
+	a.stopPolling = stopPolling
+	a.pollContext = pollCtx
+	defer stopPolling()
 	a.opts.Control.OnStateChange(a.refresh)
 	a.tray.Show()
 	// The Dock presence is the operator's: a tray app is an accessory, and
@@ -221,12 +229,13 @@ func (a *app) run(ctx context.Context) error {
 	a.reconcileAutostart()
 
 	done := make(chan struct{})
-	go a.refreshLoop(ctx, done)
-	go a.activityLoop(ctx, done)
-	go a.updateLoop(ctx, done)
+	go a.refreshLoop(pollCtx, done)
+	go a.activityLoop(pollCtx, done)
+	go a.updateLoop(pollCtx, done)
 	go func() {
 		select {
 		case <-ctx.Done():
+			_ = a.opts.Control.Stop()
 		case <-a.ended:
 		}
 		a.leave()
@@ -300,20 +309,28 @@ func (a *app) addUpdateItem(menu *systray.Menu) {
 }
 
 func (a *app) addQuitItems(menu *systray.Menu) {
-	// Quitting is an explicit choice between leaving the icon behind and
-	// ending the proxy, so the two live under one submenu and no dialog ever
-	// interrupts the menu.
-	quitMenu := systray.NewMenu()
-	a.itemQuitHide = quitMenu.Add(a.text("tray.menu.quit_hide", nil), a.hideTray)
-	a.itemQuitStop = quitMenu.Add(a.text("tray.menu.quit_shutdown", nil), func() {
+	// Quitting ends the proxy along with the icon.
+	a.itemQuit = menu.Add(a.text("tray.menu.quit", nil), func() {
+		a.beginQuit()
 		go a.stopThenLeave()
 	})
-	a.itemQuit = menu.AddSubmenu(a.text("tray.menu.quit", nil), quitMenu)
 }
 
 func (a *app) refresh() {
 	control := a.opts.Control
 	state, addr, lastErr := control.State()
+	if state == platform.StateStopping {
+		a.beginQuit()
+		return
+	}
+	a.menuMu.Lock()
+	defer a.menuMu.Unlock()
+	if a.quitting.Load() {
+		if state == platform.StateStopped {
+			a.report(state, lastErr)
+		}
+		return
+	}
 	busy := control.Busy()
 	localized := a.translator()
 	a.itemStatus.SetLabel(statusLine(state, addr, lastErr, localized))
@@ -392,8 +409,11 @@ func (a *app) loadActivity() {
 	if a.source == nil {
 		return
 	}
-	data, err := a.source.Read(context.Background(), time.Now())
+	data, err := a.source.Read(a.pollingContext(), time.Now())
 	if err != nil {
+		if a.quitting.Load() {
+			return
+		}
 		a.logger.Warn("the tray could not read activity", "error", err)
 		data.err = err.Error()
 	}
@@ -409,6 +429,15 @@ func (a *app) activityNow() activityData {
 }
 
 func (a *app) refreshRows() {
+	a.menuMu.Lock()
+	defer a.menuMu.Unlock()
+	if a.quitting.Load() {
+		return
+	}
+	a.relabelMetricRows()
+}
+
+func (a *app) relabelMetricRows() {
 	activity := a.activityNow()
 	items := [3]*systray.MenuItem{a.itemRequests, a.itemTokens, a.itemSpend}
 	keys := [3]string{"tray.info.requests", "tray.info.tokens", "tray.info.spend"}
@@ -432,17 +461,31 @@ func (a *app) baseURL() string {
 }
 
 func (a *app) restartProxy() {
-	if a.opts.Control.Busy() {
+	if a.opts.Control.Busy() || a.quitting.Load() {
 		return
 	}
-	go a.reportCycle(a.opts.Control.Restart())
+	go func() {
+		if !a.quitting.Load() {
+			a.reportCycle(a.opts.Control.Restart())
+		}
+	}()
 }
 
 func (a *app) forceRestartProxy() {
-	go a.reportCycle(a.opts.Control.ForceRestart())
+	if a.quitting.Load() {
+		return
+	}
+	go func() {
+		if !a.quitting.Load() {
+			a.reportCycle(a.opts.Control.ForceRestart())
+		}
+	}()
 }
 
 func (a *app) reportCycle(err error) {
+	if a.quitting.Load() {
+		return
+	}
 	if err == nil {
 		return
 	}
@@ -451,6 +494,9 @@ func (a *app) reportCycle(err error) {
 }
 
 func (a *app) openUpdate() {
+	if a.quitting.Load() {
+		return
+	}
 	a.updateMu.Lock()
 	target := a.updateURL
 	method := a.updateMethod
@@ -470,8 +516,16 @@ func (a *app) openUpdate() {
 }
 
 func (a *app) refreshUpdate() {
-	info, err := FetchUpdates(context.Background(), a.client, a.baseURL(), a.opts.AdminToken)
+	if a.quitting.Load() {
+		return
+	}
+	info, err := FetchUpdates(a.pollingContext(), a.client, a.baseURL(), a.opts.AdminToken)
 	if err != nil || a.itemUpdate == nil {
+		return
+	}
+	a.menuMu.Lock()
+	defer a.menuMu.Unlock()
+	if a.quitting.Load() {
 		return
 	}
 	a.updateMu.Lock()
@@ -491,6 +545,9 @@ func (a *app) refreshUpdate() {
 }
 
 func (a *app) openDashboard() {
+	if a.quitting.Load() {
+		return
+	}
 	if err := Open(a.baseURL()); err != nil {
 		a.logger.Warn("could not open the dashboard", "error", err)
 		a.notify("tray.notify.browser_failed", nil)
@@ -517,6 +574,9 @@ func (a *app) reconcileAutostart() {
 }
 
 func (a *app) toggleAutostart() {
+	if a.quitting.Load() {
+		return
+	}
 	manager := autostart.New()
 	var err error
 	if manager.IsEnabled() {
@@ -536,22 +596,53 @@ func (a *app) toggleAutostart() {
 	a.itemAutostart.SetChecked(manager.IsEnabled())
 }
 
-func (a *app) hideTray() {
-	a.tray.Hide()
-	a.logger.Info("the tray icon is hidden; the proxy keeps serving", "dashboard", a.baseURL())
+func (a *app) beginQuit() {
+	if !a.quitting.CompareAndSwap(false, true) {
+		return
+	}
+	time.AfterFunc(platform.SaveTimeout, a.leave)
+	if a.stopPolling != nil {
+		a.stopPolling()
+	}
+	a.menuMu.Lock()
+	defer a.menuMu.Unlock()
+	for _, item := range []*systray.MenuItem{a.itemDashboard, a.itemRestart, a.itemForce, a.itemAutostart, a.itemLanguage, a.itemUpdate, a.itemQuit} {
+		if item != nil {
+			item.SetDisabled(true)
+		}
+	}
+	for _, item := range a.languageItems {
+		item.SetDisabled(true)
+	}
+	if a.itemQuit != nil {
+		label := a.text("tray.menu.quitting", nil)
+		if runtime.GOOS == "windows" {
+			label = "◌ " + label
+		} else {
+			a.itemQuit.SetIcon(processingIcon())
+		}
+		a.itemQuit.SetLabel(label)
+	}
 }
 
 func (a *app) stopThenLeave() {
-	if err := a.opts.Control.Stop(); err != nil {
-		a.logger.Warn("could not stop the proxy", "error", err)
-		a.notify("tray.notify.failed", map[string]any{"Detail": shortError(err, a.translator())})
-		return
-	}
+	a.beginQuit()
+	err := a.opts.Control.Stop()
 	a.leave()
+	if err != nil {
+		a.logger.Warn("could not complete daemon shutdown", "error", err)
+	}
 }
 
 func (a *app) leave() {
 	a.quit.Do(func() {
 		a.tray.Remove()
 	})
+}
+
+func (a *app) pollingContext() context.Context {
+	if a.pollContext != nil {
+		return a.pollContext
+	}
+	return context.Background()
 }

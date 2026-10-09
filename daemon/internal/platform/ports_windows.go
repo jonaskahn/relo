@@ -3,28 +3,43 @@
 package platform
 
 import (
+	"context"
 	"os/exec"
 	"strconv"
 	"strings"
 	"syscall"
+	"time"
 )
 
 func portOwnerPID(port int) (int, bool) {
-	command := exec.Command("netstat", "-ano", "-p", "tcp")
+	owners := portOwnerPIDs(port)
+	if len(owners) == 0 {
+		return 0, false
+	}
+	return owners[0], true
+}
+
+func portOwnerPIDs(port int) []int {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	command := exec.CommandContext(ctx, "netstat", "-ano", "-p", "tcp")
 	// A GUI launch has no console to inherit, so netstat would flash its own.
 	command.SysProcAttr = &syscall.SysProcAttr{CreationFlags: createNoWindow}
 	output, err := command.Output()
 	if err != nil {
-		return 0, false
+		return nil
 	}
-	wanted := ":" + strconv.Itoa(port)
+	var owners []int
+	seen := map[int]bool{}
 	for line := range strings.SplitSeq(string(output), "\n") {
-		pid, found := listeningPID(line, wanted)
-		if found {
-			return pid, true
+		pid, found := listeningPID(line, ":"+strconv.Itoa(port))
+		if !found || seen[pid] {
+			continue
 		}
+		seen[pid] = true
+		owners = append(owners, pid)
 	}
-	return 0, false
+	return owners
 }
 
 func listeningPID(line, port string) (int, bool) {

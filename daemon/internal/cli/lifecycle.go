@@ -83,7 +83,14 @@ func runStop(cmd *cobra.Command, _ []string, localized ui) error {
 	ctx := cmd.Context()
 	out := cmd.OutOrStdout()
 	force := flagBool(cmd, "force")
+	previous, found := platform.ReadRuntime(home)
 	if _, running := platform.RunningInstanceOn(ctx, home, 0); !running && !force {
+		if found {
+			if err := platform.WaitForShutdown(ctx, previous); err != nil {
+				return err
+			}
+			platform.RemoveInstanceRuntime(home, previous)
+		}
 		_, _ = fmt.Fprintln(out, localized.text("cli.daemon.stop.not_running", nil))
 		return nil
 	}
@@ -145,7 +152,9 @@ func quiesce(ctx context.Context, home string, port int, force bool) error {
 			return err
 		}
 	}
-	platform.RemoveRuntime(home)
+	if published.InstanceID != "" {
+		platform.RemoveInstanceRuntime(home, published)
+	}
 	return nil
 }
 

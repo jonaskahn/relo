@@ -150,7 +150,7 @@
 				{/each}
 			</div>
 		{/if}
-		<div class="mt-auto flex flex-wrap items-end justify-between gap-2">
+		<div class="mt-auto flex flex-wrap items-end justify-between border-t border-border pt-3 gap-2">
 			<div class="flex flex-wrap items-center gap-2">
 				{#if !agent.enabled}
 					<Button disabled={blocked(running, agent)} onclick={onsetup}>

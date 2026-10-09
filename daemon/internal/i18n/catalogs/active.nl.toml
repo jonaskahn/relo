@@ -486,14 +486,6 @@ other = "Taal"
 description = "Tray submenu that quits the desktop app"
 other = "Afsluiten"
 
-[tray.menu.quit_hide]
-description = "Tray menu item that hides the icon and leaves the proxy serving"
-other = "Pictogram verbergen (de proxy blijft draaien)"
-
-[tray.menu.quit_shutdown]
-description = "Tray menu item that quits the desktop app and stops the daemon"
-other = "Afsluiten en daemon stoppen"
-
 [tray.notify.failed]
 description = "Notification when a proxy run failed"
 other = "De proxy is niet gestart. {{.Detail}}"
@@ -677,3 +669,7 @@ other = "verplaats {{.Bundle}} naar de Prullenbak"
 [cli.uninstall.run]
 description = "The command to run when a removal could not be started"
 other = "voer dit uit om het verwijderen van Relo af te ronden: {{.Command}}"
+
+[tray.menu.quitting]
+description = "Tray quit action while final records are saved"
+other = "Afsluiten — bezig…"

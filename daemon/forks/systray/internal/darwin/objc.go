@@ -521,6 +521,52 @@ func MsgSend3Ptr(id ID, sel SEL, arg0, arg1, arg2 uintptr) ID {
 	return ID(result)
 }
 
+// MsgSend4Ptr calls an Objective-C selector with four pointer-sized arguments.
+func MsgSend4Ptr(id ID, sel SEL, arg0, arg1, arg2, arg3 uintptr) ID {
+	if err := initRuntime(); err != nil {
+		return 0
+	}
+	cif := &types.CallInterface{}
+	descriptors := make([]*types.TypeDescriptor, 6)
+	for i := range descriptors {
+		descriptors[i] = types.PointerTypeDescriptor
+	}
+	if err := ffi.PrepareCallInterface(cif, types.DefaultCall, types.PointerTypeDescriptor, descriptors); err != nil {
+		return 0
+	}
+	self, cmd := uintptr(id), uintptr(sel)
+	var result uintptr
+	if _, err := ffi.CallFunction(cif, rt.objcMsgSend, unsafe.Pointer(&result), []unsafe.Pointer{
+		unsafe.Pointer(&self), unsafe.Pointer(&cmd), unsafe.Pointer(&arg0), unsafe.Pointer(&arg1), unsafe.Pointer(&arg2), unsafe.Pointer(&arg3),
+	}); err != nil {
+		return 0
+	}
+	return ID(result)
+}
+
+// NewTimer creates an NSTimer that invokes the selector on its target.
+func NewTimer(interval float64, target ID, selector SEL) ID {
+	if err := initRuntime(); err != nil {
+		return 0
+	}
+	cif := &types.CallInterface{}
+	descriptors := []*types.TypeDescriptor{types.PointerTypeDescriptor, types.PointerTypeDescriptor, types.DoubleTypeDescriptor,
+		types.PointerTypeDescriptor, types.PointerTypeDescriptor, types.PointerTypeDescriptor, types.PointerTypeDescriptor}
+	if err := ffi.PrepareCallInterface(cif, types.DefaultCall, types.PointerTypeDescriptor, descriptors); err != nil {
+		return 0
+	}
+	self := uintptr(GetClass("NSTimer"))
+	cmd := uintptr(RegisterSelector("timerWithTimeInterval:target:selector:userInfo:repeats:"))
+	receiver, action, info, repeats := target.Ptr(), uintptr(selector), uintptr(0), uintptr(1)
+	var result uintptr
+	if _, err := ffi.CallFunction(cif, rt.objcMsgSend, unsafe.Pointer(&result), []unsafe.Pointer{
+		unsafe.Pointer(&self), unsafe.Pointer(&cmd), unsafe.Pointer(&interval), unsafe.Pointer(&receiver), unsafe.Pointer(&action), unsafe.Pointer(&info), unsafe.Pointer(&repeats),
+	}); err != nil {
+		return 0
+	}
+	return ID(result)
+}
+
 // MsgSendPtrPtr calls objc_msgSend with self, sel, and 2 pointer arguments.
 // Used for methods like dataWithBytes:length:.
 func MsgSendPtrPtr(id ID, sel SEL, arg0, arg1 uintptr) ID {

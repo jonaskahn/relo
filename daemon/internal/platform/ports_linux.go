@@ -15,11 +15,19 @@ var procNetTCP = []string{"/proc/net/tcp", "/proc/net/tcp6"}
 const tcpListenState = "0A"
 
 func portOwnerPID(port int) (int, bool) {
-	inodes := listeningInodes(port)
-	if len(inodes) == 0 {
+	owners := portOwnerPIDs(port)
+	if len(owners) == 0 {
 		return 0, false
 	}
-	return pidHoldingInodes(inodes)
+	return owners[0], true
+}
+
+func portOwnerPIDs(port int) []int {
+	inodes := listeningInodes(port)
+	if len(inodes) == 0 {
+		return nil
+	}
+	return pidsHoldingInodes(inodes)
 }
 
 func listeningInodes(port int) map[string]bool {
@@ -65,21 +73,24 @@ func localPort(address string) string {
 	return strings.ToLower(strings.TrimLeft(port, "0"))
 }
 
-func pidHoldingInodes(inodes map[string]bool) (int, bool) {
+func pidsHoldingInodes(inodes map[string]bool) []int {
 	procs, err := os.ReadDir("/proc")
 	if err != nil {
-		return 0, false
+		return nil
 	}
+	var owners []int
+	seen := map[int]bool{}
 	for _, proc := range procs {
 		pid, err := strconv.Atoi(proc.Name())
-		if err != nil {
+		if err != nil || seen[pid] {
 			continue
 		}
 		if holdsSocket(filepath.Join("/proc", proc.Name(), "fd"), inodes) {
-			return pid, true
+			seen[pid] = true
+			owners = append(owners, pid)
 		}
 	}
-	return 0, false
+	return owners
 }
 
 func holdsSocket(fdDir string, inodes map[string]bool) bool {

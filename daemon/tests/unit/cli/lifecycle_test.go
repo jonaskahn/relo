@@ -54,6 +54,8 @@ func (d *publishedDaemon) start(t *testing.T, home string) platform.Runtime {
 		default:
 		}
 		w.WriteHeader(http.StatusAccepted)
+		w.(http.Flusher).Flush()
+		go d.server.Close()
 	})
 	d.server = httptest.NewServer(route)
 	t.Cleanup(d.server.Close)

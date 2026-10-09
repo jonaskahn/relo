@@ -485,14 +485,6 @@ other = "Lingua"
 description = "Tray submenu that quits the desktop app"
 other = "Esci"
 
-[tray.menu.quit_hide]
-description = "Tray menu item that hides the icon and leaves the proxy serving"
-other = "Nascondi l’icona (il proxy continua a servire)"
-
-[tray.menu.quit_shutdown]
-description = "Tray menu item that quits the desktop app and stops the daemon"
-other = "Esci e arresta il daemon"
-
 [tray.notify.failed]
 description = "Notification when a proxy run failed"
 other = "Il proxy non si è avviato. {{.Detail}}"
@@ -676,3 +668,7 @@ other = "sposta {{.Bundle}} nel Cestino"
 [cli.uninstall.run]
 description = "The command to run when a removal could not be started"
 other = "esegui questo per completare la rimozione di Relo: {{.Command}}"
+
+[tray.menu.quitting]
+description = "Tray quit action while final records are saved"
+other = "Esci — elaborazione…"

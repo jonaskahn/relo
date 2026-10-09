@@ -486,14 +486,6 @@ other = "Språk"
 description = "Tray submenu that quits the desktop app"
 other = "Avsluta"
 
-[tray.menu.quit_hide]
-description = "Tray menu item that hides the icon and leaves the proxy serving"
-other = "Dölj ikonen (proxyn fortsätter att köra)"
-
-[tray.menu.quit_shutdown]
-description = "Tray menu item that quits the desktop app and stops the daemon"
-other = "Avsluta och stäng av daemonen"
-
 [tray.notify.failed]
 description = "Notification when a proxy run failed"
 other = "Proxyn startade inte. {{.Detail}}"
@@ -677,3 +669,7 @@ other = "flytta {{.Bundle}} till papperskorgen"
 [cli.uninstall.run]
 description = "The command to run when a removal could not be started"
 other = "kör det här för att slutföra borttagningen av Relo: {{.Command}}"
+
+[tray.menu.quitting]
+description = "Tray quit action while final records are saved"
+other = "Avsluta — bearbetar…"

@@ -548,14 +548,6 @@ other = "语言"
 description = "Tray submenu that quits the desktop app"
 other = "退出"
 
-[tray.menu.quit_hide]
-description = "Tray menu item that hides the icon and leaves the proxy serving"
-other = "隐藏托盘图标（代理继续运行）"
-
-[tray.menu.quit_shutdown]
-description = "Tray menu item that quits the desktop app and stops the daemon"
-other = "退出并关闭守护进程"
-
 [tray.notify.failed]
 description = "Notification when a proxy run failed"
 other = "代理未能启动。{{.Detail}}"
@@ -675,3 +667,7 @@ other = "请将 {{.Bundle}} 移到废纸篓"
 [cli.uninstall.run]
 description = "The command to run when a removal could not be started"
 other = "运行以下命令以完成卸载 Relo：{{.Command}}"
+
+[tray.menu.quitting]
+description = "Tray quit action while final records are saved"
+other = "退出 — 正在处理…"

@@ -98,6 +98,8 @@ type Options struct {
 	// AfterReload runs after a successful rebuild. The composition root uses
 	// it to refresh files that mirror the listing. It must not fail the reload.
 	AfterReload func(ctx context.Context)
+	// Lifetime cancels detached roster refreshes when the owning daemon stops.
+	Lifetime context.Context
 }
 
 // Service runs the connection and model lifecycle.
@@ -116,11 +118,15 @@ type Service struct {
 	logger      *slog.Logger
 	proxyURL    func() string
 	afterReload func(ctx context.Context)
+	lifetime    context.Context
 	probes      sync.Map // probeID -> *probeSession
 }
 
 // New returns the catalog use cases over the given ports.
 func New(options Options) *Service {
+	if options.Lifetime == nil {
+		options.Lifetime = context.Background()
+	}
 	logger := options.Logger
 	if logger == nil {
 		logger = slog.New(slog.DiscardHandler)
@@ -131,7 +137,7 @@ func New(options Options) *Service {
 		accounts: options.Accounts,
 		secrets:  options.Secrets, credentials: options.Credentials, direct: options.Direct,
 		discover: options.Discover, modelsDev: options.ModelsDev, templates: options.Templates,
-		logger: logger, proxyURL: options.ProxyURL, afterReload: options.AfterReload,
+		lifetime: options.Lifetime, logger: logger, proxyURL: options.ProxyURL, afterReload: options.AfterReload,
 	}
 }
 

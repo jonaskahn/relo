@@ -5,8 +5,11 @@ package main
 import (
 	"os"
 	"runtime"
+	"sync"
+	"time"
 
 	"github.com/jonaskahn/relo/internal/cli"
+	"github.com/jonaskahn/relo/internal/platform"
 )
 
 func main() {
@@ -15,7 +18,9 @@ func main() {
 	// this one onto another thread. The whole desktop — AppKit, the tray, the
 	// event loop — runs on this goroutine.
 	runtime.LockOSThread()
-	if err := cli.Execute(); err != nil {
+	var exiting sync.Once
+	onStopping := func() { exiting.Do(func() { time.AfterFunc(platform.ExitTimeout, func() { os.Exit(1) }) }) }
+	if err := cli.ExecuteWithShutdown(onStopping); err != nil {
 		os.Exit(cli.ExitCode(err))
 	}
 }

@@ -1031,11 +1031,11 @@ func (s *Server) handlePatchSystem(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) cleanAfterSettingsSave(ctx context.Context, settings *appsettings.Service) {
-	go func() {
-		if _, err := settings.RunRetention(context.WithoutCancel(ctx)); err != nil && !errors.Is(err, activity.ErrRetentionBusy) {
+	s.runOperation(func(ctx context.Context) {
+		if _, err := settings.RunRetention(ctx); err != nil && !errors.Is(err, activity.ErrRetentionBusy) {
 			s.opts.Logger.Warn("clean the usage log after a settings save", "error", err)
 		}
-	}()
+	})
 }
 
 func (s *Server) handlePatchLanguage(w http.ResponseWriter, r *http.Request) {
@@ -1115,7 +1115,7 @@ func (s *Server) fetchModels(manager *appcatalog.Service, providerID string) {
 	if s.opts.Logger == nil {
 		return
 	}
-	if _, err := manager.RefreshProviderModels(context.WithoutCancel(context.Background()), providerID); err != nil {
+	if _, err := manager.RefreshProviderModels(s.lifetime, providerID); err != nil {
 		s.opts.Logger.Debug("skip model refresh", "provider", providerID, "error", err)
 	}
 }

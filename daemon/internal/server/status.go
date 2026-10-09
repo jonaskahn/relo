@@ -40,7 +40,7 @@ func (s *Server) handleStatus(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) statusReport(ctx context.Context) statusResponse {
-	keys, active := s.clientKeyCounts()
+	keys, active := s.clientKeyCounts(ctx)
 	return statusResponse{
 		Status:        "running",
 		Version:       s.opts.Version,
@@ -69,11 +69,11 @@ func (s *Server) dataPlaneAddresses() []dataPlaneAddress {
 	return addresses
 }
 
-func (s *Server) clientKeyCounts() (total, active int) {
+func (s *Server) clientKeyCounts(ctx context.Context) (total, active int) {
 	if s.opts.Keys == nil {
 		return 0, 0
 	}
-	keys, err := s.opts.Keys.AccessKeys(context.Background())
+	keys, err := s.opts.Keys.AccessKeys(ctx)
 	if err != nil {
 		s.opts.Logger.Warn("read client keys for status", "error", err)
 		return 0, 0

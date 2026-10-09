@@ -824,7 +824,7 @@ func (s *Service) commitCredentialProbe(ctx context.Context, probeID string, ses
 // is in rotation, with a context of its own because the request that started
 // it has already answered.
 func (s *Service) RefreshAfterCredential(providerID string) {
-	ctx, cancel := context.WithTimeout(context.WithoutCancel(context.Background()), credentialRefreshTimeout)
+	ctx, cancel := context.WithTimeout(s.lifetime, credentialRefreshTimeout)
 	defer cancel()
 	_, _ = s.RefreshProviderModels(ctx, providerID)
 }

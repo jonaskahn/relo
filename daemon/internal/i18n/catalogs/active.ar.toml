@@ -486,14 +486,6 @@ other = "اللغة"
 description = "Tray submenu that quits the desktop app"
 other = "إنهاء"
 
-[tray.menu.quit_hide]
-description = "Tray menu item that hides the icon and leaves the proxy serving"
-other = "إخفاء الأيقونة (يستمر الوكيل في العمل)"
-
-[tray.menu.quit_shutdown]
-description = "Tray menu item that quits the desktop app and stops the daemon"
-other = "إنهاء وإيقاف الخادم"
-
 [tray.notify.failed]
 description = "Notification when a proxy run failed"
 other = "لم يبدأ الوكيل. {{.Detail}}"
@@ -677,3 +669,7 @@ other = "انقل {{.Bundle}} إلى سلة المحذوفات"
 [cli.uninstall.run]
 description = "The command to run when a removal could not be started"
 other = "نفّذ هذا لإكمال إزالة Relo: {{.Command}}"
+
+[tray.menu.quitting]
+description = "Tray quit action while final records are saved"
+other = "إنهاء — جارٍ المعالجة…"

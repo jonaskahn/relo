@@ -169,7 +169,7 @@ func (g *AccessKeyGate) markUsed(ctx context.Context, id string, now time.Time) 
 	}
 	g.touched[id] = now
 	g.mu.Unlock()
-	if err := g.source.MarkAccessKeyUsed(context.WithoutCancel(ctx), id); err != nil {
+	if err := g.source.MarkAccessKeyUsed(ctx, id); err != nil {
 		g.logger.Debug("record access key use", "key", id, "error", err)
 	}
 }

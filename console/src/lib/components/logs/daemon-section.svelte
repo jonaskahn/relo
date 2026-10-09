@@ -117,8 +117,10 @@
 	// deliberately not reactive: it must not trigger the effect it guards.
 	let firstFilterRun = true;
 	$effect(() => {
-		// load() reads level and hideRequests while it builds the query, so
-		// the effect already re-runs when a filter moves.
+		// The first run returns before load(), so it must still read the
+		// filters: an effect subscribes only to what a run reads, and a run
+		// that reads nothing never re-runs.
+		buildDaemonQuery({ limit: PAGE_SIZE, level, hideRequests });
 		if (firstFilterRun) {
 			firstFilterRun = false;
 			return;

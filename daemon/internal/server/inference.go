@@ -736,6 +736,7 @@ func (s *Server) record(ctx context.Context, outcome *requestOutcome, result Res
 	if s.opts.Usage == nil {
 		return
 	}
+	ctx = s.recordContext(ctx)
 	event := s.usageEvent(outcome, result)
 	event.ClientKeyID, event.ClientKeyName, event.ClientApp = describeClient(ctx)
 	event.Attempts = len(outcome.attempts)

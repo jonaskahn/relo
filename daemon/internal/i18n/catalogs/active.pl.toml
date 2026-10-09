@@ -550,14 +550,6 @@ other = "Język"
 description = "Tray submenu that quits the desktop app"
 other = "Zakończ"
 
-[tray.menu.quit_hide]
-description = "Tray menu item that hides the icon and leaves the proxy serving"
-other = "Ukryj ikonę (proxy nadal działa)"
-
-[tray.menu.quit_shutdown]
-description = "Tray menu item that quits the desktop app and stops the daemon"
-other = "Zakończ i wyłącz demona"
-
 [tray.notify.failed]
 description = "Notification when a proxy run failed"
 other = "Proxy nie zostało uruchomione. {{.Detail}}"
@@ -677,3 +669,7 @@ other = "Przenieś {{.Bundle}} do Kosza"
 [cli.uninstall.run]
 description = "The command to run when a removal could not be started"
 other = "Uruchom to, aby dokończyć usuwanie Relo: {{.Command}}"
+
+[tray.menu.quitting]
+description = "Tray quit action while final records are saved"
+other = "Zakończ — przetwarzanie…"

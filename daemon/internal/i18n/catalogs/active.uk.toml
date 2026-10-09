@@ -482,14 +482,6 @@ other = "Мова"
 description = "Tray submenu that quits the desktop app"
 other = "Вийти"
 
-[tray.menu.quit_hide]
-description = "Tray menu item that hides the icon and leaves the proxy serving"
-other = "Сховати значок (проксі продовжує працювати)"
-
-[tray.menu.quit_shutdown]
-description = "Tray menu item that quits the desktop app and stops the daemon"
-other = "Вийти і зупинити демон"
-
 [tray.notify.failed]
 description = "Notification when a proxy run failed"
 other = "Проксі не запустився. {{.Detail}}"
@@ -673,3 +665,7 @@ other = "перемістіть {{.Bundle}} до кошика"
 [cli.uninstall.run]
 description = "The command to run when a removal could not be started"
 other = "виконайте це, щоб завершити видалення Relo: {{.Command}}"
+
+[tray.menu.quitting]
+description = "Tray quit action while final records are saved"
+other = "Вихід — обробка…"

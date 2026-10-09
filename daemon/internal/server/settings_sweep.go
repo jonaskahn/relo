@@ -102,7 +102,7 @@ func (s *Server) handleStartSweep(w http.ResponseWriter, r *http.Request) {
 		})
 		return
 	}
-	go s.runSweep(context.WithoutCancel(r.Context()))
+	s.runOperation(s.runSweep)
 	writeJSON(w, http.StatusAccepted, s.sweep.status())
 }
 

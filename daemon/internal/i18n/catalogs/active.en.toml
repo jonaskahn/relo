@@ -483,16 +483,8 @@ description = "Tray submenu that chooses the language"
 other = "Language"
 
 [tray.menu.quit]
-description = "Tray submenu that quits the desktop app"
-other = "Quit"
-
-[tray.menu.quit_hide]
-description = "Tray menu item that hides the icon and leaves the proxy serving"
-other = "Hide the tray (the proxy keeps serving)"
-
-[tray.menu.quit_shutdown]
 description = "Tray menu item that quits the desktop app and stops the daemon"
-other = "Quit and shut down daemon"
+other = "Quit"
 
 [tray.status.running]
 description = "Tray menu status row for a running daemon"
@@ -677,3 +669,7 @@ other = "Move {{.Bundle}} to the Trash"
 [cli.uninstall.run]
 description = "The command to run when a removal could not be started"
 other = "Run this to finish removing Relo: {{.Command}}"
+
+[tray.menu.quitting]
+description = "Tray quit action while final records are saved"
+other = "Quit — processing…"

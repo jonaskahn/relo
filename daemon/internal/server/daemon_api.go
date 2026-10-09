@@ -1,7 +1,10 @@
 // Daemon lifecycle routes: stop, restart, and shutdown from the console.
 package server
 
-import "net/http"
+import (
+	"net/http"
+	"strconv"
+)
 
 type daemonStopRequest struct {
 	InstanceID string `json:"instance_id"`
@@ -38,10 +41,9 @@ func (s *Server) handleDaemonStop(w http.ResponseWriter, r *http.Request) {
 
 func (s *Server) answerStopReceipt(w http.ResponseWriter) {
 	stop := s.opts.Shutdown
-	// The answer leaves before the daemon drains, so the caller reads a
-	// receipt rather than a connection that closed under it.
-	writeJSON(w, http.StatusAccepted, map[string]any{"status": "stopping"})
-	s.opts.Logger.Info("daemon stopping", "cause", "stop request")
+	// Flush the receipt before Stop closes this connection.
+	writeDaemonReceipt(w, "stopping")
+	flushStopReceipt(w)
 	go stop()
 }
 
@@ -77,8 +79,8 @@ func (s *Server) acceptDaemonRestart(w http.ResponseWriter, r *http.Request, for
 		})
 		return
 	}
-	writeJSON(w, http.StatusAccepted, map[string]any{"status": "restarting"})
-	s.opts.Logger.Info("daemon restarting", "cause", "restart request", "force", force)
+	writeDaemonReceipt(w, "restarting")
+	flushStopReceipt(w)
 	go s.opts.Restart(force)
 }
 
@@ -96,7 +98,21 @@ func (s *Server) handleDaemonShutdown(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	stop := s.opts.Shutdown
-	writeJSON(w, http.StatusAccepted, map[string]any{"status": "stopping"})
-	s.opts.Logger.Info("daemon stopping", "cause", "shutdown request")
+	writeDaemonReceipt(w, "stopping")
+	flushStopReceipt(w)
 	go stop()
+}
+
+func flushStopReceipt(w http.ResponseWriter) {
+	if flusher, ok := w.(http.Flusher); ok {
+		flusher.Flush()
+	}
+}
+
+func writeDaemonReceipt(w http.ResponseWriter, status string) {
+	body := "{\"status\":\"" + status + "\"}\n"
+	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Content-Length", strconv.Itoa(len(body)))
+	w.WriteHeader(http.StatusAccepted)
+	_, _ = w.Write([]byte(body))
 }
