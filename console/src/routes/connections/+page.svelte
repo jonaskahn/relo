@@ -33,7 +33,6 @@
 		type ModelFilters,
 		type ModelLabelFilter
 	} from '$lib/model-filters';
-	import { offeredTemplates } from '$lib/provider-sections';
 	import {
 		connectionCards,
 		groupAccountsByConnection,
@@ -216,7 +215,7 @@
 	async function loadCatalog() {
 		try {
 			const data = await api<ProviderTemplatesResponse>('/templates');
-			templates = offeredTemplates(data.items ?? []);
+			templates = data.items ?? [];
 			modelsdev = data.modelsdev ?? null;
 		} catch (error) {
 			failed = error instanceof Error ? error.message : String(error);

@@ -4,7 +4,6 @@ import {
 	SECTION_ORDER,
 	addedTemplateIds,
 	buildTemplateRows,
-	offeredTemplates,
 	countTemplateRows,
 	groupProviders,
 	isProviderId,
@@ -31,13 +30,13 @@ describe('provider sections', () => {
 		expect(sectionOf('something-new')).toBe('key');
 	});
 
-	test('leaves Google Antigravity out of the add list', () => {
+	test('offers Google Antigravity under the account section', () => {
 		const templates = [
 			signInTemplate({ id: 'google-antigravity', label: 'Google Antigravity' }),
 			signInTemplate()
 		];
-		expect(offeredTemplates(templates).map((template) => template.id)).toEqual(['claude']);
 		expect(buildTemplateRows(templates, new Set()).account.map((row) => row.id)).toEqual([
+			'google-antigravity',
 			'claude'
 		]);
 	});
