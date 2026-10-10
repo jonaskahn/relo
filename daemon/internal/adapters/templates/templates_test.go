@@ -61,7 +61,7 @@ func TestTemplates(t *testing.T) {
 		t.Fatal("google-antigravity template not found")
 	}
 	if got := antigravityTemplate.Headers["User-Agent"]; got != antigravity.UserAgent() {
-		t.Errorf("antigravity user agent = %q, want the IDE fingerprint %q", got, antigravity.UserAgent())
+		t.Errorf("antigravity user agent = %q, want the hub fingerprint %q", got, antigravity.UserAgent())
 	}
 
 	// Dynamic modelsdev

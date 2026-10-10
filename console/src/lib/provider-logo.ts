@@ -13,7 +13,6 @@ const colored = new Set(['302ai', 'atomic-chat']);
 const aliases: Record<string, string> = {
 	'openai-codex': 'openai',
 	claude: 'anthropic',
-	'google-antigravity': 'google',
 	copilot: 'github-copilot',
 	grok: 'xai',
 	kimi: 'kimi-code-plan-cn',

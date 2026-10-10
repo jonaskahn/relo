@@ -120,15 +120,6 @@ export function matchesQuery(query: string, id: string, label: string): boolean 
 	return id.toLowerCase().includes(needle) || label.toLowerCase().includes(needle);
 }
 
-// Google Antigravity is left out of the add list while its sign-in is
-// unreliable. Drop the id from this set to offer it again.
-const pausedTemplateIds = new Set(['google-antigravity']);
-
-/** Keeps the templates the add flow offers, in their sections. */
-export function offeredTemplates(templates: readonly ProviderTemplate[]): ProviderTemplate[] {
-	return templates.filter((template) => !pausedTemplateIds.has(template.id));
-}
-
 /** Groups every template the daemon offers into the four sections, in the daemon's order, with
  *  unsupported rows last inside their section.
  *  A search hides empty sections and always keeps the custom card, which is what an operator
@@ -146,7 +137,7 @@ export function buildTemplateRows(
 	};
 	const searching = query.trim() !== '';
 
-	for (const template of offeredTemplates(templates)) {
+	for (const template of templates) {
 		if (!matchesQuery(query, template.id, template.label)) continue;
 		rows[sectionOf(template.kind)].push({
 			id: template.id,

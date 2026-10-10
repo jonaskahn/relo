@@ -19,7 +19,11 @@ const (
 	finishMaxTokens = "MAX_TOKENS"
 
 	safetyErrorCode = "safety"
-	callIDPrefix    = "call_"
+
+	// emptyCompletionCode names a completion the endpoint finished without
+	// answering, which is worth another attempt rather than an empty reply.
+	emptyCompletionCode = "empty_completion"
+	callIDPrefix        = "call_"
 )
 
 var blockedReasons = map[string]bool{
@@ -41,10 +45,13 @@ type streamDecoder struct {
 	finishReason string
 	calls        int
 	sawCall      bool
+	sawText      bool
 	usage        *inference.UsageReport
 	usageSent    bool
+	responseID   string
 	failure      *inference.ErrorInfo
 	terminated   bool
+	plan         planFilter
 }
 
 // NewStreamDecoder returns a decoder for one upstream response.
@@ -60,6 +67,7 @@ type streamChunk struct {
 	Candidates    []candidate    `json:"candidates"`
 	UsageMetadata *usageMetadata `json:"usageMetadata"`
 	Error         *errorBody     `json:"error"`
+	ResponseID    string         `json:"responseId"`
 }
 
 type candidate struct {
@@ -126,9 +134,30 @@ func (d *streamDecoder) Finish() ([]inference.Event, error) {
 		return nil, nil
 	}
 	d.terminated = true
-	events := d.usageEvents()
+	d.rememberExecution()
+	events := append(textEvent(d.plan.flush()), d.usageEvents()...)
+	events = append(events, d.emptyEvents()...)
 	terminal := inference.Event{Kind: inference.EventTerminal, Terminal: &inference.TerminalInfo{Reason: d.terminalReason()}}
 	return append(events, terminal), nil
+}
+
+// emptyEvents reports a completion the endpoint finished without answering.
+// The attempt is refused rather than returned as an empty answer, so the relay
+// tries again the way it already does for a completion that billed no tokens;
+// the status is the one that makes it retryable. This says nothing about the
+// account, so nothing is recorded against it.
+func (d *streamDecoder) emptyEvents() []inference.Event {
+	if d.mode != ModeCloudCodeAssist || d.sawText || d.sawCall || d.failure != nil {
+		return nil
+	}
+	if d.finishReason != "" && !blockedReasons[d.finishReason] {
+		return []inference.Event{{Kind: inference.EventError, Error: &inference.ErrorInfo{
+			Code:    emptyCompletionCode,
+			Message: "the endpoint finished the stream without an answer",
+			Status:  http.StatusTooManyRequests,
+		}}}
+	}
+	return nil
 }
 
 func (d *streamDecoder) absorb(chunk *streamChunk) []inference.Event {
@@ -137,6 +166,9 @@ func (d *streamDecoder) absorb(chunk *streamChunk) []inference.Event {
 		events = append(events, d.candidateEvents(&chunk.Candidates[index])...)
 	}
 	d.rememberUsage(chunk.UsageMetadata)
+	if chunk.ResponseID != "" {
+		d.responseID = chunk.ResponseID
+	}
 	return append(events, d.errorEvents(chunk.Error)...)
 }
 
@@ -161,7 +193,11 @@ func (d *streamDecoder) partEvents(parts []part) []inference.Event {
 		case parts[index].Thought:
 			events = append(events, reasoningEvent(parts[index].Text, signature)...)
 		default:
-			events = append(events, textEvent(parts[index].Text)...)
+			visible := d.plan.text(parts[index].Text)
+			if visible != "" {
+				d.sawText = true
+			}
+			events = append(events, textEvent(visible)...)
 			events = append(events, reasoningEvent("", signature)...)
 		}
 	}

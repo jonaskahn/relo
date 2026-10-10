@@ -16,14 +16,32 @@ import (
 )
 
 // antigravityFingerprint is the header Cloud Code Assist expects from the
-// Antigravity IDE. It is pinned here as well as in the package, so a client
-// bump that drifts away from the IDE family fails the build.
-const antigravityFingerprint = "antigravity/ide/2.5.5 (os_type=windows; arch=amd64; aidev_client; auth_method=oauth)"
+// Antigravity client before the manifest names a newer version. It is pinned
+// here as well as in the package, so a change that drifts away from the hub
+// client family fails the build.
+const antigravityFingerprint = "antigravity/hub/2.8.0 (aidev_client; os_type=darwin; arch=arm64; cl=963137146)"
 
 func TestAntigravityFingerprint(t *testing.T) {
-	t.Run("the pinned user agent names the IDE client family", func(t *testing.T) {
+	t.Run("the pinned user agent names the hub client family", func(t *testing.T) {
 		if got := antigravity.UserAgent(); got != antigravityFingerprint {
 			t.Fatalf("UserAgent() = %q, want %q", got, antigravityFingerprint)
+		}
+	})
+
+	// The redirect has to be the one the client is registered for, or Google
+	// refuses the sign-in before the account is ever consulted.
+	t.Run("the sign-in returns to the registered callback", func(t *testing.T) {
+		server, _ := newProvider(t)
+		server.handle("/token", jsonHandler(`{"access_token":"a","refresh_token":"r","expires_in":3600}`))
+		server.handle("/v1internal:loadCodeAssist", jsonHandler(`{"cloudaicompanionProject":"project-1"}`))
+		prompt, _ := loginManual(t, antigravityFlow(server), "code-redirect")
+		parsed, err := url.Parse(prompt.URL)
+		if err != nil {
+			t.Fatalf("parse authorize url: %v", err)
+		}
+		redirect := parsed.Query().Get("redirect_uri")
+		if !strings.HasPrefix(redirect, "http://127.0.0.1:") || !strings.HasSuffix(redirect, "/oauth-callback") {
+			t.Fatalf("redirect_uri = %q, want the registered loopback callback", redirect)
 		}
 	})
 }
@@ -62,7 +80,8 @@ func TestGoogleAntigravitySignIn(t *testing.T) {
 		server.handle("/token", jsonHandler(`{"access_token":"antigravity-access","refresh_token":"antigravity-refresh","expires_in":3600}`))
 		server.handle("/v1internal:loadCodeAssist", jsonHandler(
 			`{"error":{"code":403,"status":"PERMISSION_DENIED","message":"Caller does not have permission"}}`, http.StatusForbidden))
-		server.handle("/v1internal:onboardUser", sequenceHandler(
+		server.handle("/v1internal:onboardUser", jsonHandler(`{"name":"operations/onboard-1","done":false}`))
+		server.handle("/v1internal/operations/onboard-1", sequenceHandler(
 			jsonHandler(`{"done":false}`),
 			jsonHandler(`{"done":true,"response":{"project":{"id":"project-2"}}}`),
 		))
@@ -86,21 +105,17 @@ func TestGoogleAntigravitySignIn(t *testing.T) {
 		if onboard.accept != "*/*" {
 			t.Fatalf("accept = %q, want the accept the IDE sends", onboard.accept)
 		}
-		if got := nestedField(t, onboard.body, "tier_id"); got != "free-tier" {
-			t.Fatalf("tier_id = %q, want free-tier", got)
+		if got := nestedField(t, onboard.body, "tierId"); got != "free-tier" {
+			t.Fatalf("tierId = %q, want free-tier", got)
 		}
-		if got := nestedField(t, onboard.body, "metadata", "ide_type"); got != "ANTIGRAVITY" {
-			t.Fatalf("metadata.ide_type = %q, want ANTIGRAVITY", got)
+		if got := nestedField(t, onboard.body, "metadata", "ideType"); got != "ANTIGRAVITY" {
+			t.Fatalf("metadata.ideType = %q, want ANTIGRAVITY", got)
 		}
-		if got := nestedField(t, onboard.body, "metadata", "ide_name"); got != "antigravity" {
-			t.Fatalf("metadata.ide_name = %q, want antigravity", got)
+		if recorder.count("/v1internal:onboardUser") != 1 {
+			t.Fatalf("onboard calls = %d, want one start and then polling the operation", recorder.count("/v1internal:onboardUser"))
 		}
-		version := nestedField(t, onboard.body, "metadata", "ide_version")
-		if version != antigravity.IDEVersion {
-			t.Fatalf("metadata.ide_version = %q, want the bare version %q", version, antigravity.IDEVersion)
-		}
-		if strings.Contains(version, "antigravity/ide") {
-			t.Fatalf("metadata.ide_version = %q, want a version and not the user agent", version)
+		if recorder.count("/v1internal/operations/onboard-1") == 0 {
+			t.Fatal("want the named operation polled until it finished")
 		}
 	})
 
@@ -203,6 +218,120 @@ func antigravityFlow(server *provider, options ...oauth.Option) oauth.OAuthFlow 
 		}),
 	}
 	return oauth.NewGoogleAntigravityFlow(append(settings, options...)...)
+}
+
+// TestAntigravityOnboardingEdges covers the ways an onboarding operation can
+// fall short of naming a project. Each one has to end the sign-in with a named
+// failure rather than hanging or claiming a project it never produced.
+func TestAntigravityOnboardingEdges(t *testing.T) {
+	onboard := func(t *testing.T, clock *testkit.FakeClock, start, operation http.HandlerFunc) error {
+		t.Helper()
+		server, _ := newProvider(t)
+		server.handle("/token", jsonHandler(`{"access_token":"a","refresh_token":"r","expires_in":3600}`))
+		server.handle("/v1internal:loadCodeAssist", jsonHandler(`{}`))
+		server.handle("/v1internal:onboardUser", start)
+		server.handle("/v1internal/operations/onboard-1", operation)
+		var loginErr error
+		runWithClock(t, clock, time.Second, func() error {
+			_, err := antigravityFlow(server, oauth.WithClock(clock)).Login(context.Background(), oauth.LoginOpts{
+				ManualCode: func(oauth.AuthPrompt) (string, error) { return "code", nil },
+				NoBrowser:  true, Timeout: time.Minute,
+			})
+			loginErr = err
+			return nil
+		})
+		return loginErr
+	}
+
+	t.Run("an onboarding that starts an operation already carrying its project needs no poll", func(t *testing.T) {
+		clock := testkit.NewFakeClock(time.Now())
+		server, recorder := newProvider(t)
+		server.handle("/token", jsonHandler(`{"access_token":"a","refresh_token":"r","expires_in":3600}`))
+		server.handle("/v1internal:loadCodeAssist", jsonHandler(`{}`))
+		server.handle("/v1internal:onboardUser", jsonHandler(
+			`{"name":"operations/onboard-1","done":true,"response":{"cloudaicompanionProject":"project-9"}}`))
+		_, credential := loginManual(t, antigravityFlow(server, oauth.WithClock(clock)), "code")
+		if credential.Extra[oauth.ExtraProjectID] != "project-9" {
+			t.Fatalf("credential = %+v, want the project the operation already carried", credential)
+		}
+		if recorder.count("/v1internal/operations/onboard-1") != 0 {
+			t.Fatalf("operation polls = %d, want none for an operation that was already done", recorder.count("/v1internal/operations/onboard-1"))
+		}
+	})
+
+	t.Run("an onboarding that names no operation fails the sign-in", func(t *testing.T) {
+		err := onboard(t, testkit.NewFakeClock(time.Now()),
+			jsonHandler(`{"done":false}`), jsonHandler(`{}`))
+		if !errors.Is(err, oauth.ErrOnboardingFailed) {
+			t.Fatalf("Login() error = %v, want %v", err, oauth.ErrOnboardingFailed)
+		}
+		if !strings.Contains(err.Error(), "operations answered") {
+			t.Fatalf("error = %q, want it to name the operation stage", err)
+		}
+	})
+
+	t.Run("an operation that finishes without a project fails the sign-in", func(t *testing.T) {
+		err := onboard(t, testkit.NewFakeClock(time.Now()),
+			jsonHandler(`{"name":"operations/onboard-1","done":false}`),
+			jsonHandler(`{"done":true,"response":{}}`))
+		if !errors.Is(err, oauth.ErrOnboardingFailed) {
+			t.Fatalf("Login() error = %v, want %v", err, oauth.ErrOnboardingFailed)
+		}
+	})
+
+	t.Run("an operation that never reports done gives up on the clock", func(t *testing.T) {
+		clock := testkit.NewFakeClock(time.Now())
+		err := onboard(t, clock,
+			jsonHandler(`{"name":"operations/onboard-1","done":false}`),
+			jsonHandler(`{"done":false}`))
+		if !errors.Is(err, oauth.ErrOnboardingFailed) {
+			t.Fatalf("Login() error = %v, want %v", err, oauth.ErrOnboardingFailed)
+		}
+		if !strings.Contains(err.Error(), "never reported done") {
+			t.Fatalf("error = %q, want it to say the operation never finished", err)
+		}
+	})
+
+	t.Run("an operation that answers with an unreadable body fails the sign-in", func(t *testing.T) {
+		err := onboard(t, testkit.NewFakeClock(time.Now()),
+			jsonHandler(`{"name":"operations/onboard-1","done":false}`),
+			jsonHandler(`not json`))
+		if !errors.Is(err, oauth.ErrOnboardingFailed) {
+			t.Fatalf("Login() error = %v, want %v", err, oauth.ErrOnboardingFailed)
+		}
+	})
+}
+
+// TestAntigravityRefreshSurvivesAFailedLookup covers the refresh path's
+// best-effort project fill-in: a lookup that cannot answer must not retire the
+// account, because a refreshed access token stays usable without the project
+// and the request path reports the missing project on its own.
+func TestAntigravityRefreshSurvivesAFailedLookup(t *testing.T) {
+	t.Run("a lookup that names no project keeps the refreshed token", func(t *testing.T) {
+		server, _ := newProvider(t)
+		server.handle("/token", jsonHandler(`{"access_token":"fresh-access","expires_in":3600}`))
+		server.handle("/v1internal:loadCodeAssist", jsonHandler(`{}`))
+		refreshed, err := antigravityFlow(server).Refresh(context.Background(), &oauth.OAuthCredential{
+			AccessToken: "stale", RefreshToken: "antigravity-refresh",
+		})
+		if err != nil {
+			t.Fatalf("Refresh() error = %v, want the refresh to survive the lookup", err)
+		}
+		if refreshed.AccessToken != "fresh-access" {
+			t.Fatalf("credential = %+v, want the fresh access token", refreshed)
+		}
+		if refreshed.Extra[oauth.ExtraProjectID] != "" {
+			t.Fatalf("credential = %+v, want no project invented from an empty answer", refreshed)
+		}
+	})
+
+	t.Run("a credential with no refresh token is refused", func(t *testing.T) {
+		server, _ := newProvider(t)
+		_, err := antigravityFlow(server).Refresh(context.Background(), &oauth.OAuthCredential{AccessToken: "stale"})
+		if !errors.Is(err, oauth.ErrNoRefreshToken) {
+			t.Fatalf("Refresh() error = %v, want %v", err, oauth.ErrNoRefreshToken)
+		}
+	})
 }
 
 // nestedField reads one string out of a nested JSON request body.

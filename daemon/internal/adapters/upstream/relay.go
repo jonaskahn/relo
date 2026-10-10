@@ -282,7 +282,7 @@ func (e *Executor) relayRejection(att attempt, response *http.Response) (Result,
 	result := Result{
 		Status: response.StatusCode, Duration: time.Since(att.started), Model: att.exchange.Request.Model,
 		Credential: att.exchange.CredentialLabel, HeaderLatency: att.latency,
-		RetryAfter:  retryAfter(response),
+		RetryAfter:  preferredWait(retryAfter(response), info.RetryAfter),
 		ModelAccess: modelAccessRefusal(response.StatusCode, info, att.exchange.Request.Model),
 	}
 	switchable := att.exchange.Policy.Switchable(response.StatusCode)
