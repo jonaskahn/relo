@@ -10,9 +10,36 @@ version="${version#v}"
 # The Makefile owns the floor; the default only serves a direct run.
 macos_min="${MACOS_MIN_VERSION:-12.0}"
 
+# Ad-hoc signing is the default: it needs no Apple account and still seals
+# every binary, so a build can be copied to another Mac. Pass --apple-id to
+# sign with a Developer ID instead, naming it in APPLE_SIGN_IDENTITY when the
+# keychain holds more than one.
+identity="-"
+for arg in "$@"; do
+  if [ "$arg" = "--apple-id" ]; then
+    identity="${APPLE_SIGN_IDENTITY:-Developer ID Application}"
+  else
+    echo "unknown argument: $arg" >&2
+    exit 2
+  fi
+done
+
 if [ "$(uname -s)" != "Darwin" ]; then
   echo "building the macOS app requires macOS" >&2
   exit 1
+fi
+
+# Fail before the long build rather than at the signing step, once the whole
+# bundle exists and only the identity is unusable. codesign rejects a name
+# that matches more than one certificate, so anything but a single match is
+# an error here too.
+if [ "$identity" != "-" ]; then
+  matches="$(security find-identity -v -p codesigning | grep -cF "$identity" || true)"
+  if [ "$matches" -ne 1 ]; then
+    echo "$matches codesigning identities match \"$identity\"; pass the 40-character hash" >&2
+    security find-identity -v -p codesigning >&2
+    exit 1
+  fi
 fi
 
 app="$root/dist/Relo.app"
@@ -37,10 +64,16 @@ chmod +x "$app/Contents/MacOS/Relo"
 
 sparkle_version="2.9.4"
 sparkle_sha256="ce89daf967db1e1893ed3ebd67575ed82d3902563e3191ca92aaec9164fbdef9"
-sparkle_root="$root/dist/sparkle-$sparkle_version"
+# Outside dist/ on purpose: `make package-clean` wipes dist, and a fresh
+# 15 MB download on every run is what made packaging look like it hung.
+sparkle_root="${RELO_CACHE:-$HOME/Library/Caches/relo}/sparkle-$sparkle_version"
 if [ ! -d "$sparkle_root/Sparkle.framework" ]; then
-  archive="/tmp/sparkle-$sparkle_version.tar.xz"
-  curl -fsSL -o "$archive" \
+  # Inside scratch so an interrupted run cannot leave a truncated archive
+  # behind for the next one to trip over. --retry covers a stalled
+  # connection; --progress-bar keeps the 15 MB transfer visible even when
+  # make captures stderr, so it never looks like a hung build.
+  archive="$scratch/sparkle-$sparkle_version.tar.xz"
+  curl -fSL --retry 3 --progress-bar -o "$archive" \
     "https://github.com/sparkle-project/Sparkle/releases/download/${sparkle_version}/Sparkle-${sparkle_version}.tar.xz"
   echo "${sparkle_sha256}  $archive" | shasum -a 256 -c -
   mkdir -p "$sparkle_root"
@@ -98,7 +131,7 @@ sed -e "s/__VERSION__/$version/g" -e "s/__SU_PUBLIC_ED_KEY__/$public_key/g" \
 # quarantine step in CONTRIBUTING.md. A Developer ID identity plus
 # notarization is the upgrade path. Nested code is signed before the code
 # that contains it, so --deep is not needed.
-sign() { codesign --force --sign - "$@"; }
+sign() { codesign --force --sign "$identity" "$@"; }
 
 # The bundle's own code is sealed last; the arm64 copy below swaps two
 # executables and has to repeat just this part.

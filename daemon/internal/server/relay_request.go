@@ -118,11 +118,12 @@ func (s *Server) buildAttemptExchange(spec attemptSpec, module wire.CodecModule,
 	if err != nil {
 		return Exchange{}, err
 	}
+	request, originals := s.modelRequest(outcome.request, candidate, templated, template)
 	exchange := Exchange{
-		ProviderID: candidate.ProviderID, Codec: module,
+		ProviderID: candidate.ProviderID, Codec: wire.RestoreToolNames(module, originals),
 		RequiresStream: templated && template.RequiresStream,
 		Options:        s.attemptCodecOptions(spec, extra, template, templated),
-		Request:        s.modelRequest(outcome.request, candidate, templated, template),
+		Request:        request,
 		Inbound:        spec.inbound, Surface: outcome.surface, RequestID: outcome.requestID,
 		CredentialLabel: authorized.Label, Final: final,
 		Policy: connectionPolicy(host),
@@ -367,12 +368,12 @@ func endpointBase(candidate routing.Candidate, authorized catalog.Authorization)
 	return candidate.Model.BaseURL
 }
 
-func (s *Server) modelRequest(request *inference.Request, candidate routing.Candidate, templated bool, template catalog.Template) *inference.Request {
+func (s *Server) modelRequest(request *inference.Request, candidate routing.Candidate, templated bool, template catalog.Template) (*inference.Request, map[string]string) {
 	copied := modelRequest(request, candidate.Model.UpstreamID)
 	if templated && template.ID == catalog.OpenCodeFreeTemplate {
 		return wire.OpenCodeFreeRequest(copied, candidate.Model.APIFormat)
 	}
-	return copied
+	return copied, nil
 }
 
 func modelRequest(request *inference.Request, modelID string) *inference.Request {

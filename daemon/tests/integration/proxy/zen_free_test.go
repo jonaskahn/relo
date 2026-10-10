@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"regexp"
+	"strconv"
 	"strings"
 	"testing"
 
@@ -84,10 +85,163 @@ func newZenGateway(t *testing.T, answer func(w http.ResponseWriter, attempt zenA
 			_, _ = io.WriteString(w, `{"type":"error","error":{"type":"FreeTierError","message":"`+refuse+`"}}`)
 			return
 		}
+		if schema := zenRefusedSchema(body); schema != "" {
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusBadRequest)
+			_, _ = io.WriteString(w, `{"error":{"type":"invalid_request_error",`+
+				`"param":"parameters","message":"Invalid JSON schema: `+schema+
+				` is not valid under any of the schemas listed in the 'anyOf' keyword"}}`)
+			return
+		}
+		if ceiling := zenRefusedCeiling(body); ceiling != 0 {
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusBadRequest)
+			_, _ = io.WriteString(w, `{"error":{"type":"invalid_request_error",`+
+				`"message":"`+"`max_output_tokens` The number must be `>= 16`"+`"}}`)
+			return
+		}
+		if name := zenRefusedName(body); name != "" {
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusBadRequest)
+			message := "`name` must be at most 64 characters, got " + strconv.Itoa(len(name))
+			_, _ = io.WriteString(w, `{"error":{"type":"invalid_request_error","param":"name","message":"`+
+				message+`"}}`)
+			return
+		}
 		answer(w, gateway.last)
 	}))
 	t.Cleanup(gateway.server.Close)
 	return gateway
+}
+
+// zenToolNameLimit is the longest tool name the gateway accepts. A coding
+// session passes it as soon as it loads an MCP server, and the gateway refuses
+// the whole turn for one name.
+const zenToolNameLimit = 64
+
+// zenRefusedName returns the first tool name past the limit the request sends,
+// in a declaration, a replayed call, or a named choice, which is the name the
+// gateway refuses.
+func zenRefusedName(body map[string]any) string {
+	for _, entry := range zenItems(body["tools"]) {
+		tool, _ := entry.(map[string]any)
+		if name := zenOverlongName(tool["name"]); name != "" {
+			return name
+		}
+		if function, ok := tool["function"].(map[string]any); ok {
+			if name := zenOverlongName(function["name"]); name != "" {
+				return name
+			}
+		}
+	}
+	for _, entry := range zenItems(body["input"]) {
+		if name := zenOverlongName(zenField(entry, "name")); name != "" {
+			return name
+		}
+	}
+	for _, entry := range zenItems(body["messages"]) {
+		if name := zenOverlongName(zenField(entry, "name")); name != "" {
+			return name
+		}
+		for _, call := range zenItems(zenField(entry, "tool_calls")) {
+			if name := zenOverlongName(zenField(zenField(call, "function"), "name")); name != "" {
+				return name
+			}
+		}
+	}
+	choice, _ := body["tool_choice"].(map[string]any)
+	if name := zenOverlongName(choice["name"]); name != "" {
+		return name
+	}
+	if name := zenOverlongName(zenField(choice["function"], "name")); name != "" {
+		return name
+	}
+	return ""
+}
+
+func zenOverlongName(value any) string {
+	name, _ := value.(string)
+	if len(name) > zenToolNameLimit {
+		return name
+	}
+	return ""
+}
+
+func zenItems(value any) []any {
+	items, _ := value.([]any)
+	return items
+}
+
+func zenField(entry any, key string) any {
+	object, _ := entry.(map[string]any)
+	return object[key]
+}
+
+// zenSchemaKeywords are the annotations the Responses dialect refuses. The
+// gateway reports the first fragment it cannot place under anyOf, and it names
+// no dialect of its own, so the mock refuses them the way the gateway does. A
+// keyword that shapes what a valid call is stays, as it does upstream.
+var zenSchemaKeywords = []string{"pattern", "minLength", "maxLength", "$schema"}
+
+// zenRefusedSchema returns the offending fragment of the first tool schema that
+// carries a keyword the gateway refuses, or an empty string when every schema
+// is within the dialect.
+func zenRefusedSchema(body map[string]any) string {
+	tools, _ := body["tools"].([]any)
+	for _, entry := range tools {
+		tool, _ := entry.(map[string]any)
+		if tool == nil {
+			continue
+		}
+		parameters, _ := tool["parameters"].(map[string]any)
+		for _, keyword := range zenSchemaKeywords {
+			if fragment, found := zenSchemaFragment(parameters, keyword); found {
+				return fragment
+			}
+		}
+	}
+	return ""
+}
+
+func zenSchemaFragment(node map[string]any, keyword string) (string, bool) {
+	for key, child := range node {
+		if key == keyword {
+			encoded, err := json.Marshal(child)
+			if err != nil {
+				continue
+			}
+			return string(encoded), true
+		}
+		switch value := child.(type) {
+		case map[string]any:
+			if fragment, found := zenSchemaFragment(value, keyword); found {
+				return fragment, true
+			}
+		case []any:
+			for _, item := range value {
+				if nested, ok := item.(map[string]any); ok {
+					if fragment, found := zenSchemaFragment(nested, keyword); found {
+						return fragment, true
+					}
+				}
+			}
+		}
+	}
+	return "", false
+}
+
+// zenRefusedCeiling returns the output ceiling the gateway would refuse, or
+// zero when the request states none or states one the gateway accepts. Only
+// the Responses wire names the parameter.
+func zenRefusedCeiling(body map[string]any) int {
+	ceiling, found := body["max_output_tokens"].(float64)
+	if !found {
+		return 0
+	}
+	if ceiling >= 16 {
+		return 0
+	}
+	return int(ceiling)
 }
 
 func (g *zenGateway) URL() string {
@@ -572,6 +726,124 @@ func TestZenFreeDeclaresToolsForAToolFreeTurn(t *testing.T) {
 			}
 		}
 	})
+}
+
+// TestZenFreeCorrectsWhatTheResponsesWireRefuses covers the two refusals the
+// Responses dialect adds over the chat one: it validates every tool schema
+// against a narrower set of keywords, and it names an output floor. A coding
+// client sends neither shape knowingly, so Relo answers with a request the
+// gateway serves rather than passing the refusal through.
+func TestZenFreeCorrectsWhatTheResponsesWireRefuses(t *testing.T) {
+	t.Run("a schema the dialect refuses is served without its keywords", func(t *testing.T) {
+		gateway := newZenGateway(t, zenResponsesStream)
+		daemon := startZenFreeDaemon(t, gateway.URL(),
+			zenFreeModel{ID: "muse-spark-1.3-contributor-free", Format: catalog.FormatOpenAIResp})
+		response := send(t, daemon.dataPlane, "/v1/chat/completions", dataPlaneToken,
+			`{"model":"muse-spark-1.3-contributor-free","stream":false,"max_tokens":64,`+
+				`"messages":[{"role":"user","content":"Read notes.md"}],"tools":[{"type":"function",`+
+				`"function":{"name":"read","description":"read a file","parameters":{"type":"object",`+
+				`"properties":{"file_path":{"type":"string","minLength":1,"maxLength":1024,`+
+				`"pattern":"^[^\\0]*$"}}}}}]}`)
+		defer func() { _ = response.Body.Close() }()
+		if response.StatusCode != http.StatusOK {
+			body, _ := io.ReadAll(response.Body)
+			t.Fatalf("status = %d, body = %s", response.StatusCode, body)
+		}
+		if zenRefusedSchema(gateway.last.body) != "" {
+			t.Fatalf("upstream tools = %v, want the refused keywords removed",
+				gateway.last.body["tools"])
+		}
+	})
+
+	t.Run("a ceiling below the floor is raised to it", func(t *testing.T) {
+		gateway := newZenGateway(t, zenResponsesStream)
+		daemon := startZenFreeDaemon(t, gateway.URL(),
+			zenFreeModel{ID: "muse-spark-1.3-contributor-free", Format: catalog.FormatOpenAIResp})
+		response := send(t, daemon.dataPlane, "/v1/chat/completions", dataPlaneToken,
+			`{"model":"muse-spark-1.3-contributor-free","stream":false,"max_tokens":1,`+
+				`"messages":[{"role":"user","content":"quota"}]}`)
+		defer func() { _ = response.Body.Close() }()
+		if response.StatusCode != http.StatusOK {
+			body, _ := io.ReadAll(response.Body)
+			t.Fatalf("status = %d, body = %s", response.StatusCode, body)
+		}
+		if ceiling, _ := gateway.last.body["max_output_tokens"].(float64); ceiling < 16 {
+			t.Fatalf("max_output_tokens = %v, want the floor the gateway accepts", ceiling)
+		}
+	})
+}
+
+// zenLongToolName is a tool a coding session actually sends once it loads an
+// MCP server, and it is longer than the gateway accepts.
+const zenLongToolName = "mcp__claude_ai_Cloudflare_Developer_Platform__complete_authentication"
+
+// A session with an MCP server declares a tool past the gateway's limit, which
+// the gateway refuses for the whole turn. The name goes out under an alias, and
+// the answer names the tool the client declared.
+func TestZenFreeShortensAndNamesBackALongToolName(t *testing.T) {
+	if len(zenLongToolName) <= zenToolNameLimit {
+		t.Fatalf("the sample name is %d characters, want one past the gateway limit",
+			len(zenLongToolName))
+	}
+	gateway := newZenGateway(t, zenResponsesCallsTheToolItWasOffered)
+	daemon := startZenFreeDaemon(t, gateway.URL(),
+		zenFreeModel{ID: "muse-spark-1.3-contributor-free", Format: catalog.FormatOpenAIResp})
+	response := send(t, daemon.dataPlane, "/v1/chat/completions", dataPlaneToken,
+		`{"model":"muse-spark-1.3-contributor-free","stream":false,`+
+			`"messages":[{"role":"user","content":"list the files"}],"tools":[{"type":"function",`+
+			`"function":{"name":"`+zenLongToolName+`","description":"list files",`+
+			`"parameters":{"type":"object","properties":{}}}}]}`)
+	defer func() { _ = response.Body.Close() }()
+	if response.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(response.Body)
+		t.Fatalf("status = %d, body = %s", response.StatusCode, body)
+	}
+	sent := zenOfferedToolName(gateway.last.body)
+	if sent == zenLongToolName {
+		t.Fatalf("upstream tool name = %q, want the name the gateway accepts", sent)
+	}
+	if sent == "" || len(sent) > zenToolNameLimit {
+		t.Fatalf("upstream tool name = %q, want a name of at most %d characters",
+			sent, zenToolNameLimit)
+	}
+	body, err := io.ReadAll(response.Body)
+	if err != nil {
+		t.Fatalf("read body: %v", err)
+	}
+	if !strings.Contains(string(body), zenLongToolName) {
+		t.Fatalf("body = %s, want the call named as the client declared it", body)
+	}
+}
+
+// zenResponsesCallsTheToolItWasOffered answers with a call to the first tool the
+// request declared, which is the name the model was offered.
+func zenResponsesCallsTheToolItWasOffered(w http.ResponseWriter, attempt zenAttempt) {
+	w.Header().Set("Content-Type", "text/event-stream")
+	_, _ = io.WriteString(w, strings.Join([]string{
+		`data: {"type":"response.output_item.added","sequence_number":1,"output_index":0,` +
+			`"item":{"type":"function_call","id":"fc_1","call_id":"call_1",` +
+			`"name":"` + zenOfferedToolName(attempt.body) + `","arguments":"","status":"in_progress"}}`,
+		``,
+		`data: {"type":"response.completed","sequence_number":2,"response":{"id":"resp_1",` +
+			`"object":"response","status":"completed","output":[],` +
+			`"usage":{"input_tokens":12,"output_tokens":3,"total_tokens":15}}}`,
+		``,
+	}, "\n"))
+}
+
+func zenOfferedToolName(body map[string]any) string {
+	for _, entry := range zenItems(body["tools"]) {
+		tool, _ := entry.(map[string]any)
+		if name, ok := tool["name"].(string); ok && name != "" {
+			return name
+		}
+		if function, ok := tool["function"].(map[string]any); ok {
+			if name, ok := function["name"].(string); ok && name != "" {
+				return name
+			}
+		}
+	}
+	return ""
 }
 
 // zenFreeModel is one model on the keyless lane, with the upstream wire it

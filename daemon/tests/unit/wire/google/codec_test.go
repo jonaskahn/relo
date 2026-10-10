@@ -753,8 +753,15 @@ func TestCloudCodeAssistEnvelopeCarriesTheClientIdentity(t *testing.T) {
 		}
 	}
 	requestID, _ := envelope["requestId"].(string)
-	if !strings.HasPrefix(requestID, "agent/req-1/") || !strings.HasSuffix(requestID, "/req-1/1") {
-		t.Fatalf("requestId = %q, want agent/req-1/<ms>/req-1/1", requestID)
+	parts := strings.Split(requestID, "/")
+	if len(parts) != 5 || parts[0] != "agent" {
+		t.Fatalf("requestId = %q, want agent/<agent>/<ms>/<trajectory>/<step>", requestID)
+	}
+	if parts[1] == parts[3] {
+		t.Fatalf("requestId = %q, want the agent and the trajectory to be separate identities", requestID)
+	}
+	if parts[4] != "2" {
+		t.Fatalf("requestId = %q, want the first turn to sit at step 2", requestID)
 	}
 	inner, found := envelope["request"].(map[string]any)
 	if !found {
@@ -768,11 +775,24 @@ func TestCloudCodeAssistEnvelopeCarriesTheClientIdentity(t *testing.T) {
 		t.Fatalf("request = %v, want a session id", inner)
 	}
 	labels := inner["labels"].(map[string]any)
-	if labels["trajectory_id"] != "req-1" || labels["request_id"] != "req-1-1" || labels["last_step_index"] != "0" {
-		t.Fatalf("labels = %v, want the trajectory taken from the request id", labels)
+	if labels["trajectory_id"] != parts[3] || labels["last_step_index"] != "1" {
+		t.Fatalf("labels = %v, want the trajectory from the envelope at step 1", labels)
 	}
-	if labels["used_claude"] != "false" || labels["used_non_gemini_model"] != "false" {
+	if labels["used_claude"] != "false" {
 		t.Fatalf("labels = %v, want a Gemini turn", labels)
+	}
+	// The vendor reads exactly these labels; one it never sends is a guess
+	// about what the endpoint watches, and a label it does read and Relo drops
+	// is telemetry that goes missing. A first turn has no execution to name
+	// back, so that one label joins the set rather than being filled in.
+	want := []string{"last_step_index", "trajectory_id", "used_claude", "used_claude_conservative"}
+	for _, name := range want {
+		if _, found := labels[name]; !found {
+			t.Fatalf("labels = %v, want it to carry %q", labels, name)
+		}
+	}
+	if len(labels) != len(want) {
+		t.Fatalf("labels = %v, want exactly %v", labels, want)
 	}
 	config := inner["generationConfig"].(map[string]any)
 	thinking := config["thinkingConfig"].(map[string]any)
@@ -800,6 +820,261 @@ func TestCloudCodeAssistEnvelopeCarriesTheClientIdentity(t *testing.T) {
 	if config["maxOutputTokens"] != float64(64) {
 		t.Fatalf("maxOutputTokens = %v, want the caller's limit", config["maxOutputTokens"])
 	}
+}
+
+// TestCloudCodeAssistVariantRouting asserts the envelope names the SKU the
+// vendor serves the requested effort on, under the label it reads the SKU's
+// enum from, within the ceiling that SKU accepts. The request itself keeps the
+// logical model, so usage and the replay cache stay filed under it.
+// TestCloudCodeAssistSessionIdentity asserts the two conversation ids stay
+// put across the turns of one conversation while the step advances with it:
+// the endpoint gates its models on that continuity, so a turn that re-derives
+// its trajectory or repeats a step reads as a different session.
+// TestCloudCodeAssistExecutionID covers the answer the next turn names back:
+// the endpoint issues an id with every response and expects the following turn
+// to carry it, so a fabricated one is worse than none.
+// TestCloudCodeAssistClaudeBeta covers the beta a reasoning Claude turn claims
+// by name: the vendor gates interleaved thinking behind it and serves the turn
+// without the reasoning the client asked for when it is missing.
+func TestCloudCodeAssistClaudeBeta(t *testing.T) {
+	beta := func(model, effort string) string {
+		t.Helper()
+		request := canonicalRequest(false)
+		request.Model = model
+		if effort != "" {
+			request.Reasoning = &inference.ReasoningConfig{Effort: effort}
+		}
+		encoded := encode(t, cloudCodeAssistCodec(), request, wire.CodecOpts{
+			CredentialRef: "token", AuthMethod: wire.AuthOAuth, Project: "project-1",
+		})
+		return encoded.Header.Get("anthropic-beta")
+	}
+
+	t.Run("a reasoning claude turn claims it", func(t *testing.T) {
+		for _, model := range []string{"claude-sonnet-4-6", "claude-opus-4-6"} {
+			for _, effort := range []string{"low", "medium", "high"} {
+				if got := beta(model, effort); got != "interleaved-thinking-2025-05-14" {
+					t.Fatalf("anthropic-beta = %q for %s at %s, want the interleaved-thinking beta", got, model, effort)
+				}
+			}
+		}
+	})
+
+	t.Run("a turn with thinking off does not claim it", func(t *testing.T) {
+		if got := beta("claude-sonnet-4-6", "none"); got != "" {
+			t.Fatalf("anthropic-beta = %q, want none for a turn with thinking off", got)
+		}
+	})
+
+	t.Run("a gemini turn does not claim it", func(t *testing.T) {
+		if got := beta("gemini-3.5-flash", "high"); got != "" {
+			t.Fatalf("anthropic-beta = %q, want none for a model that does not reason on this beta", got)
+		}
+	})
+}
+
+func TestCloudCodeAssistExecutionID(t *testing.T) {
+	session := "codex-thread:execution"
+	decode := func(body string) {
+		t.Helper()
+		request := canonicalRequest(false)
+		bound := cloudCodeAssistCodec().Bind(request, wire.CodecOpts{SessionAnchor: session})
+		decoder := bound.NewStreamDecoder()
+		pushStreamData(t, decoder, body)
+		if _, err := decoder.Finish(); err != nil {
+			t.Fatalf("Finish() error = %v", err)
+		}
+	}
+	execution := func() (string, bool) {
+		t.Helper()
+		body := assistEnvelope(t, canonicalRequest(false), wire.CodecOpts{
+			CredentialRef: "token", Project: "project-1", SessionAnchor: session,
+		})
+		labels := body["request"].(map[string]any)["labels"].(map[string]any)
+		value, found := labels["last_execution_id"]
+		text, _ := value.(string)
+		return text, found
+	}
+
+	if _, found := execution(); found {
+		t.Fatal("the first turn names an execution the endpoint has not issued")
+	}
+
+	decode(`{"response":{"responseId":"exec-1","candidates":[{"content":{"parts":[{"text":"hi"}]},"finishReason":"STOP"}]}}`)
+	id, found := execution()
+	if !found || id != "exec-1" {
+		t.Fatalf("last_execution_id = %q, want the id the endpoint issued", id)
+	}
+
+	t.Run("a later execution replaces it", func(t *testing.T) {
+		decode(`{"response":{"responseId":"exec-2","candidates":[{"content":{"parts":[{"text":"again"}]},"finishReason":"STOP"}]}}`)
+		if id, _ := execution(); id != "exec-2" {
+			t.Fatalf("last_execution_id = %q, want the newest execution", id)
+		}
+	})
+
+	t.Run("a refused answer leaves the execution standing", func(t *testing.T) {
+		decode(`{"response":{"responseId":"exec-3","error":{"code":429,"message":"Individual quota reached","status":"RESOURCE_EXHAUSTED"}}}`)
+		if id, _ := execution(); id != "exec-2" {
+			t.Fatalf("last_execution_id = %q, want the last execution that answered", id)
+		}
+	})
+
+	t.Run("another conversation names its own", func(t *testing.T) {
+		body := assistEnvelope(t, canonicalRequest(false), wire.CodecOpts{
+			CredentialRef: "token", Project: "project-1", SessionAnchor: "codex-thread:other",
+		})
+		labels := body["request"].(map[string]any)["labels"].(map[string]any)
+		if _, found := labels["last_execution_id"]; found {
+			t.Fatalf("labels = %v, want no execution from another conversation", labels)
+		}
+	})
+}
+
+func TestCloudCodeAssistSessionIdentity(t *testing.T) {
+	turn := func(text string, extra ...inference.Message) *inference.Request {
+		request := canonicalRequest(false)
+		request.Messages[len(request.Messages)-1].Content = []inference.ContentPart{{Type: inference.ContentTypeText, Text: text}}
+		return &inference.Request{Model: request.Model, Stream: false, Messages: append(request.Messages, extra...)}
+	}
+	read := func(request *inference.Request) (requestID, trajectory string, step string) {
+		body := assistEnvelope(t, request, wire.CodecOpts{
+			CredentialRef: "token", Project: "project-1", SessionAnchor: "codex-thread:one",
+		})
+		requestID, _ = body["requestId"].(string)
+		labels := body["request"].(map[string]any)["labels"].(map[string]any)
+		trajectory, _ = labels["trajectory_id"].(string)
+		step, _ = labels["last_step_index"].(string)
+		return requestID, trajectory, step
+	}
+
+	_, firstTrajectory, firstStep := read(turn("hello"))
+	secondID, secondTrajectory, secondStep := read(turn("hello",
+		inference.Message{Role: inference.RoleAssistant, Content: []inference.ContentPart{{Type: inference.ContentTypeText, Text: "hi"}}},
+		inference.Message{Role: inference.RoleUser, Content: []inference.ContentPart{{Type: inference.ContentTypeText, Text: "again"}}},
+	))
+
+	if firstTrajectory != secondTrajectory {
+		t.Fatalf("trajectory = %q then %q, want one identity for the conversation", firstTrajectory, secondTrajectory)
+	}
+	if firstStep != "1" || secondStep != "2" {
+		t.Fatalf("last_step_index = %q then %q, want the turn count to advance", firstStep, secondStep)
+	}
+	if step := strings.Split(secondID, "/")[4]; step != "3" {
+		t.Fatalf("requestId = %q, want the second turn at step 3", secondID)
+	}
+
+	t.Run("another conversation gets its own identities", func(t *testing.T) {
+		body := assistEnvelope(t, turn("hello"), wire.CodecOpts{
+			CredentialRef: "token", Project: "project-1", SessionAnchor: "codex-thread:two",
+		})
+		labels := body["request"].(map[string]any)["labels"].(map[string]any)
+		if labels["trajectory_id"] == firstTrajectory {
+			t.Fatalf("trajectory = %v, want a separate conversation its own identity", labels["trajectory_id"])
+		}
+	})
+
+	t.Run("a conversation ending on a model turn does not skip a step", func(t *testing.T) {
+		_, _, before := read(turn("hello"))
+		trailing := turn("hello",
+			inference.Message{Role: inference.RoleAssistant, Content: []inference.ContentPart{{Type: inference.ContentTypeText, Text: "hi"}}},
+		)
+		_, _, after := read(trailing)
+		if before != after {
+			t.Fatalf("last_step_index = %q then %q, want the continue turn left out of the count", before, after)
+		}
+	})
+}
+
+func TestCloudCodeAssistVariantRouting(t *testing.T) {
+	cases := []struct {
+		logical string
+		effort  string
+		wire    string
+		enum    string
+		ceiling float64
+	}{
+		{"gemini-3.5-flash", "minimal", "gemini-3.5-flash-extra-low", "MODEL_PLACEHOLDER_M187", 65536},
+		{"gemini-3.5-flash", "medium", "gemini-3.5-flash-low", "MODEL_PLACEHOLDER_M20", 65536},
+		{"gemini-3.5-flash", "high", "gemini-3-flash-agent", "MODEL_PLACEHOLDER_M132", 65536},
+		{"gemini-3.7-flash", "high", "gemini-3.7-flash-high", "", 65536},
+		{"gemini-3.1-pro", "low", "gemini-3.1-pro-low", "MODEL_PLACEHOLDER_M36", 65535},
+		{"gemini-3.1-pro", "high", "gemini-pro-agent", "MODEL_PLACEHOLDER_M16", 65535},
+		{"claude-sonnet-4-6", "high", "claude-sonnet-4-6", "", 64000},
+		{"claude-opus-4-6", "high", "claude-opus-4-6-thinking", "", 64000},
+		{"gemini-2.0-flash", "high", "gemini-2.0-flash", "", 65536},
+	}
+	for _, test := range cases {
+		t.Run(test.logical+" at "+test.effort, func(t *testing.T) {
+			request := canonicalRequest(false)
+			request.Model = test.logical
+			request.MaxTokens = 0
+			if test.effort != "" {
+				request.Reasoning = &inference.ReasoningConfig{Effort: test.effort}
+			}
+			body := assistEnvelope(t, request, wire.CodecOpts{
+				CredentialRef: "token", AuthMethod: wire.AuthOAuth, Project: "project-1",
+			})
+			if got, _ := body["model"].(string); got != test.wire {
+				t.Fatalf("model = %q, want the SKU %q", got, test.wire)
+			}
+			labels := body["request"].(map[string]any)["labels"].(map[string]any)
+			enum, present := labels["model_enum"]
+			if test.enum == "" && present {
+				t.Fatalf("model_enum = %v, want none for a SKU the vendor gives no enum", enum)
+			}
+			if test.enum != "" && enum != test.enum {
+				t.Fatalf("model_enum = %v, want %q", enum, test.enum)
+			}
+			config := body["request"].(map[string]any)["generationConfig"].(map[string]any)
+			if got, _ := config["maxOutputTokens"].(float64); got != test.ceiling {
+				t.Fatalf("maxOutputTokens = %v, want %v", got, test.ceiling)
+			}
+		})
+	}
+
+	t.Run("a ceiling the endpoint refuses is narrowed to what it serves", func(t *testing.T) {
+		request := canonicalRequest(false)
+		request.Model = "claude-sonnet-4-6"
+		request.MaxTokens = 100000
+		body := assistEnvelope(t, request, wire.CodecOpts{
+			CredentialRef: "token", AuthMethod: wire.AuthOAuth, Project: "project-1",
+		})
+		config := body["request"].(map[string]any)["generationConfig"].(map[string]any)
+		if got, _ := config["maxOutputTokens"].(float64); got != 64000 {
+			t.Fatalf("maxOutputTokens = %v, want the Claude ceiling", got)
+		}
+	})
+
+	t.Run("a caller below the ceiling keeps its own limit", func(t *testing.T) {
+		request := canonicalRequest(false)
+		request.Model = "gemini-3.5-flash"
+		body := assistEnvelope(t, request, wire.CodecOpts{
+			CredentialRef: "token", AuthMethod: wire.AuthOAuth, Project: "project-1",
+		})
+		config := body["request"].(map[string]any)["generationConfig"].(map[string]any)
+		if got, _ := config["maxOutputTokens"].(float64); got != 64 {
+			t.Fatalf("maxOutputTokens = %v, want the caller's limit", got)
+		}
+	})
+}
+
+// assistBody encodes one Cloud Code Assist request and reads the whole
+// envelope, since the model SKU and the labels both sit outside the inner
+// request.
+func assistEnvelope(t *testing.T, request *inference.Request, opts wire.CodecOpts) map[string]any {
+	t.Helper()
+	opts.Mode = string(google.ModeCloudCodeAssist)
+	encoded := encode(t, cloudCodeAssistCodec(), request, opts)
+	body, err := io.ReadAll(encoded.Body)
+	if err != nil {
+		t.Fatalf("read request body: %v", err)
+	}
+	var payload map[string]any
+	if err := json.Unmarshal(body, &payload); err != nil {
+		t.Fatalf("decode request body: %v", err)
+	}
+	return payload
 }
 
 func TestCloudCodeAssistSendMatchesTheClient(t *testing.T) {

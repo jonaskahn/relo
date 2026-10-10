@@ -43,6 +43,7 @@ type streamDecoder struct {
 	sawCall      bool
 	usage        *inference.UsageReport
 	usageSent    bool
+	responseID   string
 	failure      *inference.ErrorInfo
 	terminated   bool
 }
@@ -60,6 +61,7 @@ type streamChunk struct {
 	Candidates    []candidate    `json:"candidates"`
 	UsageMetadata *usageMetadata `json:"usageMetadata"`
 	Error         *errorBody     `json:"error"`
+	ResponseID    string         `json:"responseId"`
 }
 
 type candidate struct {
@@ -126,6 +128,7 @@ func (d *streamDecoder) Finish() ([]inference.Event, error) {
 		return nil, nil
 	}
 	d.terminated = true
+	d.rememberExecution()
 	events := d.usageEvents()
 	terminal := inference.Event{Kind: inference.EventTerminal, Terminal: &inference.TerminalInfo{Reason: d.terminalReason()}}
 	return append(events, terminal), nil
@@ -137,6 +140,9 @@ func (d *streamDecoder) absorb(chunk *streamChunk) []inference.Event {
 		events = append(events, d.candidateEvents(&chunk.Candidates[index])...)
 	}
 	d.rememberUsage(chunk.UsageMetadata)
+	if chunk.ResponseID != "" {
+		d.responseID = chunk.ResponseID
+	}
 	return append(events, d.errorEvents(chunk.Error)...)
 }
 

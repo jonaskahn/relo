@@ -32,6 +32,14 @@ const (
 	idePlatform = "windows/amd64"
 	ideClient   = "aidev_client"
 	ideAuth     = "oauth"
+
+	// InterleavedThinkingBeta is the beta a Claude turn asks for by name. The
+	// vendor gates interleaved thinking behind it, and serves the turn without
+	// the reasoning the client paid for when it is missing.
+	InterleavedThinkingBeta = "interleaved-thinking-2025-05-14"
+
+	// BetaHeader is where that beta travels.
+	BetaHeader = "anthropic-beta"
 )
 
 // CLIUserAgent returns the User-Agent a chat request sends:

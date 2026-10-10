@@ -113,11 +113,11 @@ func (c *Codec) EncodeRequest(req *inference.Request, opts wire.CodecOpts) (*htt
 	if err != nil {
 		return nil, fmt.Errorf("build generate content request: %w", err)
 	}
-	c.prepareGoogleRequest(request, mode, opts)
+	c.prepareGoogleRequest(request, mode, req, opts)
 	return request, nil
 }
 
-func (c *Codec) prepareGoogleRequest(request *http.Request, mode Mode, opts wire.CodecOpts) {
+func (c *Codec) prepareGoogleRequest(request *http.Request, mode Mode, req *inference.Request, opts wire.CodecOpts) {
 	request.Header.Set("Content-Type", "application/json")
 	c.authorize(request, opts)
 	for name, value := range opts.ExtraHeaders {
@@ -131,14 +131,31 @@ func (c *Codec) prepareGoogleRequest(request *http.Request, mode Mode, opts wire
 		request.Header.Set("Accept-Encoding", "gzip")
 		request.ContentLength = -1
 	}
+	c.prepareAssistBeta(request, mode, req, opts)
 }
 
-// Bind returns a codec that files this attempt's answer under its session,
-// so the next turn can replay a thought signature the client did not send
-// back. Models that do not use that cache keep the shared codec.
+// prepareAssistBeta claims the beta a reasoning turn needs on this transport.
+// Only Claude reasons here, and only while thinking is on: a turn that turned
+// thinking off has nothing to interleave.
+func (c *Codec) prepareAssistBeta(request *http.Request, mode Mode, req *inference.Request, opts wire.CodecOpts) {
+	if mode != ModeCloudCodeAssist || req == nil || !claudeOnAntigravity(req.Model) {
+		return
+	}
+	_, off := inference.ChooseThinking(effortOf(req), opts.ReasoningEfforts, opts.ReasoningToggle)
+	if off || effortOf(req) == "none" {
+		return
+	}
+	request.Header.Set(antigravity.BetaHeader, antigravity.InterleavedThinkingBeta)
+}
+
+// Bind returns a codec that files this attempt's answer under its session, so
+// the next turn can replay a thought signature the client did not send back
+// and name the execution it follows. Every Cloud Code Assist request is bound
+// for that; only the Gemini models record the signature, the rest of the
+// session state being theirs alone.
 func (c *Codec) Bind(req *inference.Request, opts wire.CodecOpts) wire.CodecModule {
 	mode, err := c.mode(opts)
-	if err != nil || mode != ModeCloudCodeAssist || req == nil || !geminiWire(req.Model) {
+	if err != nil || mode != ModeCloudCodeAssist || req == nil {
 		return c
 	}
 	bound := *c
@@ -146,7 +163,7 @@ func (c *Codec) Bind(req *inference.Request, opts wire.CodecOpts) wire.CodecModu
 	bound.replay = replayScope{
 		model:   req.Model,
 		session: sessionID(sessionPreimage(opts.SessionAnchor, req)),
-		record:  true,
+		record:  geminiWire(req.Model),
 	}
 	return &bound
 }
@@ -206,7 +223,6 @@ func (c *Codec) DecodeError(status int, body []byte) *inference.ErrorInfo {
 type settings struct {
 	project       string
 	baseURL       string
-	requestID     string
 	sessionAnchor string
 }
 
@@ -214,7 +230,6 @@ func (c *Codec) settings(opts wire.CodecOpts) settings {
 	return settings{
 		project:       firstOf(opts.Project, c.cfg.Project),
 		baseURL:       firstOf(opts.BaseURL, c.cfg.BaseURL),
-		requestID:     opts.RequestID,
 		sessionAnchor: opts.SessionAnchor,
 	}
 }
@@ -259,12 +274,39 @@ func (s settings) body(req *inference.Request, mode Mode, opts wire.CodecOpts) (
 	if !assist {
 		return json.Marshal(payload)
 	}
-	trajectory := finishAssist(payload, req, s.sessionAnchor, s.requestID)
+	// The request keeps the logical model: usage is attributed to it, and the
+	// replay cache is filed under it. Only the envelope names the wire SKU the
+	// vendor serves the requested effort on.
+	variant, _ := antigravity.Collapse(req.Model, effortOf(req))
+	wireModel := req.Model
+	if variant.WireModel != "" {
+		wireModel = variant.WireModel
+	}
+	preimage := sessionPreimage(s.sessionAnchor, req)
+	identity := finishAssist(payload, req, assistTurn{
+		anchor:  s.sessionAnchor,
+		session: sessionID(preimage),
+		variant: variant,
+	})
 	return json.Marshal(envelope{
-		Project: s.project, RequestID: assistRequestID(trajectory, userSteps(payload.Contents)),
-		Request: *payload, Model: req.Model,
+		Project: s.project, RequestID: assistRequestID(identity.agent, identity.trajectory, identity.step),
+		Request: *payload, Model: wireModel,
 		UserAgent: cloudCodeUserAgent, RequestType: cloudCodeRequestType,
 	})
+}
+
+// effortOf reports the canonical effort a request asked for. A request that
+// names none is served the middle tier, the one the vendor lists for every
+// model it collapses.
+func effortOf(req *inference.Request) string {
+	if req.Reasoning == nil {
+		return "medium"
+	}
+	effort, named := inference.NormalizeEffort(req.Reasoning.Effort)
+	if !named {
+		return "medium"
+	}
+	return effort
 }
 
 func (s settings) endpoint(req *inference.Request, mode Mode, opts wire.CodecOpts) (string, error) {

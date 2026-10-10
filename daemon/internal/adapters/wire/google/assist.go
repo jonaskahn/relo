@@ -13,6 +13,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/jonaskahn/relo/internal/adapters/antigravity"
 	"github.com/jonaskahn/relo/internal/inference"
 )
 
@@ -60,6 +61,30 @@ func newReplayCache(max int) *replayCache {
 // defaultReplayCache is the process-wide signature memory the assist codec
 // reads. All access goes through its methods, so eviction lives in one place.
 var defaultReplayCache = newReplayCache(replayCap)
+
+// The endpoint names the execution that produced the last answer and expects
+// the next turn to name it back, which is what keeps a multi-turn
+// conversation attached to the reasoning it already did. A refused turn
+// leaves the pointer where it was, so a retried one still refers to the
+// execution that actually answered.
+var defaultExecutions = newReplayCache(replayCap)
+
+func storeExecution(session, responseID string) {
+	defaultExecutions.store("execution\x00"+session, responseID, session)
+}
+
+func executionFor(session string) string {
+	return defaultExecutions.lookup("execution\x00" + session)
+}
+
+// rememberExecution files the answer's execution under its session once the
+// stream closes successfully.
+func (d *streamDecoder) rememberExecution() {
+	if d.responseID == "" || d.replay.session == "" || d.failure != nil {
+		return
+	}
+	storeExecution(d.replay.session, d.responseID)
+}
 
 func claudeOnAntigravity(model string) bool {
 	return strings.Contains(strings.ToLower(model), "claude")
@@ -123,6 +148,44 @@ func randomSessionID() string {
 	}
 	value := binary.BigEndian.Uint64(buf[:]) & 0x7fffffffffffffff
 	return "-" + strconv.FormatUint(value, 10)
+}
+
+// The envelope names two identities per conversation, and the endpoint gates
+// its models on both staying the same across a session. Both are derived from
+// the preimage rather than stored, so a conversation keeps them without the
+// codec holding any session memory; a client that sends no preimage falls back
+// to fresh ids per request, which the endpoint reads as a new session.
+const (
+	agentDomain      = "agent"
+	trajectoryDomain = "trajectory"
+)
+
+func sessionUUID(preimage, domain string) string {
+	if preimage == "" {
+		return newID()
+	}
+	sum := sha256.Sum256([]byte(domain + "\x00" + preimage))
+	return fmt.Sprintf("%x-%x-%x-%x-%x", sum[0:4], sum[4:6], sum[6:8], sum[8:10], sum[10:16])
+}
+
+// firstStep is where the endpoint expects a conversation's step count to
+// start, so the first turn reports itself as the second.
+const firstStep = 2
+
+// userTurns counts the user turns a request carries. It reads the request
+// rather than the encoded contents, which may have gained the synthetic
+// continue turn and would then report a step the conversation never took.
+func userTurns(req *inference.Request) int {
+	turns := 0
+	for _, message := range req.Messages {
+		if message.Role == inference.RoleUser {
+			turns++
+		}
+	}
+	if turns < 1 {
+		return firstStep
+	}
+	return turns + 1
 }
 
 func replayKey(model, session, name, args string) string {
@@ -394,16 +457,51 @@ func claudeCallID(raw, name string) string {
 	return builder.String() + "_" + hex.EncodeToString(sum[:4])
 }
 
-func finishAssist(payload *requestPayload, req *inference.Request, anchor, requestID string) string {
+// assistTurn is the per-request context the envelope is finished against: the
+// conversation it belongs to and the wire SKU its thinking effort collapses
+// onto.
+type assistTurn struct {
+	anchor  string
+	session string
+	variant antigravity.Variant
+}
+
+// sessionIdentity is the pair of conversation-scoped ids the envelope names,
+// and the turn this request falls at within it.
+type sessionIdentity struct {
+	agent      string
+	trajectory string
+	step       int
+}
+
+func finishAssist(payload *requestPayload, req *inference.Request, turn assistTurn) sessionIdentity {
 	if payload.SystemInstruction != nil {
 		payload.SystemInstruction.Role = roleUser
 	}
 	if payload.GenerationConfig == nil {
 		payload.GenerationConfig = &generationConfig{}
 	}
-	if payload.GenerationConfig.MaxOutputTokens == 0 {
-		payload.GenerationConfig.MaxOutputTokens = assistMaxTokens
+	capOutput := outputCeiling(req, turn.variant)
+	switch {
+	case payload.GenerationConfig.MaxOutputTokens == 0 || payload.GenerationConfig.MaxOutputTokens > capOutput:
+		payload.GenerationConfig.MaxOutputTokens = capOutput
 	}
+	applyAssistThinking(payload, req)
+	preimage := sessionPreimage(turn.anchor, req)
+	identity := sessionIdentity{
+		agent:      sessionUUID(preimage, agentDomain),
+		trajectory: sessionUUID(preimage, trajectoryDomain),
+		step:       userTurns(req),
+	}
+	payload.SessionID = sessionID(preimage)
+	payload.Labels = assistLabels(req.Model, identity.trajectory, identity.step, turn)
+	return identity
+}
+
+// applyAssistThinking gives each model family the thinking shape it accepts.
+// A Claude turn carries none, because the vendor bills reasoning through its
+// own beta; a Gemini turn with no stated effort is left open-ended.
+func applyAssistThinking(payload *requestPayload, req *inference.Request) {
 	switch {
 	case claudeOnAntigravity(req.Model):
 		payload.GenerationConfig.ThinkingConfig = nil
@@ -416,40 +514,42 @@ func finishAssist(payload *requestPayload, req *inference.Request, anchor, reque
 			payload.GenerationConfig.ThinkingConfig = &thinkingConfig{ThinkingBudget: &open, IncludeThoughts: true}
 		}
 	}
-	payload.SessionID = sessionID(sessionPreimage(anchor, req))
-	if requestID == "" {
-		requestID = newID()
-	}
-	payload.Labels = assistLabels(req.Model, requestID, userSteps(payload.Contents))
-	return requestID
 }
 
-func userSteps(contents []content) int {
-	steps := 0
-	for _, entry := range contents {
-		if entry.Role == roleUser {
-			steps++
-		}
+// outputCeiling reports the largest completion the vendor serves on this
+// request. A caller's own ask and the routed model's catalog ceiling both
+// narrow it, never widen it, because the endpoint refuses a larger one with a
+// 400 the client cannot recover from.
+func outputCeiling(req *inference.Request, variant antigravity.Variant) int {
+	ceiling := assistMaxTokens
+	if variant.MaxOutput > 0 && variant.MaxOutput < ceiling {
+		ceiling = variant.MaxOutput
 	}
-	if steps < 1 {
-		return 1
+	if req.MaxTokens > 0 && req.MaxTokens < ceiling {
+		ceiling = req.MaxTokens
 	}
-	return steps
+	return ceiling
 }
 
-func assistLabels(model, id string, step int) map[string]string {
+func assistLabels(model, trajectory string, step int, turn assistTurn) map[string]string {
 	if step < 1 {
 		step = 1
 	}
-	return map[string]string{
-		"last_execution_id":        newID(),
+	labels := map[string]string{
 		"last_step_index":          strconv.Itoa(step - 1),
-		"request_id":               id + "-1",
-		"trajectory_id":            id,
+		"trajectory_id":            trajectory,
 		"used_claude":              boolLabel(claudeOnAntigravity(model)),
 		"used_claude_conservative": "false",
-		"used_non_gemini_model":    boolLabel(!geminiWire(model)),
 	}
+	// The first turn has no execution to name back, so the label is left off
+	// rather than filled with an id the endpoint never issued.
+	if execution := executionFor(turn.session); execution != "" {
+		labels["last_execution_id"] = execution
+	}
+	if turn.variant.ModelEnum != "" {
+		labels["model_enum"] = turn.variant.ModelEnum
+	}
+	return labels
 }
 
 func boolLabel(value bool) string {
@@ -459,11 +559,11 @@ func boolLabel(value bool) string {
 	return "false"
 }
 
-func assistRequestID(id string, step int) string {
-	if step < 1 {
-		step = 1
-	}
-	return fmt.Sprintf("agent/%s/%d/%s/%d", id, time.Now().UnixMilli(), id, step)
+// assistRequestID names the request the way the first-party client does: the
+// agent that is speaking, when, the conversation it belongs to, and how far
+// into that conversation this turn is.
+func assistRequestID(agent, trajectory string, step int) string {
+	return fmt.Sprintf("agent/%s/%d/%s/%d", agent, time.Now().UnixMilli(), trajectory, step)
 }
 
 func newID() string {
