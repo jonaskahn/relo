@@ -905,6 +905,68 @@ func TestCloudCodeAssistEnvelopeCarriesTheClientIdentity(t *testing.T) {
 // TestCloudCodeAssistClaudeBeta covers the beta a reasoning Claude turn claims
 // by name: the vendor gates interleaved thinking behind it and serves the turn
 // without the reasoning the client asked for when it is missing.
+// TestCloudCodeAssistEmptyCompletion covers a stream the endpoint finished
+// without answering: the attempt is refused with the status the relay already
+// retries, rather than handed to the client as an empty answer.
+func TestCloudCodeAssistEmptyCompletion(t *testing.T) {
+	decode := func(body string) []inference.Event {
+		t.Helper()
+		decoder := cloudCodeAssistCodec().NewStreamDecoder()
+		events := pushStreamData(t, decoder, body)
+		closing, err := decoder.Finish()
+		if err != nil {
+			t.Fatalf("Finish() error = %v", err)
+		}
+		return append(events, closing...)
+	}
+	empty := `{"response":{"candidates":[{"content":{"parts":[{"text":""}]},"finishReason":"STOP"}],"usageMetadata":{"promptTokenCount":9,"candidatesTokenCount":0}}}`
+
+	t.Run("a stream that answered nothing is refused", func(t *testing.T) {
+		events := decode(empty)
+		if countKind(events, inference.EventError) != 1 {
+			t.Fatalf("events = %+v, want one failure", events)
+		}
+		failure := failureOf(events)
+		if failure.Code != "empty_completion" || failure.Status != 429 {
+			t.Fatalf("failure = %+v, want a retryable empty completion", failure)
+		}
+	})
+
+	t.Run("an answer is never mistaken for one", func(t *testing.T) {
+		events := decode(`{"response":{"candidates":[{"content":{"parts":[{"text":"Hello"}]},"finishReason":"STOP"}]}}`)
+		if countKind(events, inference.EventError) != 0 {
+			t.Fatalf("events = %+v, want no failure", events)
+		}
+	})
+
+	t.Run("a tool call is an answer", func(t *testing.T) {
+		events := decode(`{"response":{"candidates":[{"content":{"parts":[{"functionCall":{"name":"f","args":{}}}]},"finishReason":"STOP"}]}}`)
+		if countKind(events, inference.EventError) != 0 {
+			t.Fatalf("events = %+v, want no failure", events)
+		}
+	})
+
+	t.Run("a refusal is reported as itself", func(t *testing.T) {
+		events := decode(`{"response":{"candidates":[{"finishReason":"SAFETY","safetyRatings":[{"category":"HARM","probability":"HIGH","blocked":true}]}]}}`)
+		failure := failureOf(events)
+		if failure == nil || failure.Code != "safety" {
+			t.Fatalf("failure = %+v, want the refusal the endpoint sent", failure)
+		}
+	})
+
+	t.Run("another endpoint is left alone", func(t *testing.T) {
+		decoder := google.NewCodec(google.Config{Mode: google.ModeAIStudio}).NewStreamDecoder()
+		events := pushStreamData(t, decoder, `{"candidates":[{"content":{"parts":[{"text":""}]},"finishReason":"STOP"}]}`)
+		closing, err := decoder.Finish()
+		if err != nil {
+			t.Fatalf("Finish() error = %v", err)
+		}
+		if countKind(append(events, closing...), inference.EventError) != 0 {
+			t.Fatal("want no failure outside the Antigravity endpoint")
+		}
+	})
+}
+
 func TestCloudCodeAssistClaudeBeta(t *testing.T) {
 	beta := func(model, effort string) string {
 		t.Helper()
