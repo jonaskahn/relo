@@ -31,16 +31,17 @@
   url = ""            # the outbound HTTP(S) proxy for opted-in connections; empty goes direct
 
 # How long one provider call may stay silent before it is cancelled and
-# retried, the random waits between retries, low–high seconds in retry
-# order, and the first step of the wait ladder a refused account or route
-# member walks. Timeout presets: 180, 300, 600, 900, 1800. Failover
-# presets: 0, 180, 300, 900, 1800, 3600, 18000, where the chosen preset is
-# the first step and each further failure without a success between moves
-# to the next. Zero starts with no wait: the first refusal is immediately
-# reusable.
+# retried, how many times a failing account is retried before the request
+# moves to the next account (a random 1–3s wait between those retries), and
+# the first step of the wait ladder a connection or route walks when every
+# account or member failed. Timeout presets: 180, 300, 600, 900, 1800.
+# Retry presets: 1, 3, 5. Failover presets: 0, 180, 300, 900, 1800, 3600,
+# 18000, where the chosen preset is the first step and each further failure
+# without a success between moves to the next. Zero starts with no wait:
+# the first refusal is immediately reusable.
 [upstream]
   timeout_seconds = 300
-  retry_backoff = [[1, 3], [3, 5], [5, 10]]
+  retry_attempts = 3
   failover_cooldown_seconds = 0
 
 [catalog]

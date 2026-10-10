@@ -93,9 +93,9 @@ type patchProviderRequest struct {
 	// TimeoutSeconds is present in the body when this connection sets its own
 	// call wait, and null when it goes back to the global value.
 	TimeoutSeconds appcatalog.OptionalInt `json:"timeout_seconds"`
-	// RetryBackoff is present when this connection sets its own retry
-	// windows, and null when it goes back to the global ones.
-	RetryBackoff appcatalog.OptionalRetryBackoff `json:"retry_backoff"`
+	// RetryAttempts is present when this connection sets its own retry
+	// count, and null when it goes back to the global one.
+	RetryAttempts appcatalog.OptionalInt `json:"retry_attempts"`
 	// SwitchOn4xx and SwitchOn5xx fail this connection over on an unlisted
 	// status of that class; absent leaves the stored choice alone.
 	SwitchOn4xx *bool `json:"switch_on_4xx"`
@@ -318,7 +318,7 @@ func (s *Server) handlePatchProvider(w http.ResponseWriter, r *http.Request) {
 		Enabled: request.Enabled, Rank: request.Rank, PoolStrategy: request.PoolStrategy,
 		BaseURL: request.BaseURL, Variables: request.Variables,
 		Label: request.Label, APIFormat: request.APIFormat, KeyHeader: request.KeyHeader, Headers: request.Headers,
-		UseProxy: request.UseProxy, TimeoutSeconds: request.TimeoutSeconds, RetryBackoff: request.RetryBackoff,
+		UseProxy: request.UseProxy, TimeoutSeconds: request.TimeoutSeconds, RetryAttempts: request.RetryAttempts,
 		SwitchOn4xx: request.SwitchOn4xx, SwitchOn5xx: request.SwitchOn5xx,
 	})
 	if err != nil {

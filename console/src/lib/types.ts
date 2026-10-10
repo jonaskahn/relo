@@ -106,10 +106,10 @@ export interface Provider {
 	readonly enabled: boolean;
 	readonly use_proxy: boolean;
 	// timeout_seconds is this connection's own call wait in seconds; null
-	// inherits the global value. retry_backoff is its own retry windows;
-	// null inherits the global windows.
+	// inherits the global value. retry_attempts is how many times it retries
+	// one account; null inherits the global count.
 	readonly timeout_seconds: number | null;
-	readonly retry_backoff: [number, number][] | null;
+	readonly retry_attempts: number | null;
 	// switch_on_4xx and switch_on_5xx report whether this connection moves a
 	// request to another of its accounts after a status the relay does not
 	// always retry. The daemon resolves the default, so both are plain.
@@ -863,12 +863,12 @@ export interface ServerSettings {
 }
 
 /** How the daemon reaches providers and their model directory: the outbound proxy, the
- *  models.dev document, and the call, retry, and failover waits. */
+ *  models.dev document, the call wait, the retry count, and the failover wait. */
 export interface ProvidersSettings {
 	readonly catalog_url: string;
 	readonly proxy_url: string;
 	readonly timeout_seconds: number;
-	readonly retry_backoff: [number, number][];
+	readonly retry_attempts: number;
 	readonly failover_cooldown_seconds: number;
 }
 

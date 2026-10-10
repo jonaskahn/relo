@@ -23,7 +23,7 @@ func (r *CatalogRepo) SaveProvider(ctx context.Context, p ProviderRow) error {
 		p.BaseURL, p.ModelsSource, p.ModelsFormat, p.ModelsDevProviderID, headers, p.DocURL,
 		keyEnv, loginFlows, variables, p.Enabled, p.Rank, p.PoolStrategy,
 		nullInt(p.LastRefreshedAtMs), p.LastRefreshError, p.CreatedAtMs, p.UpdatedAtMs, bit(p.UseProxy),
-		nullIntValue(p.TimeoutSeconds), nullRetryBackoff(p.RetryBackoff),
+		nullIntValue(p.TimeoutSeconds), nullIntValue(p.RetryAttempts),
 		nullBool(p.SwitchOn4xx), nullBool(p.SwitchOn5xx))
 	if err != nil {
 		return fmt.Errorf("save provider %s: %w", p.ID, err)
@@ -110,7 +110,7 @@ func providerUpsertQuery() string {
 		"rank = excluded.rank, pool_strategy = excluded.pool_strategy, " +
 		"last_refreshed_at = excluded.last_refreshed_at, last_refresh_error = excluded.last_refresh_error, " +
 		"updated_at = excluded.updated_at, use_proxy = excluded.use_proxy, " +
-		"timeout_seconds = excluded.timeout_seconds, retry_backoff = excluded.retry_backoff, " +
+		"timeout_seconds = excluded.timeout_seconds, retry_attempts = excluded.retry_attempts, " +
 		"switch_on_4xx = excluded.switch_on_4xx, switch_on_5xx = excluded.switch_on_5xx"
 }
 
@@ -345,7 +345,7 @@ func saveProbeProvider(ctx context.Context, tx *sql.Tx, p ProviderRow) error {
 		p.BaseURL, p.ModelsSource, p.ModelsFormat, p.ModelsDevProviderID, headers, p.DocURL,
 		keyEnv, loginFlows, variables, p.Enabled, p.Rank, p.PoolStrategy,
 		nullInt(p.LastRefreshedAtMs), p.LastRefreshError, p.CreatedAtMs, p.UpdatedAtMs, bit(p.UseProxy),
-		nullIntValue(p.TimeoutSeconds), nullRetryBackoff(p.RetryBackoff),
+		nullIntValue(p.TimeoutSeconds), nullIntValue(p.RetryAttempts),
 		nullBool(p.SwitchOn4xx), nullBool(p.SwitchOn5xx)); err != nil {
 		return fmt.Errorf("save provider: %w", err)
 	}

@@ -55,9 +55,9 @@ type ConnectionRecord struct {
 	// TimeoutSeconds is this connection's own call wait in seconds; nil
 	// inherits the global value.
 	TimeoutSeconds *int
-	// RetryBackoff is this connection's own retry windows; nil inherits the
-	// global windows.
-	RetryBackoff [][2]int
+	// RetryAttempts is how many times this connection retries one account;
+	// nil inherits the global count.
+	RetryAttempts *int
 	// SwitchOn4xx and SwitchOn5xx fail this connection over on a status the
 	// relay does not always retry; nil is the shipped default, which does.
 	SwitchOn4xx *bool

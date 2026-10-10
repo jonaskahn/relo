@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"os"
-	"reflect"
 	"strings"
 	"testing"
 	"time"
@@ -92,7 +91,7 @@ url = "https://proxy.example:8443"
 
 [upstream]
 timeout_seconds = 600
-retry_backoff = [[2, 4], [4, 6], [6, 8]]
+retry_attempts = 5
 
 [catalog]
 modelsdev_url = "https://models.example.test/api.json"
@@ -129,12 +128,12 @@ key_file = "/tmp/other.key"
 	}
 	wantProviders := appsettings.ProvidersSettings{
 		CatalogURL: "https://models.example.test/api.json", ProxyURL: "https://proxy.example:8443",
-		TimeoutSeconds: 600, RetryBackoff: [][2]int{{2, 4}, {4, 6}, {6, 8}},
+		TimeoutSeconds: 600, RetryAttempts: 5,
 	}
 	if settings.Providers.CatalogURL != wantProviders.CatalogURL ||
 		settings.Providers.ProxyURL != wantProviders.ProxyURL ||
 		settings.Providers.TimeoutSeconds != wantProviders.TimeoutSeconds ||
-		!reflect.DeepEqual(settings.Providers.RetryBackoff, wantProviders.RetryBackoff) {
+		settings.Providers.RetryAttempts != wantProviders.RetryAttempts {
 		t.Fatalf("providers = %+v, want %+v", settings.Providers, wantProviders)
 	}
 	wantAccess := appsettings.AccessSettings{AllowExternal: true, Login: false}
@@ -293,43 +292,40 @@ func TestUpstreamTimeoutReadsTheStoredPreset(t *testing.T) {
 	}
 }
 
-// TestUpstreamRetryBackoffReadsTheStoredWindows covers the windows the relay
-// draws from on every retry: an install with nothing stored answers the
-// default, a saved set persists, and an unusable set is refused.
-func TestUpstreamRetryBackoffReadsTheStoredWindows(t *testing.T) {
+// TestUpstreamRetryAttemptsReadsTheStoredCount covers the count the relay
+// reads on every request: an install with nothing stored answers the default,
+// a saved count persists, and an unusable one is refused.
+func TestUpstreamRetryAttemptsReadsTheStoredCount(t *testing.T) {
 	harness := newHarness(t)
 	ctx := context.Background()
 
-	windows, err := harness.settings.UpstreamRetryBackoff()
-	if err != nil {
-		t.Fatalf("UpstreamRetryBackoff() error = %v", err)
-	}
-	if len(windows) != len(config.DefaultUpstreamRetryBackoff()) || windows[0] != config.DefaultUpstreamRetryBackoff()[0] {
-		t.Fatalf("UpstreamRetryBackoff() = %v, want the default", windows)
+	attempts, err := harness.settings.UpstreamRetryAttempts()
+	if err != nil || attempts != config.DefaultUpstreamRetryAttempts {
+		t.Fatalf("UpstreamRetryAttempts() = %d, %v, want the default", attempts, err)
 	}
 
 	current, err := harness.settings.Read(ctx)
 	if err != nil {
 		t.Fatal(err)
 	}
-	current.Providers.RetryBackoff = [][2]int{{2, 4}, {4, 6}, {6, 8}}
+	current.Providers.RetryAttempts = 5
 	saved, err := harness.settings.SaveProviders(current.Providers)
 	if err != nil {
 		t.Fatalf("SaveProviders() error = %v", err)
 	}
-	if saved.RetryBackoff[0] != [2]int{2, 4} {
-		t.Fatalf("SaveProviders() retry_backoff = %v, want the saved windows", saved.RetryBackoff)
+	if saved.RetryAttempts != 5 {
+		t.Fatalf("SaveProviders() retry_attempts = %d, want the saved count", saved.RetryAttempts)
 	}
-	if windows, err = harness.settings.UpstreamRetryBackoff(); err != nil || windows[0] != [2]int{2, 4} {
-		t.Fatalf("UpstreamRetryBackoff() = %v, %v, want the windows the save stored", windows, err)
+	if attempts, err = harness.settings.UpstreamRetryAttempts(); err != nil || attempts != 5 {
+		t.Fatalf("UpstreamRetryAttempts() = %d, %v, want the count the save stored", attempts, err)
 	}
 
-	current.Providers.RetryBackoff = [][2]int{{2, 4}, {4, 2}, {6, 8}}
+	current.Providers.RetryAttempts = 4
 	if _, err := harness.settings.SaveProviders(current.Providers); !errors.Is(err, appsettings.ErrInvalidWrite) {
 		t.Fatalf("SaveProviders() error = %v, want an invalid write", err)
 	}
-	if windows, err = harness.settings.UpstreamRetryBackoff(); err != nil || windows[1] != [2]int{4, 6} {
-		t.Fatalf("UpstreamRetryBackoff() = %v, %v, want the stored windows after a refused write", windows, err)
+	if attempts, err = harness.settings.UpstreamRetryAttempts(); err != nil || attempts != 5 {
+		t.Fatalf("UpstreamRetryAttempts() = %d, %v, want the stored count after a refused write", attempts, err)
 	}
 }
 

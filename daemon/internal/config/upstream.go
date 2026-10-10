@@ -1,6 +1,6 @@
 // Upstream is the provider-call policy an operator configures for the relay:
 // how long one attempt may stay silent before it is cancelled and retried,
-// and the random waits between retries.
+// and how many times a failing account is retried.
 package config
 
 import (
@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"io/fs"
 	"os"
-	"strings"
 	"time"
 
 	"github.com/BurntSushi/toml"
@@ -17,10 +16,10 @@ import (
 // UpstreamConfig is the provider-call policy stored in the startup file.
 type UpstreamConfig struct {
 	TimeoutSeconds int `toml:"timeout_seconds"`
-	// RetryBackoff is the wait before each retry as a low–high second range,
-	// in retry order. It is the connection's own windows when one is set,
-	// otherwise the global ones.
-	RetryBackoff [][2]int `toml:"retry_backoff"`
+	// RetryAttempts is how many times one account is retried after a
+	// retryable failure before the request moves to the next account. It is
+	// the connection's own count when one is set, otherwise the global one.
+	RetryAttempts int `toml:"retry_attempts"`
 	// FailoverCooldownSeconds is the first step of the denylist walk a
 	// refused account or route member goes through after a rate limit or
 	// server fault, in seconds: the next failure of the same entry waits the
@@ -42,9 +41,13 @@ func UpstreamTimeoutPresets() []int {
 var ErrInvalidUpstreamTimeout = errors.New(
 	"must be one of: 180, 300, 600, 900, 1800")
 
-// ErrInvalidUpstreamRetryBackoff reports retry windows the relay cannot use.
-var ErrInvalidUpstreamRetryBackoff = errors.New(
-	"must be three ranges with 0 <= low < high <= 600")
+// RetryAttemptPresets are the retry counts an operator may pick.
+func RetryAttemptPresets() []int {
+	return []int{1, 3, 5}
+}
+
+// ErrInvalidUpstreamRetryAttempts reports a retry count nothing offers.
+var ErrInvalidUpstreamRetryAttempts = errors.New("must be one of: 1, 3, 5")
 
 // FailoverCooldownPresets are the escalating denylist waits an operator may
 // pick, in seconds: the chosen preset is the first step, and each further
@@ -59,8 +62,6 @@ func FailoverCooldownPresets() []int {
 var ErrInvalidUpstreamFailoverCooldown = errors.New(
 	"must be one of: 0, 180, 300, 900, 1800, 3600, 18000")
 
-const maxRetryWindowSeconds = 600
-
 // ValidateUpstreamTimeout reports a call wait the relay cannot use.
 func ValidateUpstreamTimeout(seconds int) error {
 	for _, preset := range UpstreamTimeoutPresets() {
@@ -71,18 +72,14 @@ func ValidateUpstreamTimeout(seconds int) error {
 	return fmt.Errorf("upstream.timeout_seconds: %w", ErrInvalidUpstreamTimeout)
 }
 
-// ValidateUpstreamRetryBackoff reports retry windows outside the three
-// low–high ranges a request can wait through.
-func ValidateUpstreamRetryBackoff(windows [][2]int) error {
-	if len(windows) != len(DefaultUpstreamRetryBackoff()) {
-		return fmt.Errorf("upstream.retry_backoff: %w", ErrInvalidUpstreamRetryBackoff)
-	}
-	for _, window := range windows {
-		if window[0] < 0 || window[1] <= window[0] || window[1] > maxRetryWindowSeconds {
-			return fmt.Errorf("upstream.retry_backoff: %w", ErrInvalidUpstreamRetryBackoff)
+// ValidateUpstreamRetryAttempts reports a retry count nothing offers.
+func ValidateUpstreamRetryAttempts(attempts int) error {
+	for _, preset := range RetryAttemptPresets() {
+		if attempts == preset {
+			return nil
 		}
 	}
-	return nil
+	return fmt.Errorf("upstream.retry_attempts: %w", ErrInvalidUpstreamRetryAttempts)
 }
 
 // ValidateUpstreamFailoverCooldown reports a denylist wait nothing offers.
@@ -137,32 +134,31 @@ func ReadUpstreamTimeout(path string) (int, error) {
 	return file.Upstream.TimeoutSeconds, nil
 }
 
-// ReadUpstreamRetryBackoff reads the retry windows from the startup file. A
-// missing file or key answers the default, and stored windows this build no
-// longer accepts also read as the default.
-func ReadUpstreamRetryBackoff(path string) ([][2]int, error) {
-	defaults := append([][2]int(nil), DefaultUpstreamRetryBackoff()...)
+// ReadUpstreamRetryAttempts reads the retry count from the startup file. A
+// missing file or key answers the default, and a stored value this build no
+// longer offers also reads as the default.
+func ReadUpstreamRetryAttempts(path string) (int, error) {
 	data, err := os.ReadFile(path)
 	if errors.Is(err, fs.ErrNotExist) {
-		return defaults, nil
+		return DefaultUpstreamRetryAttempts, nil
 	}
 	if err != nil {
-		return nil, err
+		return 0, err
 	}
 	var file struct {
 		Upstream UpstreamConfig `toml:"upstream"`
 	}
 	meta, err := toml.Decode(string(data), &file)
 	if err != nil {
-		return nil, err
+		return 0, err
 	}
-	if !meta.IsDefined("upstream", "retry_backoff") {
-		return defaults, nil
+	if !meta.IsDefined("upstream", "retry_attempts") {
+		return DefaultUpstreamRetryAttempts, nil
 	}
-	if err := ValidateUpstreamRetryBackoff(file.Upstream.RetryBackoff); err != nil {
-		return defaults, nil
+	if err := ValidateUpstreamRetryAttempts(file.Upstream.RetryAttempts); err != nil {
+		return DefaultUpstreamRetryAttempts, nil
 	}
-	return file.Upstream.RetryBackoff, nil
+	return file.Upstream.RetryAttempts, nil
 }
 
 // UpdateUpstreamTimeout stores the call wait, keeping the rest of the startup
@@ -174,13 +170,13 @@ func UpdateUpstreamTimeout(path string, seconds int) error {
 	return updateUpstream(path, "timeout_seconds", fmt.Sprintf("%d", seconds))
 }
 
-// UpdateUpstreamRetryBackoff stores the three retry windows, keeping the rest
-// of the startup file.
-func UpdateUpstreamRetryBackoff(path string, windows [][2]int) error {
-	if err := ValidateUpstreamRetryBackoff(windows); err != nil {
+// UpdateUpstreamRetryAttempts stores the retry count, keeping the rest of
+// the startup file.
+func UpdateUpstreamRetryAttempts(path string, attempts int) error {
+	if err := ValidateUpstreamRetryAttempts(attempts); err != nil {
 		return err
 	}
-	return updateUpstream(path, "retry_backoff", formatRetryBackoff(windows))
+	return updateUpstream(path, "retry_attempts", fmt.Sprintf("%d", attempts))
 }
 
 // ReadUpstreamFailoverCooldown reads the denylist wait from the startup file.
@@ -232,12 +228,4 @@ func updateUpstream(path, key, value string) error {
 
 func replaceUpstreamSetting(source, key, value string) string {
 	return upsertTableKey(source, "upstream", key, value)
-}
-
-func formatRetryBackoff(windows [][2]int) string {
-	parts := make([]string, 0, len(windows))
-	for _, window := range windows {
-		parts = append(parts, fmt.Sprintf("[%d, %d]", window[0], window[1]))
-	}
-	return "[" + strings.Join(parts, ", ") + "]"
 }

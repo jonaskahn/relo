@@ -32,22 +32,16 @@ describe('cloneDraft', () => {
 });
 
 describe('draftDirty', () => {
-	it('is false for a copy and true once a field or a window changes', () => {
+	it('is false for a copy and true once a field changes', () => {
 		const saved = { hide: false, window: true, presence: true };
 		const draft = cloneDraft(saved);
 		expect(draftDirty(draft, saved)).toBe(false);
 		draft.window = false;
 		expect(draftDirty(draft, saved)).toBe(true);
 
-		const windows = {
-			retry_backoff: [
-				[1, 3],
-				[3, 5],
-				[5, 10]
-			]
-		};
-		const edited = cloneDraft(windows);
-		edited.retry_backoff[1][0] = 4;
-		expect(draftDirty(edited, windows)).toBe(true);
+		const nested = { upstream: { retry_attempts: 3 } };
+		const edited = cloneDraft(nested);
+		edited.upstream.retry_attempts = 5;
+		expect(draftDirty(edited, nested)).toBe(true);
 	});
 });

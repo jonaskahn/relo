@@ -97,9 +97,9 @@ type Provider struct {
 	// TimeoutSeconds is this connection's own call wait in seconds; nil
 	// inherits the global value.
 	TimeoutSeconds *int
-	// RetryBackoff is this connection's own retry windows; nil inherits the
-	// global windows.
-	RetryBackoff [][2]int
+	// RetryAttempts is how many times this connection retries one account;
+	// nil inherits the global count.
+	RetryAttempts *int
 	// SwitchOn4xx and SwitchOn5xx fail this connection over on an unlisted
 	// status of that class. An unset option reads as true: Relo switches.
 	SwitchOn4xx bool
@@ -687,7 +687,7 @@ func finishProviderFrom(host *Provider, row ConnectionRecord, formats Formats) {
 	host.UpdatedAtMs = row.UpdatedAtMs
 	host.UseProxy = row.UseProxy
 	host.TimeoutSeconds = row.TimeoutSeconds
-	host.RetryBackoff = row.RetryBackoff
+	host.RetryAttempts = row.RetryAttempts
 	host.SwitchOn4xx = switchOn(row.SwitchOn4xx)
 	host.SwitchOn5xx = switchOn(row.SwitchOn5xx)
 	host.BaseURL, host.NeedsSetup = substitute(row.BaseURL, row.Variables)

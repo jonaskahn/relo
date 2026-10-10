@@ -35,6 +35,7 @@ type Pool struct {
 	models     ModelAccess
 	clock      clock.Clock
 	steps      []time.Duration
+	conn       connectionState
 }
 
 // NewPool creates an empty pool that picks credentials by quota headroom,
@@ -157,6 +158,9 @@ func (p *Pool) Select(ctx Selection) (PoolEntry, error) {
 		}
 		return PoolEntry{}, ErrNoCredentials
 	}
+	if preferred, found := preferredEntry(servable, ctx.Prefer); found {
+		return preferred, nil
+	}
 	candidates := withoutExcluded(servable, ctx.Exclude)
 	if len(candidates) == 0 {
 		// Every account that could serve the model is one this request has
@@ -167,6 +171,9 @@ func (p *Pool) Select(ctx Selection) (PoolEntry, error) {
 	}
 	if pinned, found := p.pinned(ctx.ConversationID, candidates); found {
 		return pinned, nil
+	}
+	if sticky, found := p.stickyEntry(candidates); found {
+		return sticky, nil
 	}
 	selected, err := p.currentStrategy().Select(servable, ctx)
 	if err != nil {
@@ -188,6 +195,15 @@ func (p *Pool) servable(candidates []PoolEntry, modelIDs []string) []PoolEntry {
 		}
 	}
 	return kept
+}
+
+func preferredEntry(entries []PoolEntry, id string) (PoolEntry, bool) {
+	for _, entry := range entries {
+		if id != "" && entry.ID == id {
+			return entry, true
+		}
+	}
+	return PoolEntry{}, false
 }
 
 func withoutExcluded(entries []PoolEntry, exclude []string) []PoolEntry {
@@ -326,6 +342,9 @@ func (p *Pool) activeWhere(allows func(*Breaker) bool) []PoolEntry {
 // request again. A zero time means at least one account can take a request
 // now, or none is cooling down.
 func (p *Pool) CooldownUntil() time.Time {
+	if connection := p.ConnectionCooldownUntil(); !connection.IsZero() {
+		return connection
+	}
 	if len(p.ready()) > 0 {
 		return time.Time{}
 	}

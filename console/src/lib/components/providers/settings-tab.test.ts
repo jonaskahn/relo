@@ -104,7 +104,7 @@ describe('connection settings', () => {
 		expect(html).toContain('data-section="upstream"');
 		expect(html).toContain('Provider waits');
 		expect(html).toContain('Use global (5m)');
-		expect(html).toContain('Use global (1–3s, 3–5s, 5–10s)');
+		expect(html).toContain('Use global (3×)');
 		expect(html).toContain('Call wait');
 	});
 

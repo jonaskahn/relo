@@ -202,6 +202,22 @@ func (m *Manager) CooldownUntil(providerID string) time.Time {
 	return m.GetPool(providerID).CooldownUntil()
 }
 
+// ConnectionCooldownUntil is when a provider may take a request again after
+// every account of it failed one. A zero time means it is not cooling down.
+func (m *Manager) ConnectionCooldownUntil(providerID string) time.Time {
+	return m.GetPool(providerID).ConnectionCooldownUntil()
+}
+
+// MarkServed records the account that just answered a request of a provider.
+func (m *Manager) MarkServed(providerID, credentialID string) {
+	m.GetPool(providerID).MarkServed(credentialID)
+}
+
+// MarkExhausted records that every account of a provider failed one request.
+func (m *Manager) MarkExhausted(providerID string, retryAfter time.Duration) {
+	m.GetPool(providerID).MarkExhausted(retryAfter)
+}
+
 // SetFailoverBackoff changes the escalating waits a refused credential
 // walks through, for every pool this manager owns. No steps keeps no
 // denylist: open breakers close at once, so every credential is reusable

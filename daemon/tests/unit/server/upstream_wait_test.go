@@ -15,18 +15,18 @@ import (
 // wireProvider carries the two per-connection overrides the API reports,
 // decoded from the wire rather than the application type.
 type wireProvider struct {
-	TimeoutSeconds *int     `json:"timeout_seconds"`
-	RetryBackoff   [][2]int `json:"retry_backoff"`
+	TimeoutSeconds *int `json:"timeout_seconds"`
+	RetryAttempts  *int `json:"retry_attempts"`
 }
 
 // TestConnectionUpstreamWaitRoundTrip covers the two per-connection override
-// fields: a PATCH stores the call wait and the retry windows, the response
+// fields: a PATCH stores the call wait and the retry count, the response
 // reports them, and a present null clears each back to the global value.
 func TestConnectionUpstreamWaitRoundTrip(t *testing.T) {
 	harness := newHarness(t)
 
 	patched := harness.management(http.MethodPatch, "/api/v1/connections/openai", adminToken,
-		strings.NewReader(`{"timeout_seconds":180,"retry_backoff":[[2,4],[4,6],[6,8]]}`))
+		strings.NewReader(`{"timeout_seconds":180,"retry_attempts":5}`))
 	if patched.Code != http.StatusOK {
 		t.Fatalf("patch status = %d, body = %s", patched.Code, patched.Body.String())
 	}
@@ -37,8 +37,8 @@ func TestConnectionUpstreamWaitRoundTrip(t *testing.T) {
 	if provider.TimeoutSeconds == nil || *provider.TimeoutSeconds != 180 {
 		t.Fatalf("timeout_seconds = %v, want 180", provider.TimeoutSeconds)
 	}
-	if len(provider.RetryBackoff) != 3 || provider.RetryBackoff[1] != [2]int{4, 6} {
-		t.Fatalf("retry_backoff = %v, want the patched windows", provider.RetryBackoff)
+	if provider.RetryAttempts == nil || *provider.RetryAttempts != 5 {
+		t.Fatalf("retry_attempts = %v, want 5", provider.RetryAttempts)
 	}
 
 	read := harness.management(http.MethodGet, "/api/v1/connections/openai", adminToken, nil)
@@ -50,12 +50,12 @@ func TestConnectionUpstreamWaitRoundTrip(t *testing.T) {
 		t.Fatalf("decode get: %v", err)
 	}
 	if reloaded.TimeoutSeconds == nil || *reloaded.TimeoutSeconds != 180 ||
-		len(reloaded.RetryBackoff) != 3 || reloaded.RetryBackoff[2] != [2]int{6, 8} {
+		reloaded.RetryAttempts == nil || *reloaded.RetryAttempts != 5 {
 		t.Fatalf("read back = %+v, want the stored overrides", reloaded)
 	}
 
 	cleared := harness.management(http.MethodPatch, "/api/v1/connections/openai", adminToken,
-		strings.NewReader(`{"timeout_seconds":null,"retry_backoff":null}`))
+		strings.NewReader(`{"timeout_seconds":null,"retry_attempts":null}`))
 	if cleared.Code != http.StatusOK {
 		t.Fatalf("clear status = %d, body = %s", cleared.Code, cleared.Body.String())
 	}
@@ -63,21 +63,21 @@ func TestConnectionUpstreamWaitRoundTrip(t *testing.T) {
 	if err := json.Unmarshal(cleared.Body.Bytes(), &backToGlobal); err != nil {
 		t.Fatalf("decode clear: %v", err)
 	}
-	if backToGlobal.TimeoutSeconds != nil || backToGlobal.RetryBackoff != nil {
+	if backToGlobal.TimeoutSeconds != nil || backToGlobal.RetryAttempts != nil {
 		t.Fatalf("read back = %+v, want the overrides cleared to the global values", backToGlobal)
 	}
 }
 
 // TestConnectionUpstreamWaitRefusals covers a call wait outside the presets
-// and retry windows the relay cannot draw from: the API answers 400 and the
+// and a retry count nothing offers: the API answers 400 and the
 // stored connection is left alone.
 func TestConnectionUpstreamWaitRefusals(t *testing.T) {
 	harness := newHarness(t)
 
 	for name, body := range map[string]string{
 		"retired preset": `{"timeout_seconds":30}`,
-		"reversed range": `{"retry_backoff":[[2,4],[6,4],[6,8]]}`,
-		"two ranges":     `{"retry_backoff":[[2,4],[4,6]]}`,
+		"retired count":  `{"retry_attempts":2}`,
+		"zero count":     `{"retry_attempts":0}`,
 	} {
 		recorder := harness.management(http.MethodPatch, "/api/v1/connections/openai", adminToken,
 			strings.NewReader(body))

@@ -71,8 +71,8 @@ func normalizeUpstream(cfg *Config) {
 	if ValidateUpstreamTimeout(cfg.Upstream.TimeoutSeconds) != nil {
 		cfg.Upstream.TimeoutSeconds = DefaultUpstreamTimeoutSeconds
 	}
-	if ValidateUpstreamRetryBackoff(cfg.Upstream.RetryBackoff) != nil {
-		cfg.Upstream.RetryBackoff = append([][2]int(nil), DefaultUpstreamRetryBackoff()...)
+	if ValidateUpstreamRetryAttempts(cfg.Upstream.RetryAttempts) != nil {
+		cfg.Upstream.RetryAttempts = DefaultUpstreamRetryAttempts
 	}
 	if ValidateUpstreamFailoverCooldown(cfg.Upstream.FailoverCooldownSeconds) != nil {
 		cfg.Upstream.FailoverCooldownSeconds = DefaultFailoverCooldownSeconds

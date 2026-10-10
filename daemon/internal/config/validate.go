@@ -50,7 +50,7 @@ func ValidateConfig(cfg *Config) error {
 	if err := ValidateUpstreamTimeout(cfg.Upstream.TimeoutSeconds); err != nil {
 		return err
 	}
-	if err := ValidateUpstreamRetryBackoff(cfg.Upstream.RetryBackoff); err != nil {
+	if err := ValidateUpstreamRetryAttempts(cfg.Upstream.RetryAttempts); err != nil {
 		return err
 	}
 	if err := ValidateUpstreamFailoverCooldown(cfg.Upstream.FailoverCooldownSeconds); err != nil {

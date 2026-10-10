@@ -58,11 +58,11 @@ type wireAppear struct {
 }
 
 type wireProviders struct {
-	CatalogURL              string   `json:"catalog_url"`
-	ProxyURL                string   `json:"proxy_url"`
-	TimeoutSeconds          int      `json:"timeout_seconds"`
-	RetryBackoff            [][2]int `json:"retry_backoff"`
-	FailoverCooldownSeconds int      `json:"failover_cooldown_seconds"`
+	CatalogURL              string `json:"catalog_url"`
+	ProxyURL                string `json:"proxy_url"`
+	TimeoutSeconds          int    `json:"timeout_seconds"`
+	RetryAttempts           int    `json:"retry_attempts"`
+	FailoverCooldownSeconds int    `json:"failover_cooldown_seconds"`
 }
 
 type wireSecrets struct {
@@ -179,26 +179,26 @@ func TestNetworkPatchStoresTheListeners(t *testing.T) {
 }
 
 // TestProvidersPatchStoresTheDirectoryAndWaits covers the providers card: the
-// proxy, model directory, call wait, and retry waits round-trip, and an
+// proxy, model directory, call wait, and retry count round-trip, and an
 // unusable value is refused.
 func TestProvidersPatchStoresTheDirectoryAndWaits(t *testing.T) {
 	h := newHarness(t)
 
 	patch := `{"catalog_url":"https://models.example.test/api.json","proxy_url":"https://proxy.example:8443",` +
-		`"timeout_seconds":600,"retry_backoff":[[2,4],[4,6],[6,8]],"failover_cooldown_seconds":1800}`
+		`"timeout_seconds":600,"retry_attempts":5,"failover_cooldown_seconds":1800}`
 	saved := h.management(http.MethodPatch, "/api/v1/settings/providers", adminToken, strings.NewReader(patch))
 	if saved.Code != http.StatusOK {
 		t.Fatalf("PATCH providers status = %d, body = %s", saved.Code, saved.Body.String())
 	}
 	got := decodeGroup[wireProviders](t, saved.Body)
 	if got.CatalogURL != "https://models.example.test/api.json" || got.ProxyURL != "https://proxy.example:8443" ||
-		got.TimeoutSeconds != 600 || len(got.RetryBackoff) != 3 || got.FailoverCooldownSeconds != 1800 {
+		got.TimeoutSeconds != 600 || got.RetryAttempts != 5 || got.FailoverCooldownSeconds != 1800 {
 		t.Fatalf("providers = %+v, want the saved choices", got)
 	}
 
 	none := h.management(http.MethodPatch, "/api/v1/settings/providers", adminToken,
 		strings.NewReader(`{"catalog_url":"https://models.example.test/api.json","proxy_url":"","timeout_seconds":300,`+
-			`"retry_backoff":[[1,3],[3,5],[5,10]],"failover_cooldown_seconds":0}`))
+			`"retry_attempts":3,"failover_cooldown_seconds":0}`))
 	if none.Code != http.StatusOK {
 		t.Fatalf("PATCH providers status = %d, body = %s, want no denylist stored", none.Code, none.Body.String())
 	}
@@ -207,12 +207,12 @@ func TestProvidersPatchStoresTheDirectoryAndWaits(t *testing.T) {
 	}
 
 	for name, body := range map[string]string{
-		"empty catalog": `{"catalog_url":"","proxy_url":"","timeout_seconds":300,"retry_backoff":[[1,3],[3,5],[5,10]]}`,
-		"bad catalog":   `{"catalog_url":"ftp://example.test","proxy_url":"","timeout_seconds":300,"retry_backoff":[[1,3],[3,5],[5,10]]}`,
-		"bad proxy":     `{"catalog_url":"https://models.example.test/api.json","proxy_url":"socks5://127.0.0.1:1","timeout_seconds":300,"retry_backoff":[[1,3],[3,5],[5,10]]}`,
-		"bad timeout":   `{"catalog_url":"https://models.example.test/api.json","proxy_url":"","timeout_seconds":150,"retry_backoff":[[1,3],[3,5],[5,10]]}`,
-		"bad backoff":   `{"catalog_url":"https://models.example.test/api.json","proxy_url":"","timeout_seconds":300,"retry_backoff":[[3,1],[3,5],[5,10]],"failover_cooldown_seconds":900}`,
-		"bad cooldown":  `{"catalog_url":"https://models.example.test/api.json","proxy_url":"","timeout_seconds":300,"retry_backoff":[[1,3],[3,5],[5,10]],"failover_cooldown_seconds":301}`,
+		"empty catalog": `{"catalog_url":"","proxy_url":"","timeout_seconds":300,"retry_attempts":3}`,
+		"bad catalog":   `{"catalog_url":"ftp://example.test","proxy_url":"","timeout_seconds":300,"retry_attempts":3}`,
+		"bad proxy":     `{"catalog_url":"https://models.example.test/api.json","proxy_url":"socks5://127.0.0.1:1","timeout_seconds":300,"retry_attempts":3}`,
+		"bad timeout":   `{"catalog_url":"https://models.example.test/api.json","proxy_url":"","timeout_seconds":150,"retry_attempts":3}`,
+		"bad attempts":  `{"catalog_url":"https://models.example.test/api.json","proxy_url":"","timeout_seconds":300,"retry_attempts":4,"failover_cooldown_seconds":900}`,
+		"bad cooldown":  `{"catalog_url":"https://models.example.test/api.json","proxy_url":"","timeout_seconds":300,"retry_attempts":3,"failover_cooldown_seconds":301}`,
 	} {
 		refused := h.management(http.MethodPatch, "/api/v1/settings/providers", adminToken, strings.NewReader(body))
 		if refused.Code != http.StatusBadRequest {
@@ -222,9 +222,9 @@ func TestProvidersPatchStoresTheDirectoryAndWaits(t *testing.T) {
 }
 
 // TestNoneFailoverStepKeepsFirstRefusalsInRotation pins the live effect of
-// the None step: the first rate-limit refusal leaves the account in rotation
-// for the next request instead of parking it, while the repeated refusal
-// starts the three-minute wait and parks it for the one after.
+// the None step: the first refused request retries the account its full count
+// and still leaves it in rotation for the next one, while the repeated
+// refusal starts the three-minute wait and parks the request after.
 func TestNoneFailoverStepKeepsFirstRefusalsInRotation(t *testing.T) {
 	h := newHarness(t)
 	h.upstream.status = http.StatusTooManyRequests
@@ -232,7 +232,7 @@ func TestNoneFailoverStepKeepsFirstRefusalsInRotation(t *testing.T) {
 
 	saved := h.management(http.MethodPatch, "/api/v1/settings/providers", adminToken,
 		strings.NewReader(`{"catalog_url":"https://models.example.test/api.json","proxy_url":"","timeout_seconds":300,`+
-			`"retry_backoff":[[1,3],[3,5],[5,10]],"failover_cooldown_seconds":0}`))
+			`"retry_attempts":3,"failover_cooldown_seconds":0}`))
 	if saved.Code != http.StatusOK {
 		t.Fatalf("PATCH providers status = %d, body = %s", saved.Code, saved.Body.String())
 	}
@@ -244,8 +244,8 @@ func TestNoneFailoverStepKeepsFirstRefusalsInRotation(t *testing.T) {
 	if response.Code != http.StatusTooManyRequests {
 		t.Fatalf("status = %d, body = %s, want the provider's own 429", response.Code, response.Body.String())
 	}
-	if got := h.upstream.requestCount() - before; got != 1 {
-		t.Fatalf("upstream requests = %d, want one send per usable account", got)
+	if got := h.upstream.requestCount() - before; got != 4 {
+		t.Fatalf("upstream requests = %d, want the account retried before the request is answered", got)
 	}
 
 	second := h.dataPlaneOn(inference.ProtocolAnthropic, http.MethodPost, "/v1/messages", dataPlaneToken,
@@ -253,8 +253,8 @@ func TestNoneFailoverStepKeepsFirstRefusalsInRotation(t *testing.T) {
 	if second.Code != http.StatusTooManyRequests {
 		t.Fatalf("second status = %d, body = %s, want the refusal again while the account is still in rotation", second.Code, second.Body.String())
 	}
-	if got := h.upstream.requestCount() - before; got != 2 {
-		t.Fatalf("upstream requests = %d, want the next request to serve the refusal again", got)
+	if got := h.upstream.requestCount() - before; got != 8 {
+		t.Fatalf("upstream requests = %d, want the next request to retry the refusal again", got)
 	}
 
 	third := h.dataPlaneOn(inference.ProtocolAnthropic, http.MethodPost, "/v1/messages", dataPlaneToken,

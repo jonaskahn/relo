@@ -31,18 +31,14 @@ const (
 	// DefaultUpstreamTimeoutSeconds is how long one provider call waits for
 	// the next bytes when the operator never picked a preset.
 	DefaultUpstreamTimeoutSeconds = 300
+	// DefaultUpstreamRetryAttempts is how many times one account is retried
+	// when the operator never picked a preset.
+	DefaultUpstreamRetryAttempts = 3
 	// DefaultFailoverCooldownSeconds is the first denylist step used when the
 	// operator never picked one: zero, so the first failure keeps no wait and
 	// only a repeated failure starts escalating.
 	DefaultFailoverCooldownSeconds = 0
 )
-
-// DefaultUpstreamRetryBackoff is the shipped wait before each retry, as
-// low–high second ranges: 1–3s, then 3–5s, then 5–10s. The copy it returns
-// keeps callers from mutating the shipped baseline.
-func DefaultUpstreamRetryBackoff() [][2]int {
-	return [][2]int{{1, 3}, {3, 5}, {5, 10}}
-}
 
 // DefaultDataPlanePort returns the port a protocol listens on when the
 // configuration names none, and zero for a protocol Relo does not serve.
@@ -82,7 +78,7 @@ func DefaultConfig() Config {
 		},
 		Upstream: UpstreamConfig{
 			TimeoutSeconds:          DefaultUpstreamTimeoutSeconds,
-			RetryBackoff:            append([][2]int(nil), DefaultUpstreamRetryBackoff()...),
+			RetryAttempts:           DefaultUpstreamRetryAttempts,
 			FailoverCooldownSeconds: DefaultFailoverCooldownSeconds,
 		},
 		Catalog: CatalogConfig{ModelsDevURL: DefaultModelsDevURL},

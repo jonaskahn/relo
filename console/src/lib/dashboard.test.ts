@@ -54,7 +54,7 @@ function provider(id: string, kind: string): Provider {
 		enabled: true,
 		use_proxy: false,
 		timeout_seconds: null,
-		retry_backoff: null,
+		retry_attempts: null,
 		switch_on_4xx: true,
 		switch_on_5xx: true,
 		rank: 0,

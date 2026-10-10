@@ -158,7 +158,7 @@ func TestSettingsRefuseInvalidProviderWaits(t *testing.T) {
 	service := appsettings.New(appsettings.Options{ConfigPath: filepath.Join(t.TempDir(), "config.toml")})
 	valid := appsettings.ProvidersSettings{
 		CatalogURL: "https://models.example.test/api.json", TimeoutSeconds: 300,
-		RetryBackoff: [][2]int{{1, 3}, {3, 5}, {5, 10}}, FailoverCooldownSeconds: 900,
+		RetryAttempts: 3, FailoverCooldownSeconds: 900,
 	}
 	cases := map[string]appsettings.ProvidersSettings{
 		"bad proxy": func() appsettings.ProvidersSettings {
@@ -171,9 +171,9 @@ func TestSettingsRefuseInvalidProviderWaits(t *testing.T) {
 			next.TimeoutSeconds = 150
 			return next
 		}(),
-		"bad backoff": func() appsettings.ProvidersSettings {
+		"bad attempts": func() appsettings.ProvidersSettings {
 			next := valid
-			next.RetryBackoff = [][2]int{{3, 1}, {3, 5}, {5, 10}}
+			next.RetryAttempts = 4
 			return next
 		}(),
 		"bad cooldown": func() appsettings.ProvidersSettings {
@@ -201,8 +201,8 @@ func TestSettingsRefuseInvalidProviderWaits(t *testing.T) {
 		if saved.TimeoutSeconds != config.DefaultUpstreamTimeoutSeconds {
 			t.Fatalf("TimeoutSeconds = %d, want the default", saved.TimeoutSeconds)
 		}
-		if len(saved.RetryBackoff) != len(config.DefaultUpstreamRetryBackoff()) {
-			t.Fatalf("RetryBackoff = %v, want the default", saved.RetryBackoff)
+		if saved.RetryAttempts != config.DefaultUpstreamRetryAttempts {
+			t.Fatalf("RetryAttempts = %d, want the default", saved.RetryAttempts)
 		}
 	})
 }

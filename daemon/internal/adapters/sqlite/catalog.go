@@ -24,7 +24,7 @@ var (
 const providerColumns = "id, template_id, origin, label, auth, api_format, key_header, base_url, " +
 	"models_source, models_format, modelsdev_provider_id, headers, doc_url, key_env, login_flows, " +
 	"variables, enabled, rank, pool_strategy, last_refreshed_at, last_refresh_error, created_at, updated_at, use_proxy, " +
-	"timeout_seconds, retry_backoff, switch_on_4xx, switch_on_5xx"
+	"timeout_seconds, retry_attempts, switch_on_4xx, switch_on_5xx"
 
 const modelColumns = "provider_id, model_id, source, api_format, base_url, modelsdev_ref, " +
 	"match, enabled, available, listed_at, updated_at, upstream_model_id, cloned_from"
@@ -244,17 +244,17 @@ func scanProviders(rows *sql.Rows) ([]ProviderRow, error) {
 
 func scanProvider(row rowScanner) (ProviderRow, error) {
 	var (
-		p                ProviderRow
-		headersStr       string
-		keyEnvStr        string
-		loginFlowsStr    string
-		variablesStr     string
-		lastRefreshedAt  sql.NullInt64
-		useProxy         int
-		timeoutSeconds   sql.NullInt64
-		retryBackoffText sql.NullString
-		switchOn4xx      sql.NullInt64
-		switchOn5xx      sql.NullInt64
+		p               ProviderRow
+		headersStr      string
+		keyEnvStr       string
+		loginFlowsStr   string
+		variablesStr    string
+		lastRefreshedAt sql.NullInt64
+		useProxy        int
+		timeoutSeconds  sql.NullInt64
+		retryAttempts   sql.NullInt64
+		switchOn4xx     sql.NullInt64
+		switchOn5xx     sql.NullInt64
 	)
 
 	err := row.Scan(&p.ID, &p.TemplateID, &p.Origin, &p.Label, &p.Auth,
@@ -262,16 +262,16 @@ func scanProvider(row rowScanner) (ProviderRow, error) {
 		&p.ModelsDevProviderID, &headersStr, &p.DocURL, &keyEnvStr, &loginFlowsStr,
 		&variablesStr, &p.Enabled, &p.Rank, &p.PoolStrategy, &lastRefreshedAt,
 		&p.LastRefreshError, &p.CreatedAtMs, &p.UpdatedAtMs, &useProxy,
-		&timeoutSeconds, &retryBackoffText, &switchOn4xx, &switchOn5xx)
+		&timeoutSeconds, &retryAttempts, &switchOn4xx, &switchOn5xx)
 	if err != nil {
 		return ProviderRow{}, err
 	}
 
 	return finishProviderRow(p, headersStr, keyEnvStr, loginFlowsStr, variablesStr,
-		lastRefreshedAt, useProxy, timeoutSeconds, retryBackoffText, switchOn4xx, switchOn5xx), nil
+		lastRefreshedAt, useProxy, timeoutSeconds, retryAttempts, switchOn4xx, switchOn5xx), nil
 }
 
-func finishProviderRow(p ProviderRow, headersStr, keyEnvStr, loginFlowsStr, variablesStr string, lastRefreshedAt sql.NullInt64, useProxy int, timeoutSeconds sql.NullInt64, retryBackoffText sql.NullString, switchOn4xx, switchOn5xx sql.NullInt64) ProviderRow {
+func finishProviderRow(p ProviderRow, headersStr, keyEnvStr, loginFlowsStr, variablesStr string, lastRefreshedAt sql.NullInt64, useProxy int, timeoutSeconds, retryAttempts sql.NullInt64, switchOn4xx, switchOn5xx sql.NullInt64) ProviderRow {
 	p.Headers = decodeStringMap(headersStr)
 	p.KeyEnv = decodeStrings(keyEnvStr)
 	p.LoginFlows = decodeStrings(loginFlowsStr)
@@ -285,8 +285,9 @@ func finishProviderRow(p ProviderRow, headersStr, keyEnvStr, loginFlowsStr, vari
 		val := int(timeoutSeconds.Int64)
 		p.TimeoutSeconds = &val
 	}
-	if retryBackoffText.Valid {
-		p.RetryBackoff = decodeRetryBackoff(retryBackoffText.String)
+	if retryAttempts.Valid {
+		val := int(retryAttempts.Int64)
+		p.RetryAttempts = &val
 	}
 	p.SwitchOn4xx = boolPtr(switchOn4xx)
 	p.SwitchOn5xx = boolPtr(switchOn5xx)
@@ -469,25 +470,6 @@ func nullIntValue(value *int) sql.NullInt64 {
 		return sql.NullInt64{}
 	}
 	return sql.NullInt64{Int64: int64(*value), Valid: true}
-}
-
-func nullRetryBackoff(windows [][2]int) sql.NullString {
-	if windows == nil {
-		return sql.NullString{}
-	}
-	encoded, err := json.Marshal(windows)
-	if err != nil {
-		return sql.NullString{}
-	}
-	return sql.NullString{String: string(encoded), Valid: true}
-}
-
-func decodeRetryBackoff(raw string) [][2]int {
-	var windows [][2]int
-	if err := json.Unmarshal([]byte(raw), &windows); err != nil {
-		return nil
-	}
-	return windows
 }
 
 func bit(value bool) int {

@@ -76,9 +76,9 @@ func TestUnlistedStatusSwitchesToTheNextAccount(t *testing.T) {
 }
 
 // TestSwitchableStatusRetriesEveryAccountBeforeLeaving pins the unified retry
-// walk: a refusal the connection's own option made switchable waits the retry
-// window before each next attempt, and every account of the connection answers
-// before the request is answered with the refusal.
+// walk: a refusal the connection's own option made switchable is answered by
+// every account of the connection once — asking the same account again cannot
+// turn a refusal into a completion — before the request is answered with it.
 func TestSwitchableStatusRetriesEveryAccountBeforeLeaving(t *testing.T) {
 	h := newHarness(t)
 	h.upstream.status = http.StatusBadRequest
@@ -102,10 +102,10 @@ func TestSwitchableStatusRetriesEveryAccountBeforeLeaving(t *testing.T) {
 	if !askedWith(h, "sk-test") || !askedWith(h, "sk-second") {
 		t.Fatalf("authorizations = %v, want every account of the connection to answer", authorizations(h))
 	}
-	if len(waits) != 3 || waits[0] != 0 || waits[1] != 1 || waits[2] != 2 {
-		t.Fatalf("waits = %v, want one retry window before each next attempt", waits)
+	if len(waits) != 0 {
+		t.Fatalf("waits = %v, want no same-account retry: a refusal is not cured by asking again", waits)
 	}
-	if got := h.upstream.requestCount() - before; got != 3 {
+	if got := h.upstream.requestCount() - before; got != 2 {
 		t.Fatalf("upstream requests = %d, want both accounts asked before the final answer", got)
 	}
 }

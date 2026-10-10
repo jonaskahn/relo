@@ -160,6 +160,7 @@ type Router struct {
 	latency  map[string]float64
 	pins     *account.PinCache
 	failover *Failover
+	sticky   map[string]string
 }
 
 // New returns a router over the given catalog and pools.
@@ -173,6 +174,7 @@ func New(options Options) *Router {
 		rotation: map[string]int{}, latency: map[string]float64{},
 		pins:     account.NewPinCache(options.PinsLimit, 0, nil),
 		failover: NewFailover(options.Clock, options.FailoverBackoff),
+		sticky:   map[string]string{},
 	}
 }
 
@@ -196,11 +198,49 @@ func (r *Router) resolve(ctx context.Context, request Request, preview bool) (Pl
 		return Plan{}, ErrNoCatalog
 	}
 	plan := r.plan(snapshot, request, preview)
-	plan.Candidates = r.failover.Filter(plan.Candidates)
+	if until, cooling := r.failover.Until(groupKey(plan.GroupID)); plan.GroupID != "" && cooling {
+		plan.Candidates = nil
+		return plan, &CoolingError{Name: plan.GroupID, Until: until}
+	}
+	candidates, until := r.failover.Filter(plan.Candidates)
+	plan.Candidates = candidates
+	if len(candidates) == 0 && !until.IsZero() {
+		return plan, &CoolingError{Name: plan.Model, Until: until}
+	}
 	if err := planProblem(plan, snapshot); err != nil {
+		// A plan left empty because the connection is waiting out a failure
+		// answers with when to ask again, not only that nothing could serve.
+		if cooling := r.coolingPlan(plan); cooling != nil {
+			return plan, cooling
+		}
 		return plan, err
 	}
 	return plan, nil
+}
+
+// coolingPlan names a connection every account of which is waiting out a
+// failure, so the answer can say when the request may come back.
+func (r *Router) coolingPlan(plan Plan) *CoolingError {
+	if r.pools == nil {
+		return nil
+	}
+	var cooling *CoolingError
+	for _, skipped := range plan.Skipped {
+		if skipped.ProviderID == "" {
+			continue
+		}
+		until := r.pools.CooldownUntil(skipped.ProviderID)
+		if until.IsZero() {
+			continue
+		}
+		if cooling == nil || until.Before(cooling.Until) {
+			cooling = &CoolingError{
+				Name: plan.Model, Until: until,
+				Reason: account.CoolingDown(skipped.ProviderID, until),
+			}
+		}
+	}
+	return cooling
 }
 
 func (r *Router) current() (*catalog.Snapshot, bool) {
@@ -331,6 +371,7 @@ func (r *Router) fromGroup(snapshot *catalog.Snapshot, request Request, preview 
 		r.addGroupMember(snapshot, &plan, member, request.Needs)
 	}
 	plan.Candidates = r.orderGroup(group, plan.Candidates, preview)
+	plan.Candidates = r.stickyFirst(group, plan.Candidates)
 	plan.Candidates = r.pinned(request.Conversation, prefixGroup(group.ID), plan.Candidates, preview)
 	return plan, true
 }

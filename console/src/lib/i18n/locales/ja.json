@@ -752,8 +752,6 @@
           "retryWaits": "再試行の間隔",
           "retryWaitsHint": "各再試行前のランダムな待機時間。未設定の場合はグローバル設定を使用します。",
           "retryUseGlobal": "グローバルを使用（{value}）",
-          "retryCustom": "カスタム",
-          "retryInvalid": "各再試行の最小値は最大値より小さく、600 秒以下にしてください。",
           "switchOn4xx": "4xx で切り替え",
           "switchOn4xxHint": "リレーが再試行しない 4xx のとき、この接続の別のアカウントを試す。",
           "switchOn5xx": "5xx で切り替え",
@@ -1798,13 +1796,7 @@
       "retryLabel": "再試行の間隔",
       "failoverLabel": "Failover wait",
       "failoverHint": "How long a refused account or route member stays out of rotation after a rate limit or server fault, and how the wait grows with each further failure. A success resets it. None starts with no wait: the first refusal is immediately reusable.",
-      "retryHint": "各再試行前のランダムな待機時間（秒）。プロバイダーの Retry-After が長い場合はそちらが優先されます。",
-      "retryFirst": "1 回目の再試行",
-      "retrySecond": "2 回目の再試行",
-      "retryThird": "3 回目の再試行",
-      "retryLow": "最小",
-      "retryHigh": "最大",
-      "retryInvalid": "各再試行の最小値は最大値より小さく、600 秒以下にしてください。"
+      "retryHint": "各再試行前のランダムな待機時間（秒）。プロバイダーの Retry-After が長い場合はそちらが優先されます。"
     }
   }
 }

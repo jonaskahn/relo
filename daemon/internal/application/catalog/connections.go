@@ -119,10 +119,10 @@ type Provider struct {
 	Enabled          bool
 	UseProxy         bool
 	// TimeoutSeconds is this connection's own call wait in seconds; null
-	// inherits the global value. RetryBackoff is its own retry windows; null
-	// inherits the global windows.
+	// inherits the global value. RetryAttempts is how many times it retries
+	// one account; null inherits the global count.
 	TimeoutSeconds *int
-	RetryBackoff   [][2]int
+	RetryAttempts  *int
 	// SwitchOn4xx and SwitchOn5xx report whether this connection fails over on
 	// an unlisted status of that class. Both are resolved, so a console never
 	// repeats the default.
@@ -388,7 +388,7 @@ func (s *Service) describeProvider(snapshot *catalog.Snapshot, host catalog.Prov
 func baseProviderView(s *Service, host catalog.Provider, models []catalog.Model) Provider {
 	view := providerIdentityView(s, host, models)
 	view.TimeoutSeconds = host.TimeoutSeconds
-	view.RetryBackoff = host.RetryBackoff
+	view.RetryAttempts = host.RetryAttempts
 	view.SwitchOn4xx = host.SwitchOn4xx
 	view.SwitchOn5xx = host.SwitchOn5xx
 	view.Rank = host.Rank

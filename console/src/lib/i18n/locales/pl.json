@@ -752,8 +752,6 @@
           "retryWaits": "Przerwy między próbami",
           "retryWaitsHint": "Losowa przerwa przed każdą próbą. Nieustawione używa globalnych okien.",
           "retryUseGlobal": "Użyj globalnych ({value})",
-          "retryCustom": "Własne",
-          "retryInvalid": "Każda próba wymaga minimum niższego od maksimum, do 600 s.",
           "switchOn4xx": "Przełącz przy 4xx",
           "switchOn4xxHint": "Próbuje innego konta tego połączenia przy 4xx, którego pośrednik nie ponawia.",
           "switchOn5xx": "Przełącz przy 5xx",
@@ -1798,13 +1796,7 @@
       "retryLabel": "Przerwy między próbami",
       "failoverLabel": "Failover wait",
       "failoverHint": "How long a refused account or route member stays out of rotation after a rate limit or server fault, and how the wait grows with each further failure. A success resets it. None starts with no wait: the first refusal is immediately reusable.",
-      "retryHint": "Losowa przerwa przed każdą próbą, w sekundach. Dłuższy Retry-After dostawcy ma pierwszeństwo.",
-      "retryFirst": "Pierwsza próba",
-      "retrySecond": "Druga próba",
-      "retryThird": "Trzecia próba",
-      "retryLow": "Minimum",
-      "retryHigh": "Maksimum",
-      "retryInvalid": "Każda próba wymaga minimum niższego od maksimum, do 600 s."
+      "retryHint": "Losowa przerwa przed każdą próbą, w sekundach. Dłuższy Retry-After dostawcy ma pierwszeństwo."
     }
   }
 }
