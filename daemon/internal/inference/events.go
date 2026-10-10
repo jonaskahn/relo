@@ -1,5 +1,7 @@
 package inference
 
+import "time"
+
 // EventKind identifies the type of one streaming event.
 type EventKind int
 
@@ -88,6 +90,11 @@ type ErrorInfo struct {
 	Code    string `json:"code"`
 	Message string `json:"message"`
 	Status  int    `json:"status"`
+	// RetryAfter is how long the upstream asked the caller to wait, when it
+	// said so in the body rather than in a header. It never travels to the
+	// client: a wait belongs to the account and the next attempt, not to a
+	// response already on its way out.
+	RetryAfter time.Duration `json:"-"`
 }
 
 // The client surfaces a data plane listener serves, named for logs, usage

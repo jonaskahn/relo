@@ -409,6 +409,16 @@ func Retryable(status int) bool {
 	}
 }
 
+// preferredWait keeps the longer of the two waits an upstream asked for. A
+// header and a body can both name one, and honouring only the shorter would
+// spend an account that was told to wait.
+func preferredWait(header, body time.Duration) time.Duration {
+	if body > header {
+		return body
+	}
+	return header
+}
+
 func retryAfter(response *http.Response) time.Duration {
 	raw := response.Header.Get("Retry-After")
 	if raw == "" {

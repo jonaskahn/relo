@@ -206,11 +206,15 @@ func (c *Codec) DecodeError(status int, body []byte) *inference.ErrorInfo {
 		return envelope.Error.info(status)
 	}
 	// A Cloud Code Assist refusal arrives inside the same wrapper its answers
-	// use, so the wrapped error is read when none sits on top.
+	// use, so the wrapped error is read when none sits on top. The wait is
+	// taken from that error rather than the whole body, which would leave the
+	// refusal unread and the account waiting the wrong amount.
 	if c.cfg.Mode == ModeCloudCodeAssist {
 		var wrapped ccaEnvelope
 		if err := json.Unmarshal(body, &wrapped); err == nil && wrapped.Response != nil && wrapped.Response.Error != nil {
-			return wrapped.Response.Error.info(status)
+			info := wrapped.Response.Error.info(status)
+			info.RetryAfter = antigravity.RetryAfter(status, info.Code, info.Message)
+			return info
 		}
 	}
 	return &inference.ErrorInfo{

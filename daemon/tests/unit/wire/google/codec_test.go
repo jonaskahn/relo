@@ -11,6 +11,7 @@ import (
 	"reflect"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/jonaskahn/relo/internal/adapters/antigravity"
 	"github.com/jonaskahn/relo/internal/adapters/wire"
@@ -687,6 +688,36 @@ func TestDecodeResponse(t *testing.T) {
 		_, err := google.Module().DecodeResponse([]byte("{not json"))
 		if !errors.Is(err, wire.ErrInvalidResponse) {
 			t.Fatalf("DecodeResponse() error = %v, want the invalid response sentinel", err)
+		}
+	})
+}
+
+// TestCloudCodeAssistRefusalWait covers the wait a refusal carries into the
+// account's backoff: an endpoint that throttles on its own clock says how long,
+// and honouring a shorter wait than it asked for spends the account early.
+func TestCloudCodeAssistRefusalWait(t *testing.T) {
+	wait := func(status int, message string) time.Duration {
+		body, err := json.Marshal(map[string]any{
+			"response": map[string]any{"error": map[string]any{
+				"code": status, "message": message, "status": "RESOURCE_EXHAUSTED",
+			}},
+		})
+		if err != nil {
+			t.Fatalf("encode body: %v", err)
+		}
+		return cloudCodeAssistCodec().DecodeError(status, body).RetryAfter
+	}
+
+	if got := wait(429, "Individual quota reached"); got != 30*time.Second {
+		t.Fatalf("RetryAfter = %v, want the rate limit window", got)
+	}
+	if got := wait(429, "You exhausted your capacity on this model"); got != 0 {
+		t.Fatalf("RetryAfter = %v, want a spent quota to move on instead of waiting", got)
+	}
+
+	t.Run("another endpoint sets no wait", func(t *testing.T) {
+		if got := google.Module().DecodeError(429, []byte(`{"error":{"code":429,"message":"Individual quota reached"}}`)).RetryAfter; got != 0 {
+			t.Fatalf("RetryAfter = %v, want none outside the Antigravity endpoint", got)
 		}
 	})
 }
