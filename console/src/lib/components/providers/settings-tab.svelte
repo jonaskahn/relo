@@ -6,12 +6,11 @@
 	import { followFormatDefaults } from '$lib/provider-stepper';
 	import {
 		CALL_WAIT_PRESETS,
+		RETRY_ATTEMPT_PRESETS,
 		callWaitLabel,
-		cloneWindows,
+		retryAttemptsLabel,
 		DEFAULT_CALL_WAIT,
-		normalizeRetryBackoff,
-		retryBackoffLabel,
-		retryBackoffValid
+		DEFAULT_RETRY_ATTEMPTS
 	} from '$lib/upstream-settings';
 	import type { Provider, Settings, TemplateFormatOption, TemplateSettings } from '$lib/types';
 	import Button from '$lib/components/ui/button.svelte';
@@ -43,13 +42,6 @@
 
 	let { provider, allFormats, onchanged }: Props = $props();
 
-	// The three attempts in order, which is both the label each row shows and
-	// the key that names it.
-	const RETRY_LABEL_KEYS = [
-		'ui.settingsPage.retryFirst',
-		'ui.settingsPage.retrySecond',
-		'ui.settingsPage.retryThird'
-	];
 	const strategies = ['least-loaded', 'round-robin', 'random'] as const;
 
 	// The form holds a draft of the connection, seeded from the connection
@@ -90,11 +82,8 @@
 			: $t('ui.pages.providersPage.settings.useProxyHint')
 	);
 	const globalCallWait = $derived(globalSettings?.providers.timeout_seconds ?? DEFAULT_CALL_WAIT);
-	const globalRetryBackoff = $derived(
-		normalizeRetryBackoff(globalSettings?.providers.retry_backoff)
-	);
-	const retryError = $derived(
-		saveAttempted && draft.retryBackoff !== null && !retryBackoffValid(draft.retryBackoff)
+	const globalRetryAttempts = $derived(
+		globalSettings?.providers.retry_attempts ?? DEFAULT_RETRY_ATTEMPTS
 	);
 
 	onMount(() => {
@@ -169,12 +158,7 @@
 
 	async function save() {
 		saveAttempted = true;
-		if (
-			rankInvalid(draft.rank) ||
-			baseURLMissing(draft.baseURL) ||
-			(draft.retryBackoff !== null && !retryBackoffValid(draft.retryBackoff))
-		)
-			return;
+		if (rankInvalid(draft.rank) || baseURLMissing(draft.baseURL)) return;
 		const connection = connectionChanged;
 		const patch = signInSaved ? templatePatch(signInDraft, signInSaved) : null;
 		if (!connection && patch === null) return;
@@ -214,7 +198,7 @@
 			pool_strategy: current.poolStrategy,
 			use_proxy: current.useProxy,
 			timeout_seconds: current.timeoutSeconds,
-			retry_backoff: current.retryBackoff,
+			retry_attempts: current.retryAttempts,
 			switch_on_4xx: current.switchOn4xx,
 			switch_on_5xx: current.switchOn5xx,
 			api_format: current.apiFormat,
@@ -339,59 +323,25 @@
 							type="button"
 							variant="chip"
 							size="sm"
-							aria-pressed={draft.retryBackoff === null}
-							onclick={() => (draft.retryBackoff = null)}
+							aria-pressed={draft.retryAttempts === null}
+							onclick={() => (draft.retryAttempts = null)}
 						>
 							{$t('ui.pages.providersPage.settings.retryUseGlobal', {
-								values: { value: retryBackoffLabel(globalRetryBackoff) }
+								values: { value: retryAttemptsLabel(globalRetryAttempts) }
 							})}
 						</Button>
-						<Button
-							type="button"
-							variant="chip"
-							size="sm"
-							aria-pressed={draft.retryBackoff !== null}
-							onclick={() => {
-								if (draft.retryBackoff === null)
-									draft.retryBackoff = cloneWindows(globalRetryBackoff);
-							}}
-						>
-							{$t('ui.pages.providersPage.settings.retryCustom')}
-						</Button>
+						{#each RETRY_ATTEMPT_PRESETS as attempts (attempts)}
+							<Button
+								type="button"
+								variant="chip"
+								size="sm"
+								aria-pressed={draft.retryAttempts === attempts}
+								onclick={() => (draft.retryAttempts = attempts)}
+							>
+								{retryAttemptsLabel(attempts)}
+							</Button>
+						{/each}
 					</div>
-					{#if draft.retryBackoff}
-						<div class="flex flex-col gap-2">
-							{#each draft.retryBackoff as window, index (RETRY_LABEL_KEYS[index])}
-								{@const label = RETRY_LABEL_KEYS[index]}
-								<div class="flex flex-wrap items-center gap-2">
-									<span class="w-full text-sm text-muted-foreground sm:w-28">{$t(label)}</span>
-									<Input
-										type="number"
-										min="0"
-										max="600"
-										class="w-20 max-sm:h-11"
-										bind:value={window[0]}
-										aria-label={$t('ui.settingsPage.retryLow') + ' · ' + $t(label)}
-									/>
-									<span class="text-sm text-muted-foreground">–</span>
-									<Input
-										type="number"
-										min="0"
-										max="600"
-										class="w-20 max-sm:h-11"
-										bind:value={window[1]}
-										aria-label={$t('ui.settingsPage.retryHigh') + ' · ' + $t(label)}
-									/>
-									<span class="text-sm text-muted-foreground">s</span>
-								</div>
-							{/each}
-						</div>
-						{#if retryError}
-							<p class="text-sm text-destructive" role="alert">
-								{$t('ui.pages.providersPage.settings.retryInvalid')}
-							</p>
-						{/if}
-					{/if}
 					<p class="text-sm text-muted-foreground">
 						{$t('ui.pages.providersPage.settings.retryWaitsHint')}
 					</p>

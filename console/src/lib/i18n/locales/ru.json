@@ -752,8 +752,6 @@
           "retryWaits": "Паузы между попытками",
           "retryWaitsHint": "Случайная пауза перед каждой попыткой. Если не задано, используются глобальные окна.",
           "retryUseGlobal": "Использовать общее ({value})",
-          "retryCustom": "Свои",
-          "retryInvalid": "Для каждой попытки минимум должен быть меньше максимума, не более 600 с.",
           "switchOn4xx": "Переключать при 4xx",
           "switchOn4xxHint": "Пробует другую учётную запись этого подключения при 4xx, который релей сам не повторяет.",
           "switchOn5xx": "Переключать при 5xx",
@@ -1798,13 +1796,7 @@
       "retryLabel": "Паузы между попытками",
       "failoverLabel": "Failover wait",
       "failoverHint": "How long a refused account or route member stays out of rotation after a rate limit or server fault, and how the wait grows with each further failure. A success resets it. None starts with no wait: the first refusal is immediately reusable.",
-      "retryHint": "Случайная пауза перед каждой попыткой, в секундах. Более длинный Retry-After провайдера имеет приоритет.",
-      "retryFirst": "Первая попытка",
-      "retrySecond": "Вторая попытка",
-      "retryThird": "Третья попытка",
-      "retryLow": "Минимум",
-      "retryHigh": "Максимум",
-      "retryInvalid": "Для каждой попытки минимум должен быть меньше максимума, не более 600 с."
+      "retryHint": "Случайная пауза перед каждой попыткой, в секундах. Более длинный Retry-After провайдера имеет приоритет."
     }
   }
 }

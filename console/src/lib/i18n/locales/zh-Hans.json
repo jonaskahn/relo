@@ -752,8 +752,6 @@
           "retryWaits": "重试间隔",
           "retryWaitsHint": "每次重试前的随机等待。未设置时使用全局间隔。",
           "retryUseGlobal": "使用全局（{value}）",
-          "retryCustom": "自定义",
-          "retryInvalid": "每次重试的最小值必须小于最大值，且不超过 600 秒。",
           "switchOn4xx": "4xx 时切换",
           "switchOn4xxHint": "遇到中继不会重试的 4xx 时，改用此连接的其他账号。",
           "switchOn5xx": "5xx 时切换",
@@ -1798,13 +1796,7 @@
       "retryLabel": "重试间隔",
       "failoverLabel": "Failover wait",
       "failoverHint": "How long a refused account or route member stays out of rotation after a rate limit or server fault, and how the wait grows with each further failure. A success resets it. None starts with no wait: the first refusal is immediately reusable.",
-      "retryHint": "每次重试前的随机等待秒数。提供商更长的 Retry-After 优先。",
-      "retryFirst": "第一次重试",
-      "retrySecond": "第二次重试",
-      "retryThird": "第三次重试",
-      "retryLow": "最小值",
-      "retryHigh": "最大值",
-      "retryInvalid": "每次重试的最小值必须小于最大值，且不超过 600 秒。"
+      "retryHint": "每次重试前的随机等待秒数。提供商更长的 Retry-After 优先。"
     }
   }
 }

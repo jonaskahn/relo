@@ -1,5 +1,4 @@
 import type { Provider, TemplateFormatOption } from '$lib/types';
-import { cloneWindows } from '$lib/upstream-settings';
 
 /** The connection form before it is saved. */
 export interface ConnectionDraft {
@@ -8,10 +7,10 @@ export interface ConnectionDraft {
 	rank: string;
 	poolStrategy: string;
 	useProxy: boolean;
-	// timeoutSeconds and retryBackoff are the connection's own provider waits;
+	// timeoutSeconds and retryAttempts are the connection's own provider waits;
 	// null means the connection uses the global value.
 	timeoutSeconds: number | null;
-	retryBackoff: [number, number][] | null;
+	retryAttempts: number | null;
 	// switchOn4xx and switchOn5xx move a request to another account of this
 	// connection after a status the relay does not always retry.
 	switchOn4xx: boolean;
@@ -74,7 +73,7 @@ export function connectionDraft(provider: Provider): ConnectionDraft {
 		poolStrategy: provider.pool_strategy,
 		useProxy: provider.use_proxy,
 		timeoutSeconds: provider.timeout_seconds ?? null,
-		retryBackoff: provider.retry_backoff ? cloneWindows(provider.retry_backoff) : null,
+		retryAttempts: provider.retry_attempts ?? null,
 		switchOn4xx: provider.switch_on_4xx,
 		switchOn5xx: provider.switch_on_5xx,
 		apiFormat: provider.api_format,
@@ -95,7 +94,7 @@ export function connectionDirty(draft: ConnectionDraft, provider: Provider): boo
 		draft.poolStrategy !== current.poolStrategy ||
 		draft.useProxy !== current.useProxy ||
 		draft.timeoutSeconds !== current.timeoutSeconds ||
-		JSON.stringify(draft.retryBackoff) !== JSON.stringify(current.retryBackoff) ||
+		draft.retryAttempts !== current.retryAttempts ||
 		draft.switchOn4xx !== current.switchOn4xx ||
 		draft.switchOn5xx !== current.switchOn5xx ||
 		draft.apiFormat !== current.apiFormat ||

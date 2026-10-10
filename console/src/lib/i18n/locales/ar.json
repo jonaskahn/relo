@@ -752,8 +752,6 @@
           "retryWaits": "فترات إعادة المحاولة",
           "retryWaitsHint": "انتظار عشوائي قبل كل إعادة محاولة. إذا لم يُضبط فسيُستخدم النطاق العام.",
           "retryUseGlobal": "استخدام الإعداد العام ({value})",
-          "retryCustom": "مخصص",
-          "retryInvalid": "تحتاج كل إعادة محاولة إلى حد أدنى أقل من الحد الأقصى، حتى 600 ثانية.",
           "switchOn4xx": "التبديل عند 4xx",
           "switchOn4xxHint": "يجرّب حسابًا آخر لهذا الاتصال عند رد 4xx لا يعيد المرحّل محاولته.",
           "switchOn5xx": "التبديل عند 5xx",
@@ -1798,13 +1796,7 @@
       "retryLabel": "فترات إعادة المحاولة",
       "failoverLabel": "Failover wait",
       "failoverHint": "How long a refused account or route member stays out of rotation after a rate limit or server fault, and how the wait grows with each further failure. A success resets it. None starts with no wait: the first refusal is immediately reusable.",
-      "retryHint": "انتظار عشوائي قبل كل إعادة محاولة، بالثواني. إذا كان Retry-After للمزود أطول فهو الأولى.",
-      "retryFirst": "إعادة المحاولة الأولى",
-      "retrySecond": "إعادة المحاولة الثانية",
-      "retryThird": "إعادة المحاولة الثالثة",
-      "retryLow": "الحد الأدنى",
-      "retryHigh": "الحد الأقصى",
-      "retryInvalid": "تحتاج كل إعادة محاولة إلى حد أدنى أقل من الحد الأقصى، حتى 600 ثانية."
+      "retryHint": "انتظار عشوائي قبل كل إعادة محاولة، بالثواني. إذا كان Retry-After للمزود أطول فهو الأولى."
     }
   }
 }

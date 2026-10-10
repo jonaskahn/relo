@@ -35,37 +35,14 @@ describe('connection settings draft', () => {
 		const provider = providerOf();
 		const draft = connectionDraft(provider);
 		expect(draft.timeoutSeconds).toBeNull();
-		expect(draft.retryBackoff).toBeNull();
+		expect(draft.retryAttempts).toBeNull();
 		expect(connectionDirty({ ...draft, timeoutSeconds: 30 }, provider)).toBe(true);
-		expect(
-			connectionDirty(
-				{
-					...draft,
-					retryBackoff: [
-						[2, 4],
-						[4, 6],
-						[6, 8]
-					]
-				},
-				provider
-			)
-		).toBe(true);
+		expect(connectionDirty({ ...draft, retryAttempts: 5 }, provider)).toBe(true);
 
-		const overridden = providerOf({
-			timeout_seconds: 30,
-			retry_backoff: [
-				[2, 4],
-				[4, 6],
-				[6, 8]
-			]
-		});
+		const overridden = providerOf({ timeout_seconds: 30, retry_attempts: 5 });
 		const overriddenDraft = connectionDraft(overridden);
 		expect(overriddenDraft.timeoutSeconds).toBe(30);
-		expect(overriddenDraft.retryBackoff).toEqual([
-			[2, 4],
-			[4, 6],
-			[6, 8]
-		]);
+		expect(overriddenDraft.retryAttempts).toBe(5);
 		expect(connectionDirty(overriddenDraft, overridden)).toBe(false);
 	});
 

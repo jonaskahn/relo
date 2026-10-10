@@ -8,7 +8,7 @@ requires: [form-controls, appearance-popover, cards-and-quota, modal-and-dialogs
 
 Route `/settings`. One page of level-1 cards, one per task: **Console** (theme, accent, quota display, language),
 **Access and secrets** (external access; the read-only sign-in and vault), **Network** (bind address, console port,
-client protocol ports), **Providers** (model directory, proxy, call wait, retry waits), **Daemon** (start at login, log
+client protocol ports), **Providers** (model directory, proxy, call wait, retry count), **Daemon** (start at login, log
 level, update feed), and **Retention** (budget and
 maintenance). Each card is a level-1 surface with a title, a one-line description, and rows of label, helper text and
 control. Cards wear `flat-surface`: a form card is not interactive and does not react to hover. Appearance and language

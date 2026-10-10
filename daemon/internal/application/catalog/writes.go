@@ -93,9 +93,9 @@ type ProviderPatch struct {
 	// TimeoutSeconds sets this connection's call wait; a present null clears
 	// it back to the global value.
 	TimeoutSeconds OptionalInt
-	// RetryBackoff sets this connection's retry windows; a present null
-	// clears them back to the global windows.
-	RetryBackoff OptionalRetryBackoff
+	// RetryAttempts sets how many times this connection retries one account;
+	// a present null clears it back to the global count.
+	RetryAttempts OptionalInt
 	// SwitchOn4xx and SwitchOn5xx fail this connection over on an unlisted
 	// status of that class. An absent field leaves the stored choice alone.
 	SwitchOn4xx *bool
@@ -128,8 +128,8 @@ func validateProviderPatch(patch ProviderPatch) error {
 			return fmt.Errorf("%w: %v", ErrInvalidCatalogRow, err)
 		}
 	}
-	if patch.RetryBackoff.Set && patch.RetryBackoff.Value != nil {
-		if err := config.ValidateUpstreamRetryBackoff(*patch.RetryBackoff.Value); err != nil {
+	if patch.RetryAttempts.Set && patch.RetryAttempts.Value != nil {
+		if err := config.ValidateUpstreamRetryAttempts(int(*patch.RetryAttempts.Value)); err != nil {
 			return fmt.Errorf("%w: %v", ErrInvalidCatalogRow, err)
 		}
 	}
@@ -187,11 +187,12 @@ func applyProviderRetry(row *catalog.ConnectionRecord, patch ProviderPatch) {
 			row.TimeoutSeconds = &seconds
 		}
 	}
-	if patch.RetryBackoff.Set {
-		if patch.RetryBackoff.Value == nil {
-			row.RetryBackoff = nil
+	if patch.RetryAttempts.Set {
+		if patch.RetryAttempts.Value == nil {
+			row.RetryAttempts = nil
 		} else {
-			row.RetryBackoff = *patch.RetryBackoff.Value
+			attempts := int(*patch.RetryAttempts.Value)
+			row.RetryAttempts = &attempts
 		}
 	}
 	if patch.SwitchOn4xx != nil {
@@ -358,30 +359,6 @@ func (o *OptionalBool) UnmarshalJSON(data []byte) error {
 		return nil
 	}
 	var value bool
-	if err := json.Unmarshal(data, &value); err != nil {
-		return err
-	}
-	o.Value = &value
-	return nil
-}
-
-// OptionalRetryBackoff tells an absent JSON field from one that is present
-// and null. An absent field leaves the connection's windows alone and a null
-// clears them back to the global windows.
-type OptionalRetryBackoff struct {
-	Set   bool
-	Value *[][2]int
-}
-
-// UnmarshalJSON records whether the field was present, so absent windows
-// leave the connection's retries alone while null restores the global ones.
-func (o *OptionalRetryBackoff) UnmarshalJSON(data []byte) error {
-	o.Set = true
-	if strings.TrimSpace(string(data)) == "null" {
-		o.Value = nil
-		return nil
-	}
-	var value [][2]int
 	if err := json.Unmarshal(data, &value); err != nil {
 		return err
 	}

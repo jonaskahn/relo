@@ -173,7 +173,7 @@ type providerResponse struct {
 	Enabled             bool                   `json:"enabled"`
 	UseProxy            bool                   `json:"use_proxy"`
 	TimeoutSeconds      *int                   `json:"timeout_seconds"`
-	RetryBackoff        [][2]int               `json:"retry_backoff"`
+	RetryAttempts       *int                   `json:"retry_attempts"`
 	SwitchOn4xx         bool                   `json:"switch_on_4xx"`
 	SwitchOn5xx         bool                   `json:"switch_on_5xx"`
 	Rank                int                    `json:"rank"`
@@ -202,8 +202,8 @@ func toProviderResponse(provider appcatalog.Provider) providerResponse {
 		NeedsSetup: provider.NeedsSetup, Routable: provider.Routable,
 		UnroutableReason: provider.UnroutableReason, Enabled: provider.Enabled,
 		UseProxy: provider.UseProxy, TimeoutSeconds: provider.TimeoutSeconds,
-		RetryBackoff: provider.RetryBackoff,
-		SwitchOn4xx:  provider.SwitchOn4xx, SwitchOn5xx: provider.SwitchOn5xx,
+		RetryAttempts: provider.RetryAttempts,
+		SwitchOn4xx:   provider.SwitchOn4xx, SwitchOn5xx: provider.SwitchOn5xx,
 		Rank: provider.Rank, PoolStrategy: provider.PoolStrategy,
 		Configured:        provider.Configured,
 		LastRefreshedAtMs: provider.LastRefreshedAtMs,

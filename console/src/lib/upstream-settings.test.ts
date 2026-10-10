@@ -4,14 +4,12 @@ import {
 	CALL_WAIT_PRESETS,
 	DEFAULT_CALL_WAIT,
 	DEFAULT_FAILOVER_COOLDOWN,
-	DEFAULT_RETRY_BACKOFF,
+	DEFAULT_RETRY_ATTEMPTS,
 	FAILOVER_COOLDOWN_PRESETS,
+	RETRY_ATTEMPT_PRESETS,
 	callWaitLabel,
-	cloneWindows,
 	failoverCooldownLabel,
-	normalizeRetryBackoff,
-	retryBackoffLabel,
-	retryBackoffValid
+	retryAttemptsLabel
 } from './upstream-settings';
 
 describe('call wait labels', () => {
@@ -49,93 +47,15 @@ describe('failover cooldown labels', () => {
 	});
 });
 
-describe('retry backoff windows', () => {
-	it('labels three windows in order', () => {
-		expect(retryBackoffLabel(DEFAULT_RETRY_BACKOFF)).toBe('1–3s, 3–5s, 5–10s');
+describe('retry attempts', () => {
+	it('labels a count as its multiple', () => {
+		expect(retryAttemptsLabel(1)).toBe('1×');
+		expect(retryAttemptsLabel(3)).toBe('3×');
 	});
 
-	it('accepts three ordered ranges and rejects anything else', () => {
-		expect(retryBackoffValid(DEFAULT_RETRY_BACKOFF)).toBe(true);
-		expect(
-			retryBackoffValid([
-				[1, 3],
-				[3, 5]
-			])
-		).toBe(false);
-		expect(
-			retryBackoffValid([
-				[1, 3],
-				[5, 3],
-				[5, 10]
-			])
-		).toBe(false);
-		expect(
-			retryBackoffValid([
-				[0, 0],
-				[3, 5],
-				[5, 10]
-			])
-		).toBe(false);
-		expect(
-			retryBackoffValid([
-				[1, 3],
-				[3, 5],
-				[5, 601]
-			])
-		).toBe(false);
-	});
-
-	it('falls back to the shipped windows for a value the daemon cannot answer', () => {
-		expect(normalizeRetryBackoff(undefined)).toEqual(DEFAULT_RETRY_BACKOFF);
-		expect(normalizeRetryBackoff([])).toEqual(DEFAULT_RETRY_BACKOFF);
-		expect(
-			normalizeRetryBackoff([
-				[1, 2],
-				[3, 4],
-				[5, 6]
-			])
-		).toEqual([
-			[1, 2],
-			[3, 4],
-			[5, 6]
-		]);
-	});
-
-	it('falls back when one window is malformed', () => {
-		expect(normalizeRetryBackoff([[1, 2], [3, 4], [5]])).toEqual(DEFAULT_RETRY_BACKOFF);
-		expect(
-			normalizeRetryBackoff([
-				[1, 2],
-				[3, 4],
-				['a', 6]
-			])
-		).toEqual(DEFAULT_RETRY_BACKOFF);
-		expect(
-			normalizeRetryBackoff([
-				[1, 2],
-				[3, 4],
-				[-1, 6]
-			])
-		).toEqual(DEFAULT_RETRY_BACKOFF);
-		expect(
-			normalizeRetryBackoff([
-				[1, 2],
-				[3, 4],
-				[5, 5]
-			])
-		).toEqual(DEFAULT_RETRY_BACKOFF);
-		expect(
-			normalizeRetryBackoff([
-				[1, 2],
-				[3, 4],
-				[5, 601]
-			])
-		).toEqual(DEFAULT_RETRY_BACKOFF);
-	});
-
-	it('copies windows so a draft cannot change the source', () => {
-		const copied = cloneWindows(DEFAULT_RETRY_BACKOFF);
-		copied[0][0] = 99;
-		expect(DEFAULT_RETRY_BACKOFF[0][0]).toBe(1);
+	it('offers one, three, and five retries and ships three', () => {
+		expect(RETRY_ATTEMPT_PRESETS).toEqual([1, 3, 5]);
+		expect(RETRY_ATTEMPT_PRESETS).toContain(DEFAULT_RETRY_ATTEMPTS);
+		expect(DEFAULT_RETRY_ATTEMPTS).toBe(3);
 	});
 });

@@ -752,8 +752,6 @@
           "retryWaits": "Esperas entre tentativas",
           "retryWaitsHint": "Espera aleatória antes de cada tentativa. Não definido usa as janelas globais.",
           "retryUseGlobal": "Usar global ({value})",
-          "retryCustom": "Personalizado",
-          "retryInvalid": "Cada tentativa precisa de um mínimo abaixo do máximo, até 600 s.",
           "switchOn4xx": "Trocar em 4xx",
           "switchOn4xxHint": "Tenta outra conta desta conexão em um 4xx que o relay ainda não repete.",
           "switchOn5xx": "Trocar em 5xx",
@@ -1798,13 +1796,7 @@
       "retryLabel": "Esperas entre tentativas",
       "failoverLabel": "Failover wait",
       "failoverHint": "How long a refused account or route member stays out of rotation after a rate limit or server fault, and how the wait grows with each further failure. A success resets it. None starts with no wait: the first refusal is immediately reusable.",
-      "retryHint": "Espera aleatória antes de cada tentativa, em segundos. Um Retry-After mais longo do provedor vence.",
-      "retryFirst": "Primeira tentativa",
-      "retrySecond": "Segunda tentativa",
-      "retryThird": "Terceira tentativa",
-      "retryLow": "Mínimo",
-      "retryHigh": "Máximo",
-      "retryInvalid": "Cada tentativa precisa de um mínimo abaixo do máximo, até 600 s."
+      "retryHint": "Espera aleatória antes de cada tentativa, em segundos. Um Retry-After mais longo do provedor vence."
     }
   }
 }

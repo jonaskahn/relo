@@ -752,8 +752,6 @@
           "retryWaits": "Väntetider mellan försök",
           "retryWaitsHint": "Slumpmässig väntetid före varje försök. Oinställt använder de globala fönstren.",
           "retryUseGlobal": "Använd global ({value})",
-          "retryCustom": "Anpassad",
-          "retryInvalid": "Varje försök behöver ett minimum under maximumet, upp till 600 s.",
           "switchOn4xx": "Byt vid 4xx",
           "switchOn4xxHint": "Provar ett annat konto för den här anslutningen vid en 4xx som reläet inte redan gör om.",
           "switchOn5xx": "Byt vid 5xx",
@@ -1798,13 +1796,7 @@
       "retryLabel": "Väntetider mellan försök",
       "failoverLabel": "Failover wait",
       "failoverHint": "How long a refused account or route member stays out of rotation after a rate limit or server fault, and how the wait grows with each further failure. A success resets it. None starts with no wait: the first refusal is immediately reusable.",
-      "retryHint": "Slumpmässig väntetid före varje försök, i sekunder. En längre Retry-After från leverantören vinner.",
-      "retryFirst": "Första försöket",
-      "retrySecond": "Andra försöket",
-      "retryThird": "Tredje försöket",
-      "retryLow": "Minimum",
-      "retryHigh": "Maximum",
-      "retryInvalid": "Varje försök behöver ett minimum under maximumet, upp till 600 s."
+      "retryHint": "Slumpmässig väntetid före varje försök, i sekunder. En längre Retry-After från leverantören vinner."
     }
   }
 }

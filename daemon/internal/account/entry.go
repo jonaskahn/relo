@@ -55,6 +55,9 @@ type Selection struct {
 	// with nothing but the accounts the caller named answers with one of them
 	// rather than reporting that the provider has no account at all.
 	Exclude []string
+	// Prefer names the account a retry stays on. It is honoured while that
+	// account can still serve the model.
+	Prefer string
 	// Models names the identifiers a request may reach the model under — the
 	// catalog id, the upstream id, and the model a clone was copied from — so
 	// an account whose roster lists any of them is eligible.

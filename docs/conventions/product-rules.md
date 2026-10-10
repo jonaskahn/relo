@@ -1,6 +1,7 @@
 # Product Rules
 
-Rules about user-facing text, artwork, data sources, and settings.
+Rules about user-facing text, artwork, data sources, settings, and
+how a request reaches a provider.
 
 **Every user-facing string comes from a catalog.** Go text lives in
 `daemon/internal/i18n/catalogs/active.<tag>.toml` and is rendered through the injected
@@ -40,3 +41,26 @@ and one that answers with an empty list switches the former ids off rather than 
 startup setting, and `--home`, `--port`, and `--lang` override one for a single run. The
 environment carries `RELO_HOME` and credentials only, so a new setting is a TOML field
 with validation, never an environment variable.
+
+**Retries live inside a connection; failover moves between connections.** A refused
+account is retried `retry_attempts` times — 1, 3, or 5, stored globally with a
+per-connection override — with a random 1–3s wait between tries. Only when those are
+spent does the request reach the next account of the connection, and only when every
+account has answered does it leave the connection for the next route member. A route
+never retries a member of its own: one member is the connection's whole walk. A refusal
+that says something about the account or the model — a 401, a 403, a model the account
+may not use, or a status the connection's own switch made retryable — is not cured by
+asking the same account again, so it moves on at once.
+
+**The account and the member that served stay first.** A success pins its connection to
+that account and its route to that member, so the next request starts where the last one
+worked instead of rotating onto another. A conversation that named itself still wins over
+both, and a pool strategy the operator picked to spread load — round-robin, random — is
+left to spread it.
+
+**A connection that failed everywhere cools down.** When every account of a connection has
+failed one request, the connection waits out its next failover step before it is asked
+again; a route whose every member failed waits the same way. While it waits, the request
+is answered at once with 503 and a `Retry-After` naming when to come back, and a route
+skips the cooling connection for its next member. Both the pins and the cooldowns live in
+memory: a restart starts every connection available.

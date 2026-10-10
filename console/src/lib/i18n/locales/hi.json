@@ -752,8 +752,6 @@
           "retryWaits": "पुनः प्रयास अंतराल",
           "retryWaitsHint": "हर पुनः प्रयास से पहले यादृच्छिक प्रतीक्षा। अनसेट होने पर वैश्विक अंतराल उपयोग होते हैं।",
           "retryUseGlobal": "वैश्विक उपयोग करें ({value})",
-          "retryCustom": "कस्टम",
-          "retryInvalid": "हर पुनः प्रयास का न्यूनतम अधिकतम से कम होना चाहिए, अधिकतम 600 सेकंड।",
           "switchOn4xx": "4xx पर स्विच करें",
           "switchOn4xxHint": "जब रिले पहले से दोहराता न हो ऐसे 4xx पर इस कनेक्शन का दूसरा खाता आज़माता है।",
           "switchOn5xx": "5xx पर स्विच करें",
@@ -1798,13 +1796,7 @@
       "retryLabel": "पुनः प्रयास अंतराल",
       "failoverLabel": "Failover wait",
       "failoverHint": "How long a refused account or route member stays out of rotation after a rate limit or server fault, and how the wait grows with each further failure. A success resets it. None starts with no wait: the first refusal is immediately reusable.",
-      "retryHint": "हर पुनः प्रयास से पहले यादृच्छिक प्रतीक्षा, सेकंड में। प्रदाता का लंबा Retry-After प्राथमिकता लेता है।",
-      "retryFirst": "पहला पुनः प्रयास",
-      "retrySecond": "दूसरा पुनः प्रयास",
-      "retryThird": "तीसरा पुनः प्रयास",
-      "retryLow": "न्यूनतम",
-      "retryHigh": "अधिकतम",
-      "retryInvalid": "हर पुनः प्रयास का न्यूनतम अधिकतम से कम होना चाहिए, अधिकतम 600 सेकंड।"
+      "retryHint": "हर पुनः प्रयास से पहले यादृच्छिक प्रतीक्षा, सेकंड में। प्रदाता का लंबा Retry-After प्राथमिकता लेता है।"
     }
   }
 }

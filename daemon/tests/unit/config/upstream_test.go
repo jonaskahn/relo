@@ -28,21 +28,17 @@ func TestValidateUpstreamTimeoutAcceptsOnlyThePresets(t *testing.T) {
 	}
 }
 
-// TestValidateUpstreamRetryBackoffAcceptsThreeRanges pins the retry windows:
-// three ranges with 0 <= low < high, and a ceiling on a single wait.
-func TestValidateUpstreamRetryBackoffAcceptsThreeRanges(t *testing.T) {
-	if err := config.ValidateUpstreamRetryBackoff(config.DefaultUpstreamRetryBackoff()); err != nil {
-		t.Fatalf("the shipped windows are refused: %v", err)
+// TestValidateUpstreamRetryAttemptsAcceptsOnlyThePresets pins the retry
+// counts an operator may pick: 1, 3 or 5.
+func TestValidateUpstreamRetryAttemptsAcceptsOnlyThePresets(t *testing.T) {
+	for _, attempts := range config.RetryAttemptPresets() {
+		if err := config.ValidateUpstreamRetryAttempts(attempts); err != nil {
+			t.Errorf("preset %d is refused: %v", attempts, err)
+		}
 	}
-	for name, windows := range map[string][][2]int{
-		"two ranges":   {{1, 3}, {3, 5}},
-		"equal ends":   {{1, 3}, {3, 3}, {5, 10}},
-		"reversed":     {{1, 3}, {5, 3}, {5, 10}},
-		"negative low": {{-1, 3}, {3, 5}, {5, 10}},
-		"over ceiling": {{1, 3}, {3, 5}, {5, 601}},
-	} {
-		if err := config.ValidateUpstreamRetryBackoff(windows); !errors.Is(err, config.ErrInvalidUpstreamRetryBackoff) {
-			t.Errorf("%s: ValidateUpstreamRetryBackoff(%v) = %v, want ErrInvalidUpstreamRetryBackoff", name, windows, err)
+	for _, attempts := range []int{-1, 0, 2, 4, 6} {
+		if err := config.ValidateUpstreamRetryAttempts(attempts); !errors.Is(err, config.ErrInvalidUpstreamRetryAttempts) {
+			t.Errorf("ValidateUpstreamRetryAttempts(%d) = %v, want ErrInvalidUpstreamRetryAttempts", attempts, err)
 		}
 	}
 }
@@ -207,36 +203,36 @@ func TestReadUpstreamTimeoutDefaultsAndNormalizes(t *testing.T) {
 	}
 }
 
-// TestUpstreamRetryBackoffRoundTrip covers the three windows the console
-// stores: a missing file or key answers the default, a stored set replaces
-// it, and a retired set falls back to the default rather than breaking the
-// next request.
-func TestUpstreamRetryBackoffRoundTrip(t *testing.T) {
+// TestUpstreamRetryAttemptsRoundTrip covers the count the console stores: a
+// missing file or key answers the default, a stored count replaces it, and a
+// retired value falls back to the default rather than breaking the next
+// request.
+func TestUpstreamRetryAttemptsRoundTrip(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "config.toml")
-	window := [][2]int{{2, 4}, {4, 6}, {6, 8}}
-	if err := config.UpdateUpstreamRetryBackoff(path, window); err != nil {
-		t.Fatalf("UpdateUpstreamRetryBackoff() error = %v", err)
+	if stored, err := config.ReadUpstreamRetryAttempts(path); err != nil || stored != config.DefaultUpstreamRetryAttempts {
+		t.Fatalf("ReadUpstreamRetryAttempts(missing) = %v, %v, want the default", stored, err)
 	}
-	stored, err := config.ReadUpstreamRetryBackoff(path)
-	if err != nil || len(stored) != 3 || stored[0] != window[0] || stored[2] != window[2] {
-		t.Fatalf("ReadUpstreamRetryBackoff() = %v, %v, want the stored windows", stored, err)
+	if err := config.UpdateUpstreamRetryAttempts(path, 5); err != nil {
+		t.Fatalf("UpdateUpstreamRetryAttempts() error = %v", err)
+	}
+	stored, err := config.ReadUpstreamRetryAttempts(path)
+	if err != nil || stored != 5 {
+		t.Fatalf("ReadUpstreamRetryAttempts() = %v, %v, want the stored count", stored, err)
 	}
 	data, err := os.ReadFile(path)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if got := strings.Count(string(data), "retry_backoff"); got != 1 {
-		t.Fatalf("the file names retry_backoff %d times, want once:\n%s", got, data)
+	if got := strings.Count(string(data), "retry_attempts"); got != 1 {
+		t.Fatalf("the file names retry_attempts %d times, want once:\n%s", got, data)
 	}
 
 	retired := filepath.Join(t.TempDir(), "retired.toml")
-	if err := os.WriteFile(retired, []byte("[upstream]\nretry_backoff = [[1, 3], [3, 5]]\n"), 0o600); err != nil {
+	if err := os.WriteFile(retired, []byte("[upstream]\nretry_attempts = 2\nretry_backoff = [[1, 3], [3, 5]]\n"), 0o600); err != nil {
 		t.Fatal(err)
 	}
-	stored, err = config.ReadUpstreamRetryBackoff(retired)
-	if err != nil || len(stored) != len(config.DefaultUpstreamRetryBackoff()) ||
-		stored[0] != config.DefaultUpstreamRetryBackoff()[0] {
-		t.Fatalf("ReadUpstreamRetryBackoff(retired) = %v, %v, want the default", stored, err)
+	if stored, err = config.ReadUpstreamRetryAttempts(retired); err != nil || stored != config.DefaultUpstreamRetryAttempts {
+		t.Fatalf("ReadUpstreamRetryAttempts(retired) = %v, %v, want the default", stored, err)
 	}
 }
 
@@ -260,16 +256,16 @@ func TestUpdateUpstreamTimeoutRefusesAValueNothingUses(t *testing.T) {
 	}
 }
 
-// TestUpdateUpstreamRetryBackoffRefusesInvalidWindows keeps a window the
-// relay cannot draw from out of the startup file.
-func TestUpdateUpstreamRetryBackoffRefusesInvalidWindows(t *testing.T) {
+// TestUpdateUpstreamRetryAttemptsRefusesAnInvalidCount keeps a count nothing
+// offers out of the startup file.
+func TestUpdateUpstreamRetryAttemptsRefusesAnInvalidCount(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "config.toml")
 	original := "[server]\nport = 12345\n"
 	if err := os.WriteFile(path, []byte(original), 0o600); err != nil {
 		t.Fatal(err)
 	}
-	if err := config.UpdateUpstreamRetryBackoff(path, [][2]int{{1, 3}, {5, 3}, {5, 10}}); !errors.Is(err, config.ErrInvalidUpstreamRetryBackoff) {
-		t.Fatalf("UpdateUpstreamRetryBackoff() = %v, want ErrInvalidUpstreamRetryBackoff", err)
+	if err := config.UpdateUpstreamRetryAttempts(path, 4); !errors.Is(err, config.ErrInvalidUpstreamRetryAttempts) {
+		t.Fatalf("UpdateUpstreamRetryAttempts() = %v, want ErrInvalidUpstreamRetryAttempts", err)
 	}
 	data, err := os.ReadFile(path)
 	if err != nil {

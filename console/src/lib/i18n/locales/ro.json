@@ -752,8 +752,6 @@
           "retryWaits": "Pauze între încercări",
           "retryWaitsHint": "Pauză aleatorie înainte de fiecare încercare. Nesetat folosește ferestrele globale.",
           "retryUseGlobal": "Folosește global ({value})",
-          "retryCustom": "Personalizat",
-          "retryInvalid": "Fiecare încercare are nevoie de un minim sub maxim, până la 600 s.",
           "switchOn4xx": "Comută la 4xx",
           "switchOn4xxHint": "Încearcă alt cont al acestei conexiuni la un 4xx pe care relayul nu îl reîncearcă deja.",
           "switchOn5xx": "Comută la 5xx",
@@ -1798,13 +1796,7 @@
       "retryLabel": "Pauze între încercări",
       "failoverLabel": "Failover wait",
       "failoverHint": "How long a refused account or route member stays out of rotation after a rate limit or server fault, and how the wait grows with each further failure. A success resets it. None starts with no wait: the first refusal is immediately reusable.",
-      "retryHint": "Pauză aleatorie înainte de fiecare încercare, în secunde. Un Retry-After mai lung al furnizorului câștigă.",
-      "retryFirst": "Prima încercare",
-      "retrySecond": "A doua încercare",
-      "retryThird": "A treia încercare",
-      "retryLow": "Minim",
-      "retryHigh": "Maxim",
-      "retryInvalid": "Fiecare încercare are nevoie de un minim sub maxim, până la 600 s."
+      "retryHint": "Pauză aleatorie înainte de fiecare încercare, în secunde. Un Retry-After mai lung al furnizorului câștigă."
     }
   }
 }

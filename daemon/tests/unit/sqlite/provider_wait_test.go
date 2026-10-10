@@ -24,13 +24,14 @@ func TestProviderUpstreamWaitRoundTrip(t *testing.T) {
 	if err != nil {
 		t.Fatalf("GetProvider() error = %v", err)
 	}
-	if stored.TimeoutSeconds != nil || stored.RetryBackoff != nil {
+	if stored.TimeoutSeconds != nil || stored.RetryAttempts != nil {
 		t.Fatalf("stored = %+v, want unset overrides to read NULL", stored)
 	}
 
 	seconds := 30
 	row.TimeoutSeconds = &seconds
-	row.RetryBackoff = [][2]int{{2, 4}, {4, 6}, {6, 8}}
+	attempts := 5
+	row.RetryAttempts = &attempts
 	if err := repo.SaveProvider(ctx, row); err != nil {
 		t.Fatalf("SaveProvider(override) error = %v", err)
 	}
@@ -41,11 +42,11 @@ func TestProviderUpstreamWaitRoundTrip(t *testing.T) {
 	if stored.TimeoutSeconds == nil || *stored.TimeoutSeconds != 30 {
 		t.Fatalf("TimeoutSeconds = %v, want 30", stored.TimeoutSeconds)
 	}
-	if len(stored.RetryBackoff) != 3 || stored.RetryBackoff[0] != [2]int{2, 4} || stored.RetryBackoff[2] != [2]int{6, 8} {
-		t.Fatalf("RetryBackoff = %v, want the stored windows", stored.RetryBackoff)
+	if stored.RetryAttempts == nil || *stored.RetryAttempts != 5 {
+		t.Fatalf("RetryAttempts = %v, want 5", stored.RetryAttempts)
 	}
 
-	row.TimeoutSeconds, row.RetryBackoff = nil, nil
+	row.TimeoutSeconds, row.RetryAttempts = nil, nil
 	if err := repo.SaveProvider(ctx, row); err != nil {
 		t.Fatalf("SaveProvider(clear) error = %v", err)
 	}
@@ -53,7 +54,7 @@ func TestProviderUpstreamWaitRoundTrip(t *testing.T) {
 	if err != nil {
 		t.Fatalf("GetProvider(clear) error = %v", err)
 	}
-	if stored.TimeoutSeconds != nil || stored.RetryBackoff != nil {
+	if stored.TimeoutSeconds != nil || stored.RetryAttempts != nil {
 		t.Fatalf("stored = %+v, want the cleared overrides to read NULL again", stored)
 	}
 }

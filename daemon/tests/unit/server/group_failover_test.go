@@ -20,11 +20,11 @@ func thirdEntry() account.PoolEntry {
 	}
 }
 
-// TestRouteWalksEveryAccountBeforeTheNextMember pins the group budget: three
-// rate-limited accounts on the first member answer once each before the
-// request reaches the second member, which serves it. A repeated refusal
-// escalates the first member out, so the request after that starts on the
-// second member.
+// TestRouteWalksEveryAccountBeforeTheNextMember pins the walk: three
+// rate-limited accounts on the first member are each retried the full count
+// before the request reaches the second member, which serves it. The member
+// that served becomes the route's first choice, so the requests after it
+// start there instead of walking the refused connection again.
 func TestRouteWalksEveryAccountBeforeTheNextMember(t *testing.T) {
 	h := newHarness(t)
 	healthy := newUpstreamServer(t)
@@ -39,15 +39,15 @@ func TestRouteWalksEveryAccountBeforeTheNextMember(t *testing.T) {
 
 	body := `{"model":"reloc-combo","stream":true,"messages":[{"role":"user","content":"hi"}]}`
 
-	// The first request spends one send per account of the first member and
-	// then one on the second member, which answers it.
+	// The first request retries each account of the first member its full
+	// count and then one send on the second member, which answers it.
 	openBefore := h.upstream.requestCount()
 	first := h.dataPlane(http.MethodPost, "/v1/chat/completions", dataPlaneToken, strings.NewReader(body))
 	if first.Code != http.StatusOK {
 		t.Fatalf("first status = %d, body = %s", first.Code, first.Body.String())
 	}
-	if got := h.upstream.requestCount() - openBefore; got != 3 {
-		t.Fatalf("first member requests = %d, want every account once", got)
+	if got := h.upstream.requestCount() - openBefore; got != 12 {
+		t.Fatalf("first member requests = %d, want every account retried three times", got)
 	}
 	if healthy.requestCount() != 1 {
 		t.Fatalf("second member requests = %d, want the failover target to serve", healthy.requestCount())
@@ -56,21 +56,25 @@ func TestRouteWalksEveryAccountBeforeTheNextMember(t *testing.T) {
 		t.Fatalf("authorizations = %v, want every account of the first member asked", authorizations(h))
 	}
 
-	// The repeated refusal still starts on the first member, and the one
-	// after it finds every account cooling and starts on the second member.
+	// The member that served the first request is now the route's own first
+	// choice: the request after it starts there, and the refused connection
+	// is not walked again.
 	second := h.dataPlane(http.MethodPost, "/v1/chat/completions", dataPlaneToken, strings.NewReader(body))
 	if second.Code != http.StatusOK {
 		t.Fatalf("second status = %d, body = %s", second.Code, second.Body.String())
 	}
-	if got := h.upstream.requestCount() - openBefore; got != 6 {
-		t.Fatalf("first member requests after two rounds = %d, want each account asked twice", got)
+	if got := h.upstream.requestCount() - openBefore; got != 12 {
+		t.Fatalf("first member requests after two rounds = %d, want the served member to be tried first", got)
+	}
+	if healthy.requestCount() != 2 {
+		t.Fatalf("second member requests = %d, want the served member to answer the next request", healthy.requestCount())
 	}
 	third := h.dataPlane(http.MethodPost, "/v1/chat/completions", dataPlaneToken, strings.NewReader(body))
 	if third.Code != http.StatusOK {
 		t.Fatalf("third status = %d, body = %s", third.Code, third.Body.String())
 	}
-	if got := h.upstream.requestCount() - openBefore; got != 6 {
-		t.Fatalf("first member requests after the escalation = %d, want the cooling member skipped", got)
+	if got := h.upstream.requestCount() - openBefore; got != 12 {
+		t.Fatalf("first member requests after the sticky member = %d, want the refused connection left alone", got)
 	}
 	if healthy.requestCount() != 3 {
 		t.Fatalf("second member requests = %d, want one per request", healthy.requestCount())

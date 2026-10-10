@@ -91,17 +91,17 @@ type serverSettingsRequest struct {
 }
 
 type providersSettingsResponse struct {
-	CatalogURL              string   `json:"catalog_url"`
-	ProxyURL                string   `json:"proxy_url"`
-	TimeoutSeconds          int      `json:"timeout_seconds"`
-	RetryBackoff            [][2]int `json:"retry_backoff"`
-	FailoverCooldownSeconds int      `json:"failover_cooldown_seconds"`
+	CatalogURL              string `json:"catalog_url"`
+	ProxyURL                string `json:"proxy_url"`
+	TimeoutSeconds          int    `json:"timeout_seconds"`
+	RetryAttempts           int    `json:"retry_attempts"`
+	FailoverCooldownSeconds int    `json:"failover_cooldown_seconds"`
 }
 
 func toProvidersSettingsResponse(providers appsettings.ProvidersSettings) providersSettingsResponse {
 	return providersSettingsResponse{
 		CatalogURL: providers.CatalogURL, ProxyURL: providers.ProxyURL,
-		TimeoutSeconds: providers.TimeoutSeconds, RetryBackoff: providers.RetryBackoff,
+		TimeoutSeconds: providers.TimeoutSeconds, RetryAttempts: providers.RetryAttempts,
 		FailoverCooldownSeconds: providers.FailoverCooldownSeconds,
 	}
 }
@@ -109,17 +109,17 @@ func toProvidersSettingsResponse(providers appsettings.ProvidersSettings) provid
 func toProvidersSettings(request providersSettingsRequest) appsettings.ProvidersSettings {
 	return appsettings.ProvidersSettings{
 		CatalogURL: request.CatalogURL, ProxyURL: request.ProxyURL,
-		TimeoutSeconds: request.TimeoutSeconds, RetryBackoff: request.RetryBackoff,
+		TimeoutSeconds: request.TimeoutSeconds, RetryAttempts: request.RetryAttempts,
 		FailoverCooldownSeconds: request.FailoverCooldownSeconds,
 	}
 }
 
 type providersSettingsRequest struct {
-	CatalogURL              string   `json:"catalog_url"`
-	ProxyURL                string   `json:"proxy_url"`
-	TimeoutSeconds          int      `json:"timeout_seconds"`
-	RetryBackoff            [][2]int `json:"retry_backoff"`
-	FailoverCooldownSeconds int      `json:"failover_cooldown_seconds"`
+	CatalogURL              string `json:"catalog_url"`
+	ProxyURL                string `json:"proxy_url"`
+	TimeoutSeconds          int    `json:"timeout_seconds"`
+	RetryAttempts           int    `json:"retry_attempts"`
+	FailoverCooldownSeconds int    `json:"failover_cooldown_seconds"`
 }
 
 type accessSettingsResponse struct {

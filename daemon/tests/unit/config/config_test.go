@@ -150,7 +150,7 @@ func TestLoadConfigValidDefaults(t *testing.T) {
 			Catalog: config.CatalogConfig{ModelsDevURL: config.DefaultModelsDevURL},
 			Upstream: config.UpstreamConfig{
 				TimeoutSeconds: config.DefaultUpstreamTimeoutSeconds,
-				RetryBackoff:   config.DefaultUpstreamRetryBackoff(),
+				RetryAttempts:  config.DefaultUpstreamRetryAttempts,
 			},
 		}
 		if !sameConfig(*loaded, want) {
@@ -373,7 +373,7 @@ func sameConfig(got, want config.Config) bool {
 		return false
 	}
 	if got.Upstream.TimeoutSeconds != want.Upstream.TimeoutSeconds ||
-		!slices.Equal(got.Upstream.RetryBackoff, want.Upstream.RetryBackoff) {
+		got.Upstream.RetryAttempts != want.Upstream.RetryAttempts {
 		return false
 	}
 	if got.UI.Language != want.UI.Language || got.UI.Theme != want.UI.Theme || got.UI.Accent != want.UI.Accent {
@@ -723,10 +723,10 @@ func TestExampleConfig(t *testing.T) {
 // TestShippedDefaultsAreCopies covers the preset accessors with mutation
 // isolation: changing a returned slice never moves the shipped baseline.
 func TestShippedDefaultsAreCopies(t *testing.T) {
-	backoff := config.DefaultUpstreamRetryBackoff()
-	backoff[0][0] = 999
-	if again := config.DefaultUpstreamRetryBackoff(); again[0][0] == 999 {
-		t.Fatal("DefaultUpstreamRetryBackoff() shares its storage with callers")
+	attempts := config.RetryAttemptPresets()
+	attempts[0] = 999
+	if again := config.RetryAttemptPresets(); again[0] == 999 {
+		t.Fatal("RetryAttemptPresets() shares its storage with callers")
 	}
 	timeouts := config.UpstreamTimeoutPresets()
 	timeouts[0] = 999

@@ -77,9 +77,9 @@ type ProvidersSettings struct {
 	// the provider is done. Zero means the operator never picked one, which
 	// stores and reads as the default.
 	TimeoutSeconds int
-	// RetryBackoff is the wait before each retry as a low–high second range,
-	// in retry order.
-	RetryBackoff [][2]int
+	// RetryAttempts is how many times one account is retried after a
+	// retryable failure. Zero reads as the default.
+	RetryAttempts int
 	// FailoverCooldownSeconds is the first step of the wait ladder a refused
 	// account or route member walks: the next failure without a success
 	// between waits the next, longer preset. Zero starts with no wait at
@@ -245,7 +245,7 @@ func (s *Service) readUpstream(settings *Settings, file config.Config) error {
 	if err != nil {
 		return err
 	}
-	backoff, err := config.ReadUpstreamRetryBackoff(s.configPath)
+	attempts, err := config.ReadUpstreamRetryAttempts(s.configPath)
 	if err != nil {
 		return err
 	}
@@ -255,7 +255,7 @@ func (s *Service) readUpstream(settings *Settings, file config.Config) error {
 	}
 	settings.Providers = ProvidersSettings{
 		CatalogURL: file.Catalog.ModelsDevURL,
-		ProxyURL:   proxyURL, TimeoutSeconds: timeout, RetryBackoff: backoff,
+		ProxyURL:   proxyURL, TimeoutSeconds: timeout, RetryAttempts: attempts,
 		FailoverCooldownSeconds: cooldown,
 	}
 	return nil
@@ -300,10 +300,10 @@ func (s *Service) UpstreamTimeout() (int, error) {
 	return config.ReadUpstreamTimeout(s.configPath)
 }
 
-// UpstreamRetryBackoff returns the random wait before each retry, as
-// low–high second ranges, read from the startup file on every request.
-func (s *Service) UpstreamRetryBackoff() ([][2]int, error) {
-	return config.ReadUpstreamRetryBackoff(s.configPath)
+// UpstreamRetryAttempts returns how many times one account is retried, read
+// from the startup file on every request.
+func (s *Service) UpstreamRetryAttempts() (int, error) {
+	return config.ReadUpstreamRetryAttempts(s.configPath)
 }
 
 // AllowExternal reports whether the console may be reached through a
@@ -434,43 +434,43 @@ func (s *Service) SaveProviders(input ProvidersSettings) (ProvidersSettings, err
 	if err := config.ValidateProxyURL(proxyURL); err != nil {
 		return ProvidersSettings{}, fmt.Errorf("%w: %v", ErrInvalidWrite, err)
 	}
-	timeout, backoff, cooldown, err := validatedProviderWaits(input)
+	timeout, attempts, cooldown, err := validatedProviderWaits(input)
 	if err != nil {
 		return ProvidersSettings{}, err
 	}
-	if err := s.writeProviderConfig(input, proxyURL, timeout, backoff, cooldown); err != nil {
+	if err := s.writeProviderConfig(input, proxyURL, timeout, attempts, cooldown); err != nil {
 		return ProvidersSettings{}, err
 	}
 	return ProvidersSettings{
 		CatalogURL: strings.TrimSpace(input.CatalogURL), ProxyURL: proxyURL,
-		TimeoutSeconds: timeout, RetryBackoff: backoff,
+		TimeoutSeconds: timeout, RetryAttempts: attempts,
 		FailoverCooldownSeconds: cooldown,
 	}, nil
 }
 
-func validatedProviderWaits(input ProvidersSettings) (int, [][2]int, int, error) {
+func validatedProviderWaits(input ProvidersSettings) (int, int, int, error) {
 	timeout := input.TimeoutSeconds
 	if timeout == 0 {
 		timeout = config.DefaultUpstreamTimeoutSeconds
 	}
 	if err := config.ValidateUpstreamTimeout(timeout); err != nil {
-		return 0, nil, 0, fmt.Errorf("%w: %v", ErrInvalidWrite, err)
+		return 0, 0, 0, fmt.Errorf("%w: %v", ErrInvalidWrite, err)
 	}
-	backoff := input.RetryBackoff
-	if len(backoff) == 0 {
-		backoff = config.DefaultUpstreamRetryBackoff()
+	attempts := input.RetryAttempts
+	if attempts == 0 {
+		attempts = config.DefaultUpstreamRetryAttempts
 	}
-	if err := config.ValidateUpstreamRetryBackoff(backoff); err != nil {
-		return 0, nil, 0, fmt.Errorf("%w: %v", ErrInvalidWrite, err)
+	if err := config.ValidateUpstreamRetryAttempts(attempts); err != nil {
+		return 0, 0, 0, fmt.Errorf("%w: %v", ErrInvalidWrite, err)
 	}
 	cooldown := input.FailoverCooldownSeconds
 	if err := config.ValidateUpstreamFailoverCooldown(cooldown); err != nil {
-		return 0, nil, 0, fmt.Errorf("%w: %v", ErrInvalidWrite, err)
+		return 0, 0, 0, fmt.Errorf("%w: %v", ErrInvalidWrite, err)
 	}
-	return timeout, backoff, cooldown, nil
+	return timeout, attempts, cooldown, nil
 }
 
-func (s *Service) writeProviderConfig(input ProvidersSettings, proxyURL string, timeout int, backoff [][2]int, cooldown int) error {
+func (s *Service) writeProviderConfig(input ProvidersSettings, proxyURL string, timeout, attempts, cooldown int) error {
 	if err := config.UpdateProxyURL(s.configPath, proxyURL); err != nil {
 		return fmt.Errorf("%w: %v", ErrInvalidWrite, err)
 	}
@@ -483,7 +483,7 @@ func (s *Service) writeProviderConfig(input ProvidersSettings, proxyURL string, 
 	if err := config.UpdateUpstreamTimeout(s.configPath, timeout); err != nil {
 		return err
 	}
-	if err := config.UpdateUpstreamRetryBackoff(s.configPath, backoff); err != nil {
+	if err := config.UpdateUpstreamRetryAttempts(s.configPath, attempts); err != nil {
 		return err
 	}
 	return config.UpdateUpstreamFailoverCooldown(s.configPath, cooldown)

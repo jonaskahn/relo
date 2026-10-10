@@ -33,6 +33,11 @@ type attemptSpec struct {
 	outcome    *requestOutcome
 	host       catalog.Provider
 	authorized catalog.Authorization
+	// prefer is the account a retry stays on. hold reports a failure that
+	// another retry of this account follows, so the account is not held to
+	// account for it yet: a rate limit or server fault a retry may cure.
+	prefer string
+	hold   func(Result) bool
 }
 
 func (s *Server) attempt(w http.ResponseWriter, spec attemptSpec, tried map[string][]string, final bool) (Result, error) {
@@ -68,8 +73,11 @@ func (s *Server) reportAttemptAsync(spec attemptSpec, result Result) {
 	// those stores.
 	candidate, authorized := spec.candidate, spec.authorized
 	ctx := s.recordContext(spec.request.Context())
+	held := spec.hold != nil && spec.hold(result)
 	s.bookkeeping.enqueue(func() {
-		s.reportCredential(ctx, candidate, authorized, result)
+		if !held {
+			s.reportCredential(ctx, candidate, authorized, result)
+		}
 		s.learnModelAccess(ctx, candidate, authorized, result)
 		s.recordQuota(ctx, authorized.CredentialID, result.RateLimits)
 	})
@@ -89,7 +97,7 @@ func (s *Server) resolveAttemptCandidate(spec attemptSpec, tried map[string][]st
 		ProviderID: candidate.ProviderID, Auth: host.Auth,
 		Selection: account.Selection{
 			ConversationID: conversationOf(spec.request), Surface: string(outcome.kind),
-			RequestID: outcome.requestID, Exclude: tried[candidate.ProviderID],
+			RequestID: outcome.requestID, Exclude: tried[candidate.ProviderID], Prefer: spec.prefer,
 			Models: capabilityIDs(candidate.Model),
 		},
 	})
@@ -343,6 +351,13 @@ func capabilityIDs(model catalog.Model) []string {
 		}
 	}
 	return identifiers
+}
+
+// retryCurable reports a status a retry of the same account could turn into a
+// completion: a rate limit, a server fault, or an attempt that never reached
+// the upstream. A refusal about the account or the request is not one.
+func retryCurable(status int) bool {
+	return status == 0 || status == http.StatusTooManyRequests || status >= 500
 }
 
 func (s *Server) reportCredential(ctx context.Context, candidate routing.Candidate, authorized catalog.Authorization, result Result) {

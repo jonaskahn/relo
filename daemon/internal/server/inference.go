@@ -11,8 +11,10 @@ import (
 	mathrand "math/rand/v2"
 	"net/http"
 	"slices"
+	"strconv"
 	"time"
 
+	"github.com/jonaskahn/relo/internal/account"
 	"github.com/jonaskahn/relo/internal/activity"
 	"github.com/jonaskahn/relo/internal/adapters/wire"
 	"github.com/jonaskahn/relo/internal/catalog"
@@ -23,16 +25,20 @@ import (
 
 const (
 	requestIDBytes = 8
-	// maxAttempts floors how many sends one client request may cost, so a
-	// lone candidate still gets its full retry schedule.
+	// maxAttempts is how many sends a request with no pool to ask is costed
+	// at, which is the widest walk one member could take.
 	maxAttempts = 4
-	// maxRequestAttempts ceilings how many sends one request may cost when
-	// its route has several members with accounts of their own, so a long
-	// route still answers in a predictable time.
-	maxRequestAttempts = 8
-	// maxAccountsPerMember caps one member's share of the sends, so a
+	// maxRequestAttempts ceilings how many sends one request may cost: every
+	// account of every member, each with its retries. It keeps a long route
+	// answering in a predictable time.
+	maxRequestAttempts = 32
+	// maxAccountsPerMember caps one member's share of the accounts, so a
 	// connection with many accounts cannot consume the whole request.
-	maxAccountsPerMember  = 4
+	maxAccountsPerMember = 4
+	// retryWaitLow and retryWaitHigh bound the random wait before an account
+	// is retried.
+	retryWaitLow          = time.Second
+	retryWaitHigh         = 3 * time.Second
 	contextLimitTolerance = 2_560
 	// anthropicVersionHeader is the header an Anthropic client sends. It
 	// repeats the codec's constant so a server built without a format
@@ -179,16 +185,19 @@ func (s *Server) send(spec relaySpec, plan routing.Plan, outcome *requestOutcome
 }
 
 type sendDriver struct {
-	s              *Server
-	w              http.ResponseWriter
-	r              *http.Request
-	plan           routing.Plan
-	inbound        wire.InboundCodec
-	outcome        *requestOutcome
-	anthropic      bool
-	tried          map[string][]string
-	budget         int
-	attempts       int
+	s         *Server
+	w         http.ResponseWriter
+	r         *http.Request
+	plan      routing.Plan
+	inbound   wire.InboundCodec
+	outcome   *requestOutcome
+	anthropic bool
+	tried     map[string][]string
+	budget    int
+	attempts  int
+	// walked counts the members this request actually asked an account of.
+	walked         int
+	cooldown       *routing.CoolingError
 	last           error
 	upstreamStatus int
 }
@@ -206,6 +215,12 @@ type memberWalk struct {
 	pendingErr error
 	attempted  bool
 	marked     bool
+	// maxRetries is how many times one account of this member is retried.
+	maxRetries int
+	// account is the account being retried, and retries how many retries it
+	// has had since the request first reached it.
+	account string
+	retries int
 }
 
 func (d *sendDriver) run() {
@@ -213,6 +228,16 @@ func (d *sendDriver) run() {
 		if !d.runMember(candidate, index == len(d.plan.Candidates)-1) {
 			return
 		}
+	}
+	if d.walked == len(d.plan.Candidates) {
+		// Every member answered without serving the request, which is what a
+		// route remembers: the next request starts past the whole route.
+		d.s.opts.Router.MarkGroupFailed(d.plan)
+	}
+	if d.attempts == 0 && d.cooldown != nil {
+		d.s.failInference(d.w, d.r, d.cooldown, d.anthropic)
+		d.s.record(context.WithoutCancel(d.r.Context()), d.outcome, Result{Status: http.StatusServiceUnavailable})
+		return
 	}
 	if d.last == nil {
 		d.last = skipCause(d.plan)
@@ -222,15 +247,27 @@ func (d *sendDriver) run() {
 }
 
 func (d *sendDriver) runMember(candidate routing.Candidate, lastCandidate bool) bool {
-	allowance := d.s.candidateAllowance(candidate)
-	limit := maxAccountsPerMember
-	if lastCandidate {
-		// The last member spends whatever is left, which is how a lone
-		// candidate keeps its full retry schedule.
-		limit = d.budget - d.attempts
+	if until := d.s.connectionCooldown(candidate.ProviderID); !until.IsZero() {
+		// A connection that just failed every account is not asked again
+		// until its wait is over: the request goes to the next member.
+		cooling := &routing.CoolingError{
+			Name: candidate.ProviderID, Until: until,
+			Reason: account.CoolingDown(candidate.ProviderID, until),
+		}
+		if d.cooldown == nil || until.Before(d.cooldown.Until) {
+			d.cooldown = cooling
+		}
+		d.last = cooling
+		return true
 	}
-	walk := &memberWalk{}
-	for account := 0; account < limit && d.attempts < d.budget; account++ {
+	d.walked++
+	// One member may spend one attempt per account it can reach, plus the
+	// retries each of them is allowed. A member never spends more than that,
+	// however much of the request's budget is left.
+	allowance := d.s.candidateAllowance(candidate)
+	walk := &memberWalk{maxRetries: d.s.retryAttempts(candidate.ProviderID)}
+	limit := allowance * (1 + walk.maxRetries)
+	for step := 0; step < limit && d.attempts < d.budget; step++ {
 		action := d.stepAttempt(candidate, lastCandidate, allowance, walk)
 		if action == walkAnswered {
 			return false
@@ -252,7 +289,17 @@ func (d *sendDriver) stepAttempt(candidate routing.Candidate, lastCandidate bool
 	// gets a chance to serve the request.
 	final := d.attempts == d.budget-1
 	d.attempts++
-	result, err := d.s.attempt(d.w, attemptSpec{request: d.r, candidate: candidate, inbound: d.inbound, outcome: d.outcome}, d.tried, final)
+	spec := attemptSpec{
+		request: d.r, candidate: candidate, inbound: d.inbound, outcome: d.outcome,
+		// A retry stays on its account. A failure this account will be asked
+		// again for is held back from its health until the retries are spent,
+		// while a refusal a retry cannot cure is reported at once.
+		prefer: walk.account,
+		hold: func(result Result) bool {
+			return walk.retries < walk.maxRetries && retryCurable(result.Status)
+		},
+	}
+	result, err := d.s.attempt(d.w, spec, d.tried, final)
 	d.outcome.attempts = append(d.outcome.attempts, attemptRow{
 		providerID: candidate.ProviderID, modelID: candidate.ModelID,
 		credential: result.Credential, credentialID: result.CredentialID,
@@ -265,26 +312,61 @@ func (d *sendDriver) stepAttempt(candidate routing.Candidate, lastCandidate bool
 		d.s.opts.Router.Record(candidate, result.HeaderLatency)
 		d.s.opts.Router.Pin(conversationOf(d.r), routing.PinPrefix(d.plan), candidate)
 		d.s.opts.Router.MarkSucceeded(candidate)
+		d.s.opts.Router.MarkGroupSucceeded(d.plan, candidate)
+		d.s.markConnectionServed(candidate.ProviderID, result.CredentialID)
 		d.s.record(context.WithoutCancel(d.r.Context()), d.outcome, result)
 		return walkAnswered
 	}
-	return d.handleAttemptFailure(candidate, lastCandidate, allowance, walk, result, err)
+	return d.handleAttemptFailure(failedAttempt{
+		candidate: candidate, lastCandidate: lastCandidate, allowance: allowance, walk: walk, result: result,
+	}, err)
 }
 
-func (d *sendDriver) handleAttemptFailure(candidate routing.Candidate, lastCandidate bool, allowance int, walk *memberWalk, result Result, err error) walkAction {
+// failedAttempt is one refused attempt and where it sits in the walk, which is
+// what decides whether its account is asked again or the request moves on.
+type failedAttempt struct {
+	candidate     routing.Candidate
+	lastCandidate bool
+	allowance     int
+	walk          *memberWalk
+	result        Result
+}
+
+func (d *sendDriver) handleAttemptFailure(failed failedAttempt, err error) walkAction {
 	d.last = err
-	if !result.Retryable {
-		return d.answerUnretryable(walk, result)
+	if !failed.result.Retryable {
+		d.recordSpentAccount(failed.candidate, failed.allowance, failed.result)
+		return d.answerUnretryable(failed)
 	}
+	walk, result := failed.walk, failed.result
 	walk.pending, walk.pendingErr, walk.attempted = result, err, true
-	if !d.s.waitBeforeRetry(d.r.Context(), d.s.retryWindows(candidate.ProviderID), d.attempts-1, result.RetryAfter) {
-		d.s.record(context.WithoutCancel(d.r.Context()), d.outcome, result)
-		return walkAnswered
+	if d.retriesAccount(walk, result) {
+		if !d.s.waitBeforeRetry(d.r.Context(), walk.retries, result.RetryAfter) {
+			d.s.record(context.WithoutCancel(d.r.Context()), d.outcome, result)
+			return walkAnswered
+		}
+		walk.retries++
+		return walkContinue
 	}
-	return d.routeRetryableFailure(candidate, lastCandidate, allowance, walk, result)
+	return d.leaveAccount(failed)
 }
 
-func (d *sendDriver) answerUnretryable(walk *memberWalk, result Result) walkAction {
+// retriesAccount reports whether the failed account is asked again. A failure
+// that says something about the account or the model, or that the connection's
+// policy made retryable, is not cured by asking the same account again.
+func (d *sendDriver) retriesAccount(walk *memberWalk, result Result) bool {
+	credential := credentialKeyOf(result)
+	if credential == "" || result.ClassSwitch || sameProviderRetry(result) && result.Status != http.StatusTooManyRequests {
+		return false
+	}
+	if walk.account != credential {
+		walk.account, walk.retries = credential, 0
+	}
+	return walk.retries < walk.maxRetries
+}
+
+func (d *sendDriver) answerUnretryable(failed failedAttempt) walkAction {
+	walk, result := failed.walk, failed.result
 	// An attempt that never reached the upstream has no failure
 	// of its own: when an earlier attempt did, the client reads
 	// that failure instead of the selection error. A retry that
@@ -299,90 +381,83 @@ func (d *sendDriver) answerUnretryable(walk *memberWalk, result Result) walkActi
 	return walkAnswered
 }
 
-func (d *sendDriver) routeRetryableFailure(candidate routing.Candidate, lastCandidate bool, allowance int, walk *memberWalk, result Result) walkAction {
-	if result.ClassSwitch {
-		return d.handleClassSwitch(candidate, lastCandidate, walk, result)
-	}
-	if sameProviderRetry(result) {
-		return d.handleSameProviderRetry(candidate, lastCandidate, allowance, walk, result)
-	}
-	return d.handleMemberFallback(candidate, lastCandidate, allowance, walk, result)
-}
-
-func (d *sendDriver) handleMemberFallback(candidate routing.Candidate, lastCandidate bool, allowance int, walk *memberWalk, result Result) walkAction {
-	d.s.opts.Router.Unpin(conversationOf(d.r), routing.PinPrefix(d.plan))
-	if lastCandidate {
-		// The last member answers once every account it could serve
-		// has answered, the way the same-provider path does: asking
-		// a tried account again only walks it further down its
-		// denylist.
-		credential := credentialKeyOf(result)
-		if !slices.Contains(d.tried[candidate.ProviderID], credential) {
-			d.tried[candidate.ProviderID] = append(d.tried[candidate.ProviderID], credential)
-		}
-		if len(d.tried[candidate.ProviderID]) >= allowance {
-			d.s.answerFailed(d, d.outcome, result, d.last)
-			return walkAnswered
-		}
-		return walkContinue
-	}
-	d.s.markCandidateFailed(candidate, result)
-	walk.marked = true
-	return walkNextMember
-}
-
-func (d *sendDriver) handleClassSwitch(candidate routing.Candidate, lastCandidate bool, walk *memberWalk, result Result) walkAction {
-	// A status the operator asked Relo to switch on reaches another
-	// account of the same connection first: every account answers once,
-	// and the request leaves the connection only when none of them can
-	// serve it.
+// leaveAccount moves on from an account that failed its retries: to the next
+// account of the connection, and once every account has answered, to the next
+// member. The last member answers the failure itself.
+func (d *sendDriver) leaveAccount(failed failedAttempt) walkAction {
+	candidate, allowance, walk, result := failed.candidate, failed.allowance, failed.walk, failed.result
 	credential := credentialKeyOf(result)
 	if !slices.Contains(d.tried[candidate.ProviderID], credential) {
 		d.tried[candidate.ProviderID] = append(d.tried[candidate.ProviderID], credential)
+	}
+	walk.account, walk.retries = "", 0
+	if len(d.tried[candidate.ProviderID]) < allowance {
 		return walkContinue
 	}
-	if lastCandidate || !memberSwitchAllowed(d.plan, result) {
-		d.s.markCandidateFailed(candidate, result)
+	if connectionSpent(result) {
+		d.s.markConnectionExhausted(candidate.ProviderID, result.RetryAfter)
+	}
+	d.s.markCandidateFailed(candidate, result)
+	if failed.lastCandidate || !memberSwitchAllowed(d.plan, result) {
 		d.s.answerFailed(d, d.outcome, result, d.last)
 		return walkAnswered
 	}
 	d.s.opts.Router.Unpin(conversationOf(d.r), routing.PinPrefix(d.plan))
-	d.s.markCandidateFailed(candidate, result)
 	walk.marked = true
 	return walkNextMember
 }
 
-func (d *sendDriver) handleSameProviderRetry(candidate routing.Candidate, lastCandidate bool, allowance int, walk *memberWalk, result Result) walkAction {
+// recordSpentAccount records an account whose answer this request cannot
+// retry, which is the last attempt it may spend. Without it a request that
+// ends on the final attempt would never tell the connection that every
+// account of it failed, and the connection would keep being walked.
+func (d *sendDriver) recordSpentAccount(candidate routing.Candidate, allowance int, result Result) {
 	credential := credentialKeyOf(result)
+	if credential == "" || !connectionSpent(result) {
+		return
+	}
 	if !slices.Contains(d.tried[candidate.ProviderID], credential) {
 		d.tried[candidate.ProviderID] = append(d.tried[candidate.ProviderID], credential)
 	}
-	// Every account that could serve this member has answered:
-	// the next member gets the send instead of one that just
-	// failed again, and the last member answers the failure
-	// instead of asking a tried account again. A second refusal
-	// only walks the same account further down its denylist, so
-	// the request after this one would meet the cooldown rather
-	// than the account.
-	if len(d.tried[candidate.ProviderID]) >= allowance {
-		if lastCandidate {
-			d.s.answerFailed(d, d.outcome, result, d.last)
-			return walkAnswered
-		}
-		d.s.opts.Router.Unpin(conversationOf(d.r), routing.PinPrefix(d.plan))
-		d.s.markCandidateFailed(candidate, result)
-		walk.marked = true
-		return walkNextMember
+	if len(d.tried[candidate.ProviderID]) < allowance {
+		return
 	}
-	return walkContinue
+	d.s.markConnectionExhausted(candidate.ProviderID, result.RetryAfter)
+	d.s.markCandidateFailed(candidate, result)
+}
+
+// connectionSpent reports a failure that means the connection cannot serve
+// right now: a rate limit or a server fault. A refusal about the request or
+// the model says nothing about the connection, so it never parks it.
+func connectionSpent(result Result) bool {
+	return result.Status == 429 || result.Status >= 500
+}
+
+func (s *Server) connectionCooldown(providerID string) time.Time {
+	if s.opts.Pools == nil {
+		return time.Time{}
+	}
+	return s.opts.Pools.ConnectionCooldownUntil(providerID)
+}
+
+func (s *Server) markConnectionServed(providerID, credentialID string) {
+	if s.opts.Pools != nil && credentialID != "" {
+		s.opts.Pools.MarkServed(providerID, credentialID)
+	}
+}
+
+func (s *Server) markConnectionExhausted(providerID string, retryAfter time.Duration) {
+	if s.opts.Pools != nil {
+		s.opts.Pools.MarkExhausted(providerID, retryAfter)
+	}
 }
 
 func (s *Server) sendBudget(plan routing.Plan) int {
 	total := 0
 	for _, candidate := range plan.Candidates {
-		total += s.candidateAllowance(candidate)
+		total += s.candidateAllowance(candidate) * (1 + s.retryAttempts(candidate.ProviderID))
 	}
-	return min(max(total, maxAttempts), maxRequestAttempts)
+	return min(max(total, 1), maxRequestAttempts)
 }
 
 func (s *Server) candidateAllowance(candidate routing.Candidate) int {
@@ -391,19 +466,6 @@ func (s *Server) candidateAllowance(candidate routing.Candidate) int {
 	}
 	serving, _ := s.opts.Pools.Coverage(candidate.ProviderID, capabilityIDs(candidate.Model))
 	return min(max(serving, 1), maxAccountsPerMember)
-}
-
-func retryDelay(windows [][2]int, retry int) time.Duration {
-	if retry < 0 || retry >= len(windows) {
-		return 0
-	}
-	window := windows[retry]
-	low := time.Duration(window[0]) * time.Second
-	high := time.Duration(window[1]) * time.Second
-	if high <= low {
-		return low
-	}
-	return randomDelay(low, high)
 }
 
 func (s *Server) applyFailoverBackoff(seconds int) {
@@ -419,10 +481,10 @@ func (s *Server) applyFailoverBackoff(seconds int) {
 	}
 }
 
-func (s *Server) retryWindows(providerID string) [][2]int {
-	global := append([][2]int(nil), config.DefaultUpstreamRetryBackoff()...)
+func (s *Server) retryAttempts(providerID string) int {
+	global := config.DefaultUpstreamRetryAttempts
 	if s.opts.Settings != nil {
-		if stored, err := s.opts.Settings.UpstreamRetryBackoff(); err == nil && len(stored) > 0 {
+		if stored, err := s.opts.Settings.UpstreamRetryAttempts(); err == nil {
 			global = stored
 		}
 	}
@@ -437,12 +499,12 @@ func (s *Server) retryWindows(providerID string) [][2]int {
 	if !ok {
 		return global
 	}
-	return retryWindowsFor(host, global)
+	return retryAttemptsFor(host, global)
 }
 
-func retryWindowsFor(host catalog.Provider, global [][2]int) [][2]int {
-	if len(host.RetryBackoff) > 0 {
-		return host.RetryBackoff
+func retryAttemptsFor(host catalog.Provider, global int) int {
+	if host.RetryAttempts != nil {
+		return *host.RetryAttempts
 	}
 	return global
 }
@@ -451,8 +513,8 @@ func randomDelay(low, high time.Duration) time.Duration {
 	return low + time.Duration(mathrand.Int64N(int64(high-low)))
 }
 
-func (s *Server) waitBeforeRetry(ctx context.Context, windows [][2]int, retry int, retryAfter time.Duration) bool {
-	delay := retryDelay(windows, retry)
+func (s *Server) waitBeforeRetry(ctx context.Context, retry int, retryAfter time.Duration) bool {
+	delay := randomDelay(retryWaitLow, retryWaitHigh)
 	if s.opts.RetryDelay != nil {
 		delay = s.opts.RetryDelay(retry)
 	}
@@ -553,6 +615,10 @@ func credentialKeyOf(result Result) string {
 
 func (s *Server) failInference(w http.ResponseWriter, r *http.Request, cause error, anthropic bool) {
 	status := failureStatus(cause)
+	var cooling *routing.CoolingError
+	if errors.As(cause, &cooling) {
+		w.Header().Set("Retry-After", strconv.Itoa(max(1, int(time.Until(cooling.Until).Seconds()+0.5))))
+	}
 	if anthropic {
 		s.writeAnthropicError(w, status, cause.Error())
 		return

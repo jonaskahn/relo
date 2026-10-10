@@ -23,23 +23,24 @@ func TestFailoverSkipsRefusedMembers(t *testing.T) {
 	}
 
 	failover.MarkFailed("openai alpha")
-	if kept := failover.Filter(members); len(kept) != 1 || kept[0].ModelID != "beta" {
+	if kept := keptOf(failover, members); len(kept) != 1 || kept[0].ModelID != "beta" {
 		t.Fatalf("Filter() = %v, want only beta", kept)
 	}
 
 	failover.MarkSucceeded("openai alpha")
-	if kept := failover.Filter(members); len(kept) != 2 {
+	if kept := keptOf(failover, members); len(kept) != 2 {
 		t.Fatalf("Filter() = %v, want both members after a success", kept)
 	}
 
 	failover.MarkFailed("openai alpha")
 	failover.MarkFailed("openai beta")
-	if kept := failover.Filter(members); len(kept) != 2 {
-		t.Fatalf("Filter() = %v, want every member when all are refused", kept)
+	kept, until := failover.Filter(members)
+	if len(kept) != 0 || until.IsZero() {
+		t.Fatalf("Filter() = %v, %v, want no member and the moment one returns when all are refused", kept, until)
 	}
 
 	clock.Add(16 * time.Minute)
-	if kept := failover.Filter(members); len(kept) != 2 {
+	if kept := keptOf(failover, members); len(kept) != 2 {
 		t.Fatalf("Filter() = %v, want the wait to expire", kept)
 	}
 }
@@ -56,17 +57,17 @@ func TestDisabledFailoverKeepsEveryMember(t *testing.T) {
 
 	withoutDenylist := routing.NewFailover(clock, nil)
 	withoutDenylist.MarkFailed("openai alpha")
-	if kept := withoutDenylist.Filter(members); len(kept) != 2 {
+	if kept := keptOf(withoutDenylist, members); len(kept) != 2 {
 		t.Fatalf("Filter() = %v, want both members without a denylist", kept)
 	}
 
 	waiting := routing.NewFailover(clock, []time.Duration{15 * time.Minute})
 	waiting.MarkFailed("openai alpha")
-	if kept := waiting.Filter(members); len(kept) != 1 {
+	if kept := keptOf(waiting, members); len(kept) != 1 {
 		t.Fatalf("Filter() = %v, want only beta while the wait runs", kept)
 	}
 	waiting.SetBackoff(nil)
-	if kept := waiting.Filter(members); len(kept) != 2 {
+	if kept := keptOf(waiting, members); len(kept) != 2 {
 		t.Fatalf("Filter() = %v, want the waiting member back at once", kept)
 	}
 }
@@ -83,26 +84,26 @@ func TestFailoverEscalatesRepeatedFailures(t *testing.T) {
 	}
 
 	failover.MarkFailed("openai alpha")
-	if kept := failover.Filter(members); len(kept) != 2 {
+	if kept := keptOf(failover, members); len(kept) != 2 {
 		t.Fatalf("Filter() = %v, want the first step to keep the member", kept)
 	}
 	failover.MarkFailed("openai alpha")
 	clock.Add(3*time.Minute - time.Second)
-	if kept := failover.Filter(members); len(kept) != 1 || kept[0].ModelID != "beta" {
+	if kept := keptOf(failover, members); len(kept) != 1 || kept[0].ModelID != "beta" {
 		t.Fatalf("Filter() = %v, want only beta during the three-minute step", kept)
 	}
 	clock.Add(2 * time.Second)
-	if kept := failover.Filter(members); len(kept) != 2 {
+	if kept := keptOf(failover, members); len(kept) != 2 {
 		t.Fatalf("Filter() = %v, want the three-minute step to expire", kept)
 	}
 	failover.MarkFailed("openai alpha")
 	clock.Add(5*time.Minute - time.Second)
-	if kept := failover.Filter(members); len(kept) != 1 {
+	if kept := keptOf(failover, members); len(kept) != 1 {
 		t.Fatalf("Filter() = %v, want the third failure to wait its five-minute step", kept)
 	}
 	failover.MarkSucceeded("openai alpha")
 	failover.MarkFailed("openai alpha")
-	if kept := failover.Filter(members); len(kept) != 2 {
+	if kept := keptOf(failover, members); len(kept) != 2 {
 		t.Fatalf("Filter() = %v, want a success to reset the ladder", kept)
 	}
 }
@@ -160,4 +161,9 @@ func TestPlanSkipsARefusedMember(t *testing.T) {
 	if len(third.Candidates) != 2 {
 		t.Fatalf("recovered plan = %v, want both members", third.Candidates)
 	}
+}
+
+func keptOf(failover *routing.Failover, members []routing.Candidate) []routing.Candidate {
+	kept, _ := failover.Filter(members)
+	return kept
 }
