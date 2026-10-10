@@ -220,6 +220,120 @@ func antigravityFlow(server *provider, options ...oauth.Option) oauth.OAuthFlow 
 	return oauth.NewGoogleAntigravityFlow(append(settings, options...)...)
 }
 
+// TestAntigravityOnboardingEdges covers the ways an onboarding operation can
+// fall short of naming a project. Each one has to end the sign-in with a named
+// failure rather than hanging or claiming a project it never produced.
+func TestAntigravityOnboardingEdges(t *testing.T) {
+	onboard := func(t *testing.T, clock *testkit.FakeClock, start, operation http.HandlerFunc) error {
+		t.Helper()
+		server, _ := newProvider(t)
+		server.handle("/token", jsonHandler(`{"access_token":"a","refresh_token":"r","expires_in":3600}`))
+		server.handle("/v1internal:loadCodeAssist", jsonHandler(`{}`))
+		server.handle("/v1internal:onboardUser", start)
+		server.handle("/v1internal/operations/onboard-1", operation)
+		var loginErr error
+		runWithClock(t, clock, time.Second, func() error {
+			_, err := antigravityFlow(server, oauth.WithClock(clock)).Login(context.Background(), oauth.LoginOpts{
+				ManualCode: func(oauth.AuthPrompt) (string, error) { return "code", nil },
+				NoBrowser:  true, Timeout: time.Minute,
+			})
+			loginErr = err
+			return nil
+		})
+		return loginErr
+	}
+
+	t.Run("an onboarding that starts an operation already carrying its project needs no poll", func(t *testing.T) {
+		clock := testkit.NewFakeClock(time.Now())
+		server, recorder := newProvider(t)
+		server.handle("/token", jsonHandler(`{"access_token":"a","refresh_token":"r","expires_in":3600}`))
+		server.handle("/v1internal:loadCodeAssist", jsonHandler(`{}`))
+		server.handle("/v1internal:onboardUser", jsonHandler(
+			`{"name":"operations/onboard-1","done":true,"response":{"cloudaicompanionProject":"project-9"}}`))
+		_, credential := loginManual(t, antigravityFlow(server, oauth.WithClock(clock)), "code")
+		if credential.Extra[oauth.ExtraProjectID] != "project-9" {
+			t.Fatalf("credential = %+v, want the project the operation already carried", credential)
+		}
+		if recorder.count("/v1internal/operations/onboard-1") != 0 {
+			t.Fatalf("operation polls = %d, want none for an operation that was already done", recorder.count("/v1internal/operations/onboard-1"))
+		}
+	})
+
+	t.Run("an onboarding that names no operation fails the sign-in", func(t *testing.T) {
+		err := onboard(t, testkit.NewFakeClock(time.Now()),
+			jsonHandler(`{"done":false}`), jsonHandler(`{}`))
+		if !errors.Is(err, oauth.ErrOnboardingFailed) {
+			t.Fatalf("Login() error = %v, want %v", err, oauth.ErrOnboardingFailed)
+		}
+		if !strings.Contains(err.Error(), "operations answered") {
+			t.Fatalf("error = %q, want it to name the operation stage", err)
+		}
+	})
+
+	t.Run("an operation that finishes without a project fails the sign-in", func(t *testing.T) {
+		err := onboard(t, testkit.NewFakeClock(time.Now()),
+			jsonHandler(`{"name":"operations/onboard-1","done":false}`),
+			jsonHandler(`{"done":true,"response":{}}`))
+		if !errors.Is(err, oauth.ErrOnboardingFailed) {
+			t.Fatalf("Login() error = %v, want %v", err, oauth.ErrOnboardingFailed)
+		}
+	})
+
+	t.Run("an operation that never reports done gives up on the clock", func(t *testing.T) {
+		clock := testkit.NewFakeClock(time.Now())
+		err := onboard(t, clock,
+			jsonHandler(`{"name":"operations/onboard-1","done":false}`),
+			jsonHandler(`{"done":false}`))
+		if !errors.Is(err, oauth.ErrOnboardingFailed) {
+			t.Fatalf("Login() error = %v, want %v", err, oauth.ErrOnboardingFailed)
+		}
+		if !strings.Contains(err.Error(), "never reported done") {
+			t.Fatalf("error = %q, want it to say the operation never finished", err)
+		}
+	})
+
+	t.Run("an operation that answers with an unreadable body fails the sign-in", func(t *testing.T) {
+		err := onboard(t, testkit.NewFakeClock(time.Now()),
+			jsonHandler(`{"name":"operations/onboard-1","done":false}`),
+			jsonHandler(`not json`))
+		if !errors.Is(err, oauth.ErrOnboardingFailed) {
+			t.Fatalf("Login() error = %v, want %v", err, oauth.ErrOnboardingFailed)
+		}
+	})
+}
+
+// TestAntigravityRefreshSurvivesAFailedLookup covers the refresh path's
+// best-effort project fill-in: a lookup that cannot answer must not retire the
+// account, because a refreshed access token stays usable without the project
+// and the request path reports the missing project on its own.
+func TestAntigravityRefreshSurvivesAFailedLookup(t *testing.T) {
+	t.Run("a lookup that names no project keeps the refreshed token", func(t *testing.T) {
+		server, _ := newProvider(t)
+		server.handle("/token", jsonHandler(`{"access_token":"fresh-access","expires_in":3600}`))
+		server.handle("/v1internal:loadCodeAssist", jsonHandler(`{}`))
+		refreshed, err := antigravityFlow(server).Refresh(context.Background(), &oauth.OAuthCredential{
+			AccessToken: "stale", RefreshToken: "antigravity-refresh",
+		})
+		if err != nil {
+			t.Fatalf("Refresh() error = %v, want the refresh to survive the lookup", err)
+		}
+		if refreshed.AccessToken != "fresh-access" {
+			t.Fatalf("credential = %+v, want the fresh access token", refreshed)
+		}
+		if refreshed.Extra[oauth.ExtraProjectID] != "" {
+			t.Fatalf("credential = %+v, want no project invented from an empty answer", refreshed)
+		}
+	})
+
+	t.Run("a credential with no refresh token is refused", func(t *testing.T) {
+		server, _ := newProvider(t)
+		_, err := antigravityFlow(server).Refresh(context.Background(), &oauth.OAuthCredential{AccessToken: "stale"})
+		if !errors.Is(err, oauth.ErrNoRefreshToken) {
+			t.Fatalf("Refresh() error = %v, want %v", err, oauth.ErrNoRefreshToken)
+		}
+	})
+}
+
 // nestedField reads one string out of a nested JSON request body.
 func nestedField(t *testing.T, body string, path ...string) string {
 	t.Helper()

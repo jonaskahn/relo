@@ -206,7 +206,7 @@ func startAntigravityOnboarding(ctx context.Context, settings Options, client to
 	if status < 200 || status >= 300 {
 		return operationPoll{}, fmt.Errorf("%w: %v", ErrOnboardingFailed, antigravityOnboardAnswer(body, status))
 	}
-	if project, done := onboardOperation(body, status); done {
+	if project, done := onboardOperation(body); done {
 		// An operation that carries its project is already finished, so it
 		// needs no polling at all.
 		return operationPoll{project: project, token: accessToken}, nil
@@ -232,11 +232,8 @@ func (o operationPoll) endpoint(settings Options) string {
 }
 
 func antigravityOnboardAnswer(body []byte, status int) antigravityAnswer {
-	if status < 200 || status >= 300 {
-		code, detail := antigravity.Refusal(body)
-		return antigravityAnswer{stage: "onboardUser", status: status, code: code, detail: detail}
-	}
-	return antigravityAnswer{stage: "onboardUser", status: status, detail: "the answer named no operation"}
+	code, detail := antigravity.Refusal(body)
+	return antigravityAnswer{stage: "onboardUser", status: status, code: code, detail: detail}
 }
 
 func awaitAntigravityOnboarding(ctx context.Context, settings Options, client tokenClient, operation operationPoll) (string, error) {
@@ -249,7 +246,7 @@ func awaitAntigravityOnboarding(ctx context.Context, settings Options, client to
 		if err != nil {
 			return "", fmt.Errorf("read the onboarding operation: %w", err)
 		}
-		project, done := onboardOperation(body, status)
+		project, done := onboardOperation(body)
 		if done {
 			return project, nil
 		}
@@ -265,13 +262,10 @@ func awaitAntigravityOnboarding(ctx context.Context, settings Options, client to
 }
 
 // onboardOperation reads the operation an onboarding names: the project once it
-// is finished, and whether that is so. An operation that finishes without a
-// project is reported as finished with none, so the caller refuses it rather
-// than polling for a project that is never coming.
-func onboardOperation(body []byte, status int) (project string, done bool) {
-	if status < 200 || status >= 300 {
-		return "", true
-	}
+// is finished, and whether that is so. Only a successful answer reaches it; an
+// operation that finishes without a project is reported as finished with none,
+// so the caller refuses it rather than polling for a project never coming.
+func onboardOperation(body []byte) (project string, done bool) {
 	operation := struct {
 		Done     bool            `json:"done"`
 		Response json.RawMessage `json:"response"`
