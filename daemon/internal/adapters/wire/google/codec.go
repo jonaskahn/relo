@@ -124,10 +124,10 @@ func (c *Codec) prepareGoogleRequest(request *http.Request, mode Mode, req *infe
 		request.Header.Set(name, value)
 	}
 	if mode == ModeCloudCodeAssist {
-		// The connection template still carries the IDE fingerprint used for
-		// listing. Chat replaces it with the CLI fingerprint, and leaves the
-		// body length unset so the transport writes a chunked body.
-		request.Header.Set("User-Agent", antigravity.CLIUserAgent())
+		// The connection template fixes its User-Agent when it is built, so chat
+		// sends the current one, and leaves the body length unset so the
+		// transport writes a chunked body.
+		request.Header.Set("User-Agent", antigravity.UserAgent())
 		request.Header.Set("Accept-Encoding", "gzip")
 		request.ContentLength = -1
 	}

@@ -35,7 +35,7 @@ internal/adapters/wire/kiro	internal/adapters/wire/kiro/...	68
 internal/adapters/wire/openaichat	tests/unit/wire/...	47
 internal/adapters/wire/openairesponses	tests/unit/wire/openairesponses/...
 internal/adapters/wire/sse	tests/unit/wire/sse/...
-internal/adapters/antigravity	tests/unit/quota/...	79
+internal/adapters/antigravity	tests/unit/quota/...,internal/adapters/antigravity/...	79
 internal/platform	tests/unit/cli/...,tests/unit/platform/...,internal/platform/...	53
 internal/catalog	tests/unit/routing/...,tests/unit/service/...,tests/unit/sqlite/...	70
 internal/cli	tests/unit/cli/...	79

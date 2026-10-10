@@ -922,20 +922,6 @@ func TestCloudCodeAssistEnvelopeCarriesTheClientIdentity(t *testing.T) {
 	}
 }
 
-// TestCloudCodeAssistVariantRouting asserts the envelope names the SKU the
-// vendor serves the requested effort on, under the label it reads the SKU's
-// enum from, within the ceiling that SKU accepts. The request itself keeps the
-// logical model, so usage and the replay cache stay filed under it.
-// TestCloudCodeAssistSessionIdentity asserts the two conversation ids stay
-// put across the turns of one conversation while the step advances with it:
-// the endpoint gates its models on that continuity, so a turn that re-derives
-// its trajectory or repeats a step reads as a different session.
-// TestCloudCodeAssistExecutionID covers the answer the next turn names back:
-// the endpoint issues an id with every response and expects the following turn
-// to carry it, so a fabricated one is worse than none.
-// TestCloudCodeAssistClaudeBeta covers the beta a reasoning Claude turn claims
-// by name: the vendor gates interleaved thinking behind it and serves the turn
-// without the reasoning the client asked for when it is missing.
 // TestCloudCodeAssistEmptyCompletion covers a stream the endpoint finished
 // without answering: the attempt is refused with the status the relay already
 // retries, rather than handed to the client as an empty answer.
@@ -998,6 +984,9 @@ func TestCloudCodeAssistEmptyCompletion(t *testing.T) {
 	})
 }
 
+// TestCloudCodeAssistClaudeBeta covers the beta a reasoning Claude turn claims
+// by name: the vendor gates interleaved thinking behind it and serves the turn
+// without the reasoning the client asked for when it is missing.
 func TestCloudCodeAssistClaudeBeta(t *testing.T) {
 	beta := func(model, effort string) string {
 		t.Helper()
@@ -1035,6 +1024,9 @@ func TestCloudCodeAssistClaudeBeta(t *testing.T) {
 	})
 }
 
+// TestCloudCodeAssistExecutionID covers the answer the next turn names back:
+// the endpoint issues an id with every response and expects the following turn
+// to carry it, so a fabricated one is worse than none.
 func TestCloudCodeAssistExecutionID(t *testing.T) {
 	session := "codex-thread:execution"
 	decode := func(body string) {
@@ -1093,6 +1085,10 @@ func TestCloudCodeAssistExecutionID(t *testing.T) {
 	})
 }
 
+// TestCloudCodeAssistSessionIdentity asserts the two conversation ids stay
+// put across the turns of one conversation while the step advances with it:
+// the endpoint gates its models on that continuity, so a turn that re-derives
+// its trajectory or repeats a step reads as a different session.
 func TestCloudCodeAssistSessionIdentity(t *testing.T) {
 	turn := func(text string, extra ...inference.Message) *inference.Request {
 		request := canonicalRequest(false)
@@ -1148,6 +1144,10 @@ func TestCloudCodeAssistSessionIdentity(t *testing.T) {
 	})
 }
 
+// TestCloudCodeAssistVariantRouting asserts the envelope names the SKU the
+// vendor serves the requested effort on, under the label it reads the SKU's
+// enum from, within the ceiling that SKU accepts. The request itself keeps the
+// logical model, so usage and the replay cache stay filed under it.
 func TestCloudCodeAssistVariantRouting(t *testing.T) {
 	cases := []struct {
 		logical string
@@ -1242,13 +1242,13 @@ func assistEnvelope(t *testing.T, request *inference.Request, opts wire.CodecOpt
 func TestCloudCodeAssistSendMatchesTheClient(t *testing.T) {
 	const realSignature = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcd"
 
-	t.Run("the cli user agent replaces the ide fingerprint", func(t *testing.T) {
+	t.Run("chat sends the current hub fingerprint", func(t *testing.T) {
 		request := encode(t, cloudCodeAssistCodec(), canonicalRequest(false), wire.CodecOpts{
 			CredentialRef: "token", AuthMethod: wire.AuthOAuth, Project: "project-1",
-			ExtraHeaders: map[string]string{"User-Agent": antigravity.UserAgent()},
+			ExtraHeaders: map[string]string{"User-Agent": "stale-template-agent"},
 		})
-		if got := request.Header.Get("User-Agent"); got != antigravity.CLIUserAgent() {
-			t.Fatalf("User-Agent = %q, want the CLI fingerprint", got)
+		if got := request.Header.Get("User-Agent"); got != antigravity.UserAgent() {
+			t.Fatalf("User-Agent = %q, want the current hub fingerprint over the template's", got)
 		}
 		if request.Header.Get("Accept-Encoding") != "gzip" || request.ContentLength != -1 {
 			t.Fatalf("header length = %d, accept-encoding = %q, want a chunked gzip request", request.ContentLength, request.Header.Get("Accept-Encoding"))

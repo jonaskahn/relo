@@ -1,37 +1,25 @@
-// Package antigravity carries the client fingerprints Cloud Code Assist
-// expects.
-//
-// Sign-in, project discovery, the model listing, and the quota probe send
-// the IDE fingerprint. A chat request sends the CLI fingerprint the current
-// Antigravity client uses for generateContent. A routed call whose header
-// does not match the client family the credential was minted for is rejected.
+// Package antigravity carries the client identity and wire rules Cloud Code
+// Assist expects: the fingerprint every call sends, the SKU each logical model
+// collapses onto, and how a refusal is read.
 package antigravity
 
 import (
 	"fmt"
-	"strings"
+	"sync/atomic"
 )
 
 const (
-	// IDEVersion is the Antigravity IDE language-server version the
-	// fingerprint reports, matching the client the credential was minted
-	// for. Bump it here when the client moves.
-	IDEVersion = "2.5.5"
+	// DefaultVersion is the client version reported until the manifest names
+	// a newer one, so nothing breaks while Relo is offline.
+	DefaultVersion = "2.8.0"
 
-	cliVersion    = "1.2.13"
-	cliChangeList = "989937024"
-	cliOS         = "darwin"
-	cliArch       = "arm64"
-	cliAuth       = "consumer"
-)
-
-const (
-	// The platform and client tokens mirror the fingerprint the real IDE
-	// sends rather than this host's, because the backend compares the client
-	// family the credential was minted for, not the machine Relo runs on.
-	idePlatform = "windows/amd64"
-	ideClient   = "aidev_client"
-	ideAuth     = "oauth"
+	// The platform tokens mirror the build the manifest describes rather than
+	// this host's, because the backend compares the client family a credential
+	// was minted for, not the machine Relo runs on.
+	clientOS     = "darwin"
+	clientArch   = "arm64"
+	clientDevice = "aidev_client"
+	changeList   = "963137146"
 
 	// InterleavedThinkingBeta is the beta a Claude turn asks for by name. The
 	// vendor gates interleaved thinking behind it, and serves the turn without
@@ -42,19 +30,28 @@ const (
 	BetaHeader = "anthropic-beta"
 )
 
-// CLIUserAgent returns the User-Agent a chat request sends:
-//
-//	antigravity/cli/1.2.13 (aidev_client; os_type=darwin; arch=arm64; cl=989937024; auth_method=consumer)
-func CLIUserAgent() string {
-	return fmt.Sprintf("antigravity/cli/%s (aidev_client; os_type=%s; arch=%s; cl=%s; auth_method=%s)",
-		cliVersion, cliOS, cliArch, cliChangeList, cliAuth)
+// version holds the client version the fingerprint reports. It is read on
+// every request and written by a worker once a day, so it lives behind an
+// atomic rather than a lock.
+var version atomic.Pointer[string]
+
+// SetVersion records the client version the manifest named. An empty one is
+// ignored, so a manifest that could not be read leaves the last good version.
+func SetVersion(value string) {
+	if value == "" {
+		return
+	}
+	version.Store(&value)
 }
 
-// UserAgent returns the User-Agent a sign-in, listing, or quota probe carries:
+// UserAgent returns the User-Agent every Cloud Code Assist call sends:
 //
-//	antigravity/ide/<version> (os_type=<os>; arch=<arch>; aidev_client; auth_method=oauth)
+//	antigravity/hub/2.8.0 (aidev_client; os_type=darwin; arch=arm64; cl=963137146)
 func UserAgent() string {
-	osType, arch, _ := strings.Cut(idePlatform, "/")
-	return fmt.Sprintf("antigravity/ide/%s (os_type=%s; arch=%s; %s; auth_method=%s)",
-		IDEVersion, osType, arch, ideClient, ideAuth)
+	current := DefaultVersion
+	if stored := version.Load(); stored != nil {
+		current = *stored
+	}
+	return fmt.Sprintf("antigravity/hub/%s (%s; os_type=%s; arch=%s; cl=%s)",
+		current, clientDevice, clientOS, clientArch, changeList)
 }

@@ -221,6 +221,7 @@ func startServeWorkers(ctx context.Context, wired wired) {
 	startMaintenance(ctx, wired.server, wired.deps)
 	startRefreshing(ctx, wired.deps)
 	startDiscovery(ctx, wired.deps)
+	startAntigravityVersion(ctx, wired.deps)
 	startQuota(ctx, wired.deps)
 	warnOnMissingClientKeys(ctx, wired.deps)
 }
