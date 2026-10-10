@@ -429,6 +429,75 @@ func TestToolSchemas(t *testing.T) {
 	})
 }
 
+// TestStreamDecodingStripsFlashPlanningLeaks covers the preamble a Flash
+// answer sometimes opens with: the client never meant to read the planning, so
+// it is read past while the answer after it reaches them whole.
+func TestStreamDecodingStripsFlashPlanningLeaks(t *testing.T) {
+	stream := func(parts ...string) string {
+		t.Helper()
+		decoder := cloudCodeAssistCodec().NewStreamDecoder()
+		var events []inference.Event
+		for _, part := range parts {
+			frame, err := json.Marshal(map[string]any{
+				"response": map[string]any{
+					"candidates": []any{map[string]any{
+						"content": map[string]any{"parts": []any{map[string]any{"text": part}}},
+					}},
+				},
+			})
+			if err != nil {
+				t.Fatalf("encode frame: %v", err)
+			}
+			events = append(events, pushStreamData(t, decoder, string(frame))...)
+		}
+		closing, err := decoder.Finish()
+		if err != nil {
+			t.Fatalf("Finish() error = %v", err)
+		}
+		return textOf(append(events, closing...))
+	}
+
+	t.Run("a planning preamble is dropped and the answer kept", func(t *testing.T) {
+		got := stream(`{"tool_thought":"I should greet"}`, "Hello there")
+		if got != "Hello there" {
+			t.Fatalf("text = %q, want the answer without the planning", got)
+		}
+	})
+
+	t.Run("a preamble arriving in pieces is still recognised", func(t *testing.T) {
+		got := stream(`{"tool_`, `thought":"greet"}`, "Hi")
+		if got != "Hi" {
+			t.Fatalf("text = %q, want the answer without the split planning", got)
+		}
+	})
+
+	t.Run("an answer that merely opens with a brace is kept", func(t *testing.T) {
+		if got := stream(`{"answer": 42}`); got != `{"answer": 42}` {
+			t.Fatalf("text = %q, want the JSON the client meant to read", got)
+		}
+	})
+
+	t.Run("an ordinary answer is untouched", func(t *testing.T) {
+		if got := stream("Hello"); got != "Hello" {
+			t.Fatalf("text = %q, want the answer as sent", got)
+		}
+	})
+
+	t.Run("an answer split across frames is concatenated", func(t *testing.T) {
+		if got := stream("Hello", " there"); got != "Hello there" {
+			t.Fatalf("text = %q, want both frames", got)
+		}
+	})
+
+	t.Run("planning too long to judge is released rather than lost", func(t *testing.T) {
+		runaway := `{"tool_thought":"` + strings.Repeat("x", 9000) + `"}`
+		got := stream(runaway)
+		if got != runaway {
+			t.Fatalf("text = %d bytes, want the unjudgeable opening handed back whole", len(got))
+		}
+	})
+}
+
 func TestStreamDecoding(t *testing.T) {
 	t.Run("text stream per mode (AI Studio, Vertex, Cloud Code Assist)", func(t *testing.T) {
 		modes := []struct {

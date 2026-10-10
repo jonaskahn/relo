@@ -46,6 +46,7 @@ type streamDecoder struct {
 	responseID   string
 	failure      *inference.ErrorInfo
 	terminated   bool
+	plan         planFilter
 }
 
 // NewStreamDecoder returns a decoder for one upstream response.
@@ -129,7 +130,7 @@ func (d *streamDecoder) Finish() ([]inference.Event, error) {
 	}
 	d.terminated = true
 	d.rememberExecution()
-	events := d.usageEvents()
+	events := append(textEvent(d.plan.flush()), d.usageEvents()...)
 	terminal := inference.Event{Kind: inference.EventTerminal, Terminal: &inference.TerminalInfo{Reason: d.terminalReason()}}
 	return append(events, terminal), nil
 }
@@ -167,7 +168,7 @@ func (d *streamDecoder) partEvents(parts []part) []inference.Event {
 		case parts[index].Thought:
 			events = append(events, reasoningEvent(parts[index].Text, signature)...)
 		default:
-			events = append(events, textEvent(parts[index].Text)...)
+			events = append(events, textEvent(d.plan.text(parts[index].Text))...)
 			events = append(events, reasoningEvent("", signature)...)
 		}
 	}
