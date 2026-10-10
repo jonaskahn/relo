@@ -15,8 +15,14 @@ type streamDecoder struct {
 	pending      map[int]*inference.ToolCallDelta
 	order        []int
 	finishReason string
+	failure      *inference.ErrorInfo
 	terminated   bool
 }
+
+const (
+	finishError       = "error"
+	upstreamErrorCode = "upstream_error"
+)
 
 // NewStreamDecoder returns a decoder for one upstream response.
 func (c *Codec) NewStreamDecoder() wire.StreamDecoder {
@@ -70,14 +76,26 @@ func (d *streamDecoder) choiceEvents(choice *chatChoice) []inference.Event {
 		message = choice.Message
 	}
 	if message == nil {
-		return nil
+		return d.finishEvents(choice.FinishReason)
 	}
 	events := append(d.textEvents(message), d.toolCallEvents(message.ToolCalls)...)
 	if choice.FinishReason == "" {
 		return events
 	}
 	d.finishReason = choice.FinishReason
-	return append(events, d.toolCallEnds()...)
+	return append(events, append(d.finishEvents(choice.FinishReason), d.toolCallEnds()...)...)
+}
+
+func (d *streamDecoder) finishEvents(reason string) []inference.Event {
+	if reason != finishError {
+		return nil
+	}
+	// Some gateways end an empty stream in-band with finish_reason "error"
+	// while keeping HTTP 200, which must surface as an upstream failure
+	// rather than a clean stop so the relay fails over instead of logging
+	// a successful empty turn.
+	d.failure = &inference.ErrorInfo{Code: upstreamErrorCode, Message: `upstream reported finish_reason "error"`, Status: http.StatusBadGateway}
+	return []inference.Event{{Kind: inference.EventError, Error: d.failure}}
 }
 
 func (d *streamDecoder) textEvents(message *chatMessageBody) []inference.Event {
@@ -137,10 +155,12 @@ func snapshot(delta *inference.ToolCallDelta) *inference.ToolCallDelta {
 }
 
 func (d *streamDecoder) terminalReason() string {
-	switch d.finishReason {
-	case "tool_calls", "function_call":
+	switch {
+	case d.failure != nil:
+		return inference.EventReasonError
+	case d.finishReason == "tool_calls" || d.finishReason == "function_call":
 		return inference.EventReasonToolUse
-	case "length":
+	case d.finishReason == "length":
 		return inference.EventReasonLength
 	default:
 		return inference.EventReasonStop
