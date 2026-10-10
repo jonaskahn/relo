@@ -325,7 +325,8 @@ func TestGoogleAntigravityFlow(t *testing.T) {
 		server, recorder := newProvider(t)
 		server.handle("/token", jsonHandler(`{"access_token":"google-access","refresh_token":"google-refresh","expires_in":3600}`))
 		server.handle("/v1internal:loadCodeAssist", jsonHandler(`{"error":{"code":404}}`, http.StatusNotFound))
-		server.handle("/v1internal:onboardUser", sequenceHandler(
+		server.handle("/v1internal:onboardUser", jsonHandler(`{"name":"operations/onboard-9","done":false}`))
+		server.handle("/v1internal/operations/onboard-9", sequenceHandler(
 			jsonHandler(`{"done":false}`),
 			jsonHandler(`{"done":true,"response":{"project":{"id":"project-3"}}}`),
 		))
@@ -346,8 +347,11 @@ func TestGoogleAntigravityFlow(t *testing.T) {
 		if credential.Extra["projectId"] != "project-3" {
 			t.Fatalf("credential = %+v, want the onboarded project", credential)
 		}
-		if recorder.count("/v1internal:onboardUser") < 2 {
-			t.Fatalf("onboard attempts = %d, want the poll to continue", recorder.count("/onboardUser"))
+		if recorder.count("/v1internal:onboardUser") != 1 {
+			t.Fatalf("onboard starts = %d, want one start and then polling the operation", recorder.count("/v1internal:onboardUser"))
+		}
+		if recorder.count("/v1internal/operations/onboard-9") < 2 {
+			t.Fatalf("operation polls = %d, want the poll to continue", recorder.count("/v1internal/operations/onboard-9"))
 		}
 	})
 
@@ -356,7 +360,8 @@ func TestGoogleAntigravityFlow(t *testing.T) {
 		server, _ := newProvider(t)
 		server.handle("/token", jsonHandler(`{"access_token":"a","refresh_token":"r","expires_in":60}`))
 		server.handle("/v1internal:loadCodeAssist", jsonHandler(`{}`))
-		server.handle("/v1internal:onboardUser", jsonHandler(`{"done":false}`))
+		server.handle("/v1internal:onboardUser", jsonHandler(`{"name":"operations/stuck","done":false}`))
+		server.handle("/v1internal/operations/stuck", jsonHandler(`{"done":false}`))
 		flow := oauth.NewGoogleAntigravityFlow(
 			oauth.WithClock(clock),
 			oauth.WithCallbackPort(-1),

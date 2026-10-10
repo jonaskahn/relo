@@ -26,6 +26,23 @@ func TestAntigravityFingerprint(t *testing.T) {
 			t.Fatalf("UserAgent() = %q, want %q", got, antigravityFingerprint)
 		}
 	})
+
+	// The redirect has to be the one the client is registered for, or Google
+	// refuses the sign-in before the account is ever consulted.
+	t.Run("the sign-in returns to the registered callback", func(t *testing.T) {
+		server, _ := newProvider(t)
+		server.handle("/token", jsonHandler(`{"access_token":"a","refresh_token":"r","expires_in":3600}`))
+		server.handle("/v1internal:loadCodeAssist", jsonHandler(`{"cloudaicompanionProject":"project-1"}`))
+		prompt, _ := loginManual(t, antigravityFlow(server), "code-redirect")
+		parsed, err := url.Parse(prompt.URL)
+		if err != nil {
+			t.Fatalf("parse authorize url: %v", err)
+		}
+		redirect := parsed.Query().Get("redirect_uri")
+		if !strings.HasPrefix(redirect, "http://127.0.0.1:") || !strings.HasSuffix(redirect, "/oauth-callback") {
+			t.Fatalf("redirect_uri = %q, want the registered loopback callback", redirect)
+		}
+	})
 }
 
 func TestGoogleAntigravitySignIn(t *testing.T) {
@@ -62,7 +79,8 @@ func TestGoogleAntigravitySignIn(t *testing.T) {
 		server.handle("/token", jsonHandler(`{"access_token":"antigravity-access","refresh_token":"antigravity-refresh","expires_in":3600}`))
 		server.handle("/v1internal:loadCodeAssist", jsonHandler(
 			`{"error":{"code":403,"status":"PERMISSION_DENIED","message":"Caller does not have permission"}}`, http.StatusForbidden))
-		server.handle("/v1internal:onboardUser", sequenceHandler(
+		server.handle("/v1internal:onboardUser", jsonHandler(`{"name":"operations/onboard-1","done":false}`))
+		server.handle("/v1internal/operations/onboard-1", sequenceHandler(
 			jsonHandler(`{"done":false}`),
 			jsonHandler(`{"done":true,"response":{"project":{"id":"project-2"}}}`),
 		))
@@ -86,21 +104,17 @@ func TestGoogleAntigravitySignIn(t *testing.T) {
 		if onboard.accept != "*/*" {
 			t.Fatalf("accept = %q, want the accept the IDE sends", onboard.accept)
 		}
-		if got := nestedField(t, onboard.body, "tier_id"); got != "free-tier" {
-			t.Fatalf("tier_id = %q, want free-tier", got)
+		if got := nestedField(t, onboard.body, "tierId"); got != "free-tier" {
+			t.Fatalf("tierId = %q, want free-tier", got)
 		}
-		if got := nestedField(t, onboard.body, "metadata", "ide_type"); got != "ANTIGRAVITY" {
-			t.Fatalf("metadata.ide_type = %q, want ANTIGRAVITY", got)
+		if got := nestedField(t, onboard.body, "metadata", "ideType"); got != "ANTIGRAVITY" {
+			t.Fatalf("metadata.ideType = %q, want ANTIGRAVITY", got)
 		}
-		if got := nestedField(t, onboard.body, "metadata", "ide_name"); got != "antigravity" {
-			t.Fatalf("metadata.ide_name = %q, want antigravity", got)
+		if recorder.count("/v1internal:onboardUser") != 1 {
+			t.Fatalf("onboard calls = %d, want one start and then polling the operation", recorder.count("/v1internal:onboardUser"))
 		}
-		version := nestedField(t, onboard.body, "metadata", "ide_version")
-		if version != antigravity.IDEVersion {
-			t.Fatalf("metadata.ide_version = %q, want the bare version %q", version, antigravity.IDEVersion)
-		}
-		if strings.Contains(version, "antigravity/ide") {
-			t.Fatalf("metadata.ide_version = %q, want a version and not the user agent", version)
+		if recorder.count("/v1internal/operations/onboard-1") == 0 {
+			t.Fatal("want the named operation polled until it finished")
 		}
 	})
 

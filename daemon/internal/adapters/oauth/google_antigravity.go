@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"net/url"
+	"strings"
 	"time"
 
 	"github.com/jonaskahn/relo/internal/adapters/antigravity"
@@ -23,9 +24,7 @@ const (
 	antigravityDailyAPI       = "https://daily-cloudcode-pa.googleapis.com"
 	antigravityAPIVersion     = "v1internal"
 	antigravityPort           = 51121
-	antigravityPath           = "/callback"
-	antigravityOnboardTries   = 5
-	antigravityOnboardWait    = 2 * time.Second
+	antigravityPath           = "/oauth-callback"
 	// antigravityAccept is the accept the IDE sends on these calls, kept
 	// because the header set is the fingerprint the backend reads.
 	antigravityAccept = "*/*"
@@ -59,7 +58,7 @@ func NewGoogleAntigravityFlow(options ...Option) OAuthFlow {
 		scopes:       antigravityScopes,
 		port:         antigravityPort,
 		path:         antigravityPath,
-		redirectHost: "localhost",
+		redirectHost: "127.0.0.1",
 		authParams:   map[string]string{"access_type": "offline", "prompt": "consent"},
 		afterLogin:   antigravityProjectHook(settings, client),
 		exchange:     antigravityExchange,
@@ -180,30 +179,56 @@ func loadCodeAssistProject(ctx context.Context, settings Options, client tokenCl
 	return antigravityLookup{answer: antigravityAnswer{stage: "loadCodeAssist", status: status, detail: "the answer named no project"}}, nil
 }
 
+// The onboarding is a long-running operation: the call names an operation and
+// the account is only ready once that operation reports done. The wait is a
+// second a step, bounded, so a sign-in cannot hang on an operation the
+// endpoint never finishes.
+const (
+	antigravityOnboardPoll   = time.Second
+	antigravityOnboardTries  = 30
+	antigravityOperationPath = "/" + antigravityAPIVersion + "/operations/"
+)
+
 func onboardAntigravityProject(ctx context.Context, settings Options, client tokenClient, accessToken string) (string, error) {
-	endpoint := option(settings.Endpoints.DailyAPIBaseURL, antigravityDailyAPI) + "/" + antigravityAPIVersion + ":onboardUser"
-	var answer error
-	for attempt := 0; attempt < antigravityOnboardTries; attempt++ {
-		body, status, err := client.postJSONRaw(ctx, endpoint, onboardPayload(), antigravityHeaders(accessToken))
-		if err != nil {
-			return "", fmt.Errorf("onboard the Cloud Code Assist project: %w", err)
-		}
-		if project, done := onboardProjectID(body, status); done {
-			return project, nil
-		}
-		answer = antigravityOnboardAnswer(body, status)
-		if status < 200 || status >= 300 {
-			if status != 429 && status < 500 {
-				return "", fmt.Errorf("%w: %v", ErrOnboardingFailed, answer)
-			}
-		}
-		if err := waitFor(ctx, client.clock, antigravityOnboardWait); err != nil {
-			return "", err
-		}
+	operation, err := startAntigravityOnboarding(ctx, settings, client, accessToken)
+	if err != nil {
+		return "", err
 	}
-	// The attempt budget is never zero, so every way out of the loop has an
-	// answer to report.
-	return "", fmt.Errorf("%w: %v", ErrOnboardingFailed, answer)
+	return awaitAntigravityOnboarding(ctx, settings, client, operation)
+}
+
+func startAntigravityOnboarding(ctx context.Context, settings Options, client tokenClient, accessToken string) (operationPoll, error) {
+	endpoint := option(settings.Endpoints.DailyAPIBaseURL, antigravityDailyAPI) + "/" + antigravityAPIVersion + ":onboardUser"
+	body, status, err := client.postJSONRaw(ctx, endpoint, onboardPayload(), antigravityHeaders(accessToken))
+	if err != nil {
+		return operationPoll{}, fmt.Errorf("onboard the Cloud Code Assist project: %w", err)
+	}
+	if status < 200 || status >= 300 {
+		return operationPoll{}, fmt.Errorf("%w: %v", ErrOnboardingFailed, antigravityOnboardAnswer(body, status))
+	}
+	if project, done := onboardOperation(body, status); done {
+		// An operation that carries its project is already finished, so it
+		// needs no polling at all.
+		return operationPoll{project: project, token: accessToken}, nil
+	}
+	name := operationName(body)
+	if name == "" {
+		return operationPoll{}, fmt.Errorf("%w: %v", ErrOnboardingFailed, antigravityOperationAnswer(body, status))
+	}
+	return operationPoll{name: name, token: accessToken}, nil
+}
+
+// operationPoll is the started onboarding a sign-in waits on: either the
+// project it produced outright, or the operation to ask until it does.
+type operationPoll struct {
+	name    string
+	project string
+	token   string
+}
+
+func (o operationPoll) endpoint(settings Options) string {
+	base := option(settings.Endpoints.DailyAPIBaseURL, antigravityDailyAPI) + antigravityOperationPath
+	return base + strings.TrimPrefix(o.name, "operations/")
 }
 
 func antigravityOnboardAnswer(body []byte, status int) antigravityAnswer {
@@ -211,7 +236,73 @@ func antigravityOnboardAnswer(body []byte, status int) antigravityAnswer {
 		code, detail := antigravity.Refusal(body)
 		return antigravityAnswer{stage: "onboardUser", status: status, code: code, detail: detail}
 	}
-	return antigravityAnswer{stage: "onboardUser", status: status, detail: "the answer never reported done"}
+	return antigravityAnswer{stage: "onboardUser", status: status, detail: "the answer named no operation"}
+}
+
+func awaitAntigravityOnboarding(ctx context.Context, settings Options, client tokenClient, operation operationPoll) (string, error) {
+	if operation.project != "" {
+		return operation.project, nil
+	}
+	var answer error
+	for range antigravityOnboardTries {
+		body, status, err := client.get(ctx, operation.endpoint(settings), antigravityHeaders(operation.token))
+		if err != nil {
+			return "", fmt.Errorf("read the onboarding operation: %w", err)
+		}
+		project, done := onboardOperation(body, status)
+		if done {
+			return project, nil
+		}
+		answer = antigravityOperationAnswer(body, status)
+		if status < 200 || status >= 300 {
+			return "", fmt.Errorf("%w: %v", ErrOnboardingFailed, answer)
+		}
+		if err := waitFor(ctx, client.clock, antigravityOnboardPoll); err != nil {
+			return "", err
+		}
+	}
+	return "", fmt.Errorf("%w: %v", ErrOnboardingFailed, answer)
+}
+
+// onboardOperation reads the operation an onboarding names: the project once it
+// is finished, and whether that is so. An operation that finishes without a
+// project is reported as finished with none, so the caller refuses it rather
+// than polling for a project that is never coming.
+func onboardOperation(body []byte, status int) (project string, done bool) {
+	if status < 200 || status >= 300 {
+		return "", true
+	}
+	operation := struct {
+		Done     bool            `json:"done"`
+		Response json.RawMessage `json:"response"`
+	}{}
+	if err := json.Unmarshal(body, &operation); err != nil {
+		return "", true
+	}
+	if !operation.Done {
+		return "", false
+	}
+	return projectIDFrom(operation.Response), true
+}
+
+// operationName reads the operation an onboarding started, empty when the
+// answer refused or named none.
+func operationName(body []byte) string {
+	operation := struct {
+		Name string `json:"name"`
+	}{}
+	if err := json.Unmarshal(body, &operation); err != nil {
+		return ""
+	}
+	return operation.Name
+}
+
+func antigravityOperationAnswer(body []byte, status int) antigravityAnswer {
+	if status < 200 || status >= 300 {
+		code, detail := antigravity.Refusal(body)
+		return antigravityAnswer{stage: "operations", status: status, code: code, detail: detail}
+	}
+	return antigravityAnswer{stage: "operations", status: status, detail: "the operation never reported done"}
 }
 
 func antigravityRefresh(ctx context.Context, settings Options, client tokenClient, request refreshRequest) (*OAuthCredential, error) {
@@ -254,28 +345,9 @@ func attachAntigravityProject(ctx context.Context, settings Options, client toke
 
 func onboardPayload() map[string]any {
 	return map[string]any{
-		"tier_id": "free-tier",
-		"metadata": map[string]string{
-			"ide_type": "ANTIGRAVITY", "ide_name": "antigravity", "ide_version": antigravity.IDEVersion,
-		},
+		"tierId":   "free-tier",
+		"metadata": map[string]string{"ideType": "ANTIGRAVITY"},
 	}
-}
-
-func onboardProjectID(body []byte, status int) (string, bool) {
-	if status < 200 || status >= 300 {
-		return "", false
-	}
-	response := struct {
-		Done     bool            `json:"done"`
-		Response json.RawMessage `json:"response"`
-	}{}
-	if err := json.Unmarshal(body, &response); err != nil {
-		return "", false
-	}
-	if !response.Done {
-		return "", false
-	}
-	return projectIDFrom(response.Response), true
 }
 
 func projectIDFrom(body []byte) string {
