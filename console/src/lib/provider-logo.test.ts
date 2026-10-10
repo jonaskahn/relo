@@ -196,7 +196,15 @@ describe('providerLogoPath', () => {
 	// only: they have no geometry for the chart to draw, which is the same
 	// position every models.dev mark is in and the chart falls back for it.
 	it('leaves a project-supplied mark as a file the chart cannot inline', () => {
-		for (const id of ['hermes', 'pi', 'omp', 'orcarouter', 'other', 'shared']) {
+		for (const id of [
+			'hermes',
+			'pi',
+			'omp',
+			'orcarouter',
+			'other',
+			'shared',
+			'google-antigravity'
+		]) {
 			expect(providerLogoSrc(id), id).not.toBeNull();
 			expect(providerLogoPath(id), id).toBeNull();
 		}
@@ -233,6 +241,12 @@ describe('providerLogoPath', () => {
 			expect(providerLogoSrc(id), id).toBeNull();
 			expect(providerLogoPath(id), id).toBeNull();
 		}
+	});
+
+	// Google Antigravity wears its own mark rather than Google's: the
+	// connection signs into a different product with its own glyph.
+	it('gives Google Antigravity its own mark rather than the vendor mark', () => {
+		expect(providerLogoSrc('google-antigravity')).toBe('/provider-logos/google-antigravity.svg');
 	});
 
 	// An agent row is chosen by the operator as an agent, so it wears the
