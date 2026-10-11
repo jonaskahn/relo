@@ -60,6 +60,19 @@ func TestEnableRetiresTheMovedDSHFile(t *testing.T) {
 		t.Fatalf("web patch = %s, want no default model: the browser picks its own", written)
 	}
 
+	recorded := map[string]string{}
+	for _, file := range h.store.files["dsh"] {
+		recorded[file.Kind] = file.Path
+	}
+	for kind, want := range map[string]string{
+		codingclients.FileDSH:         filepath.Join(home, ".dsh", "profiles", "web", "cordis.patch.yml"),
+		codingclients.FileDSHHeadless: filepath.Join(home, ".dsh", "profiles", "headless", "cordis.patch.yml"),
+	} {
+		if got, found := recorded[kind]; !found || got != want {
+			t.Fatalf("file rows = %+v, want kind %q at %q", h.store.files["dsh"], kind, want)
+		}
+	}
+
 	restored, err := os.ReadFile(stale)
 	if err != nil {
 		t.Fatalf("read the old settings file: %v", err)

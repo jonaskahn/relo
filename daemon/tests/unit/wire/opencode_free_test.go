@@ -173,6 +173,39 @@ func TestOpenCodeFreeRequestDropsRejectedSchemaKeywords(t *testing.T) {
 	}
 }
 
+// An argument named like a rejected keyword is not a keyword. The gateway
+// refused the schema dialect, so only keywords inside a schema object are
+// stripped; names inside a properties map name what a valid call carries.
+func TestOpenCodeFreeRequestKeepsArgumentsNamedLikeRejectedKeywords(t *testing.T) {
+	original := &inference.Request{Tools: []inference.Tool{{
+		Name: "grep",
+		Parameters: json.RawMessage(`{"type":"object","properties":{"pattern":` +
+			`{"type":"string","description":"regex to search for","minLength":1},` +
+			`"path":{"type":"string"}},"required":["pattern"],` +
+			`"additionalProperties":false}`),
+	}}}
+	got, _ := wire.OpenCodeFreeRequest(original, catalog.FormatOpenAIResp)
+	var cleaned map[string]any
+	if err := json.Unmarshal(got.Tools[0].Parameters, &cleaned); err != nil {
+		t.Fatalf("decode cleaned schema: %v", err)
+	}
+	properties, _ := cleaned["properties"].(map[string]any)
+	pattern, _ := properties["pattern"].(map[string]any)
+	if len(pattern) == 0 {
+		t.Fatalf("properties = %v, want the pattern argument kept", properties)
+	}
+	if kind, _ := pattern["type"].(string); kind != "string" {
+		t.Errorf("pattern type = %q, want the declaration's meaning kept", kind)
+	}
+	if _, found := pattern["minLength"]; found {
+		t.Error("pattern kept \"minLength\", want the keyword inside its schema removed")
+	}
+	required, _ := cleaned["required"].([]any)
+	if len(required) != 1 || required[0] != "pattern" {
+		t.Errorf("required = %v, want the required argument still named", required)
+	}
+}
+
 // A schema Relo cannot read is one it must not alter, and one already within
 // the dialect is left exactly as the client wrote it, because re-marshalling
 // every schema of a hundred-tool turn to fix a rare refusal costs more than
