@@ -131,6 +131,9 @@ func claudeUserAgent(headers map[string]string) string {
 }
 
 func claudeSession(opts wire.CodecOpts) string {
+	if opts.SessionID != "" {
+		return opts.SessionID
+	}
 	if opts.SessionAnchor != "" {
 		return opts.SessionAnchor
 	}

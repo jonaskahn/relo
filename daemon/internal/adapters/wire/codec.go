@@ -61,6 +61,13 @@ type CodecOpts struct {
 	// to. A codec that attributes usage to an account sends it; empty means
 	// the attempt carries no account attribution.
 	AccountID string
+	// DeviceID is the installation's stable device id for AccountID. A codec
+	// that attributes usage to a device sends it beside the account.
+	DeviceID string
+	// SessionID is the resolved upstream conversation id for this attempt.
+	// It stays stable across retries of one conversation; empty leaves the
+	// dialect's own fallback in place.
+	SessionID string
 	// RequestID names the request in Relo's own log, which a dialect that
 	// carries a correlation identifier of its own puts on the wire.
 	RequestID string

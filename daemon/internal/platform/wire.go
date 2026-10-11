@@ -570,6 +570,7 @@ func coreServerOptions(built deps, captures *sqlite.CaptureStore) server.Options
 		Callbacks:     NewCallbackBridge(built.callbacks),
 		CallbackIcon:  oauth.CallbackIcon,
 		CallbackPorts: oauth.DefaultRegistry(),
+		DeviceSeed:    deviceSeed(built.home),
 	}
 }
 

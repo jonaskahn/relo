@@ -775,6 +775,13 @@ func (s *Server) conversationAnchor(outcome *requestOutcome, r *http.Request) st
 	return outcome.sessionLease
 }
 
+func (s *Server) deviceID(accountID string) string {
+	if accountID == "" || s.opts.DeviceSeed == "" {
+		return ""
+	}
+	return account.ClaudeDeviceID(s.opts.DeviceSeed, accountID)
+}
+
 func openCodeLane(outcome *requestOutcome, r *http.Request) string {
 	if lane := conversationOf(r); lane != "" {
 		return lane
