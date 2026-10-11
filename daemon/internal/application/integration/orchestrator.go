@@ -1126,7 +1126,7 @@ func (s *Service) claudePickerModels() []ModelRef {
 }
 
 func claudeModelRefs(snap *catalog.Snapshot, model catalog.Model) []ModelRef {
-	ref := namedRef(snap, model)
+	ref := claudeNamedRef(snap, model)
 	ref.Connection = connectionLabel(snap, model.ProviderID)
 	standard, paired := catalog.StandardContext(ref.ContextWindow, snap.OffersLongContext(model))
 	if !paired {
@@ -1209,6 +1209,10 @@ func appendSuffixedVariant(models []ModelRef, ref ModelRef) []ModelRef {
 }
 
 func namedRef(snap *catalog.Snapshot, model catalog.Model) ModelRef {
+	return modelRef(model)
+}
+
+func claudeNamedRef(snap *catalog.Snapshot, model catalog.Model) ModelRef {
 	ref := modelRef(model)
 	if snap.ClaudeSubscription(model.ProviderID) {
 		ref.Name = catalog.StripClaudePrefix(ref.Name)

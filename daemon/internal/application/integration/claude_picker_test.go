@@ -158,8 +158,8 @@ func TestClaudeSignInPublishesDefaultAndMillionEntries(t *testing.T) {
 
 // TestClaudeSignInDropsTheVendorWord pins the picker label on the Claude.ai
 // sign-in: a model the provider names Claude Opus 5.5 reads as Opus 5.5 on
-// Claude.ai, while the same model on another connection keeps its name and
-// takes the generated suffix.
+// Claude.ai on the Claude surface only, while the OpenAI surface keeps the
+// full name. The same model on another connection keeps its name everywhere.
 func TestClaudeSignInDropsTheVendorWord(t *testing.T) {
 	db := testkit.OpenTestDB(t)
 	upstream := testkit.MockUpstream(t, map[string]string{})
@@ -187,8 +187,8 @@ func TestClaudeSignInDropsTheVendorWord(t *testing.T) {
 		t.Fatalf("published = %+v, want one entry per connection", plain)
 	}
 	signIn := plain["relo-claude-ai-claude-opus-5-5"]
-	if catalog.ConfigModelName(signIn.Name, signIn.Connection, signIn.ContextWindow) != "Opus 5.5 1M on Claude.ai" {
-		t.Fatalf("published = %+v, want the vendor word dropped on the sign-in", plain)
+	if catalog.ConfigModelName(signIn.Name, signIn.Connection, signIn.ContextWindow) != "Claude Opus 5.5 1M on Claude.ai" {
+		t.Fatalf("published = %+v, want the full name on the OpenAI surface", plain)
 	}
 	api := plain["relo-claude-api-claude-opus-5-5-1m"]
 	if catalog.ConfigModelName(api.Name, api.Connection, api.ContextWindow) != "Claude Opus 5.5 1M on Claude API" {

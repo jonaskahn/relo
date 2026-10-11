@@ -22,7 +22,7 @@ func (s *Server) handleListModels(protocol string) http.HandlerFunc {
 			return
 		}
 		if protocol == inference.ProtocolAnthropic || s.isAnthropicRequest(r) {
-			listed := listedModels(snapshot, s.advertisedContexts(r.Context()))
+			listed := listedModels(snapshot, s.advertisedContexts(r.Context()), true)
 			writeJSON(w, http.StatusOK, anthropicModelList(listed))
 			return
 		}
@@ -30,7 +30,7 @@ func (s *Server) handleListModels(protocol string) http.HandlerFunc {
 		if s.opts.Integrations != nil {
 			rows = s.opts.Integrations.CodexCatalogRows()
 		}
-		attributeCodexRows(rows, listedModels(snapshot, nil))
+		attributeCodexRows(rows, listedModels(snapshot, nil, false))
 		writeJSON(w, http.StatusOK, map[string]any{"models": rows})
 	}
 }
@@ -47,7 +47,7 @@ type listedModel struct {
 	MaxOutput     *int64
 }
 
-func listedModels(snapshot *catalog.Snapshot, advertised map[string]*int64) []listedModel {
+func listedModels(snapshot *catalog.Snapshot, advertised map[string]*int64, stripClaude bool) []listedModel {
 	entries := make([]listedModel, 0, 64)
 	seen := map[string]bool{}
 	for _, group := range snapshot.ListedGroups() {
@@ -61,7 +61,7 @@ func listedModels(snapshot *catalog.Snapshot, advertised map[string]*int64) []li
 			continue
 		}
 		seen[id] = true
-		entries = appendListedVariants(entries, listedStandalone(snapshot, advertised, model, id), snapshot.OffersLongContext(model))
+		entries = appendListedVariants(entries, listedStandalone(snapshot, advertised, model, id, stripClaude), snapshot.OffersLongContext(model))
 	}
 	return entries
 }
@@ -80,12 +80,12 @@ func listedGroup(snapshot *catalog.Snapshot, advertised map[string]*int64, group
 	}
 }
 
-func listedStandalone(snapshot *catalog.Snapshot, advertised map[string]*int64, model catalog.Model, id string) listedModel {
+func listedStandalone(snapshot *catalog.Snapshot, advertised map[string]*int64, model catalog.Model, id string, stripClaude bool) listedModel {
 	window := advertisedContext(advertised, model)
 	view := model
 	view.ContextWindow = window
 	label := labelOr(model.Name, model.ID)
-	if snapshot.ClaudeSubscription(model.ProviderID) {
+	if stripClaude && snapshot.ClaudeSubscription(model.ProviderID) {
 		label = catalog.StripClaudePrefix(label)
 	}
 	return listedModel{
