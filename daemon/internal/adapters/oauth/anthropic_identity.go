@@ -44,6 +44,14 @@ type claudeBootstrapAccount struct {
 // Fetch returns the identity the bootstrap endpoint reports for a token. A
 // refusal or an unreadable answer is an error the caller degrades from.
 func (s ClaudeIdentitySource) Fetch(ctx context.Context, accessToken string) (ClaudeIdentity, error) {
+	body, err := s.get(ctx, accessToken)
+	if err != nil {
+		return ClaudeIdentity{}, err
+	}
+	return decodeClaudeIdentity(body)
+}
+
+func (s ClaudeIdentitySource) get(ctx context.Context, accessToken string) ([]byte, error) {
 	endpoint := s.Endpoint
 	if endpoint == "" {
 		endpoint = claudeBootstrapEndpoint
@@ -52,10 +60,9 @@ func (s ClaudeIdentitySource) Fetch(ctx context.Context, accessToken string) (Cl
 	if client == nil {
 		client = &http.Client{Timeout: claudeIdentityTimeout}
 	}
-	target := endpoint + "?entrypoint=cli&model=" + claudeBootstrapModel
-	request, err := http.NewRequestWithContext(ctx, http.MethodGet, target, nil)
+	request, err := http.NewRequestWithContext(ctx, http.MethodGet, endpoint+"?entrypoint=cli&model="+claudeBootstrapModel, nil)
 	if err != nil {
-		return ClaudeIdentity{}, fmt.Errorf("build the claude identity request: %w", err)
+		return nil, fmt.Errorf("build the claude identity request: %w", err)
 	}
 	request.Header.Set("Accept", "application/json")
 	request.Header.Set("Authorization", "Bearer "+accessToken)
@@ -64,16 +71,24 @@ func (s ClaudeIdentitySource) Fetch(ctx context.Context, accessToken string) (Cl
 	request.Header.Set("anthropic-beta", "oauth-2025-04-20")
 	response, err := client.Do(request)
 	if err != nil {
-		return ClaudeIdentity{}, fmt.Errorf("read the claude identity: %w", err)
+		return nil, fmt.Errorf("read the claude identity: %w", err)
 	}
 	defer func() { _ = response.Body.Close() }()
+	return readClaudeIdentityBody(response)
+}
+
+func readClaudeIdentityBody(response *http.Response) ([]byte, error) {
 	body, err := io.ReadAll(io.LimitReader(response.Body, claudeIdentityBodyLimit))
 	if err != nil {
-		return ClaudeIdentity{}, fmt.Errorf("read the claude identity: %w", err)
+		return nil, fmt.Errorf("read the claude identity: %w", err)
 	}
 	if response.StatusCode < 200 || response.StatusCode >= 300 {
-		return ClaudeIdentity{}, fmt.Errorf("claude identity answered %d", response.StatusCode)
+		return nil, fmt.Errorf("claude identity answered %d", response.StatusCode)
 	}
+	return body, nil
+}
+
+func decodeClaudeIdentity(body []byte) (ClaudeIdentity, error) {
 	var envelope struct {
 		Account *claudeBootstrapAccount `json:"oauth_account"`
 	}
@@ -98,10 +113,14 @@ func (c *OAuthCredential) FillClaudeIdentity(identity ClaudeIdentity) {
 	if c == nil {
 		return
 	}
-	c.AccountID = firstNonEmpty(identity.AccountID, c.AccountID)
-	c.Email = firstNonEmpty(identity.Email, c.Email)
-	addExtra(c, orgExtraKey, identity.OrgID)
-	addExtra(c, orgNameExtraKey, identity.OrgName)
+	c.AccountID = firstNonEmpty(c.AccountID, identity.AccountID)
+	c.Email = firstNonEmpty(c.Email, identity.Email)
+	if c.Extra[orgExtraKey] == "" {
+		addExtra(c, orgExtraKey, identity.OrgID)
+	}
+	if c.Extra[orgNameExtraKey] == "" {
+		addExtra(c, orgNameExtraKey, identity.OrgName)
+	}
 }
 
 // claudeIdentityHook fills identity the token response left unset. A failed

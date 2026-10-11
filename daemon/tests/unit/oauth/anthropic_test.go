@@ -101,4 +101,34 @@ func TestClaudeIdentityFetch(t *testing.T) {
 			t.Fatal("Fetch() error = nil, want the refusal")
 		}
 	})
+
+	t.Run("an unreadable answer stays an error the caller degrades from", func(t *testing.T) {
+		for name, body := range map[string]string{
+			"malformed json":  `{"oauth_account":`,
+			"missing account": `{"limits":[]}`,
+		} {
+			server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+				w.Header().Set("Content-Type", "application/json")
+				_, _ = io.WriteString(w, body)
+			}))
+			source := oauth.ClaudeIdentitySource{Endpoint: server.URL}
+			if _, err := source.Fetch(context.Background(), "token-1"); err == nil {
+				t.Fatalf("Fetch() error = nil for %s, want the decode failure", name)
+			}
+			server.Close()
+		}
+	})
+
+	t.Run("recording identity keeps values the token already provided", func(t *testing.T) {
+		var nilCredential *oauth.OAuthCredential
+		nilCredential.FillClaudeIdentity(oauth.ClaudeIdentity{})
+		credential := &oauth.OAuthCredential{AccountID: "acct-1", Extra: map[string]string{oauth.ExtraOrgID: "org-1"}}
+		credential.FillClaudeIdentity(oauth.ClaudeIdentity{AccountID: "acct-9", Email: "a@example.test", OrgID: "org-9", OrgName: "Acme"})
+		if credential.AccountID != "acct-1" || credential.Email != "a@example.test" {
+			t.Fatalf("credential = %+v, want stored account with fetched email", credential)
+		}
+		if credential.Extra[oauth.ExtraOrgID] != "org-1" {
+			t.Fatalf("org id = %q, want the stored workspace", credential.Extra[oauth.ExtraOrgID])
+		}
+	})
 }
