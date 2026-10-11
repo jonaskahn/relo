@@ -144,6 +144,7 @@ func (f FactsRecord) Empty() bool {
 	return f.Name == nil && f.Description == nil && f.Family == nil && f.Category == nil &&
 		f.ContextWindow == nil && f.MaxInput == nil && f.MaxOutput == nil &&
 		f.SupportsTools == nil && f.SupportsReasoning == nil && f.SupportsVision == nil &&
+		len(f.ReasoningEfforts) == 0 &&
 		f.ReasoningToggle == nil && f.ReasoningBudget == nil &&
 		f.ReasoningBudgetMin == nil && f.ReasoningBudgetMax == nil &&
 		f.Status == nil && f.ReleaseDate == nil && !f.Prices.Known()

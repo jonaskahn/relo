@@ -5,14 +5,15 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/jonaskahn/relo/internal/catalog"
 	"github.com/jonaskahn/relo/internal/inference"
 )
 
 // Selection kinds name how one configuration is chosen inside its group.
 const (
-	SelectDefault = "default"
-	SelectOff     = "off"
-	SelectToggle  = "toggle"
+	SelectDefault = catalog.CursorSelectDefault
+	SelectOff     = catalog.CursorSelectOff
+	SelectToggle  = catalog.CursorSelectToggle
 )
 
 // Reasoning parameter ids never participate in lane identity: they select

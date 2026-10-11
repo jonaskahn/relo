@@ -97,6 +97,13 @@ func (w *Writer) Message(field int, nested []byte) {
 	w.Bytes(field, nested)
 }
 
+// Empty appends a present-but-empty nested message, which marks presence
+// the way Cursor's empty thinking details do.
+func (w *Writer) Empty(field int) {
+	w.tag(field, wireLength)
+	w.buf = append(w.buf, 0)
+}
+
 // Field is one decoded protobuf field.
 type Field struct {
 	Number int

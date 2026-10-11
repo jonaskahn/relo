@@ -72,6 +72,8 @@ func (l *Lister) List(ctx context.Context, target Target) ([]Listed, error) {
 		return l.listKiro(ctx, target)
 	case catalog.ModelsCodex:
 		return l.listCodex(ctx, target)
+	case catalog.ModelsCursor:
+		return l.listCursor(ctx, target)
 	default:
 		return nil, fmt.Errorf("%s: %w", target.Format, ErrUnsupported)
 	}

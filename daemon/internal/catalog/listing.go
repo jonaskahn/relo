@@ -28,6 +28,50 @@ type Listed struct {
 	// a pointer because a listing that never states the flag says nothing, and
 	// a name that mentions no price proves neither way.
 	IsFree *bool
+	// SupportsTools, SupportsReasoning, and SupportsVision carry a
+	// provider-declared capability. Nil means the listing said nothing.
+	SupportsTools     *bool
+	SupportsReasoning *bool
+	SupportsVision    *bool
+	// ReasoningEfforts are the effort values the listing stated the model
+	// accepts. Nil means unstated; an explicitly empty list states none.
+	ReasoningEfforts []string
+	// ReasoningToggle reports that the listing stated an on/off thinking
+	// switch. Nil means the listing said nothing about a toggle.
+	ReasoningToggle *bool
+	// Cursor carries the exact request configurations behind one Cursor
+	// group. Nil on every other provider.
+	Cursor []CursorVariant
+}
+
+// Cursor selection kinds name how one CursorVariant is chosen inside its
+// group: the default, thinking off, thinking on without an effort, or one
+// canonical effort.
+const (
+	CursorSelectDefault = "default"
+	CursorSelectOff     = "off"
+	CursorSelectToggle  = "toggle"
+)
+
+// CursorParam is one Cursor model parameter pair.
+type CursorParam struct {
+	ID    string
+	Value string
+}
+
+// CursorVariant is one exact Cursor request configuration: the tuple the
+// relay sends for one selection inside a group.
+type CursorVariant struct {
+	GroupID   string
+	Selection string
+	Effort    string
+	ModelID   string
+	DetailsID string
+	MaxMode   bool
+	Params    []CursorParam
+	Context   int64
+	Images    bool
+	Reasoning bool
 }
 
 // ListTarget names the endpoint and credential one listing runs against.
@@ -73,7 +117,7 @@ type Authorization struct {
 // anything else would send one listing per key to learn the same ids.
 func PerAccountRoster(format ModelsFormat) bool {
 	switch format {
-	case ModelsCodex, ModelsAntigravity:
+	case ModelsCodex, ModelsAntigravity, ModelsCursor:
 		return true
 	default:
 		return false

@@ -5,6 +5,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"sort"
 	"strings"
 	"sync"
 
@@ -319,6 +320,11 @@ func factsForRefresh(providerID string, entry rosterEntry, mdModel catalog.Model
 		MaxOutput:     entry.MaxOutput,
 		Prices:        provPrices.row(),
 	}
+	providerFact.SupportsTools = entry.SupportsTools
+	providerFact.SupportsReasoning = entry.SupportsReasoning
+	providerFact.SupportsVision = entry.SupportsVision
+	providerFact.ReasoningEfforts = append([]string(nil), entry.ReasoningEfforts...)
+	providerFact.ReasoningToggle = entry.ReasoningToggle
 	if !providerFact.Empty() {
 		facts = append(facts, providerFact)
 	}
@@ -381,6 +387,7 @@ type accountRosters struct {
 	failures []string
 	firstErr error
 	seen     map[string]bool
+	index    map[string]int
 }
 
 func (s *Service) discoverAccounts(ctx context.Context, host catalog.Provider, entries []account.PoolEntry) ([]catalog.Listed, map[string][]string, []string, error) {
@@ -388,6 +395,7 @@ func (s *Service) discoverAccounts(ctx context.Context, host catalog.Provider, e
 		union:   make([]catalog.Listed, 0, 64),
 		rosters: make(map[string][]string, len(entries)),
 		seen:    map[string]bool{},
+		index:   map[string]int{},
 	}
 	for _, entry := range entries {
 		s.discoverAccountRoster(ctx, host, entry, acc)
@@ -418,12 +426,92 @@ func (s *Service) discoverAccountRoster(ctx context.Context, host catalog.Provid
 	for _, item := range listed {
 		modelIDs = append(modelIDs, item.ID)
 		if acc.seen[item.ID] {
+			acc.mergeCursor(item)
 			continue
 		}
 		acc.seen[item.ID] = true
+		acc.index[item.ID] = len(acc.union)
 		acc.union = append(acc.union, item)
 	}
 	acc.rosters[entry.ID] = modelIDs
+}
+
+// mergeCursor unions another account's Cursor configurations into the
+// connection roster, so the displayed efforts cover every account while
+// each account's own entitlement stays per-account.
+func (acc *accountRosters) mergeCursor(item catalog.Listed) {
+	if len(item.Cursor) == 0 {
+		return
+	}
+	position, found := acc.index[item.ID]
+	if !found {
+		return
+	}
+	merged := mergeCursorVariants(acc.union[position].Cursor, item.Cursor)
+	acc.union[position].Cursor = merged
+	refreshCursorDisplay(&acc.union[position])
+}
+
+func mergeCursorVariants(into, from []catalog.CursorVariant) []catalog.CursorVariant {
+	seen := make(map[string]bool, len(into)+len(from))
+	merged := make([]catalog.CursorVariant, 0, len(into)+len(from))
+	for _, variant := range into {
+		key := variant.GroupID + "\x00" + variant.Selection
+		if seen[key] {
+			continue
+		}
+		seen[key] = true
+		merged = append(merged, variant)
+	}
+	for _, variant := range from {
+		key := variant.GroupID + "\x00" + variant.Selection
+		if seen[key] {
+			continue
+		}
+		seen[key] = true
+		merged = append(merged, variant)
+	}
+	sort.Slice(merged, func(i, j int) bool {
+		if merged[i].Selection != merged[j].Selection {
+			return merged[i].Selection < merged[j].Selection
+		}
+		return merged[i].Effort < merged[j].Effort
+	})
+	return merged
+}
+
+func refreshCursorDisplay(entry *catalog.Listed) {
+	efforts := make([]string, 0, len(entry.Cursor))
+	toggle := false
+	reasoning := false
+	var context int64
+	for _, variant := range entry.Cursor {
+		if variant.Effort != "" {
+			efforts = append(efforts, variant.Effort)
+		}
+		if variant.Selection == catalog.CursorSelectToggle {
+			toggle = true
+		}
+		if variant.Reasoning {
+			reasoning = true
+		}
+		if variant.Context > context {
+			context = variant.Context
+		}
+	}
+	sort.Strings(efforts)
+	entry.ReasoningEfforts = efforts
+	if toggle {
+		stated := true
+		entry.ReasoningToggle = &stated
+	}
+	if reasoning {
+		supported := true
+		entry.SupportsReasoning = &supported
+	}
+	if context > 0 {
+		entry.ContextWindow = &context
+	}
 }
 
 func (s *Service) activeAccounts(providerID string) []account.PoolEntry {

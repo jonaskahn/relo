@@ -60,6 +60,9 @@ const (
 	// by the client version the caller declares. Only the Codex template
 	// uses it, so it stays out of ModelsFormats.
 	ModelsCodex ModelsFormat = "codex"
+	// ModelsCursor reads the Cursor account roster over its agent RPCs. Only
+	// the Cursor template uses it, so it stays out of ModelsFormats.
+	ModelsCursor ModelsFormat = "cursor"
 )
 
 // Auth names how a provider proves who is calling, which decides whether an
