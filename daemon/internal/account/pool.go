@@ -175,7 +175,7 @@ func (p *Pool) Select(ctx Selection) (PoolEntry, error) {
 	if sticky, found := p.stickyEntry(candidates); found {
 		return sticky, nil
 	}
-	selected, err := p.currentStrategy().Select(servable, ctx)
+	selected, err := p.currentStrategy().Select(candidates, ctx)
 	if err != nil {
 		return PoolEntry{}, err
 	}

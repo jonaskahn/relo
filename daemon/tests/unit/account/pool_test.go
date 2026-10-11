@@ -210,6 +210,28 @@ func TestPoolFailover(t *testing.T) {
 		}
 	})
 
+	t.Run("an excluded account never wins, even with more headroom", func(t *testing.T) {
+		pooled := account.NewPoolWithOptions("openai", account.Options{
+			Strategy: &account.LeastLoadedStrategy{Headroom: func(id string) (float64, bool) {
+				if id == "a" {
+					return 90, true
+				}
+				return 10, true
+			}},
+		})
+		pooled.Add(entry("a", account.StatusActive))
+		pooled.Add(entry("b", account.StatusActive))
+		for attempt := 0; attempt < 4; attempt++ {
+			selected, err := pooled.Select(account.Selection{Exclude: []string{"a"}})
+			if err != nil {
+				t.Fatalf("Select() error = %v", err)
+			}
+			if selected.ID != "b" {
+				t.Fatalf("Select() = %q, want b: the excluded account must not win on headroom", selected.ID)
+			}
+		}
+	})
+
 	t.Run("a success returns the account to rotation", func(t *testing.T) {
 		pooled := account.NewPool("openai")
 		pooled.Add(entry("a", account.StatusActive))
