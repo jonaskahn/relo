@@ -22,6 +22,7 @@
 	import { EMPTY_MODEL_FILTERS, type ModelFilters } from '$lib/model-filters';
 	import type { ModelLabelFilter } from '$lib/model-filters';
 	import { providerStatus } from '$lib/provider-status';
+	import { isExperimentalConnection } from '$lib/provider-experimental';
 	import { ageOf } from '$lib/format';
 
 	interface Props {
@@ -77,6 +78,8 @@
 	let quotaRevision = $state(0);
 
 	const status = $derived(providerStatus(provider));
+	// The lane logs what it is sent, so the header says so beside what it is.
+	const experimental = $derived(isExperimentalConnection(provider.template_id || provider.id));
 	const quotaStale = $derived(windows.some((window) => window.stale));
 	// modelFilters lives here so search and the one filter menu can sit beside
 	// Back on the models tab while the list below keeps filtering.
@@ -257,7 +260,17 @@
 		<div class="flex min-w-0 items-start gap-3">
 			<ProviderLogo id={provider.template_id || provider.id} label={provider.label} />
 			<div class="min-w-0">
-				<h2 class="truncate text-base font-semibold">{provider.label}</h2>
+				<h2 class="flex min-w-0 items-center gap-1.5 truncate text-base font-semibold">
+					{#if experimental}
+						<span
+							data-experimental-chip
+							class="badge shrink-0 border border-border text-muted-foreground"
+						>
+							{$t('ui.pages.providersPage.list.tagExperimental')}
+						</span>
+					{/if}
+					<span class="truncate">{provider.label}</span>
+				</h2>
 				<div
 					class="flex min-w-0 flex-wrap items-center gap-1.5 pt-0.5 text-xs text-muted-foreground"
 				>

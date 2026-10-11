@@ -38,8 +38,8 @@
       "signingOut": "Déconnexion…",
       "closeMenu": "Fermer le menu",
       "integrations": "Intégrations",
-      "agents": "Agents",
-      "agentsAttention": "Agents need repair or restart",
+      "agents": "Agent Harness",
+      "agentsAttention": "Agent Harness a besoin d'une réparation ou d'un redémarrage",
       "chat": "Chat",
       "actions": "Actions de la barre latérale",
       "github": "GitHub",
@@ -454,7 +454,8 @@
           "noMatch": "Aucune connexion ne correspond à votre recherche ou à vos filtres.",
           "filters": "Filtres de connexion",
           "filterOption": "{label} ({count})",
-          "tagFree": "Gratuit"
+          "tagFree": "Gratuit",
+          "tagExperimental": "Expérimental"
         },
         "status": {
           "ready": "Prêt",
@@ -1507,7 +1508,7 @@
         "description": "Tous les choix du démon au même endroit : apparence, accès, réseau, fournisseurs et maintenance."
       },
       "integrationsPage": {
-        "title": "Agents",
+        "title": "Agent Harness",
         "subtitle": "Branchez les agents de code de cette machine à Relo, et laissez Relo garder leurs clés.",
         "empty": "Aucun agent à brancher.",
         "tested": "Testé",
@@ -1741,6 +1742,8 @@
       "autostartHint": "Enregistre Relo au démarrage de la session. Appliqué à l'enregistrement.",
       "logLevelLabel": "Niveau de journal",
       "logLevelHint": "Combien le démon écrit dans son journal. S'applique après un redémarrage.",
+      "trafficLogLabel": "Journal de trafic",
+      "trafficLogHint": "Écrit chaque requête de l'agent et chaque échange avec le fournisseur en entier dans logs/traffic-YYYYMMDD.jsonl, un fichier par jour, conservé deux semaines. Les identifiants restent masqués. Appliqué à l'enregistrement.",
       "updateFeedLabel": "Flux de mises à jour",
       "updatesURL": "URL de l'appcast",
       "updatesURLHint": "Le flux que Relo lit pour les nouvelles versions. Vide désactive la vérification.",

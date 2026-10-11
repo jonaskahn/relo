@@ -96,7 +96,7 @@ func (s *Server) resolveAttemptCandidate(spec attemptSpec, tried map[string][]st
 	authorized, err := s.opts.Relay.Authorize(spec.request.Context(), catalog.AuthRequest{
 		ProviderID: candidate.ProviderID, Auth: host.Auth,
 		Selection: account.Selection{
-			ConversationID: conversationOf(spec.request), Surface: string(outcome.kind),
+			ConversationID: s.conversationAnchor(outcome, spec.request), Surface: string(outcome.kind),
 			RequestID: outcome.requestID, Exclude: tried[candidate.ProviderID], Prefer: spec.prefer,
 			Models: capabilityIDs(candidate.Model),
 		},
@@ -129,6 +129,7 @@ func (s *Server) buildAttemptExchange(spec attemptSpec, module wire.CodecModule,
 	request, originals := s.modelRequest(outcome.request, candidate, templated, template)
 	exchange := Exchange{
 		ProviderID: candidate.ProviderID, Codec: wire.RestoreToolNames(module, originals),
+		CaptureLimit:   s.captureLimit(),
 		RequiresStream: templated && template.RequiresStream,
 		Options:        s.attemptCodecOptions(spec, extra, template, templated),
 		Request:        request,
@@ -178,7 +179,7 @@ func (s *Server) attemptCodecOptions(spec attemptSpec, extra map[string]string, 
 		Mode:                   s.opts.Formats.ModeFor(candidate.Model.APIFormat),
 		Project:                authorized.Project,
 		RequestID:              outcome.requestID,
-		SessionAnchor:          conversationOf(spec.request),
+		SessionAnchor:          s.conversationAnchor(outcome, spec.request),
 		ExtraHeaders:           extra,
 		RefusesMaxOutputTokens: templated && template.RefusesMaxOutputTokens,
 		MaxOutput:              candidate.Model.MaxOutput,

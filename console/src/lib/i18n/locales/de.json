@@ -38,8 +38,8 @@
       "signingOut": "Abmelden…",
       "closeMenu": "Menü schließen",
       "integrations": "Integrationen",
-      "agents": "Agenten",
-      "agentsAttention": "Agents need repair or restart",
+      "agents": "Agent Harness",
+      "agentsAttention": "Agent Harness braucht Reparatur oder Neustart",
       "chat": "Chat",
       "actions": "Aktionen in der Seitenleiste",
       "github": "GitHub",
@@ -454,7 +454,8 @@
           "noMatch": "Keine Verbindung passt zu deiner Suche oder deinen Filtern.",
           "filters": "Verbindungsfilter",
           "filterOption": "{label} ({count})",
-          "tagFree": "Kostenlos"
+          "tagFree": "Kostenlos",
+          "tagExperimental": "Experimentell"
         },
         "status": {
           "ready": "Bereit",
@@ -1507,7 +1508,7 @@
         "description": "Alle Daemon-Einstellungen an einem Ort: Erscheinungsbild, Zugriff, Netzwerk, Anbieter und Wartung."
       },
       "integrationsPage": {
-        "title": "Agenten",
+        "title": "Agent Harness",
         "subtitle": "Verbinde die Coding-Agenten auf diesem Rechner mit Relo, und überlass Relo ihre Schlüssel.",
         "empty": "Keine Agenten zu verbinden.",
         "tested": "Getestet",
@@ -1741,6 +1742,8 @@
       "autostartHint": "Registriert Relo für den Start bei der Anmeldung. Wird beim Speichern angewendet.",
       "logLevelLabel": "Log-Level",
       "logLevelHint": "Wie viel der Daemon ins Log schreibt. Greift nach einem Neustart.",
+      "trafficLogLabel": "Datenverkehrsprotokoll",
+      "trafficLogHint": "Schreibt jede Agent-Anfrage und jeden Anbieter-Austausch vollständig in logs/traffic-YYYYMMDD.jsonl, eine Datei pro Tag, zwei Wochen lang aufbewahrt. Zugangsdaten werden weiterhin maskiert. Wird beim Speichern angewendet.",
       "updateFeedLabel": "Update-Feed",
       "updatesURL": "Appcast-URL",
       "updatesURLHint": "Der Feed, den Relo nach neueren Builds liest. Leer schaltet die Prüfung aus.",

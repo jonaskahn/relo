@@ -44,6 +44,10 @@ type ModelRef struct {
 	// model stated no ladder, so a client offers the shared list. An empty
 	// slice means the model stated that it takes none.
 	ReasoningEfforts []string
+	// ReasoningToggle reports that the model can turn thinking on or off
+	// without an effort name. A nil toggle is unknown, and a client config
+	// omits the field rather than inventing it.
+	ReasoningToggle *bool
 }
 
 // ReasoningEfforts are the picker levels a client offers when a model supports

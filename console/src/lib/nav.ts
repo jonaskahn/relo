@@ -47,7 +47,7 @@ export const NAV_SECTIONS: NavSection[] = [
 		id: 'integrations',
 		labelKey: 'ui.sidebar.integrations',
 		links: [
-			{ id: 'integrations', href: '/agents', labelKey: 'ui.sidebar.agents', icon: 'layers' },
+			{ id: 'integrations', href: '/agent-harness', labelKey: 'ui.sidebar.agents', icon: 'layers' },
 			{ id: 'chat', href: '/chat', labelKey: 'ui.sidebar.chat', icon: 'message-square' }
 		]
 	},

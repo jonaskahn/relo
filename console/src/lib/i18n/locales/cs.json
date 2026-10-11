@@ -38,8 +38,8 @@
       "signingOut": "Odhlásení…",
       "closeMenu": "Zavřít nabídku",
       "integrations": "Integrace",
-      "agents": "Agenti",
-      "agentsAttention": "Agents need repair or restart",
+      "agents": "Agent Harness",
+      "agentsAttention": "Agent Harness potřebuje opravu nebo restart",
       "chat": "Chat",
       "actions": "Akce postranního panelu",
       "github": "GitHub",
@@ -454,7 +454,8 @@
           "noMatch": "Žádné připojení neodpovídá hledání nebo filtrům.",
           "filters": "Filtry připojení",
           "filterOption": "{label} ({count})",
-          "tagFree": "Zdarma"
+          "tagFree": "Zdarma",
+          "tagExperimental": "Experimentální"
         },
         "status": {
           "ready": "Připraveno",
@@ -1507,7 +1508,7 @@
         "description": "Všechny volby daemona na jednom místě: vzhled, přístup, síť, poskytovatelé a údržba."
       },
       "integrationsPage": {
-        "title": "Agenti",
+        "title": "Agent Harness",
         "subtitle": "Připojte kódovací agenty na tomto počítači k Relo a nechte Relo hlídat jejich klíče.",
         "empty": "Žádní agenti k připojení.",
         "tested": "Otestováno",
@@ -1741,6 +1742,8 @@
       "autostartHint": "Zaregistruje Relo ke spuštění při přihlášení. Použije se při uložení.",
       "logLevelLabel": "Úroveň logu",
       "logLevelHint": "Kolik daemon zapisuje do logu. Platí po restartu.",
+      "trafficLogLabel": "Protokol provozu",
+      "trafficLogHint": "Zapíše každý požadavek agenta a každou výměnu s poskytovatelem celou do logs/traffic-YYYYMMDD.jsonl, jeden soubor na den, uchováno dva týdny. Přihlašovací údaje zůstávají zakryté. Použije se při uložení.",
       "updateFeedLabel": "Kanál aktualizací",
       "updatesURL": "Adresa appcastu",
       "updatesURLHint": "Kanál, který Relo čte kvůli novějším verzím. Prázdný kontrolu vypne.",

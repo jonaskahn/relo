@@ -88,6 +88,13 @@
 				<option value="error">error</option>
 			</NativeSelect>
 		</SettingsRow>
+		<SettingsSwitch
+			id="log-traffic"
+			bind:checked={draft.log_traffic}
+			label={$t('ui.settingsPage.trafficLogLabel')}
+			hint={$t('ui.settingsPage.trafficLogHint')}
+			disabled={saving}
+		/>
 		<SettingsRow label={$t('ui.settingsPage.updateFeedLabel')}>
 			<div>
 				<button

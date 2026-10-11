@@ -34,7 +34,7 @@ const (
 	FileOMP = "omp-models"
 	// FileGajae is Gajae's model catalog.
 	FileGajae = "gajae-models"
-	// FileDSH is the DeepSeek Harness settings file.
+	// FileDSH is the DeepSeek Harness Cordis patch carrying the profile web.
 	FileDSH = "dsh-settings"
 	// FileMCode is MiniMax Code's configuration file.
 	FileMCode = "mcode-config"
@@ -116,6 +116,20 @@ func (p Paths) OpenClawConfig() (string, error) {
 	return filepath.Join(p.Home, ".openclaw", "openclaw.json"), nil
 }
 
+// dshPatch returns the Cordis patch the harness's web profile reads,
+// honouring DSH_HOME when the operator keeps it somewhere else.
+func (p Paths) dshPatch() (string, error) {
+	root := filepath.Join(p.Home, ".dsh")
+	if raw := strings.TrimSpace(os.Getenv("DSH_HOME")); raw != "" {
+		resolved, err := absolutePath(raw, p.Home, "DSH_HOME")
+		if err != nil {
+			return "", err
+		}
+		root = resolved
+	}
+	return filepath.Join(root, "profiles", "web", "cordis.patch.yml"), nil
+}
+
 func absolutePath(raw, home, name string) (string, error) {
 	trimmed := strings.TrimSpace(raw)
 	switch {
@@ -148,7 +162,11 @@ func (p Paths) ConfigTargets(id string) ([]ConfigTarget, error) {
 	case ClientGajae:
 		return fixedTarget(FileGajae, filepath.Join(p.Home, ".gjc", "agent", "models.yml")), nil
 	case ClientDSH:
-		return fixedTarget(FileDSH, filepath.Join(p.Home, ".dsh", "settings.yaml")), nil
+		path, err := p.dshPatch()
+		if err != nil {
+			return nil, err
+		}
+		return fixedTarget(FileDSH, path), nil
 	case ClientMCode:
 		return fixedTarget(FileMCode, filepath.Join(p.Home, ".minimax", "config.yaml")), nil
 	case ClientRaycast:

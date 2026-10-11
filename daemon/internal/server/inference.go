@@ -94,10 +94,11 @@ func (s *Server) handleInference(surface inferenceSurface) http.HandlerFunc {
 		}
 		// The agent's own request is read before the codec consumes it, which
 		// is what keeps a body Relo cannot decode readable in the log.
-		captured := captureInbound(s.opts.CaptureRedactor, r)
+		limit := s.captureLimit()
+		captured := captureInbound(s.opts.CaptureRedactor, r, limit)
 		// The answer is kept beside the request it answers, so the log holds
 		// both halves of the exchange an operator debugs.
-		answer := newAgentAnswer(w, s.opts.CaptureRedactor)
+		answer := newAgentAnswer(w, s.opts.CaptureRedactor, limit)
 		inbound, found := s.inboundFor(surface)
 		if !found {
 			s.handleNotImplemented(w, r)
@@ -136,7 +137,7 @@ func (s *Server) relay(spec relaySpec) *requestOutcome {
 		outcome.answer = answer
 	}
 	plan, err := s.opts.Router.Plan(r.Context(), routing.Request{
-		Model: request.Model, Conversation: conversationOf(r), Needs: needsOf(request),
+		Model: request.Model, Conversation: s.conversationAnchor(outcome, r), Needs: needsOf(request),
 	})
 	anthropic := spec.surface.name == inference.SurfaceMessages
 	if err != nil {
@@ -310,7 +311,7 @@ func (d *sendDriver) stepAttempt(candidate routing.Candidate, lastCandidate bool
 	}
 	if err == nil {
 		d.s.opts.Router.Record(candidate, result.HeaderLatency)
-		d.s.opts.Router.Pin(conversationOf(d.r), routing.PinPrefix(d.plan), candidate)
+		d.s.opts.Router.Pin(d.s.conversationAnchor(d.outcome, d.r), routing.PinPrefix(d.plan), candidate)
 		d.s.opts.Router.MarkSucceeded(candidate)
 		d.s.opts.Router.MarkGroupSucceeded(d.plan, candidate)
 		d.s.markConnectionServed(candidate.ProviderID, result.CredentialID)
@@ -402,7 +403,7 @@ func (d *sendDriver) leaveAccount(failed failedAttempt) walkAction {
 		d.s.answerFailed(d, d.outcome, result, d.last)
 		return walkAnswered
 	}
-	d.s.opts.Router.Unpin(conversationOf(d.r), routing.PinPrefix(d.plan))
+	d.s.opts.Router.Unpin(d.s.conversationAnchor(d.outcome, d.r), routing.PinPrefix(d.plan))
 	walk.marked = true
 	return walkNextMember
 }
@@ -737,6 +738,27 @@ func conversationOf(r *http.Request) string {
 	return wire.SessionAnchor(r.Header)
 }
 
+// conversationAnchor is the conversation identity one request speaks with. A
+// client that named its conversation keeps it; one that did not is given a
+// leased session held while it keeps asking, so a provider never sees a fresh
+// identity per request. The lease is taken once per request, which is what
+// keeps a retry and the attempt it follows on the one session.
+func (s *Server) conversationAnchor(outcome *requestOutcome, r *http.Request) string {
+	if named := conversationOf(r); named != "" {
+		return named
+	}
+	if s.opts.SessionLeases == nil {
+		return ""
+	}
+	if outcome.sessionLease == "" {
+		keyID, _, _ := describeClient(r.Context())
+		outcome.sessionLease = s.opts.SessionLeases.Lease(account.SessionKey{
+			ClientKind: wire.ClientKind(r.Header), ClientKey: keyID,
+		})
+	}
+	return outcome.sessionLease
+}
+
 func openCodeLane(outcome *requestOutcome, r *http.Request) string {
 	if lane := conversationOf(r); lane != "" {
 		return lane
@@ -772,6 +794,9 @@ type requestOutcome struct {
 	// warnings names what this request asked of the model that served it and
 	// the catalog doubts, stored with the event so a log keeps the note.
 	warnings []string
+	// sessionLease is the synthetic session a request with no conversation
+	// named was given, taken once so a retry stays on the same identity.
+	sessionLease string
 	// openCodeLane is the session a request with no conversation still sends
 	// to OpenCode Go, allocated once so a retry stays on the same lane.
 	openCodeLane string
@@ -828,6 +853,51 @@ func (s *Server) record(ctx context.Context, outcome *requestOutcome, result Res
 		}
 	}
 	s.recordCaptures(ctx, eventID, outcome)
+	s.recordTraffic(ctx, event, eventID, outcome)
+}
+
+// recordTraffic writes the whole exchange of one finished request to the
+// day's traffic file. It runs behind the response like the rest of the
+// bookkeeping, and writes nothing while the traffic log is off.
+func (s *Server) recordTraffic(ctx context.Context, event activity.RequestEvent, eventID int64, outcome *requestOutcome) {
+	if !s.trafficOn() {
+		return
+	}
+	record := TrafficRecord{
+		Timestamp: time.UnixMilli(event.Timestamp).UTC().Format(time.RFC3339Nano), EventID: eventID,
+		RequestID: event.RequestID, Surface: event.Surface, Origin: event.Origin,
+		Provider: event.Provider, Model: event.Model, Status: event.Status,
+		AgentRequest: trafficMessage(outcome.inbound),
+	}
+	if outcome.answer != nil {
+		if answer, ok := outcome.answer.captured(); ok {
+			record.AgentResponse = trafficMessage(answer)
+		}
+	}
+	for ordinal, attempt := range outcome.attempts {
+		line := TrafficAttemptLine{
+			Ordinal: ordinal, Provider: attempt.providerID, Model: attempt.modelID,
+			Credential: attempt.credential, Status: attempt.status,
+		}
+		if attempt.capture != nil {
+			line.Request = trafficMessage(attempt.capture.Request)
+			line.Response = trafficMessage(attempt.capture.Response)
+		}
+		record.Attempts = append(record.Attempts, line)
+	}
+	if err := s.opts.Traffic.Append(record); err != nil {
+		s.opts.Logger.Warn("write the traffic log", "request_id", outcome.requestID, "error", err)
+	}
+}
+
+func trafficMessage(message *CapturedMessage) *TrafficMessage {
+	if message == nil {
+		return nil
+	}
+	return &TrafficMessage{
+		Method: message.Method, URL: message.URL, Status: message.Status,
+		Headers: message.Headers, Body: message.Body, Truncated: message.Truncated,
+	}
 }
 
 func (s *Server) recordUnreadable(r *http.Request, surface inferenceSurface, captured *CapturedMessage, answer *agentAnswer) {

@@ -38,8 +38,8 @@
       "signingOut": "Oturum kapatılıyor…",
       "closeMenu": "Menüyü kapat",
       "integrations": "Entegrasyonlar",
-      "agents": "Ajanlar",
-      "agentsAttention": "Agents need repair or restart",
+      "agents": "Agent Harness",
+      "agentsAttention": "Agent Harness onarım veya yeniden başlatma gerektiriyor",
       "chat": "Sohbet",
       "actions": "Kenar çubuğu eylemleri",
       "github": "GitHub",
@@ -454,7 +454,8 @@
           "noMatch": "Aramanızla veya filtrelerinizle eşleşen bağlantı yok.",
           "filters": "Bağlantı filtreleri",
           "filterOption": "{label} ({count})",
-          "tagFree": "Ücretsiz"
+          "tagFree": "Ücretsiz",
+          "tagExperimental": "Deneysel"
         },
         "status": {
           "ready": "Hazır",
@@ -1507,7 +1508,7 @@
         "description": "Tüm daemon seçimleri tek yerde: görünüm, erişim, ağ, sağlayıcılar ve bakım."
       },
       "integrationsPage": {
-        "title": "Ajanlar",
+        "title": "Agent Harness",
         "subtitle": "Bu makinedeki kodlama ajanlarını Relo’ya bağlayın ve anahtarlarını Relo tutsun.",
         "empty": "Bağlanacak ajan yok.",
         "tested": "Test edildi",
@@ -1741,6 +1742,8 @@
       "autostartHint": "Relo'yu oturum açılışında başlayacak şekilde kaydeder. Kaydedince uygulanır.",
       "logLevelLabel": "Günlük düzeyi",
       "logLevelHint": "Daemon'un günlüğe ne kadar yazdığı. Yeniden başlatmadan sonra geçerli olur.",
+      "trafficLogLabel": "Trafik günlüğü",
+      "trafficLogHint": "Aracının her isteğini ve sağlayıcıyla her değişimi eksiksiz olarak logs/traffic-YYYYMMDD.jsonl dosyasına, günde bir dosya olarak iki hafta boyunca yazar. Kimlik bilgileri maskelenmeye devam eder. Kaydettiğinizde uygulanır.",
       "updateFeedLabel": "Güncelleme akışı",
       "updatesURL": "Appcast adresi",
       "updatesURLHint": "Relo'nun yeni sürümler için okuduğu akış. Boş bırakmak denetimi kapatır.",

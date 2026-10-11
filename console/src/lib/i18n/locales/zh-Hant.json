@@ -38,8 +38,8 @@
       "signingOut": "登出中…",
       "closeMenu": "關閉選單",
       "integrations": "整合",
-      "agents": "代理程式",
-      "agentsAttention": "Agents need repair or restart",
+      "agents": "Agent Harness",
+      "agentsAttention": "Agent Harness 需要修復或重新啟動",
       "chat": "聊天",
       "actions": "側邊欄動作",
       "github": "GitHub",
@@ -454,7 +454,8 @@
           "noMatch": "沒有連接符合你的搜尋或篩選條件。",
           "filters": "連接篩選",
           "filterOption": "{label} ({count})",
-          "tagFree": "免費"
+          "tagFree": "免費",
+          "tagExperimental": "實驗性"
         },
         "status": {
           "ready": "就緒",
@@ -1507,7 +1508,7 @@
         "description": "所有常駐程式設定集中一處：外觀、存取、網路、供應商與維護。"
       },
       "integrationsPage": {
-        "title": "代理",
+        "title": "Agent Harness",
         "subtitle": "把本機的編碼代理接入 Relo，並由 Relo 保管它們的金鑰。",
         "empty": "沒有可接入的代理。",
         "tested": "已測試",
@@ -1741,6 +1742,8 @@
       "autostartHint": "註冊 Relo 以便登入時啟動。儲存時套用。",
       "logLevelLabel": "日誌層級",
       "logLevelHint": "常駐程式寫入日誌的詳細程度。重新啟動後生效。",
+      "trafficLogLabel": "流量日誌",
+      "trafficLogHint": "將代理的每個請求與與提供者的每次交換完整寫入 logs/traffic-YYYYMMDD.jsonl，每天一個檔案，保留兩週。憑證仍會遮蔽。儲存後生效。",
       "updateFeedLabel": "更新來源",
       "updatesURL": "Appcast 網址",
       "updatesURLHint": "Relo 用來尋找新版本的更新來源。留空則關閉檢查。",

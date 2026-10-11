@@ -38,8 +38,8 @@
       "signingOut": "Uscita in corso…",
       "closeMenu": "Chiudi il menu",
       "integrations": "Integrazioni",
-      "agents": "Agenti",
-      "agentsAttention": "Agents need repair or restart",
+      "agents": "Agent Harness",
+      "agentsAttention": "Agent Harness richiede una riparazione o un riavvio",
       "chat": "Chat",
       "actions": "Azioni della barra laterale",
       "github": "GitHub",
@@ -454,7 +454,8 @@
           "noMatch": "Nessuna connessione corrisponde alla ricerca o ai filtri.",
           "filters": "Filtri connessioni",
           "filterOption": "{label} ({count})",
-          "tagFree": "Gratuito"
+          "tagFree": "Gratuito",
+          "tagExperimental": "Sperimentale"
         },
         "status": {
           "ready": "Pronto",
@@ -1507,7 +1508,7 @@
         "description": "Tutte le scelte del daemon in un posto: aspetto, accesso, rete, provider e manutenzione."
       },
       "integrationsPage": {
-        "title": "Agenti",
+        "title": "Agent Harness",
         "subtitle": "Collega a Relo gli agenti di programmazione su questa macchina e lascia a Relo le loro chiavi.",
         "empty": "Nessun agente da collegare.",
         "tested": "Testato",
@@ -1741,6 +1742,8 @@
       "autostartHint": "Registra Relo per l'avvio all'accesso. Si applica al salvataggio.",
       "logLevelLabel": "Livello di log",
       "logLevelHint": "Quanto scrive il daemon nel log. Si applica dopo un riavvio.",
+      "trafficLogLabel": "Registro del traffico",
+      "trafficLogHint": "Scrive ogni richiesta dell'agente e ogni scambio con il provider per intero in logs/traffic-YYYYMMDD.jsonl, un file al giorno, conservato per due settimane. Le credibili restano mascherate. Viene applicato al salvataggio.",
       "updateFeedLabel": "Feed degli aggiornamenti",
       "updatesURL": "URL appcast",
       "updatesURLHint": "Il feed che Relo legge per le nuove versioni. Vuoto disattiva il controllo.",

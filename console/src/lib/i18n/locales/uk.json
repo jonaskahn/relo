@@ -38,8 +38,8 @@
       "signingOut": "Вихід…",
       "closeMenu": "Закрити меню",
       "integrations": "Інтеграції",
-      "agents": "Агенти",
-      "agentsAttention": "Agents need repair or restart",
+      "agents": "Agent Harness",
+      "agentsAttention": "Agent Harness потребує полагодження або перезапуску",
       "chat": "Чат",
       "actions": "Дії бічної панелі",
       "github": "GitHub",
@@ -454,7 +454,8 @@
           "noMatch": "Жодне підключення не відповідає пошуку чи фільтрам.",
           "filters": "Фільтри підключень",
           "filterOption": "{label} ({count})",
-          "tagFree": "Безкоштовно"
+          "tagFree": "Безкоштовно",
+          "tagExperimental": "Експериментальний"
         },
         "status": {
           "ready": "Готово",
@@ -1507,7 +1508,7 @@
         "description": "Усі налаштування демона в одному місці: вигляд, доступ, мережа, провайдери та обслуговування."
       },
       "integrationsPage": {
-        "title": "Агенти",
+        "title": "Agent Harness",
         "subtitle": "Підключіть агентів розробки на цій машині до Relo й довірте Relo їхні ключі.",
         "empty": "Немає агентів для підключення.",
         "tested": "Перевірений",
@@ -1741,6 +1742,8 @@
       "autostartHint": "Реєструє Relo для запуску під час входу. Застосовується під час збереження.",
       "logLevelLabel": "Рівень журналу",
       "logLevelHint": "Скільки демон пише в журнал. Застосовується після перезапуску.",
+      "trafficLogLabel": "Журнал трафіку",
+      "trafficLogHint": "Записує кожен запит агента та кожен обмін із провайдером повністю у logs/traffic-YYYYMMDD.jsonl, по одному файлу на день, зберігається два тижні. Облікові дані залишаються прихованими. Застосовується після збереження.",
       "updateFeedLabel": "Стрічка оновлень",
       "updatesURL": "URL appcast",
       "updatesURLHint": "Стрічка, яку Relo читає для пошуку нових версій. Порожня вимикає перевірку.",

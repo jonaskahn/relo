@@ -38,8 +38,8 @@
       "signingOut": "로그아웃하는 중…",
       "closeMenu": "메뉴 닫기",
       "integrations": "연동",
-      "agents": "에이전트",
-      "agentsAttention": "Agents need repair or restart",
+      "agents": "Agent Harness",
+      "agentsAttention": "Agent Harness를 수리하거나 다시 시작해야 해요",
       "chat": "채팅",
       "actions": "사이드바 작업",
       "github": "GitHub",
@@ -454,7 +454,8 @@
           "noMatch": "검색어나 필터와 일치하는 연결이 없습니다.",
           "filters": "연결 필터",
           "filterOption": "{label} ({count})",
-          "tagFree": "무료"
+          "tagFree": "무료",
+          "tagExperimental": "실험적"
         },
         "status": {
           "ready": "준비됨",
@@ -1507,7 +1508,7 @@
         "description": "모든 데몬 설정을 한곳에: 모양, 접근, 네트워크, 공급자, 유지 관리."
       },
       "integrationsPage": {
-        "title": "에이전트",
+        "title": "Agent Harness",
         "subtitle": "이 컴퓨터의 코딩 에이전트를 Relo에 연결하고 키를 Relo가 관리하도록 해요.",
         "empty": "연결할 에이전트가 없어요.",
         "tested": "테스트됨",
@@ -1741,6 +1742,8 @@
       "autostartHint": "로그인 시 Relo를 시작하도록 등록합니다. 저장할 때 적용됩니다.",
       "logLevelLabel": "로그 수준",
       "logLevelHint": "데몬이 로그에 기록하는 양. 재시작 후 적용됩니다.",
+      "trafficLogLabel": "트래픽 로그",
+      "trafficLogHint": "에이전트의 요청과 제공자 교환 전체를 logs/traffic-YYYYMMDD.jsonl에 하루 한 파일로 2주 동안 기록합니다. 자격 증명은 계속 가려집니다. 저장할 때 적용됩니다.",
       "updateFeedLabel": "업데이트 피드",
       "updatesURL": "appcast URL",
       "updatesURLHint": "Relo가 새 빌드를 확인하는 피드. 비우면 확인이 꺼집니다.",

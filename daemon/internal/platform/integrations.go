@@ -70,6 +70,11 @@ func (s *IntegrationStore) DeleteFiles(ctx context.Context, id string) error {
 	return s.repo.DeleteFiles(ctx, id)
 }
 
+// DeleteFile forgets one file record.
+func (s *IntegrationStore) DeleteFile(ctx context.Context, id, kind string) error {
+	return s.repo.DeleteFile(ctx, id, kind)
+}
+
 // AppendOp records one action.
 func (s *IntegrationStore) AppendOp(ctx context.Context, op integration.OpRecord) error {
 	return s.repo.AppendOp(ctx, sqlite.IntegrationOpRow{

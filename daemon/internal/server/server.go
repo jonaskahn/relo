@@ -51,6 +51,9 @@ type Options struct {
 	SchemaVersion SchemaVersionSource
 	Logger        *slog.Logger
 	Clock         clock.Clock
+	// Sessions holds the synthetic session ids of conversations a client did
+	// not name, so one unlabelled conversation keeps one upstream identity.
+	SessionLeases *account.SessionLeases
 	Version       string
 	// Catalogs holds the messages this process speaks. A server built
 	// without them loads the ones compiled into the binary.
@@ -100,6 +103,9 @@ type Options struct {
 	// Captures stores the raw messages of a request: what the agent sent,
 	// what Relo sent to a provider account, and what the provider answered.
 	Captures activity.CaptureWriter
+	// Traffic is the daily JSONL file that holds whole exchanges when the
+	// traffic log is on, and the place the detail page reads them back from.
+	Traffic TrafficLog
 	// Quota stores the windows a live upstream response reported, and
 	// QuotaFreshness reports which credentials a failed probe left reading
 	// an older observation. QuotaRefresh reads that quota again for one
@@ -291,6 +297,9 @@ func setServerInfra(opts *Options) {
 	}
 	if opts.Sessions == nil {
 		opts.Sessions = NewSessions(opts.Clock)
+	}
+	if opts.SessionLeases == nil {
+		opts.SessionLeases = account.NewSessionLeases(0, 0, opts.Clock)
 	}
 	if opts.Events == nil {
 		opts.Events = NewEventBus(EventBusOptions{Subscribers: MaxSubscribers})

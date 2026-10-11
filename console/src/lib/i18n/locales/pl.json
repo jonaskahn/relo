@@ -38,8 +38,8 @@
       "signingOut": "Wylogowywanie…",
       "closeMenu": "Zamknij menu",
       "integrations": "Integracje",
-      "agents": "Agenci",
-      "agentsAttention": "Agents need repair or restart",
+      "agents": "Agent Harness",
+      "agentsAttention": "Agent Harness wymaga naprawy lub ponownego uruchomienia",
       "chat": "Czat",
       "actions": "Działania paska bocznego",
       "github": "GitHub",
@@ -454,7 +454,8 @@
           "noMatch": "Żadne połączenie nie pasuje do wyszukiwania ani filtrów.",
           "filters": "Filtry połączeń",
           "filterOption": "{label} ({count})",
-          "tagFree": "Bezpłatne"
+          "tagFree": "Bezpłatne",
+          "tagExperimental": "Eksperymentalne"
         },
         "status": {
           "ready": "Gotowe",
@@ -1507,7 +1508,7 @@
         "description": "Wszystkie wybory demona w jednym miejscu: wygląd, dostęp, sieć, dostawcy i konserwacja."
       },
       "integrationsPage": {
-        "title": "Agenci",
+        "title": "Agent Harness",
         "subtitle": "Podłącz agentów kodowania na tym komputerze do Relo i pozwól Relo pilnować ich kluczy.",
         "empty": "Brak agentów do podłączenia.",
         "tested": "Przetestowano",
@@ -1741,6 +1742,8 @@
       "autostartHint": "Rejestruje Relo do startu przy logowaniu. Stosowane przy zapisie.",
       "logLevelLabel": "Poziom dziennika",
       "logLevelHint": "Ile demon zapisuje do dziennika. Działa po restarcie.",
+      "trafficLogLabel": "Dziennik ruchu",
+      "trafficLogHint": "Zapisuje każde żądanie agenta i każdą wymianę z dostawcą w całości do logs/traffic-YYYYMMDD.jsonl, jeden plik dziennie, przechowywany przez dwa tygodnie. Dane logowania pozostają zaciemnione. Działa po zapisaniu.",
       "updateFeedLabel": "Kanał aktualizacji",
       "updatesURL": "Adres appcast",
       "updatesURLHint": "Kanał, który Relo czyta, aby znaleźć nowsze wersje. Pusty wyłącza sprawdzanie.",

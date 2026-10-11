@@ -60,6 +60,7 @@ func relayExchange(exchange server.Exchange) upstream.Exchange {
 		Options: exchange.Options, Request: exchange.Request,
 		Inbound: exchange.Inbound, Surface: exchange.Surface,
 		RequestID:       exchange.RequestID,
+		CaptureLimit:    exchange.CaptureLimit,
 		RequiresStream:  exchange.RequiresStream,
 		CredentialLabel: exchange.CredentialLabel, CallWait: exchange.CallWait,
 		Final: exchange.Final,

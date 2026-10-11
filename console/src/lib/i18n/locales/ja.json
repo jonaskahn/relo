@@ -38,8 +38,8 @@
       "signingOut": "サインアウト中…",
       "closeMenu": "メニューを閉じる",
       "integrations": "連携",
-      "agents": "エージェント",
-      "agentsAttention": "Agents need repair or restart",
+      "agents": "Agent Harness",
+      "agentsAttention": "Agent Harness の修復または再起動が必要です",
       "chat": "チャット",
       "actions": "サイドバーの操作",
       "github": "GitHub",
@@ -454,7 +454,8 @@
           "noMatch": "検索やフィルターに一致する接続はありません。",
           "filters": "接続フィルター",
           "filterOption": "{label} ({count})",
-          "tagFree": "無料"
+          "tagFree": "無料",
+          "tagExperimental": "実験的"
         },
         "status": {
           "ready": "準備完了",
@@ -1507,7 +1508,7 @@
         "description": "デーモンの設定を一か所に: 外観、アクセス、ネットワーク、プロバイダー、メンテナンス。"
       },
       "integrationsPage": {
-        "title": "エージェント",
+        "title": "Agent Harness",
         "subtitle": "このマシンのコーディングエージェントをReloに接続し、キーをReloに管理させます。",
         "empty": "接続できるエージェントがありません。",
         "tested": "テスト済み",
@@ -1741,6 +1742,8 @@
       "autostartHint": "ログイン時に Relo を起動するよう登録します。保存時に適用されます。",
       "logLevelLabel": "ログレベル",
       "logLevelHint": "デーモンがログに書く量。再起動後に反映されます。",
+      "trafficLogLabel": "トラフィックログ",
+      "trafficLogHint": "エージェントのリクエストとプロバイダーとのやり取りを丸ごと logs/traffic-YYYYMMDD.jsonl に日ごとのファイルとして2週間書き込みます。資格情報は引き続き伏せられます。保存時に適用されます。",
       "updateFeedLabel": "更新フィード",
       "updatesURL": "appcast URL",
       "updatesURLHint": "Relo が新しいビルドを確認するフィード。空にすると確認を停止します。",

@@ -38,8 +38,8 @@
       "signingOut": "Đang đăng xuất…",
       "closeMenu": "Đóng menu",
       "integrations": "Tích hợp",
-      "agents": "Agent",
-      "agentsAttention": "Agents need repair or restart",
+      "agents": "Agent Harness",
+      "agentsAttention": "Agent Harness cần sửa hoặc khởi động lại",
       "chat": "Trò chuyện",
       "actions": "Thao tác thanh bên",
       "github": "GitHub",
@@ -454,7 +454,8 @@
           "noMatch": "Không có kết nối nào khớp với tìm kiếm hoặc bộ lọc.",
           "filters": "Bộ lọc kết nối",
           "filterOption": "{label} ({count})",
-          "tagFree": "Miễn phí"
+          "tagFree": "Miễn phí",
+          "tagExperimental": "Thử nghiệm"
         },
         "status": {
           "ready": "Sẵn sàng",
@@ -1507,7 +1508,7 @@
         "description": "Mọi lựa chọn của daemon ở một nơi: giao diện, truy cập, mạng, nhà cung cấp và bảo trì."
       },
       "integrationsPage": {
-        "title": "Agent",
+        "title": "Agent Harness",
         "subtitle": "Đấu nối các tác nhân mã hóa trên máy này tới Relo và để Relo giữ chìa khóa của họ.",
         "empty": "Không có agent để dây.",
         "tested": "Đã thử nghiệm",
@@ -1741,6 +1742,8 @@
       "autostartHint": "Đăng ký Relo khởi động khi đăng nhập. Áp dụng khi lưu.",
       "logLevelLabel": "Mức log",
       "logLevelHint": "Daemon ghi vào log bao nhiêu. Áp dụng sau khi khởi động lại.",
+      "trafficLogLabel": "Nhật ký lưu lượng",
+      "trafficLogHint": "Ghi toàn bộ yêu cầu của agent và trao đổi với nhà cung cấp vào logs/traffic-YYYYMMDD.jsonl, mỗi ngày một tệp, giữ trong vòng hai tuần. Thông tin đăng nhập vẫn được che. Áp dụng khi lưu.",
       "updateFeedLabel": "Nguồn cập nhật",
       "updatesURL": "URL appcast",
       "updatesURLHint": "Nguồn Relo đọc để tìm bản dựng mới. Để trống sẽ tắt kiểm tra.",

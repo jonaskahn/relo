@@ -12,7 +12,7 @@ import (
 
 const maxInboundRead = 64 << 20
 
-func captureInbound(redactor CaptureRedactor, r *http.Request) *CapturedMessage {
+func captureInbound(redactor CaptureRedactor, r *http.Request, limit int64) *CapturedMessage {
 	message := &CapturedMessage{
 		Method: r.Method, URL: inboundTarget(r), Headers: redactor.RedactHeaders(inboundHeaders(r)),
 	}
@@ -30,7 +30,7 @@ func captureInbound(redactor CaptureRedactor, r *http.Request) *CapturedMessage 
 	_ = r.Body.Close()
 	r.Body = io.NopCloser(bytes.NewReader(body))
 	r.ContentLength = int64(len(body))
-	kept, captureTruncated := redactor.CaptureBytes(body, redactor.MaxCaptureBytes())
+	kept, captureTruncated := redactor.CaptureBytes(body, limit)
 	message.Body, message.Truncated = redactor.RedactBody(kept), readTruncated || captureTruncated
 	return message
 }
@@ -59,11 +59,11 @@ func (s *Server) recordCaptures(ctx context.Context, eventID int64, outcome *req
 	}
 	captures := make([]activity.CaptureWrite, 0, len(outcome.attempts)*2+2)
 	if outcome.inbound != nil {
-		captures = append(captures, captureRow(nil, activity.CaptureAgentRequest, outcome.inbound))
+		captures = append(captures, s.captureRow(nil, activity.CaptureAgentRequest, outcome.inbound))
 	}
-	captures = appendAnswerCapture(captures, outcome)
+	captures = s.appendAnswerCapture(captures, outcome)
 	for ordinal, attempt := range outcome.attempts {
-		captures = appendAttemptCaptures(captures, ordinal, attempt)
+		captures = s.appendAttemptCaptures(captures, ordinal, attempt)
 	}
 	if len(captures) == 0 {
 		return
@@ -73,37 +73,45 @@ func (s *Server) recordCaptures(ctx context.Context, eventID int64, outcome *req
 	}
 }
 
-func appendAnswerCapture(captures []activity.CaptureWrite, outcome *requestOutcome) []activity.CaptureWrite {
+func (s *Server) appendAnswerCapture(captures []activity.CaptureWrite, outcome *requestOutcome) []activity.CaptureWrite {
 	// The answer belongs beside the request it answers, so a request whose
 	// bytes Relo could not decode still has both halves.
 	if outcome.answer != nil {
 		if message, ok := outcome.answer.captured(); ok {
-			captures = append(captures, captureRow(nil, activity.CaptureAgentResponse, message))
+			captures = append(captures, s.captureRow(nil, activity.CaptureAgentResponse, message))
 		}
 	}
 	return captures
 }
 
-func appendAttemptCaptures(captures []activity.CaptureWrite, ordinal int, attempt attemptRow) []activity.CaptureWrite {
+func (s *Server) appendAttemptCaptures(captures []activity.CaptureWrite, ordinal int, attempt attemptRow) []activity.CaptureWrite {
 	if attempt.capture == nil {
 		return captures
 	}
 	index := ordinal
 	if attempt.capture.Request != nil {
-		captures = append(captures, captureRow(&index, activity.CaptureProviderRequest, attempt.capture.Request))
+		captures = append(captures, s.captureRow(&index, activity.CaptureProviderRequest, attempt.capture.Request))
 	}
 	if attempt.capture.Response != nil {
-		captures = append(captures, captureRow(&index, activity.CaptureProviderResponse, attempt.capture.Response))
+		captures = append(captures, s.captureRow(&index, activity.CaptureProviderResponse, attempt.capture.Response))
 	}
 	return captures
 }
 
-func captureRow(ordinal *int, kind string, message *CapturedMessage) activity.CaptureWrite {
+func (s *Server) captureRow(ordinal *int, kind string, message *CapturedMessage) activity.CaptureWrite {
+	// The traffic log raises the capture bound, so a body kept whole for the
+	// file on disk is cut back to the state cap here: what the state database
+	// holds stays the size it always was.
+	kept, truncated := s.clampCapture(message.Body)
 	return activity.CaptureWrite{
 		Ordinal: ordinal, Kind: kind, Method: message.Method, URL: message.URL,
-		Status: message.Status, Headers: message.Headers, Body: message.Body,
-		Truncated: message.Truncated,
+		Status: message.Status, Headers: message.Headers, Body: kept,
+		Truncated: message.Truncated || truncated,
 	}
+}
+
+func (s *Server) clampCapture(body []byte) ([]byte, bool) {
+	return s.opts.CaptureRedactor.CaptureBytes(body, s.opts.CaptureRedactor.MaxCaptureBytes())
 }
 
 type agentAnswer struct {
@@ -118,8 +126,8 @@ type agentAnswer struct {
 
 var _ http.ResponseWriter = (*agentAnswer)(nil)
 
-func newAgentAnswer(w http.ResponseWriter, redactor CaptureRedactor) *agentAnswer {
-	return &agentAnswer{ResponseWriter: w, redactor: redactor, limit: redactor.MaxCaptureBytes()}
+func newAgentAnswer(w http.ResponseWriter, redactor CaptureRedactor, limit int64) *agentAnswer {
+	return &agentAnswer{ResponseWriter: w, redactor: redactor, limit: limit}
 }
 
 // WriteHeader keeps the headers the reply was written with, once, and hands

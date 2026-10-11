@@ -31,7 +31,7 @@ func TestCatalogMergeKeepsTheRestOfTheFile(t *testing.T) {
 		{codingclients.FileClineModels, "", "Relo", base},
 		{codingclients.FileOMP, "theme: dark\nproviders:\n  openai:\n    api: openai\n", "${RELO_OMP_API_KEY}", base + "/v1"},
 		{codingclients.FileGajae, "", "openai-completions", base + "/v1"},
-		{codingclients.FileDSH, "providers:\n  other:\n    baseUrl: http://example\n", "${RELO_DSH_API_KEY}", base},
+		{codingclients.FileDSH, "- id: other\n  config:\n    providers:\n      openai:\n        baseURL: http://example\n", "apiKeyEnv: RELO_DSH_API_KEY", base + "/v1"},
 		{codingclients.FileMCode, "editor: vim\n", "${RELO_MCODE_API_KEY}", base},
 		{codingclients.FileRaycast, "providers:\n  - id: openai\n    name: OpenAI\n", "Relo", base},
 		{codingclients.FileKimi, "[providers.other]\nbase_url = \"http://example\"\n", "${RELO_KIMI_API_KEY}", base + "/v1"},

@@ -4,6 +4,8 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/jonaskahn/relo/internal/account"
 )
 
 func TestConversationOfReadsTheClientThread(t *testing.T) {
@@ -67,6 +69,54 @@ func TestConversationOfReadsTheClientThread(t *testing.T) {
 		request.Header.Set("conversation_id", "conv")
 		if got := conversationOf(request); got != "conv" {
 			t.Fatalf("conversation = %q, want the conversation id", got)
+		}
+	})
+}
+
+func TestConversationAnchorLeasesASession(t *testing.T) {
+	t.Run("a named conversation always wins", func(t *testing.T) {
+		server := &Server{opts: Options{SessionLeases: account.NewSessionLeases(0, 0, nil)}}
+		request := httptest.NewRequest(http.MethodPost, "/", nil)
+		request.Header.Set("session-id", "sess")
+		outcome := &requestOutcome{requestID: "req-1"}
+		if got := server.conversationAnchor(outcome, request); got != "sess" {
+			t.Fatalf("anchor = %q, want the named conversation", got)
+		}
+	})
+
+	t.Run("one unlabelled client keeps one session across requests", func(t *testing.T) {
+		server := &Server{opts: Options{SessionLeases: account.NewSessionLeases(0, 0, nil)}}
+		first := &requestOutcome{requestID: "req-1"}
+		request := httptest.NewRequest(http.MethodPost, "/", nil)
+		anchor := server.conversationAnchor(first, request)
+		if anchor == "" {
+			t.Fatal("anchor is empty, want a leased session")
+		}
+		if again := server.conversationAnchor(first, request); again != anchor {
+			t.Fatalf("anchor = %q, want the leased session %q", again, anchor)
+		}
+		second := &requestOutcome{requestID: "req-2"}
+		if again := server.conversationAnchor(second, request); again != anchor {
+			t.Fatalf("anchor = %q on the next request, want the leased session", again)
+		}
+	})
+
+	t.Run("one retry attempt stays on the request session", func(t *testing.T) {
+		server := &Server{opts: Options{SessionLeases: account.NewSessionLeases(0, 0, nil)}}
+		request := httptest.NewRequest(http.MethodPost, "/", nil)
+		outcome := &requestOutcome{requestID: "req-1"}
+		anchor := server.conversationAnchor(outcome, request)
+		if again := server.conversationAnchor(outcome, request); again != anchor {
+			t.Fatalf("anchor = %q on the retry, want the leased session", again)
+		}
+	})
+
+	t.Run("a server without leases leaves the anchor empty", func(t *testing.T) {
+		server := &Server{}
+		request := httptest.NewRequest(http.MethodPost, "/", nil)
+		outcome := &requestOutcome{requestID: "req-1"}
+		if got := server.conversationAnchor(outcome, request); got != "" {
+			t.Fatalf("anchor = %q, want no session without a store", got)
 		}
 	})
 }

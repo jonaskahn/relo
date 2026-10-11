@@ -127,6 +127,9 @@ type AdminConfig struct {
 // LoggingConfig configures the process-wide logger.
 type LoggingConfig struct {
 	Level string `toml:"level"`
+	// Traffic also writes every request and provider exchange, in full, to a
+	// daily JSONL file in the logs folder. Off by default: the file holds prompts.
+	Traffic bool `toml:"traffic"`
 }
 
 // Addr returns the host:port the listener binds.

@@ -55,7 +55,7 @@ export const CLIENT_OPTIONS: ClientOption[] = [
 	// Kimi Code has no mark under its own id, so it wears the published Kimi one.
 	{ id: 'kimi', label: 'Kimi', kind: 'agent', protocol: 'openai', logoId: 'kimi-code-plan-cn' },
 	{ id: 'gajae', label: 'Gajae', kind: 'agent', protocol: 'openai' },
-	{ id: 'dsh', label: 'DSH', kind: 'agent', protocol: 'openai', logoId: 'dsh' },
+	{ id: 'dsh', label: 'DeepSeek Harness', kind: 'agent', protocol: 'openai', logoId: 'dsh' },
 	{ id: 'mcode', label: 'Mcode', kind: 'agent', protocol: 'openai', logoId: 'mcode' },
 	{ id: 'zcode', label: 'Zcode', kind: 'agent', protocol: 'openai' },
 	{ id: 'prime', label: 'Prime', kind: 'agent', protocol: 'openai' },

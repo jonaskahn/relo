@@ -783,13 +783,21 @@ func (s *Server) handleCaptures(w http.ResponseWriter, r *http.Request) {
 		writeServiceError(w, err)
 		return
 	}
+	var whole map[int64]bool
+	if len(captures) > 0 && s.opts.Traffic != nil && s.trafficOn() {
+		whole = s.wholeBodies(r.Context(), reads, eventID, captures)
+	}
 	items := make([]captureResponse, 0, len(captures))
 	for _, capture := range captures {
-		items = append(items, captureResponse{
+		listed := captureResponse{
 			ID: capture.ID, Kind: capture.Kind, Ordinal: capture.Ordinal,
 			Method: capture.Method, URL: capture.URL, Status: capture.Status,
 			Headers: capture.Headers, BodyBytes: capture.BodyBytes, Truncated: capture.Truncated,
-		})
+		}
+		if whole[capture.ID] {
+			listed.Truncated = false
+		}
+		items = append(items, listed)
 	}
 	writeJSON(w, http.StatusOK, capturesResponse{Items: items})
 }
@@ -822,6 +830,13 @@ func (s *Server) handleCaptureBody(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		s.failCaptureRead(w, r, err)
 		return
+	}
+	// The state rows keep a bounded body. When the traffic log held this
+	// request whole, its body is what the operator opens.
+	if body.Truncated {
+		if whole, ok := s.wholeCaptureBody(r.Context(), reads, eventID, captureID); ok {
+			body.Body, body.BodyBytes, body.Truncated = whole, int64(len(whole)), false
+		}
 	}
 	w.Header().Set("Content-Type", "application/octet-stream")
 	w.Header().Set("Cache-Control", "no-store")

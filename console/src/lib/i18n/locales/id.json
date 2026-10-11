@@ -38,8 +38,8 @@
       "signingOut": "Sedang keluar…",
       "closeMenu": "Tutup menu",
       "integrations": "Integrasi",
-      "agents": "Agen",
-      "agentsAttention": "Agents need repair or restart",
+      "agents": "Agent Harness",
+      "agentsAttention": "Agent Harness perlu perbaikan atau mulai ulang",
       "chat": "Obrolan",
       "actions": "Tindakan sidebar",
       "github": "GitHub",
@@ -454,7 +454,8 @@
           "noMatch": "Tidak ada koneksi yang cocok dengan pencarian atau filter.",
           "filters": "Filter koneksi",
           "filterOption": "{label} ({count})",
-          "tagFree": "Gratis"
+          "tagFree": "Gratis",
+          "tagExperimental": "Eksperimental"
         },
         "status": {
           "ready": "Siap",
@@ -1507,7 +1508,7 @@
         "description": "Semua pilihan daemon di satu tempat: tampilan, akses, jaringan, penyedia, dan pemeliharaan."
       },
       "integrationsPage": {
-        "title": "Agen",
+        "title": "Agent Harness",
         "subtitle": "Kirimkan agen pengkodean pada mesin ini ke Relo, dan biarkan Relo menyimpan kuncinya.",
         "empty": "Tidak ada agen yang mengirim.",
         "tested": "Diuji",
@@ -1741,6 +1742,8 @@
       "autostartHint": "Mendaftarkan Relo untuk mulai saat masuk. Diterapkan saat disimpan.",
       "logLevelLabel": "Tingkat log",
       "logLevelHint": "Seberapa banyak daemon menulis ke log. Berlaku setelah mulai ulang.",
+      "trafficLogLabel": "Log lalu lintas",
+      "trafficLogHint": "Menulis setiap permintaan agen dan setiap pertukaran dengan penyedia secara utuh ke logs/traffic-YYYYMMDD.jsonl, satu berkas per hari, disimpan selama dua minggu. Kredensial tetap disamarkan. Berlaku saat disimpan.",
       "updateFeedLabel": "Feed pembaruan",
       "updatesURL": "URL appcast",
       "updatesURLHint": "Feed yang dibaca Relo untuk versi baru. Kosong mematikan pemeriksaan.",

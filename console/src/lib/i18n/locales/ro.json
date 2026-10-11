@@ -38,8 +38,8 @@
       "signingOut": "Se deconectează…",
       "closeMenu": "Închide meniul",
       "integrations": "Integrări",
-      "agents": "Agenti",
-      "agentsAttention": "Agents need repair or restart",
+      "agents": "Agent Harness",
+      "agentsAttention": "Agent Harness are nevoie de reparație sau repornire",
       "chat": "Chat",
       "actions": "Acțiuni din bara laterală",
       "github": "GitHub",
@@ -454,7 +454,8 @@
           "noMatch": "Nicio conexiune nu corespunde căutării sau filtrelor.",
           "filters": "Filtre conexiuni",
           "filterOption": "{label} ({count})",
-          "tagFree": "Gratuit"
+          "tagFree": "Gratuit",
+          "tagExperimental": "Experimental"
         },
         "status": {
           "ready": "Pregătit",
@@ -1507,7 +1508,7 @@
         "description": "Toate alegerile daemonului într-un singur loc: aspect, acces, rețea, furnizori și mentenanță."
       },
       "integrationsPage": {
-        "title": "Agenți",
+        "title": "Agent Harness",
         "subtitle": "Conectați agenții de programare de pe acest aparat la Relo și lăsați Relo să le păstreze cheile.",
         "empty": "Niciun agent de conectat.",
         "tested": "Testat",
@@ -1741,6 +1742,8 @@
       "autostartHint": "Înregistrează Relo pentru pornire la autentificare. Se aplică la salvare.",
       "logLevelLabel": "Nivel de jurnal",
       "logLevelHint": "Cât scrie daemonul în jurnal. Se aplică după o repornire.",
+      "trafficLogLabel": "Jurnal de trafic",
+      "trafficLogHint": "Scrie fiecare cerere a agentului și fiecare schimb cu furnizorul integral în logs/traffic-YYYYMMDD.jsonl, un fișier pe zi, păstrat două săptămâni. Datele de autentificare rămân mascate. Se aplică la salvare.",
       "updateFeedLabel": "Flux de actualizări",
       "updatesURL": "URL appcast",
       "updatesURLHint": "Fluxul pe care îl citește Relo pentru versiuni noi. Gol oprește verificarea.",

@@ -67,6 +67,10 @@ type Exchange struct {
 	Inbound    wire.InboundCodec
 	Surface    string
 	RequestID  string
+	// CaptureLimit overrides how much of each body this attempt keeps, which
+	// the traffic log raises so the state rows stay small while the file on
+	// disk holds the exchange whole.
+	CaptureLimit int64
 	// RequiresStream reports that the connection's upstream only answers a
 	// streamed request, so a client that asked for one complete body is
 	// served by reassembling the stream rather than by a one-shot request the
@@ -263,7 +267,7 @@ func (e *Executor) dispatchOnce(ctx context.Context, pass dispatchPass, num int)
 		return false, true, result, err
 	}
 	if num == 0 {
-		if message, captureErr := captureRequest(outbound, MaxCaptureBytes); captureErr == nil {
+		if message, captureErr := captureRequest(outbound, ex.captureLimit()); captureErr == nil {
 			pass.state.capture.Request = message
 		}
 	}

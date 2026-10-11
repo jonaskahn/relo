@@ -50,6 +50,7 @@ func clientRefs(models []ModelRef) []codingclients.ModelRef {
 			MaxOutput: ref.MaxOutput, Tools: ref.Tools, Reasoning: ref.Reasoning,
 			Vision: ref.Vision, Connection: ref.Connection, Upstream: ref.Upstream,
 			ChatGPT: ref.ChatGPT, ReasoningEfforts: ref.ReasoningEfforts,
+			ReasoningToggle: ref.ReasoningToggle,
 		})
 	}
 	return converted

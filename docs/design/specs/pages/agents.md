@@ -1,16 +1,17 @@
 ---
-name: agents
+name: agent-harness
 description: Coding client cards and setup.
 requires: [toolbar-and-layout-control, cards-and-quota, status-and-banners, modal-and-dialogs]
 ---
 
-# Agents
+# Agent Harness
 
-Route `/agents` (`/integrations` redirects). Lists supported coding clients with setup state; configured agents above
-those not set up. The layout control sits above both sections and re-solves both grids with the shared morph; the page
-adds no motion of its own. Clicking anywhere on a card opens the detail modal; Setup, Manage and the action buttons keep
-their own jobs, and the title button (`aria-label="Open <name>"`) is the accessible target. Warnings scroll inside the
-card; Setup and Manage sit under the body. OpenCode, Claude Code, Claude Desktop, Codex, Pi and OMP carry a **Tested**
+Route `/agent-harness` (`/agents` and `/integrations` redirect). Lists supported coding clients with setup state;
+configured agents above those not set up. The layout control sits above both sections and re-solves both grids with the
+shared morph; the page adds no motion of its own. Clicking anywhere on a card opens the detail modal; Setup, Manage and
+the action buttons keep their own jobs, and the title button (`aria-label="Open <name>"`) is the accessible target.
+Warnings scroll inside the card; Setup and Manage sit under the body. OpenCode, Claude Code, Claude Desktop, Codex, Pi
+and OMP carry a **Tested**
 pill in the head's right column; every other client carries **Not tested yet** (neutral pill). The detail modal
 shows the client key, managed-file status or manual setup steps, model choices and verification. Setup, repair and
 rotation report their result before the operator leaves; destructive changes ask for confirmation.

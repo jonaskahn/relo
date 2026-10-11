@@ -30,7 +30,7 @@
 		if (p.startsWith('/logs')) return 'ui.pages.logs.title';
 		if (p.startsWith('/usage')) return 'ui.pages.usage.title';
 		if (p.startsWith('/chat')) return 'ui.pages.chatPage.title';
-		if (p.startsWith('/agents') || p.startsWith('/integrations')) return 'ui.sidebar.agents';
+		if (p.startsWith('/agent-harness') || p.startsWith('/integrations')) return 'ui.sidebar.agents';
 		if (p.startsWith('/settings')) return 'ui.pages.settings.title';
 		return 'ui.sidebar.console';
 	});

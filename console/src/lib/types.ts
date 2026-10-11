@@ -849,6 +849,7 @@ export interface Settings {
 export interface SystemSettings {
 	readonly autostart: boolean;
 	readonly log_level: string;
+	readonly log_traffic: boolean;
 	readonly updates_url: string;
 	readonly updates_download: string;
 }

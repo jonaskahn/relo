@@ -10,6 +10,7 @@
 	import CardTitle from '$lib/components/ui/card-title.svelte';
 	import { selectedAccount } from '$lib/provider-quota';
 	import { isFreeConnection } from '$lib/provider-free';
+	import { isExperimentalConnection } from '$lib/provider-experimental';
 	import { providerStatus, type ProviderStatusName } from '$lib/provider-status';
 	import { ATTENTION_PERCENT } from '$lib/provider-attention';
 	import { isCardOpenClick } from '$lib/card-target';
@@ -111,6 +112,8 @@
 		worst >= 100 ? 'limitReached' : worst >= ATTENTION_PERCENT ? 'nearLimit' : status.name
 	);
 	const free = $derived(isFreeConnection(provider));
+	// The lane logs what it is sent, so the card says so beside what it costs.
+	const experimental = $derived(isExperimentalConnection(provider.template_id || provider.id));
 </script>
 
 <Card
@@ -145,6 +148,14 @@
 					{#if free}
 						<span data-free-chip class="badge shrink-0 border border-ok/40 bg-ok/10 text-ok">
 							{$t('ui.pages.providersPage.list.tagFree')}
+						</span>
+					{/if}
+					{#if experimental}
+						<span
+							data-experimental-chip
+							class="badge shrink-0 border border-border text-muted-foreground"
+						>
+							{$t('ui.pages.providersPage.list.tagExperimental')}
 						</span>
 					{/if}
 				</CardTitle>

@@ -35,20 +35,21 @@ type retentionSettingsRequest struct {
 type systemSettingsResponse struct {
 	Autostart       bool   `json:"autostart"`
 	LogLevel        string `json:"log_level"`
+	LogTraffic      bool   `json:"log_traffic"`
 	UpdatesURL      string `json:"updates_url"`
 	UpdatesDownload string `json:"updates_download"`
 }
 
 func toSystemSettingsResponse(system appsettings.SystemSettings) systemSettingsResponse {
 	return systemSettingsResponse{
-		Autostart: system.Autostart, LogLevel: system.LogLevel,
+		Autostart: system.Autostart, LogLevel: system.LogLevel, LogTraffic: system.LogTraffic,
 		UpdatesURL: system.UpdatesURL, UpdatesDownload: system.UpdatesDownload,
 	}
 }
 
 func toSystemSettings(request systemSettingsRequest) appsettings.SystemSettings {
 	return appsettings.SystemSettings{
-		Autostart: request.Autostart, LogLevel: request.LogLevel,
+		Autostart: request.Autostart, LogLevel: request.LogLevel, LogTraffic: request.LogTraffic,
 		UpdatesURL: request.UpdatesURL, UpdatesDownload: request.UpdatesDownload,
 	}
 }
@@ -56,6 +57,7 @@ func toSystemSettings(request systemSettingsRequest) appsettings.SystemSettings 
 type systemSettingsRequest struct {
 	Autostart       bool   `json:"autostart"`
 	LogLevel        string `json:"log_level"`
+	LogTraffic      bool   `json:"log_traffic"`
 	UpdatesURL      string `json:"updates_url"`
 	UpdatesDownload string `json:"updates_download"`
 }

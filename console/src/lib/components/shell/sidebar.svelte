@@ -231,7 +231,7 @@
 						>
 							{$t(link.labelKey)}
 						</span>
-						{#if link.href === '/agents' && agentAttention.count > 0}
+						{#if link.href === '/agent-harness' && agentAttention.count > 0}
 							<span
 								role="img"
 								aria-label={$t('ui.sidebar.agentsAttention')}

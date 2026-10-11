@@ -8,6 +8,7 @@
 
   [system.logging]
     level = "info"    # debug | info | warn | error
+    traffic = false   # true also writes every agent and provider exchange, in full, to logs/traffic-YYYYMMDD.jsonl
 
   [system.updates]
     url = "https://jonaskahn.github.io/relo/appcast.xml"          # empty turns the version check off

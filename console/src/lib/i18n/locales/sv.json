@@ -38,8 +38,8 @@
       "signingOut": "Loggar ut…",
       "closeMenu": "Stäng menyn",
       "integrations": "Integrationer",
-      "agents": "Agenter",
-      "agentsAttention": "Agents need repair or restart",
+      "agents": "Agent Harness",
+      "agentsAttention": "Agent Harness behöver repareras eller startas om",
       "chat": "Chatt",
       "actions": "Åtgärder i menyn",
       "github": "GitHub",
@@ -454,7 +454,8 @@
           "noMatch": "Ingen anslutning matchar din sökning eller dina filter.",
           "filters": "Anslutningsfilter",
           "filterOption": "{label} ({count})",
-          "tagFree": "Gratis"
+          "tagFree": "Gratis",
+          "tagExperimental": "Experimentell"
         },
         "status": {
           "ready": "Redo",
@@ -1507,7 +1508,7 @@
         "description": "Alla daemonval på ett ställe: utseende, åtkomst, nätverk, leverantörer och underhåll."
       },
       "integrationsPage": {
-        "title": "Agenter",
+        "title": "Agent Harness",
         "subtitle": "Koppla kodningsagenterna på den här maskinen till Relo, och låt Relo behålla deras nycklar.",
         "empty": "Inga agenter att koppla.",
         "tested": "Testad",
@@ -1741,6 +1742,8 @@
       "autostartHint": "Registrerar Relo att starta vid inloggning. Tillämpas när du sparar.",
       "logLevelLabel": "Loggnivå",
       "logLevelHint": "Hur mycket daemonen skriver till loggen. Gäller efter en omstart.",
+      "trafficLogLabel": "Trafiklogg",
+      "trafficLogHint": "Skriver varje begäran från agenten och varje utbyte med leverantören i sin helhet till logs/traffic-YYYYMMDD.jsonl, en fil per dag, sparas i två veckor. Inloggningsuppgifter förblir maskerade. Tillämpas när du sparar.",
       "updateFeedLabel": "Uppdateringsflöde",
       "updatesURL": "Appcast-URL",
       "updatesURLHint": "Flödet Relo läser för nya versioner. Tomt stänger av kontrollen.",

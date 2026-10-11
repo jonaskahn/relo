@@ -38,8 +38,8 @@
       "signingOut": "กำลังออกจากระบบ…",
       "closeMenu": "ปิดเมนู",
       "integrations": "การผสานรวม",
-      "agents": "agent",
-      "agentsAttention": "Agents need repair or restart",
+      "agents": "Agent Harness",
+      "agentsAttention": "Agent Harness ต้องการซ่อมหรือเริ่มใหม่",
       "chat": "แชต",
       "actions": "คำสั่งในแถบด้านข้าง",
       "github": "GitHub",
@@ -454,7 +454,8 @@
           "noMatch": "ไม่มีการเชื่อมต่อที่ตรงกับการค้นหาหรือตัวกรอง",
           "filters": "ตัวกรองการเชื่อมต่อ",
           "filterOption": "{label} ({count})",
-          "tagFree": "ฟรี"
+          "tagFree": "ฟรี",
+          "tagExperimental": "ทดลอง"
         },
         "status": {
           "ready": "พร้อมใช้งาน",
@@ -1507,7 +1508,7 @@
         "description": "ทุกตัวเลือกของดีมอนในที่เดียว: รูปลักษณ์ การเข้าถึง เครือข่าย ผู้ให้บริการ และการบำรุงรักษา"
       },
       "integrationsPage": {
-        "title": "เอเจนต์",
+        "title": "Agent Harness",
         "subtitle": "ต่อเอเจนต์เขียนโค้ดในเครื่องนี้เข้ากับ Relo และให้ Relo ดูแลคีย์ของมัน",
         "empty": "ไม่มีเอเจนต์ให้เชื่อม",
         "tested": "ทดสอบแล้ว",
@@ -1741,6 +1742,8 @@
       "autostartHint": "ลงทะเบียน Relo ให้เริ่มเมื่อลงชื่อเข้าใช้ มีผลเมื่อบันทึก",
       "logLevelLabel": "ระดับล็อก",
       "logLevelHint": "ดีมอนเขียนล็อกมากแค่ไหน มีผลหลังรีสตาร์ท",
+      "trafficLogLabel": "บันทึกการรับส่งข้อมูล",
+      "trafficLogHint": "เขียนคำขอของเอเจนต์และการแลกเปลี่ยนกับผู้ให้บริการทั้งหมดลง logs/traffic-YYYYMMDD.jsonl ไฟล์หนึ่งไฟล์ต่อวัน เก็บไว้สองสัปดาห์ ข้อมูลรับรองยังถูกปิดบัง ใช้งานเมื่อบันทึก",
       "updateFeedLabel": "ฟีดอัปเดต",
       "updatesURL": "URL appcast",
       "updatesURLHint": "ฟีดที่ Relo อ่านเพื่อหาบิลด์ใหม่ เว้นว่างเพื่อปิดการตรวจสอบ",
