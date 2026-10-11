@@ -91,17 +91,23 @@ type wireMessage struct {
 }
 
 type wireBlock struct {
-	Type      string          `json:"type"`
-	Text      string          `json:"text,omitempty"`
-	Thinking  *string         `json:"thinking,omitempty"`
-	Signature string          `json:"signature,omitempty"`
-	Source    *imageSource    `json:"source,omitempty"`
-	ID        string          `json:"id,omitempty"`
-	Name      string          `json:"name,omitempty"`
-	Input     json.RawMessage `json:"input,omitempty"`
-	ToolUseID string          `json:"tool_use_id,omitempty"`
-	Result    string          `json:"content,omitempty"`
-	IsError   bool            `json:"is_error,omitempty"`
+	Type         string           `json:"type"`
+	Text         string           `json:"text,omitempty"`
+	Thinking     *string          `json:"thinking,omitempty"`
+	Signature    string           `json:"signature,omitempty"`
+	Source       *imageSource     `json:"source,omitempty"`
+	ID           string           `json:"id,omitempty"`
+	Name         string           `json:"name,omitempty"`
+	Input        json.RawMessage  `json:"input,omitempty"`
+	ToolUseID    string           `json:"tool_use_id,omitempty"`
+	Result       string           `json:"content,omitempty"`
+	IsError      bool             `json:"is_error,omitempty"`
+	CacheControl *cacheControlDef `json:"cache_control,omitempty"`
+}
+
+type cacheControlDef struct {
+	Type string `json:"type"`
+	TTL  string `json:"ttl,omitempty"`
 }
 
 type imageSource struct {
@@ -212,15 +218,28 @@ func systemField(prompt string, oauth bool, firstUser string) json.RawMessage {
 }
 
 func oauthSystem(prompt, firstUser string) []wireBlock {
-	lead := billingHeader(firstUser)
-	if strings.HasPrefix(strings.TrimSpace(prompt), claudeCodeIdentity) {
-		return []wireBlock{{Type: blockText, Text: lead + prompt}}
+	billing := wireBlock{Type: blockText, Text: billingHeader(firstUser)}
+	identity := claudeCodeIdentity
+	if !strings.HasPrefix(strings.TrimSpace(prompt), claudeCodeIdentity) {
+		blocks := []wireBlock{billing, {
+			Type:         blockText,
+			Text:         identity,
+			CacheControl: &cacheControlDef{Type: "ephemeral", TTL: "1h"},
+		}}
+		if prompt != "" {
+			blocks = append(blocks, wireBlock{
+				Type:         blockText,
+				Text:         prompt,
+				CacheControl: &cacheControlDef{Type: "ephemeral", TTL: "1h"},
+			})
+		}
+		return blocks
 	}
-	blocks := []wireBlock{{Type: blockText, Text: lead + claudeCodeIdentity}}
-	if prompt != "" {
-		blocks = append(blocks, wireBlock{Type: blockText, Text: prompt})
-	}
-	return blocks
+	return []wireBlock{billing, {
+		Type:         blockText,
+		Text:         prompt,
+		CacheControl: &cacheControlDef{Type: "ephemeral", TTL: "1h"},
+	}}
 }
 
 func encodeMessages(messages []inference.Message, oauth bool) []wireMessage {

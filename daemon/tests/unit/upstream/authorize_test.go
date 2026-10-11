@@ -49,7 +49,7 @@ func TestAuthorizeBackfillsMissingClaudeIdentity(t *testing.T) {
 	newSource := func(values map[string]string) (*upstream.Source, *memorySecrets) {
 		secrets := &memorySecrets{values: values}
 		return upstream.New(upstream.Options{
-			Pools: &memoryPools{entries: map[string]account.PoolEntry{entry.ID: entry}},
+			Pools:   &memoryPools{entries: map[string]account.PoolEntry{entry.ID: entry}},
 			Secrets: secrets, Flows: &memoryFlows{}, Adapters: templateAdapters{},
 			IdentityEndpoint: identity.URL,
 		}), secrets
@@ -86,7 +86,7 @@ func TestAuthorizeBackfillsMissingClaudeIdentity(t *testing.T) {
 			"secret": `{"access_token":"live","refresh_token":"r","expires_at":"2999-01-01T00:00:00Z"}`,
 		}}
 		source := upstream.New(upstream.Options{
-			Pools: &memoryPools{entries: map[string]account.PoolEntry{entry.ID: entry}},
+			Pools:   &memoryPools{entries: map[string]account.PoolEntry{entry.ID: entry}},
 			Secrets: secrets, Flows: &memoryFlows{}, Adapters: templateAdapters{},
 			IdentityEndpoint: down.URL,
 		})

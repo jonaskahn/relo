@@ -57,7 +57,7 @@ type Options struct {
 	// DeviceSeed is the installation secret subscription device ids derive
 	// from. Empty leaves device attribution out of subscription requests.
 	DeviceSeed string
-	Version       string
+	Version    string
 	// Catalogs holds the messages this process speaks. A server built
 	// without them loads the ones compiled into the binary.
 	Catalogs *i18n.Catalogs

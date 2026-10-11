@@ -92,17 +92,27 @@ func TestEncodeRequest(t *testing.T) {
 	t.Run("an OAuth request leads the system with the Claude Code identity", func(t *testing.T) {
 		body := encodeBody(t, canonicalRequest(false), wire.CodecOpts{CredentialRef: "oauth-token", AuthMethod: "oauth"})
 		blocks, _ := body["system"].([]any)
-		if len(blocks) != 2 {
-			t.Fatalf("system = %v, want the identity then the prompt", body["system"])
+		if len(blocks) != 3 {
+			t.Fatalf("system = %v, want billing, identity, then the prompt", body["system"])
 		}
 		first := blocks[0].(map[string]any)
 		text, _ := first["text"].(string)
 		if first["type"] != "text" || !strings.HasPrefix(text, "x-anthropic-billing-header:") ||
-			!strings.Contains(text, "You are Claude Code, Anthropic's official CLI for Claude.") {
-			t.Fatalf("first system block = %v, want the billing line and the Claude Code identity", first)
+			strings.Contains(text, "You are Claude Code, Anthropic's official CLI for Claude.") {
+			t.Fatalf("first system block = %v, want only the billing line", first)
 		}
-		if blocks[1].(map[string]any)["text"] != "be brief" {
-			t.Fatalf("second system block = %v, want the request prompt", blocks[1])
+		second := blocks[1].(map[string]any)
+		if second["text"] != "You are Claude Code, Anthropic's official CLI for Claude." {
+			t.Fatalf("second system block = %v, want the Claude Code identity", second)
+		}
+		if blocks[2].(map[string]any)["text"] != "be brief" {
+			t.Fatalf("third system block = %v, want the request prompt", blocks[2])
+		}
+		for _, index := range []int{1, 2} {
+			cache, _ := blocks[index].(map[string]any)["cache_control"].(map[string]any)
+			if cache["type"] != "ephemeral" || cache["ttl"] != "1h" {
+				t.Fatalf("system block %d cache = %v, want the 1h breakpoint", index, cache)
+			}
 		}
 	})
 
@@ -111,13 +121,13 @@ func TestEncodeRequest(t *testing.T) {
 		request.Messages[0].Content[0].Text = "You are Claude Code, Anthropic's official CLI for Claude.\n\nbe brief"
 		body := encodeBody(t, request, wire.CodecOpts{CredentialRef: "oauth-token", AuthMethod: "oauth"})
 		blocks, _ := body["system"].([]any)
-		if len(blocks) != 1 {
-			t.Fatalf("system = %v, want a single block", body["system"])
+		if len(blocks) != 2 {
+			t.Fatalf("system = %v, want billing then the prompt", body["system"])
 		}
-		text, _ := blocks[0].(map[string]any)["text"].(string)
+		text, _ := blocks[1].(map[string]any)["text"].(string)
 		if strings.Count(text, "You are Claude Code, Anthropic's official CLI for Claude.") != 1 ||
 			!strings.Contains(text, request.Messages[0].Content[0].Text) {
-			t.Fatalf("system = %v, want the prompt once, under the billing line", blocks[0])
+			t.Fatalf("system = %v, want the prompt once, after the billing line", blocks[1])
 		}
 	})
 
