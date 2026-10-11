@@ -757,7 +757,11 @@
           "switchOn4xx": "4xx'te geçiş yap",
           "switchOn4xxHint": "Relay'in zaten yeniden denemediği bir 4xx'te bu bağlantının başka hesabını dener.",
           "switchOn5xx": "5xx'te geçiş yap",
-          "switchOn5xxHint": "Relay'in zaten yeniden denemediği bir 5xx'te bu bağlantının başka hesabını dener."
+          "switchOn5xxHint": "Relay'in zaten yeniden denemediği bir 5xx'te bu bağlantının başka hesabını dener.",
+          "antigravityTitle": "Google Antigravity oturumu",
+          "antigravityDescription": "Bu Google Antigravity oturumunun belirteci nasıl yenilediği.",
+          "grokTitle": "Grok oturumu",
+          "grokDescription": "Bu Grok oturumunun belirteci nasıl yenilediği."
         },
         "add": {
           "title": "Bağlantı ekle",

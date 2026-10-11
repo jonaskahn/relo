@@ -757,7 +757,11 @@
           "switchOn4xx": "Chuyển khi 4xx",
           "switchOn4xxHint": "Thử tài khoản khác của kết nối này khi gặp 4xx mà relay chưa thử lại.",
           "switchOn5xx": "Chuyển khi 5xx",
-          "switchOn5xxHint": "Thử tài khoản khác của kết nối này khi gặp 5xx mà relay chưa thử lại."
+          "switchOn5xxHint": "Thử tài khoản khác của kết nối này khi gặp 5xx mà relay chưa thử lại.",
+          "antigravityTitle": "Đăng nhập Google Antigravity",
+          "antigravityDescription": "Đăng nhập Google Antigravity này làm mới token thế nào.",
+          "grokTitle": "Đăng nhập Grok",
+          "grokDescription": "Đăng nhập Grok này làm mới token thế nào."
         },
         "add": {
           "title": "Thêm kết nối",

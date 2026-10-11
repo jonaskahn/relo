@@ -757,7 +757,11 @@
           "switchOn4xx": "Beralih pada 4xx",
           "switchOn4xxHint": "Mencoba akun lain koneksi ini saat menerima 4xx yang belum diulang relay.",
           "switchOn5xx": "Beralih pada 5xx",
-          "switchOn5xxHint": "Mencoba akun lain koneksi ini saat menerima 5xx yang belum diulang relay."
+          "switchOn5xxHint": "Mencoba akun lain koneksi ini saat menerima 5xx yang belum diulang relay.",
+          "antigravityTitle": "Masuk Google Antigravity",
+          "antigravityDescription": "Bagaimana masuk Google Antigravity ini memperbarui tokennya.",
+          "grokTitle": "Masuk Grok",
+          "grokDescription": "Bagaimana masuk Grok ini memperbarui tokennya."
         },
         "add": {
           "title": "Tambah koneksi",

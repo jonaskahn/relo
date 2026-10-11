@@ -757,7 +757,11 @@
           "switchOn4xx": "Comută la 4xx",
           "switchOn4xxHint": "Încearcă alt cont al acestei conexiuni la un 4xx pe care relayul nu îl reîncearcă deja.",
           "switchOn5xx": "Comută la 5xx",
-          "switchOn5xxHint": "Încearcă alt cont al acestei conexiuni la un 5xx pe care relayul nu îl reîncearcă deja."
+          "switchOn5xxHint": "Încearcă alt cont al acestei conexiuni la un 5xx pe care relayul nu îl reîncearcă deja.",
+          "antigravityTitle": "Autentificare Google Antigravity",
+          "antigravityDescription": "Cum această autentificare Google Antigravity își reînnoiește tokenul.",
+          "grokTitle": "Autentificare Grok",
+          "grokDescription": "Cum această autentificare Grok își reînnoiește tokenul."
         },
         "add": {
           "title": "Adaugă conexiune",

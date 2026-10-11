@@ -757,7 +757,11 @@
           "switchOn4xx": "4xx에서 전환",
           "switchOn4xxHint": "릴레이가 재시도하지 않는 4xx일 때 이 연결의 다른 계정을 시도합니다.",
           "switchOn5xx": "5xx에서 전환",
-          "switchOn5xxHint": "릴레이가 재시도하지 않는 5xx일 때 이 연결의 다른 계정을 시도합니다."
+          "switchOn5xxHint": "릴레이가 재시도하지 않는 5xx일 때 이 연결의 다른 계정을 시도합니다.",
+          "antigravityTitle": "Google Antigravity 로그인",
+          "antigravityDescription": "이 Google Antigravity 로그인이 토큰을 갱신하는 방식입니다.",
+          "grokTitle": "Grok 로그인",
+          "grokDescription": "이 Grok 로그인이 토큰을 갱신하는 방식입니다."
         },
         "add": {
           "title": "연결 추가",

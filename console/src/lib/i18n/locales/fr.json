@@ -757,7 +757,11 @@
           "switchOn4xx": "Basculer sur les 4xx",
           "switchOn4xxHint": "Essaie un autre compte de cette connexion sur un 4xx que le relais ne réessaie pas déjà.",
           "switchOn5xx": "Basculer sur les 5xx",
-          "switchOn5xxHint": "Essaie un autre compte de cette connexion sur un 5xx que le relais ne réessaie pas déjà."
+          "switchOn5xxHint": "Essaie un autre compte de cette connexion sur un 5xx que le relais ne réessaie pas déjà.",
+          "antigravityTitle": "Connexion Google Antigravity",
+          "antigravityDescription": "Comment cette connexion Google Antigravity renouvelle son jeton.",
+          "grokTitle": "Connexion Grok",
+          "grokDescription": "Comment cette connexion Grok renouvelle son jeton."
         },
         "add": {
           "title": "Ajouter une connexion",

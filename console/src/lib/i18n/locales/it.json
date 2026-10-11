@@ -757,7 +757,11 @@
           "switchOn4xx": "Cambia sui 4xx",
           "switchOn4xxHint": "Prova un altro account di questa connessione su un 4xx che il relay non ritenta già.",
           "switchOn5xx": "Cambia sui 5xx",
-          "switchOn5xxHint": "Prova un altro account di questa connessione su un 5xx che il relay non ritenta già."
+          "switchOn5xxHint": "Prova un altro account di questa connessione su un 5xx che il relay non ritenta già.",
+          "antigravityTitle": "Accesso Google Antigravity",
+          "antigravityDescription": "Come questo accesso Google Antigravity rinnova il token.",
+          "grokTitle": "Accesso Grok",
+          "grokDescription": "Come questo accesso Grok rinnova il token."
         },
         "add": {
           "title": "Aggiungi connessione",

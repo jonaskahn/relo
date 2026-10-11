@@ -757,7 +757,11 @@
           "switchOn4xx": "4xx पर स्विच करें",
           "switchOn4xxHint": "जब रिले पहले से दोहराता न हो ऐसे 4xx पर इस कनेक्शन का दूसरा खाता आज़माता है।",
           "switchOn5xx": "5xx पर स्विच करें",
-          "switchOn5xxHint": "जब रिले पहले से दोहराता न हो ऐसे 5xx पर इस कनेक्शन का दूसरा खाता आज़माता है।"
+          "switchOn5xxHint": "जब रिले पहले से दोहराता न हो ऐसे 5xx पर इस कनेक्शन का दूसरा खाता आज़माता है।",
+          "antigravityTitle": "Google Antigravity साइन-इन",
+          "antigravityDescription": "यह Google Antigravity साइन-इन अपना टोकन कैसे नवीनीकृत करता है।",
+          "grokTitle": "Grok साइन-इन",
+          "grokDescription": "यह Grok साइन-इन अपना टोकन कैसे नवीनीकृत करता है।"
         },
         "add": {
           "title": "कनेक्शन जोड़ें",

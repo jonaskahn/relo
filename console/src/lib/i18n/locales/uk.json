@@ -757,7 +757,11 @@
           "switchOn4xx": "Перемикати на 4xx",
           "switchOn4xxHint": "Пробує інший обліковий запис цього підключення на 4xx, який релей сам не повторює.",
           "switchOn5xx": "Перемикати на 5xx",
-          "switchOn5xxHint": "Пробує інший обліковий запис цього підключення на 5xx, який релей сам не повторює."
+          "switchOn5xxHint": "Пробує інший обліковий запис цього підключення на 5xx, який релей сам не повторює.",
+          "antigravityTitle": "Вхід Google Antigravity",
+          "antigravityDescription": "Як цей вхід Google Antigravity оновлює токен.",
+          "grokTitle": "Вхід Grok",
+          "grokDescription": "Як цей вхід Grok оновлює токен."
         },
         "add": {
           "title": "Додати підключення",

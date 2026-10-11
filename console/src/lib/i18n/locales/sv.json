@@ -757,7 +757,11 @@
           "switchOn4xx": "Byt vid 4xx",
           "switchOn4xxHint": "Provar ett annat konto för den här anslutningen vid en 4xx som reläet inte redan gör om.",
           "switchOn5xx": "Byt vid 5xx",
-          "switchOn5xxHint": "Provar ett annat konto för den här anslutningen vid en 5xx som reläet inte redan gör om."
+          "switchOn5xxHint": "Provar ett annat konto för den här anslutningen vid en 5xx som reläet inte redan gör om.",
+          "antigravityTitle": "Google Antigravity-inloggning",
+          "antigravityDescription": "Hur den här Google Antigravity-inloggningen förnyar sin token.",
+          "grokTitle": "Grok-inloggning",
+          "grokDescription": "Hur den här Grok-inloggningen förnyar sin token."
         },
         "add": {
           "title": "Lägg till anslutning",

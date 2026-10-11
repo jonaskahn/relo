@@ -59,6 +59,10 @@ describe('connection settings draft', () => {
 		expect(signInSection('openai-codex')?.title).toBe(
 			'ui.pages.providersPage.settings.chatgptTitle'
 		);
+		expect(signInSection('google-antigravity')?.title).toBe(
+			'ui.pages.providersPage.settings.antigravityTitle'
+		);
+		expect(signInSection('grok')?.title).toBe('ui.pages.providersPage.settings.grokTitle');
 		expect(signInSection('openai')).toBeNull();
 	});
 

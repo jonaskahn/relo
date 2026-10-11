@@ -858,4 +858,48 @@ func TestXAIDeviceFlow(t *testing.T) {
 			t.Fatalf("attempts = %d, want one retry", recorder.count("/token"))
 		}
 	})
+
+	t.Run("a login without a refresh token fails", func(t *testing.T) {
+		clock := testkit.NewFakeClock(time.Now())
+		server, _ := newProvider(t)
+		server.handle("/device/code", jsonHandler(`{"device_code":"device-1","user_code":"XAI-1","verification_uri":"https://accounts.x.ai/oauth2/device","interval":1}`))
+		server.handle("/token", sequenceHandler(
+			jsonHandler(`{"error":"authorization_pending"}`, http.StatusBadRequest),
+			jsonHandler(`{"access_token":"xai-access","expires_in":3600}`),
+		))
+		flow := oauth.NewXAIDeviceFlow(oauth.WithClock(clock), oauth.WithEndpoints(oauth.Endpoints{
+			DeviceURL: server.url("/device/code"), TokenURL: server.url("/token"),
+		}))
+		var loginErr error
+		runWithClock(t, clock, 2*time.Second, func() error {
+			_, err := flow.Login(context.Background(), oauth.LoginOpts{Timeout: time.Minute})
+			loginErr = err
+			return nil
+		})
+		if !errors.Is(loginErr, oauth.ErrNoRefreshToken) {
+			t.Fatalf("Login() error = %v, want %v", loginErr, oauth.ErrNoRefreshToken)
+		}
+	})
+
+	t.Run("an earlier jwt expiry shortens the stored lifetime", func(t *testing.T) {
+		clock := testkit.NewFakeClock(time.Now())
+		server, _ := newProvider(t)
+		expiry := clock.Now().Add(10 * time.Minute).Unix()
+		access := jwt(t, map[string]any{"sub": "user-1", "exp": float64(expiry)})
+		server.handle("/token", jsonHandler(`{"access_token":"`+access+`","refresh_token":"r","expires_in":3600}`))
+		flow := oauth.NewXAIDeviceFlow(
+			oauth.WithClock(clock),
+			oauth.WithEndpoints(oauth.Endpoints{DeviceURL: server.url("/device/code"), TokenURL: server.url("/token")}),
+		)
+		refreshed, err := flow.Refresh(context.Background(), &oauth.OAuthCredential{RefreshToken: "r"})
+		if err != nil {
+			t.Fatalf("Refresh() error = %v", err)
+		}
+		if refreshed.ExpiresAt.After(clock.Now().Add(11 * time.Minute)) {
+			t.Fatalf("credential = %+v, want the jwt expiry kept", refreshed)
+		}
+		if refreshed.RefreshToken != "r" {
+			t.Fatalf("credential = %+v, want the stored refresh token kept", refreshed)
+		}
+	})
 }
