@@ -520,6 +520,15 @@ func (h *harness) usageRows() int {
 	return count
 }
 
+// settle waits for the log writes a request queued to land, because those rows
+// reach their stores behind the response.
+func (h *harness) settle() {
+	h.t.Helper()
+	if err := h.server.SettleBookkeeping(h.t.Context()); err != nil {
+		h.t.Fatalf("settle bookkeeping: %v", err)
+	}
+}
+
 // defaultConfig is the configuration the handler tests build servers from. No
 // data plane port is asked for, so a test that never starts a listener never
 // takes one, and the handler tests reach a protocol's routes through

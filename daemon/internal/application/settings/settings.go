@@ -51,8 +51,11 @@ type Settings struct {
 // SystemSettings is when the daemon runs, how it logs, and how it learns
 // about newer builds.
 type SystemSettings struct {
-	Autostart       bool
-	LogLevel        string
+	Autostart bool
+	LogLevel  string
+	// LogTraffic also writes every request and provider exchange, in full,
+	// to a daily JSONL file in the logs folder. It takes effect on save.
+	LogTraffic      bool
 	UpdatesURL      string
 	UpdatesDownload string
 }
@@ -225,6 +228,7 @@ func readSystemServer(settings *Settings, file config.Config) {
 	settings.System = SystemSettings{
 		Autostart:       file.System.Autostart,
 		LogLevel:        file.System.Logging.Level,
+		LogTraffic:      file.System.Logging.Traffic,
 		UpdatesURL:      file.System.Updates.URL,
 		UpdatesDownload: file.System.Updates.Download,
 	}
@@ -286,6 +290,16 @@ func (s *Service) RestartPending(boot config.Config) (bool, error) {
 		boot.Catalog.ModelsDevURL != file.Catalog.ModelsDevURL ||
 		boot.Admin.Login != file.Admin.Login ||
 		boot.Secrets != file.Secrets, nil
+}
+
+// LogTraffic reports whether the traffic log is on, read from the startup
+// file on every request, so saving the choice takes effect at once.
+func (s *Service) LogTraffic() bool {
+	on, err := config.ReadLogTraffic(s.configPath)
+	if err != nil {
+		return false
+	}
+	return on
 }
 
 // ProxyURL returns the outbound proxy stored in the startup file.
@@ -501,7 +515,7 @@ func (s *Service) SaveSystem(system SystemSettings) (SystemSettings, error) {
 	updatesURL := strings.TrimSpace(system.UpdatesURL)
 	download := strings.TrimSpace(system.UpdatesDownload)
 	if err := config.UpdateSystemConfig(s.configPath, config.SystemConfigPatch{
-		Autostart: &system.Autostart, LogLevel: &level,
+		Autostart: &system.Autostart, LogLevel: &level, LogTraffic: &system.LogTraffic,
 		UpdatesURL: &updatesURL, UpdatesDownload: &download,
 	}); err != nil {
 		if errors.Is(err, config.ErrInvalidLogLevel) || errors.Is(err, config.ErrInvalidURL) {
@@ -513,7 +527,7 @@ func (s *Service) SaveSystem(system SystemSettings) (SystemSettings, error) {
 		s.applyAutostart(system.Autostart)
 	}
 	return SystemSettings{
-		Autostart: system.Autostart, LogLevel: level,
+		Autostart: system.Autostart, LogLevel: level, LogTraffic: system.LogTraffic,
 		UpdatesURL: updatesURL, UpdatesDownload: download,
 	}, nil
 }

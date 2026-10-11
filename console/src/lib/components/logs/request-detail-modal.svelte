@@ -3,6 +3,7 @@
 
 	import { api } from '$lib/api';
 	import CenteredModal from '$lib/components/ui/centered-modal.svelte';
+	import StatusBadge from '$lib/components/ui/status-badge.svelte';
 	import RequestDetailExchange from '$lib/components/logs/request-detail-exchange.svelte';
 	import RequestDetailOverview from '$lib/components/logs/request-detail-overview.svelte';
 	import RequestDetailTokens from '$lib/components/logs/request-detail-tokens.svelte';
@@ -22,6 +23,7 @@
 	let attempts = $state<UsageAttemptRow[]>([]);
 	let captures = $state<UsageCapture[]>([]);
 	let attemptsLoading = $state(false);
+	let traced = $state(false);
 	let capturesLoading = $state(false);
 	let detailModel = $state<Model | null>(null);
 	let detailModelLoading = $state(false);
@@ -44,6 +46,7 @@
 		const open = row;
 		attempts = [];
 		captures = [];
+		traced = false;
 		detailModel = null;
 		attemptsLoading = open !== null;
 		capturesLoading = open !== null;
@@ -61,11 +64,14 @@
 			attempts = data.items;
 			attemptsLoading = false;
 		});
-		void read<{ items: UsageCapture[] }>('/activity/requests/' + id + '/captures', signal, {
-			items: []
-		}).then((data) => {
+		void read<{ items: UsageCapture[]; traced?: boolean }>(
+			'/activity/requests/' + id + '/captures',
+			signal,
+			{ items: [] }
+		).then((data) => {
 			if (settled()) return;
 			captures = data.items ?? [];
+			traced = data.traced === true;
 			capturesLoading = false;
 		});
 		const provider = open.RouteProvider || open.Provider;
@@ -91,6 +97,11 @@
 	size="wide"
 	title={$t('ui.pages.logsPage.detailTitle')}
 >
+	{#snippet titleAside()}
+		{#if traced}
+			<StatusBadge kind="muted" label={$t('ui.pages.logsPage.traceBadge')} />
+		{/if}
+	{/snippet}
 	{#if row}
 		<div class="space-y-3">
 			<RequestDetailOverview {row} />

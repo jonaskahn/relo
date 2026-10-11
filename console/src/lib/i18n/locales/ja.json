@@ -38,8 +38,9 @@
       "signingOut": "サインアウト中…",
       "closeMenu": "メニューを閉じる",
       "integrations": "連携",
-      "agents": "エージェント",
-      "agentsAttention": "Agents need repair or restart",
+      "agents": "Agent Harness",
+      "agentsShort": "Harness",
+      "agentsAttention": "Agent Harness の修復または再起動が必要です",
       "chat": "チャット",
       "actions": "サイドバーの操作",
       "github": "GitHub",
@@ -454,7 +455,8 @@
           "noMatch": "検索やフィルターに一致する接続はありません。",
           "filters": "接続フィルター",
           "filterOption": "{label} ({count})",
-          "tagFree": "無料"
+          "tagFree": "無料",
+          "tagExperimental": "実験的"
         },
         "status": {
           "ready": "準備完了",
@@ -1178,6 +1180,7 @@
         "attemptsEmpty": "記録された試行がありません。",
         "attempt": "試行",
         "exchangeAgentTitle": "エージェント通信",
+        "traceBadge": "完全なトレース",
         "exchangeProviderTitle": "プロバイダー通信",
         "captureAgentRequest": "エージェントリクエスト",
         "captureAgentResponse": "エージェントレスポンス",
@@ -1188,7 +1191,7 @@
         "captureTruncated": "キャプチャ上限で切り詰められました。",
         "captureHeaders": "ヘッダー",
         "captureBody": "本文",
-        "captureCopy": "コピー",
+        "captureCopyCurl": "cURL としてコピー",
         "captureDownload": "ダウンロード",
         "captureEmptyBody": "送信された本文がありません。",
         "captureBinary": "バイナリ本文（{size}）。確認するにはダウンロードしてください。",
@@ -1507,7 +1510,7 @@
         "description": "デーモンの設定を一か所に: 外観、アクセス、ネットワーク、プロバイダー、メンテナンス。"
       },
       "integrationsPage": {
-        "title": "エージェント",
+        "title": "Agent Harness",
         "subtitle": "このマシンのコーディングエージェントをReloに接続し、キーをReloに管理させます。",
         "empty": "接続できるエージェントがありません。",
         "tested": "テスト済み",
@@ -1741,7 +1744,8 @@
       "autostartHint": "ログイン時に Relo を起動するよう登録します。保存時に適用されます。",
       "logLevelLabel": "ログレベル",
       "logLevelHint": "デーモンがログに書く量。再起動後に反映されます。",
-      "updateFeedLabel": "更新フィード",
+      "trafficLogLabel": "トラフィックログ",
+      "trafficLogHint": "エージェントのリクエストとプロバイダーとのやり取りを丸ごと logs/traffic-YYYYMMDD.log に日ごとのファイルとして2週間書き込みます。資格情報は引き続き伏せられます。保存時に適用されます。",
       "updatesURL": "appcast URL",
       "updatesURLHint": "Relo が新しいビルドを確認するフィード。空にすると確認を停止します。",
       "updatesDownload": "ダウンロードページ",
@@ -1796,7 +1800,8 @@
       "retryLabel": "再試行の間隔",
       "failoverLabel": "Failover wait",
       "failoverHint": "How long a refused account or route member stays out of rotation after a rate limit or server fault, and how the wait grows with each further failure. A success resets it. None starts with no wait: the first refusal is immediately reusable.",
-      "retryHint": "各再試行前のランダムな待機時間（秒）。プロバイダーの Retry-After が長い場合はそちらが優先されます。"
+      "retryHint": "各再試行前のランダムな待機時間（秒）。プロバイダーの Retry-After が長い場合はそちらが優先されます。",
+      "jumpLabel": "セクションへ移動"
     }
   }
 }

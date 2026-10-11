@@ -38,8 +38,9 @@
       "signingOut": "Wylogowywanie…",
       "closeMenu": "Zamknij menu",
       "integrations": "Integracje",
-      "agents": "Agenci",
-      "agentsAttention": "Agents need repair or restart",
+      "agents": "Agent Harness",
+      "agentsShort": "Harness",
+      "agentsAttention": "Agent Harness wymaga naprawy lub ponownego uruchomienia",
       "chat": "Czat",
       "actions": "Działania paska bocznego",
       "github": "GitHub",
@@ -454,7 +455,8 @@
           "noMatch": "Żadne połączenie nie pasuje do wyszukiwania ani filtrów.",
           "filters": "Filtry połączeń",
           "filterOption": "{label} ({count})",
-          "tagFree": "Bezpłatne"
+          "tagFree": "Bezpłatne",
+          "tagExperimental": "Eksperymentalne"
         },
         "status": {
           "ready": "Gotowe",
@@ -1178,6 +1180,7 @@
         "attemptsEmpty": "Nie zarejestrowano prób.",
         "attempt": "Próba",
         "exchangeAgentTitle": "Wymiana z agentem",
+        "traceBadge": "Pełny ślad",
         "exchangeProviderTitle": "Wymiana z dostawcą",
         "captureAgentRequest": "Żądanie agenta",
         "captureAgentResponse": "Odpowiedź agenta",
@@ -1188,7 +1191,7 @@
         "captureTruncated": "Obcięto na limicie przechwytywania.",
         "captureHeaders": "Nagłówki",
         "captureBody": "Treść",
-        "captureCopy": "Kopiuj",
+        "captureCopyCurl": "Kopiuj jako cURL",
         "captureDownload": "Pobierz",
         "captureEmptyBody": "Nie wysłano treści.",
         "captureBinary": "Treść binarna ({size}). Pobierz ją, aby ją zbadać.",
@@ -1507,7 +1510,7 @@
         "description": "Wszystkie wybory demona w jednym miejscu: wygląd, dostęp, sieć, dostawcy i konserwacja."
       },
       "integrationsPage": {
-        "title": "Agenci",
+        "title": "Agent Harness",
         "subtitle": "Podłącz agentów kodowania na tym komputerze do Relo i pozwól Relo pilnować ich kluczy.",
         "empty": "Brak agentów do podłączenia.",
         "tested": "Przetestowano",
@@ -1741,7 +1744,8 @@
       "autostartHint": "Rejestruje Relo do startu przy logowaniu. Stosowane przy zapisie.",
       "logLevelLabel": "Poziom dziennika",
       "logLevelHint": "Ile demon zapisuje do dziennika. Działa po restarcie.",
-      "updateFeedLabel": "Kanał aktualizacji",
+      "trafficLogLabel": "Dziennik ruchu",
+      "trafficLogHint": "Zapisuje każde żądanie agenta i każdą wymianę z dostawcą w całości do logs/traffic-YYYYMMDD.log, jeden plik dziennie, przechowywany przez dwa tygodnie. Dane logowania pozostają zaciemnione. Działa po zapisaniu.",
       "updatesURL": "Adres appcast",
       "updatesURLHint": "Kanał, który Relo czyta, aby znaleźć nowsze wersje. Pusty wyłącza sprawdzanie.",
       "updatesDownload": "Strona pobierania",
@@ -1796,7 +1800,8 @@
       "retryLabel": "Przerwy między próbami",
       "failoverLabel": "Failover wait",
       "failoverHint": "How long a refused account or route member stays out of rotation after a rate limit or server fault, and how the wait grows with each further failure. A success resets it. None starts with no wait: the first refusal is immediately reusable.",
-      "retryHint": "Losowa przerwa przed każdą próbą, w sekundach. Dłuższy Retry-After dostawcy ma pierwszeństwo."
+      "retryHint": "Losowa przerwa przed każdą próbą, w sekundach. Dłuższy Retry-After dostawcy ma pierwszeństwo.",
+      "jumpLabel": "Przejdź do sekcji"
     }
   }
 }

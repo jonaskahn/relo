@@ -38,8 +38,9 @@
       "signingOut": "Saindo…",
       "closeMenu": "Fechar menu",
       "integrations": "Integrações",
-      "agents": "Agentes",
-      "agentsAttention": "Agents need repair or restart",
+      "agents": "Agent Harness",
+      "agentsShort": "Harness",
+      "agentsAttention": "Agent Harness precisa de reparo ou reinício",
       "chat": "Chat",
       "actions": "Ações do menu",
       "github": "GitHub",
@@ -454,7 +455,8 @@
           "noMatch": "Nenhuma conexão corresponde à sua busca ou aos filtros.",
           "filters": "Filtros de conexões",
           "filterOption": "{label} ({count})",
-          "tagFree": "Grátis"
+          "tagFree": "Grátis",
+          "tagExperimental": "Experimental"
         },
         "status": {
           "ready": "Pronta",
@@ -1178,6 +1180,7 @@
         "attemptsEmpty": "Nenhuma tentativa registrada.",
         "attempt": "Tentativa",
         "exchangeAgentTitle": "Troca com o agente",
+        "traceBadge": "Rastro completo",
         "exchangeProviderTitle": "Troca com o provedor",
         "captureAgentRequest": "Solicitação do agente",
         "captureAgentResponse": "Resposta do agente",
@@ -1188,7 +1191,7 @@
         "captureTruncated": "Truncado no limite da captura.",
         "captureHeaders": "Cabeçalhos",
         "captureBody": "Corpo",
-        "captureCopy": "Copiar",
+        "captureCopyCurl": "Copiar como cURL",
         "captureDownload": "Baixar",
         "captureEmptyBody": "Nenhum corpo foi enviado.",
         "captureBinary": "Corpo binário ({size}). Baixe-o para inspecioná-lo.",
@@ -1507,7 +1510,7 @@
         "description": "Todas as escolhas do daemon em um só lugar: aparência, acesso, rede, provedores e manutenção."
       },
       "integrationsPage": {
-        "title": "Agentes",
+        "title": "Agent Harness",
         "subtitle": "Conecte os agentes de código desta máquina ao Relo e deixe o Relo guardar as chaves.",
         "empty": "Sem agentes para conectar.",
         "tested": "Testado",
@@ -1741,7 +1744,8 @@
       "autostartHint": "Registra o Relo para iniciar ao entrar. Aplicado ao salvar.",
       "logLevelLabel": "Nível de log",
       "logLevelHint": "Quanto o daemon escreve no log. Vale após reiniciar.",
-      "updateFeedLabel": "Feed de atualizações",
+      "trafficLogLabel": "Registro de tráfego",
+      "trafficLogHint": "Grava cada solicitação do agente e cada troca com o provedor inteira em logs/traffic-YYYYMMDD.log, um arquivo por dia, guardado por duas semanas. As credenciais continuam mascaradas. Aplicado ao salvar.",
       "updatesURL": "URL do appcast",
       "updatesURLHint": "O feed que o Relo lê para achar versões novas. Vazio desliga a verificação.",
       "updatesDownload": "Página de download",
@@ -1796,7 +1800,8 @@
       "retryLabel": "Esperas entre tentativas",
       "failoverLabel": "Failover wait",
       "failoverHint": "How long a refused account or route member stays out of rotation after a rate limit or server fault, and how the wait grows with each further failure. A success resets it. None starts with no wait: the first refusal is immediately reusable.",
-      "retryHint": "Espera aleatória antes de cada tentativa, em segundos. Um Retry-After mais longo do provedor vence."
+      "retryHint": "Espera aleatória antes de cada tentativa, em segundos. Um Retry-After mais longo do provedor vence.",
+      "jumpLabel": "Ir para a seção"
     }
   }
 }

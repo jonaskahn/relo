@@ -99,6 +99,39 @@ describe('the connection overview card', () => {
 		expect(metered).not.toContain('data-free-chip');
 	});
 
+	// The keyless Kilo pool logs every prompt at the vendor, so it is offered
+	// for throwaway work. The card says which lane that is, because a Free chip
+	// on its own reads like any other free connection.
+	it('chips the keyless Kilo lane experimental and leaves the others bare', () => {
+		const experimental = render(ProviderOverviewCard, {
+			props: {
+				provider: providerOf({
+					id: 'kilo',
+					label: 'Kilo Free',
+					template_id: 'kilo-free',
+					auth: 'none'
+				}),
+				onopen: () => {}
+			}
+		}).body;
+		expect(experimental).toContain('data-experimental-chip');
+		expect(experimental).toContain('Experimental');
+
+		const sibling = render(ProviderOverviewCard, {
+			props: {
+				provider: providerOf({
+					id: 'opencode-free',
+					label: 'Opencode Free',
+					template_id: 'opencode-free',
+					auth: 'none'
+				}),
+				onopen: () => {}
+			}
+		}).body;
+		expect(sibling).toContain('data-free-chip');
+		expect(sibling).not.toContain('data-experimental-chip');
+	});
+
 	it('raises the status pill with the account quota', () => {
 		const html = render(ProviderOverviewCard, {
 			props: {

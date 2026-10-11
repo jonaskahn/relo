@@ -42,6 +42,15 @@ func newCaptureSink(limit int64) *captureSink {
 	return &captureSink{limit: limit}
 }
 
+// captureLimit is how much of one body the exchange keeps: the traffic-log
+// bound when one is asked for, and the state-sized cap otherwise.
+func (e Exchange) captureLimit() int64 {
+	if e.CaptureLimit > 0 {
+		return e.CaptureLimit
+	}
+	return MaxCaptureBytes
+}
+
 // Write collects the bytes of the stream and always reports them written, so
 // the relay it is teed from is unaffected by the cap.
 func (s *captureSink) Write(p []byte) (int, error) {

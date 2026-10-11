@@ -28,6 +28,7 @@ type wireSettings struct {
 type wireSystem struct {
 	Autostart       bool   `json:"autostart"`
 	LogLevel        string `json:"log_level"`
+	LogTraffic      bool   `json:"log_traffic"`
 	UpdatesURL      string `json:"updates_url"`
 	UpdatesDownload string `json:"updates_download"`
 }
@@ -147,6 +148,42 @@ func TestSystemPatchStoresTheDaemonChoices(t *testing.T) {
 		strings.NewReader(`{"autostart":true,"log_level":"trace","updates_url":"","updates_download":""}`))
 	if invalid.Code != http.StatusBadRequest {
 		t.Fatalf("invalid level status = %d, want 400 (body %s)", invalid.Code, invalid.Body.String())
+	}
+}
+
+// TestSystemPatchStoresTheTrafficLog covers the traffic switch: it round-trips
+// through the settings card and applies at once, so it never asks for a
+// restart the way a changed log level does.
+func TestSystemPatchStoresTheTrafficLog(t *testing.T) {
+	h := newHarness(t)
+
+	// The update feed keeps the boot defaults, so only the traffic switch
+	// differs from what the daemon booted with: it must not ask for a
+	// restart.
+	patch := `{"autostart":true,"log_level":"info","log_traffic":true,` +
+		`"updates_url":"https://jonaskahn.github.io/relo/appcast.xml",` +
+		`"updates_download":"https://github.com/jonaskahn/relo/releases/latest"}`
+	saved := h.management(http.MethodPatch, "/api/v1/settings/system", adminToken, strings.NewReader(patch))
+	if saved.Code != http.StatusOK {
+		t.Fatalf("PATCH system status = %d, body = %s", saved.Code, saved.Body.String())
+	}
+	if got := decodeGroup[wireSystem](t, saved.Body); !got.LogTraffic {
+		t.Fatalf("system = %+v, want the traffic log on", got)
+	}
+	read := h.management(http.MethodGet, "/api/v1/settings", adminToken, nil)
+	settings := decodeSettings(t, read.Body)
+	if !settings.System.LogTraffic {
+		t.Fatalf("system = %+v, want the saved traffic switch", settings.System)
+	}
+	if settings.RestartPending {
+		t.Fatal("restart_pending = true after only the traffic switch changed")
+	}
+	off := `{"autostart":true,"log_level":"info","log_traffic":false,` +
+		`"updates_url":"https://jonaskahn.github.io/relo/appcast.xml",` +
+		`"updates_download":"https://github.com/jonaskahn/relo/releases/latest"}`
+	again := h.management(http.MethodPatch, "/api/v1/settings/system", adminToken, strings.NewReader(off))
+	if got := decodeGroup[wireSystem](t, again.Body); got.LogTraffic {
+		t.Fatalf("system = %+v, want the traffic log off again", got)
 	}
 }
 

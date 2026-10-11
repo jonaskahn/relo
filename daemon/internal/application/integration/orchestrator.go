@@ -10,6 +10,7 @@ import (
 	"log/slog"
 	"net/http"
 	"path/filepath"
+	"slices"
 	"strings"
 	"sync"
 	"time"
@@ -1099,6 +1100,9 @@ func (s *Service) publishedModels() []ModelRef {
 	for _, group := range groups {
 		window, output := routeBudget(snap, group)
 		ref := routeModelRef(group, window, output)
+		tools, reasoning, vision, efforts, toggle := routeCapabilities(snap, group)
+		ref.Tools, ref.Reasoning, ref.Vision = tools, reasoning, vision
+		ref.ReasoningEfforts, ref.ReasoningToggle = efforts, toggle
 		models = appendPublishedGroup(models, snap, ref, group)
 	}
 	return models
@@ -1147,6 +1151,9 @@ func claudeModelRefs(snap *catalog.Snapshot, model catalog.Model) []ModelRef {
 func claudeRouteRefs(snap *catalog.Snapshot, group catalog.Group) []ModelRef {
 	window, output := routeBudget(snap, group)
 	ref := routeModelRef(group, window, output)
+	tools, reasoning, vision, efforts, toggle := routeCapabilities(snap, group)
+	ref.Tools, ref.Reasoning, ref.Vision = tools, reasoning, vision
+	ref.ReasoningEfforts, ref.ReasoningToggle = efforts, toggle
 	standard, paired := catalog.StandardContext(ref.ContextWindow, snap.OffersLongContextGroup(group))
 	if !paired {
 		if snap.NativeMillionGroup(group) {
@@ -1220,6 +1227,64 @@ func routeModelRef(group catalog.Group, window, output *int64) ModelRef {
 	}
 }
 
+// routeCapabilities reports what every member of a route can do. A route
+// advertises a capability only when each member carries it, so a turn the
+// route accepts never lands on a member that cannot serve it.
+func routeCapabilities(snap *catalog.Snapshot, group catalog.Group) (tools, reasoning, vision *bool, efforts []string, toggle *bool) {
+	members := snap.GroupModels(group)
+	if len(members) == 0 {
+		return nil, nil, nil, nil, new(false)
+	}
+	tools, reasoning, vision = new(true), new(true), new(true)
+	toggle = new(true)
+	efforts = sharedEfforts(members)
+	for _, model := range members {
+		if model.SupportsTools == nil || !*model.SupportsTools {
+			tools = nil
+		}
+		if model.SupportsReasoning == nil || !*model.SupportsReasoning {
+			reasoning = nil
+		}
+		if model.SupportsVision == nil || !*model.SupportsVision {
+			vision = nil
+		}
+		if !model.ReasoningToggle {
+			toggle = new(false)
+		}
+	}
+	return tools, reasoning, vision, efforts, toggle
+}
+
+// sharedEfforts is the ladder every member of a route accepts. The effort a
+// route offers has to exist on the member a turn lands on, so the route
+// offers only the shared names.
+func sharedEfforts(members []catalog.Model) []string {
+	var shared []string
+	for index, model := range members {
+		ladder := model.ReasoningEfforts
+		if ladder == nil {
+			ladder = sharedReasoningLadder
+		}
+		if index == 0 {
+			shared = append([]string(nil), ladder...)
+			continue
+		}
+		kept := shared[:0]
+		for _, effort := range shared {
+			if slices.Contains(ladder, effort) {
+				kept = append(kept, effort)
+			}
+		}
+		shared = kept
+	}
+	return shared
+}
+
+// sharedReasoningLadder is the effort list a client offers when a model
+// states none. It repeats the adapter's shared list, which stays the copy a
+// client file is written from; this one only intersects route members.
+var sharedReasoningLadder = []string{"low", "medium", "high", "xhigh", "max"}
+
 func connectionLabel(snap *catalog.Snapshot, providerID string) string {
 	host, found := snap.Provider(providerID)
 	if !found {
@@ -1282,6 +1347,7 @@ func modelRef(model catalog.Model) ModelRef {
 	if model.ReasoningEfforts != nil {
 		ref.ReasoningEfforts = append([]string(nil), model.ReasoningEfforts...)
 	}
+	ref.ReasoningToggle = new(model.ReasoningToggle)
 	return ref
 }
 

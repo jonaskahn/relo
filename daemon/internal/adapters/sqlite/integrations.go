@@ -22,6 +22,7 @@ const (
 		" ON CONFLICT (integration_id, kind) DO UPDATE SET path = excluded.path, digest = excluded.digest," +
 		" snapshot_path = excluded.snapshot_path, updated_at = excluded.updated_at"
 	deleteIntegrationFilesSQL = "DELETE FROM integration_files WHERE integration_id = ?"
+	deleteIntegrationFileSQL  = "DELETE FROM integration_files WHERE integration_id = ? AND kind = ?"
 	appendIntegrationOpSQL    = "INSERT INTO integration_ops (id, integration_id, action, detail, created_at) VALUES (?, ?, ?, ?, ?)"
 	listIntegrationOpsSQL     = "SELECT id, integration_id, action, detail, created_at" +
 		" FROM integration_ops WHERE integration_id = ? ORDER BY created_at DESC, id DESC LIMIT ?"
@@ -124,6 +125,15 @@ func (r *IntegrationRepo) SaveFile(ctx context.Context, row IntegrationFileRow) 
 func (r *IntegrationRepo) DeleteFiles(ctx context.Context, id string) error {
 	if _, err := r.db.sql.ExecContext(ctx, deleteIntegrationFilesSQL, id); err != nil {
 		return fmt.Errorf("delete the files of %s: %w", id, err)
+	}
+	return nil
+}
+
+// DeleteFile forgets one file record, which is what retiring a file a client
+// has since moved requires.
+func (r *IntegrationRepo) DeleteFile(ctx context.Context, id, kind string) error {
+	if _, err := r.db.sql.ExecContext(ctx, deleteIntegrationFileSQL, id, kind); err != nil {
+		return fmt.Errorf("delete the file %s of %s: %w", kind, id, err)
 	}
 	return nil
 }

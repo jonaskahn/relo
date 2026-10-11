@@ -207,7 +207,7 @@
 								: 'text-muted-foreground hover:bg-hover hover:text-ink'
 						)}
 						aria-current={isActive(link.href) ? 'page' : undefined}
-						title={compact ? $t(link.labelKey) : undefined}
+						title={compact ? $t(link.shortLabelKey ?? link.labelKey) : undefined}
 						onclick={() => navDrawer.close()}
 					>
 						<span
@@ -229,9 +229,9 @@
 									: 'min-w-0 flex-1 translate-x-0 opacity-100'
 							)}
 						>
-							{$t(link.labelKey)}
+							{$t(link.shortLabelKey ?? link.labelKey)}
 						</span>
-						{#if link.href === '/agents' && agentAttention.count > 0}
+						{#if link.href === '/agent-harness' && agentAttention.count > 0}
 							<span
 								role="img"
 								aria-label={$t('ui.sidebar.agentsAttention')}

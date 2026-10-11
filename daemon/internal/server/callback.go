@@ -169,6 +169,7 @@ func (w *callbackShellWriter) WriteHeader(_ int) {
 func (w *callbackShellWriter) Write(body []byte) (int, error) {
 	if !w.wrote {
 		w.writeHeader()
+		w.ResponseWriter.WriteHeader(w.status)
 	}
 	return w.ResponseWriter.Write(body)
 }

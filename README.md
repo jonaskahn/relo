@@ -11,12 +11,12 @@
 
 ## ▓ CONSOLE
 
-|                                                                       |                                                                        |                                                                     |
-|-----------------------------------------------------------------------|------------------------------------------------------------------------|---------------------------------------------------------------------|
-| Dashboard                                                             | Connections                                                            | Groups                                                              |
-| <img src="assets/demo/dashboard-02.webp" alt="Dashboard" width="320"> | <img src="assets/demo/connections.webp" alt="Connections" width="320"> | <img src="assets/demo/groups-add.webp" alt="Groups" width="320">    |
-| Agents                                                                | Add agent                                                              | Usage                                                               |
-| <img src="assets/demo/agents-overview.webp" alt="Agents" width="320"> | <img src="assets/demo/agents-add.webp" alt="Add agent" width="320">    | <img src="assets/demo/usage-overview.webp" alt="Usage" width="320"> |
+|                                                                              |                                                                        |                                                                     |
+|------------------------------------------------------------------------------|------------------------------------------------------------------------|---------------------------------------------------------------------|
+| Dashboard                                                                    | Connections                                                            | Groups                                                              |
+| <img src="assets/demo/dashboard-02.webp" alt="Dashboard" width="320">        | <img src="assets/demo/connections.webp" alt="Connections" width="320"> | <img src="assets/demo/groups-add.webp" alt="Groups" width="320">    |
+| Agent Harness                                                                | Add agent                                                              | Usage                                                               |
+| <img src="assets/demo/agents-overview.webp" alt="Agent Harness" width="320"> | <img src="assets/demo/agents-add.webp" alt="Add agent" width="320">    | <img src="assets/demo/usage-overview.webp" alt="Usage" width="320"> |
 
 <div align="center">
 <img src="assets/demo/demo-vid.gif" alt="Relo demo: using Relo from Codex" width="960">

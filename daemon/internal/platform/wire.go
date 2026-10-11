@@ -525,6 +525,17 @@ func newServer(built deps) *server.Server {
 	return served
 }
 
+// openTrafficLog opens the daily traffic file. A state folder that cannot hold
+// one leaves the traffic log unbuilt: the requests still serve, and only the
+// traffic log is missing.
+func openTrafficLog(home string) *trafficLog {
+	traffic, err := newTrafficLog(home)
+	if err != nil {
+		return nil
+	}
+	return traffic
+}
+
 func newServerOptions(built deps) server.Options {
 	captures := sqlite.NewCaptureStore(built.db)
 	options := coreServerOptions(built, captures)
@@ -546,6 +557,7 @@ func coreServerOptions(built deps, captures *sqlite.CaptureStore) server.Options
 		Relay:           NewRelay(built.credentials, upstream.NewExecutor(NewInferenceClient(), built.logger)),
 		Templates:       NewTemplateSource(),
 		CaptureRedactor: NewCaptureRedactor(),
+		Traffic:         openTrafficLog(built.home),
 		Pools:           built.pools,
 		Secrets:         secretModeSource(built.secrets),
 		Usage:           built.usage,

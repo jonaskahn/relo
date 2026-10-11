@@ -109,6 +109,7 @@ type Store interface {
 	Files(ctx context.Context, id string) ([]FileRecord, error)
 	SaveFile(ctx context.Context, record FileRecord) error
 	DeleteFiles(ctx context.Context, id string) error
+	DeleteFile(ctx context.Context, id, kind string) error
 	AppendOp(ctx context.Context, op OpRecord) error
 }
 
@@ -810,11 +811,40 @@ func (m *Manager) writeManaged(ctx context.Context, agent Agent, overwrite bool)
 	return m.writeContribution(ctx, agent, fileContribution{kind: target.Kind, path: target.Path, content: merged, mode: 0o644})
 }
 
+// retireMovedTargets drops records for catalog files a client has since
+// moved. An integration written before a file changed address keeps a record
+// of the path it used then; the block Relo wrote there is left behind in a
+// file nothing reads any more, so the record is retired instead of carried.
+func (m *Manager) retireMovedTargets(ctx context.Context, id string, targets []ConfigTarget) {
+	current := make(map[string]bool, len(targets))
+	for _, target := range targets {
+		current[target.Path] = true
+	}
+	files, err := m.store.Files(ctx, id)
+	if err != nil {
+		return
+	}
+	for _, file := range files {
+		if current[file.Path] {
+			continue
+		}
+		if err := m.stripCatalog(file); err != nil {
+			m.recordFailure(ctx, Agent{ID: id}, err)
+			return
+		}
+		if err := m.store.DeleteFile(ctx, id, file.Kind); err != nil {
+			m.recordFailure(ctx, Agent{ID: id}, err)
+			return
+		}
+	}
+}
+
 func (m *Manager) writeCatalog(ctx context.Context, agent Agent, overwrite bool) error {
 	targets, err := m.paths.ConfigTargets(agent.ID)
 	if err != nil {
 		return err
 	}
+	m.retireMovedTargets(ctx, agent.ID, targets)
 	for _, target := range targets {
 		if err := os.MkdirAll(target.Dir, 0o755); err != nil {
 			return fmt.Errorf("create %s: %w", target.Dir, err)

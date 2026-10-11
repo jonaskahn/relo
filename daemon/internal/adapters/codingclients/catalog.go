@@ -27,7 +27,7 @@ func CatalogAgent(id string) bool {
 func CatalogKind(kind string) bool {
 	switch kind {
 	case FilePi, FilePrime, FileAside, FileOMO, FileZCode, FileClineProviders, FileClineModels,
-		FileOMP, FileGajae, FileDSH, FileMCode, FileRaycast, FileKimi:
+		FileOMP, FileGajae, FileDSH, FileDSHHeadless, FileDSHDesktop, FileMCode, FileRaycast, FileKimi:
 		return true
 	default:
 		return false
@@ -35,12 +35,17 @@ func CatalogKind(kind string) bool {
 }
 
 // KeptDocument is what remains when stripping the block would leave a file
-// with nothing in it. The file stays on disk.
+// with nothing in it. The file stays on disk. A Cordis patch is a list at its
+// top level, so an empty one is [] and a map would stop the harness booting.
 func KeptDocument(kind string) string {
-	if kind == FileKimi {
+	switch kind {
+	case FileKimi:
 		return "\n"
+	case FileDSH, FileDSHHeadless, FileDSHDesktop:
+		return "[]\n"
+	default:
+		return "{}\n"
 	}
-	return "{}\n"
 }
 
 // MergeKind returns the file with Relo's provider block in it.
@@ -52,7 +57,7 @@ func MergeKind(kind, existing, baseURL string, models []ModelRef) (string, error
 	switch kind {
 	case FilePi, FilePrime, FileAside, FileOMO, FileZCode, FileClineProviders:
 		return mergeJSONKind(kind, existing, address, models)
-	case FileOMP, FileGajae, FileDSH, FileMCode:
+	case FileOMP, FileGajae, FileMCode:
 		return mergeYAMLKind(kind, existing, address, models)
 	default:
 		return mergeSpecialKind(kind, existing, address, models)
@@ -78,8 +83,6 @@ func mergeYAMLKind(kind, existing, address string, models []ModelRef) (string, e
 		return mergeYAMLMap(existing, "providers", ompEntry(address, models))
 	case FileGajae:
 		return mergeYAMLMap(existing, "providers", gajaeEntry(address, models))
-	case FileDSH:
-		return mergeYAMLMap(existing, "providers", dshEntry(address, models))
 	default:
 		return mergeYAMLMap(existing, "", mcodeEntry(address, models))
 	}
@@ -89,6 +92,10 @@ func mergeSpecialKind(kind, existing, address string, models []ModelRef) (string
 	switch kind {
 	case FileClineModels:
 		return mergeClineModels(existing, address, models)
+	case FileDSH, FileDSHDesktop:
+		return MergeDSH(existing, address, models)
+	case FileDSHHeadless:
+		return MergeDSHHeadless(existing, address, models)
 	case FileRaycast:
 		return mergeRaycast(existing, address, models)
 	case FileKimi:
@@ -107,10 +114,12 @@ func StripKind(kind, existing string) (string, error) {
 	switch kind {
 	case FilePi, FilePrime, FileAside, FileOMO, FileZCode, FileClineProviders, FileClineModels:
 		stripped, err = stripJSON(existing, []string{"providers", reloProviderID})
-	case FileOMP, FileGajae, FileDSH:
+	case FileOMP, FileGajae:
 		stripped, err = stripYAMLMap(existing, "providers")
 	case FileMCode:
 		stripped, err = stripYAMLMap(existing, "")
+	case FileDSH, FileDSHHeadless, FileDSHDesktop:
+		stripped, err = StripDSH(existing)
 	case FileRaycast:
 		stripped, err = stripRaycast(existing)
 	case FileKimi:
@@ -132,10 +141,12 @@ func KindHasRelo(kind, existing string) (bool, error) {
 	switch kind {
 	case FilePi, FilePrime, FileAside, FileOMO, FileZCode, FileClineProviders, FileClineModels:
 		return jsonHas(existing, []string{"providers", reloProviderID})
-	case FileOMP, FileGajae, FileDSH:
+	case FileOMP, FileGajae:
 		return yamlHas(existing, "providers")
 	case FileMCode:
 		return yamlHas(existing, "")
+	case FileDSH, FileDSHHeadless, FileDSHDesktop:
+		return DSHHasRelo(existing)
 	case FileRaycast:
 		return raycastHas(existing)
 	case FileKimi:
@@ -155,7 +166,7 @@ func KindPointsAt(kind, existing, baseURL string, models []ModelRef) bool {
 	switch kind {
 	case FilePi, FilePrime, FileAside, FileOMO, FileZCode, FileClineProviders:
 		return jsonKindPointsAt(kind, existing, address, models)
-	case FileOMP, FileGajae, FileDSH, FileMCode:
+	case FileOMP, FileGajae, FileMCode:
 		return yamlKindPointsAt(kind, existing, address, models)
 	default:
 		return specialKindPointsAt(kind, existing, address, models)
@@ -181,8 +192,6 @@ func yamlKindPointsAt(kind, existing, address string, models []ModelRef) bool {
 		return yamlPointsAt(existing, "providers", ompEntry(address, models))
 	case FileGajae:
 		return yamlPointsAt(existing, "providers", gajaeEntry(address, models))
-	case FileDSH:
-		return yamlPointsAt(existing, "providers", dshEntry(address, models))
 	default:
 		return yamlPointsAt(existing, "", mcodeEntry(address, models))
 	}
@@ -192,6 +201,10 @@ func specialKindPointsAt(kind, existing, address string, models []ModelRef) bool
 	switch kind {
 	case FileClineModels:
 		return jsonPointsAt(existing, clineModelsValue(address, models))
+	case FileDSH, FileDSHDesktop:
+		return DSHPointsAt(existing, address, models)
+	case FileDSHHeadless:
+		return DSHHeadlessPointsAt(existing, address, models)
 	case FileRaycast:
 		return raycastPointsAt(existing, address, models)
 	case FileKimi:
@@ -239,7 +252,7 @@ func kindClient(kind string) string {
 		return ClientOMP
 	case FileGajae:
 		return ClientGajae
-	case FileDSH:
+	case FileDSH, FileDSHHeadless, FileDSHDesktop:
 		return ClientDSH
 	case FileMCode:
 		return ClientMCode
@@ -408,10 +421,6 @@ func modelLimitFields(model ModelRef, format func(name string, value int64) stri
 
 func gajaeEntry(address string, models []ModelRef) string {
 	return "relo:\n  baseUrl: " + yamlQuote(address) + "\n  api: openai-completions\n" + yamlIDModels(models)
-}
-
-func dshEntry(address string, models []ModelRef) string {
-	return "relo:\n  baseUrl: " + yamlQuote(address) + "\n  apiKey: " + yamlQuote(braceKey(FileDSH)) + "\n" + yamlIDModels(models)
 }
 
 func mcodeEntry(address string, models []ModelRef) string {

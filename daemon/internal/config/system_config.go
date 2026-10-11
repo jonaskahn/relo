@@ -8,6 +8,8 @@ import (
 	"os"
 	"strconv"
 	"strings"
+
+	"github.com/BurntSushi/toml"
 )
 
 // SystemConfigPatch names the [system] choices a settings save carries; a nil
@@ -15,6 +17,7 @@ import (
 type SystemConfigPatch struct {
 	Autostart       *bool
 	LogLevel        *string
+	LogTraffic      *bool
 	UpdatesURL      *string
 	UpdatesDownload *string
 }
@@ -60,6 +63,9 @@ func writeSystemPatch(updated string, patch SystemConfigPatch) string {
 	if patch.LogLevel != nil {
 		updated = upsertTableKey(updated, "system.logging", "level", fmt.Sprintf("%q", *patch.LogLevel))
 	}
+	if patch.LogTraffic != nil {
+		updated = upsertTableKey(updated, "system.logging", "traffic", strconv.FormatBool(*patch.LogTraffic))
+	}
 	if patch.UpdatesURL != nil {
 		updated = upsertTableKey(updated, "system.updates", "url", fmt.Sprintf("%q", *patch.UpdatesURL))
 	}
@@ -77,4 +83,25 @@ func validateUpdatesURL(path, raw string) error {
 		return fmt.Errorf("%s: %w", path, err)
 	}
 	return nil
+}
+
+// ReadLogTraffic reads the traffic-log switch from the startup file. A missing
+// file or key reads as off.
+func ReadLogTraffic(path string) (bool, error) {
+	data, err := os.ReadFile(path)
+	if errors.Is(err, fs.ErrNotExist) {
+		return false, nil
+	}
+	if err != nil {
+		return false, err
+	}
+	var file struct {
+		System struct {
+			Logging LoggingConfig `toml:"logging"`
+		} `toml:"system"`
+	}
+	if _, err := toml.Decode(string(data), &file); err != nil {
+		return false, err
+	}
+	return file.System.Logging.Traffic, nil
 }

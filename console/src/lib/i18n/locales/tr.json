@@ -38,8 +38,9 @@
       "signingOut": "Oturum kapatılıyor…",
       "closeMenu": "Menüyü kapat",
       "integrations": "Entegrasyonlar",
-      "agents": "Ajanlar",
-      "agentsAttention": "Agents need repair or restart",
+      "agents": "Agent Harness",
+      "agentsShort": "Harness",
+      "agentsAttention": "Agent Harness onarım veya yeniden başlatma gerektiriyor",
       "chat": "Sohbet",
       "actions": "Kenar çubuğu eylemleri",
       "github": "GitHub",
@@ -454,7 +455,8 @@
           "noMatch": "Aramanızla veya filtrelerinizle eşleşen bağlantı yok.",
           "filters": "Bağlantı filtreleri",
           "filterOption": "{label} ({count})",
-          "tagFree": "Ücretsiz"
+          "tagFree": "Ücretsiz",
+          "tagExperimental": "Deneysel"
         },
         "status": {
           "ready": "Hazır",
@@ -1178,6 +1180,7 @@
         "attemptsEmpty": "Kaydedilmiş deneme yok.",
         "attempt": "Deneme",
         "exchangeAgentTitle": "Ajan alışverişi",
+        "traceBadge": "Tam iz",
         "exchangeProviderTitle": "Sağlayıcı alışverişi",
         "captureAgentRequest": "Ajan isteği",
         "captureAgentResponse": "Ajan yanıtı",
@@ -1188,7 +1191,7 @@
         "captureTruncated": "Yakalama sınırında kesildi.",
         "captureHeaders": "Başlıklar",
         "captureBody": "Gövde",
-        "captureCopy": "Kopyalayın",
+        "captureCopyCurl": "cURL olarak kopyala",
         "captureDownload": "İndirin",
         "captureEmptyBody": "Gövde gönderilmedi.",
         "captureBinary": "İkili gövde ({size}). İncelemek için indirin.",
@@ -1507,7 +1510,7 @@
         "description": "Tüm daemon seçimleri tek yerde: görünüm, erişim, ağ, sağlayıcılar ve bakım."
       },
       "integrationsPage": {
-        "title": "Ajanlar",
+        "title": "Agent Harness",
         "subtitle": "Bu makinedeki kodlama ajanlarını Relo’ya bağlayın ve anahtarlarını Relo tutsun.",
         "empty": "Bağlanacak ajan yok.",
         "tested": "Test edildi",
@@ -1741,7 +1744,8 @@
       "autostartHint": "Relo'yu oturum açılışında başlayacak şekilde kaydeder. Kaydedince uygulanır.",
       "logLevelLabel": "Günlük düzeyi",
       "logLevelHint": "Daemon'un günlüğe ne kadar yazdığı. Yeniden başlatmadan sonra geçerli olur.",
-      "updateFeedLabel": "Güncelleme akışı",
+      "trafficLogLabel": "Trafik günlüğü",
+      "trafficLogHint": "Aracının her isteğini ve sağlayıcıyla her değişimi eksiksiz olarak logs/traffic-YYYYMMDD.log dosyasına, günde bir dosya olarak iki hafta boyunca yazar. Kimlik bilgileri maskelenmeye devam eder. Kaydettiğinizde uygulanır.",
       "updatesURL": "Appcast adresi",
       "updatesURLHint": "Relo'nun yeni sürümler için okuduğu akış. Boş bırakmak denetimi kapatır.",
       "updatesDownload": "İndirme sayfası",
@@ -1796,7 +1800,8 @@
       "retryLabel": "Yeniden deneme aralıkları",
       "failoverLabel": "Failover wait",
       "failoverHint": "How long a refused account or route member stays out of rotation after a rate limit or server fault, and how the wait grows with each further failure. A success resets it. None starts with no wait: the first refusal is immediately reusable.",
-      "retryHint": "Her denemeden önce rastgele bekleme, saniye cinsinden. Sağlayıcının daha uzun Retry-After değeri kazanır."
+      "retryHint": "Her denemeden önce rastgele bekleme, saniye cinsinden. Sağlayıcının daha uzun Retry-After değeri kazanır.",
+      "jumpLabel": "Bölüme git"
     }
   }
 }

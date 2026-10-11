@@ -140,6 +140,7 @@ func chatFrames(t *testing.T, body string) []chatFrame {
 // usageOrigin reads the origin one recorded request was stored with.
 func usageOrigin(t *testing.T, h *harness, requestID string) string {
 	t.Helper()
+	h.settle()
 	var origin string
 	if err := h.db.SQL().QueryRow("SELECT origin FROM usage_events WHERE request_id = ?", requestID).Scan(&origin); err != nil {
 		t.Fatalf("read the recorded origin: %v", err)

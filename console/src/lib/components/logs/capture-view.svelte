@@ -18,6 +18,9 @@
 	let { requestId, capture }: Props = $props();
 
 	const PREVIEW_BYTES = 20_000;
+	const bodyPath = $derived(
+		'/api/v1/activity/requests/' + requestId + '/captures/' + capture.id + '/body'
+	);
 
 	// phase names where the body read stands; it is not called state, which
 	// is the rune that builds one.
@@ -41,6 +44,9 @@
 	const response = $derived(
 		capture.kind === 'agent_response' || capture.kind === 'provider_response'
 	);
+	// A request is what an operator replays, so it carries a copy that
+	// becomes the cURL of the exchange; a response has nothing to replay.
+	const request = $derived(!response);
 	const label = $derived(
 		capture.kind === 'agent_request'
 			? $t('ui.pages.logsPage.captureAgentRequest')
@@ -59,10 +65,10 @@
 		phase = 'loading';
 		failure = '';
 		try {
-			const response = await fetch(
-				'/api/v1/activity/requests/' + requestId + '/captures/' + capture.id + '/body',
-				{ credentials: 'same-origin', headers: { Accept: 'application/octet-stream' } }
-			);
+			const response = await fetch(bodyPath, {
+				credentials: 'same-origin',
+				headers: { Accept: 'application/octet-stream' }
+			});
 			if (!response.ok) {
 				throw new Error(
 					$t('ui.pages.logsPage.captureFailed', { values: { status: response.status } })
@@ -89,10 +95,45 @@
 		return false;
 	}
 
-	async function copy() {
+	// A single-quoted shell word: one safe way to carry a header value or a
+	// body into a command line.
+	function shellQuote(value: string): string {
+		return "'" + value.replace(/'/g, "'\\''") + "'";
+	}
+
+	// target is where the message went. The agent's own request names only its
+	// path, so the Host header it arrived with says where that path lives.
+	function target(): string {
+		if (/^https?:\/\//i.test(capture.url)) return capture.url;
+		const host = (capture.headers?.Host ?? capture.headers?.host ?? [])[0] ?? 'localhost';
+		return 'http://' + host + capture.url;
+	}
+
+	// curlCommand is the request as a command an operator can run again. A
+	// binary body is left out of it: a shell word cannot carry those bytes,
+	// and the download keeps them.
+	function curlCommand(bodyText: string): string {
+		const lines = ['curl ' + shellQuote(target())];
+		if (capture.method !== '' && capture.method !== 'GET') {
+			lines.push('-X ' + capture.method);
+		}
+		for (const [name, values] of headers) {
+			if (name.toLowerCase() === 'content-length') continue;
+			for (const value of values) {
+				lines.push('-H ' + shellQuote(name + ': ' + value));
+			}
+		}
+		if (bodyText !== '') {
+			lines.push('--data-binary ' + shellQuote(bodyText));
+		}
+		return lines.map((line, index) => (index === 0 ? line : ' \\\n  ' + line)).join('');
+	}
+
+	async function copyCurl() {
+		if (phase !== 'ready') await load();
 		if (phase !== 'ready') return;
 		try {
-			await navigator.clipboard.writeText(body);
+			await navigator.clipboard.writeText(curlCommand(binary ? '' : body));
 			copied = true;
 			clearTimeout(copyTimer);
 			copyTimer = setTimeout(() => (copied = false), 1500);
@@ -105,10 +146,7 @@
 	// still arrives whole.
 	async function download() {
 		try {
-			const response = await fetch(
-				'/api/v1/activity/requests/' + requestId + '/captures/' + capture.id + '/body',
-				{ credentials: 'same-origin' }
-			);
+			const response = await fetch(bodyPath, { credentials: 'same-origin' });
 			if (!response.ok) return;
 			const blob = await response.blob();
 			const url = URL.createObjectURL(blob);
@@ -125,34 +163,42 @@
 	function captureName(): string {
 		const kind = response ? 'reply' : 'request';
 		const ordinal = capture.ordinal === undefined ? '' : '-attempt-' + (capture.ordinal + 1);
-		return 'relo-' + kind + ordinal + '-request-' + requestId + '.body';
+		return 'relo-' + kind + ordinal + '-request-' + requestId + '.log';
 	}
 </script>
 
 <div class="rounded-lg border border-border">
-	<button
-		type="button"
-		class="flex w-full items-center gap-2 px-3 py-2 text-left"
-		aria-expanded={open}
-		onclick={() => {
-			open = !open;
-			if (open) void load();
-		}}
-	>
-		<Icon
-			name="chevron-right"
-			size={13}
-			class="shrink-0 transition-transform {open ? 'rotate-90' : ''}"
-		/>
-		<span class="text-xs font-medium">{label}</span>
-		<span class="mono-data text-muted-foreground shrink-0 text-[11px]">{summary}</span>
-		<span class="mono-data min-w-0 flex-1 truncate text-xs text-muted-foreground"
-			>{capture.url}</span
+	<div class="flex items-center gap-2 px-3 py-2">
+		<button
+			type="button"
+			class="flex min-w-0 flex-1 items-center gap-2 text-left"
+			aria-expanded={open}
+			onclick={() => {
+				open = !open;
+				if (open) void load();
+			}}
 		>
-		<span class="text-muted-foreground shrink-0 text-[11px] tabular-nums"
-			>{formatBytes(capture.body_bytes)}</span
-		>
-	</button>
+			<Icon
+				name="chevron-right"
+				size={13}
+				class="shrink-0 transition-transform {open ? 'rotate-90' : ''}"
+			/>
+			<span class="text-xs font-medium">{label}</span>
+			<span class="mono-data text-muted-foreground shrink-0 text-[11px]">{summary}</span>
+			<span class="mono-data min-w-0 flex-1 truncate text-xs text-muted-foreground"
+				>{capture.url}</span
+			>
+			<span class="text-muted-foreground shrink-0 text-[11px] tabular-nums"
+				>{formatBytes(capture.body_bytes)}</span
+			>
+		</button>
+		{#if request}
+			<Button variant="ghost" size="sm" onclick={() => void copyCurl()}>
+				<Icon name={copied ? 'check' : 'copy'} size={14} />
+				<span class="ml-1">{$t('ui.pages.logsPage.captureCopyCurl')}</span>
+			</Button>
+		{/if}
+	</div>
 
 	{#if open}
 		<div class="space-y-3 border-t border-border px-3 py-3">
@@ -184,26 +230,15 @@
 				<p class="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
 					{$t('ui.pages.logsPage.captureBody')}
 				</p>
-				<div class="flex items-center gap-1">
-					<Button
-						variant="ghost"
-						size="sm"
-						onclick={() => void copy()}
-						disabled={phase !== 'ready' || binary}
-					>
-						<Icon name={copied ? 'check' : 'copy'} size={14} />
-						<span class="ml-1">{$t('ui.pages.logsPage.captureCopy')}</span>
-					</Button>
-					<Button
-						variant="ghost"
-						size="sm"
-						onclick={() => void download()}
-						disabled={capture.body_bytes === 0}
-					>
-						<Icon name="arrow-down" size={14} />
-						<span class="ml-1">{$t('ui.pages.logsPage.captureDownload')}</span>
-					</Button>
-				</div>
+				<Button
+					variant="ghost"
+					size="sm"
+					onclick={() => void download()}
+					disabled={capture.body_bytes === 0}
+				>
+					<Icon name="arrow-down" size={14} />
+					<span class="ml-1">{$t('ui.pages.logsPage.captureDownload')}</span>
+				</Button>
 			</div>
 
 			{#if phase === 'loading'}

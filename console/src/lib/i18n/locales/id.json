@@ -38,8 +38,9 @@
       "signingOut": "Sedang keluar…",
       "closeMenu": "Tutup menu",
       "integrations": "Integrasi",
-      "agents": "Agen",
-      "agentsAttention": "Agents need repair or restart",
+      "agents": "Agent Harness",
+      "agentsShort": "Harness",
+      "agentsAttention": "Agent Harness perlu perbaikan atau mulai ulang",
       "chat": "Obrolan",
       "actions": "Tindakan sidebar",
       "github": "GitHub",
@@ -454,7 +455,8 @@
           "noMatch": "Tidak ada koneksi yang cocok dengan pencarian atau filter.",
           "filters": "Filter koneksi",
           "filterOption": "{label} ({count})",
-          "tagFree": "Gratis"
+          "tagFree": "Gratis",
+          "tagExperimental": "Eksperimental"
         },
         "status": {
           "ready": "Siap",
@@ -1178,6 +1180,7 @@
         "attemptsEmpty": "Tidak ada upaya yang tercatat.",
         "attempt": "Mencoba",
         "exchangeAgentTitle": "Pertukaran agen",
+        "traceBadge": "Jejak lengkap",
         "exchangeProviderTitle": "Pertukaran penyedia",
         "captureAgentRequest": "Permintaan agen",
         "captureAgentResponse": "Tanggapan agen",
@@ -1188,7 +1191,7 @@
         "captureTruncated": "Terpotong pada batas penangkapan.",
         "captureHeaders": "Header",
         "captureBody": "Tubuh",
-        "captureCopy": "Salin",
+        "captureCopyCurl": "Salin sebagai cURL",
         "captureDownload": "Unduh",
         "captureEmptyBody": "Tidak ada jenazah yang dikirim.",
         "captureBinary": "Tubuh biner ({size}). Unduh untuk memeriksanya.",
@@ -1507,7 +1510,7 @@
         "description": "Semua pilihan daemon di satu tempat: tampilan, akses, jaringan, penyedia, dan pemeliharaan."
       },
       "integrationsPage": {
-        "title": "Agen",
+        "title": "Agent Harness",
         "subtitle": "Kirimkan agen pengkodean pada mesin ini ke Relo, dan biarkan Relo menyimpan kuncinya.",
         "empty": "Tidak ada agen yang mengirim.",
         "tested": "Diuji",
@@ -1741,7 +1744,8 @@
       "autostartHint": "Mendaftarkan Relo untuk mulai saat masuk. Diterapkan saat disimpan.",
       "logLevelLabel": "Tingkat log",
       "logLevelHint": "Seberapa banyak daemon menulis ke log. Berlaku setelah mulai ulang.",
-      "updateFeedLabel": "Feed pembaruan",
+      "trafficLogLabel": "Log lalu lintas",
+      "trafficLogHint": "Menulis setiap permintaan agen dan setiap pertukaran dengan penyedia secara utuh ke logs/traffic-YYYYMMDD.log, satu berkas per hari, disimpan selama dua minggu. Kredensial tetap disamarkan. Berlaku saat disimpan.",
       "updatesURL": "URL appcast",
       "updatesURLHint": "Feed yang dibaca Relo untuk versi baru. Kosong mematikan pemeriksaan.",
       "updatesDownload": "Halaman unduhan",
@@ -1796,7 +1800,8 @@
       "retryLabel": "Jeda percobaan ulang",
       "failoverLabel": "Failover wait",
       "failoverHint": "How long a refused account or route member stays out of rotation after a rate limit or server fault, and how the wait grows with each further failure. A success resets it. None starts with no wait: the first refusal is immediately reusable.",
-      "retryHint": "Jeda acak sebelum setiap percobaan ulang, dalam detik. Retry-After penyedia yang lebih lama menang."
+      "retryHint": "Jeda acak sebelum setiap percobaan ulang, dalam detik. Retry-After penyedia yang lebih lama menang.",
+      "jumpLabel": "Lompat ke bagian"
     }
   }
 }

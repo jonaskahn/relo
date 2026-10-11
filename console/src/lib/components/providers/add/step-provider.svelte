@@ -13,6 +13,7 @@
 		visibleTemplateRows,
 		type TemplateRow
 	} from '$lib/provider-sections';
+	import { isExperimentalConnection } from '$lib/provider-experimental';
 
 	// The provider picker is a radio list: choosing marks a row and the
 	// footer's Next advances, so a misread row never opens the form by itself.
@@ -141,6 +142,14 @@
 								<span class="min-w-0 flex-1">
 									<span class="flex items-center gap-2">
 										<span class="truncate text-sm font-medium">{row.label}</span>
+										{#if isExperimentalConnection(row.id)}
+											<span
+												data-experimental-chip
+												class="badge shrink-0 border border-border text-muted-foreground"
+											>
+												{$t('ui.pages.providersPage.list.tagExperimental')}
+											</span>
+										{/if}
 										{#if row.added}
 											<span
 												class="shrink-0 rounded border border-border px-1.5 py-0.5 text-[0.6rem] text-muted-foreground"

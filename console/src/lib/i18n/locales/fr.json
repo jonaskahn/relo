@@ -38,8 +38,9 @@
       "signingOut": "Déconnexion…",
       "closeMenu": "Fermer le menu",
       "integrations": "Intégrations",
-      "agents": "Agents",
-      "agentsAttention": "Agents need repair or restart",
+      "agents": "Agent Harness",
+      "agentsShort": "Harness",
+      "agentsAttention": "Agent Harness a besoin d'une réparation ou d'un redémarrage",
       "chat": "Chat",
       "actions": "Actions de la barre latérale",
       "github": "GitHub",
@@ -454,7 +455,8 @@
           "noMatch": "Aucune connexion ne correspond à votre recherche ou à vos filtres.",
           "filters": "Filtres de connexion",
           "filterOption": "{label} ({count})",
-          "tagFree": "Gratuit"
+          "tagFree": "Gratuit",
+          "tagExperimental": "Expérimental"
         },
         "status": {
           "ready": "Prêt",
@@ -1178,6 +1180,7 @@
         "attemptsEmpty": "Aucune tentative enregistrée.",
         "attempt": "Tentative",
         "exchangeAgentTitle": "Échange agent",
+        "traceBadge": "Trace complète",
         "exchangeProviderTitle": "Échange provider",
         "captureAgentRequest": "Requête agent",
         "captureAgentResponse": "Réponse agent",
@@ -1188,7 +1191,7 @@
         "captureTruncated": "Tronqué à la limite de capture.",
         "captureHeaders": "En-têtes",
         "captureBody": "Corps",
-        "captureCopy": "Copier",
+        "captureCopyCurl": "Copier en cURL",
         "captureDownload": "Télécharger",
         "captureEmptyBody": "Aucun corps n’a été envoyé.",
         "captureBinary": "Corps binaire ({size}). Téléchargez-le pour l’examiner.",
@@ -1507,7 +1510,7 @@
         "description": "Tous les choix du démon au même endroit : apparence, accès, réseau, fournisseurs et maintenance."
       },
       "integrationsPage": {
-        "title": "Agents",
+        "title": "Agent Harness",
         "subtitle": "Branchez les agents de code de cette machine à Relo, et laissez Relo garder leurs clés.",
         "empty": "Aucun agent à brancher.",
         "tested": "Testé",
@@ -1741,7 +1744,8 @@
       "autostartHint": "Enregistre Relo au démarrage de la session. Appliqué à l'enregistrement.",
       "logLevelLabel": "Niveau de journal",
       "logLevelHint": "Combien le démon écrit dans son journal. S'applique après un redémarrage.",
-      "updateFeedLabel": "Flux de mises à jour",
+      "trafficLogLabel": "Journal de trafic",
+      "trafficLogHint": "Écrit chaque requête de l'agent et chaque échange avec le fournisseur en entier dans logs/traffic-YYYYMMDD.log, un fichier par jour, conservé deux semaines. Les identifiants restent masqués. Appliqué à l'enregistrement.",
       "updatesURL": "URL de l'appcast",
       "updatesURLHint": "Le flux que Relo lit pour les nouvelles versions. Vide désactive la vérification.",
       "updatesDownload": "Page de téléchargement",
@@ -1796,7 +1800,8 @@
       "retryLabel": "Délais entre les tentatives",
       "failoverLabel": "Failover wait",
       "failoverHint": "How long a refused account or route member stays out of rotation after a rate limit or server fault, and how the wait grows with each further failure. A success resets it. None starts with no wait: the first refusal is immediately reusable.",
-      "retryHint": "Attente aléatoire avant chaque tentative, en secondes. Un Retry-After plus long du fournisseur l'emporte."
+      "retryHint": "Attente aléatoire avant chaque tentative, en secondes. Un Retry-After plus long du fournisseur l'emporte.",
+      "jumpLabel": "Aller à la section"
     }
   }
 }

@@ -38,8 +38,9 @@
       "signingOut": "Loggar ut…",
       "closeMenu": "Stäng menyn",
       "integrations": "Integrationer",
-      "agents": "Agenter",
-      "agentsAttention": "Agents need repair or restart",
+      "agents": "Agent Harness",
+      "agentsShort": "Harness",
+      "agentsAttention": "Agent Harness behöver repareras eller startas om",
       "chat": "Chatt",
       "actions": "Åtgärder i menyn",
       "github": "GitHub",
@@ -454,7 +455,8 @@
           "noMatch": "Ingen anslutning matchar din sökning eller dina filter.",
           "filters": "Anslutningsfilter",
           "filterOption": "{label} ({count})",
-          "tagFree": "Gratis"
+          "tagFree": "Gratis",
+          "tagExperimental": "Experimentell"
         },
         "status": {
           "ready": "Redo",
@@ -1178,6 +1180,7 @@
         "attemptsEmpty": "Inga försök registrerade.",
         "attempt": "Försök",
         "exchangeAgentTitle": "Agentutbyte",
+        "traceBadge": "Fullständig spårning",
         "exchangeProviderTitle": "Leverantörsutbyte",
         "captureAgentRequest": "Agentförfrågan",
         "captureAgentResponse": "Agentsvar",
@@ -1188,7 +1191,7 @@
         "captureTruncated": "Trunkerad vid fångstgränsen.",
         "captureHeaders": "Headers",
         "captureBody": "Brödtext",
-        "captureCopy": "Kopiera",
+        "captureCopyCurl": "Kopiera som cURL",
         "captureDownload": "Ladda ned",
         "captureEmptyBody": "Ingen brödtext skickades.",
         "captureBinary": "Binär brödtext ({size}). Ladda ned den för att inspektera den.",
@@ -1507,7 +1510,7 @@
         "description": "Alla daemonval på ett ställe: utseende, åtkomst, nätverk, leverantörer och underhåll."
       },
       "integrationsPage": {
-        "title": "Agenter",
+        "title": "Agent Harness",
         "subtitle": "Koppla kodningsagenterna på den här maskinen till Relo, och låt Relo behålla deras nycklar.",
         "empty": "Inga agenter att koppla.",
         "tested": "Testad",
@@ -1741,7 +1744,8 @@
       "autostartHint": "Registrerar Relo att starta vid inloggning. Tillämpas när du sparar.",
       "logLevelLabel": "Loggnivå",
       "logLevelHint": "Hur mycket daemonen skriver till loggen. Gäller efter en omstart.",
-      "updateFeedLabel": "Uppdateringsflöde",
+      "trafficLogLabel": "Trafiklogg",
+      "trafficLogHint": "Skriver varje begäran från agenten och varje utbyte med leverantören i sin helhet till logs/traffic-YYYYMMDD.log, en fil per dag, sparas i två veckor. Inloggningsuppgifter förblir maskerade. Tillämpas när du sparar.",
       "updatesURL": "Appcast-URL",
       "updatesURLHint": "Flödet Relo läser för nya versioner. Tomt stänger av kontrollen.",
       "updatesDownload": "Nedladdningssida",
@@ -1796,7 +1800,8 @@
       "retryLabel": "Väntetider mellan försök",
       "failoverLabel": "Failover wait",
       "failoverHint": "How long a refused account or route member stays out of rotation after a rate limit or server fault, and how the wait grows with each further failure. A success resets it. None starts with no wait: the first refusal is immediately reusable.",
-      "retryHint": "Slumpmässig väntetid före varje försök, i sekunder. En längre Retry-After från leverantören vinner."
+      "retryHint": "Slumpmässig väntetid före varje försök, i sekunder. En längre Retry-After från leverantören vinner.",
+      "jumpLabel": "Gå till avsnitt"
     }
   }
 }

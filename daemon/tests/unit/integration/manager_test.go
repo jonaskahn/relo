@@ -57,6 +57,17 @@ func (s *store) DeleteFiles(_ context.Context, id string) error {
 	return nil
 }
 
+func (s *store) DeleteFile(_ context.Context, id, kind string) error {
+	files := s.files[id]
+	for index, file := range files {
+		if file.Kind == kind {
+			s.files[id] = append(files[:index], files[index+1:]...)
+			break
+		}
+	}
+	return nil
+}
+
 func (s *store) AppendOp(_ context.Context, op integration.OpRecord) error {
 	return nil
 }

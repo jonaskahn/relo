@@ -222,7 +222,9 @@ func chatGPTTokenResponse(t *testing.T) string {
 
 // openAILoginHarness returns a harness whose server performs real ChatGPT
 // logins, the broker they report through, and the channel that reports which
-// broker the server handed the login.
+// broker the server handed the login. The sentences the page renders live in
+// the document the daemon falls back to, so that is the build the assertions
+// read.
 func openAILoginHarness(t *testing.T, tokenURL string) (*harness, *oauth.CallbackBroker, chan server.CallbackBroker) {
 	t.Helper()
 	harness := newHarness(t)
@@ -234,6 +236,7 @@ func openAILoginHarness(t *testing.T, tokenURL string) (*harness, *oauth.Callbac
 			options.Callbacks = platform.NewCallbackBridge(broker)
 			options.Login = runner
 		})
+	harness.server.SetDashboard(nil)
 	return harness, broker, runner.seen
 }
 

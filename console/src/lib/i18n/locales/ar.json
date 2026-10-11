@@ -38,7 +38,8 @@
       "signingOut": "جارٍ تسجيل الخروج…",
       "closeMenu": "إغلاق القائمة",
       "integrations": "التكاملات",
-      "agents": "الوكلاء",
+      "agents": "Agent Harness",
+      "agentsShort": "Harness",
       "chat": "الدردشة",
       "actions": "إجراءات الشريط الجانبي",
       "github": "GitHub",
@@ -60,7 +61,7 @@
       "restarted": "يُعاد تشغيل daemon.",
       "forceRestarted": "يُعاد تشغيل daemon قسرًا.",
       "shutdownStarted": "يجري إيقاف daemon.",
-      "agentsAttention": "يحتاج وكيل واحد إلى الإصلاح أو إعادة التشغيل"
+      "agentsAttention": "تحتاج Agent Harness إلى الإصلاح أو إعادة التشغيل"
     },
     "topbar": {
       "menu": "القائمة",
@@ -454,7 +455,8 @@
           "noMatch": "لا يوجد اتصال يطابق بحثك أو عوامل التصفية.",
           "filters": "عوامل تصفية الاتصالات",
           "filterOption": "{label} ({count})",
-          "tagFree": "مجاني"
+          "tagFree": "مجاني",
+          "tagExperimental": "تجريبي"
         },
         "status": {
           "ready": "جاهز",
@@ -1178,6 +1180,7 @@
         "attemptsEmpty": "لم يتم تسجيل أية محاولات.",
         "attempt": "محاولة",
         "exchangeAgentTitle": "تبادل الوكيل",
+        "traceBadge": "التتبع الكامل",
         "exchangeProviderTitle": "تبادل مقدم",
         "captureAgentRequest": "طلب الوكيل",
         "captureAgentResponse": "رد الوكيل",
@@ -1188,7 +1191,7 @@
         "captureTruncated": "اقتطاع عند حد الالتقاط.",
         "captureHeaders": "الرؤوس",
         "captureBody": "الجسم",
-        "captureCopy": "نسخ",
+        "captureCopyCurl": "نسخ كـ cURL",
         "captureDownload": "تحميل",
         "captureEmptyBody": "ولم يتم إرسال أي جثة.",
         "captureBinary": "الجسم الثنائي ({size}). قم بتنزيله لفحصه.",
@@ -1507,7 +1510,7 @@
         "description": "كل خيارات الخادم في مكان واحد: المظهر والوصول والشبكة والمزودون والصيانة."
       },
       "integrationsPage": {
-        "title": "الوكلاء",
+        "title": "Agent Harness",
         "subtitle": "قم بتوصيل وكلاء التشفير على هذا الجهاز إلى Relo، واترك Relo يحتفظ بمفاتيحهم.",
         "empty": "لا يوجد وكلاء للأسلاك.",
         "tested": "تم اختباره",
@@ -1741,7 +1744,8 @@
       "autostartHint": "يسجّل Relo للبدء عند تسجيل الدخول. يُطبَّق عند الحفظ.",
       "logLevelLabel": "مستوى السجل",
       "logLevelHint": "مقدار ما يكتبه الخادم في السجل. يُطبَّق بعد إعادة التشغيل.",
-      "updateFeedLabel": "خلاصة التحديثات",
+      "trafficLogLabel": "سجل حركة المرور",
+      "trafficLogHint": "يكتب كل طلب من الوكيل وكل تبادل مع المزود كاملاً في logs/traffic-YYYYMMDD.log، ملف واحد لكل يوم، ويُحتفظ به أسبوعين. تبقى بيانات الاعتماد مخفية. يُطبَّق عند الحفظ.",
       "updatesURL": "عنوان appcast",
       "updatesURLHint": "الخلاصة التي يقرأها Relo للإصدارات الأحدث. فارغة توقف التحقق.",
       "updatesDownload": "صفحة التنزيل",
@@ -1796,7 +1800,8 @@
       "retryLabel": "فترات إعادة المحاولة",
       "failoverLabel": "Failover wait",
       "failoverHint": "How long a refused account or route member stays out of rotation after a rate limit or server fault, and how the wait grows with each further failure. A success resets it. None starts with no wait: the first refusal is immediately reusable.",
-      "retryHint": "انتظار عشوائي قبل كل إعادة محاولة، بالثواني. إذا كان Retry-After للمزود أطول فهو الأولى."
+      "retryHint": "انتظار عشوائي قبل كل إعادة محاولة، بالثواني. إذا كان Retry-After للمزود أطول فهو الأولى.",
+      "jumpLabel": "انتقل إلى القسم"
     }
   }
 }

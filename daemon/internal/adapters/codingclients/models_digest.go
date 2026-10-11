@@ -23,9 +23,14 @@ func ModelsDigest(models []ModelRef) string {
 			builder.WriteString(strconv.FormatInt(*model.ContextWindow, 10))
 		}
 		builder.WriteByte('\n')
+		if model.MaxOutput != nil {
+			builder.WriteString(strconv.FormatInt(*model.MaxOutput, 10))
+		}
+		builder.WriteByte('\n')
 		writeDigestFlag(&builder, model.Tools)
 		writeDigestFlag(&builder, model.Reasoning)
 		writeDigestFlag(&builder, model.Vision)
+		writeDigestFlag(&builder, model.ReasoningToggle)
 		writeDigestEfforts(&builder, model.ReasoningEfforts)
 	}
 	return Digest(builder.String())

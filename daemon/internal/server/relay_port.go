@@ -88,6 +88,9 @@ type Exchange struct {
 	Inbound    wire.InboundCodec
 	Surface    string
 	RequestID  string
+	// CaptureLimit overrides how much of each provider body the attempt
+	// keeps. Zero keeps the state-sized cap.
+	CaptureLimit int64
 	// RequiresStream reports that the connection's upstream only answers a
 	// streamed request, so a client that asked for one complete body is
 	// served by reassembling the stream rather than by a one-shot request the

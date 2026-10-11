@@ -38,8 +38,9 @@
       "signingOut": "Đang đăng xuất…",
       "closeMenu": "Đóng menu",
       "integrations": "Tích hợp",
-      "agents": "Agent",
-      "agentsAttention": "Agents need repair or restart",
+      "agents": "Agent Harness",
+      "agentsShort": "Harness",
+      "agentsAttention": "Agent Harness cần sửa hoặc khởi động lại",
       "chat": "Trò chuyện",
       "actions": "Thao tác thanh bên",
       "github": "GitHub",
@@ -454,7 +455,8 @@
           "noMatch": "Không có kết nối nào khớp với tìm kiếm hoặc bộ lọc.",
           "filters": "Bộ lọc kết nối",
           "filterOption": "{label} ({count})",
-          "tagFree": "Miễn phí"
+          "tagFree": "Miễn phí",
+          "tagExperimental": "Thử nghiệm"
         },
         "status": {
           "ready": "Sẵn sàng",
@@ -1178,6 +1180,7 @@
         "attemptsEmpty": "Không có nỗ lực nào được ghi lại.",
         "attempt": "Cố gắng",
         "exchangeAgentTitle": "Trao đổi agent",
+        "traceBadge": "Dấu vết đầy đủ",
         "exchangeProviderTitle": "Trao đổi nhà cung cấp",
         "captureAgentRequest": "Yêu cầu agent",
         "captureAgentResponse": "Phản hồi của agent",
@@ -1188,7 +1191,7 @@
         "captureTruncated": "Cắt ngắn ở giới hạn chụp.",
         "captureHeaders": "Tiêu đề",
         "captureBody": "Thân hình",
-        "captureCopy": "Sao chép",
+        "captureCopyCurl": "Sao chép dạng cURL",
         "captureDownload": "Tải xuống",
         "captureEmptyBody": "Không có thi thể nào được gửi đi.",
         "captureBinary": "Thân nhị phân ({size}). Tải về nó để kiểm tra nó.",
@@ -1507,7 +1510,7 @@
         "description": "Mọi lựa chọn của daemon ở một nơi: giao diện, truy cập, mạng, nhà cung cấp và bảo trì."
       },
       "integrationsPage": {
-        "title": "Agent",
+        "title": "Agent Harness",
         "subtitle": "Đấu nối các tác nhân mã hóa trên máy này tới Relo và để Relo giữ chìa khóa của họ.",
         "empty": "Không có agent để dây.",
         "tested": "Đã thử nghiệm",
@@ -1741,7 +1744,8 @@
       "autostartHint": "Đăng ký Relo khởi động khi đăng nhập. Áp dụng khi lưu.",
       "logLevelLabel": "Mức log",
       "logLevelHint": "Daemon ghi vào log bao nhiêu. Áp dụng sau khi khởi động lại.",
-      "updateFeedLabel": "Nguồn cập nhật",
+      "trafficLogLabel": "Nhật ký lưu lượng",
+      "trafficLogHint": "Ghi toàn bộ yêu cầu của agent và trao đổi với nhà cung cấp vào logs/traffic-YYYYMMDD.log, mỗi ngày một tệp, giữ trong vòng hai tuần. Thông tin đăng nhập vẫn được che. Áp dụng khi lưu.",
       "updatesURL": "URL appcast",
       "updatesURLHint": "Nguồn Relo đọc để tìm bản dựng mới. Để trống sẽ tắt kiểm tra.",
       "updatesDownload": "Trang tải xuống",
@@ -1796,7 +1800,8 @@
       "retryLabel": "Khoảng chờ thử lại",
       "failoverLabel": "Failover wait",
       "failoverHint": "How long a refused account or route member stays out of rotation after a rate limit or server fault, and how the wait grows with each further failure. A success resets it. None starts with no wait: the first refusal is immediately reusable.",
-      "retryHint": "Khoảng chờ ngẫu nhiên trước mỗi lần thử lại, tính bằng giây. Retry-After dài hơn của nhà cung cấp sẽ thắng."
+      "retryHint": "Khoảng chờ ngẫu nhiên trước mỗi lần thử lại, tính bằng giây. Retry-After dài hơn của nhà cung cấp sẽ thắng.",
+      "jumpLabel": "Chuyển đến phần"
     }
   }
 }

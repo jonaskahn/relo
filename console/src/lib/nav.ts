@@ -8,6 +8,9 @@ export interface NavLink {
 	id: string;
 	href: string;
 	labelKey: string;
+	// shortLabelKey is the sidebar-only label when the full name is too
+	// long for the rail; the palette keeps the full labelKey.
+	shortLabelKey?: string;
 	// icon is the glyph the sidebar and the command palette show beside the
 	// label, so a page is recognised by shape before its name is read.
 	icon: IconName;
@@ -47,7 +50,13 @@ export const NAV_SECTIONS: NavSection[] = [
 		id: 'integrations',
 		labelKey: 'ui.sidebar.integrations',
 		links: [
-			{ id: 'integrations', href: '/agents', labelKey: 'ui.sidebar.agents', icon: 'layers' },
+			{
+				id: 'integrations',
+				href: '/agent-harness',
+				labelKey: 'ui.sidebar.agents',
+				shortLabelKey: 'ui.sidebar.agentsShort',
+				icon: 'layers'
+			},
 			{ id: 'chat', href: '/chat', labelKey: 'ui.sidebar.chat', icon: 'message-square' }
 		]
 	},

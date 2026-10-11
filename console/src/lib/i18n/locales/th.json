@@ -38,8 +38,9 @@
       "signingOut": "กำลังออกจากระบบ…",
       "closeMenu": "ปิดเมนู",
       "integrations": "การผสานรวม",
-      "agents": "agent",
-      "agentsAttention": "Agents need repair or restart",
+      "agents": "Agent Harness",
+      "agentsShort": "Harness",
+      "agentsAttention": "Agent Harness ต้องการซ่อมหรือเริ่มใหม่",
       "chat": "แชต",
       "actions": "คำสั่งในแถบด้านข้าง",
       "github": "GitHub",
@@ -454,7 +455,8 @@
           "noMatch": "ไม่มีการเชื่อมต่อที่ตรงกับการค้นหาหรือตัวกรอง",
           "filters": "ตัวกรองการเชื่อมต่อ",
           "filterOption": "{label} ({count})",
-          "tagFree": "ฟรี"
+          "tagFree": "ฟรี",
+          "tagExperimental": "ทดลอง"
         },
         "status": {
           "ready": "พร้อมใช้งาน",
@@ -1178,6 +1180,7 @@
         "attemptsEmpty": "ไม่มีความพยายามที่บันทึกไว้",
         "attempt": "ความพยายาม",
         "exchangeAgentTitle": "การแลกเปลี่ยนของเอเจนต์",
+        "traceBadge": "ข้อมูลเต็ม",
         "exchangeProviderTitle": "การแลกเปลี่ยนของผู้ให้บริการ",
         "captureAgentRequest": "คำขอเอเจนต์",
         "captureAgentResponse": "การตอบเอเจนต์",
@@ -1188,7 +1191,7 @@
         "captureTruncated": "ตัดที่ขีดจำกัดการบันทึก",
         "captureHeaders": "ส่วนหัว",
         "captureBody": "เนื้อความ",
-        "captureCopy": "คัดลอก",
+        "captureCopyCurl": "คัดลอกเป็น cURL",
         "captureDownload": "ดาวน์โหลด",
         "captureEmptyBody": "ไม่มีเนื้อความที่ส่ง",
         "captureBinary": "เนื้อความไบนารี ({size}) ดาวน์โหลดเพื่อตรวจสอบ",
@@ -1507,7 +1510,7 @@
         "description": "ทุกตัวเลือกของดีมอนในที่เดียว: รูปลักษณ์ การเข้าถึง เครือข่าย ผู้ให้บริการ และการบำรุงรักษา"
       },
       "integrationsPage": {
-        "title": "เอเจนต์",
+        "title": "Agent Harness",
         "subtitle": "ต่อเอเจนต์เขียนโค้ดในเครื่องนี้เข้ากับ Relo และให้ Relo ดูแลคีย์ของมัน",
         "empty": "ไม่มีเอเจนต์ให้เชื่อม",
         "tested": "ทดสอบแล้ว",
@@ -1741,7 +1744,8 @@
       "autostartHint": "ลงทะเบียน Relo ให้เริ่มเมื่อลงชื่อเข้าใช้ มีผลเมื่อบันทึก",
       "logLevelLabel": "ระดับล็อก",
       "logLevelHint": "ดีมอนเขียนล็อกมากแค่ไหน มีผลหลังรีสตาร์ท",
-      "updateFeedLabel": "ฟีดอัปเดต",
+      "trafficLogLabel": "บันทึกการรับส่งข้อมูล",
+      "trafficLogHint": "เขียนคำขอของเอเจนต์และการแลกเปลี่ยนกับผู้ให้บริการทั้งหมดลง logs/traffic-YYYYMMDD.log ไฟล์หนึ่งไฟล์ต่อวัน เก็บไว้สองสัปดาห์ ข้อมูลรับรองยังถูกปิดบัง ใช้งานเมื่อบันทึก",
       "updatesURL": "URL appcast",
       "updatesURLHint": "ฟีดที่ Relo อ่านเพื่อหาบิลด์ใหม่ เว้นว่างเพื่อปิดการตรวจสอบ",
       "updatesDownload": "หน้าดาวน์โหลด",
@@ -1796,7 +1800,8 @@
       "retryLabel": "ช่วงรอการลองใหม่",
       "failoverLabel": "Failover wait",
       "failoverHint": "How long a refused account or route member stays out of rotation after a rate limit or server fault, and how the wait grows with each further failure. A success resets it. None starts with no wait: the first refusal is immediately reusable.",
-      "retryHint": "การรอแบบสุ่มก่อนการลองใหม่แต่ละครั้ง หน่วยเป็นวินาที Retry-After ที่นานกว่าของผู้ให้บริการจะชนะ"
+      "retryHint": "การรอแบบสุ่มก่อนการลองใหม่แต่ละครั้ง หน่วยเป็นวินาที Retry-After ที่นานกว่าของผู้ให้บริการจะชนะ",
+      "jumpLabel": "ข้ามไปยังส่วน"
     }
   }
 }

@@ -38,8 +38,9 @@
       "signingOut": "Abmelden…",
       "closeMenu": "Menü schließen",
       "integrations": "Integrationen",
-      "agents": "Agenten",
-      "agentsAttention": "Agents need repair or restart",
+      "agents": "Agent Harness",
+      "agentsShort": "Harness",
+      "agentsAttention": "Agent Harness braucht Reparatur oder Neustart",
       "chat": "Chat",
       "actions": "Aktionen in der Seitenleiste",
       "github": "GitHub",
@@ -454,7 +455,8 @@
           "noMatch": "Keine Verbindung passt zu deiner Suche oder deinen Filtern.",
           "filters": "Verbindungsfilter",
           "filterOption": "{label} ({count})",
-          "tagFree": "Kostenlos"
+          "tagFree": "Kostenlos",
+          "tagExperimental": "Experimentell"
         },
         "status": {
           "ready": "Bereit",
@@ -1178,6 +1180,7 @@
         "attemptsEmpty": "Keine Versuche aufgezeichnet.",
         "attempt": "Versuch",
         "exchangeAgentTitle": "Austausch mit dem Agenten",
+        "traceBadge": "Vollständige Aufzeichnung",
         "exchangeProviderTitle": "Austausch mit dem Anbieter",
         "captureAgentRequest": "Anfrage des Agenten",
         "captureAgentResponse": "Antwort an den Agenten",
@@ -1188,7 +1191,7 @@
         "captureTruncated": "Am Aufzeichnungslimit abgeschnitten.",
         "captureHeaders": "Header",
         "captureBody": "Body",
-        "captureCopy": "Kopieren",
+        "captureCopyCurl": "Als cURL kopieren",
         "captureDownload": "Herunterladen",
         "captureEmptyBody": "Es wurde kein Body gesendet.",
         "captureBinary": "Binärer Body ({size}). Lade ihn herunter, um ihn zu prüfen.",
@@ -1507,7 +1510,7 @@
         "description": "Alle Daemon-Einstellungen an einem Ort: Erscheinungsbild, Zugriff, Netzwerk, Anbieter und Wartung."
       },
       "integrationsPage": {
-        "title": "Agenten",
+        "title": "Agent Harness",
         "subtitle": "Verbinde die Coding-Agenten auf diesem Rechner mit Relo, und überlass Relo ihre Schlüssel.",
         "empty": "Keine Agenten zu verbinden.",
         "tested": "Getestet",
@@ -1741,7 +1744,8 @@
       "autostartHint": "Registriert Relo für den Start bei der Anmeldung. Wird beim Speichern angewendet.",
       "logLevelLabel": "Log-Level",
       "logLevelHint": "Wie viel der Daemon ins Log schreibt. Greift nach einem Neustart.",
-      "updateFeedLabel": "Update-Feed",
+      "trafficLogLabel": "Datenverkehrsprotokoll",
+      "trafficLogHint": "Schreibt jede Agent-Anfrage und jeden Anbieter-Austausch vollständig in logs/traffic-YYYYMMDD.log, eine Datei pro Tag, zwei Wochen lang aufbewahrt. Zugangsdaten werden weiterhin maskiert. Wird beim Speichern angewendet.",
       "updatesURL": "Appcast-URL",
       "updatesURLHint": "Der Feed, den Relo nach neueren Builds liest. Leer schaltet die Prüfung aus.",
       "updatesDownload": "Download-Seite",
@@ -1796,7 +1800,8 @@
       "retryLabel": "Wartezeiten bei Wiederholungen",
       "failoverLabel": "Failover wait",
       "failoverHint": "How long a refused account or route member stays out of rotation after a rate limit or server fault, and how the wait grows with each further failure. A success resets it. None starts with no wait: the first refusal is immediately reusable.",
-      "retryHint": "Zufällige Wartezeit vor jeder Wiederholung, in Sekunden. Ein längerer Retry-After des Anbieters hat Vorrang."
+      "retryHint": "Zufällige Wartezeit vor jeder Wiederholung, in Sekunden. Ein längerer Retry-After des Anbieters hat Vorrang.",
+      "jumpLabel": "Zum Abschnitt springen"
     }
   }
 }

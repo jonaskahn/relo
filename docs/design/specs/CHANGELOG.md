@@ -7,12 +7,13 @@ description: Changes from 2.4 to 3.2.
 
 ## 3.2
 
-| Area       | 3.1                                       | 3.2                                                                                                                                                                                                                            |
-|------------|-------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Logs page  | Request log only                          | Agent, Daemon and Startup sections behind one segmented switch; request list and daemon log as dense row-cards with selection-box filters; boot transcripts with outcome and current marker; one shared equalizer live control |
-| Tabs       | Underline bar (usage)                     | Text triggers per `form-controls`: selected `--accent-50` fill with `--accent-ink`, no underline                                                                                                                               |
-| Usage page | Trend plus comparison bars                | Page header with queried-at caption and refresh; token mix, reliability, latency and spend-share charts off the trend's own days; group rows as row-cards with a spend meter                                                   |
-| Nav drawer | Panel and scrim appear with no transition | Svelte slide from the left edge (260ms in, 220ms out), drag-release continues from the finger; scrim fades 140ms; fade only under reduced motion                                                                               |
+| Area        | 3.1                                       | 3.2                                                                                                                                                                                                                            |
+|-------------|-------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Logs page   | Request log only                          | Agent, Daemon and Startup sections behind one segmented switch; request list and daemon log as dense row-cards with selection-box filters; boot transcripts with outcome and current marker; one shared equalizer live control |
+| Tabs        | Underline bar (usage)                     | Text triggers per `form-controls`: selected `--accent-50` fill with `--accent-ink`, no underline                                                                                                                               |
+| Usage page  | Trend plus comparison bars                | Page header with queried-at caption and refresh; token mix, reliability, latency and spend-share charts off the trend's own days; group rows as row-cards with a spend meter                                                   |
+| Nav drawer  | Panel and scrim appear with no transition | Svelte slide from the left edge (260ms in, 220ms out), drag-release continues from the finger; scrim fades 140ms; fade only under reduced motion                                                                               |
+| Agents page | Named "Agents" at `/agents`               | Renamed Agent Harness at `/agent-harness`; `/agents` and `/integrations` redirect there with their query                                                                                                                       |
 
 ## 3.1
 

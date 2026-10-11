@@ -3,10 +3,11 @@ import { describe, expect, it } from 'vitest';
 import { NAV_SECTIONS, isNavLinkActive } from './nav';
 
 describe('NAV_SECTIONS', () => {
-	it('offers the agents and the chat page inside the integrations section', () => {
+	it('offers the agent harness and the chat page inside the integrations section', () => {
 		const section = NAV_SECTIONS.find((entry) => entry.id === 'integrations');
-		expect(section?.links.map((link) => link.href)).toEqual(['/agents', '/chat']);
+		expect(section?.links.map((link) => link.href)).toEqual(['/agent-harness', '/chat']);
 		expect(section?.links[0].labelKey).toBe('ui.sidebar.agents');
+		expect(section?.links[0].shortLabelKey).toBe('ui.sidebar.agentsShort');
 		expect(section?.links[1].labelKey).toBe('ui.sidebar.chat');
 	});
 });

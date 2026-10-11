@@ -32,7 +32,7 @@ func TestCaptureInboundKeepsTheRequestWholeUnderTheCaptureCap(t *testing.T) {
 	body := strings.Repeat("a", 4*upstream.MaxCaptureBytes)
 	request := httptest.NewRequest(http.MethodPost, "/v1/chat/completions", strings.NewReader(body))
 
-	captured := captureInbound(testRedactor{}, request)
+	captured := captureInbound(testRedactor{}, request, upstream.MaxCaptureBytes)
 
 	if !captured.Truncated {
 		t.Fatal("captured.Truncated = false, want the capture cut at the cap")
@@ -53,7 +53,7 @@ func TestCaptureInboundKeepsASmallRequestWhole(t *testing.T) {
 	body := `{"model":"gpt-4o"}`
 	request := httptest.NewRequest(http.MethodPost, "/v1/chat/completions", strings.NewReader(body))
 
-	captured := captureInbound(testRedactor{}, request)
+	captured := captureInbound(testRedactor{}, request, upstream.MaxCaptureBytes)
 
 	if captured.Truncated {
 		t.Fatal("captured.Truncated = true, want a small capture kept whole")

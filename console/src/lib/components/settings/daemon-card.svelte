@@ -4,12 +4,10 @@
 	import { toast } from 'svelte-sonner';
 
 	import { api } from '$lib/api';
-	import Icon from '$lib/components/ui/icon.svelte';
 	import SettingsCard from './settings-card.svelte';
 	import SettingsRow from './settings-row.svelte';
 	import SettingsSave from './settings-save.svelte';
 	import SettingsSwitch from './settings-switch.svelte';
-	import Field from '$lib/components/ui/field.svelte';
 	import Input from '$lib/components/ui/input.svelte';
 	import NativeSelect from '$lib/components/ui/native-select.svelte';
 	import { cloneDraft, draftDirty } from '$lib/settings-draft';
@@ -30,7 +28,6 @@
 	let saved = $state(untrack(() => cloneDraft(value)));
 	let saving = $state(false);
 	let error = $state('');
-	let updatesOpen = $state(false);
 
 	const dirty = $derived(draftDirty(draft, saved));
 
@@ -88,50 +85,36 @@
 				<option value="error">error</option>
 			</NativeSelect>
 		</SettingsRow>
-		<SettingsRow label={$t('ui.settingsPage.updateFeedLabel')}>
-			<div>
-				<button
-					type="button"
-					class="settings-disclosure-toggle"
-					aria-expanded={updatesOpen}
-					aria-controls="settings-updates-panel"
-					aria-label="{$t('ui.common.edit')}: {$t('ui.settingsPage.updateFeedLabel')}"
-					onclick={() => (updatesOpen = !updatesOpen)}
-				>
-					<Icon name={updatesOpen ? 'chevron-down' : 'chevron-right'} size={16} />
-					{$t('ui.common.edit')}
-				</button>
-				<div id="settings-updates-panel" class="settings-disclosure" class:open={updatesOpen}>
-					<div class="settings-disclosure-body">
-						<div class="disclosure-pad flex min-h-0 flex-col gap-4 overflow-hidden">
-							<Field
-								id="updates-url"
-								label={$t('ui.settingsPage.updatesURL')}
-								hint={$t('ui.settingsPage.updatesURLHint')}
-							>
-								<Input
-									id="updates-url"
-									class="mono-data max-sm:h-11"
-									bind:value={draft.updates_url}
-									disabled={saving}
-								/>
-							</Field>
-							<Field
-								id="updates-download"
-								label={$t('ui.settingsPage.updatesDownload')}
-								hint={$t('ui.settingsPage.updatesDownloadHint')}
-							>
-								<Input
-									id="updates-download"
-									class="mono-data max-sm:h-11"
-									bind:value={draft.updates_download}
-									disabled={saving}
-								/>
-							</Field>
-						</div>
-					</div>
-				</div>
-			</div>
+		<SettingsSwitch
+			id="log-traffic"
+			bind:checked={draft.log_traffic}
+			label={$t('ui.settingsPage.trafficLogLabel')}
+			hint={$t('ui.settingsPage.trafficLogHint')}
+			disabled={saving}
+		/>
+		<SettingsRow
+			label={$t('ui.settingsPage.updatesURL')}
+			hint={$t('ui.settingsPage.updatesURLHint')}
+		>
+			<Input
+				id="updates-url"
+				class="mono-data max-sm:h-11"
+				bind:value={draft.updates_url}
+				disabled={saving}
+				aria-label={$t('ui.settingsPage.updatesURL')}
+			/>
+		</SettingsRow>
+		<SettingsRow
+			label={$t('ui.settingsPage.updatesDownload')}
+			hint={$t('ui.settingsPage.updatesDownloadHint')}
+		>
+			<Input
+				id="updates-download"
+				class="mono-data max-sm:h-11"
+				bind:value={draft.updates_download}
+				disabled={saving}
+				aria-label={$t('ui.settingsPage.updatesDownload')}
+			/>
 		</SettingsRow>
 	</div>
 </SettingsCard>

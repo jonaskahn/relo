@@ -94,10 +94,11 @@ func (s *Server) handleInference(surface inferenceSurface) http.HandlerFunc {
 		}
 		// The agent's own request is read before the codec consumes it, which
 		// is what keeps a body Relo cannot decode readable in the log.
-		captured := captureInbound(s.opts.CaptureRedactor, r)
+		limit := s.captureLimit()
+		captured := captureInbound(s.opts.CaptureRedactor, r, limit)
 		// The answer is kept beside the request it answers, so the log holds
 		// both halves of the exchange an operator debugs.
-		answer := newAgentAnswer(w, s.opts.CaptureRedactor)
+		answer := newAgentAnswer(w, s.opts.CaptureRedactor, limit)
 		inbound, found := s.inboundFor(surface)
 		if !found {
 			s.handleNotImplemented(w, r)
@@ -135,8 +136,9 @@ func (s *Server) relay(spec relaySpec) *requestOutcome {
 	if answer, ok := w.(*agentAnswer); ok {
 		outcome.answer = answer
 	}
+	s.traceAgentRequest(outcome)
 	plan, err := s.opts.Router.Plan(r.Context(), routing.Request{
-		Model: request.Model, Conversation: conversationOf(r), Needs: needsOf(request),
+		Model: request.Model, Conversation: s.conversationAnchor(outcome, r), Needs: needsOf(request),
 	})
 	anthropic := spec.surface.name == inference.SurfaceMessages
 	if err != nil {
@@ -300,17 +302,13 @@ func (d *sendDriver) stepAttempt(candidate routing.Candidate, lastCandidate bool
 		},
 	}
 	result, err := d.s.attempt(d.w, spec, d.tried, final)
-	d.outcome.attempts = append(d.outcome.attempts, attemptRow{
-		providerID: candidate.ProviderID, modelID: candidate.ModelID,
-		credential: result.Credential, credentialID: result.CredentialID,
-		status: result.Status, code: attemptCode(err), capture: result.Capture,
-	})
+	d.keepAttempt(candidate, result, err)
 	if result.Status != 0 {
 		d.upstreamStatus = result.Status
 	}
 	if err == nil {
 		d.s.opts.Router.Record(candidate, result.HeaderLatency)
-		d.s.opts.Router.Pin(conversationOf(d.r), routing.PinPrefix(d.plan), candidate)
+		d.s.opts.Router.Pin(d.s.conversationAnchor(d.outcome, d.r), routing.PinPrefix(d.plan), candidate)
 		d.s.opts.Router.MarkSucceeded(candidate)
 		d.s.opts.Router.MarkGroupSucceeded(d.plan, candidate)
 		d.s.markConnectionServed(candidate.ProviderID, result.CredentialID)
@@ -320,6 +318,18 @@ func (d *sendDriver) stepAttempt(candidate routing.Candidate, lastCandidate bool
 	return d.handleAttemptFailure(failedAttempt{
 		candidate: candidate, lastCandidate: lastCandidate, allowance: allowance, walk: walk, result: result,
 	}, err)
+}
+
+// keepAttempt keeps one attempt's outcome with its request, and hands the
+// exchange it had to the traffic log before the walk moves on.
+func (d *sendDriver) keepAttempt(candidate routing.Candidate, result Result, err error) {
+	attempt := attemptRow{
+		providerID: candidate.ProviderID, modelID: candidate.ModelID,
+		credential: result.Credential, credentialID: result.CredentialID,
+		status: result.Status, code: attemptCode(err), capture: result.Capture,
+	}
+	d.outcome.attempts = append(d.outcome.attempts, attempt)
+	d.s.traceAttempt(d.outcome, len(d.outcome.attempts)-1, attempt)
 }
 
 // failedAttempt is one refused attempt and where it sits in the walk, which is
@@ -402,7 +412,7 @@ func (d *sendDriver) leaveAccount(failed failedAttempt) walkAction {
 		d.s.answerFailed(d, d.outcome, result, d.last)
 		return walkAnswered
 	}
-	d.s.opts.Router.Unpin(conversationOf(d.r), routing.PinPrefix(d.plan))
+	d.s.opts.Router.Unpin(d.s.conversationAnchor(d.outcome, d.r), routing.PinPrefix(d.plan))
 	walk.marked = true
 	return walkNextMember
 }
@@ -737,6 +747,27 @@ func conversationOf(r *http.Request) string {
 	return wire.SessionAnchor(r.Header)
 }
 
+// conversationAnchor is the conversation identity one request speaks with. A
+// client that named its conversation keeps it; one that did not is given a
+// leased session held while it keeps asking, so a provider never sees a fresh
+// identity per request. The lease is taken once per request, which is what
+// keeps a retry and the attempt it follows on the one session.
+func (s *Server) conversationAnchor(outcome *requestOutcome, r *http.Request) string {
+	if named := conversationOf(r); named != "" {
+		return named
+	}
+	if s.opts.SessionLeases == nil {
+		return ""
+	}
+	if outcome.sessionLease == "" {
+		keyID, _, _ := describeClient(r.Context())
+		outcome.sessionLease = s.opts.SessionLeases.Lease(account.SessionKey{
+			ClientKind: wire.ClientKind(r.Header), ClientKey: keyID,
+		})
+	}
+	return outcome.sessionLease
+}
+
 func openCodeLane(outcome *requestOutcome, r *http.Request) string {
 	if lane := conversationOf(r); lane != "" {
 		return lane
@@ -772,6 +803,9 @@ type requestOutcome struct {
 	// warnings names what this request asked of the model that served it and
 	// the catalog doubts, stored with the event so a log keeps the note.
 	warnings []string
+	// sessionLease is the synthetic session a request with no conversation
+	// named was given, taken once so a retry stays on the same identity.
+	sessionLease string
 	// openCodeLane is the session a request with no conversation still sends
 	// to OpenCode Go, allocated once so a retry stays on the same lane.
 	openCodeLane string
@@ -808,26 +842,34 @@ func (s *Server) record(ctx context.Context, outcome *requestOutcome, result Res
 	event.Attempts = len(outcome.attempts)
 	event.Retried = len(outcome.attempts) > 1
 	s.publishUsage(event)
-	// The event and its day aggregate commit together: a finalize pass that
-	// runs while a request finishes either recomputes the day from the row or
-	// sees it arrive afterwards, never both.
-	eventID, err := s.opts.Usage.AppendEvent(ctx, event)
-	if err != nil {
-		s.opts.Logger.Error("record usage event", "error", err)
-		return
-	}
-	for ordinal, attempt := range outcome.attempts {
-		if err := s.opts.Usage.AppendAttempt(ctx, activity.RequestAttempt{
-			EventID: eventID, Ordinal: ordinal,
-			Provider: attempt.providerID, Model: attempt.modelID,
-			CredentialLabel: attempt.credential, CredentialID: attempt.credentialID,
-			Status: attempt.status, ErrorCode: attempt.code,
-		}); err != nil {
-			s.opts.Logger.Error("record usage attempt", "error", err)
+	// The answer is the last half of the exchange to exist, so the log takes it
+	// here; the state rows follow behind the response.
+	s.traceAgentAnswer(outcome)
+	// The rows land behind the response, because a capture as large as the
+	// request must not hold the handler open. A full queue runs the job here
+	// instead of dropping it: the Logs page and the spend totals read these.
+	s.bookkeeping.enqueueOrRun(func() {
+		// The event and its day aggregate commit together: a finalize pass that
+		// runs while a request finishes either recomputes the day from the row or
+		// sees it arrive afterwards, never both.
+		eventID, err := s.opts.Usage.AppendEvent(ctx, event)
+		if err != nil {
+			s.opts.Logger.Error("record usage event", "error", err)
 			return
 		}
-	}
-	s.recordCaptures(ctx, eventID, outcome)
+		for ordinal, attempt := range outcome.attempts {
+			if err := s.opts.Usage.AppendAttempt(ctx, activity.RequestAttempt{
+				EventID: eventID, Ordinal: ordinal,
+				Provider: attempt.providerID, Model: attempt.modelID,
+				CredentialLabel: attempt.credential, CredentialID: attempt.credentialID,
+				Status: attempt.status, ErrorCode: attempt.code,
+			}); err != nil {
+				s.opts.Logger.Error("record usage attempt", "error", err)
+				return
+			}
+		}
+		s.recordCaptures(ctx, eventID, outcome)
+	})
 }
 
 func (s *Server) recordUnreadable(r *http.Request, surface inferenceSurface, captured *CapturedMessage, answer *agentAnswer) {
@@ -836,6 +878,7 @@ func (s *Server) recordUnreadable(r *http.Request, surface inferenceSurface, cap
 		origin: inference.OriginExternal, kind: routing.Kind("bad_request"), inbound: captured,
 		answer: answer,
 	}
+	s.traceAgentRequest(outcome)
 	s.record(context.WithoutCancel(r.Context()), outcome, Result{Status: http.StatusBadRequest})
 }
 

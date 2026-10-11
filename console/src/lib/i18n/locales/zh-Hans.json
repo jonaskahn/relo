@@ -38,8 +38,9 @@
       "signingOut": "正在退出…",
       "closeMenu": "关闭菜单",
       "integrations": "集成",
-      "agents": "智能体",
-      "agentsAttention": "Agents need repair or restart",
+      "agents": "Agent Harness",
+      "agentsShort": "Harness",
+      "agentsAttention": "Agent Harness 需要修复或重启",
       "chat": "聊天",
       "actions": "侧栏操作",
       "github": "GitHub",
@@ -454,7 +455,8 @@
           "noMatch": "没有连接符合你的搜索或筛选条件。",
           "filters": "连接筛选",
           "filterOption": "{label} ({count})",
-          "tagFree": "免费"
+          "tagFree": "免费",
+          "tagExperimental": "实验性"
         },
         "status": {
           "ready": "就绪",
@@ -1178,6 +1180,7 @@
         "attemptsEmpty": "没有记录的尝试。",
         "attempt": "尝试",
         "exchangeAgentTitle": "代理请求与响应",
+        "traceBadge": "完整跟踪",
         "exchangeProviderTitle": "提供商请求与响应",
         "captureAgentRequest": "代理请求",
         "captureAgentResponse": "代理响应",
@@ -1188,7 +1191,7 @@
         "captureTruncated": "已在记录上限处截断。",
         "captureHeaders": "请求头",
         "captureBody": "正文",
-        "captureCopy": "复制",
+        "captureCopyCurl": "复制为 cURL",
         "captureDownload": "下载",
         "captureEmptyBody": "没有发送正文。",
         "captureBinary": "二进制正文（{size}）。请下载后查看。",
@@ -1507,7 +1510,7 @@
         "description": "所有守护进程设置集中一处：外观、访问、网络、提供商和维护。"
       },
       "integrationsPage": {
-        "title": "代理",
+        "title": "Agent Harness",
         "subtitle": "把本机的编码代理接入 Relo，并由 Relo 保管它们的密钥。",
         "empty": "没有可接入的代理。",
         "tested": "已测试",
@@ -1741,7 +1744,8 @@
       "autostartHint": "注册 Relo 以便登录时启动。保存时应用。",
       "logLevelLabel": "日志级别",
       "logLevelHint": "守护进程写入日志的详细程度。重启后生效。",
-      "updateFeedLabel": "更新源",
+      "trafficLogLabel": "流量日志",
+      "trafficLogHint": "将智能体的每个请求和与提供方的每次交换完整写入 logs/traffic-YYYYMMDD.log，每天一个文件，保留两周。凭据仍会遮盖。保存后生效。",
       "updatesURL": "Appcast 地址",
       "updatesURLHint": "Relo 用于查找新版本的更新源。留空则关闭检查。",
       "updatesDownload": "下载页面",
@@ -1796,7 +1800,8 @@
       "retryLabel": "重试间隔",
       "failoverLabel": "Failover wait",
       "failoverHint": "How long a refused account or route member stays out of rotation after a rate limit or server fault, and how the wait grows with each further failure. A success resets it. None starts with no wait: the first refusal is immediately reusable.",
-      "retryHint": "每次重试前的随机等待秒数。提供商更长的 Retry-After 优先。"
+      "retryHint": "每次重试前的随机等待秒数。提供商更长的 Retry-After 优先。",
+      "jumpLabel": "跳转到部分"
     }
   }
 }

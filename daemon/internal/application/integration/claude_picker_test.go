@@ -229,9 +229,10 @@ func (claudeEnabled) SaveIntegration(context.Context, Record) error { return nil
 func (claudeEnabled) Files(context.Context, string) ([]FileRecord, error) {
 	return nil, nil
 }
-func (claudeEnabled) SaveFile(context.Context, FileRecord) error { return nil }
-func (claudeEnabled) DeleteFiles(context.Context, string) error  { return nil }
-func (claudeEnabled) AppendOp(context.Context, OpRecord) error   { return nil }
+func (claudeEnabled) SaveFile(context.Context, FileRecord) error       { return nil }
+func (claudeEnabled) DeleteFiles(context.Context, string) error        { return nil }
+func (claudeEnabled) DeleteFile(context.Context, string, string) error { return nil }
+func (claudeEnabled) AppendOp(context.Context, OpRecord) error         { return nil }
 
 // TestAProvidersOwnMillionTokenSpellingIsPublishedOnce pins both shapes a
 // picker reads. A router that publishes kimi-k3 and kimi-k3[1M] gives the

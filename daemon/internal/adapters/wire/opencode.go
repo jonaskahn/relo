@@ -97,7 +97,9 @@ var freeRejectedKeywords = map[string]bool{
 	"$schema": true,
 }
 
-// dropRejectedKeywords returns the schema the gateway accepts. A schema that
+// dropRejectedKeywords returns the schema the gateway accepts. A keyword that
+// names an argument or a definition is kept: only keywords inside a schema
+// object state a rule the gateway refuses. A schema that
 // does not decode, or that decodes but will not re-encode, arrives as it came,
 // because a schema Relo cannot parse is one it must not alter. One that needs
 // no change arrives as it came too: a coding turn declares a hundred tools, and
@@ -121,10 +123,28 @@ func dropRejectedKeywords(raw json.RawMessage) json.RawMessage {
 	return cleaned
 }
 
+// schemaNameMaps hold argument and definition names rather than schema
+// keywords, so a key inside one names what a valid call carries instead of
+// stating a rule the gateway refuses.
+var schemaNameMaps = map[string]bool{
+	"properties": true, "patternProperties": true,
+	"$defs": true, "definitions": true,
+}
+
 func carriesRejectedKeyword(node any) bool {
 	switch value := node.(type) {
 	case map[string]any:
 		for key, child := range value {
+			if schemaNameMaps[key] {
+				if named, ok := child.(map[string]any); ok {
+					for _, schema := range named {
+						if carriesRejectedKeyword(schema) {
+							return true
+						}
+					}
+				}
+				continue
+			}
 			if freeRejectedKeywords[key] || carriesRejectedKeyword(child) {
 				return true
 			}
@@ -145,6 +165,14 @@ func withoutRejectedKeywords(node any) any {
 		for key := range value {
 			if freeRejectedKeywords[key] {
 				delete(value, key)
+				continue
+			}
+			if schemaNameMaps[key] {
+				if named, ok := value[key].(map[string]any); ok {
+					for name := range named {
+						named[name] = withoutRejectedKeywords(named[name])
+					}
+				}
 				continue
 			}
 			value[key] = withoutRejectedKeywords(value[key])

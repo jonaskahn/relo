@@ -5,6 +5,7 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"sort"
 	"strings"
@@ -330,6 +331,21 @@ func (q *UsageQuery) Attempts(ctx context.Context, eventID int64) ([]activity.Us
 	}
 	defer func() { _ = rows.Close() }()
 	return scanAttemptRows(rows)
+}
+
+// RequestID names the request one stored event belongs to, which is the key the
+// traffic log writes its lines under. A row the retention has already deleted
+// reports no request rather than an error.
+func (q *UsageQuery) RequestID(ctx context.Context, eventID int64) (string, error) {
+	var requestID string
+	err := q.db.sql.QueryRowContext(ctx, `SELECT request_id FROM usage_events WHERE id = ?`, eventID).Scan(&requestID)
+	if errors.Is(err, sql.ErrNoRows) {
+		return "", nil
+	}
+	if err != nil {
+		return "", fmt.Errorf("read the request id of an event: %w", err)
+	}
+	return requestID, nil
 }
 
 // Summary totals a filter into one row, independent of the group limit a

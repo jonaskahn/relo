@@ -783,15 +783,33 @@ func (s *Server) handleCaptures(w http.ResponseWriter, r *http.Request) {
 		writeServiceError(w, err)
 		return
 	}
+	items, traced := s.captureItems(r.Context(), reads, eventID, captures)
+	writeJSON(w, http.StatusOK, capturesResponse{Items: items, Traced: traced})
+}
+
+// captureItems lists the stored messages, taking the size of each body the
+// traffic log kept whole, and reports whether the traffic log holds the request.
+func (s *Server) captureItems(ctx context.Context, reads captureReader, eventID int64, captures []activity.CaptureHeader) ([]captureResponse, bool) {
+	var trace trafficTrace
+	var traced bool
+	if len(captures) > 0 && s.opts.Traffic != nil && s.trafficOn() {
+		trace, traced = s.trafficTrace(ctx, reads, eventID)
+	}
 	items := make([]captureResponse, 0, len(captures))
 	for _, capture := range captures {
-		items = append(items, captureResponse{
+		listed := captureResponse{
 			ID: capture.ID, Kind: capture.Kind, Ordinal: capture.Ordinal,
 			Method: capture.Method, URL: capture.URL, Status: capture.Status,
 			Headers: capture.Headers, BodyBytes: capture.BodyBytes, Truncated: capture.Truncated,
-		})
+		}
+		if capture.Truncated {
+			if message := trafficMessageFor(trace, capture.Kind, capture.Ordinal); message != nil && !message.Truncated {
+				listed.BodyBytes, listed.Truncated = int64(len(message.Body)), false
+			}
+		}
+		items = append(items, listed)
 	}
-	writeJSON(w, http.StatusOK, capturesResponse{Items: items})
+	return items, traced
 }
 
 func (s *Server) parseCaptureID(w http.ResponseWriter, r *http.Request) (int64, error) {
@@ -822,6 +840,13 @@ func (s *Server) handleCaptureBody(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		s.failCaptureRead(w, r, err)
 		return
+	}
+	// The state rows keep a bounded body. When the traffic log held this
+	// request whole, its body is what the operator opens.
+	if body.Truncated {
+		if whole, ok := s.wholeCaptureBody(r.Context(), reads, eventID, captureID); ok {
+			body.Body, body.BodyBytes, body.Truncated = whole, int64(len(whole)), false
+		}
 	}
 	w.Header().Set("Content-Type", "application/octet-stream")
 	w.Header().Set("Cache-Control", "no-store")
@@ -855,6 +880,8 @@ func (s *Server) captureEventID(w http.ResponseWriter, r *http.Request) (int64, 
 
 type capturesResponse struct {
 	Items []captureResponse `json:"items"`
+	// Traced reports that the traffic log holds this request whole.
+	Traced bool `json:"traced"`
 }
 
 type captureResponse struct {

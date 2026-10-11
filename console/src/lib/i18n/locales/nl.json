@@ -38,8 +38,9 @@
       "signingOut": "Uitloggen…",
       "closeMenu": "Menu sluiten",
       "integrations": "Integraties",
-      "agents": "Agents",
-      "agentsAttention": "Agents need repair or restart",
+      "agents": "Agent Harness",
+      "agentsShort": "Harness",
+      "agentsAttention": "Agent Harness moet worden gerepareerd of opnieuw gestart",
       "chat": "Chat",
       "actions": "Zijbalkacties",
       "github": "GitHub",
@@ -454,7 +455,8 @@
           "noMatch": "Geen enkele verbinding komt overeen met je zoekopdracht of filters.",
           "filters": "Verbindingsfilters",
           "filterOption": "{label} ({count})",
-          "tagFree": "Gratis"
+          "tagFree": "Gratis",
+          "tagExperimental": "Experimenteel"
         },
         "status": {
           "ready": "Klaar",
@@ -1178,6 +1180,7 @@
         "attemptsEmpty": "Geen pogingen vastgelegd.",
         "attempt": "Poging",
         "exchangeAgentTitle": "Agentuitwisseling",
+        "traceBadge": "Volledige trace",
         "exchangeProviderTitle": "Provideruitwisseling",
         "captureAgentRequest": "Agentaanvraag",
         "captureAgentResponse": "Agentantwoord",
@@ -1188,7 +1191,7 @@
         "captureTruncated": "Afgekapt op de capturelimiet.",
         "captureHeaders": "Headers",
         "captureBody": "Body",
-        "captureCopy": "Kopiëren",
+        "captureCopyCurl": "Kopiëren als cURL",
         "captureDownload": "Downloaden",
         "captureEmptyBody": "Er is geen body verzonden.",
         "captureBinary": "Binaire body ({size}). Download deze om hem te inspecteren.",
@@ -1507,7 +1510,7 @@
         "description": "Elke daemonkeuze op één plek: uiterlijk, toegang, netwerk, providers en onderhoud."
       },
       "integrationsPage": {
-        "title": "Agenten",
+        "title": "Agent Harness",
         "subtitle": "Koppel de codeeragenten op deze machine aan Relo, en laat Relo hun sleutels beheren.",
         "empty": "Geen agenten om te koppelen.",
         "tested": "Getest",
@@ -1741,7 +1744,8 @@
       "autostartHint": "Registreert Relo om te starten bij aanmelden. Toegepast bij opslaan.",
       "logLevelLabel": "Logniveau",
       "logLevelHint": "Hoeveel de daemon naar het log schrijft. Geldt na een herstart.",
-      "updateFeedLabel": "Updatefeed",
+      "trafficLogLabel": "Verkeerslogboek",
+      "trafficLogHint": "Schrijft elk verzoek van de agent en elke uitwisseling met de provider volledig naar logs/traffic-YYYYMMDD.log, één bestand per dag, twee weken bewaard. Inloggegevens blijven gemaskeerd. Wordt bij opslaan toegepast.",
       "updatesURL": "Appcast-URL",
       "updatesURLHint": "De feed die Relo leest voor nieuwere versies. Leeg zet de controle uit.",
       "updatesDownload": "Downloadpagina",
@@ -1796,7 +1800,8 @@
       "retryLabel": "Wachttijden tussen pogingen",
       "failoverLabel": "Failover wait",
       "failoverHint": "How long a refused account or route member stays out of rotation after a rate limit or server fault, and how the wait grows with each further failure. A success resets it. None starts with no wait: the first refusal is immediately reusable.",
-      "retryHint": "Willekeurige wachttijd voor elke poging, in seconden. Een langere Retry-After van de provider wint."
+      "retryHint": "Willekeurige wachttijd voor elke poging, in seconden. Een langere Retry-After van de provider wint.",
+      "jumpLabel": "Ga naar sectie"
     }
   }
 }

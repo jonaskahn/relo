@@ -26,6 +26,7 @@ type capturedRow struct {
 // capturesOf reads what was stored beside one request, oldest first.
 func capturesOf(t *testing.T, daemon daemon, requestID string) []capturedRow {
 	t.Helper()
+	daemon.settle(t)
 	rows, err := daemon.db.SQL().QueryContext(context.Background(),
 		`SELECT c.kind, c.ordinal, c.method, c.url, c.status, c.headers, c.body, c.body_bytes, c.truncated
 		FROM usage_captures c JOIN usage_events e ON e.id = c.event_id

@@ -38,8 +38,9 @@
       "signingOut": "Uscita in corso…",
       "closeMenu": "Chiudi il menu",
       "integrations": "Integrazioni",
-      "agents": "Agenti",
-      "agentsAttention": "Agents need repair or restart",
+      "agents": "Agent Harness",
+      "agentsShort": "Harness",
+      "agentsAttention": "Agent Harness richiede una riparazione o un riavvio",
       "chat": "Chat",
       "actions": "Azioni della barra laterale",
       "github": "GitHub",
@@ -454,7 +455,8 @@
           "noMatch": "Nessuna connessione corrisponde alla ricerca o ai filtri.",
           "filters": "Filtri connessioni",
           "filterOption": "{label} ({count})",
-          "tagFree": "Gratuito"
+          "tagFree": "Gratuito",
+          "tagExperimental": "Sperimentale"
         },
         "status": {
           "ready": "Pronto",
@@ -1178,6 +1180,7 @@
         "attemptsEmpty": "Nessun tentativo registrato.",
         "attempt": "Tentativo",
         "exchangeAgentTitle": "Scambio con l’agente",
+        "traceBadge": "Traccia completa",
         "exchangeProviderTitle": "Scambio con il provider",
         "captureAgentRequest": "Richiesta dell’agente",
         "captureAgentResponse": "Risposta dell’agente",
@@ -1188,7 +1191,7 @@
         "captureTruncated": "Troncato al limite di acquisizione.",
         "captureHeaders": "Intestazioni",
         "captureBody": "Corpo",
-        "captureCopy": "Copia",
+        "captureCopyCurl": "Copia come cURL",
         "captureDownload": "Scarica",
         "captureEmptyBody": "Nessun corpo inviato.",
         "captureBinary": "Corpo binario ({size}). Scaricalo per ispezionarlo.",
@@ -1507,7 +1510,7 @@
         "description": "Tutte le scelte del daemon in un posto: aspetto, accesso, rete, provider e manutenzione."
       },
       "integrationsPage": {
-        "title": "Agenti",
+        "title": "Agent Harness",
         "subtitle": "Collega a Relo gli agenti di programmazione su questa macchina e lascia a Relo le loro chiavi.",
         "empty": "Nessun agente da collegare.",
         "tested": "Testato",
@@ -1741,7 +1744,8 @@
       "autostartHint": "Registra Relo per l'avvio all'accesso. Si applica al salvataggio.",
       "logLevelLabel": "Livello di log",
       "logLevelHint": "Quanto scrive il daemon nel log. Si applica dopo un riavvio.",
-      "updateFeedLabel": "Feed degli aggiornamenti",
+      "trafficLogLabel": "Registro del traffico",
+      "trafficLogHint": "Scrive ogni richiesta dell'agente e ogni scambio con il provider per intero in logs/traffic-YYYYMMDD.log, un file al giorno, conservato per due settimane. Le credibili restano mascherate. Viene applicato al salvataggio.",
       "updatesURL": "URL appcast",
       "updatesURLHint": "Il feed che Relo legge per le nuove versioni. Vuoto disattiva il controllo.",
       "updatesDownload": "Pagina di download",
@@ -1796,7 +1800,8 @@
       "retryLabel": "Attese tra i tentativi",
       "failoverLabel": "Failover wait",
       "failoverHint": "How long a refused account or route member stays out of rotation after a rate limit or server fault, and how the wait grows with each further failure. A success resets it. None starts with no wait: the first refusal is immediately reusable.",
-      "retryHint": "Attesa casuale prima di ogni tentativo, in secondi. Un Retry-After del provider più lungo ha la precedenza."
+      "retryHint": "Attesa casuale prima di ogni tentativo, in secondi. Un Retry-After del provider più lungo ha la precedenza.",
+      "jumpLabel": "Vai alla sezione"
     }
   }
 }
