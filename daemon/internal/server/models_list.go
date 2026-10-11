@@ -22,7 +22,7 @@ func (s *Server) handleListModels(protocol string) http.HandlerFunc {
 			return
 		}
 		if protocol == inference.ProtocolAnthropic || s.isAnthropicRequest(r) {
-			listed := listedModels(snapshot, s.advertisedContexts(r.Context()), true)
+			listed := listedModels(snapshot, listView{advertised: s.advertisedContexts(r.Context()), stripClaude: true})
 			writeJSON(w, http.StatusOK, anthropicModelList(listed))
 			return
 		}
@@ -30,7 +30,7 @@ func (s *Server) handleListModels(protocol string) http.HandlerFunc {
 		if s.opts.Integrations != nil {
 			rows = s.opts.Integrations.CodexCatalogRows()
 		}
-		attributeCodexRows(rows, listedModels(snapshot, nil, false))
+		attributeCodexRows(rows, listedModels(snapshot, listView{}))
 		writeJSON(w, http.StatusOK, map[string]any{"models": rows})
 	}
 }
@@ -47,13 +47,13 @@ type listedModel struct {
 	MaxOutput     *int64
 }
 
-func listedModels(snapshot *catalog.Snapshot, advertised map[string]*int64, stripClaude bool) []listedModel {
+func listedModels(snapshot *catalog.Snapshot, view listView) []listedModel {
 	entries := make([]listedModel, 0, 64)
 	seen := map[string]bool{}
 	for _, group := range snapshot.ListedGroups() {
 		id := catalog.ClientRouteID(group.ID)
 		seen[id] = true
-		entries = appendListedVariants(entries, listedGroup(snapshot, advertised, group, id), snapshot.OffersLongContextGroup(group))
+		entries = appendListedVariants(entries, listedGroup(snapshot, view.advertised, group, id), snapshot.OffersLongContextGroup(group))
 	}
 	for _, model := range snapshot.Listed() {
 		id := catalog.ClientModelID(model.ProviderID, model.ID)
@@ -61,9 +61,14 @@ func listedModels(snapshot *catalog.Snapshot, advertised map[string]*int64, stri
 			continue
 		}
 		seen[id] = true
-		entries = appendListedVariants(entries, listedStandalone(snapshot, advertised, model, id, stripClaude), snapshot.OffersLongContext(model))
+		entries = appendListedVariants(entries, listedStandalone(snapshot, view, model, id), snapshot.OffersLongContext(model))
 	}
 	return entries
+}
+
+type listView struct {
+	advertised  map[string]*int64
+	stripClaude bool
 }
 
 func listedGroup(snapshot *catalog.Snapshot, advertised map[string]*int64, group catalog.Group, id string) listedModel {
@@ -80,19 +85,19 @@ func listedGroup(snapshot *catalog.Snapshot, advertised map[string]*int64, group
 	}
 }
 
-func listedStandalone(snapshot *catalog.Snapshot, advertised map[string]*int64, model catalog.Model, id string, stripClaude bool) listedModel {
-	window := advertisedContext(advertised, model)
-	view := model
-	view.ContextWindow = window
+func listedStandalone(snapshot *catalog.Snapshot, view listView, model catalog.Model, id string) listedModel {
+	window := advertisedContext(view.advertised, model)
+	viewModel := model
+	viewModel.ContextWindow = window
 	label := labelOr(model.Name, model.ID)
-	if stripClaude && snapshot.ClaudeSubscription(model.ProviderID) {
+	if view.stripClaude && snapshot.ClaudeSubscription(model.ProviderID) {
 		label = catalog.StripClaudePrefix(label)
 	}
 	return listedModel{
-		ID: id, Name: catalog.ClientModelName(label, providerLabel(snapshot, model.ProviderID), namedWindow(window, snapshot.MillionAlone(view))),
+		ID: id, Name: catalog.ClientModelName(label, providerLabel(snapshot, model.ProviderID), namedWindow(window, snapshot.MillionAlone(viewModel))),
 		ProviderID: model.ProviderID, SourceModelID: model.ID,
-		NativeMillion: snapshot.MillionAlone(view),
-		Suffixed:      snapshot.OffersSuffixed(view),
+		NativeMillion: snapshot.MillionAlone(viewModel),
+		Suffixed:      snapshot.OffersSuffixed(viewModel),
 		ContextWindow: window, MaxOutput: model.MaxOutput,
 	}
 }
