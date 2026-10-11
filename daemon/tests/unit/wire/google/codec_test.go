@@ -1188,6 +1188,134 @@ func TestCloudCodeAssistClaudeThinking(t *testing.T) {
 	})
 }
 
+// TestCloudCodeAssistToolChoice covers the tool constraint a turn carries:
+// silence keeps the VALIDATED default, and an explicit client choice wins
+// over it. A choice Gemini needs restated is also written into the
+// transcript, because the endpoint drops the wire constraint on its routes.
+func TestCloudCodeAssistToolChoice(t *testing.T) {
+	inner := func(model string, choice *inference.ToolChoice, tools []inference.Tool) map[string]any {
+		t.Helper()
+		request := canonicalRequest(false)
+		request.Model = model
+		request.ToolChoice = choice
+		request.Tools = tools
+		return assistEnvelope(t, request, wire.CodecOpts{
+			CredentialRef: "token", AuthMethod: wire.AuthOAuth, Project: "project-1",
+		})
+	}
+	toolConfigOf := func(body map[string]any) map[string]any {
+		t.Helper()
+		config, _ := body["request"].(map[string]any)["toolConfig"].(map[string]any)
+		return config
+	}
+	modeOf := func(body map[string]any) (string, []any) {
+		t.Helper()
+		calling, _ := toolConfigOf(body)["functionCallingConfig"].(map[string]any)
+		mode, _ := calling["mode"].(string)
+		names, _ := calling["allowedFunctionNames"].([]any)
+		return mode, names
+	}
+	lastText := func(body map[string]any) string {
+		t.Helper()
+		contents := body["request"].(map[string]any)["contents"].([]any)
+		last := contents[len(contents)-1].(map[string]any)
+		parts := last["parts"].([]any)
+		text, _ := parts[len(parts)-1].(map[string]any)["text"].(string)
+		return text
+	}
+	weather := []inference.Tool{{Name: "get_weather", Parameters: json.RawMessage(`{"type":"object"}`)}}
+
+	t.Run("a silent gemini turn with tools stays validated", func(t *testing.T) {
+		if mode, _ := modeOf(inner("gemini-2.0-flash", nil, weather)); mode != "VALIDATED" {
+			t.Fatalf("mode = %q, want the default while tools are declared", mode)
+		}
+	})
+
+	t.Run("a silent gemini turn without tools omits the constraint", func(t *testing.T) {
+		if config := toolConfigOf(inner("gemini-2.0-flash", nil, nil)); len(config) != 0 {
+			t.Fatalf("toolConfig = %v, want none without tools or a choice", config)
+		}
+	})
+
+	t.Run("an explicit auto drops the constraint", func(t *testing.T) {
+		choice := &inference.ToolChoice{Mode: inference.ToolChoiceAuto}
+		if config := toolConfigOf(inner("claude-sonnet-4-6", choice, weather)); len(config) != 0 {
+			t.Fatalf("toolConfig = %v, want an explicit auto to omit it", config)
+		}
+	})
+
+	t.Run("disabling tools sends none", func(t *testing.T) {
+		choice := &inference.ToolChoice{Mode: inference.ToolChoiceNone}
+		if mode, _ := modeOf(inner("claude-sonnet-4-6", choice, weather)); mode != "NONE" {
+			t.Fatalf("mode = %q, want none", mode)
+		}
+	})
+
+	t.Run("a required tool sends any", func(t *testing.T) {
+		choice := &inference.ToolChoice{Mode: inference.ToolChoiceRequired}
+		if mode, _ := modeOf(inner("gemini-2.0-flash", choice, weather)); mode != "ANY" {
+			t.Fatalf("mode = %q, want any", mode)
+		}
+	})
+
+	t.Run("a pinned tool names itself", func(t *testing.T) {
+		choice := &inference.ToolChoice{Mode: inference.ToolChoiceTool, Name: "get_weather"}
+		mode, names := modeOf(inner("claude-sonnet-4-6", choice, weather))
+		if mode != "ANY" || len(names) != 1 || names[0] != "get_weather" {
+			t.Fatalf("mode = %q names = %v, want any pinned to get_weather", mode, names)
+		}
+	})
+
+	t.Run("a forced gemini turn restates the demand", func(t *testing.T) {
+		choice := &inference.ToolChoice{Mode: inference.ToolChoiceTool, Name: "get_weather"}
+		if got := lastText(inner("gemini-2.0-flash", choice, weather)); !strings.HasPrefix(got, "TOOL-ONLY TURN.") {
+			t.Fatalf("last turn = %q, want the tool-only restraint", got)
+		}
+	})
+
+	t.Run("a forced claude turn needs no restraint", func(t *testing.T) {
+		choice := &inference.ToolChoice{Mode: inference.ToolChoiceTool, Name: "get_weather"}
+		if got := lastText(inner("claude-sonnet-4-6", choice, weather)); strings.HasPrefix(got, "TOOL-ONLY TURN.") {
+			t.Fatalf("last turn = %q, want no restraint where the wire constraint holds", got)
+		}
+	})
+
+	t.Run("a long call id is cut to the limit", func(t *testing.T) {
+		request := canonicalRequest(false)
+		request.Model = "claude-sonnet-4-6"
+		request.Messages = append(request.Messages, inference.Message{
+			Role: inference.RoleAssistant,
+			ToolCalls: []inference.ToolCall{{
+				ID:   "call/with/many:segments/that/keeps/going/past/the/sixty/four/character/limit/ever",
+				Name: "get_weather", Arguments: `{}`,
+			}},
+		})
+		body := assistEnvelope(t, request, wire.CodecOpts{
+			CredentialRef: "token", AuthMethod: wire.AuthOAuth, Project: "project-1",
+		})
+		contents := body["request"].(map[string]any)["contents"].([]any)
+		var id string
+		for _, raw := range contents {
+			turn := raw.(map[string]any)
+			if turn["role"] != "model" {
+				continue
+			}
+			for _, rawPart := range turn["parts"].([]any) {
+				call, _ := rawPart.(map[string]any)["functionCall"].(map[string]any)
+				if call != nil {
+					id, _ = call["id"].(string)
+				}
+			}
+		}
+		if id == "" || len(id) > 64 {
+			t.Fatalf("id = %q, want a sanitized id within 64 characters", id)
+		}
+		if strings.ContainsAny(id, "/:") {
+			t.Fatalf("id = %q, want no foreign characters", id)
+		}
+	})
+}
+
 // TestCloudCodeAssistExecutionID covers the answer the next turn names back:
 // the endpoint issues an id with every response and expects the following turn
 // to carry it, so a fabricated one is worse than none.

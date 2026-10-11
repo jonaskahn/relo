@@ -27,6 +27,21 @@ const (
 	minSignatureLen        = 16
 )
 
+// forcedToolText is the restraint a forced tool choice is restated as on
+// Gemini routes: the endpoint drops the wire constraint, so the transcript
+// itself must demand the call.
+const forcedToolText = "TOOL-ONLY TURN. This turn accepts a tool call and nothing else; a text reply here is discarded unread and you will be re-prompted. Emit the tool call now."
+
+// forcedToolTurn reports whether the request pins a tool choice the Gemini
+// endpoint needs restated in the transcript. Claude honors the wire
+// constraint, so only Gemini turns carry the extra turn.
+func forcedToolTurn(req *inference.Request) bool {
+	if claudeOnAntigravity(req.Model) || req.ToolChoice == nil {
+		return false
+	}
+	return req.ToolChoice.Mode == inference.ToolChoiceRequired || req.ToolChoice.Mode == inference.ToolChoiceTool
+}
+
 var geminiWirePattern = regexp.MustCompile(`(?i)^gemini[-.\d]`)
 
 var foreignSignature = regexp.MustCompile(`(?i)^(fc|ctc|tsc|call|msg|rs|resp|reasoning|item|ws|toolu|tool|func|function)[-_]`)
@@ -36,7 +51,8 @@ type toolConfig struct {
 }
 
 type functionCallingConfig struct {
-	Mode string `json:"mode,omitempty"`
+	Mode                 string   `json:"mode,omitempty"`
+	AllowedFunctionNames []string `json:"allowedFunctionNames,omitempty"`
 }
 
 type replayScope struct {
@@ -265,6 +281,9 @@ func encodeAssist(req *inference.Request, anchor string) ([]content, error) {
 	if len(encoded) == 0 || encoded[len(encoded)-1].Role == roleModel {
 		encoded = append(encoded, content{Role: roleUser, Parts: []part{{Text: continueText}}})
 	}
+	if forcedToolTurn(req) {
+		encoded = append(encoded, content{Role: roleUser, Parts: []part{{Text: forcedToolText}}})
+	}
 	return encoded, nil
 }
 
@@ -452,10 +471,21 @@ func claudeCallID(raw, name string) string {
 		}
 	}
 	if !rewritten {
-		return builder.String()
+		return truncateCallID(builder.String())
 	}
 	sum := sha256.Sum256([]byte(raw))
-	return builder.String() + "_" + hex.EncodeToString(sum[:4])
+	return truncateCallID(builder.String() + "_" + hex.EncodeToString(sum[:4]))
+}
+
+// maxCallIDLen is the longest tool call id the endpoint reads: a longer one
+// is cut rather than refused.
+const maxCallIDLen = 64
+
+func truncateCallID(id string) string {
+	if len(id) > maxCallIDLen {
+		return id[:maxCallIDLen]
+	}
+	return id
 }
 
 // assistTurn is the per-request context the envelope is finished against: the
@@ -507,13 +537,49 @@ func applyAssistThinking(payload *requestPayload, req *inference.Request, opts w
 	switch {
 	case claudeOnAntigravity(req.Model):
 		payload.GenerationConfig.ThinkingConfig = claudeThinking(req, opts)
-		payload.ToolConfig = &toolConfig{FunctionCallingConfig: &functionCallingConfig{Mode: assistToolMode}}
+		payload.ToolConfig = assistToolConfig(req)
 	case geminiWire(req.Model):
 		if payload.GenerationConfig.ThinkingConfig == nil {
 			open := -1
 			payload.GenerationConfig.ThinkingConfig = &thinkingConfig{ThinkingBudget: &open, IncludeThoughts: true}
 		}
+		if payload.ToolConfig == nil {
+			payload.ToolConfig = assistToolConfig(req)
+		}
 	}
+}
+
+// assistToolConfig reports the function-calling constraint a Cloud Code
+// Assist turn carries. Silence keeps the default — VALIDATED always for
+// Claude, VALIDATED for Gemini only while tools are declared — and an
+// explicit client choice wins over it; an explicit auto drops the constraint
+// entirely.
+func assistToolConfig(req *inference.Request) *toolConfig {
+	if choice := req.ToolChoice; choice != nil && choice.Mode != "" {
+		return explicitToolConfig(choice)
+	}
+	if !claudeOnAntigravity(req.Model) && len(req.Tools) == 0 {
+		return nil
+	}
+	return &toolConfig{FunctionCallingConfig: &functionCallingConfig{Mode: assistToolMode}}
+}
+
+func explicitToolConfig(choice *inference.ToolChoice) *toolConfig {
+	calling := &functionCallingConfig{}
+	switch choice.Mode {
+	case inference.ToolChoiceNone:
+		calling.Mode = "NONE"
+	case inference.ToolChoiceRequired:
+		calling.Mode = "ANY"
+	case inference.ToolChoiceTool:
+		calling.Mode = "ANY"
+		if choice.Name != "" {
+			calling.AllowedFunctionNames = []string{choice.Name}
+		}
+	default:
+		return nil
+	}
+	return &toolConfig{FunctionCallingConfig: calling}
 }
 
 // claudeThinking reports the budget a Claude turn on Cloud Code Assist reasons
