@@ -122,6 +122,9 @@ type relaySpec struct {
 	canonical *inference.Request
 	origin    string
 	captured  *CapturedMessage
+	// native is the original client body a same-family surface decoded,
+	// kept so a routed attempt can preserve its wire shape.
+	native []byte
 }
 
 func (s *Server) relay(spec relaySpec) *requestOutcome {
@@ -129,7 +132,7 @@ func (s *Server) relay(spec relaySpec) *requestOutcome {
 	outcome := &requestOutcome{
 		requested: request.Model, surface: spec.surface.name,
 		requestID: newRequestID(), started: time.Now(), request: request, origin: spec.origin,
-		inbound: spec.captured,
+		inbound: spec.captured, native: spec.native,
 	}
 	// A writer that keeps the answer belongs to traffic an agent sent, which
 	// is exactly the traffic whose exchange the log shows.
@@ -829,6 +832,10 @@ type requestOutcome struct {
 	// inbound is the request the agent sent, kept so the log can show the
 	// bytes a client actually asked with.
 	inbound *CapturedMessage
+	// native is the original client body a same-family surface decoded. An
+	// attempt the route keeps on the requested model reuses its wire shape
+	// instead of rebuilding the body from the canonical request.
+	native []byte
 	// answer is the reply the agent read, kept so the log can show what Relo
 	// answered the bytes it was asked with.
 	answer *agentAnswer

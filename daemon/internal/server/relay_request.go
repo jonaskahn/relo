@@ -182,6 +182,7 @@ func (s *Server) attemptCodecOptions(spec attemptSpec, extra map[string]string, 
 		AccountID:              authorized.AccountID,
 		DeviceID:               s.deviceID(authorized.AccountID),
 		SessionID:              account.ClaudeSessionID(candidate.ProviderID, anchor),
+		NativeBody:             s.nativeBody(outcome, candidate),
 		RequestID:              outcome.requestID,
 		SessionAnchor:          anchor,
 		ExtraHeaders:           extra,
@@ -204,6 +205,16 @@ func (s *Server) attemptPromptTokens(outcome *requestOutcome) int64 {
 		return 0
 	}
 	return int64(s.estimateRequestTokens(outcome.request) + max(outcome.request.MaxTokens, 0))
+}
+
+func (s *Server) nativeBody(outcome *requestOutcome, candidate routing.Candidate) []byte {
+	if outcome == nil || len(outcome.native) == 0 {
+		return nil
+	}
+	if candidate.Model.UpstreamID == "" || candidate.Model.UpstreamID != outcome.requested {
+		return nil
+	}
+	return outcome.native
 }
 
 func codexIdentityHeaders(request *http.Request) map[string]string {

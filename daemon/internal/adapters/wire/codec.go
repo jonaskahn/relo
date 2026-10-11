@@ -68,6 +68,11 @@ type CodecOpts struct {
 	// It stays stable across retries of one conversation; empty leaves the
 	// dialect's own fallback in place.
 	SessionID string
+	// NativeBody is the original client body a same-family surface decoded.
+	// A codec that speaks the client's own wire reuses its shape for an
+	// attempt the route keeps on the requested model. Empty means the codec
+	// always builds the body from the canonical request.
+	NativeBody []byte
 	// RequestID names the request in Relo's own log, which a dialect that
 	// carries a correlation identifier of its own puts on the wire.
 	RequestID string
