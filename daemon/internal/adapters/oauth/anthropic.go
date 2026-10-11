@@ -73,6 +73,10 @@ type anthropicAccountBlock struct {
 		UUID  string `json:"uuid"`
 		Email string `json:"email_address"`
 	} `json:"account"`
+	Organization struct {
+		UUID string `json:"uuid"`
+		Name string `json:"name"`
+	} `json:"organization"`
 }
 
 func anthropicAccount(response tokenResponse, credential *OAuthCredential) error {
@@ -82,6 +86,8 @@ func anthropicAccount(response tokenResponse, credential *OAuthCredential) error
 	}
 	credential.AccountID = firstNonEmpty(block.Account.UUID, credential.AccountID)
 	credential.Email = firstNonEmpty(strings.ToLower(block.Account.Email), credential.Email)
+	addExtra(credential, orgExtraKey, block.Organization.UUID)
+	addExtra(credential, orgNameExtraKey, block.Organization.Name)
 	return nil
 }
 

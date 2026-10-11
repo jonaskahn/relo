@@ -10,6 +10,11 @@ import (
 
 const projectExtraKey = "projectId"
 
+const (
+	orgExtraKey     = "orgId"
+	orgNameExtraKey = "orgName"
+)
+
 func decodeJSONBody(body []byte, target any) error {
 	if err := json.Unmarshal(body, target); err != nil {
 		return fmt.Errorf("decode the provider response: %w", err)
