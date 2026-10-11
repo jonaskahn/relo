@@ -19,7 +19,7 @@ import (
 // Antigravity client before the manifest names a newer version. It is pinned
 // here as well as in the package, so a change that drifts away from the hub
 // client family fails the build.
-const antigravityFingerprint = "antigravity/hub/2.8.0 (aidev_client; os_type=darwin; arch=arm64; cl=963137146)"
+const antigravityFingerprint = "antigravity/hub/2.19.1 (aidev_client; os_type=darwin; arch=arm64; cl=963137146)"
 
 func TestAntigravityFingerprint(t *testing.T) {
 	t.Run("the pinned user agent names the hub client family", func(t *testing.T) {

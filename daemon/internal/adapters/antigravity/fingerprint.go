@@ -11,7 +11,7 @@ import (
 const (
 	// DefaultVersion is the client version reported until the manifest names
 	// a newer one, so nothing breaks while Relo is offline.
-	DefaultVersion = "2.8.0"
+	DefaultVersion = "2.19.1"
 
 	// The platform tokens mirror the build the manifest describes rather than
 	// this host's, because the backend compares the client family a credential
@@ -46,7 +46,7 @@ func SetVersion(value string) {
 
 // UserAgent returns the User-Agent every Cloud Code Assist call sends:
 //
-//	antigravity/hub/2.8.0 (aidev_client; os_type=darwin; arch=arm64; cl=963137146)
+//	antigravity/hub/2.19.1 (aidev_client; os_type=darwin; arch=arm64; cl=963137146)
 func UserAgent() string {
 	current := DefaultVersion
 	if stored := version.Load(); stored != nil {
