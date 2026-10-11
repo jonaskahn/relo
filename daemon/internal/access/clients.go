@@ -261,6 +261,9 @@ var clientProfiles = []ClientProfile{
 			"",
 			"export RELO_DSH_API_KEY={{token}}",
 			"",
+			"For the desktop app, put the same block in ~/.dsh/profiles/desktop/cordis.patch.yml.",
+			"That app picks its model in its own picker, so it needs no default-model item.",
+			"",
 			"For the command line, put the same block in ~/.dsh/profiles/headless/cordis.patch.yml.",
 			"That profile has no model flag, so also add a second item that makes Relo its default:",
 			"",
@@ -271,7 +274,7 @@ var clientProfiles = []ClientProfile{
 			"",
 			"Then run: dsh --profile headless \"your task\"",
 		},
-		Verify: "Select the Relo model in the harness and send one message, or run dsh --profile headless \"say hi\". The harness reads the environment it started with, so the key must be exported in the shell that launches dsh, and a rotated key needs a new dsh run.",
+		Verify: "Select the Relo model in the harness and send one message, or run dsh --profile headless \"say hi\". The harness reads the environment it started with, so the key must be exported in the shell that launches dsh, and a rotated key needs a new dsh run. The desktop app does not inherit a login shell's environment, so store the key under RELO_DSH_API_KEY in ~/.dsh/.credentials.yaml, or write it on the harness's Settings > Models page.",
 	},
 	{
 		ID:       "mcode",

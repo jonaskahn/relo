@@ -1,6 +1,8 @@
 package codingclients_test
 
 import (
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 
@@ -164,6 +166,102 @@ func TestDSHCarriesLimitsEffortsAndTheEnvKey(t *testing.T) {
 	}
 }
 
+// dshEffortKeys reads back the thinking levels every model in a patch declares.
+func dshEffortKeys(t *testing.T, patch string) []map[string]any {
+	t.Helper()
+	var document []map[string]any
+	if err := yaml.Unmarshal([]byte(patch), &document); err != nil {
+		t.Fatalf("the patch is not a YAML list: %v\n%s", err, patch)
+	}
+	var keys []map[string]any
+	for _, item := range document {
+		config, _ := item["config"].(map[string]any)
+		providers, _ := config["providers"].(map[string]any)
+		relo, _ := providers["relo"].(map[string]any)
+		models, _ := relo["models"].([]any)
+		for _, entry := range models {
+			model, _ := entry.(map[string]any)
+			efforts, _ := model["reasoningEfforts"].(map[string]any)
+			if efforts != nil {
+				keys = append(keys, efforts)
+			}
+		}
+	}
+	return keys
+}
+
+// TestDSHEffortKeysStayInsideTheHarnessVocabulary pins the harness's closed set
+// of thinking levels. A key it does not know fails the whole llm-pi-ai entry at
+// boot, which silently drops every Relo route rather than one model.
+func TestDSHEffortKeysStayInsideTheHarnessVocabulary(t *testing.T) {
+	known := map[string]bool{
+		"off": true, "minimal": true, "low": true, "medium": true,
+		"high": true, "xhigh": true, "max": true,
+	}
+	on := true
+	models := []codingclients.ModelRef{
+		{ID: "relo-orcarouter-tencent-hy3-free", Name: "Hy3", Reasoning: &on,
+			ReasoningEfforts: []string{"none", "low", "high"}},
+		{ID: "relo-openai-codex-gpt-6-luna", Name: "Luna", Reasoning: &on,
+			ReasoningEfforts: []string{"none", "minimal", "low", "medium", "high", "xhigh", "max"}},
+		{ID: "relo-kilo-free-hy4", Name: "Hy4", Reasoning: &on,
+			ReasoningEfforts: []string{"none", "high"}},
+	}
+	merged, err := codingclients.MergeKind(codingclients.FileDSH, "", "http://127.0.0.1:10201", models)
+	if err != nil {
+		t.Fatalf("MergeKind() error = %v", err)
+	}
+	efforts := dshEffortKeys(t, merged)
+	if len(efforts) != len(models) {
+		t.Fatalf("patch carries %d effort ladders, want one per model:\n%s", len(efforts), merged)
+	}
+	for _, ladder := range efforts {
+		for key, wire := range ladder {
+			if !known[key] {
+				t.Fatalf("merged = %s, want no effort key %q the harness does not know", merged, key)
+			}
+			if wire == nil && key != "off" {
+				t.Fatalf("merged = %s, want a wire value on %q", merged, key)
+			}
+		}
+	}
+	if !strings.Contains(merged, "off: none") {
+		t.Fatalf("merged = %s, want Relo's none rung written under the harness's off", merged)
+	}
+}
+
+// TestDSHDropsAnEffortTheHarnessCannotName keeps one unknown rung from taking
+// the whole provider entry down at boot.
+func TestDSHDropsAnEffortTheHarnessCannotName(t *testing.T) {
+	on := true
+	model := codingclients.ModelRef{ID: "relo-openai-o3", Name: "o3", Reasoning: &on,
+		ReasoningEfforts: []string{"turbo", "low", "high"}}
+	merged, err := codingclients.MergeKind(codingclients.FileDSH, "", "http://127.0.0.1:10201", []codingclients.ModelRef{model})
+	if err != nil {
+		t.Fatalf("MergeKind() error = %v", err)
+	}
+	if strings.Contains(merged, "turbo") {
+		t.Fatalf("merged = %s, want the unknown rung dropped", merged)
+	}
+	if !strings.Contains(merged, "low: low") || !strings.Contains(merged, "high: high") {
+		t.Fatalf("merged = %s, want the known rungs kept", merged)
+	}
+}
+
+// TestDSHNamesOneOffRungOnce covers a model that states both none and off.
+func TestDSHNamesOneOffRungOnce(t *testing.T) {
+	on := true
+	model := codingclients.ModelRef{ID: "relo-openai-o3", Name: "o3", Reasoning: &on,
+		ReasoningEfforts: []string{"none", "off", "low"}}
+	merged, err := codingclients.MergeKind(codingclients.FileDSH, "", "http://127.0.0.1:10201", []codingclients.ModelRef{model})
+	if err != nil {
+		t.Fatalf("MergeKind() error = %v", err)
+	}
+	if count := strings.Count(merged, "            off:"); count != 1 {
+		t.Fatalf("merged carries the off rung %d times, want one:\n%s", count, merged)
+	}
+}
+
 func TestDSHNeverWritesTheKey(t *testing.T) {
 	base := "http://127.0.0.1:10201"
 	models := []codingclients.ModelRef{{ID: "relo-openai-gpt-4o", Name: "GPT-4o"}}
@@ -195,22 +293,45 @@ func TestDSHPatchParsesAsAList(t *testing.T) {
 }
 
 func TestDSHConfigTargetHonoursDSHHome(t *testing.T) {
-	t.Setenv("DSH_HOME", "/opt/dsh")
+	home := t.TempDir()
+	desktop := filepath.Join(home, "profiles", "desktop")
+	if err := os.MkdirAll(desktop, 0o755); err != nil {
+		t.Fatalf("create the desktop profile: %v", err)
+	}
+	t.Setenv("DSH_HOME", home)
 	paths := codingclients.Paths{Home: "/home/op"}
 	targets, err := paths.ConfigTargets(codingclients.ClientDSH)
 	if err != nil {
 		t.Fatalf("ConfigTargets() error = %v", err)
 	}
-	if len(targets) != 2 {
-		t.Fatalf("ConfigTargets() = %d targets, want the web and the headless profile", len(targets))
-	}
 	wanted := map[string]string{
-		codingclients.FileDSH:         "/opt/dsh/profiles/web/cordis.patch.yml",
-		codingclients.FileDSHHeadless: "/opt/dsh/profiles/headless/cordis.patch.yml",
+		codingclients.FileDSH:         filepath.Join(home, "profiles", "web", "cordis.patch.yml"),
+		codingclients.FileDSHHeadless: filepath.Join(home, "profiles", "headless", "cordis.patch.yml"),
+		codingclients.FileDSHDesktop:  filepath.Join(desktop, "cordis.patch.yml"),
+	}
+	if len(targets) != len(wanted) {
+		t.Fatalf("ConfigTargets() = %d targets, want the web, headless, and desktop profiles", len(targets))
 	}
 	for _, target := range targets {
 		if want, found := wanted[target.Kind]; !found || target.Path != want {
 			t.Fatalf("ConfigTargets() target %q path = %q, want %q", target.Kind, target.Path, want)
+		}
+	}
+}
+
+// TestDSHSkipsADesktopProfileTheAppHasNotCreated covers the desktop app owning
+// its profile outright: writing into a profile Relo created would leave the
+// app refusing to start.
+func TestDSHSkipsADesktopProfileTheAppHasNotCreated(t *testing.T) {
+	home := t.TempDir()
+	t.Setenv("DSH_HOME", home)
+	targets, err := codingclients.Paths{Home: "/home/op"}.ConfigTargets(codingclients.ClientDSH)
+	if err != nil {
+		t.Fatalf("ConfigTargets() error = %v", err)
+	}
+	for _, target := range targets {
+		if target.Kind == codingclients.FileDSHDesktop {
+			t.Fatalf("ConfigTargets() wrote the desktop profile at %q, want it skipped", target.Path)
 		}
 	}
 }
@@ -226,10 +347,29 @@ func TestDSHConfigTargetDefaultsToTheHomeDirectory(t *testing.T) {
 		"/home/op/.dsh/profiles/web/cordis.patch.yml",
 		"/home/op/.dsh/profiles/headless/cordis.patch.yml",
 	}
+	if len(targets) != len(want) {
+		t.Fatalf("ConfigTargets() = %d targets, want %d", len(targets), len(want))
+	}
 	for index, target := range targets {
 		if target.Path != want[index] {
 			t.Fatalf("ConfigTargets() path = %q, want %q", target.Path, want[index])
 		}
+	}
+}
+
+// TestDSHDesktopWritesTheProviderWithoutADefaultModel pins the desktop app
+// picking its model in its own picker, the way the web profile does.
+func TestDSHDesktopWritesTheProviderWithoutADefaultModel(t *testing.T) {
+	base := "http://127.0.0.1:10201"
+	merged, err := codingclients.MergeKind(codingclients.FileDSHDesktop, "", base, dshHeadlessModels())
+	if err != nil {
+		t.Fatalf("MergeKind() error = %v", err)
+	}
+	if strings.Contains(merged, "agent-default-model") {
+		t.Fatalf("the desktop app picks its model itself, merged = %s", merged)
+	}
+	if !codingclients.KindPointsAt(codingclients.FileDSHDesktop, merged, base, dshHeadlessModels()) {
+		t.Fatalf("merged file does not point at Relo:\n%s", merged)
 	}
 }
 
@@ -348,7 +488,7 @@ func TestDSHHeadlessPointsAtRefusesAChangedDefault(t *testing.T) {
 
 func TestDSHStripLeavesAListWhenNothingRemains(t *testing.T) {
 	base := "http://127.0.0.1:10201"
-	for _, kind := range []string{codingclients.FileDSH, codingclients.FileDSHHeadless} {
+	for _, kind := range []string{codingclients.FileDSH, codingclients.FileDSHHeadless, codingclients.FileDSHDesktop} {
 		merged, err := codingclients.MergeKind(kind, "", base, dshHeadlessModels())
 		if err != nil {
 			t.Fatalf("MergeKind(%s) error = %v", kind, err)

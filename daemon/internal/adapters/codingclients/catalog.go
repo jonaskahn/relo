@@ -27,7 +27,7 @@ func CatalogAgent(id string) bool {
 func CatalogKind(kind string) bool {
 	switch kind {
 	case FilePi, FilePrime, FileAside, FileOMO, FileZCode, FileClineProviders, FileClineModels,
-		FileOMP, FileGajae, FileDSH, FileDSHHeadless, FileMCode, FileRaycast, FileKimi:
+		FileOMP, FileGajae, FileDSH, FileDSHHeadless, FileDSHDesktop, FileMCode, FileRaycast, FileKimi:
 		return true
 	default:
 		return false
@@ -41,7 +41,7 @@ func KeptDocument(kind string) string {
 	switch kind {
 	case FileKimi:
 		return "\n"
-	case FileDSH, FileDSHHeadless:
+	case FileDSH, FileDSHHeadless, FileDSHDesktop:
 		return "[]\n"
 	default:
 		return "{}\n"
@@ -92,7 +92,7 @@ func mergeSpecialKind(kind, existing, address string, models []ModelRef) (string
 	switch kind {
 	case FileClineModels:
 		return mergeClineModels(existing, address, models)
-	case FileDSH:
+	case FileDSH, FileDSHDesktop:
 		return MergeDSH(existing, address, models)
 	case FileDSHHeadless:
 		return MergeDSHHeadless(existing, address, models)
@@ -118,7 +118,7 @@ func StripKind(kind, existing string) (string, error) {
 		stripped, err = stripYAMLMap(existing, "providers")
 	case FileMCode:
 		stripped, err = stripYAMLMap(existing, "")
-	case FileDSH, FileDSHHeadless:
+	case FileDSH, FileDSHHeadless, FileDSHDesktop:
 		stripped, err = StripDSH(existing)
 	case FileRaycast:
 		stripped, err = stripRaycast(existing)
@@ -145,7 +145,7 @@ func KindHasRelo(kind, existing string) (bool, error) {
 		return yamlHas(existing, "providers")
 	case FileMCode:
 		return yamlHas(existing, "")
-	case FileDSH, FileDSHHeadless:
+	case FileDSH, FileDSHHeadless, FileDSHDesktop:
 		return DSHHasRelo(existing)
 	case FileRaycast:
 		return raycastHas(existing)
@@ -201,7 +201,7 @@ func specialKindPointsAt(kind, existing, address string, models []ModelRef) bool
 	switch kind {
 	case FileClineModels:
 		return jsonPointsAt(existing, clineModelsValue(address, models))
-	case FileDSH:
+	case FileDSH, FileDSHDesktop:
 		return DSHPointsAt(existing, address, models)
 	case FileDSHHeadless:
 		return DSHHeadlessPointsAt(existing, address, models)
@@ -252,7 +252,7 @@ func kindClient(kind string) string {
 		return ClientOMP
 	case FileGajae:
 		return ClientGajae
-	case FileDSH, FileDSHHeadless:
+	case FileDSH, FileDSHHeadless, FileDSHDesktop:
 		return ClientDSH
 	case FileMCode:
 		return ClientMCode

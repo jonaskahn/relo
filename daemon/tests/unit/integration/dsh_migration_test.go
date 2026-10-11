@@ -87,3 +87,67 @@ func TestEnableRetiresTheMovedDSHFile(t *testing.T) {
 		}
 	}
 }
+
+// A machine that runs the desktop app has a third profile Relo writes into.
+// The app picks its own default model there, so the patch carries the provider
+// alone and leaves the operator's other patch items alone.
+func TestEnableWritesTheDesktopProfileTheAppCreated(t *testing.T) {
+	h := newHarness(t, func(string) string { return "http://127.0.0.1:10201" })
+	models := []integration.ModelRef{{ID: "relo-openai-gpt-4o", Name: "GPT-4o"}}
+	withModels(h, &models)
+	home := h.paths.Home
+	dshHome := filepath.Join(home, ".dsh")
+	t.Setenv("DSH_HOME", dshHome)
+
+	desktop := filepath.Join(dshHome, "profiles", "desktop")
+	if err := os.MkdirAll(desktop, 0o755); err != nil {
+		t.Fatalf("create the desktop profile: %v", err)
+	}
+	operatorPatch := "# the operator's own desktop settings\n- id: agent-default-model\n  name: \"@deepseek-ai/dsh-agent-default-model\"\n  config:\n    provider: deepseek-account\n    model: deepseek-flash\n"
+	if err := os.WriteFile(filepath.Join(desktop, "cordis.patch.yml"), []byte(operatorPatch), 0o644); err != nil {
+		t.Fatalf("write the operator's desktop patch: %v", err)
+	}
+
+	if _, err := h.manager.Enable(t.Context(), "dsh", "rlo_ak_test"); err != nil {
+		t.Fatalf("Enable() error = %v", err)
+	}
+
+	written, err := os.ReadFile(filepath.Join(desktop, "cordis.patch.yml"))
+	if err != nil {
+		t.Fatalf("read the desktop Cordis patch: %v", err)
+	}
+	patch := string(written)
+	for _, want := range []string{"apiKeyEnv: RELO_DSH_API_KEY", "- id: llm-pi-ai", "deepseek-flash"} {
+		if !strings.Contains(patch, want) {
+			t.Fatalf("desktop patch = %s, want %q", patch, want)
+		}
+	}
+	if count := strings.Count(patch, "- id: agent-default-model"); count != 1 {
+		t.Fatalf("desktop patch carries the operator's default %d times, want one:\n%s", count, patch)
+	}
+	if strings.Contains(patch, "provider: relo") {
+		t.Fatalf("desktop patch = %s, want the default left pointing at the operator's provider", patch)
+	}
+
+	recorded := map[string]string{}
+	for _, file := range h.store.files["dsh"] {
+		recorded[file.Kind] = file.Path
+	}
+	if got := recorded[codingclients.FileDSHDesktop]; got != filepath.Join(desktop, "cordis.patch.yml") {
+		t.Fatalf("file rows = %+v, want the desktop patch recorded", h.store.files["dsh"])
+	}
+
+	if _, err := h.manager.Disable(t.Context(), "dsh"); err != nil {
+		t.Fatalf("Disable() error = %v", err)
+	}
+	stripped, err := os.ReadFile(filepath.Join(desktop, "cordis.patch.yml"))
+	if err != nil {
+		t.Fatalf("read the desktop patch after Disable(): %v", err)
+	}
+	if strings.Contains(string(stripped), "relo") {
+		t.Fatalf("desktop patch still names Relo after Disable():\n%s", stripped)
+	}
+	if !strings.Contains(string(stripped), "deepseek-flash") {
+		t.Fatalf("desktop patch = %s, want the operator's default kept", stripped)
+	}
+}

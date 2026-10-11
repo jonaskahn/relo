@@ -38,6 +38,10 @@ const (
 	FileDSH = "dsh-settings"
 	// FileDSHHeadless is the Cordis patch of the profile the command line runs.
 	FileDSHHeadless = "dsh-headless"
+	// FileDSHDesktop is the Cordis patch of the profile the desktop app boots.
+	// The app owns that profile outright, so the patch is only written once
+	// the app has created it.
+	FileDSHDesktop = "dsh-desktop"
 	// FileMCode is MiniMax Code's configuration file.
 	FileMCode = "mcode-config"
 	// FileRaycast is Raycast AI's provider list.
@@ -135,22 +139,37 @@ func (p Paths) dshPatch(profile string) (string, error) {
 	return filepath.Join(root, "profiles", profile, "cordis.patch.yml"), nil
 }
 
-// dshTargets are the web profile, which serves the browser, and the headless
-// profile, which serves the command line. Each has its own kind because a
+// dshTargets are the three profiles a harness boot reads: the web profile,
+// which serves the browser, the headless profile, which serves the command
+// line, and the desktop app's own profile. Each has its own kind because a
 // file record is keyed by integration and kind.
+//
+// The desktop profile is written only where the desktop app has already
+// created it. That app owns the directory outright and refuses a profile
+// folder holding a patch and nothing else, so Relo creating the profile would
+// leave the app unable to start.
 func (p Paths) dshTargets() ([]ConfigTarget, error) {
-	web, err := p.dshPatch("web")
-	if err != nil {
-		return nil, err
+	targets := make([]ConfigTarget, 0, 3)
+	for _, profile := range []struct {
+		kind, name string
+	}{
+		{FileDSH, "web"},
+		{FileDSHHeadless, "headless"},
+		{FileDSHDesktop, "desktop"},
+	} {
+		patch, err := p.dshPatch(profile.name)
+		if err != nil {
+			return nil, err
+		}
+		dir := filepath.Dir(patch)
+		if profile.kind == FileDSHDesktop {
+			if _, err := os.Stat(dir); err != nil {
+				continue
+			}
+		}
+		targets = append(targets, ConfigTarget{Kind: profile.kind, Path: patch, Dir: dir})
 	}
-	headless, err := p.dshPatch("headless")
-	if err != nil {
-		return nil, err
-	}
-	return []ConfigTarget{
-		{Kind: FileDSH, Path: web, Dir: filepath.Dir(web)},
-		{Kind: FileDSHHeadless, Path: headless, Dir: filepath.Dir(headless)},
-	}, nil
+	return targets, nil
 }
 
 func absolutePath(raw, home, name string) (string, error) {

@@ -299,10 +299,26 @@ func dshInput(model ModelRef) string {
 	return "          input: [text]\n"
 }
 
+// dshEffortLevel maps Relo's rung names onto the closed set of thinking levels
+// the harness accepts as a reasoningEfforts key. The wire value stays Relo's
+// own spelling: the harness sends whatever the entry names, and Relo
+// normalizes upstream.
+var dshEffortLevel = map[string]string{
+	"none":    "off",
+	"off":     "off",
+	"minimal": "minimal",
+	"low":     "low",
+	"medium":  "medium",
+	"high":    "high",
+	"xhigh":   "xhigh",
+	"max":     "max",
+}
+
 // dshEfforts renders the effort ladder a reasoning model accepts. A model
 // that stated no ladder offers the shared list; one that stated none takes
 // reasoningEfforts false, which is what turns the harness's effort menu off.
-// The off level is offered only when the model can turn thinking off.
+// A rung the harness cannot name is dropped rather than written: one unknown
+// key fails the whole llm-pi-ai entry at boot, taking every Relo route with it.
 func dshEfforts(model ModelRef) string {
 	if model.Reasoning == nil || !*model.Reasoning {
 		return "          reasoningEfforts: false\n"
@@ -311,16 +327,46 @@ func dshEfforts(model ModelRef) string {
 	if efforts == nil {
 		efforts = ReasoningEfforts()
 	}
-	var body strings.Builder
-	if model.ReasoningToggle != nil && *model.ReasoningToggle {
-		body.WriteString("          reasoningEfforts:\n            off:\n")
-	} else {
-		body.WriteString("          reasoningEfforts:\n")
+	ladder := dshEffortLadder(model, efforts)
+	if len(ladder) == 0 {
+		// The harness refuses both an empty ladder and one offering nothing
+		// beyond off, so a model left with neither takes reasoning off.
+		return "          reasoningEfforts: false\n"
 	}
-	for _, effort := range efforts {
-		body.WriteString("            " + effort + ": " + effort + "\n")
+	var body strings.Builder
+	body.WriteString("          reasoningEfforts:\n")
+	for _, rung := range ladder {
+		body.WriteString("            " + rung.level + ":")
+		if rung.wire != "" {
+			body.WriteString(" " + rung.wire)
+		}
+		body.WriteString("\n")
 	}
 	return body.String()
+}
+
+// dshRung is one line of a reasoningEfforts ladder: the thinking level the
+// harness offers, and the wire value it sends to reach it.
+type dshRung struct{ level, wire string }
+
+// dshEffortLadder translates Relo's rungs into the levels the harness names,
+// keeping the first spelling of a level so a model stating both none and off
+// offers one rung. A toggle adds an empty off, which sends nothing at all.
+func dshEffortLadder(model ModelRef, efforts []string) []dshRung {
+	ladder := make([]dshRung, 0, len(efforts)+1)
+	seen := make(map[string]bool, len(efforts)+1)
+	for _, effort := range efforts {
+		level, known := dshEffortLevel[effort]
+		if !known || seen[level] {
+			continue
+		}
+		seen[level] = true
+		ladder = append(ladder, dshRung{level: level, wire: effort})
+	}
+	if model.ReasoningToggle != nil && *model.ReasoningToggle && !seen["off"] {
+		ladder = append([]dshRung{{level: "off"}}, ladder...)
+	}
+	return ladder
 }
 
 // dshThinkingCompat marks the DeepSeek family for the harness's thinking
