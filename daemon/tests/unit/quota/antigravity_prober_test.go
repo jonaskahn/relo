@@ -161,6 +161,29 @@ func TestAntigravityProber(t *testing.T) {
 		}
 	})
 
+	t.Run("a bucket with only a reset time reports exhaustion", func(t *testing.T) {
+		server := httptest.NewServer(jsonBodyHandler(`{"groups":[{"buckets":[
+			{"bucketId":"gemini-5h","resetTime":"2026-07-02T16:00:00Z"},
+			{"bucketId":"gemini-weekly","remainingFraction":0.5},
+			{"bucketId":"3p-5h","remainingFraction":0.4}]}]}`))
+		t.Cleanup(server.Close)
+		prober := quota.NewAntigravityProber(quota.ProberOptions{BaseURL: server.URL})
+		windows, err := prober.Probe(context.Background(), activity.Credential{ID: "credential-1", AccessToken: "token"})
+		if err != nil {
+			t.Fatalf("Probe() error = %v", err)
+		}
+		if len(windows) != 3 {
+			t.Fatalf("windows = %+v, want the spent pool beside the healthy ones", windows)
+		}
+		spent := windows[0]
+		if spent.Window != "Gem" || spent.UsedPercent != 100 {
+			t.Fatalf("spent = %+v, want the Gem pool exhausted", spent)
+		}
+		if spent.ResetAt != time.Date(2026, 7, 2, 16, 0, 0, 0, time.UTC).Unix() {
+			t.Fatalf("reset = %d, want the reset the bucket named", spent.ResetAt)
+		}
+	})
+
 	t.Run("both calls carry the fingerprint and the billing project", func(t *testing.T) {
 		requests := &recordedProbes{}
 		server := httptest.NewServer(requests.handler(`{"groups":[{"buckets":

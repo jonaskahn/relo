@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"github.com/jonaskahn/relo/internal/adapters/antigravity"
+	"github.com/jonaskahn/relo/internal/adapters/wire"
 	"github.com/jonaskahn/relo/internal/inference"
 )
 
@@ -26,6 +27,21 @@ const (
 	minSignatureLen        = 16
 )
 
+// forcedToolText is the restraint a forced tool choice is restated as on
+// Gemini routes: the endpoint drops the wire constraint, so the transcript
+// itself must demand the call.
+const forcedToolText = "TOOL-ONLY TURN. This turn accepts a tool call and nothing else; a text reply here is discarded unread and you will be re-prompted. Emit the tool call now."
+
+// forcedToolTurn reports whether the request pins a tool choice the Gemini
+// endpoint needs restated in the transcript. Claude honors the wire
+// constraint, so only Gemini turns carry the extra turn.
+func forcedToolTurn(req *inference.Request) bool {
+	if claudeOnAntigravity(req.Model) || req.ToolChoice == nil {
+		return false
+	}
+	return req.ToolChoice.Mode == inference.ToolChoiceRequired || req.ToolChoice.Mode == inference.ToolChoiceTool
+}
+
 var geminiWirePattern = regexp.MustCompile(`(?i)^gemini[-.\d]`)
 
 var foreignSignature = regexp.MustCompile(`(?i)^(fc|ctc|tsc|call|msg|rs|resp|reasoning|item|ws|toolu|tool|func|function)[-_]`)
@@ -35,7 +51,8 @@ type toolConfig struct {
 }
 
 type functionCallingConfig struct {
-	Mode string `json:"mode,omitempty"`
+	Mode                 string   `json:"mode,omitempty"`
+	AllowedFunctionNames []string `json:"allowedFunctionNames,omitempty"`
 }
 
 type replayScope struct {
@@ -264,6 +281,9 @@ func encodeAssist(req *inference.Request, anchor string) ([]content, error) {
 	if len(encoded) == 0 || encoded[len(encoded)-1].Role == roleModel {
 		encoded = append(encoded, content{Role: roleUser, Parts: []part{{Text: continueText}}})
 	}
+	if forcedToolTurn(req) {
+		encoded = append(encoded, content{Role: roleUser, Parts: []part{{Text: forcedToolText}}})
+	}
 	return encoded, nil
 }
 
@@ -451,10 +471,21 @@ func claudeCallID(raw, name string) string {
 		}
 	}
 	if !rewritten {
-		return builder.String()
+		return truncateCallID(builder.String())
 	}
 	sum := sha256.Sum256([]byte(raw))
-	return builder.String() + "_" + hex.EncodeToString(sum[:4])
+	return truncateCallID(builder.String() + "_" + hex.EncodeToString(sum[:4]))
+}
+
+// maxCallIDLen is the longest tool call id the endpoint reads: a longer one
+// is cut rather than refused.
+const maxCallIDLen = 64
+
+func truncateCallID(id string) string {
+	if len(id) > maxCallIDLen {
+		return id[:maxCallIDLen]
+	}
+	return id
 }
 
 // assistTurn is the per-request context the envelope is finished against: the
@@ -474,7 +505,7 @@ type sessionIdentity struct {
 	step       int
 }
 
-func finishAssist(payload *requestPayload, req *inference.Request, turn assistTurn) sessionIdentity {
+func finishAssist(payload *requestPayload, req *inference.Request, turn assistTurn, opts wire.CodecOpts) sessionIdentity {
 	if payload.SystemInstruction != nil {
 		payload.SystemInstruction.Role = roleUser
 	}
@@ -486,7 +517,7 @@ func finishAssist(payload *requestPayload, req *inference.Request, turn assistTu
 	case payload.GenerationConfig.MaxOutputTokens == 0 || payload.GenerationConfig.MaxOutputTokens > capOutput:
 		payload.GenerationConfig.MaxOutputTokens = capOutput
 	}
-	applyAssistThinking(payload, req)
+	applyAssistThinking(payload, req, opts)
 	preimage := sessionPreimage(turn.anchor, req)
 	identity := sessionIdentity{
 		agent:      sessionUUID(preimage, agentDomain),
@@ -499,21 +530,86 @@ func finishAssist(payload *requestPayload, req *inference.Request, turn assistTu
 }
 
 // applyAssistThinking gives each model family the thinking shape it accepts.
-// A Claude turn carries none, because the vendor bills reasoning through its
-// own beta; a Gemini turn with no stated effort is left open-ended.
-func applyAssistThinking(payload *requestPayload, req *inference.Request) {
+// A Claude turn carries a token budget, because the endpoint reasons through
+// one on this transport; a Gemini turn with no stated effort is left
+// open-ended.
+func applyAssistThinking(payload *requestPayload, req *inference.Request, opts wire.CodecOpts) {
 	switch {
 	case claudeOnAntigravity(req.Model):
-		payload.GenerationConfig.ThinkingConfig = nil
-		if len(payload.Tools) > 0 {
-			payload.ToolConfig = &toolConfig{FunctionCallingConfig: &functionCallingConfig{Mode: assistToolMode}}
-		}
+		payload.GenerationConfig.ThinkingConfig = claudeThinking(req, opts)
+		payload.ToolConfig = assistToolConfig(req)
 	case geminiWire(req.Model):
 		if payload.GenerationConfig.ThinkingConfig == nil {
 			open := -1
 			payload.GenerationConfig.ThinkingConfig = &thinkingConfig{ThinkingBudget: &open, IncludeThoughts: true}
 		}
+		if payload.ToolConfig == nil {
+			payload.ToolConfig = assistToolConfig(req)
+		}
 	}
+}
+
+// assistToolConfig reports the function-calling constraint a Cloud Code
+// Assist turn carries. Silence keeps the default — VALIDATED always for
+// Claude, VALIDATED for Gemini only while tools are declared — and an
+// explicit client choice wins over it; an explicit auto drops the constraint
+// entirely.
+func assistToolConfig(req *inference.Request) *toolConfig {
+	if choice := req.ToolChoice; choice != nil && choice.Mode != "" {
+		return explicitToolConfig(choice)
+	}
+	if !claudeOnAntigravity(req.Model) && len(req.Tools) == 0 {
+		return nil
+	}
+	return &toolConfig{FunctionCallingConfig: &functionCallingConfig{Mode: assistToolMode}}
+}
+
+func explicitToolConfig(choice *inference.ToolChoice) *toolConfig {
+	calling := &functionCallingConfig{}
+	switch choice.Mode {
+	case inference.ToolChoiceNone:
+		calling.Mode = "NONE"
+	case inference.ToolChoiceRequired:
+		calling.Mode = "ANY"
+	case inference.ToolChoiceTool:
+		calling.Mode = "ANY"
+		if choice.Name != "" {
+			calling.AllowedFunctionNames = []string{choice.Name}
+		}
+	default:
+		return nil
+	}
+	return &toolConfig{FunctionCallingConfig: calling}
+}
+
+// claudeThinking reports the budget a Claude turn on Cloud Code Assist reasons
+// through. A turn that asked for nothing keeps nothing, so the endpoint
+// applies its own default; a turn that named an effort carries that effort as
+// a budget, and a turn that switched thinking off carries a zero budget with
+// summaries off.
+func claudeThinking(req *inference.Request, opts wire.CodecOpts) *thinkingConfig {
+	if req.Reasoning == nil {
+		return nil
+	}
+	level, off := inference.ChooseThinking(req.Reasoning.Effort, opts.ReasoningEfforts, opts.ReasoningToggle)
+	if off || level == "none" {
+		budget := inference.ClampBudget(0, opts.ReasoningBudgetMin, opts.ReasoningBudgetMax)
+		return &thinkingConfig{ThinkingBudget: &budget, IncludeThoughts: false}
+	}
+	name := level
+	if name == "" {
+		var ok bool
+		name, ok = inference.NormalizeEffort(req.Reasoning.Effort)
+		if !ok {
+			return nil
+		}
+	}
+	budget, ok := inference.EffortBudget(name)
+	if !ok {
+		return nil
+	}
+	budget = inference.ClampBudget(budget, opts.ReasoningBudgetMin, opts.ReasoningBudgetMax)
+	return &thinkingConfig{ThinkingBudget: &budget, IncludeThoughts: true}
 }
 
 // outputCeiling reports the largest completion the vendor serves on this

@@ -266,6 +266,66 @@ func TestListAntigravityNamesARejectedListing(t *testing.T) {
 	}
 }
 
+// TestListAntigravityServerFailureIsNotARejection asserts an endpoint failure
+// is reported as one: a 500 must not read as a rejected credential, or a
+// transient outage would retire a healthy account and wipe the roster it had.
+func TestListAntigravityServerFailureIsNotARejection(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.WriteHeader(http.StatusBadGateway)
+	}))
+	t.Cleanup(server.Close)
+
+	_, err := New(server.Client()).List(context.Background(), Target{
+		Format: catalog.ModelsAntigravity, BaseURL: server.URL,
+		Auth: upstream.Authorization{Token: "tok", KeyHeader: catalog.KeyHeaderBearer},
+	})
+	if !errors.Is(err, ErrListStatus) {
+		t.Fatalf("List(antigravity) error = %v, want %v", err, ErrListStatus)
+	}
+	if errors.Is(err, ErrListRejected) {
+		t.Fatalf("List(antigravity) error = %v, want no credential rejection", err)
+	}
+}
+
+// TestListAntigravityCarriesAdvertisedBudgets asserts the dialect reads the
+// context and output limits the vendor advertises, so the roster states what
+// the account's own list publishes rather than nothing.
+func TestListAntigravityCarriesAdvertisedBudgets(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"models":{
+			"gemini-3.8-flash":{"displayName":"Gemini 3.8 Flash","maxTokens":1048576,"maxOutputTokens":65536},
+			"gemini-3.8-flash-high":{"displayName":"Gemini 3.8 Flash (High)"}
+		}}`))
+	}))
+	t.Cleanup(server.Close)
+
+	listed, err := New(server.Client()).List(context.Background(), Target{
+		Format: catalog.ModelsAntigravity, BaseURL: server.URL,
+		Auth: upstream.Authorization{Token: "tok", KeyHeader: catalog.KeyHeaderBearer},
+	})
+	if err != nil {
+		t.Fatalf("List(antigravity) error = %v", err)
+	}
+	budgets := map[string]Listed{}
+	for _, item := range listed {
+		budgets[item.ID] = item
+	}
+	full, found := budgets["gemini-3.8-flash"]
+	if !found {
+		t.Fatalf("listed = %+v, want the advertised model", listed)
+	}
+	if full.ContextWindow == nil || *full.ContextWindow != 1048576 {
+		t.Fatalf("ContextWindow = %+v, want the advertised context", full.ContextWindow)
+	}
+	if full.MaxOutput == nil || *full.MaxOutput != 65536 {
+		t.Fatalf("MaxOutput = %+v, want the advertised output", full.MaxOutput)
+	}
+	if bare, found := budgets["gemini-3.8-flash-high"]; !found || bare.ContextWindow != nil || bare.MaxOutput != nil {
+		t.Fatalf("listed = %+v, want no budgets invented for a silent row", listed)
+	}
+}
+
 // antigravityListing is a live-shaped Cloud Code Assist answer: the vendor
 // names what every model is for, and the same models are reachable under a
 // legacy alias.
@@ -336,8 +396,8 @@ func TestListAntigravityKeepsOnlyTheAgentSurface(t *testing.T) {
 	want := []string{
 		"claude-opus-4-6-thinking", "claude-sonnet-4-6", "gemini-2.5-pro",
 		"gemini-3.1-flash-image", "gemini-3.1-pro-low", "gemini-3.5-flash-lite",
-		"gemini-3.7-flash-low", "gemini-3.8-flash-high", "gemini-3.8-flash-tiered",
-		"gemini-pro-agent", "gpt-oss-120b-medium",
+		"gemini-3.6-flash-medium", "gemini-3.7-flash-low", "gemini-3.8-flash-high",
+		"gemini-3.8-flash-tiered", "gemini-pro-agent", "gpt-oss-120b-medium",
 	}
 	if len(got) != len(want) {
 		t.Fatalf("listed = %v, want %v", got, want)
@@ -359,7 +419,7 @@ func TestListAntigravityWithoutBucketsKeepsWhatItLists(t *testing.T) {
 		"gemini-3.8-flash-high":{"displayName":"Gemini 3.8 Flash (High)"}
 	}}`
 	got := antigravityListIDs(t, body)
-	want := []string{"gemini-3.8-flash-high", "tab_flash_lite_preview"}
+	want := []string{"gemini-3.6-flash-medium", "gemini-3.8-flash-high", "tab_flash_lite_preview"}
 	if len(got) != len(want) {
 		t.Fatalf("listed = %v, want %v", got, want)
 	}

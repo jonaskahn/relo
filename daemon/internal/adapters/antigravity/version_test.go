@@ -35,7 +35,7 @@ func TestParseVersion(t *testing.T) {
 func TestUserAgentFollowsTheManifest(t *testing.T) {
 	t.Cleanup(func() { SetVersion(DefaultVersion) })
 	SetVersion(DefaultVersion)
-	want := "antigravity/hub/2.8.0 (aidev_client; os_type=darwin; arch=arm64; cl=963137146)"
+	want := "antigravity/hub/2.19.1 (aidev_client; os_type=darwin; arch=arm64; cl=963137146)"
 	if got := UserAgent(); got != want {
 		t.Fatalf("UserAgent() = %q, want %q", got, want)
 	}

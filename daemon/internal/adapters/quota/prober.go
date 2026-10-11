@@ -207,7 +207,22 @@ func antigravitySummaryWindows(summary antigravityQuotaSummary) []activity.Windo
 	windows := make([]activity.WindowSample, 0, len(antigravitySummaryBuckets))
 	for _, spec := range antigravitySummaryBuckets {
 		bucket, found := pooled[spec.bucketID]
-		if !found || bucket.RemainingFraction == nil {
+		if !found {
+			continue
+		}
+		if bucket.RemainingFraction == nil {
+			// An account whose counter is spent sometimes names only the
+			// reset time. That is exhausted until reset, not unknown: a
+			// healthy sibling counter would otherwise mask it.
+			if bucket.ResetTime == "" {
+				continue
+			}
+			windows = append(windows, activity.WindowSample{
+				Window:      spec.window,
+				UsedPercent: 100,
+				ResetAt:     resetTime(bucket.ResetTime),
+				Seconds:     spec.seconds,
+			})
 			continue
 		}
 		windows = append(windows, activity.WindowSample{

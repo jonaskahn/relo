@@ -244,7 +244,9 @@ func supportsGenerateContent(methods []string) bool {
 
 type antigravityModels struct {
 	Models map[string]struct {
-		DisplayName string `json:"displayName"`
+		DisplayName     string `json:"displayName"`
+		MaxTokens       *int64 `json:"maxTokens"`
+		MaxOutputTokens *int64 `json:"maxOutputTokens"`
 	} `json:"models"`
 	AgentModelSorts []struct {
 		Groups []struct {
@@ -268,10 +270,6 @@ var antigravityRetiredModelIDs = map[string]bool{
 	"gemini-3.5-flash-low":       true,
 	"gemini-3.5-flash-mid":       true,
 	"gemini-3.5-flash-high":      true,
-	"gemini-3.6-flash":           true,
-	"gemini-3.6-flash-low":       true,
-	"gemini-3.6-flash-medium":    true,
-	"gemini-3.6-flash-high":      true,
 	"gemini-3-flash-agent":       true,
 }
 
@@ -345,10 +343,16 @@ func (l *Lister) listAntigravity(ctx context.Context, target Target) ([]Listed, 
 		return nil, err
 	}
 	defer func() { _ = response.Body.Close() }()
-	if response.StatusCode < 200 || response.StatusCode >= 300 {
+	if response.StatusCode == http.StatusUnauthorized || response.StatusCode == http.StatusForbidden {
 		refusal, _ := io.ReadAll(io.LimitReader(response.Body, refusalBodyLimit))
 		code, detail := antigravity.Refusal(refusal)
 		return nil, antigravityRefusal(response.StatusCode, code, detail)
+	}
+	if response.StatusCode < 200 || response.StatusCode >= 300 {
+		// Any other refusal is the endpoint failing, not the credential: it
+		// must not read as a rejection, or a transient outage would retire a
+		// healthy account and wipe the roster it had.
+		return nil, fmt.Errorf("%w %d", ErrListStatus, response.StatusCode)
 	}
 	var document antigravityModels
 	if err := json.NewDecoder(response.Body).Decode(&document); err != nil {
@@ -384,7 +388,16 @@ func antigravityModelsOf(document antigravityModels) []Listed {
 		if !antigravityServes(id, agents, others, document.DeprecatedModelIDs) {
 			continue
 		}
-		models = append(models, Listed{ID: id, Name: entry.DisplayName})
+		listed := Listed{ID: id, Name: entry.DisplayName}
+		if entry.MaxTokens != nil && *entry.MaxTokens > 0 {
+			budget := *entry.MaxTokens
+			listed.ContextWindow = &budget
+		}
+		if entry.MaxOutputTokens != nil && *entry.MaxOutputTokens > 0 {
+			budget := *entry.MaxOutputTokens
+			listed.MaxOutput = &budget
+		}
+		models = append(models, listed)
 	}
 	return models
 }

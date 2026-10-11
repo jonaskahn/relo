@@ -984,6 +984,102 @@ func TestCloudCodeAssistEmptyCompletion(t *testing.T) {
 	})
 }
 
+// TestCloudCodeAssistTruncatedStream covers a stream the endpoint ended
+// without a finish reason: a dropped connection, not a short answer. It is
+// refused as retryable, and its id is never filed as the execution the next
+// turn follows.
+func TestCloudCodeAssistTruncatedStream(t *testing.T) {
+	session := "codex-thread:truncated"
+	decode := func(body string) []inference.Event {
+		t.Helper()
+		request := canonicalRequest(false)
+		bound := cloudCodeAssistCodec().Bind(request, wire.CodecOpts{SessionAnchor: session})
+		decoder := bound.NewStreamDecoder()
+		events := pushStreamData(t, decoder, body)
+		closing, err := decoder.Finish()
+		if err != nil {
+			t.Fatalf("Finish() error = %v", err)
+		}
+		return append(events, closing...)
+	}
+	execution := func() (string, bool) {
+		t.Helper()
+		body := assistEnvelope(t, canonicalRequest(false), wire.CodecOpts{
+			CredentialRef: "token", Project: "project-1", SessionAnchor: session,
+		})
+		labels := body["request"].(map[string]any)["labels"].(map[string]any)
+		value, found := labels["last_execution_id"]
+		text, _ := value.(string)
+		return text, found
+	}
+
+	t.Run("text without a finish is refused", func(t *testing.T) {
+		events := decode(`{"response":{"responseId":"exec-t1","candidates":[{"content":{"parts":[{"text":"partial"}]}}]}}`)
+		failure := failureOf(events)
+		if failure == nil || failure.Code != "truncated_completion" {
+			t.Fatalf("failure = %+v, want the truncated stream refused", failure)
+		}
+		if terminalReason(events) != inference.EventReasonError {
+			t.Fatalf("events = %+v, want an error terminal", events)
+		}
+		if id, found := execution(); found {
+			t.Fatalf("last_execution_id = %q, want no execution from a dropped stream", id)
+		}
+	})
+
+	t.Run("a thought-only stop is complete", func(t *testing.T) {
+		events := decode(`{"response":{"candidates":[{"content":{"parts":[{"text":"reasoned","thought":true}]},"finishReason":"STOP"}]}}`)
+		if countKind(events, inference.EventError) != 0 {
+			t.Fatalf("events = %+v, want no failure for a thought-only answer", events)
+		}
+		if terminalReason(events) != inference.EventReasonStop {
+			t.Fatalf("events = %+v, want a stop terminal", events)
+		}
+	})
+
+	t.Run("a usage-only trailer keeps the finish", func(t *testing.T) {
+		decoder := cloudCodeAssistCodec().NewStreamDecoder()
+		pushStreamData(t, decoder, `{"response":{"candidates":[{"content":{"parts":[{"text":"done"}]},"finishReason":"STOP"}]}}`)
+		pushStreamData(t, decoder, `{"response":{"usageMetadata":{"promptTokenCount":5,"candidatesTokenCount":2}}}`)
+		closing, err := decoder.Finish()
+		if err != nil {
+			t.Fatalf("Finish() error = %v", err)
+		}
+		if countKind(closing, inference.EventError) != 0 {
+			t.Fatalf("closing = %+v, want no failure after a finished answer", closing)
+		}
+		if terminalReason(closing) != inference.EventReasonStop {
+			t.Fatalf("closing = %+v, want a stop terminal", closing)
+		}
+	})
+
+	t.Run("an in-band quota refusal keeps its status", func(t *testing.T) {
+		events := decode(`{"response":{"error":{"code":429,"message":"Individual quota reached","status":"RESOURCE_EXHAUSTED"}}}`)
+		failure := failureOf(events)
+		if failure == nil || failure.Code != "RESOURCE_EXHAUSTED" || failure.Status != 429 {
+			t.Fatalf("failure = %+v, want the quota refusal with its status", failure)
+		}
+	})
+
+	t.Run("a blocked prompt is reported", func(t *testing.T) {
+		events := decode(`{"response":{"promptFeedback":{"blockReason":"SAFETY","blockReasonMessage":"blocked"}}}`)
+		failure := failureOf(events)
+		if failure == nil || failure.Code != "safety" {
+			t.Fatalf("failure = %+v, want the prompt block reported", failure)
+		}
+		if terminalReason(events) != inference.EventReasonError {
+			t.Fatalf("events = %+v, want an error terminal", events)
+		}
+	})
+
+	t.Run("a max-tokens finish with calls is tool use", func(t *testing.T) {
+		events := decode(`{"response":{"candidates":[{"content":{"parts":[{"functionCall":{"name":"f","args":{}}}]},"finishReason":"MAX_TOKENS"}]}}`)
+		if terminalReason(events) != inference.EventReasonToolUse {
+			t.Fatalf("events = %+v, want tool_use for the calls it carried", events)
+		}
+	})
+}
+
 // TestCloudCodeAssistClaudeBeta covers the beta a reasoning Claude turn claims
 // by name: the vendor gates interleaved thinking behind it and serves the turn
 // without the reasoning the client asked for when it is missing.
@@ -1020,6 +1116,202 @@ func TestCloudCodeAssistClaudeBeta(t *testing.T) {
 	t.Run("a gemini turn does not claim it", func(t *testing.T) {
 		if got := beta("gemini-3.5-flash", "high"); got != "" {
 			t.Fatalf("anthropic-beta = %q, want none for a model that does not reason on this beta", got)
+		}
+	})
+}
+
+// TestCloudCodeAssistClaudeThinking covers the thinking a Claude turn carries
+// on Cloud Code Assist: the endpoint reasons through a token budget, so the
+// budget survives here instead of being dropped, and the turn always pins the
+// tool mode even when it declares no tools.
+func TestCloudCodeAssistClaudeThinking(t *testing.T) {
+	inner := func(model string, reasoning *inference.ReasoningConfig) map[string]any {
+		t.Helper()
+		request := canonicalRequest(false)
+		request.Model = model
+		request.Reasoning = reasoning
+		return assistEnvelope(t, request, wire.CodecOpts{
+			CredentialRef: "token", AuthMethod: wire.AuthOAuth, Project: "project-1",
+		})
+	}
+	thinkingOf := func(body map[string]any) map[string]any {
+		t.Helper()
+		config, found := body["request"].(map[string]any)["generationConfig"].(map[string]any)
+		if !found {
+			t.Fatalf("generationConfig missing in %v", body)
+		}
+		thinking, _ := config["thinkingConfig"].(map[string]any)
+		return thinking
+	}
+	modeOf := func(body map[string]any) string {
+		t.Helper()
+		toolConfig, _ := body["request"].(map[string]any)["toolConfig"].(map[string]any)
+		calling, _ := toolConfig["functionCallingConfig"].(map[string]any)
+		mode, _ := calling["mode"].(string)
+		return mode
+	}
+
+	t.Run("a reasoning turn carries its effort as a budget", func(t *testing.T) {
+		thinking := thinkingOf(inner("claude-sonnet-4-6", &inference.ReasoningConfig{Effort: "high"}))
+		if thinking["thinkingBudget"] != float64(16384) || thinking["includeThoughts"] != true {
+			t.Fatalf("thinkingConfig = %v, want the high budget with summaries", thinking)
+		}
+		if _, present := thinking["thinkingLevel"]; present {
+			t.Fatalf("thinkingConfig = %v, want budget transport without a level", thinking)
+		}
+	})
+
+	t.Run("a turn that asked for nothing keeps nothing", func(t *testing.T) {
+		if thinking := thinkingOf(inner("claude-sonnet-4-6", nil)); len(thinking) != 0 {
+			t.Fatalf("thinkingConfig = %v, want none without a requested effort", thinking)
+		}
+	})
+
+	t.Run("thinking off carries a zero budget", func(t *testing.T) {
+		thinking := thinkingOf(inner("claude-sonnet-4-6", &inference.ReasoningConfig{Effort: "none"}))
+		if thinking["thinkingBudget"] != float64(0) || thinking["includeThoughts"] != false {
+			t.Fatalf("thinkingConfig = %v, want a zero budget without summaries", thinking)
+		}
+	})
+
+	t.Run("the tool mode is pinned with no tools", func(t *testing.T) {
+		if got := modeOf(inner("claude-sonnet-4-6", nil)); got != "VALIDATED" {
+			t.Fatalf("toolConfig mode = %q, want the pinned mode even with no tools", got)
+		}
+	})
+
+	t.Run("a gemini turn without an effort stays open-ended", func(t *testing.T) {
+		thinking := thinkingOf(inner("gemini-2.0-flash", nil))
+		if thinking["thinkingBudget"] != float64(-1) || thinking["includeThoughts"] != true {
+			t.Fatalf("thinkingConfig = %v, want the open budget", thinking)
+		}
+	})
+}
+
+// TestCloudCodeAssistToolChoice covers the tool constraint a turn carries:
+// silence keeps the VALIDATED default, and an explicit client choice wins
+// over it. A choice Gemini needs restated is also written into the
+// transcript, because the endpoint drops the wire constraint on its routes.
+func TestCloudCodeAssistToolChoice(t *testing.T) {
+	inner := func(model string, choice *inference.ToolChoice, tools []inference.Tool) map[string]any {
+		t.Helper()
+		request := canonicalRequest(false)
+		request.Model = model
+		request.ToolChoice = choice
+		request.Tools = tools
+		return assistEnvelope(t, request, wire.CodecOpts{
+			CredentialRef: "token", AuthMethod: wire.AuthOAuth, Project: "project-1",
+		})
+	}
+	toolConfigOf := func(body map[string]any) map[string]any {
+		t.Helper()
+		config, _ := body["request"].(map[string]any)["toolConfig"].(map[string]any)
+		return config
+	}
+	modeOf := func(body map[string]any) (string, []any) {
+		t.Helper()
+		calling, _ := toolConfigOf(body)["functionCallingConfig"].(map[string]any)
+		mode, _ := calling["mode"].(string)
+		names, _ := calling["allowedFunctionNames"].([]any)
+		return mode, names
+	}
+	lastText := func(body map[string]any) string {
+		t.Helper()
+		contents := body["request"].(map[string]any)["contents"].([]any)
+		last := contents[len(contents)-1].(map[string]any)
+		parts := last["parts"].([]any)
+		text, _ := parts[len(parts)-1].(map[string]any)["text"].(string)
+		return text
+	}
+	weather := []inference.Tool{{Name: "get_weather", Parameters: json.RawMessage(`{"type":"object"}`)}}
+
+	t.Run("a silent gemini turn with tools stays validated", func(t *testing.T) {
+		if mode, _ := modeOf(inner("gemini-2.0-flash", nil, weather)); mode != "VALIDATED" {
+			t.Fatalf("mode = %q, want the default while tools are declared", mode)
+		}
+	})
+
+	t.Run("a silent gemini turn without tools omits the constraint", func(t *testing.T) {
+		if config := toolConfigOf(inner("gemini-2.0-flash", nil, nil)); len(config) != 0 {
+			t.Fatalf("toolConfig = %v, want none without tools or a choice", config)
+		}
+	})
+
+	t.Run("an explicit auto drops the constraint", func(t *testing.T) {
+		choice := &inference.ToolChoice{Mode: inference.ToolChoiceAuto}
+		if config := toolConfigOf(inner("claude-sonnet-4-6", choice, weather)); len(config) != 0 {
+			t.Fatalf("toolConfig = %v, want an explicit auto to omit it", config)
+		}
+	})
+
+	t.Run("disabling tools sends none", func(t *testing.T) {
+		choice := &inference.ToolChoice{Mode: inference.ToolChoiceNone}
+		if mode, _ := modeOf(inner("claude-sonnet-4-6", choice, weather)); mode != "NONE" {
+			t.Fatalf("mode = %q, want none", mode)
+		}
+	})
+
+	t.Run("a required tool sends any", func(t *testing.T) {
+		choice := &inference.ToolChoice{Mode: inference.ToolChoiceRequired}
+		if mode, _ := modeOf(inner("gemini-2.0-flash", choice, weather)); mode != "ANY" {
+			t.Fatalf("mode = %q, want any", mode)
+		}
+	})
+
+	t.Run("a pinned tool names itself", func(t *testing.T) {
+		choice := &inference.ToolChoice{Mode: inference.ToolChoiceTool, Name: "get_weather"}
+		mode, names := modeOf(inner("claude-sonnet-4-6", choice, weather))
+		if mode != "ANY" || len(names) != 1 || names[0] != "get_weather" {
+			t.Fatalf("mode = %q names = %v, want any pinned to get_weather", mode, names)
+		}
+	})
+
+	t.Run("a forced gemini turn restates the demand", func(t *testing.T) {
+		choice := &inference.ToolChoice{Mode: inference.ToolChoiceTool, Name: "get_weather"}
+		if got := lastText(inner("gemini-2.0-flash", choice, weather)); !strings.HasPrefix(got, "TOOL-ONLY TURN.") {
+			t.Fatalf("last turn = %q, want the tool-only restraint", got)
+		}
+	})
+
+	t.Run("a forced claude turn needs no restraint", func(t *testing.T) {
+		choice := &inference.ToolChoice{Mode: inference.ToolChoiceTool, Name: "get_weather"}
+		if got := lastText(inner("claude-sonnet-4-6", choice, weather)); strings.HasPrefix(got, "TOOL-ONLY TURN.") {
+			t.Fatalf("last turn = %q, want no restraint where the wire constraint holds", got)
+		}
+	})
+
+	t.Run("a long call id is cut to the limit", func(t *testing.T) {
+		request := canonicalRequest(false)
+		request.Model = "claude-sonnet-4-6"
+		request.Messages = append(request.Messages, inference.Message{
+			Role: inference.RoleAssistant,
+			ToolCalls: []inference.ToolCall{{
+				ID:   "call/with/many:segments/that/keeps/going/past/the/sixty/four/character/limit/ever",
+				Name: "get_weather", Arguments: `{}`,
+			}},
+		})
+		body := assistEnvelope(t, request, wire.CodecOpts{
+			CredentialRef: "token", AuthMethod: wire.AuthOAuth, Project: "project-1",
+		})
+		contents := body["request"].(map[string]any)["contents"].([]any)
+		var id string
+		for _, raw := range contents {
+			turn := raw.(map[string]any)
+			if turn["role"] != "model" {
+				continue
+			}
+			for _, rawPart := range turn["parts"].([]any) {
+				call, _ := rawPart.(map[string]any)["functionCall"].(map[string]any)
+				if call != nil {
+					id, _ = call["id"].(string)
+				}
+			}
+		}
+		if id == "" || len(id) > 64 {
+			t.Fatalf("id = %q, want a sanitized id within 64 characters", id)
+		}
+		if strings.ContainsAny(id, "/:") {
+			t.Fatalf("id = %q, want no foreign characters", id)
 		}
 	})
 }

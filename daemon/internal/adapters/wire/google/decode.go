@@ -23,7 +23,10 @@ const (
 	// emptyCompletionCode names a completion the endpoint finished without
 	// answering, which is worth another attempt rather than an empty reply.
 	emptyCompletionCode = "empty_completion"
-	callIDPrefix        = "call_"
+	// truncatedCompletionCode names a stream the endpoint ended without a
+	// finish reason: a dropped connection, not a short answer.
+	truncatedCompletionCode = "truncated_completion"
+	callIDPrefix            = "call_"
 )
 
 var blockedReasons = map[string]bool{
@@ -46,6 +49,7 @@ type streamDecoder struct {
 	calls        int
 	sawCall      bool
 	sawText      bool
+	sawReasoning bool
 	usage        *inference.UsageReport
 	usageSent    bool
 	responseID   string
@@ -64,10 +68,16 @@ type ccaEnvelope struct {
 }
 
 type streamChunk struct {
-	Candidates    []candidate    `json:"candidates"`
-	UsageMetadata *usageMetadata `json:"usageMetadata"`
-	Error         *errorBody     `json:"error"`
-	ResponseID    string         `json:"responseId"`
+	Candidates     []candidate     `json:"candidates"`
+	UsageMetadata  *usageMetadata  `json:"usageMetadata"`
+	Error          *errorBody      `json:"error"`
+	ResponseID     string          `json:"responseId"`
+	PromptFeedback *promptFeedback `json:"promptFeedback"`
+}
+
+type promptFeedback struct {
+	BlockReason        string `json:"blockReason"`
+	BlockReasonMessage string `json:"blockReasonMessage"`
 }
 
 type candidate struct {
@@ -134,11 +144,33 @@ func (d *streamDecoder) Finish() ([]inference.Event, error) {
 		return nil, nil
 	}
 	d.terminated = true
+	// A stream that never said how it ended is refused before its id is
+	// filed, so a dropped connection is retried rather than remembered as
+	// the execution the next turn follows.
+	truncated := d.truncatedEvents()
 	d.rememberExecution()
 	events := append(textEvent(d.plan.flush()), d.usageEvents()...)
+	events = append(events, truncated...)
 	events = append(events, d.emptyEvents()...)
 	terminal := inference.Event{Kind: inference.EventTerminal, Terminal: &inference.TerminalInfo{Reason: d.terminalReason()}}
 	return append(events, terminal), nil
+}
+
+// truncatedEvents refuses a Cloud Code Assist stream that ended without a
+// finish reason: a dropped connection, not a short answer. Partial text or a
+// lone thought without an ending is still truncated — only a named finish
+// proves the endpoint completed the turn. The refusal is retryable and
+// records nothing against the account.
+func (d *streamDecoder) truncatedEvents() []inference.Event {
+	if d.mode != ModeCloudCodeAssist || d.failure != nil || d.finishReason != "" {
+		return nil
+	}
+	d.failure = &inference.ErrorInfo{
+		Code:    truncatedCompletionCode,
+		Message: "the endpoint ended the stream without a finish reason",
+		Status:  http.StatusBadGateway,
+	}
+	return []inference.Event{{Kind: inference.EventError, Error: d.failure}}
 }
 
 // emptyEvents reports a completion the endpoint finished without answering.
@@ -147,7 +179,7 @@ func (d *streamDecoder) Finish() ([]inference.Event, error) {
 // the status is the one that makes it retryable. This says nothing about the
 // account, so nothing is recorded against it.
 func (d *streamDecoder) emptyEvents() []inference.Event {
-	if d.mode != ModeCloudCodeAssist || d.sawText || d.sawCall || d.failure != nil {
+	if d.mode != ModeCloudCodeAssist || d.sawText || d.sawCall || d.sawReasoning || d.failure != nil {
 		return nil
 	}
 	if d.finishReason != "" && !blockedReasons[d.finishReason] {
@@ -169,7 +201,23 @@ func (d *streamDecoder) absorb(chunk *streamChunk) []inference.Event {
 	if chunk.ResponseID != "" {
 		d.responseID = chunk.ResponseID
 	}
+	events = append(events, d.feedbackEvents(chunk)...)
 	return append(events, d.errorEvents(chunk.Error)...)
+}
+
+// feedbackEvents reports a prompt the endpoint blocked before answering.
+// With no candidates and a block reason, there is no answer coming — only a
+// refusal the client must read as one.
+func (d *streamDecoder) feedbackEvents(chunk *streamChunk) []inference.Event {
+	if len(chunk.Candidates) != 0 || chunk.PromptFeedback == nil || chunk.PromptFeedback.BlockReason == "" {
+		return nil
+	}
+	d.failure = &inference.ErrorInfo{
+		Code:    safetyErrorCode,
+		Message: "google blocked the prompt with reason " + chunk.PromptFeedback.BlockReason,
+		Status:  http.StatusBadGateway,
+	}
+	return []inference.Event{{Kind: inference.EventError, Error: d.failure}}
 }
 
 func (d *streamDecoder) candidateEvents(source *candidate) []inference.Event {
@@ -178,7 +226,11 @@ func (d *streamDecoder) candidateEvents(source *candidate) []inference.Event {
 		d.carried = rememberSignatures(d.replay, source.Content.Parts, d.carried)
 		events = d.partEvents(source.Content.Parts)
 	}
-	d.finishReason = source.FinishReason
+	// A usage-only frame carries no finish reason of its own; only a frame
+	// that names one moves the stream's end.
+	if source.FinishReason != "" {
+		d.finishReason = source.FinishReason
+	}
 	return append(events, d.finishEvents(source)...)
 }
 
@@ -191,6 +243,7 @@ func (d *streamDecoder) partEvents(parts []part) []inference.Event {
 			events = append(events, d.callEvents(parts[index].FunctionCall)...)
 			events = append(events, reasoningEvent("", signature)...)
 		case parts[index].Thought:
+			d.sawReasoning = true
 			events = append(events, reasoningEvent(parts[index].Text, signature)...)
 		default:
 			visible := d.plan.text(parts[index].Text)
@@ -263,18 +316,28 @@ func (d *streamDecoder) errorEvents(failure *errorBody) []inference.Event {
 	if failure == nil {
 		return nil
 	}
-	d.failure = failure.info(http.StatusBadGateway)
+	d.failure = failure.info(errorStatus(failure.Code))
 	return []inference.Event{{Kind: inference.EventError, Error: d.failure}}
+}
+
+// errorStatus keeps the status an in-band failure already named, so a quota
+// refusal still reads as one downstream. A body that names none is a gateway
+// failure, the way it already was.
+func errorStatus(code int) int {
+	if code >= 400 && code < 600 {
+		return code
+	}
+	return http.StatusBadGateway
 }
 
 func (d *streamDecoder) terminalReason() string {
 	switch {
 	case d.failure != nil:
 		return inference.EventReasonError
-	case d.finishReason == finishMaxTokens:
-		return inference.EventReasonLength
 	case d.sawCall:
 		return inference.EventReasonToolUse
+	case d.finishReason == finishMaxTokens:
+		return inference.EventReasonLength
 	default:
 		return inference.EventReasonStop
 	}
