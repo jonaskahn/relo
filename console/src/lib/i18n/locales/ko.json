@@ -1801,7 +1801,8 @@
       "retryLabel": "재시도 간격",
       "failoverLabel": "Failover wait",
       "failoverHint": "How long a refused account or route member stays out of rotation after a rate limit or server fault, and how the wait grows with each further failure. A success resets it. None starts with no wait: the first refusal is immediately reusable.",
-      "retryHint": "각 재시도 전의 무작위 대기 시간(초)입니다. 공급자의 Retry-After가 더 길면 우선합니다."
+      "retryHint": "각 재시도 전의 무작위 대기 시간(초)입니다. 공급자의 Retry-After가 더 길면 우선합니다.",
+      "jumpLabel": "섹션으로 이동"
     }
   }
 }

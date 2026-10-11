@@ -1,10 +1,9 @@
 <script lang="ts">
-	import { onDestroy, onMount, untrack } from 'svelte';
+	import { untrack } from 'svelte';
 	import { t } from 'svelte-i18n';
 	import { toast } from 'svelte-sonner';
 
 	import { api } from '$lib/api';
-	import ConfirmDialog from '$lib/components/ui/confirm-dialog.svelte';
 	import Icon from '$lib/components/ui/icon.svelte';
 	import SettingsCard from './settings-card.svelte';
 	import SettingsRow from './settings-row.svelte';
@@ -14,11 +13,10 @@
 	import { stepSwap } from '$lib/modal-motion';
 	import { MIN_USAGE_DAYS, validUsageDays } from '$lib/settings-retention';
 	import { cloneDraft, draftDirty } from '$lib/settings-draft';
-	import type { RetentionPreview, RetentionSettings, SweepStatus } from '$lib/types';
+	import type { RetentionPreview, RetentionSettings } from '$lib/types';
 
-	// RetentionCard owns the usage-log budget and the two maintenance
-	// actions: the cleanup that applies the stored budget, and the reclaim
-	// sweep that deletes stored bodies and compacts the database.
+	// RetentionCard owns the usage-log budget and the cleanup that applies
+	// the stored budget. The reclaim sweep lives in its own card beside it.
 	interface Props {
 		value: RetentionSettings;
 		onsaved: (next: RetentionSettings) => void;
@@ -38,24 +36,8 @@
 	let cleaningUp = $state(false);
 	let cleanupError = $state('');
 
-	let sweep = $state<SweepStatus | null>(null);
-	let sweepAsking = $state(false);
-	let sweepError = $state('');
-	let sweepTimer: ReturnType<typeof setInterval> | undefined;
-	let alive = true;
-
 	const dirty = $derived(draftDirty(draft, saved));
 	const invalid = $derived(!validUsageDays(Number(draft.usage_days)));
-	const sweepRunning = $derived(sweep !== null && sweep.state === 'working');
-
-	onMount(() => {
-		void readSweep();
-	});
-
-	onDestroy(() => {
-		alive = false;
-		if (sweepTimer !== undefined) clearInterval(sweepTimer);
-	});
 
 	async function save() {
 		if (saving || invalid) return;
@@ -108,46 +90,6 @@
 			cleanupError = failure instanceof Error ? failure.message : String(failure);
 		} finally {
 			cleaningUp = false;
-		}
-	}
-
-	async function readSweep() {
-		const wasRunning = sweepRunning;
-		try {
-			sweep = await api<SweepStatus>('/settings/retention/sweep');
-		} catch {
-			// A daemon that cannot answer keeps the state it had, and the next
-			// read picks the sweep up again.
-			followSweep();
-			return;
-		}
-		if (wasRunning && sweep?.state === 'done') {
-			toast.success(
-				$t('ui.settingsPage.sweepDoneToast', {
-					values: {
-						before: formatBytes(sweep.report?.live_bytes_before ?? 0),
-						after: formatBytes(sweep.report?.live_bytes_after ?? 0)
-					}
-				})
-			);
-		}
-		followSweep();
-	}
-
-	function followSweep() {
-		if (sweepTimer !== undefined) clearInterval(sweepTimer);
-		sweepTimer = undefined;
-		if (alive && sweepRunning) sweepTimer = setInterval(() => void readSweep(), 1000);
-	}
-
-	async function startSweep() {
-		sweepAsking = false;
-		sweepError = '';
-		try {
-			sweep = await api<SweepStatus>('/settings/retention/sweep', { method: 'POST' });
-			followSweep();
-		} catch (failure) {
-			sweepError = failure instanceof Error ? failure.message : String(failure);
 		}
 	}
 </script>
@@ -257,80 +199,5 @@
 					.replace('{bytes}', formatBytes(preview.EstimatedBytesFreed))}
 			</p>
 		{/if}
-
-		<div class="rounded-panel bg-sunken p-4">
-			<div class="max-w-[72ch]">
-				<p class="text-sm font-medium">{$t('ui.settingsPage.sweepTitle')}</p>
-				<p class="mt-1 text-xs leading-relaxed text-muted-foreground">
-					{$t('ui.settingsPage.sweepDescription')}
-				</p>
-			</div>
-			<div class="mt-3">
-				<Button
-					type="button"
-					size="sm"
-					variant="outline"
-					disabled={sweepRunning}
-					onclick={() => (sweepAsking = true)}
-				>
-					<Icon name="database" size={14} />
-					{$t('ui.settingsPage.sweepAction')}
-				</Button>
-			</div>
-			{#if sweepRunning}
-				<p class="mt-3 flex items-center gap-1.5 text-sm text-muted-foreground" role="status">
-					<Icon name="loader" size={13} spin />
-					{$t('ui.settingsPage.sweepWorking')}
-				</p>
-			{:else if sweep?.state === 'failed'}
-				<p class="mt-3 text-sm text-destructive" role="alert">
-					{$t('ui.settingsPage.sweepFailed', { values: { error: sweep.error ?? '' } })}
-				</p>
-			{/if}
-			{#if sweepError}
-				<p class="mt-3 text-sm text-destructive" role="alert">
-					{$t('ui.settingsPage.sweepFailed', { values: { error: sweepError } })}
-				</p>
-			{/if}
-			{#if sweep?.report}
-				<div class="mt-4 flex flex-col gap-1.5" in:stepSwap>
-					<div class="flex items-center justify-between gap-3 text-xs">
-						<span class="text-muted-foreground">{$t('ui.settingsPage.sweepReportDays')}</span>
-						<span class="mono-data">{sweep.report.finalized_days.toLocaleString()}</span>
-					</div>
-					<div class="flex items-center justify-between gap-3 text-xs">
-						<span class="text-muted-foreground">{$t('ui.settingsPage.sweepReportRows')}</span>
-						<span class="mono-data">{sweep.report.rows_deleted.toLocaleString()}</span>
-					</div>
-					<div class="flex items-center justify-between gap-3 text-xs">
-						<span class="text-muted-foreground">{$t('ui.settingsPage.sweepReportCaptures')}</span>
-						<span class="mono-data">{sweep.report.captures_deleted.toLocaleString()}</span>
-					</div>
-					<div class="flex items-center justify-between gap-3 text-xs">
-						<span class="text-muted-foreground">{$t('ui.settingsPage.sweepReportSize')}</span>
-						<span class="mono-data"
-							>{formatBytes(sweep.report.live_bytes_before)} → {formatBytes(
-								sweep.report.live_bytes_after
-							)}</span
-						>
-					</div>
-					{#if !sweep.report.vacuumed}
-						<p class="text-xs leading-relaxed text-muted-foreground">
-							{$t('ui.settingsPage.sweepNotCompacted')}
-						</p>
-					{/if}
-				</div>
-			{/if}
-		</div>
 	</div>
 </SettingsCard>
-
-<ConfirmDialog
-	bind:open={sweepAsking}
-	title={$t('ui.settingsPage.sweepConfirmTitle')}
-	body={$t('ui.settingsPage.sweepConfirmBody')}
-	confirmLabel={$t('ui.settingsPage.sweepAction')}
-	tone="destructive"
-	icon="database"
-	onconfirm={startSweep}
-/>

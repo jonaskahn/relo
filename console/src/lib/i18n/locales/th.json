@@ -1801,7 +1801,8 @@
       "retryLabel": "ช่วงรอการลองใหม่",
       "failoverLabel": "Failover wait",
       "failoverHint": "How long a refused account or route member stays out of rotation after a rate limit or server fault, and how the wait grows with each further failure. A success resets it. None starts with no wait: the first refusal is immediately reusable.",
-      "retryHint": "การรอแบบสุ่มก่อนการลองใหม่แต่ละครั้ง หน่วยเป็นวินาที Retry-After ที่นานกว่าของผู้ให้บริการจะชนะ"
+      "retryHint": "การรอแบบสุ่มก่อนการลองใหม่แต่ละครั้ง หน่วยเป็นวินาที Retry-After ที่นานกว่าของผู้ให้บริการจะชนะ",
+      "jumpLabel": "ข้ามไปยังส่วน"
     }
   }
 }

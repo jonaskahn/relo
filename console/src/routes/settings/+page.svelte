@@ -10,6 +10,7 @@
 	import DaemonCard from '$lib/components/settings/daemon-card.svelte';
 	import NetworkCard from '$lib/components/settings/network-card.svelte';
 	import ProvidersCard from '$lib/components/settings/providers-card.svelte';
+	import ReclaimCard from '$lib/components/settings/reclaim-card.svelte';
 	import RestartBanner from '$lib/components/settings/restart-banner.svelte';
 	import RetentionCard from '$lib/components/settings/retention-card.svelte';
 	import Button from '$lib/components/ui/button.svelte';
@@ -99,6 +100,17 @@
 		if (!settings) return;
 		settings = { ...settings, retention: next };
 	}
+
+	// Section jumps reuse each card's own heading id, so the labels below
+	// stay in lockstep with the cards above without another id registry.
+	const sections = $derived([
+		{ href: '#settings-network', label: $t('ui.settingsPage.sectionNetwork') },
+		{ href: '#settings-access', label: $t('ui.settingsPage.sectionAccess') },
+		{ href: '#settings-providers', label: $t('ui.settingsPage.sectionProviders') },
+		{ href: '#settings-daemon', label: $t('ui.settingsPage.sectionDaemon') },
+		{ href: '#settings-retention', label: $t('ui.settingsPage.sectionRetention') },
+		{ href: '#settings-console', label: $t('ui.settingsPage.sectionConsole') }
+	]);
 </script>
 
 <svelte:head><title>{$t('ui.pages.settings.title')} · Relo</title></svelte:head>
@@ -119,20 +131,26 @@
 		{#if restartPending}
 			<div in:stepSwap><RestartBanner /></div>
 		{/if}
+		<nav aria-label={$t('ui.settingsPage.jumpLabel')} class="flex flex-wrap gap-2">
+			{#each sections as section (section.href)}
+				<a
+					href={section.href}
+					class="inline-flex h-control items-center rounded-control border border-line bg-surface px-3 text-sm font-medium text-muted-foreground transition-colors hover:border-line-strong hover:text-ink"
+					>{section.label}</a
+				>
+			{/each}
+		</nav>
 		<!-- One column below xl: the paired cards hold port and URL rows that
 		     need the width. From xl the small cards pair up and the sections
 		     with many settings keep a full row. -->
 		<div class="grid grid-cols-1 gap-[var(--section)] xl:grid-cols-2">
-			<div class="xl:col-span-2"><ConsoleCard /></div>
-			<AccessCard access={settings.access} secrets={settings.secrets} onsaved={onAccessSaved} />
 			<NetworkCard value={settings.server} onsaved={onNetworkSaved} />
+			<AccessCard access={settings.access} secrets={settings.secrets} onsaved={onAccessSaved} />
+			<ProvidersCard value={settings.providers} onsaved={onProvidersSaved} />
 			<DaemonCard value={settings.system} onsaved={onSystemSaved} />
-			<div class="xl:col-span-2">
-				<ProvidersCard value={settings.providers} onsaved={onProvidersSaved} />
-			</div>
-			<div class="xl:col-span-2">
-				<RetentionCard value={settings.retention} onsaved={onRetentionSaved} />
-			</div>
+			<RetentionCard value={settings.retention} onsaved={onRetentionSaved} />
+			<ReclaimCard />
+			<div class="xl:col-span-2"><ConsoleCard /></div>
 		</div>
 	{:else}
 		<div

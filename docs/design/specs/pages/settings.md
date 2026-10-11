@@ -6,14 +6,15 @@ requires: [form-controls, appearance-popover, cards-and-quota, modal-and-dialogs
 
 # Settings
 
-Route `/settings`. One page of level-1 cards, one per task: **Console** (theme, accent, quota display, language),
-**Access and secrets** (external access; the read-only sign-in and vault), **Network** (bind address, console port,
-client protocol ports), **Providers** (model directory, proxy, call wait, retry count), **Daemon** (start at login, log
-level, update feed), and **Retention** (budget and
-maintenance). Each card is a level-1 surface with a title, a one-line description, and rows of label, helper text and
-control. Cards wear `flat-surface`: a form card is not interactive and does not react to hover. Appearance and language
-controls are the same components as `appearance-popover`. Loading keeps one centred spinner in the frame; a failed load
-answers one card with the reason and a Retry action.
+Route `/settings`. One page of level-1 cards, one per task: **Network** (bind address, console port,
+client protocol ports), **Access and secrets** (external access; the read-only sign-in and vault),
+**Providers** (model directory, proxy, call wait, retry count, failover wait), **Daemon** (start at login,
+traffic log, log level, update feed), **Retention** (budget and cleanup), **Reclaim space** (maintenance
+sweep), and **Console** (theme, accent, quota display, language). Each card is a level-1 surface with a
+title, a one-line description, and rows of label, helper text and control. Cards wear `flat-surface`: a form
+card is not interactive and does not react to hover. Appearance and language controls are the same components
+as `appearance-popover`. A jump row above the grid links to each card's heading. Loading keeps one centred
+spinner in the frame; a failed load answers one card with the reason and a Retry action.
 
 ## Row anatomy
 
@@ -35,15 +36,14 @@ areas stack under it so a translated label never squeezes a control. Nothing dev
 
 ## Card grid
 
-One column below 1280px. From `xl` the small cards pair and the sections with many settings keep a full row:
+One column below 1280px. From `xl` the small cards pair and Console keeps a full row:
 
 | Row | Cards                            |
 |-----|----------------------------------|
-| 1   | Console (full)                   |
-| 2   | Access and secrets + Desktop app |
-| 3   | Network + Daemon                 |
-| 4   | Providers (full)                 |
-| 5   | Retention (full)                 |
+| 1   | Network + Access and secrets     |
+| 2   | Providers + Daemon               |
+| 3   | Retention + Reclaim space        |
+| 4   | Console (full)                   |
 
 Pairing is never forced: a card that holds wide fields keeps its own row, and below `xl` everything stacks because a
 paired port or URL row needs the width. Cards in one grid row share their height, and an explicit-save card pins its
@@ -84,16 +84,21 @@ Retention edits save with an explicit Save. The three budget values — usage hi
 rows on the shared grid; the floor rule rides on the usage-history row as its helper text, and a rejected value reports
 under its own input. **Preview** asks what the draft would prune without changing a row and reports the count and the
 estimated space beside the button; **Clean up now** applies the stored budget and answers as a toast. Both sit with Save
-on the value column. The card also carries the maintenance action: **Reclaim space now**. It asks for confirmation first
+on the value column. Usage totals and request records survive the cleanup.
+
+## Reclaim card
+
+The maintenance action is its own card beside Retention: **Reclaim space now**. It asks for confirmation first
 (AlertDialog) because every captured request and response body is deleted for good. Serving is never stopped: the
 stored budget is applied and the stored bodies are deleted while the data plane keeps answering, and the database
-compacts itself as soon as traffic pauses. Afterwards the panel shows exactly four facts — days archived, requests
+compacts itself as soon as traffic pauses. Afterwards the card shows exactly four facts — days archived, requests
 removed, captured bodies removed, database size before and after — revealed with the shared rise; when the compaction
 had to wait for quiet traffic it says so, and the maintenance tick retries. Usage totals and request records survive
 the cleanup.
 
-The maintenance action sits in a `--sunken` inner panel one radius step below its card, with the sweep's progress and
-failure inside the panel, never as toasts.
+The card reads the sweep on mount and polls while one runs, so the report appears without leaving the page. A finished
+sweep answers with a toast naming the sizes before and after; progress and failure stay inline in the card, never as
+toasts.
 
 ## Motion
 
