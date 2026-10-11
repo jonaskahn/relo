@@ -42,8 +42,8 @@ func TestClaudeProberReadsTheSessionAndWeeklyWindows(t *testing.T) {
 	if request.Header.Get("Authorization") != "Bearer token" {
 		t.Fatalf("authorization = %q, want the stored access token", request.Header.Get("Authorization"))
 	}
-	if request.Header.Get("anthropic-beta") != anthropic.ClaudeCodeBeta {
-		t.Fatalf("beta = %q, want the Claude Code beta profile", request.Header.Get("anthropic-beta"))
+	if request.Header.Get("anthropic-beta") != anthropic.ClaudeCodeUsageBeta {
+		t.Fatalf("beta = %q, want the Claude Code usage profile", request.Header.Get("anthropic-beta"))
 	}
 	if beta := request.Header.Get("anthropic-beta"); strings.Contains(beta, "context-1m-2025-08-07") || strings.Contains(beta, "afk-mode-2026-01-31") {
 		t.Fatalf("beta = %q, want the current Claude Code profile", beta)

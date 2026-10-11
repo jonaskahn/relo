@@ -416,9 +416,9 @@ func TestClaudeCodeOAuthFingerprint(t *testing.T) {
 		t.Fatalf("stainless = %v", request.Header)
 	}
 	body := rawBody(t, request)
-	sum := sha256.Sum256([]byte("59cf53e54c78o2.1.294"))
+	sum := sha256.Sum256([]byte("59cf53e54c78o2.1.296"))
 	suffix := hex.EncodeToString(sum[:])[:3]
-	if !strings.Contains(body, "cc_version=2.1.294."+suffix) || strings.Contains(body, "cch=00000") {
+	if !strings.Contains(body, "cc_version=2.1.296."+suffix) || strings.Contains(body, "cch=00000") {
 		t.Fatalf("body missing the patched billing header: %s", body)
 	}
 	again := rawBody(t, newTestRequest(t, canonicalRequest(true), opts))

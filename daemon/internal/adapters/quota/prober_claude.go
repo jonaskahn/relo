@@ -48,7 +48,7 @@ func (p *ClaudeProber) Probe(ctx context.Context, credential activity.Credential
 	request.Header.Set("Accept", claudeUsageAccept)
 	request.Header.Set("Accept-Encoding", claudeUsageEncoding)
 	request.Header.Set("Authorization", "Bearer "+credential.AccessToken)
-	request.Header.Set(anthropic.BetaHeader, anthropic.ClaudeCodeBeta)
+	request.Header.Set(anthropic.BetaHeader, anthropic.ClaudeCodeUsageBeta)
 	request.Header.Set("Content-Type", "application/json")
 	request.Header.Set("Connection", "keep-alive")
 	request.Header.Set("User-Agent", anthropic.CLIUserAgent)
