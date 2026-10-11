@@ -29,6 +29,10 @@ type Store interface {
 	CommitProbe(ctx context.Context, conn catalog.ConnectionRecord, cred account.PoolEntry, models []catalog.ModelRecord, facts []catalog.FactsRecord) error
 	RecordRefresh(ctx context.Context, providerID string, atMs int64, refreshErr string) error
 	RefreshProviderModels(ctx context.Context, providerID string, models []catalog.ModelRecord, facts []catalog.FactsRecord, unavailableIDs []string, atMs int64, refreshErr string) error
+	// SaveCursorConfigs replaces one account's Cursor request tuples.
+	SaveCursorConfigs(ctx context.Context, providerID, credentialID string, configs []catalog.CursorVariant) error
+	// CursorConfigs returns one account's Cursor request tuples.
+	CursorConfigs(ctx context.Context, providerID, credentialID string) ([]catalog.CursorVariant, error)
 	SaveModelsDevFacts(ctx context.Context, facts []catalog.FactsRecord, state catalog.ModelsDevStateRecord) error
 	GetModelsDevState(ctx context.Context) (catalog.ModelsDevStateRecord, bool, error)
 }

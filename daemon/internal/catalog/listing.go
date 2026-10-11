@@ -65,6 +65,8 @@ type CursorVariant struct {
 	GroupID   string
 	Selection string
 	Effort    string
+	// Default marks the member an empty effort request resolves to.
+	Default   bool
 	ModelID   string
 	DetailsID string
 	MaxMode   bool

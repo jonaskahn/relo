@@ -123,16 +123,17 @@ func (s *Service) refreshProvider(ctx context.Context, providerID string) (Refre
 		return RefreshResult{Status: RefreshSkipped, ModelsDev: mdState}, nil
 	}
 
-	listed, accountRosters, accountFailures, err := s.fetchRefreshRoster(ctx, host)
+	listed, rosters, accountFailures, err := s.fetchRefreshRoster(ctx, host)
 	if err != nil {
 		return s.recordRefreshFailure(ctx, providerID, atMs, mdState, err)
 	}
-	s.keepAccountRosters(ctx, accountRosters)
+	s.keepAccountRosters(ctx, rosters)
+	s.keepCursorConfigs(ctx, providerID, host.ModelsFormat, rosters)
 
 	existingMap := indexExistingModels(existing)
 	assembly := assembleRefreshRoster(t, host, listed, mdIdx, providerID, existingMap)
 
-	return s.finishRefresh(ctx, providerID, refreshFinish{listed: listed, assembly: assembly, existing: existing, accountRosters: accountRosters, accountFailures: accountFailures, atMs: atMs, mdState: mdState})
+	return s.finishRefresh(ctx, providerID, refreshFinish{listed: listed, assembly: assembly, existing: existing, accountRosters: rosters.ids(), accountFailures: accountFailures, atMs: atMs, mdState: mdState})
 }
 
 func indexExistingModels(existing []catalog.Model) map[string]catalog.Model {
@@ -177,13 +178,17 @@ func (s *Service) openRefreshHost(ctx context.Context, providerID string) (catal
 	return host, t, mdIdx, mdState, snap.Models(providerID), nil
 }
 
-func (s *Service) fetchRefreshRoster(ctx context.Context, host catalog.Provider) ([]catalog.Listed, map[string][]string, []string, error) {
+func (s *Service) fetchRefreshRoster(ctx context.Context, host catalog.Provider) ([]catalog.Listed, *accountRosters, []string, error) {
 	accounts := s.activeAccounts(host.ID)
 	if catalog.PerAccountRoster(host.ModelsFormat) && len(accounts) > 0 {
 		// An account's own entitlement can be narrower than the connection's,
 		// so every account is asked and the union is what the connection
 		// lists. What each account answered is remembered against it.
-		return s.discoverAccounts(ctx, host, accounts)
+		acc, err := s.discoverAccounts(ctx, host, accounts)
+		if err != nil {
+			return nil, nil, acc.failures, err
+		}
+		return acc.union, acc, acc.failures, nil
 	}
 	listed, err := s.DiscoverModels(ctx, host)
 	return listed, nil, nil, err
@@ -203,12 +208,28 @@ func (s *Service) recordRefreshFailure(ctx context.Context, providerID string, a
 	return RefreshResult{Status: RefreshFailed, ModelsDev: mdState}, fmt.Errorf("%s: %w", err, ErrListingFailed)
 }
 
-func (s *Service) keepAccountRosters(ctx context.Context, accountRosters map[string][]string) {
+func (s *Service) keepAccountRosters(ctx context.Context, rosters *accountRosters) {
+	if rosters == nil {
+		return
+	}
 	// A roster that was read is stored whether or not the rest of the refresh
 	// succeeds: it is what the next request filters accounts by.
-	for credentialID, modelIDs := range accountRosters {
+	for credentialID, modelIDs := range rosters.rosters {
 		if err := s.pools.SetRoster(ctx, credentialID, modelIDs, account.ModelSourceListing); err != nil {
 			s.logger.Warn("store an account's model roster", "credential", credentialID, "error", err)
+		}
+	}
+}
+
+// keepCursorConfigs stores one account's exact Cursor request tuples beside
+// its roster, so selection resolves the requested effort per account.
+func (s *Service) keepCursorConfigs(ctx context.Context, providerID string, format catalog.ModelsFormat, rosters *accountRosters) {
+	if rosters == nil || format != catalog.ModelsCursor {
+		return
+	}
+	for credentialID, configs := range rosters.cursor {
+		if err := s.store.SaveCursorConfigs(ctx, providerID, credentialID, configs); err != nil {
+			s.logger.Warn("store an account's cursor configs", "credential", credentialID, "error", err)
 		}
 	}
 }
@@ -384,16 +405,26 @@ func markRefreshUnavailable(existing []catalog.Model, seen map[string]bool) []st
 type accountRosters struct {
 	union    []catalog.Listed
 	rosters  map[string][]string
+	cursor   map[string][]catalog.CursorVariant
 	failures []string
 	firstErr error
 	seen     map[string]bool
 	index    map[string]int
 }
 
-func (s *Service) discoverAccounts(ctx context.Context, host catalog.Provider, entries []account.PoolEntry) ([]catalog.Listed, map[string][]string, []string, error) {
+// ids returns the per-account model ids, or nil when no account was read.
+func (acc *accountRosters) ids() map[string][]string {
+	if acc == nil {
+		return nil
+	}
+	return acc.rosters
+}
+
+func (s *Service) discoverAccounts(ctx context.Context, host catalog.Provider, entries []account.PoolEntry) (*accountRosters, error) {
 	acc := &accountRosters{
 		union:   make([]catalog.Listed, 0, 64),
 		rosters: make(map[string][]string, len(entries)),
+		cursor:  make(map[string][]catalog.CursorVariant, len(entries)),
 		seen:    map[string]bool{},
 		index:   map[string]int{},
 	}
@@ -402,11 +433,11 @@ func (s *Service) discoverAccounts(ctx context.Context, host catalog.Provider, e
 	}
 	if len(acc.rosters) == 0 {
 		if acc.firstErr != nil {
-			return nil, nil, acc.failures, acc.firstErr
+			return acc, acc.firstErr
 		}
-		return nil, nil, acc.failures, fmt.Errorf("%s: %w", host.ID, account.ErrNoCredentials)
+		return acc, fmt.Errorf("%s: %w", host.ID, account.ErrNoCredentials)
 	}
-	return acc.union, acc.rosters, acc.failures, nil
+	return acc, nil
 }
 
 func (s *Service) discoverAccountRoster(ctx context.Context, host catalog.Provider, entry account.PoolEntry, acc *accountRosters) {
@@ -434,6 +465,18 @@ func (s *Service) discoverAccountRoster(ctx context.Context, host catalog.Provid
 		acc.union = append(acc.union, item)
 	}
 	acc.rosters[entry.ID] = modelIDs
+	acc.cursor[entry.ID] = cursorConfigsOf(listed)
+}
+
+// cursorConfigsOf collects one account's exact Cursor tuples. A successful
+// empty listing clears the account's tuples; a failed listing never reaches
+// here, so its previous tuples stay stored.
+func cursorConfigsOf(listed []catalog.Listed) []catalog.CursorVariant {
+	var configs []catalog.CursorVariant
+	for _, item := range listed {
+		configs = append(configs, item.Cursor...)
+	}
+	return configs
 }
 
 // mergeCursor unions another account's Cursor configurations into the

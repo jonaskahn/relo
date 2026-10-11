@@ -86,6 +86,16 @@ func NewCatalogRepo(db *DB) *CatalogRepo {
 	return &CatalogRepo{db: db}
 }
 
+// SaveCursorConfigs replaces one account's Cursor request tuples.
+func (r *CatalogRepo) SaveCursorConfigs(ctx context.Context, providerID, credentialID string, configs []catalog.CursorVariant) error {
+	return NewCursorConfigRepo(r.db).Save(ctx, providerID, credentialID, configs)
+}
+
+// CursorConfigs returns one account's Cursor request tuples.
+func (r *CatalogRepo) CursorConfigs(ctx context.Context, providerID, credentialID string) ([]catalog.CursorVariant, error) {
+	return NewCursorConfigRepo(r.db).Load(ctx, providerID, credentialID)
+}
+
 // ListProviders returns every provider, ordered by identifier.
 func (r *CatalogRepo) ListProviders(ctx context.Context) ([]ProviderRow, error) {
 	rows, err := r.db.sql.QueryContext(ctx, "SELECT "+providerColumns+" FROM providers ORDER BY id")

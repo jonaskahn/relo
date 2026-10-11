@@ -526,6 +526,7 @@ func groupToListed(group Group) catalog.Listed {
 	for _, member := range group.Members {
 		entry.Cursor = append(entry.Cursor, catalog.CursorVariant{
 			GroupID: group.ID, Selection: member.Selection, Effort: member.Effort,
+			Default: member.Selection == group.Default,
 			ModelID: member.ModelID, DetailsID: member.DetailsID, MaxMode: member.MaxMode,
 			Params: cursorParams(member.Params), Context: memberContext(member, group),
 			Images: group.Images, Reasoning: memberReasoning(member),
