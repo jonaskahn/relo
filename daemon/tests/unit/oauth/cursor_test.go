@@ -22,7 +22,7 @@ func TestCursorFlow(t *testing.T) {
 			jsonHandler(`{"accessToken":"`+access+`","refreshToken":"cursor-refresh"}`),
 		))
 		flow := oauth.NewCursorFlow(oauth.WithClock(clock), oauth.WithEndpoints(oauth.Endpoints{
-			AuthURL: server.url("/loginDeepControl"), APIBaseURL: server.url("/poll"),
+			AuthURL: server.url("/loginDeepControl"), APIBaseURL: server.url("/poll"), UserURL: server.url("/me"),
 		}))
 		var prompt oauth.AuthPrompt
 		var credential *oauth.OAuthCredential
@@ -111,7 +111,7 @@ func TestCursorFlow(t *testing.T) {
 
 	t.Run("refresh exchanges the stored token", func(t *testing.T) {
 		server, recorder := newProvider(t)
-		server.handle("/exchange", jsonHandler(`{"accessToken":"cursor-fresh","refreshToken":"cursor-rotated"}`))
+		server.handle("/exchange", jsonHandler(`{"access_token":"cursor-fresh","refresh_token":"cursor-rotated"}`))
 		flow := oauth.NewCursorFlow(oauth.WithEndpoints(oauth.Endpoints{
 			AuthURL: server.url("/login"), APIBaseURL: server.url("/poll"), TokenURL: server.url("/exchange"),
 		}))
@@ -127,8 +127,14 @@ func TestCursorFlow(t *testing.T) {
 		if refreshed.AccountID != "cursor-user" {
 			t.Fatalf("credential = %+v, want the identity kept", refreshed)
 		}
-		if recorder.last("/exchange").authorization != "Bearer cursor-refresh" {
-			t.Fatalf("authorization = %q, want the refresh token", recorder.last("/exchange").authorization)
+		assertJSONFields(t, recorder.last("/exchange").body, map[string]string{
+			"grant_type": "refresh_token", "refresh_token": "cursor-refresh",
+		})
+		if !strings.Contains(recorder.last("/exchange").body, "KbZUR41cY7W6zRSdpSUJ7I7mLYBKOCmB") {
+			t.Fatalf("body = %q, want the cursor client id", recorder.last("/exchange").body)
+		}
+		if recorder.last("/exchange").authorization != "" {
+			t.Fatalf("authorization = %q, want no bearer refresh token", recorder.last("/exchange").authorization)
 		}
 		if _, err := flow.Refresh(context.Background(), &oauth.OAuthCredential{}); !errors.Is(err, oauth.ErrNoRefreshToken) {
 			t.Fatalf("Refresh() error = %v, want %v", err, oauth.ErrNoRefreshToken)
@@ -145,6 +151,103 @@ func TestCursorFlow(t *testing.T) {
 		server.handle("/exchange", jsonHandler(`not json`))
 		if _, err := flow.Refresh(context.Background(), &oauth.OAuthCredential{RefreshToken: "r"}); err == nil {
 			t.Fatal("Refresh() error = nil, want the decode failure")
+		}
+	})
+
+	t.Run("transient polling failures recover then exhaust", func(t *testing.T) {
+		clock := testkit.NewFakeClock(time.Now())
+		access := jwt(t, map[string]any{"sub": "cursor-user", "exp": float64(time.Now().Add(time.Hour).Unix())})
+		server, _ := newProvider(t)
+		server.handle("/poll", sequenceHandler(
+			jsonHandler(`{"error":"busy"}`, 503),
+			jsonHandler(`{"accessToken":"`+access+`","refreshToken":"cursor-refresh"}`),
+		))
+		server.handle("/me", jsonHandler(`{}`, 404))
+		flow := oauth.NewCursorFlow(oauth.WithClock(clock), oauth.WithEndpoints(oauth.Endpoints{
+			AuthURL: server.url("/login"), APIBaseURL: server.url("/poll"), UserURL: server.url("/me"),
+		}))
+		var credential *oauth.OAuthCredential
+		runWithClock(t, clock, 2*time.Second, func() error {
+			created, err := flow.Login(context.Background(), oauth.LoginOpts{NoBrowser: true, Timeout: time.Minute})
+			credential = created
+			return err
+		})
+		if credential == nil || credential.AccessToken != access {
+			t.Fatalf("credential = %+v, want recovery after a transient poll", credential)
+		}
+	})
+
+	t.Run("persistent transient polling cancels the login", func(t *testing.T) {
+		clock := testkit.NewFakeClock(time.Now())
+		server, _ := newProvider(t)
+		server.handle("/poll", jsonHandler(`{"error":"busy"}`, 503))
+		flow := oauth.NewCursorFlow(oauth.WithClock(clock), oauth.WithEndpoints(oauth.Endpoints{
+			AuthURL: server.url("/login"), APIBaseURL: server.url("/poll"), UserURL: server.url("/me"),
+		}))
+		var loginErr error
+		runWithClock(t, clock, 2*time.Second, func() error {
+			_, err := flow.Login(context.Background(), oauth.LoginOpts{NoBrowser: true, Timeout: time.Minute})
+			loginErr = err
+			return nil
+		})
+		if !errors.Is(loginErr, oauth.ErrLoginCancelled) {
+			t.Fatalf("Login() error = %v, want %v", loginErr, oauth.ErrLoginCancelled)
+		}
+	})
+
+	t.Run("a logged-out session demands a fresh login", func(t *testing.T) {
+		server, _ := newProvider(t)
+		server.handle("/exchange", jsonHandler(`{"shouldLogout":true}`))
+		flow := oauth.NewCursorFlow(oauth.WithEndpoints(oauth.Endpoints{TokenURL: server.url("/exchange")}))
+		_, err := flow.Refresh(context.Background(), &oauth.OAuthCredential{RefreshToken: "stale"})
+		if !errors.Is(err, oauth.ErrRefreshRejected) {
+			t.Fatalf("Refresh() error = %v, want %v", err, oauth.ErrRefreshRejected)
+		}
+	})
+
+	t.Run("refresh keeps the stored token when none rotates", func(t *testing.T) {
+		server, _ := newProvider(t)
+		server.handle("/exchange", jsonHandler(`{"access_token":"cursor-fresh"}`))
+		flow := oauth.NewCursorFlow(oauth.WithEndpoints(oauth.Endpoints{TokenURL: server.url("/exchange")}))
+		refreshed, err := flow.Refresh(context.Background(), &oauth.OAuthCredential{RefreshToken: "cursor-keep"})
+		if err != nil {
+			t.Fatalf("Refresh() error = %v", err)
+		}
+		if refreshed.RefreshToken != "cursor-keep" {
+			t.Fatalf("credential = %+v, want the stored refresh token kept", refreshed)
+		}
+	})
+
+	t.Run("profile email needs a matching subject", func(t *testing.T) {
+		clock := testkit.NewFakeClock(time.Now())
+		access := jwt(t, map[string]any{"sub": "auth0|user_9", "exp": float64(time.Now().Add(time.Hour).Unix())})
+		server, _ := newProvider(t)
+		server.handle("/poll", jsonHandler(`{"accessToken":"`+access+`","refreshToken":"cursor-refresh"}`))
+		server.handle("/me", jsonHandler(`{"sub":"user_9","email":"Profile@Example.test"}`))
+		flow := oauth.NewCursorFlow(oauth.WithClock(clock), oauth.WithEndpoints(oauth.Endpoints{
+			AuthURL: server.url("/login"), APIBaseURL: server.url("/poll"), UserURL: server.url("/me"),
+		}))
+		var credential *oauth.OAuthCredential
+		runWithClock(t, clock, 2*time.Second, func() error {
+			created, err := flow.Login(context.Background(), oauth.LoginOpts{NoBrowser: true, Timeout: time.Minute})
+			credential = created
+			return err
+		})
+		if credential.Email != "profile@example.test" {
+			t.Fatalf("credential = %+v, want the profile email", credential)
+		}
+		server.handle("/me", jsonHandler(`{"sub":"someone-else","email":"other@example.test"}`))
+		flowIgnored := oauth.NewCursorFlow(oauth.WithClock(clock), oauth.WithEndpoints(oauth.Endpoints{
+			AuthURL: server.url("/login"), APIBaseURL: server.url("/poll"), UserURL: server.url("/me"),
+		}))
+		var mismatched *oauth.OAuthCredential
+		runWithClock(t, clock, 2*time.Second, func() error {
+			created, err := flowIgnored.Login(context.Background(), oauth.LoginOpts{NoBrowser: true, Timeout: time.Minute})
+			mismatched = created
+			return err
+		})
+		if mismatched.Email != "" {
+			t.Fatalf("credential = %+v, want no email on subject mismatch", mismatched)
 		}
 	})
 

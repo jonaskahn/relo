@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"net/url"
+	"strings"
 	"time"
 
 	"github.com/jonaskahn/relo/internal/clock"
@@ -15,7 +16,9 @@ const (
 	providerCursor     = FlowCursor
 	cursorLoginURL     = "https://cursor.com/loginDeepControl"
 	cursorPollURL      = "https://api2.cursor.sh/auth/poll"
-	cursorRefreshURL   = "https://api2.cursor.sh/auth/exchange_user_api_key"
+	cursorRefreshURL   = "https://api2.cursor.sh/oauth/token"
+	cursorProfileURL   = "https://cursor.com/api/auth/me"
+	cursorClientID     = "KbZUR41cY7W6zRSdpSUJ7I7mLYBKOCmB"
 	cursorPollAttempts = 150
 	cursorBaseDelay    = time.Second
 	cursorBackoff      = 1.2
@@ -23,11 +26,14 @@ const (
 	cursorRefreshSkew  = 5 * time.Minute
 	cursorFallbackTTL  = time.Hour
 	cursorErrorBudget  = 3
+	cursorProfileWait  = 3 * time.Second
 )
 
 // ErrCursorLoginRejected reports a login Cursor answered with a status
 // that only a fresh attempt can fix.
 var ErrCursorLoginRejected = errors.New("cursor rejected the login attempt")
+
+var errCursorTransient = errors.New("cursor request transient")
 
 type cursorFlow struct {
 	settings   Options
@@ -36,6 +42,8 @@ type cursorFlow struct {
 	loginURL   string
 	pollURL    string
 	refreshURL string
+	profileURL string
+	userAgent  string
 }
 
 // NewCursorFlow returns the browser login for a Cursor account.
@@ -48,6 +56,7 @@ func NewCursorFlow(options ...Option) OAuthFlow {
 		loginURL:   option(settings.Endpoints.AuthURL, cursorLoginURL),
 		pollURL:    option(settings.Endpoints.APIBaseURL, cursorPollURL),
 		refreshURL: option(settings.Endpoints.TokenURL, cursorRefreshURL),
+		profileURL: option(settings.Endpoints.UserURL, cursorProfileURL),
 	}
 }
 
@@ -88,19 +97,40 @@ func (f *cursorFlow) Refresh(ctx context.Context, cred *OAuthCredential) (*OAuth
 	if cred == nil || cred.RefreshToken == "" {
 		return nil, ErrNoRefreshToken
 	}
-	headers := map[string]string{"Authorization": "Bearer " + cred.RefreshToken}
-	body, status, err := f.client.postJSONRaw(ctx, f.refreshURL, map[string]string{}, headers)
+	payload := map[string]string{
+		"grant_type":    "refresh_token",
+		"client_id":     cursorClientID,
+		"refresh_token": cred.RefreshToken,
+	}
+	body, status, err := f.client.postJSONRaw(ctx, f.refreshURL, payload, nil)
 	if err != nil {
 		return nil, fmt.Errorf("refresh the access token: %w", err)
 	}
 	if status < 200 || status >= 300 {
-		return nil, fmt.Errorf("refresh the access token: %w", responseError{Status: status, Code: errorCode(body)})
+		return nil, fmt.Errorf("refresh the access token: %w", refreshFailure(responseError{Status: status, Code: errorCode(body)}))
 	}
-	tokens := cursorTokens{}
+	tokens := cursorRefreshTokens{}
 	if err := decodeJSONBody(body, &tokens); err != nil {
 		return nil, err
 	}
-	return f.credential(tokens, cred)
+	if tokens.ShouldLogout {
+		return nil, fmt.Errorf("cursor ended this session: %w", ErrRefreshRejected)
+	}
+	if tokens.access() == "" {
+		return nil, ErrTokenResponse
+	}
+	renewed := cursorTokens{AccessToken: tokens.access(), RefreshToken: tokens.refresh()}
+	credential, err := f.credential(renewed, cred)
+	if err != nil {
+		return nil, err
+	}
+	if credential.Email == "" && cred.Email != "" {
+		credential.Email = cred.Email
+	}
+	if previous := f.profileEmail(ctx, tokens.access()); previous != "" && credential.Email == "" {
+		credential.Email = previous
+	}
+	return credential, nil
 }
 
 // Validate reports whether the credential can still serve a request.
@@ -113,6 +143,22 @@ type cursorTokens struct {
 	RefreshToken string `json:"refreshToken"`
 }
 
+type cursorRefreshTokens struct {
+	AccessToken       string `json:"access_token"`
+	AccessTokenCamel  string `json:"accessToken"`
+	RefreshToken      string `json:"refresh_token"`
+	RefreshTokenCamel string `json:"refreshToken"`
+	ShouldLogout      bool   `json:"shouldLogout"`
+}
+
+func (t cursorRefreshTokens) access() string {
+	return firstNonEmpty(t.AccessToken, t.AccessTokenCamel)
+}
+
+func (t cursorRefreshTokens) refresh() string {
+	return firstNonEmpty(t.RefreshToken, t.RefreshTokenCamel)
+}
+
 func (f *cursorFlow) poll(ctx context.Context, uuid, verifier string) (*OAuthCredential, error) {
 	delay := cursorBaseDelay
 	failures := 0
@@ -122,16 +168,28 @@ func (f *cursorFlow) poll(ctx context.Context, uuid, verifier string) (*OAuthCre
 		}
 		tokens, pending, err := f.pollOnce(ctx, uuid, verifier)
 		if err != nil {
+			if errors.Is(err, errCursorTransient) {
+				failures++
+				if failures >= cursorErrorBudget {
+					return nil, fmt.Errorf("poll the cursor login: %w", ErrLoginCancelled)
+				}
+				delay = min(time.Duration(float64(delay)*cursorBackoff), cursorMaxDelay)
+				continue
+			}
 			return nil, err
 		}
 		if !pending {
-			return f.credential(tokens, nil)
+			credential, err := f.credential(tokens, nil)
+			if err != nil {
+				return nil, err
+			}
+			if email := f.profileEmail(ctx, tokens.AccessToken); email != "" {
+				credential.Email = email
+			}
+			return credential, nil
 		}
 		failures = 0
 		delay = min(time.Duration(float64(delay)*cursorBackoff), cursorMaxDelay)
-		if failures >= cursorErrorBudget {
-			return nil, fmt.Errorf("poll the cursor login: %w", ErrLoginCancelled)
-		}
 	}
 	return nil, fmt.Errorf("poll the cursor login: %w", ErrCallbackTimeout)
 }
@@ -140,7 +198,10 @@ func (f *cursorFlow) pollOnce(ctx context.Context, uuid, verifier string) (curso
 	endpoint := withQuery(f.pollURL, url.Values{"uuid": {uuid}, "verifier": {verifier}})
 	body, status, err := f.client.get(ctx, endpoint, nil)
 	if err != nil {
-		return cursorTokens{}, false, fmt.Errorf("poll the cursor login: %w", err)
+		if ctx.Err() != nil {
+			return cursorTokens{}, false, fmt.Errorf("poll the cursor login: %w", ctx.Err())
+		}
+		return cursorTokens{}, false, fmt.Errorf("poll the cursor login: %w", errCursorTransient)
 	}
 	switch {
 	case status == 404:
@@ -149,6 +210,8 @@ func (f *cursorFlow) pollOnce(ctx context.Context, uuid, verifier string) (curso
 		return decodeCursorTokens(body)
 	case cursorTerminalStatus(status):
 		return cursorTokens{}, false, fmt.Errorf("cursor answered %d: %w", status, ErrCursorLoginRejected)
+	case cursorTransientStatus(status):
+		return cursorTokens{}, false, fmt.Errorf("poll the cursor login: %w", errCursorTransient)
 	default:
 		return cursorTokens{}, false, fmt.Errorf("poll the cursor login: %w", responseError{Status: status, Code: errorCode(body)})
 	}
@@ -179,6 +242,50 @@ func cursorTerminalStatus(status int) bool {
 	default:
 		return false
 	}
+}
+
+func cursorTransientStatus(status int) bool {
+	return status == 408 || status == 425 || status == 429 || status >= 500
+}
+
+func cursorUserID(token string) string {
+	subject := SubjectFromToken(token)
+	if subject == "" {
+		return ""
+	}
+	if index := strings.LastIndex(subject, "|"); index >= 0 {
+		subject = subject[index+1:]
+	}
+	return strings.TrimSpace(subject)
+}
+
+func cursorSessionCookie(userID, accessToken string) string {
+	return "WorkosCursorSessionToken=" + url.QueryEscape(userID+"::"+accessToken)
+}
+
+func (f *cursorFlow) profileEmail(ctx context.Context, accessToken string) string {
+	userID := cursorUserID(accessToken)
+	if userID == "" {
+		return ""
+	}
+	profileCtx, cancel := context.WithTimeout(ctx, cursorProfileWait)
+	defer cancel()
+	headers := map[string]string{"Cookie": cursorSessionCookie(userID, accessToken)}
+	body, status, err := f.client.get(profileCtx, f.profileURL, headers)
+	if err != nil || status < 200 || status >= 300 {
+		return ""
+	}
+	profile := struct {
+		Sub   string `json:"sub"`
+		Email string `json:"email"`
+	}{}
+	if err := decodeJSONBody(body, &profile); err != nil {
+		return ""
+	}
+	if profile.Sub != userID || strings.TrimSpace(profile.Email) == "" {
+		return ""
+	}
+	return strings.ToLower(strings.TrimSpace(profile.Email))
 }
 
 func decodeCursorTokens(body []byte) (cursorTokens, bool, error) {
