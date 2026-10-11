@@ -21,6 +21,7 @@ type UsageReader interface {
 	Summary(ctx context.Context, filter act.UsageFilter) (act.UsageRollupRow, error)
 	Logs(ctx context.Context, query act.LogQuery) (act.LogPage, error)
 	Attempts(ctx context.Context, eventID int64) ([]act.UsageAttemptRow, error)
+	RequestID(ctx context.Context, eventID int64) (string, error)
 	RawFromMs(ctx context.Context) (int64, bool, error)
 }
 
@@ -169,6 +170,12 @@ func (s *Service) ArchiveFloor(ctx context.Context) (int64, bool, error) {
 // Captures lists what was captured beside one request.
 func (s *Service) Captures(ctx context.Context, eventID int64) ([]act.CaptureHeader, error) {
 	return s.captures.Manifest(ctx, eventID)
+}
+
+// RequestID names the request one stored event belongs to, which the detail
+// page hands to the traffic log to find the halves it kept.
+func (s *Service) RequestID(ctx context.Context, eventID int64) (string, error) {
+	return s.usage.RequestID(ctx, eventID)
 }
 
 // CaptureBody returns the stored body of one capture of one request.

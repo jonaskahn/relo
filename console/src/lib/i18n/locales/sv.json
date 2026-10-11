@@ -1746,7 +1746,6 @@
       "logLevelHint": "Hur mycket daemonen skriver till loggen. Gäller efter en omstart.",
       "trafficLogLabel": "Trafiklogg",
       "trafficLogHint": "Skriver varje begäran från agenten och varje utbyte med leverantören i sin helhet till logs/traffic-YYYYMMDD.log, en fil per dag, sparas i två veckor. Inloggningsuppgifter förblir maskerade. Tillämpas när du sparar.",
-      "updateFeedLabel": "Uppdateringsflöde",
       "updatesURL": "Appcast-URL",
       "updatesURLHint": "Flödet Relo läser för nya versioner. Tomt stänger av kontrollen.",
       "updatesDownload": "Nedladdningssida",

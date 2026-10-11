@@ -783,17 +783,17 @@ func (s *Server) handleCaptures(w http.ResponseWriter, r *http.Request) {
 		writeServiceError(w, err)
 		return
 	}
-	items, traced := s.captureItems(eventID, captures)
+	items, traced := s.captureItems(r.Context(), reads, eventID, captures)
 	writeJSON(w, http.StatusOK, capturesResponse{Items: items, Traced: traced})
 }
 
 // captureItems lists the stored messages, taking the size of each body the
 // traffic log kept whole, and reports whether the traffic log holds the request.
-func (s *Server) captureItems(eventID int64, captures []activity.CaptureHeader) ([]captureResponse, bool) {
-	var whole map[int64]int64
+func (s *Server) captureItems(ctx context.Context, reads captureReader, eventID int64, captures []activity.CaptureHeader) ([]captureResponse, bool) {
+	var trace trafficTrace
 	var traced bool
 	if len(captures) > 0 && s.opts.Traffic != nil && s.trafficOn() {
-		whole, traced = s.wholeBodies(eventID, captures)
+		trace, traced = s.trafficTrace(ctx, reads, eventID)
 	}
 	items := make([]captureResponse, 0, len(captures))
 	for _, capture := range captures {
@@ -802,8 +802,10 @@ func (s *Server) captureItems(eventID int64, captures []activity.CaptureHeader) 
 			Method: capture.Method, URL: capture.URL, Status: capture.Status,
 			Headers: capture.Headers, BodyBytes: capture.BodyBytes, Truncated: capture.Truncated,
 		}
-		if size, ok := whole[capture.ID]; ok {
-			listed.BodyBytes, listed.Truncated = size, false
+		if capture.Truncated {
+			if message := trafficMessageFor(trace, capture.Kind, capture.Ordinal); message != nil && !message.Truncated {
+				listed.BodyBytes, listed.Truncated = int64(len(message.Body)), false
+			}
 		}
 		items = append(items, listed)
 	}

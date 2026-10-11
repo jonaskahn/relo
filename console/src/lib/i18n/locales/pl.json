@@ -1746,7 +1746,6 @@
       "logLevelHint": "Ile demon zapisuje do dziennika. Działa po restarcie.",
       "trafficLogLabel": "Dziennik ruchu",
       "trafficLogHint": "Zapisuje każde żądanie agenta i każdą wymianę z dostawcą w całości do logs/traffic-YYYYMMDD.log, jeden plik dziennie, przechowywany przez dwa tygodnie. Dane logowania pozostają zaciemnione. Działa po zapisaniu.",
-      "updateFeedLabel": "Kanał aktualizacji",
       "updatesURL": "Adres appcast",
       "updatesURLHint": "Kanał, który Relo czyta, aby znaleźć nowsze wersje. Pusty wyłącza sprawdzanie.",
       "updatesDownload": "Strona pobierania",

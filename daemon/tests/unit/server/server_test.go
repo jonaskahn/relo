@@ -316,6 +316,7 @@ func TestStartAndShutdown(t *testing.T) {
 		if err := <-serving; err != nil {
 			t.Fatalf("Start() error = %v", err)
 		}
+		harness.settle()
 		if got := harness.usageRows(); got > 1 {
 			t.Fatalf("duplicate final records: %d", got)
 		}

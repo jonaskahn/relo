@@ -29,8 +29,6 @@ areas stack under it so a translated label never squeezes a control. Nothing dev
 - A **group inside one row** keeps its own small grid in the value cell: the three protocol ports of Network, the
   fields of a disclosure body, a row of chips. A group fills the value column and ends on its right edge; only a
   control with a width of its own hugs that edge.
-- A **disclosure** is a normal row: the label and its helper text on the left, an **Edit** toggle with a chevron and
-  the expanding body in the value cell.
 - A **save row**, a **validation message** under its own input, and a card-level **failure** all end on that same right
   edge (`.settings-field-action`), level with the values they belong to.
 

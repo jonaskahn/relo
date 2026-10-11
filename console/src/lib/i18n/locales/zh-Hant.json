@@ -1746,7 +1746,6 @@
       "logLevelHint": "常駐程式寫入日誌的詳細程度。重新啟動後生效。",
       "trafficLogLabel": "流量日誌",
       "trafficLogHint": "將代理的每個請求與與提供者的每次交換完整寫入 logs/traffic-YYYYMMDD.log，每天一個檔案，保留兩週。憑證仍會遮蔽。儲存後生效。",
-      "updateFeedLabel": "更新來源",
       "updatesURL": "Appcast 網址",
       "updatesURLHint": "Relo 用來尋找新版本的更新來源。留空則關閉檢查。",
       "updatesDownload": "下載頁面",

@@ -136,6 +136,7 @@ func (s *Server) relay(spec relaySpec) *requestOutcome {
 	if answer, ok := w.(*agentAnswer); ok {
 		outcome.answer = answer
 	}
+	s.traceAgentRequest(outcome)
 	plan, err := s.opts.Router.Plan(r.Context(), routing.Request{
 		Model: request.Model, Conversation: s.conversationAnchor(outcome, r), Needs: needsOf(request),
 	})
@@ -301,11 +302,7 @@ func (d *sendDriver) stepAttempt(candidate routing.Candidate, lastCandidate bool
 		},
 	}
 	result, err := d.s.attempt(d.w, spec, d.tried, final)
-	d.outcome.attempts = append(d.outcome.attempts, attemptRow{
-		providerID: candidate.ProviderID, modelID: candidate.ModelID,
-		credential: result.Credential, credentialID: result.CredentialID,
-		status: result.Status, code: attemptCode(err), capture: result.Capture,
-	})
+	d.keepAttempt(candidate, result, err)
 	if result.Status != 0 {
 		d.upstreamStatus = result.Status
 	}
@@ -321,6 +318,18 @@ func (d *sendDriver) stepAttempt(candidate routing.Candidate, lastCandidate bool
 	return d.handleAttemptFailure(failedAttempt{
 		candidate: candidate, lastCandidate: lastCandidate, allowance: allowance, walk: walk, result: result,
 	}, err)
+}
+
+// keepAttempt keeps one attempt's outcome with its request, and hands the
+// exchange it had to the traffic log before the walk moves on.
+func (d *sendDriver) keepAttempt(candidate routing.Candidate, result Result, err error) {
+	attempt := attemptRow{
+		providerID: candidate.ProviderID, modelID: candidate.ModelID,
+		credential: result.Credential, credentialID: result.CredentialID,
+		status: result.Status, code: attemptCode(err), capture: result.Capture,
+	}
+	d.outcome.attempts = append(d.outcome.attempts, attempt)
+	d.s.traceAttempt(d.outcome, len(d.outcome.attempts)-1, attempt)
 }
 
 // failedAttempt is one refused attempt and where it sits in the walk, which is
@@ -833,71 +842,34 @@ func (s *Server) record(ctx context.Context, outcome *requestOutcome, result Res
 	event.Attempts = len(outcome.attempts)
 	event.Retried = len(outcome.attempts) > 1
 	s.publishUsage(event)
-	// The event and its day aggregate commit together: a finalize pass that
-	// runs while a request finishes either recomputes the day from the row or
-	// sees it arrive afterwards, never both.
-	eventID, err := s.opts.Usage.AppendEvent(ctx, event)
-	if err != nil {
-		s.opts.Logger.Error("record usage event", "error", err)
-		return
-	}
-	for ordinal, attempt := range outcome.attempts {
-		if err := s.opts.Usage.AppendAttempt(ctx, activity.RequestAttempt{
-			EventID: eventID, Ordinal: ordinal,
-			Provider: attempt.providerID, Model: attempt.modelID,
-			CredentialLabel: attempt.credential, CredentialID: attempt.credentialID,
-			Status: attempt.status, ErrorCode: attempt.code,
-		}); err != nil {
-			s.opts.Logger.Error("record usage attempt", "error", err)
+	// The answer is the last half of the exchange to exist, so the log takes it
+	// here; the state rows follow behind the response.
+	s.traceAgentAnswer(outcome)
+	// The rows land behind the response, because a capture as large as the
+	// request must not hold the handler open. A full queue runs the job here
+	// instead of dropping it: the Logs page and the spend totals read these.
+	s.bookkeeping.enqueueOrRun(func() {
+		// The event and its day aggregate commit together: a finalize pass that
+		// runs while a request finishes either recomputes the day from the row or
+		// sees it arrive afterwards, never both.
+		eventID, err := s.opts.Usage.AppendEvent(ctx, event)
+		if err != nil {
+			s.opts.Logger.Error("record usage event", "error", err)
 			return
 		}
-	}
-	s.recordCaptures(ctx, eventID, outcome)
-	s.recordTraffic(ctx, event, eventID, outcome)
-}
-
-// recordTraffic writes the whole exchange of one finished request to the
-// day's traffic file. It runs behind the response like the rest of the
-// bookkeeping, and writes nothing while the traffic log is off.
-func (s *Server) recordTraffic(ctx context.Context, event activity.RequestEvent, eventID int64, outcome *requestOutcome) {
-	if !s.trafficOn() {
-		return
-	}
-	record := TrafficRecord{
-		Timestamp: time.UnixMilli(event.Timestamp).UTC().Format(time.RFC3339Nano), EventID: eventID,
-		RequestID: event.RequestID, Surface: event.Surface, Origin: event.Origin,
-		Provider: event.Provider, Model: event.Model, Status: event.Status,
-		AgentRequest: trafficMessage(outcome.inbound),
-	}
-	if outcome.answer != nil {
-		if answer, ok := outcome.answer.captured(); ok {
-			record.AgentResponse = trafficMessage(answer)
+		for ordinal, attempt := range outcome.attempts {
+			if err := s.opts.Usage.AppendAttempt(ctx, activity.RequestAttempt{
+				EventID: eventID, Ordinal: ordinal,
+				Provider: attempt.providerID, Model: attempt.modelID,
+				CredentialLabel: attempt.credential, CredentialID: attempt.credentialID,
+				Status: attempt.status, ErrorCode: attempt.code,
+			}); err != nil {
+				s.opts.Logger.Error("record usage attempt", "error", err)
+				return
+			}
 		}
-	}
-	for ordinal, attempt := range outcome.attempts {
-		line := TrafficAttemptLine{
-			Ordinal: ordinal, Provider: attempt.providerID, Model: attempt.modelID,
-			Credential: attempt.credential, Status: attempt.status,
-		}
-		if attempt.capture != nil {
-			line.Request = trafficMessage(attempt.capture.Request)
-			line.Response = trafficMessage(attempt.capture.Response)
-		}
-		record.Attempts = append(record.Attempts, line)
-	}
-	if err := s.opts.Traffic.Append(record); err != nil {
-		s.opts.Logger.Warn("write the traffic log", "request_id", outcome.requestID, "error", err)
-	}
-}
-
-func trafficMessage(message *CapturedMessage) *TrafficMessage {
-	if message == nil {
-		return nil
-	}
-	return &TrafficMessage{
-		Method: message.Method, URL: message.URL, Status: message.Status,
-		Headers: message.Headers, Body: string(message.Body), Truncated: message.Truncated,
-	}
+		s.recordCaptures(ctx, eventID, outcome)
+	})
 }
 
 func (s *Server) recordUnreadable(r *http.Request, surface inferenceSurface, captured *CapturedMessage, answer *agentAnswer) {
@@ -906,6 +878,7 @@ func (s *Server) recordUnreadable(r *http.Request, surface inferenceSurface, cap
 		origin: inference.OriginExternal, kind: routing.Kind("bad_request"), inbound: captured,
 		answer: answer,
 	}
+	s.traceAgentRequest(outcome)
 	s.record(context.WithoutCancel(r.Context()), outcome, Result{Status: http.StatusBadRequest})
 }
 

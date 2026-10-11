@@ -1746,7 +1746,6 @@
       "logLevelHint": "守护进程写入日志的详细程度。重启后生效。",
       "trafficLogLabel": "流量日志",
       "trafficLogHint": "将智能体的每个请求和与提供方的每次交换完整写入 logs/traffic-YYYYMMDD.log，每天一个文件，保留两周。凭据仍会遮盖。保存后生效。",
-      "updateFeedLabel": "更新源",
       "updatesURL": "Appcast 地址",
       "updatesURLHint": "Relo 用于查找新版本的更新源。留空则关闭检查。",
       "updatesDownload": "下载页面",

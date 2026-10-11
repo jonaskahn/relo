@@ -1746,7 +1746,6 @@
       "logLevelHint": "Seberapa banyak daemon menulis ke log. Berlaku setelah mulai ulang.",
       "trafficLogLabel": "Log lalu lintas",
       "trafficLogHint": "Menulis setiap permintaan agen dan setiap pertukaran dengan penyedia secara utuh ke logs/traffic-YYYYMMDD.log, satu berkas per hari, disimpan selama dua minggu. Kredensial tetap disamarkan. Berlaku saat disimpan.",
-      "updateFeedLabel": "Feed pembaruan",
       "updatesURL": "URL appcast",
       "updatesURLHint": "Feed yang dibaca Relo untuk versi baru. Kosong mematikan pemeriksaan.",
       "updatesDownload": "Halaman unduhan",

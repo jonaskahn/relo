@@ -1746,7 +1746,6 @@
       "logLevelHint": "Quanto scrive il daemon nel log. Si applica dopo un riavvio.",
       "trafficLogLabel": "Registro del traffico",
       "trafficLogHint": "Scrive ogni richiesta dell'agente e ogni scambio con il provider per intero in logs/traffic-YYYYMMDD.log, un file al giorno, conservato per due settimane. Le credibili restano mascherate. Viene applicato al salvataggio.",
-      "updateFeedLabel": "Feed degli aggiornamenti",
       "updatesURL": "URL appcast",
       "updatesURLHint": "Il feed che Relo legge per le nuove versioni. Vuoto disattiva il controllo.",
       "updatesDownload": "Pagina di download",

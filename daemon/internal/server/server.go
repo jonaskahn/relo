@@ -393,6 +393,13 @@ func (s *Server) Drained() bool {
 	return s.InFlight() == 0
 }
 
+// SettleBookkeeping waits for the log writes queued so far to land. The rows a
+// request keeps reach their stores behind the response, so a reader that must
+// see them — a test, or a hand-off to a compaction — waits here first.
+func (s *Server) SettleBookkeeping(ctx context.Context) error {
+	return s.bookkeeping.flush(ctx)
+}
+
 // InvalidateAccessKey forgets one cached client key, so a revocation or
 // rotation an operator just made takes effect on the next request.
 func (s *Server) InvalidateAccessKey(id string) {

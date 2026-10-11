@@ -1746,7 +1746,6 @@
       "logLevelHint": "Combien le démon écrit dans son journal. S'applique après un redémarrage.",
       "trafficLogLabel": "Journal de trafic",
       "trafficLogHint": "Écrit chaque requête de l'agent et chaque échange avec le fournisseur en entier dans logs/traffic-YYYYMMDD.log, un fichier par jour, conservé deux semaines. Les identifiants restent masqués. Appliqué à l'enregistrement.",
-      "updateFeedLabel": "Flux de mises à jour",
       "updatesURL": "URL de l'appcast",
       "updatesURLHint": "Le flux que Relo lit pour les nouvelles versions. Vide désactive la vérification.",
       "updatesDownload": "Page de téléchargement",

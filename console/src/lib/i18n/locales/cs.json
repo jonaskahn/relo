@@ -1746,7 +1746,6 @@
       "logLevelHint": "Kolik daemon zapisuje do logu. Platí po restartu.",
       "trafficLogLabel": "Protokol provozu",
       "trafficLogHint": "Zapíše každý požadavek agenta a každou výměnu s poskytovatelem celou do logs/traffic-YYYYMMDD.log, jeden soubor na den, uchováno dva týdny. Přihlašovací údaje zůstávají zakryté. Použije se při uložení.",
-      "updateFeedLabel": "Kanál aktualizací",
       "updatesURL": "Adresa appcastu",
       "updatesURLHint": "Kanál, který Relo čte kvůli novějším verzím. Prázdný kontrolu vypne.",
       "updatesDownload": "Stránka ke stažení",

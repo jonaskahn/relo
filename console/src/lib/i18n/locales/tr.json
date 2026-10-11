@@ -1746,7 +1746,6 @@
       "logLevelHint": "Daemon'un günlüğe ne kadar yazdığı. Yeniden başlatmadan sonra geçerli olur.",
       "trafficLogLabel": "Trafik günlüğü",
       "trafficLogHint": "Aracının her isteğini ve sağlayıcıyla her değişimi eksiksiz olarak logs/traffic-YYYYMMDD.log dosyasına, günde bir dosya olarak iki hafta boyunca yazar. Kimlik bilgileri maskelenmeye devam eder. Kaydettiğinizde uygulanır.",
-      "updateFeedLabel": "Güncelleme akışı",
       "updatesURL": "Appcast adresi",
       "updatesURLHint": "Relo'nun yeni sürümler için okuduğu akış. Boş bırakmak denetimi kapatır.",
       "updatesDownload": "İndirme sayfası",

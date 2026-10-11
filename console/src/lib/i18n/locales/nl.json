@@ -1746,7 +1746,6 @@
       "logLevelHint": "Hoeveel de daemon naar het log schrijft. Geldt na een herstart.",
       "trafficLogLabel": "Verkeerslogboek",
       "trafficLogHint": "Schrijft elk verzoek van de agent en elke uitwisseling met de provider volledig naar logs/traffic-YYYYMMDD.log, één bestand per dag, twee weken bewaard. Inloggegevens blijven gemaskeerd. Wordt bij opslaan toegepast.",
-      "updateFeedLabel": "Updatefeed",
       "updatesURL": "Appcast-URL",
       "updatesURLHint": "De feed die Relo leest voor nieuwere versies. Leeg zet de controle uit.",
       "updatesDownload": "Downloadpagina",

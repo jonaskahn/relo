@@ -32,6 +32,7 @@ func TestClaudeLoginRoutesAnAliasAndForwardsANativeModel(t *testing.T) {
 		t.Fatalf("upstream authorization = %q, want the login credential dropped", harness.upstream.lastAuthorization())
 	}
 	var answers int
+	harness.settle()
 	if err := harness.db.SQL().QueryRow(`SELECT COUNT(*) FROM usage_captures WHERE kind = 'agent_response'`).Scan(&answers); err != nil {
 		t.Fatalf("count the stored answers: %v", err)
 	}

@@ -1746,7 +1746,6 @@
       "logLevelHint": "Wie viel der Daemon ins Log schreibt. Greift nach einem Neustart.",
       "trafficLogLabel": "Datenverkehrsprotokoll",
       "trafficLogHint": "Schreibt jede Agent-Anfrage und jeden Anbieter-Austausch vollständig in logs/traffic-YYYYMMDD.log, eine Datei pro Tag, zwei Wochen lang aufbewahrt. Zugangsdaten werden weiterhin maskiert. Wird beim Speichern angewendet.",
-      "updateFeedLabel": "Update-Feed",
       "updatesURL": "Appcast-URL",
       "updatesURLHint": "Der Feed, den Relo nach neueren Builds liest. Leer schaltet die Prüfung aus.",
       "updatesDownload": "Download-Seite",

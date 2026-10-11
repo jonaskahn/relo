@@ -1746,7 +1746,6 @@
       "logLevelHint": "데몬이 로그에 기록하는 양. 재시작 후 적용됩니다.",
       "trafficLogLabel": "트래픽 로그",
       "trafficLogHint": "에이전트의 요청과 제공자 교환 전체를 logs/traffic-YYYYMMDD.log에 하루 한 파일로 2주 동안 기록합니다. 자격 증명은 계속 가려집니다. 저장할 때 적용됩니다.",
-      "updateFeedLabel": "업데이트 피드",
       "updatesURL": "appcast URL",
       "updatesURLHint": "Relo가 새 빌드를 확인하는 피드. 비우면 확인이 꺼집니다.",
       "updatesDownload": "다운로드 페이지",

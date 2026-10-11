@@ -1746,7 +1746,6 @@
       "logLevelHint": "デーモンがログに書く量。再起動後に反映されます。",
       "trafficLogLabel": "トラフィックログ",
       "trafficLogHint": "エージェントのリクエストとプロバイダーとのやり取りを丸ごと logs/traffic-YYYYMMDD.log に日ごとのファイルとして2週間書き込みます。資格情報は引き続き伏せられます。保存時に適用されます。",
-      "updateFeedLabel": "更新フィード",
       "updatesURL": "appcast URL",
       "updatesURLHint": "Relo が新しいビルドを確認するフィード。空にすると確認を停止します。",
       "updatesDownload": "ダウンロードページ",

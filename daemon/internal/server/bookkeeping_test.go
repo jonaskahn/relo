@@ -57,6 +57,58 @@ func TestBookkeepingTakesNoWorkAfterStop(t *testing.T) {
 	}
 }
 
+// TestBookkeepingFlushWaitsForWhatIsQueued covers the seam a store assertion
+// waits on: flush reports only once every job queued before it has run.
+func TestBookkeepingFlushWaitsForWhatIsQueued(t *testing.T) {
+	worker := newBookkeeping()
+	var ran atomic.Int64
+	for i := 0; i < 8; i++ {
+		worker.enqueue(func() { ran.Add(1) })
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	defer cancel()
+	if err := worker.flush(ctx); err != nil {
+		t.Fatalf("flush() error = %v", err)
+	}
+	if got := ran.Load(); got != 8 {
+		t.Fatalf("jobs run = %d, want every queued job finished", got)
+	}
+	if err := worker.stop(ctx); err != nil {
+		t.Fatalf("stop() error = %v", err)
+	}
+}
+
+// TestBookkeepingRunsAKeptJobRatherThanDroppingIt covers the rule the state
+// rows rely on: a full queue runs the job on the caller's goroutine instead of
+// losing it, which the traffic log's best-effort halves do not.
+func TestBookkeepingRunsAKeptJobRatherThanDroppingIt(t *testing.T) {
+	worker := newBookkeeping()
+	started := make(chan struct{})
+	release := make(chan struct{})
+	worker.enqueue(func() {
+		close(started)
+		<-release
+	})
+	<-started
+	for i := 0; i < bookkeepingQueue; i++ {
+		worker.enqueue(func() {})
+	}
+
+	ran := make(chan struct{}, 1)
+	worker.enqueueOrRun(func() { ran <- struct{}{} })
+	select {
+	case <-ran:
+	case <-time.After(time.Second):
+		t.Fatal("a job the queue could not take was dropped instead of run")
+	}
+	close(release)
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	defer cancel()
+	if err := worker.stop(ctx); err != nil {
+		t.Fatalf("stop() error = %v", err)
+	}
+}
+
 // TestBookkeepingDropsRatherThanBlockTheRelay covers the overflow rule: the
 // queue is bounded, and a writer that falls behind costs bookkeeping rather
 // than the responses still arriving.

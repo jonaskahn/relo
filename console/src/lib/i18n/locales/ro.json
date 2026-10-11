@@ -1746,7 +1746,6 @@
       "logLevelHint": "Cât scrie daemonul în jurnal. Se aplică după o repornire.",
       "trafficLogLabel": "Jurnal de trafic",
       "trafficLogHint": "Scrie fiecare cerere a agentului și fiecare schimb cu furnizorul integral în logs/traffic-YYYYMMDD.log, un fișier pe zi, păstrat două săptămâni. Datele de autentificare rămân mascate. Se aplică la salvare.",
-      "updateFeedLabel": "Flux de actualizări",
       "updatesURL": "URL appcast",
       "updatesURLHint": "Fluxul pe care îl citește Relo pentru versiuni noi. Gol oprește verificarea.",
       "updatesDownload": "Pagina de descărcare",

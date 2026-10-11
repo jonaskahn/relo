@@ -1,6 +1,7 @@
-// The traffic log is the file of JSON lines that holds whole agent and provider
-// exchanges when the operator turns the traffic log on. One line per request,
-// one file per day, pruned with the daemon log's own retention.
+// The traffic log is the file of JSON lines that holds the halves of every
+// exchange when the operator turns the traffic log on. A half is appended the
+// moment it exists, one file per day, pruned with the daemon log's own
+// retention.
 package platform
 
 import (
@@ -52,12 +53,12 @@ func newTrafficLog(home string) (*trafficLog, error) {
 	return &trafficLog{dir: dir, now: time.Now}, nil
 }
 
-// Append writes one exchange to today's file, opening the day's file and
-// dropping the days past retention the first time it is written.
-func (t *trafficLog) Append(record server.TrafficRecord) error {
-	line, err := json.Marshal(record)
+// AppendHalf writes one half of an exchange to today's file, opening the day's
+// file and dropping the days past retention the first time it is written.
+func (t *trafficLog) AppendHalf(half server.TrafficHalf) error {
+	line, err := json.Marshal(half)
 	if err != nil {
-		return fmt.Errorf("encode the traffic record: %w", err)
+		return fmt.Errorf("encode the traffic half: %w", err)
 	}
 	t.mu.Lock()
 	defer t.mu.Unlock()
@@ -96,14 +97,15 @@ func (t *trafficLog) open() error {
 	return nil
 }
 
-// Find returns the whole exchange of one request, read back from the day
-// files newest first. A request the traffic log never wrote, or whose days
-// have aged out, reports false rather than an error: the request detail page
-// still shows what the state rows hold.
-func (t *trafficLog) Find(eventID int64) (server.TrafficRecord, bool, error) {
+// Halves returns every half the log kept of one request, read back from the day
+// files newest first. One request's halves land in the day it ran, so the first
+// file that holds any of them holds them all, but for a request that crossed
+// midnight. A request the log never wrote, or whose days have aged out, reports
+// none: the request detail still shows what the state rows hold.
+func (t *trafficLog) Halves(requestID string) ([]server.TrafficHalf, error) {
 	paths, err := t.dayFiles()
 	if err != nil {
-		return server.TrafficRecord{}, false, err
+		return nil, err
 	}
 	for _, path := range paths {
 		file, openErr := os.Open(path)
@@ -111,21 +113,21 @@ func (t *trafficLog) Find(eventID int64) (server.TrafficRecord, bool, error) {
 			if os.IsNotExist(openErr) {
 				continue
 			}
-			return server.TrafficRecord{}, false, openErr
+			return nil, openErr
 		}
-		found, scanErr := scanTrafficFile(file, eventID)
+		halves, scanErr := scanTrafficFile(file, requestID)
 		closeErr := file.Close()
 		if scanErr != nil {
-			return server.TrafficRecord{}, false, scanErr
+			return nil, scanErr
 		}
 		if closeErr != nil {
-			return server.TrafficRecord{}, false, closeErr
+			return nil, closeErr
 		}
-		if found.EventID == eventID {
-			return found, true, nil
+		if len(halves) > 0 {
+			return halves, nil
 		}
 	}
-	return server.TrafficRecord{}, false, nil
+	return nil, nil
 }
 
 // dayFiles lists the day's files newest first, so a request that ran today is
@@ -154,24 +156,26 @@ func (t *trafficLog) dayFiles() ([]string, error) {
 	return paths, nil
 }
 
-// scanTrafficFile finds one request's line by its leading event_id, so the
-// lines it skips are read but never decoded.
-func scanTrafficFile(file *os.File, eventID int64) (server.TrafficRecord, error) {
-	prefix := []byte(`{"event_id":` + strconv.FormatInt(eventID, 10) + `,`)
+// scanTrafficFile reads back the halves of one request, matching the request id
+// at the head of each line, so the lines it skips are read but never decoded.
+// A request id is generated, so JSON writes it exactly as it is spelled here.
+func scanTrafficFile(file *os.File, requestID string) ([]server.TrafficHalf, error) {
+	prefix := []byte(`{"request_id":` + strconv.Quote(requestID) + `,`)
 	reader := bufio.NewReaderSize(file, 64<<10)
+	var halves []server.TrafficHalf
 	for {
 		line, err := reader.ReadBytes('\n')
 		if bytes.HasPrefix(line, prefix) {
-			var record server.TrafficRecord
-			if json.Unmarshal(line, &record) == nil && record.EventID == eventID {
-				return record, nil
+			var half server.TrafficHalf
+			if json.Unmarshal(line, &half) == nil && half.RequestID == requestID {
+				halves = append(halves, half)
 			}
 		}
 		if errors.Is(err, io.EOF) {
-			return server.TrafficRecord{}, nil
+			return halves, nil
 		}
 		if err != nil {
-			return server.TrafficRecord{}, fmt.Errorf("read the traffic log: %w", err)
+			return nil, fmt.Errorf("read the traffic log: %w", err)
 		}
 	}
 }

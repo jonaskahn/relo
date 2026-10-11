@@ -21,7 +21,7 @@ export const DEFAULT_RETRY_ATTEMPTS = 3;
  *  step, and each further failure of the same account or route member moves to the next, longer
  *  one. The first step may be zero: no wait at all, so the first refusal is immediately reusable.
  *  The shipped default is zero. */
-export const FAILOVER_COOLDOWN_PRESETS = [0, 180, 300, 900, 1800, 3600, 18000];
+export const FAILOVER_COOLDOWN_PRESETS = [0, 180, 300, 900, 1800, 3600];
 
 /** The shipped failover wait in seconds, used when the daemon stores none: zero, the first step
  *  without a wait, so only a repeated failure starts escalating. */

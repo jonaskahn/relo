@@ -179,6 +179,9 @@ type daemon struct {
 	addr      string
 	dataPlane string
 	db        *sqlite.DB
+	// instance is the served server, which a test reaches to wait for the rows
+	// a request queued.
+	instance *server.Server
 	// service is the catalog application layer the management API runs on,
 	// and integrations is the coding-client setup layer, which is what a test
 	// reaches for when it acts on the daemon rather than on a client.
@@ -412,6 +415,7 @@ func startDaemonSeeded(t *testing.T, s seed) daemon {
 		addr:         waitForAddr(t, instance.Addr),
 		dataPlane:    waitForDataPlane(t, instance, inference.ProtocolOpenAI),
 		db:           db,
+		instance:     instance,
 		service:      catalogSvc,
 		integrations: integrations,
 	}
@@ -432,8 +436,18 @@ func waitForDataPlane(t *testing.T, instance *server.Server, protocol string) st
 	return ""
 }
 
+// settle waits for the log writes a request queued to land, because those rows
+// reach their stores behind the response.
+func (d daemon) settle(t *testing.T) {
+	t.Helper()
+	if err := d.instance.SettleBookkeeping(t.Context()); err != nil {
+		t.Fatalf("settle bookkeeping: %v", err)
+	}
+}
+
 func (d daemon) usageCount(t *testing.T) int {
 	t.Helper()
+	d.settle(t)
 	var count int
 	if err := d.db.SQL().QueryRow("SELECT count(*) FROM usage_events").Scan(&count); err != nil {
 		t.Fatalf("count usage events: %v", err)
@@ -443,6 +457,7 @@ func (d daemon) usageCount(t *testing.T) int {
 
 func (d daemon) attemptCount(t *testing.T) int {
 	t.Helper()
+	d.settle(t)
 	var count int
 	if err := d.db.SQL().QueryRow("SELECT count(*) FROM usage_attempts").Scan(&count); err != nil {
 		t.Fatalf("count usage attempts: %v", err)
@@ -452,6 +467,7 @@ func (d daemon) attemptCount(t *testing.T) int {
 
 func (d daemon) lastUsageEvent(t *testing.T) sqlite.UsageEvent {
 	t.Helper()
+	d.settle(t)
 	const query = "SELECT request_id, provider, model, credential_label, surface, status, input_tokens, output_tokens" +
 		" FROM usage_events ORDER BY id DESC LIMIT 1"
 	var event sqlite.UsageEvent

@@ -40,8 +40,8 @@ describe('failover cooldown labels', () => {
 		expect(failoverCooldownLabel(18000)).toBe('5h');
 	});
 
-	it('offers the none start plus the six waits and ships no first wait by default', () => {
-		expect(FAILOVER_COOLDOWN_PRESETS).toEqual([0, 180, 300, 900, 1800, 3600, 18000]);
+	it('offers the none start plus the five waits and ships no first wait by default', () => {
+		expect(FAILOVER_COOLDOWN_PRESETS).toEqual([0, 180, 300, 900, 1800, 3600]);
 		expect(FAILOVER_COOLDOWN_PRESETS).toContain(DEFAULT_FAILOVER_COOLDOWN);
 		expect(DEFAULT_FAILOVER_COOLDOWN).toBe(0);
 	});
