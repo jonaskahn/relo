@@ -147,7 +147,7 @@ Connection controls and one explicit **Save** (primary). Unsaved changes are ind
 or irreversible settings use the same inline confirm pattern as elsewhere. On a wide pane the sections read as a 2x2
 card grid (General, Routing, Upstream waits, Advanced; a sign-in full-width below for a Claude or ChatGPT connection);
 a narrow pane keeps the stacked rows. Cards in a grid row share the taller card's height in every state. The sign-in
-section carries **Refresh the token automatically** for both, and nothing else — a model that reaches a million tokens
+section carries **Refresh the token automatically** for Claude, ChatGPT, Google Antigravity and Grok, and nothing else — a model that reaches a million tokens
 is published at 200K and at 1M whichever connection serves it, and a model whose own name says `1M` is published at that
 window alone, so no switch governs it. On a wide pane its switches sit in one row, stacked on a narrow pane.
 

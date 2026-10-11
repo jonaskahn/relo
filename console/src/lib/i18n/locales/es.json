@@ -757,7 +757,11 @@
           "switchOn4xx": "Cambiar en 4xx",
           "switchOn4xxHint": "Prueba otra cuenta de esta conexión ante un 4xx que el relé no reintenta ya.",
           "switchOn5xx": "Cambiar en 5xx",
-          "switchOn5xxHint": "Prueba otra cuenta de esta conexión ante un 5xx que el relé no reintenta ya."
+          "switchOn5xxHint": "Prueba otra cuenta de esta conexión ante un 5xx que el relé no reintenta ya.",
+          "antigravityTitle": "Inicio de sesión de Google Antigravity",
+          "antigravityDescription": "Cómo este inicio de sesión de Google Antigravity renueva su token.",
+          "grokTitle": "Inicio de sesión de Grok",
+          "grokDescription": "Cómo este inicio de sesión de Grok renueva su token."
         },
         "add": {
           "title": "Añadir conexión",

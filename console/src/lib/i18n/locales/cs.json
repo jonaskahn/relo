@@ -757,7 +757,11 @@
           "switchOn4xx": "Přepnout při 4xx",
           "switchOn4xxHint": "Zkusí jiný účet tohoto připojení při 4xx, které relay sám neopakuje.",
           "switchOn5xx": "Přepnout při 5xx",
-          "switchOn5xxHint": "Zkusí jiný účet tohoto připojení při 5xx, které relay sám neopakuje."
+          "switchOn5xxHint": "Zkusí jiný účet tohoto připojení při 5xx, které relay sám neopakuje.",
+          "antigravityTitle": "Přihlášení Google Antigravity",
+          "antigravityDescription": "Jak toto přihlášení Google Antigravity obnovuje token.",
+          "grokTitle": "Přihlášení Grok",
+          "grokDescription": "Jak toto přihlášení Grok obnovuje token."
         },
         "add": {
           "title": "Přidat připojení",

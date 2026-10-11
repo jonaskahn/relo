@@ -757,7 +757,11 @@
           "switchOn4xx": "4xx 時切換",
           "switchOn4xxHint": "遇到 Relay 不會重試的 4xx 時，改用此連線的其他帳號。",
           "switchOn5xx": "5xx 時切換",
-          "switchOn5xxHint": "遇到 Relay 不會重試的 5xx 時，改用此連線的其他帳號。"
+          "switchOn5xxHint": "遇到 Relay 不會重試的 5xx 時，改用此連線的其他帳號。",
+          "antigravityTitle": "Google Antigravity 登入",
+          "antigravityDescription": "此 Google Antigravity 登入如何更新權杖。",
+          "grokTitle": "Grok 登入",
+          "grokDescription": "此 Grok 登入如何更新權杖。"
         },
         "add": {
           "title": "新增連線",

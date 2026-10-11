@@ -757,7 +757,11 @@
           "switchOn4xx": "Przełącz przy 4xx",
           "switchOn4xxHint": "Próbuje innego konta tego połączenia przy 4xx, którego pośrednik nie ponawia.",
           "switchOn5xx": "Przełącz przy 5xx",
-          "switchOn5xxHint": "Próbuje innego konta tego połączenia przy 5xx, którego pośrednik nie ponawia."
+          "switchOn5xxHint": "Próbuje innego konta tego połączenia przy 5xx, którego pośrednik nie ponawia.",
+          "antigravityTitle": "Logowanie Google Antigravity",
+          "antigravityDescription": "Jak to logowanie Google Antigravity odnawia token.",
+          "grokTitle": "Logowanie Grok",
+          "grokDescription": "Jak to logowanie Grok odnawia token."
         },
         "add": {
           "title": "Dodaj połączenie",

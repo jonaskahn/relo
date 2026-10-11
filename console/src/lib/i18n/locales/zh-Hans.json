@@ -757,7 +757,11 @@
           "switchOn4xx": "4xx 时切换",
           "switchOn4xxHint": "遇到中继不会重试的 4xx 时，改用此连接的其他账号。",
           "switchOn5xx": "5xx 时切换",
-          "switchOn5xxHint": "遇到中继不会重试的 5xx 时，改用此连接的其他账号。"
+          "switchOn5xxHint": "遇到中继不会重试的 5xx 时，改用此连接的其他账号。",
+          "antigravityTitle": "Google Antigravity 登录",
+          "antigravityDescription": "此 Google Antigravity 登录如何续期令牌。",
+          "grokTitle": "Grok 登录",
+          "grokDescription": "此 Grok 登录如何续期令牌。"
         },
         "add": {
           "title": "添加连接",

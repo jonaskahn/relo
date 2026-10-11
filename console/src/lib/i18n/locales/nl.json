@@ -757,7 +757,11 @@
           "switchOn4xx": "Overschakelen bij 4xx",
           "switchOn4xxHint": "Probeert een ander account van deze verbinding bij een 4xx die de relay niet al opnieuw probeert.",
           "switchOn5xx": "Overschakelen bij 5xx",
-          "switchOn5xxHint": "Probeert een ander account van deze verbinding bij een 5xx die de relay niet al opnieuw probeert."
+          "switchOn5xxHint": "Probeert een ander account van deze verbinding bij een 5xx die de relay niet al opnieuw probeert.",
+          "antigravityTitle": "Google Antigravity-aanmelding",
+          "antigravityDescription": "Hoe deze Google Antigravity-aanmelding het token vernieuwt.",
+          "grokTitle": "Grok-aanmelding",
+          "grokDescription": "Hoe deze Grok-aanmelding het token vernieuwt."
         },
         "add": {
           "title": "Verbinding toevoegen",

@@ -757,7 +757,11 @@
           "switchOn4xx": "4xx で切り替え",
           "switchOn4xxHint": "リレーが再試行しない 4xx のとき、この接続の別のアカウントを試す。",
           "switchOn5xx": "5xx で切り替え",
-          "switchOn5xxHint": "リレーが再試行しない 5xx のとき、この接続の別のアカウントを試す。"
+          "switchOn5xxHint": "リレーが再試行しない 5xx のとき、この接続の別のアカウントを試す。",
+          "antigravityTitle": "Google Antigravityのサインイン",
+          "antigravityDescription": "このGoogle Antigravityのサインインがトークンを更新する方法です。",
+          "grokTitle": "Grokのサインイン",
+          "grokDescription": "このGrokのサインインがトークンを更新する方法です。"
         },
         "add": {
           "title": "接続を追加",

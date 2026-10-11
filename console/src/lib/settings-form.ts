@@ -49,6 +49,16 @@ export function signInSection(templateID: string): SignInSection | null {
 				title: 'ui.pages.providersPage.settings.chatgptTitle',
 				description: 'ui.pages.providersPage.settings.chatgptDescription'
 			};
+		case 'google-antigravity':
+			return {
+				title: 'ui.pages.providersPage.settings.antigravityTitle',
+				description: 'ui.pages.providersPage.settings.antigravityDescription'
+			};
+		case 'grok':
+			return {
+				title: 'ui.pages.providersPage.settings.grokTitle',
+				description: 'ui.pages.providersPage.settings.grokDescription'
+			};
 		default:
 			return null;
 	}

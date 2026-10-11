@@ -757,7 +757,11 @@
           "switchOn4xx": "Allow switch on 4xx",
           "switchOn4xxHint": "Tries another account of this connection on a 4xx the relay does not already retry.",
           "switchOn5xx": "Allow switch on 5xx",
-          "switchOn5xxHint": "Tries another account of this connection on a 5xx the relay does not already retry."
+          "switchOn5xxHint": "Tries another account of this connection on a 5xx the relay does not already retry.",
+          "antigravityTitle": "Google Antigravity sign-in",
+          "antigravityDescription": "How this Google Antigravity login renews its token.",
+          "grokTitle": "Grok sign-in",
+          "grokDescription": "How this Grok login renews its token."
         },
         "add": {
           "title": "Add connection",

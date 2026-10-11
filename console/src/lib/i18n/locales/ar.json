@@ -757,7 +757,11 @@
           "switchOn4xx": "التبديل عند 4xx",
           "switchOn4xxHint": "يجرّب حسابًا آخر لهذا الاتصال عند رد 4xx لا يعيد المرحّل محاولته.",
           "switchOn5xx": "التبديل عند 5xx",
-          "switchOn5xxHint": "يجرّب حسابًا آخر لهذا الاتصال عند رد 5xx لا يعيد المرحّل محاولته."
+          "switchOn5xxHint": "يجرّب حسابًا آخر لهذا الاتصال عند رد 5xx لا يعيد المرحّل محاولته.",
+          "antigravityTitle": "تسجيل الدخول إلى Google Antigravity",
+          "antigravityDescription": "كيف يجدّد تسجيل الدخول هذا إلى Google Antigravity رمزه.",
+          "grokTitle": "تسجيل الدخول إلى Grok",
+          "grokDescription": "كيف يجدّد تسجيل الدخول هذا إلى Grok رمزه."
         },
         "add": {
           "title": "إضافة اتصال",
