@@ -3,6 +3,7 @@
 
 	import { api } from '$lib/api';
 	import CenteredModal from '$lib/components/ui/centered-modal.svelte';
+	import StatusBadge from '$lib/components/ui/status-badge.svelte';
 	import RequestDetailExchange from '$lib/components/logs/request-detail-exchange.svelte';
 	import RequestDetailOverview from '$lib/components/logs/request-detail-overview.svelte';
 	import RequestDetailTokens from '$lib/components/logs/request-detail-tokens.svelte';
@@ -96,6 +97,11 @@
 	size="wide"
 	title={$t('ui.pages.logsPage.detailTitle')}
 >
+	{#snippet titleAside()}
+		{#if traced}
+			<StatusBadge kind="muted" label={$t('ui.pages.logsPage.traceBadge')} />
+		{/if}
+	{/snippet}
 	{#if row}
 		<div class="space-y-3">
 			<RequestDetailOverview {row} />
@@ -106,7 +112,6 @@
 				{attempts}
 				{capturesLoading}
 				{attemptsLoading}
-				{traced}
 			/>
 		</div>
 	{/if}

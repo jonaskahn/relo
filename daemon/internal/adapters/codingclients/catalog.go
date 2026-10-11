@@ -27,7 +27,7 @@ func CatalogAgent(id string) bool {
 func CatalogKind(kind string) bool {
 	switch kind {
 	case FilePi, FilePrime, FileAside, FileOMO, FileZCode, FileClineProviders, FileClineModels,
-		FileOMP, FileGajae, FileDSH, FileMCode, FileRaycast, FileKimi:
+		FileOMP, FileGajae, FileDSH, FileDSHHeadless, FileMCode, FileRaycast, FileKimi:
 		return true
 	default:
 		return false
@@ -35,12 +35,17 @@ func CatalogKind(kind string) bool {
 }
 
 // KeptDocument is what remains when stripping the block would leave a file
-// with nothing in it. The file stays on disk.
+// with nothing in it. The file stays on disk. A Cordis patch is a list at its
+// top level, so an empty one is [] and a map would stop the harness booting.
 func KeptDocument(kind string) string {
-	if kind == FileKimi {
+	switch kind {
+	case FileKimi:
 		return "\n"
+	case FileDSH, FileDSHHeadless:
+		return "[]\n"
+	default:
+		return "{}\n"
 	}
-	return "{}\n"
 }
 
 // MergeKind returns the file with Relo's provider block in it.
@@ -89,6 +94,8 @@ func mergeSpecialKind(kind, existing, address string, models []ModelRef) (string
 		return mergeClineModels(existing, address, models)
 	case FileDSH:
 		return MergeDSH(existing, address, models)
+	case FileDSHHeadless:
+		return MergeDSHHeadless(existing, address, models)
 	case FileRaycast:
 		return mergeRaycast(existing, address, models)
 	case FileKimi:
@@ -111,7 +118,7 @@ func StripKind(kind, existing string) (string, error) {
 		stripped, err = stripYAMLMap(existing, "providers")
 	case FileMCode:
 		stripped, err = stripYAMLMap(existing, "")
-	case FileDSH:
+	case FileDSH, FileDSHHeadless:
 		stripped, err = StripDSH(existing)
 	case FileRaycast:
 		stripped, err = stripRaycast(existing)
@@ -138,7 +145,7 @@ func KindHasRelo(kind, existing string) (bool, error) {
 		return yamlHas(existing, "providers")
 	case FileMCode:
 		return yamlHas(existing, "")
-	case FileDSH:
+	case FileDSH, FileDSHHeadless:
 		return DSHHasRelo(existing)
 	case FileRaycast:
 		return raycastHas(existing)
@@ -196,6 +203,8 @@ func specialKindPointsAt(kind, existing, address string, models []ModelRef) bool
 		return jsonPointsAt(existing, clineModelsValue(address, models))
 	case FileDSH:
 		return DSHPointsAt(existing, address, models)
+	case FileDSHHeadless:
+		return DSHHeadlessPointsAt(existing, address, models)
 	case FileRaycast:
 		return raycastPointsAt(existing, address, models)
 	case FileKimi:
@@ -243,7 +252,7 @@ func kindClient(kind string) string {
 		return ClientOMP
 	case FileGajae:
 		return ClientGajae
-	case FileDSH:
+	case FileDSH, FileDSHHeadless:
 		return ClientDSH
 	case FileMCode:
 		return ClientMCode

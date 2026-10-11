@@ -7,6 +7,7 @@ describe('NAV_SECTIONS', () => {
 		const section = NAV_SECTIONS.find((entry) => entry.id === 'integrations');
 		expect(section?.links.map((link) => link.href)).toEqual(['/agent-harness', '/chat']);
 		expect(section?.links[0].labelKey).toBe('ui.sidebar.agents');
+		expect(section?.links[0].shortLabelKey).toBe('ui.sidebar.agentsShort');
 		expect(section?.links[1].labelKey).toBe('ui.sidebar.chat');
 	});
 });

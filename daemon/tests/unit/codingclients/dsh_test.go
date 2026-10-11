@@ -201,12 +201,17 @@ func TestDSHConfigTargetHonoursDSHHome(t *testing.T) {
 	if err != nil {
 		t.Fatalf("ConfigTargets() error = %v", err)
 	}
-	if len(targets) != 1 {
-		t.Fatalf("ConfigTargets() = %d targets, want exactly one", len(targets))
+	if len(targets) != 2 {
+		t.Fatalf("ConfigTargets() = %d targets, want the web and the headless profile", len(targets))
 	}
-	want := "/opt/dsh/profiles/web/cordis.patch.yml"
-	if targets[0].Path != want {
-		t.Fatalf("ConfigTargets() path = %q, want %q", targets[0].Path, want)
+	wanted := map[string]string{
+		codingclients.FileDSH:         "/opt/dsh/profiles/web/cordis.patch.yml",
+		codingclients.FileDSHHeadless: "/opt/dsh/profiles/headless/cordis.patch.yml",
+	}
+	for _, target := range targets {
+		if want, found := wanted[target.Kind]; !found || target.Path != want {
+			t.Fatalf("ConfigTargets() target %q path = %q, want %q", target.Kind, target.Path, want)
+		}
 	}
 }
 
@@ -217,9 +222,145 @@ func TestDSHConfigTargetDefaultsToTheHomeDirectory(t *testing.T) {
 	if err != nil {
 		t.Fatalf("ConfigTargets() error = %v", err)
 	}
-	want := "/home/op/.dsh/profiles/web/cordis.patch.yml"
-	if targets[0].Path != want {
-		t.Fatalf("ConfigTargets() path = %q, want %q", targets[0].Path, want)
+	want := []string{
+		"/home/op/.dsh/profiles/web/cordis.patch.yml",
+		"/home/op/.dsh/profiles/headless/cordis.patch.yml",
+	}
+	for index, target := range targets {
+		if target.Path != want[index] {
+			t.Fatalf("ConfigTargets() path = %q, want %q", target.Path, want[index])
+		}
+	}
+}
+
+func dshHeadlessModels() []codingclients.ModelRef {
+	return []codingclients.ModelRef{
+		{ID: "relo-openai-gpt-4o-mini", Name: "GPT-4o mini"},
+		{ID: "relo-openai-gpt-4o", Name: "GPT-4o"},
+	}
+}
+
+func TestDSHHeadlessSetsTheDefaultModel(t *testing.T) {
+	base := "http://127.0.0.1:10201"
+	merged, err := codingclients.MergeKind(codingclients.FileDSHHeadless, "", base, dshHeadlessModels())
+	if err != nil {
+		t.Fatalf("MergeKind() error = %v", err)
+	}
+	var document []map[string]any
+	if err := yaml.Unmarshal([]byte(merged), &document); err != nil {
+		t.Fatalf("the patch is not a YAML list: %v\n%s", err, merged)
+	}
+	if len(document) != 2 {
+		t.Fatalf("patch carries %d items, want the provider and the default model:\n%s", len(document), merged)
+	}
+	defaults := document[1]
+	config, _ := defaults["config"].(map[string]any)
+	if defaults["id"] != "agent-default-model" || config["provider"] != "relo" || config["model"] != "relo-openai-gpt-4o" {
+		t.Fatalf("default item = %v, want relo and the first listed model:\n%s", defaults, merged)
+	}
+	if !codingclients.KindPointsAt(codingclients.FileDSHHeadless, merged, base, dshHeadlessModels()) {
+		t.Fatalf("merged file does not point at Relo:\n%s", merged)
+	}
+}
+
+func TestDSHWebWritesNoDefaultModel(t *testing.T) {
+	merged, err := codingclients.MergeKind(codingclients.FileDSH, "", "http://127.0.0.1:10201", dshHeadlessModels())
+	if err != nil {
+		t.Fatalf("MergeKind() error = %v", err)
+	}
+	if strings.Contains(merged, "agent-default-model") {
+		t.Fatalf("the web profile picks its model in the browser, merged = %s", merged)
+	}
+}
+
+func TestDSHHeadlessMergeIsIdempotent(t *testing.T) {
+	base := "http://127.0.0.1:10201"
+	first, err := codingclients.MergeKind(codingclients.FileDSHHeadless, "", base, dshHeadlessModels())
+	if err != nil {
+		t.Fatalf("MergeKind() error = %v", err)
+	}
+	second, err := codingclients.MergeKind(codingclients.FileDSHHeadless, first, base, dshHeadlessModels())
+	if err != nil {
+		t.Fatalf("MergeKind() on its own output error = %v", err)
+	}
+	if first != second {
+		t.Fatalf("merged twice differs:\nfirst:\n%s\nsecond:\n%s", first, second)
+	}
+}
+
+func TestDSHHeadlessReplacesTheOperatorsDefault(t *testing.T) {
+	existing := "- id: agent-default-model\n  config:\n    provider: deepseek-official\n    model: deepseek-flash\n    reasoningEffort: high\n- id: other-patch\n  config:\n    enabled: true\n"
+	merged, err := codingclients.MergeKind(codingclients.FileDSHHeadless, existing, "http://127.0.0.1:10201", dshHeadlessModels())
+	if err != nil {
+		t.Fatalf("MergeKind() error = %v", err)
+	}
+	if strings.Contains(merged, "deepseek-official") || strings.Contains(merged, "reasoningEffort: high") {
+		t.Fatalf("merged = %s, want the old default replaced whole", merged)
+	}
+	if count := strings.Count(merged, "- id: agent-default-model"); count != 1 {
+		t.Fatalf("merged carries the default %d times, want one:\n%s", count, merged)
+	}
+	if !strings.Contains(merged, "other-patch") {
+		t.Fatalf("merged = %s, want the operator's other item kept", merged)
+	}
+}
+
+func TestDSHStripKeepsADefaultTheOperatorPointedElsewhere(t *testing.T) {
+	cases := []struct {
+		name     string
+		provider string
+		wantKept bool
+	}{
+		{"relo's own default goes", "relo", false},
+		{"another provider's default stays", "openai", true},
+	}
+	for _, testCase := range cases {
+		t.Run(testCase.name, func(t *testing.T) {
+			existing := "- id: agent-default-model\n  config:\n    provider: " + testCase.provider + "\n    model: some-model\n- id: other-patch\n  config:\n    enabled: true\n"
+			stripped, err := codingclients.StripKind(codingclients.FileDSHHeadless, existing)
+			if err != nil {
+				t.Fatalf("StripKind() error = %v", err)
+			}
+			if kept := strings.Contains(stripped, "agent-default-model"); kept != testCase.wantKept {
+				t.Fatalf("stripped = %s, default kept = %v, want %v", stripped, kept, testCase.wantKept)
+			}
+			if !strings.Contains(stripped, "other-patch") {
+				t.Fatalf("stripped = %s, want the operator's other item kept", stripped)
+			}
+		})
+	}
+}
+
+func TestDSHHeadlessPointsAtRefusesAChangedDefault(t *testing.T) {
+	base := "http://127.0.0.1:10201"
+	merged, err := codingclients.MergeKind(codingclients.FileDSHHeadless, "", base, dshHeadlessModels())
+	if err != nil {
+		t.Fatalf("MergeKind() error = %v", err)
+	}
+	moved := strings.ReplaceAll(merged, "model: \"relo-openai-gpt-4o\"\n", "model: \"relo-openai-gpt-4o-mini\"\n")
+	if moved == merged {
+		t.Fatalf("test setup did not change the default:\n%s", merged)
+	}
+	if codingclients.KindPointsAt(codingclients.FileDSHHeadless, moved, base, dshHeadlessModels()) {
+		t.Fatal("KindPointsAt() accepted a patch whose default model moved")
+	}
+}
+
+func TestDSHStripLeavesAListWhenNothingRemains(t *testing.T) {
+	base := "http://127.0.0.1:10201"
+	for _, kind := range []string{codingclients.FileDSH, codingclients.FileDSHHeadless} {
+		merged, err := codingclients.MergeKind(kind, "", base, dshHeadlessModels())
+		if err != nil {
+			t.Fatalf("MergeKind(%s) error = %v", kind, err)
+		}
+		stripped, err := codingclients.StripKind(kind, merged)
+		if err != nil {
+			t.Fatalf("StripKind(%s) error = %v", kind, err)
+		}
+		var document []any
+		if err := yaml.Unmarshal([]byte(stripped), &document); err != nil || len(document) != 0 {
+			t.Fatalf("StripKind(%s) = %q, want an empty YAML list the harness can read (%v)", kind, stripped, err)
+		}
 	}
 }
 

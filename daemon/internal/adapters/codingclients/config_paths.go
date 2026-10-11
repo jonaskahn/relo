@@ -36,6 +36,8 @@ const (
 	FileGajae = "gajae-models"
 	// FileDSH is the DeepSeek Harness Cordis patch carrying the profile web.
 	FileDSH = "dsh-settings"
+	// FileDSHHeadless is the Cordis patch of the profile the command line runs.
+	FileDSHHeadless = "dsh-headless"
 	// FileMCode is MiniMax Code's configuration file.
 	FileMCode = "mcode-config"
 	// FileRaycast is Raycast AI's provider list.
@@ -116,9 +118,12 @@ func (p Paths) OpenClawConfig() (string, error) {
 	return filepath.Join(p.Home, ".openclaw", "openclaw.json"), nil
 }
 
-// dshPatch returns the Cordis patch the harness's web profile reads,
-// honouring DSH_HOME when the operator keeps it somewhere else.
-func (p Paths) dshPatch() (string, error) {
+// dshPatch returns the Cordis patch a shipped harness profile reads,
+// honouring DSH_HOME when the operator keeps it somewhere else. Only a shipped
+// name is safe to write: the harness fills the rest of that profile in on its
+// first run, and refuses a profile folder that holds a patch and nothing else
+// when no template names it.
+func (p Paths) dshPatch(profile string) (string, error) {
 	root := filepath.Join(p.Home, ".dsh")
 	if raw := strings.TrimSpace(os.Getenv("DSH_HOME")); raw != "" {
 		resolved, err := absolutePath(raw, p.Home, "DSH_HOME")
@@ -127,7 +132,25 @@ func (p Paths) dshPatch() (string, error) {
 		}
 		root = resolved
 	}
-	return filepath.Join(root, "profiles", "web", "cordis.patch.yml"), nil
+	return filepath.Join(root, "profiles", profile, "cordis.patch.yml"), nil
+}
+
+// dshTargets are the web profile, which serves the browser, and the headless
+// profile, which serves the command line. Each has its own kind because a
+// file record is keyed by integration and kind.
+func (p Paths) dshTargets() ([]ConfigTarget, error) {
+	web, err := p.dshPatch("web")
+	if err != nil {
+		return nil, err
+	}
+	headless, err := p.dshPatch("headless")
+	if err != nil {
+		return nil, err
+	}
+	return []ConfigTarget{
+		{Kind: FileDSH, Path: web, Dir: filepath.Dir(web)},
+		{Kind: FileDSHHeadless, Path: headless, Dir: filepath.Dir(headless)},
+	}, nil
 }
 
 func absolutePath(raw, home, name string) (string, error) {
@@ -162,11 +185,7 @@ func (p Paths) ConfigTargets(id string) ([]ConfigTarget, error) {
 	case ClientGajae:
 		return fixedTarget(FileGajae, filepath.Join(p.Home, ".gjc", "agent", "models.yml")), nil
 	case ClientDSH:
-		path, err := p.dshPatch()
-		if err != nil {
-			return nil, err
-		}
-		return fixedTarget(FileDSH, path), nil
+		return p.dshTargets()
 	case ClientMCode:
 		return fixedTarget(FileMCode, filepath.Join(p.Home, ".minimax", "config.yaml")), nil
 	case ClientRaycast:

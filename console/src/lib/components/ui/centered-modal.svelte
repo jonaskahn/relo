@@ -16,6 +16,9 @@
 		size?: ModalSize;
 		title: string;
 		description?: string;
+		// titleAside draws one small marker beside the title, for a dialog
+		// that carries a state worth naming at the top.
+		titleAside?: Snippet;
 		dismissible?: boolean;
 		children?: Snippet;
 		footer?: Snippet;
@@ -38,6 +41,7 @@
 		size = 'standard',
 		title,
 		description,
+		titleAside,
 		dismissible = true,
 		children,
 		footer,
@@ -204,9 +208,13 @@
 							onpointerdown={onSheetPointerDown}
 						>
 							<div class="min-w-0">
-								<Dialog.Title class={cn('text-[1.125rem] font-semibold leading-snug', chrome.title)}
-									>{title}</Dialog.Title
-								>
+								<div class="flex items-center gap-2">
+									<Dialog.Title
+										class={cn('text-[1.125rem] font-semibold leading-snug', chrome.title)}
+										>{title}</Dialog.Title
+									>
+									{@render titleAside?.()}
+								</div>
 								{#if description}
 									<Dialog.Description class="mt-0.5 text-sm text-muted-foreground"
 										>{description}</Dialog.Description

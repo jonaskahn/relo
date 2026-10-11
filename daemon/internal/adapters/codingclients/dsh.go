@@ -1,9 +1,11 @@
 // DeepSeek Harness config: the Cordis patch entry Relo maintains.
 //
-// The harness reads $DSH_HOME/profiles/web/cordis.patch.yml, a list whose
-// item id llm-pi-ai carries the provider map. Relo maintains only the relo
-// entry inside config.providers and leaves every other provider and every
-// other list item alone. The key never touches the harness's files: the
+// The harness reads $DSH_HOME/profiles/<name>/cordis.patch.yml, a list whose
+// item id llm-pi-ai carries the provider map. Relo writes the web and the
+// headless profile, and in each maintains only the relo entry inside
+// config.providers, leaving every other provider and every other list item
+// alone. The headless profile also gets a default model (dsh_default.go),
+// because it has no flag to choose one. The key never touches the harness's files: the
 // entry names apiKeyEnv, which the harness resolves per request with the
 // launch environment winning, and Relo publishes RELO_DSH_API_KEY into that
 // environment itself.
@@ -43,6 +45,13 @@ func parseDSH(content string) error {
 
 // MergeDSH returns the Cordis patch with Relo's provider entry in it.
 func MergeDSH(existing, baseURL string, models []ModelRef) (string, error) {
+	return mergeDSH(existing, baseURL, models, false)
+}
+
+// mergeDSH is MergeDSH, plus Relo's default model when the profile has no
+// model flag of its own. The default is cut before the provider goes back in,
+// so a second merge lays the patch out exactly as the first did.
+func mergeDSH(existing, baseURL string, models []ModelRef, withDefault bool) (string, error) {
 	address, err := requireBase(baseURL)
 	if err != nil {
 		return "", fmt.Errorf("dsh: %w", err)
@@ -51,12 +60,18 @@ func MergeDSH(existing, baseURL string, models []ModelRef) (string, error) {
 		return "", err
 	}
 	lines, err := dropDSHRelo(splitLines(existing))
+	if err == nil && withDefault {
+		lines, err = cutDSHDefault(lines, false)
+	}
 	if err != nil {
 		return "", err
 	}
 	lines, err = insertDSHRelo(lines, dshModel(address, models))
 	if err != nil {
 		return "", err
+	}
+	if withDefault {
+		lines = appendDSHDefault(lines, models)
 	}
 	merged := joinLines(lines, lineEnding(existing))
 	if err := parseDSH(merged); err != nil {
@@ -81,6 +96,10 @@ func StripDSH(existing string) (string, error) {
 		return "", err
 	}
 	lines, err := dropDSHRelo(splitLines(existing))
+	if err == nil {
+		// A default the operator pointed at another provider stays theirs.
+		lines, err = cutDSHDefault(lines, true)
+	}
 	if err != nil {
 		return "", err
 	}
@@ -364,12 +383,39 @@ func dshItemWithoutRelo(item []string, itemIndent int) []string {
 		return nil
 	}
 	kept, _ := dshDropReloBlock(body, itemIndent+4)
+	kept = dshWithoutEmptyProviders(kept)
 	if strings.TrimSpace(strings.Join(kept, "\n")) == "" {
 		return nil
 	}
 	head := strings.Repeat(" ", itemIndent+2)
 	rendered := append([]string{item[0]}, dshIndent(kept, head)...)
 	return rendered
+}
+
+// dshWithoutEmptyProviders drops a providers key the relo entry left empty,
+// and the config key as well when that was all it held. A patch that kept
+// either would replace the harness's own llm-pi-ai config with an empty one.
+func dshWithoutEmptyProviders(body []string) []string {
+	start, _, end, found, err := dshProvidersBlock(body)
+	if err != nil || !found || dshHasContent(body[start+1:end]) {
+		return body
+	}
+	body = append(append([]string{}, body[:start]...), body[end:]...)
+	configStart, _, configEnd, found, err := dshConfigBlock(body)
+	if err != nil || !found || dshHasContent(body[configStart+1:configEnd]) {
+		return body
+	}
+	return append(append([]string{}, body[:configStart]...), body[configEnd:]...)
+}
+
+func dshHasContent(lines []string) bool {
+	for _, line := range lines {
+		trimmed := strings.TrimSpace(line)
+		if trimmed != "" && !strings.HasPrefix(trimmed, "#") {
+			return true
+		}
+	}
+	return false
 }
 
 // dshItemBody is the item's lines past its own "- id: llm-pi-ai" line,

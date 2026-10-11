@@ -16,6 +16,8 @@ import (
 // Cordis patch the harness actually reads is written in its place.
 func TestEnableRetiresTheMovedDSHFile(t *testing.T) {
 	h := newHarness(t, func(string) string { return "http://127.0.0.1:10201" })
+	models := []integration.ModelRef{{ID: "relo-openai-gpt-4o", Name: "GPT-4o"}}
+	withModels(h, &models)
 	home := h.paths.Home
 	t.Setenv("DSH_HOME", filepath.Join(home, ".dsh"))
 
@@ -42,6 +44,20 @@ func TestEnableRetiresTheMovedDSHFile(t *testing.T) {
 	}
 	if !strings.Contains(string(written), "apiKeyEnv: RELO_DSH_API_KEY") {
 		t.Fatalf("patch = %s, want the env helper", written)
+	}
+
+	headlessPatch := filepath.Join(home, ".dsh", "profiles", "headless", "cordis.patch.yml")
+	headless, err := os.ReadFile(headlessPatch)
+	if err != nil {
+		t.Fatalf("read the headless Cordis patch: %v", err)
+	}
+	for _, want := range []string{"apiKeyEnv: RELO_DSH_API_KEY", "- id: agent-default-model", "provider: relo"} {
+		if !strings.Contains(string(headless), want) {
+			t.Fatalf("headless patch = %s, want %q", headless, want)
+		}
+	}
+	if strings.Contains(string(written), "agent-default-model") {
+		t.Fatalf("web patch = %s, want no default model: the browser picks its own", written)
 	}
 
 	restored, err := os.ReadFile(stale)
