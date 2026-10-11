@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"github.com/jonaskahn/relo/internal/adapters/antigravity"
+	"github.com/jonaskahn/relo/internal/adapters/wire"
 	"github.com/jonaskahn/relo/internal/inference"
 )
 
@@ -474,7 +475,7 @@ type sessionIdentity struct {
 	step       int
 }
 
-func finishAssist(payload *requestPayload, req *inference.Request, turn assistTurn) sessionIdentity {
+func finishAssist(payload *requestPayload, req *inference.Request, turn assistTurn, opts wire.CodecOpts) sessionIdentity {
 	if payload.SystemInstruction != nil {
 		payload.SystemInstruction.Role = roleUser
 	}
@@ -486,7 +487,7 @@ func finishAssist(payload *requestPayload, req *inference.Request, turn assistTu
 	case payload.GenerationConfig.MaxOutputTokens == 0 || payload.GenerationConfig.MaxOutputTokens > capOutput:
 		payload.GenerationConfig.MaxOutputTokens = capOutput
 	}
-	applyAssistThinking(payload, req)
+	applyAssistThinking(payload, req, opts)
 	preimage := sessionPreimage(turn.anchor, req)
 	identity := sessionIdentity{
 		agent:      sessionUUID(preimage, agentDomain),
@@ -499,21 +500,50 @@ func finishAssist(payload *requestPayload, req *inference.Request, turn assistTu
 }
 
 // applyAssistThinking gives each model family the thinking shape it accepts.
-// A Claude turn carries none, because the vendor bills reasoning through its
-// own beta; a Gemini turn with no stated effort is left open-ended.
-func applyAssistThinking(payload *requestPayload, req *inference.Request) {
+// A Claude turn carries a token budget, because the endpoint reasons through
+// one on this transport; a Gemini turn with no stated effort is left
+// open-ended.
+func applyAssistThinking(payload *requestPayload, req *inference.Request, opts wire.CodecOpts) {
 	switch {
 	case claudeOnAntigravity(req.Model):
-		payload.GenerationConfig.ThinkingConfig = nil
-		if len(payload.Tools) > 0 {
-			payload.ToolConfig = &toolConfig{FunctionCallingConfig: &functionCallingConfig{Mode: assistToolMode}}
-		}
+		payload.GenerationConfig.ThinkingConfig = claudeThinking(req, opts)
+		payload.ToolConfig = &toolConfig{FunctionCallingConfig: &functionCallingConfig{Mode: assistToolMode}}
 	case geminiWire(req.Model):
 		if payload.GenerationConfig.ThinkingConfig == nil {
 			open := -1
 			payload.GenerationConfig.ThinkingConfig = &thinkingConfig{ThinkingBudget: &open, IncludeThoughts: true}
 		}
 	}
+}
+
+// claudeThinking reports the budget a Claude turn on Cloud Code Assist reasons
+// through. A turn that asked for nothing keeps nothing, so the endpoint
+// applies its own default; a turn that named an effort carries that effort as
+// a budget, and a turn that switched thinking off carries a zero budget with
+// summaries off.
+func claudeThinking(req *inference.Request, opts wire.CodecOpts) *thinkingConfig {
+	if req.Reasoning == nil {
+		return nil
+	}
+	level, off := inference.ChooseThinking(req.Reasoning.Effort, opts.ReasoningEfforts, opts.ReasoningToggle)
+	if off || level == "none" {
+		budget := inference.ClampBudget(0, opts.ReasoningBudgetMin, opts.ReasoningBudgetMax)
+		return &thinkingConfig{ThinkingBudget: &budget, IncludeThoughts: false}
+	}
+	name := level
+	if name == "" {
+		var ok bool
+		name, ok = inference.NormalizeEffort(req.Reasoning.Effort)
+		if !ok {
+			return nil
+		}
+	}
+	budget, ok := inference.EffortBudget(name)
+	if !ok {
+		return nil
+	}
+	budget = inference.ClampBudget(budget, opts.ReasoningBudgetMin, opts.ReasoningBudgetMax)
+	return &thinkingConfig{ThinkingBudget: &budget, IncludeThoughts: true}
 }
 
 // outputCeiling reports the largest completion the vendor serves on this

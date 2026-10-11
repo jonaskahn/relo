@@ -1024,6 +1024,74 @@ func TestCloudCodeAssistClaudeBeta(t *testing.T) {
 	})
 }
 
+// TestCloudCodeAssistClaudeThinking covers the thinking a Claude turn carries
+// on Cloud Code Assist: the endpoint reasons through a token budget, so the
+// budget survives here instead of being dropped, and the turn always pins the
+// tool mode even when it declares no tools.
+func TestCloudCodeAssistClaudeThinking(t *testing.T) {
+	inner := func(model string, reasoning *inference.ReasoningConfig) map[string]any {
+		t.Helper()
+		request := canonicalRequest(false)
+		request.Model = model
+		request.Reasoning = reasoning
+		return assistEnvelope(t, request, wire.CodecOpts{
+			CredentialRef: "token", AuthMethod: wire.AuthOAuth, Project: "project-1",
+		})
+	}
+	thinkingOf := func(body map[string]any) map[string]any {
+		t.Helper()
+		config, found := body["request"].(map[string]any)["generationConfig"].(map[string]any)
+		if !found {
+			t.Fatalf("generationConfig missing in %v", body)
+		}
+		thinking, _ := config["thinkingConfig"].(map[string]any)
+		return thinking
+	}
+	modeOf := func(body map[string]any) string {
+		t.Helper()
+		toolConfig, _ := body["request"].(map[string]any)["toolConfig"].(map[string]any)
+		calling, _ := toolConfig["functionCallingConfig"].(map[string]any)
+		mode, _ := calling["mode"].(string)
+		return mode
+	}
+
+	t.Run("a reasoning turn carries its effort as a budget", func(t *testing.T) {
+		thinking := thinkingOf(inner("claude-sonnet-4-6", &inference.ReasoningConfig{Effort: "high"}))
+		if thinking["thinkingBudget"] != float64(16384) || thinking["includeThoughts"] != true {
+			t.Fatalf("thinkingConfig = %v, want the high budget with summaries", thinking)
+		}
+		if _, present := thinking["thinkingLevel"]; present {
+			t.Fatalf("thinkingConfig = %v, want budget transport without a level", thinking)
+		}
+	})
+
+	t.Run("a turn that asked for nothing keeps nothing", func(t *testing.T) {
+		if thinking := thinkingOf(inner("claude-sonnet-4-6", nil)); len(thinking) != 0 {
+			t.Fatalf("thinkingConfig = %v, want none without a requested effort", thinking)
+		}
+	})
+
+	t.Run("thinking off carries a zero budget", func(t *testing.T) {
+		thinking := thinkingOf(inner("claude-sonnet-4-6", &inference.ReasoningConfig{Effort: "none"}))
+		if thinking["thinkingBudget"] != float64(0) || thinking["includeThoughts"] != false {
+			t.Fatalf("thinkingConfig = %v, want a zero budget without summaries", thinking)
+		}
+	})
+
+	t.Run("the tool mode is pinned with no tools", func(t *testing.T) {
+		if got := modeOf(inner("claude-sonnet-4-6", nil)); got != "VALIDATED" {
+			t.Fatalf("toolConfig mode = %q, want the pinned mode even with no tools", got)
+		}
+	})
+
+	t.Run("a gemini turn without an effort stays open-ended", func(t *testing.T) {
+		thinking := thinkingOf(inner("gemini-2.0-flash", nil))
+		if thinking["thinkingBudget"] != float64(-1) || thinking["includeThoughts"] != true {
+			t.Fatalf("thinkingConfig = %v, want the open budget", thinking)
+		}
+	})
+}
+
 // TestCloudCodeAssistExecutionID covers the answer the next turn names back:
 // the endpoint issues an id with every response and expects the following turn
 // to carry it, so a fabricated one is worse than none.

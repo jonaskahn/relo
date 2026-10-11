@@ -291,7 +291,7 @@ func (s settings) body(req *inference.Request, mode Mode, opts wire.CodecOpts) (
 		anchor:  s.sessionAnchor,
 		session: sessionID(preimage),
 		variant: variant,
-	})
+	}, opts)
 	return json.Marshal(envelope{
 		Project: s.project, RequestID: assistRequestID(identity.agent, identity.trajectory, identity.step),
 		Request: *payload, Model: wireModel,
