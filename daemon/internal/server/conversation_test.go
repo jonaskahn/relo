@@ -6,6 +6,8 @@ import (
 	"testing"
 
 	"github.com/jonaskahn/relo/internal/account"
+	"github.com/jonaskahn/relo/internal/catalog"
+	"github.com/jonaskahn/relo/internal/routing"
 )
 
 func TestConversationOfReadsTheClientThread(t *testing.T) {
@@ -117,6 +119,28 @@ func TestConversationAnchorLeasesASession(t *testing.T) {
 		outcome := &requestOutcome{requestID: "req-1"}
 		if got := server.conversationAnchor(outcome, request); got != "" {
 			t.Fatalf("anchor = %q, want no session without a store", got)
+		}
+	})
+}
+
+func TestNativeBodyStaysOnTheRequestedModel(t *testing.T) {
+	server := &Server{}
+	native := []byte(`{"model":"claude-sonnet-5-5"}`)
+	same := routing.Candidate{Model: catalog.Model{UpstreamID: "claude-sonnet-5-5"}}
+	if got := server.nativeBody(&requestOutcome{requested: "claude-sonnet-5-5", native: native}, same); string(got) != string(native) {
+		t.Fatalf("native body = %q, want the original request", got)
+	}
+
+	t.Run("a remapped model rebuilds from the canonical request", func(t *testing.T) {
+		other := routing.Candidate{Model: catalog.Model{UpstreamID: "claude-opus-4-6"}}
+		if got := server.nativeBody(&requestOutcome{requested: "claude-sonnet-5-5", native: native}, other); got != nil {
+			t.Fatalf("native body = %q, want no reuse across models", got)
+		}
+	})
+
+	t.Run("a request without a native body rebuilds", func(t *testing.T) {
+		if got := server.nativeBody(&requestOutcome{requested: "claude-sonnet-5-5"}, same); got != nil {
+			t.Fatalf("native body = %q, want no reuse without one", got)
 		}
 	})
 }

@@ -104,3 +104,22 @@ func TestAuthorizeBackfillsMissingClaudeIdentity(t *testing.T) {
 		}
 	})
 }
+
+func TestRefreshRejectedKeepsAccountAttribution(t *testing.T) {
+	entry := account.PoolEntry{ID: "cred-1", ProviderID: oauth.FlowClaude, Label: "Claude", SecretRef: "secret"}
+	secrets := &memorySecrets{values: map[string]string{
+		"secret": `{"access_token":"stale","refresh_token":"refresh"}`,
+	}}
+	flows := &memoryFlows{next: &oauth.OAuthCredential{AccessToken: "fresh", RefreshToken: "rotated", AccountID: "acct-9"}}
+	source := upstream.New(upstream.Options{
+		Pools:   &memoryPools{entries: map[string]account.PoolEntry{entry.ID: entry}},
+		Secrets: secrets, Flows: flows, Adapters: templateAdapters{},
+	})
+	auth, err := source.RefreshRejected(context.Background(), oauth.FlowClaude, entry.ID, "stale")
+	if err != nil {
+		t.Fatalf("RefreshRejected() error = %v", err)
+	}
+	if auth.Token != "fresh" || auth.AccountID != "acct-9" {
+		t.Fatalf("token = %q account = %q, want the rotated token with its account", auth.Token, auth.AccountID)
+	}
+}
