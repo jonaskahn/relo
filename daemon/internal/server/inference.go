@@ -701,12 +701,19 @@ func (s *Server) contextLimitExceeded(plan routing.Plan, request *inference.Requ
 	if plan.ContextLimit <= 0 || request == nil {
 		return false
 	}
+	return int64(s.estimateRequestTokens(request)+max(request.MaxTokens, 0)) > plan.ContextLimit+contextLimitTolerance
+}
+
+func (s *Server) estimateRequestTokens(request *inference.Request) int {
+	if request == nil {
+		return 0
+	}
 	body, err := json.Marshal(struct {
 		Messages []inference.Message `json:"messages"`
 		Tools    []inference.Tool    `json:"tools,omitempty"`
 	}{Messages: request.Messages, Tools: request.Tools})
 	if err != nil {
-		return false
+		return 0
 	}
 	tokens := int(catalog.PromptTokensFrom(len(body)))
 	if s.contextTokenizer != nil {
@@ -714,7 +721,7 @@ func (s *Server) contextLimitExceeded(plan routing.Plan, request *inference.Requ
 			tokens = counted
 		}
 	}
-	return int64(tokens+max(request.MaxTokens, 0)) > plan.ContextLimit+contextLimitTolerance
+	return tokens
 }
 
 func failureKind(cause error) routing.Kind {

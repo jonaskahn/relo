@@ -132,22 +132,20 @@ func TestClaudeSignInPublishesDefaultAndMillionEntries(t *testing.T) {
 
 	plain := indexModels(t, service.publishedModels())
 	for _, id := range []string{
-		"relo-claude-work-opus", "relo-claude-work-opus-1m",
-		"reloc-claude-route", "reloc-claude-route-1m",
+		"relo-claude-work-opus-1m",
+		"reloc-claude-route-1m",
 	} {
 		if _, found := plain[id]; !found {
 			t.Fatalf("published models = %+v, want %s", plain, id)
 		}
 	}
-	if *plain["relo-claude-work-opus"].ContextWindow != catalog.DefaultContext {
-		t.Fatalf("default window = %d, want %d", *plain["relo-claude-work-opus"].ContextWindow, catalog.DefaultContext)
+	if *plain["relo-claude-work-opus-1m"].ContextWindow != catalog.MillionContext {
+		t.Fatalf("1M window = %d, want %d", *plain["relo-claude-work-opus-1m"].ContextWindow, catalog.MillionContext)
 	}
 
 	claude := indexModels(t, service.claudePickerModels())
 	for _, id := range []string{
-		"claude-relo-claude-work--opus",
 		"claude-relo-claude-work--opus[1m]",
-		"claude-reloc-claude-route",
 		"claude-reloc-claude-route[1m]",
 	} {
 		if _, found := claude[id]; !found {

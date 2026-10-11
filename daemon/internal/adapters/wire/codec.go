@@ -94,6 +94,9 @@ type CodecOpts struct {
 	// NativeMillion reports that the named entry is a million tokens on its own,
 	// so the long-context beta does not apply and must be left off the request.
 	NativeMillion bool
+	// PromptTokens estimates the request size the codec will encode, used to
+	// stay on the short-context beta while a 1M-capable model fits in 200K.
+	PromptTokens int64
 }
 
 // ApplyCredential writes the credential onto the request according to KeyHeader.

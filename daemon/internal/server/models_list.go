@@ -116,16 +116,13 @@ func appendListedVariants(entries []listedModel, entry listedModel, enabled bool
 		}
 		return append(entries, entry)
 	}
+	// A paired Claude model is published once, as its 1M entry alone. The
+	// bare 200K spelling still resolves for saved clients, but it is no
+	// longer advertised.
+	_ = standard
 	entry.Paired = true
-	full := entry
-	full.ID = catalog.MillionAlias(entry.ID)
-	entry.ContextWindow = standard
-	entry.Name = withoutMillionLabel(entry.Name)
-	return append(entries, entry, full)
-}
-
-func withoutMillionLabel(label string) string {
-	return strings.Replace(label, " 1M on ", " on ", 1)
+	entry.ID = catalog.MillionAlias(entry.ID)
+	return append(entries, entry)
 }
 
 func attributeCodexRows(rows []map[string]any, listed []listedModel) {

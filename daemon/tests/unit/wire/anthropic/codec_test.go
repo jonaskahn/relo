@@ -72,8 +72,8 @@ func TestEncodeRequest(t *testing.T) {
 
 	t.Run("OAuth beta header present once, with the tool prefix", func(t *testing.T) {
 		request := newTestRequest(t, canonicalRequest(true), wire.CodecOpts{CredentialRef: "oauth-token", AuthMethod: "oauth"})
-		if got := request.Header.Get("anthropic-beta"); got != anthropic.ClaudeCodeBeta {
-			t.Fatalf("anthropic-beta = %q, want %q", got, anthropic.ClaudeCodeBeta)
+		if got := request.Header.Get("anthropic-beta"); got != anthropic.ClaudeCodeBetaShort {
+			t.Fatalf("anthropic-beta = %q, want %q", got, anthropic.ClaudeCodeBetaShort)
 		}
 		if got := request.Header.Values("anthropic-beta"); len(got) != 1 {
 			t.Fatalf("anthropic-beta = %v, want exactly one value", got)
@@ -278,8 +278,8 @@ func TestEncodeRequest(t *testing.T) {
 	})
 }
 
-// TestLongContextBetaIsTheSameProfile pins that a paired 1M request and a
-// natively million-token model advertise the same Claude Code beta profile.
+// TestLongContextBetaIsTheSameProfile pins that a 1M-capable model stays on
+// the short profile while it fits 200K and escalates only above it.
 func TestLongContextBetaIsTheSameProfile(t *testing.T) {
 	opts := wire.CodecOpts{
 		CredentialRef: "oauth-token", AuthMethod: "oauth", SessionAnchor: "sess-1",
@@ -287,31 +287,40 @@ func TestLongContextBetaIsTheSameProfile(t *testing.T) {
 	}
 
 	paired := newTestRequest(t, canonicalRequest(true), opts)
-	if got := paired.Header.Get("anthropic-beta"); got != anthropic.ClaudeCodeBeta {
-		t.Fatalf("beta = %q, want the Claude Code profile", got)
+	if got := paired.Header.Get("anthropic-beta"); got != anthropic.ClaudeCodeBetaShort {
+		t.Fatalf("beta = %q, want the short profile", got)
+	}
+
+	small := newTestRequest(t, canonicalRequest(true), wire.CodecOpts{
+		CredentialRef: "oauth-token", AuthMethod: "oauth", SessionAnchor: "sess-1",
+		ExtraHeaders: map[string]string{"X-Api-Key": "sk-caller"},
+		LongContext:  true,
+	})
+	if got := small.Header.Get("anthropic-beta"); got != anthropic.ClaudeCodeBetaShort || retiredBeta(got) {
+		t.Fatalf("beta = %q, want the short profile for a small 1M request", got)
 	}
 
 	long := newTestRequest(t, canonicalRequest(true), wire.CodecOpts{
 		CredentialRef: "oauth-token", AuthMethod: "oauth", SessionAnchor: "sess-1",
 		ExtraHeaders: map[string]string{"X-Api-Key": "sk-caller"},
-		LongContext:  true,
+		LongContext:  true, PromptTokens: 200_001,
 	})
 	if got := long.Header.Get("anthropic-beta"); got != anthropic.ClaudeCodeBeta || retiredBeta(got) {
-		t.Fatalf("beta = %q, want the same profile for a paired 1M request", got)
+		t.Fatalf("beta = %q, want the long profile for a large 1M request", got)
 	}
 
 	native := newTestRequest(t, canonicalRequest(true), wire.CodecOpts{
 		CredentialRef: "oauth-token", AuthMethod: "oauth", SessionAnchor: "sess-1",
 		ExtraHeaders: map[string]string{"X-Api-Key": "sk-caller"},
-		LongContext:  true, NativeMillion: true,
+		LongContext:  true, NativeMillion: true, PromptTokens: 200_001,
 	})
 	if got := native.Header.Get("anthropic-beta"); got != anthropic.ClaudeCodeBeta || retiredBeta(got) {
-		t.Fatalf("beta = %q, want the same profile for a natively 1M model", got)
+		t.Fatalf("beta = %q, want the long profile for a large native 1M request", got)
 	}
 }
 
 func retiredBeta(value string) bool {
-	return strings.Contains(value, "context-1m-2025-08-07") || strings.Contains(value, "afk-mode-2026-01-31")
+	return strings.Contains(value, "context-1m-2025-08-07")
 }
 
 func TestClaudeCodeOAuthFingerprint(t *testing.T) {
@@ -329,8 +338,8 @@ func TestClaudeCodeOAuthFingerprint(t *testing.T) {
 	if request.Header.Get("Authorization") != "Bearer oauth-token" {
 		t.Fatalf("authorization = %q", request.Header.Get("Authorization"))
 	}
-	if got := request.Header.Get("anthropic-beta"); got != anthropic.ClaudeCodeBeta || retiredBeta(got) {
-		t.Fatalf("beta = %q, want the Claude Code profile", got)
+	if got := request.Header.Get("anthropic-beta"); got != anthropic.ClaudeCodeBetaShort || retiredBeta(got) {
+		t.Fatalf("beta = %q, want the short Claude Code profile", got)
 	}
 	if request.Header.Get("User-Agent") != anthropic.CLIUserAgent || request.Header.Get("x-app") != "cli" {
 		t.Fatalf("user-agent = %q, x-app = %q", request.Header.Get("User-Agent"), request.Header.Get("x-app"))
@@ -378,7 +387,7 @@ func TestClaudeCodeOAuthFingerprint(t *testing.T) {
 		if forwarded.Header.Get("User-Agent") != "claude-cli/9.9.9 (external, cli)" {
 			t.Fatalf("user-agent = %q, want the caller claude-cli agent", forwarded.Header.Get("User-Agent"))
 		}
-		if forwarded.Header.Get("anthropic-beta") != anthropic.ClaudeCodeBeta || forwarded.Header.Get("X-Custom") != "keep" {
+		if forwarded.Header.Get("anthropic-beta") != anthropic.ClaudeCodeBetaShort || forwarded.Header.Get("X-Custom") != "keep" {
 			t.Fatalf("beta = %q, custom = %q", forwarded.Header.Get("anthropic-beta"), forwarded.Header.Get("X-Custom"))
 		}
 	})
