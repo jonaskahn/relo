@@ -144,6 +144,28 @@ func TestGoogleAntigravitySignIn(t *testing.T) {
 		}
 	})
 
+	t.Run("an account ruled out of the free tier fails with the validation address", func(t *testing.T) {
+		server, recorder := newProvider(t)
+		server.handle("/token", jsonHandler(`{"access_token":"antigravity-access","refresh_token":"antigravity-refresh","expires_in":3600}`))
+		server.handle("/v1internal:loadCodeAssist", jsonHandler(`{"cloudaicompanionProject":"project-1",`+
+			`"ineligibleTiers":[{"tierId":"free-tier","reasonMessage":"Verify your account.","validationUrl":"https://example.test/validate"}]}`))
+		_, err := antigravityFlow(server).Login(context.Background(), oauth.LoginOpts{
+			ManualCode: func(oauth.AuthPrompt) (string, error) { return "code-5", nil },
+			NoBrowser:  true, Timeout: time.Minute,
+		})
+		if !errors.Is(err, oauth.ErrValidationRequired) {
+			t.Fatalf("Login() error = %v, want %v", err, oauth.ErrValidationRequired)
+		}
+		for _, want := range []string{"Verify your account.", "https://example.test/validate"} {
+			if !strings.Contains(err.Error(), want) {
+				t.Fatalf("error = %q, want it to name %q", err, want)
+			}
+		}
+		if recorder.count("/v1internal:onboardUser") != 0 {
+			t.Fatal("onboarding ran for an account the endpoint already ruled out")
+		}
+	})
+
 	t.Run("a token response without a refresh token fails the login", func(t *testing.T) {
 		server, _ := newProvider(t)
 		server.handle("/token", jsonHandler(`{"access_token":"antigravity-access","expires_in":3600}`))
@@ -276,6 +298,20 @@ func TestAntigravityOnboardingEdges(t *testing.T) {
 			jsonHandler(`{"done":true,"response":{}}`))
 		if !errors.Is(err, oauth.ErrOnboardingFailed) {
 			t.Fatalf("Login() error = %v, want %v", err, oauth.ErrOnboardingFailed)
+		}
+	})
+
+	t.Run("an operation that finishes with an error names it", func(t *testing.T) {
+		err := onboard(t, testkit.NewFakeClock(time.Now()),
+			jsonHandler(`{"name":"operations/onboard-1","done":false}`),
+			jsonHandler(`{"done":true,"error":{"status":"FAILED_PRECONDITION","message":"Region not supported"}}`))
+		if !errors.Is(err, oauth.ErrOnboardingFailed) {
+			t.Fatalf("Login() error = %v, want %v", err, oauth.ErrOnboardingFailed)
+		}
+		for _, want := range []string{"FAILED_PRECONDITION", "Region not supported"} {
+			if !strings.Contains(err.Error(), want) {
+				t.Fatalf("error = %q, want it to name %q", err, want)
+			}
 		}
 	})
 

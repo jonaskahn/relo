@@ -41,6 +41,11 @@ var (
 		"https://www.googleapis.com/auth/experimentsandconfigs",
 	}
 	ErrOnboardingFailed = errors.New("the Cloud Code Assist project could not be onboarded")
+	// ErrValidationRequired reports an account the endpoint will not serve
+	// until its owner validates it. The refusal names why and where, so the
+	// sign-in ends with the vendor's own words instead of onboarding an
+	// account the endpoint already ruled out.
+	ErrValidationRequired = errors.New("the account needs manual validation")
 )
 
 // NewGoogleAntigravityFlow returns the browser PKCE login for a Google
@@ -173,10 +178,41 @@ func loadCodeAssistProject(ctx context.Context, settings Options, client tokenCl
 		code, detail := antigravity.Refusal(body)
 		return antigravityLookup{answer: antigravityAnswer{stage: "loadCodeAssist", status: status, code: code, detail: detail}}, nil
 	}
+	if refusal := validationRefusal(body); refusal != nil {
+		return antigravityLookup{}, refusal
+	}
 	if project := projectIDFrom(body); project != "" {
 		return antigravityLookup{project: project}, nil
 	}
 	return antigravityLookup{answer: antigravityAnswer{stage: "loadCodeAssist", status: status, detail: "the answer named no project"}}, nil
+}
+
+// validationRefusal reads the tier the endpoint ruled out of the tier list a
+// loadCodeAssist answer carries. Only the free tier matters: it is the one an
+// onboarding would provision, so an account ruled out of it fails here rather
+// than onboard into the same refusal.
+func validationRefusal(body []byte) error {
+	var state struct {
+		IneligibleTiers []struct {
+			TierID        string `json:"tierId"`
+			ReasonMessage string `json:"reasonMessage"`
+			ValidationURL string `json:"validationUrl"`
+		} `json:"ineligibleTiers"`
+	}
+	if err := json.Unmarshal(body, &state); err != nil {
+		return nil
+	}
+	for _, tier := range state.IneligibleTiers {
+		if tier.TierID != "free-tier" {
+			continue
+		}
+		detail := strings.TrimSpace(tier.ReasonMessage + " " + tier.ValidationURL)
+		if detail == "" {
+			detail = "the free tier needs validation"
+		}
+		return fmt.Errorf("%w: %s", ErrValidationRequired, detail)
+	}
+	return nil
 }
 
 // The onboarding is a long-running operation: the call names an operation and
@@ -248,7 +284,10 @@ func awaitAntigravityOnboarding(ctx context.Context, settings Options, client to
 		}
 		project, done := onboardOperation(body)
 		if done {
-			return project, nil
+			if project != "" {
+				return project, nil
+			}
+			return "", fmt.Errorf("%w: %v", ErrOnboardingFailed, operationRefusal(body, status))
 		}
 		answer = antigravityOperationAnswer(body, status)
 		if status < 200 || status >= 300 {
@@ -289,6 +328,17 @@ func operationName(body []byte) string {
 		return ""
 	}
 	return operation.Name
+}
+
+// operationRefusal reads why a finished operation named no project: the
+// vendor's own error when it carried one, otherwise the bare fact that the
+// operation finished empty-handed.
+func operationRefusal(body []byte, status int) antigravityAnswer {
+	code, detail := antigravity.Refusal(body)
+	if detail == "" {
+		detail = "the operation finished without a project"
+	}
+	return antigravityAnswer{stage: "operations", status: status, code: code, detail: detail}
 }
 
 func antigravityOperationAnswer(body []byte, status int) antigravityAnswer {
