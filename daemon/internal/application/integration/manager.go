@@ -625,9 +625,11 @@ func (m *Manager) Rotate(ctx context.Context, id, token string) (View, error) {
 }
 
 // Repair rewrites everything Relo contributed, which is what a client update
-// that replaced a launcher or an editor that removed a block needs.
+// that replaced a launcher or an editor that removed a block needs. A relo
+// provider already in the file is taken over, so a repair never refuses the
+// file it was asked to fix.
 func (m *Manager) Repair(ctx context.Context, id, token string) (View, error) {
-	view, err := m.Enable(ctx, id, token)
+	view, err := m.EnableOverwriting(ctx, id, token)
 	if err != nil {
 		return View{}, err
 	}
