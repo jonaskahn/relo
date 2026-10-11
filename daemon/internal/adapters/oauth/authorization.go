@@ -40,10 +40,11 @@ const (
 // token, the headers that go beside it, and any endpoint the credential
 // itself selects.
 type Authorization struct {
-	Token   string
-	Headers map[string]string
-	BaseURL string
-	Project string
+	Token     string
+	Headers   map[string]string
+	BaseURL   string
+	Project   string
+	AccountID string
 }
 
 // CopilotRequestHeaders returns the editor headers the Copilot API requires,

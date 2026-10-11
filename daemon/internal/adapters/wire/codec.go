@@ -57,6 +57,10 @@ type CodecOpts struct {
 	KeyHeader     string
 	Mode          string
 	Project       string
+	// AccountID is the subscription account the selected credential belongs
+	// to. A codec that attributes usage to an account sends it; empty means
+	// the attempt carries no account attribution.
+	AccountID string
 	// RequestID names the request in Relo's own log, which a dialect that
 	// carries a correlation identifier of its own puts on the wire.
 	RequestID string

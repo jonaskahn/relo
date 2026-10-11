@@ -12,7 +12,7 @@ import (
 const OpenAICodexTemplate = "openai-codex"
 
 func authorizeDefault(cred oauth.OAuthCredential) oauth.Authorization {
-	return oauth.Authorization{Token: cred.AccessToken}
+	return oauth.Authorization{Token: cred.AccessToken, AccountID: cred.AccountID}
 }
 
 func authorizeCodex(cred oauth.OAuthCredential) oauth.Authorization {

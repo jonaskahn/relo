@@ -308,6 +308,7 @@ func (s *Source) signInAuthorization(providerID string, entry account.PoolEntry,
 		CredentialID: entry.ID, Label: entry.Label, Auth: catalog.AuthOAuth,
 		Token: resolved.Token, Headers: resolved.Headers,
 		BaseURL: resolved.BaseURL, Project: resolved.Project,
+		AccountID: resolved.AccountID,
 	}, nil
 }
 
