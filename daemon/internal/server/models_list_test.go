@@ -47,17 +47,11 @@ func TestAppendListedVariantsPublishesDefaultAndMillionEntries(t *testing.T) {
 		ID: "relo-claude-work-opus", Name: "Opus 1M on Claude",
 		ProviderID: "claude-work", SourceModelID: "opus", ContextWindow: &window,
 	}, true)
-	if len(entries) != 2 {
-		t.Fatalf("entries = %+v, want a default and 1M entry", entries)
+	if len(entries) != 1 {
+		t.Fatalf("entries = %+v, want the 1M entry alone", entries)
 	}
-	if entries[0].ID != "relo-claude-work-opus" || *entries[0].ContextWindow != catalog.DefaultContext {
-		t.Fatalf("default entry = %+v, want a %d-token entry", entries[0], catalog.DefaultContext)
-	}
-	if entries[0].Name != "Opus on Claude" {
-		t.Fatalf("default name = %q, want the 1M marker removed", entries[0].Name)
-	}
-	if entries[1].ID != "relo-claude-work-opus-1m" || *entries[1].ContextWindow != catalog.MillionContext {
-		t.Fatalf("1M entry = %+v, want the full window", entries[1])
+	if entries[0].ID != "relo-claude-work-opus-1m" || *entries[0].ContextWindow != catalog.MillionContext {
+		t.Fatalf("1M entry = %+v, want the full window", entries[0])
 	}
 }
 

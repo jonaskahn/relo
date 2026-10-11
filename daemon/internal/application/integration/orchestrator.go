@@ -1126,9 +1126,9 @@ func (s *Service) claudePickerModels() []ModelRef {
 }
 
 func claudeModelRefs(snap *catalog.Snapshot, model catalog.Model) []ModelRef {
-	ref := namedRef(snap, model)
+	ref := claudeNamedRef(snap, model)
 	ref.Connection = connectionLabel(snap, model.ProviderID)
-	standard, paired := catalog.StandardContext(ref.ContextWindow, snap.OffersLongContext(model))
+	_, paired := catalog.StandardContext(ref.ContextWindow, snap.OffersLongContext(model))
 	if !paired {
 		if snap.OffersSuffixed(model) {
 			ref.ID = catalog.AnthropicModelAlias(model.ProviderID, model.ID, ref.ContextWindow)
@@ -1141,11 +1141,9 @@ func claudeModelRefs(snap *catalog.Snapshot, model catalog.Model) []ModelRef {
 		ref.ID = catalog.AnthropicModelAlias(model.ProviderID, model.ID, nil)
 		return []ModelRef{ref}
 	}
-	full := ref
-	ref.ContextWindow = standard
+	// A paired Claude model is published once, as its 1M entry alone.
 	ref.ID = catalog.AnthropicModelAlias(model.ProviderID, model.ID, ref.ContextWindow)
-	full.ID = catalog.AnthropicModelAlias(model.ProviderID, model.ID, full.ContextWindow)
-	return []ModelRef{ref, full}
+	return []ModelRef{ref}
 }
 
 func claudeRouteRefs(snap *catalog.Snapshot, group catalog.Group) []ModelRef {
@@ -1154,7 +1152,7 @@ func claudeRouteRefs(snap *catalog.Snapshot, group catalog.Group) []ModelRef {
 	tools, reasoning, vision, efforts, toggle := routeCapabilities(snap, group)
 	ref.Tools, ref.Reasoning, ref.Vision = tools, reasoning, vision
 	ref.ReasoningEfforts, ref.ReasoningToggle = efforts, toggle
-	standard, paired := catalog.StandardContext(ref.ContextWindow, snap.OffersLongContextGroup(group))
+	_, paired := catalog.StandardContext(ref.ContextWindow, snap.OffersLongContextGroup(group))
 	if !paired {
 		if snap.NativeMillionGroup(group) {
 			ref.ID = catalog.AnthropicClientID(ref.ID, nil)
@@ -1164,11 +1162,9 @@ func claudeRouteRefs(snap *catalog.Snapshot, group catalog.Group) []ModelRef {
 		}
 		return []ModelRef{ref}
 	}
-	full := ref
-	ref.ContextWindow = standard
+	// A paired route is published once, as its 1M entry alone.
 	ref.ID = catalog.AnthropicClientID(ref.ID, ref.ContextWindow)
-	full.ID = catalog.AnthropicClientID(full.ID, full.ContextWindow)
-	return []ModelRef{ref, full}
+	return []ModelRef{ref}
 }
 
 func appendPublishedVariants(models []ModelRef, snap *catalog.Snapshot, ref ModelRef, model catalog.Model) []ModelRef {
@@ -1192,14 +1188,13 @@ func appendPublishedGroup(models []ModelRef, snap *catalog.Snapshot, ref ModelRe
 }
 
 func appendModelRefVariants(models []ModelRef, ref ModelRef, enabled bool) []ModelRef {
-	standard, paired := catalog.StandardContext(ref.ContextWindow, enabled)
+	_, paired := catalog.StandardContext(ref.ContextWindow, enabled)
 	if !paired {
 		return append(models, ref)
 	}
-	full := ref
-	full.ID = catalog.MillionAlias(ref.ID)
-	ref.ContextWindow = standard
-	return append(models, ref, full)
+	// A paired entry is published once, as its 1M entry alone.
+	ref.ID = catalog.MillionAlias(ref.ID)
+	return append(models, ref)
 }
 
 func appendSuffixedVariant(models []ModelRef, ref ModelRef) []ModelRef {
@@ -1209,6 +1204,10 @@ func appendSuffixedVariant(models []ModelRef, ref ModelRef) []ModelRef {
 }
 
 func namedRef(snap *catalog.Snapshot, model catalog.Model) ModelRef {
+	return modelRef(model)
+}
+
+func claudeNamedRef(snap *catalog.Snapshot, model catalog.Model) ModelRef {
 	ref := modelRef(model)
 	if snap.ClaudeSubscription(model.ProviderID) {
 		ref.Name = catalog.StripClaudePrefix(ref.Name)

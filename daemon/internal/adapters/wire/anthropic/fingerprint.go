@@ -24,8 +24,7 @@ const (
 	CLIUserAgent = "claude-cli/" + CLIVersion + " (external, cli)"
 
 	// ClaudeCodeBeta is the beta profile a subscription inference or usage
-	// call advertises. One profile covers a paired 1M request and a model
-	// that is a million tokens on its own.
+	// call advertises when the request needs the million-token window.
 	ClaudeCodeBeta = "claude-code-20250219,oauth-2025-04-20," +
 		"interleaved-thinking-2025-05-14,thinking-token-count-2026-05-13," +
 		"context-management-2025-06-27,prompt-caching-scope-2026-01-05," +
@@ -34,6 +33,20 @@ const (
 		"advisor-tool-2026-03-01,effort-2025-11-24," +
 		"dangerous-tool-use-2026-09-03,thinking-display-updates-2026-08-18," +
 		"extended-cache-ttl-2025-04-11"
+
+	// ClaudeCodeBetaShort is the beta profile a subscription inference call
+	// advertises while the request fits the 200K window, so a 1M-capable
+	// model stays in the base rate until its prompt actually grows.
+	ClaudeCodeBetaShort = "claude-code-20250219,oauth-2025-04-20," +
+		"interleaved-thinking-2025-05-14,thinking-token-count-2026-05-13," +
+		"context-management-2025-06-27,prompt-caching-scope-2026-01-05," +
+		"advisor-tool-2026-03-01,effort-2025-11-24," +
+		"dangerous-tool-use-2026-09-03,thinking-display-updates-2026-08-18," +
+		"afk-mode-2026-01-31,extended-cache-ttl-2025-04-11"
+
+	// shortContextTokens bounds the short profile. It mirrors the default
+	// 200K entry, so a larger estimate escalates a 1M-capable model.
+	shortContextTokens = int64(200_000)
 
 	claudeAcceptEncoding = "gzip, deflate, br, zstd"
 	stainlessLang        = "js"
@@ -90,7 +103,7 @@ func applyClaudeCodeHeaders(request *http.Request, opts wire.CodecOpts) {
 	request.Header.Set("anthropic-dangerous-direct-browser-access", "true")
 	request.Header.Set("Connection", "keep-alive")
 	request.Header.Set("Accept-Encoding", claudeAcceptEncoding)
-	request.Header.Set(BetaHeader, ClaudeCodeBeta)
+	request.Header.Set(BetaHeader, claudeBetaFor(opts))
 	request.Header.Set("x-app", "cli")
 	request.Header.Set("User-Agent", claudeUserAgent(opts.ExtraHeaders))
 	if session := claudeSession(opts); session != "" {
@@ -100,6 +113,13 @@ func applyClaudeCodeHeaders(request *http.Request, opts wire.CodecOpts) {
 		request.Header.Set(APIKeyHeader, key)
 	}
 	applyStainless(request)
+}
+
+func claudeBetaFor(opts wire.CodecOpts) string {
+	if (opts.LongContext || opts.NativeMillion) && opts.PromptTokens > shortContextTokens {
+		return ClaudeCodeBeta
+	}
+	return ClaudeCodeBetaShort
 }
 
 func claudeUserAgent(headers map[string]string) string {

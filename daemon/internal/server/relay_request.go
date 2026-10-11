@@ -191,7 +191,15 @@ func (s *Server) attemptCodecOptions(spec attemptSpec, extra map[string]string, 
 		TemplateID:             host.TemplateID,
 		LongContext:            outcome.longContext,
 		NativeMillion:          outcome.nativeMillion,
+		PromptTokens:           s.attemptPromptTokens(outcome),
 	}
+}
+
+func (s *Server) attemptPromptTokens(outcome *requestOutcome) int64 {
+	if outcome == nil || outcome.request == nil {
+		return 0
+	}
+	return int64(s.estimateRequestTokens(outcome.request) + max(outcome.request.MaxTokens, 0))
 }
 
 func codexIdentityHeaders(request *http.Request) map[string]string {

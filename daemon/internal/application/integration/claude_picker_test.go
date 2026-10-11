@@ -132,22 +132,20 @@ func TestClaudeSignInPublishesDefaultAndMillionEntries(t *testing.T) {
 
 	plain := indexModels(t, service.publishedModels())
 	for _, id := range []string{
-		"relo-claude-work-opus", "relo-claude-work-opus-1m",
-		"reloc-claude-route", "reloc-claude-route-1m",
+		"relo-claude-work-opus-1m",
+		"reloc-claude-route-1m",
 	} {
 		if _, found := plain[id]; !found {
 			t.Fatalf("published models = %+v, want %s", plain, id)
 		}
 	}
-	if *plain["relo-claude-work-opus"].ContextWindow != catalog.DefaultContext {
-		t.Fatalf("default window = %d, want %d", *plain["relo-claude-work-opus"].ContextWindow, catalog.DefaultContext)
+	if *plain["relo-claude-work-opus-1m"].ContextWindow != catalog.MillionContext {
+		t.Fatalf("1M window = %d, want %d", *plain["relo-claude-work-opus-1m"].ContextWindow, catalog.MillionContext)
 	}
 
 	claude := indexModels(t, service.claudePickerModels())
 	for _, id := range []string{
-		"claude-relo-claude-work--opus",
 		"claude-relo-claude-work--opus[1m]",
-		"claude-reloc-claude-route",
 		"claude-reloc-claude-route[1m]",
 	} {
 		if _, found := claude[id]; !found {
@@ -158,8 +156,8 @@ func TestClaudeSignInPublishesDefaultAndMillionEntries(t *testing.T) {
 
 // TestClaudeSignInDropsTheVendorWord pins the picker label on the Claude.ai
 // sign-in: a model the provider names Claude Opus 5.5 reads as Opus 5.5 on
-// Claude.ai, while the same model on another connection keeps its name and
-// takes the generated suffix.
+// Claude.ai on the Claude surface only, while the OpenAI surface keeps the
+// full name. The same model on another connection keeps its name everywhere.
 func TestClaudeSignInDropsTheVendorWord(t *testing.T) {
 	db := testkit.OpenTestDB(t)
 	upstream := testkit.MockUpstream(t, map[string]string{})
@@ -187,8 +185,8 @@ func TestClaudeSignInDropsTheVendorWord(t *testing.T) {
 		t.Fatalf("published = %+v, want one entry per connection", plain)
 	}
 	signIn := plain["relo-claude-ai-claude-opus-5-5"]
-	if catalog.ConfigModelName(signIn.Name, signIn.Connection, signIn.ContextWindow) != "Opus 5.5 1M on Claude.ai" {
-		t.Fatalf("published = %+v, want the vendor word dropped on the sign-in", plain)
+	if catalog.ConfigModelName(signIn.Name, signIn.Connection, signIn.ContextWindow) != "Claude Opus 5.5 1M on Claude.ai" {
+		t.Fatalf("published = %+v, want the full name on the OpenAI surface", plain)
 	}
 	api := plain["relo-claude-api-claude-opus-5-5-1m"]
 	if catalog.ConfigModelName(api.Name, api.Connection, api.ContextWindow) != "Claude Opus 5.5 1M on Claude API" {
