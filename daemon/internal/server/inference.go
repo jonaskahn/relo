@@ -896,7 +896,7 @@ func trafficMessage(message *CapturedMessage) *TrafficMessage {
 	}
 	return &TrafficMessage{
 		Method: message.Method, URL: message.URL, Status: message.Status,
-		Headers: message.Headers, Body: message.Body, Truncated: message.Truncated,
+		Headers: message.Headers, Body: string(message.Body), Truncated: message.Truncated,
 	}
 }
 

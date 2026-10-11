@@ -17,6 +17,8 @@
 		attempts: UsageAttemptRow[];
 		capturesLoading?: boolean;
 		attemptsLoading?: boolean;
+		// traced marks a request the traffic log holds whole.
+		traced?: boolean;
 	}
 
 	let {
@@ -24,7 +26,8 @@
 		captures,
 		attempts,
 		capturesLoading = false,
-		attemptsLoading = false
+		attemptsLoading = false,
+		traced = false
 	}: Props = $props();
 
 	// The two halves of the exchange the agent itself had are the captures
@@ -46,7 +49,10 @@
 	}
 </script>
 
-<DetailDisclosure title={$t('ui.pages.logsPage.exchangeAgentTitle')}>
+<DetailDisclosure
+	title={$t('ui.pages.logsPage.exchangeAgentTitle')}
+	badge={traced ? $t('ui.pages.logsPage.traceBadge') : undefined}
+>
 	<div class="space-y-1 px-4 py-3">
 		{#if capturesLoading}
 			<p class="text-muted-foreground text-sm">{$t('ui.common.loading')}</p>

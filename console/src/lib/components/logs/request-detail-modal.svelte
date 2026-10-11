@@ -22,6 +22,7 @@
 	let attempts = $state<UsageAttemptRow[]>([]);
 	let captures = $state<UsageCapture[]>([]);
 	let attemptsLoading = $state(false);
+	let traced = $state(false);
 	let capturesLoading = $state(false);
 	let detailModel = $state<Model | null>(null);
 	let detailModelLoading = $state(false);
@@ -44,6 +45,7 @@
 		const open = row;
 		attempts = [];
 		captures = [];
+		traced = false;
 		detailModel = null;
 		attemptsLoading = open !== null;
 		capturesLoading = open !== null;
@@ -61,11 +63,14 @@
 			attempts = data.items;
 			attemptsLoading = false;
 		});
-		void read<{ items: UsageCapture[] }>('/activity/requests/' + id + '/captures', signal, {
-			items: []
-		}).then((data) => {
+		void read<{ items: UsageCapture[]; traced?: boolean }>(
+			'/activity/requests/' + id + '/captures',
+			signal,
+			{ items: [] }
+		).then((data) => {
 			if (settled()) return;
 			captures = data.items ?? [];
+			traced = data.traced === true;
 			capturesLoading = false;
 		});
 		const provider = open.RouteProvider || open.Provider;
@@ -101,6 +106,7 @@
 				{attempts}
 				{capturesLoading}
 				{attemptsLoading}
+				{traced}
 			/>
 		</div>
 	{/if}

@@ -88,7 +88,7 @@ func TestTrafficLogFindsARequestAndReportsAMissingOne(t *testing.T) {
 	home := t.TempDir()
 	day := time.Date(2026, 10, 11, 9, 0, 0, 0, time.UTC)
 	traffic := &trafficLog{dir: logDir(home), now: func() time.Time { return day }}
-	body := []byte(`{"model":"gpt-4o","messages":[]}`)
+	body := `{"model":"gpt-4o","messages":[]}`
 
 	if err := traffic.Append(server.TrafficRecord{EventID: 41, AgentRequest: &server.TrafficMessage{Body: body}}); err != nil {
 		t.Fatal(err)
@@ -98,8 +98,14 @@ func TestTrafficLogFindsARequestAndReportsAMissingOne(t *testing.T) {
 	if err != nil || !found {
 		t.Fatalf("Find(41) = %+v, %v, %v", record, found, err)
 	}
-	if string(record.AgentRequest.Body) != string(body) {
+	if record.AgentRequest.Body != body {
 		t.Fatalf("body = %q, want the whole captured body", record.AgentRequest.Body)
+	}
+	if err := traffic.Append(server.TrafficRecord{EventID: 410, RequestID: "req-410"}); err != nil {
+		t.Fatal(err)
+	}
+	if other, found, err := traffic.Find(41); err != nil || !found || other.RequestID == "req-410" {
+		t.Fatalf("Find(41) = %+v, %v, %v, want only event 41", other, found, err)
 	}
 	if _, found, err := traffic.Find(42); err != nil || found {
 		t.Fatalf("Find(42) found = %v, err = %v, want no record", found, err)

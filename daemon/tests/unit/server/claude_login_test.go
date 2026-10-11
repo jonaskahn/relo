@@ -31,6 +31,13 @@ func TestClaudeLoginRoutesAnAliasAndForwardsANativeModel(t *testing.T) {
 	if strings.Contains(harness.upstream.lastAuthorization(), oauth) {
 		t.Fatalf("upstream authorization = %q, want the login credential dropped", harness.upstream.lastAuthorization())
 	}
+	var answers int
+	if err := harness.db.SQL().QueryRow(`SELECT COUNT(*) FROM usage_captures WHERE kind = 'agent_response'`).Scan(&answers); err != nil {
+		t.Fatalf("count the stored answers: %v", err)
+	}
+	if answers != 1 {
+		t.Fatalf("stored agent responses = %d, want the login request's answer kept", answers)
+	}
 
 	remote := anthropicRequest(http.MethodPost, "/v1/messages", oauth, body)
 	before := harness.upstream.requestCount()

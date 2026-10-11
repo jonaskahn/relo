@@ -1,15 +1,19 @@
-// The traffic log is the JSONL file that holds whole agent and provider
+// The traffic log is the file of JSON lines that holds whole agent and provider
 // exchanges when the operator turns the traffic log on. One line per request,
 // one file per day, pruned with the daemon log's own retention.
 package platform
 
 import (
 	"bufio"
+	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"sort"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -19,13 +23,10 @@ import (
 
 const (
 	trafficLogPrefix = "traffic-"
-	trafficLogSuffix = ".jsonl"
+	trafficLogSuffix = ".log"
 	// trafficLogKeep is the fortnight the daemon log keeps, applied here so
 	// both files in the logs folder age out together.
 	trafficLogKeep = daemonLogKeep
-	// trafficLineMax bounds one line read back. A captured body is capped far
-	// below this, so only a corrupt line reaches the scanner's error.
-	trafficLineMax = 96 << 20
 )
 
 type trafficLog struct {
@@ -153,19 +154,24 @@ func (t *trafficLog) dayFiles() ([]string, error) {
 	return paths, nil
 }
 
+// scanTrafficFile finds one request's line by its leading event_id, so the
+// lines it skips are read but never decoded.
 func scanTrafficFile(file *os.File, eventID int64) (server.TrafficRecord, error) {
-	scanner := bufio.NewScanner(file)
-	scanner.Buffer(make([]byte, 0, 64<<10), trafficLineMax)
-	for scanner.Scan() {
-		var record server.TrafficRecord
-		line := scanner.Bytes()
-		if json.Unmarshal(line, &record) != nil || record.EventID != eventID {
-			continue
+	prefix := []byte(`{"event_id":` + strconv.FormatInt(eventID, 10) + `,`)
+	reader := bufio.NewReaderSize(file, 64<<10)
+	for {
+		line, err := reader.ReadBytes('\n')
+		if bytes.HasPrefix(line, prefix) {
+			var record server.TrafficRecord
+			if json.Unmarshal(line, &record) == nil && record.EventID == eventID {
+				return record, nil
+			}
 		}
-		return record, nil
+		if errors.Is(err, io.EOF) {
+			return server.TrafficRecord{}, nil
+		}
+		if err != nil {
+			return server.TrafficRecord{}, fmt.Errorf("read the traffic log: %w", err)
+		}
 	}
-	if err := scanner.Err(); err != nil {
-		return server.TrafficRecord{}, fmt.Errorf("read the traffic log: %w", err)
-	}
-	return server.TrafficRecord{}, nil
 }

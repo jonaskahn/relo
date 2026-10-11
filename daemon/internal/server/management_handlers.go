@@ -783,9 +783,17 @@ func (s *Server) handleCaptures(w http.ResponseWriter, r *http.Request) {
 		writeServiceError(w, err)
 		return
 	}
-	var whole map[int64]bool
+	items, traced := s.captureItems(eventID, captures)
+	writeJSON(w, http.StatusOK, capturesResponse{Items: items, Traced: traced})
+}
+
+// captureItems lists the stored messages, taking the size of each body the
+// traffic log kept whole, and reports whether the traffic log holds the request.
+func (s *Server) captureItems(eventID int64, captures []activity.CaptureHeader) ([]captureResponse, bool) {
+	var whole map[int64]int64
+	var traced bool
 	if len(captures) > 0 && s.opts.Traffic != nil && s.trafficOn() {
-		whole = s.wholeBodies(r.Context(), reads, eventID, captures)
+		whole, traced = s.wholeBodies(eventID, captures)
 	}
 	items := make([]captureResponse, 0, len(captures))
 	for _, capture := range captures {
@@ -794,12 +802,12 @@ func (s *Server) handleCaptures(w http.ResponseWriter, r *http.Request) {
 			Method: capture.Method, URL: capture.URL, Status: capture.Status,
 			Headers: capture.Headers, BodyBytes: capture.BodyBytes, Truncated: capture.Truncated,
 		}
-		if whole[capture.ID] {
-			listed.Truncated = false
+		if size, ok := whole[capture.ID]; ok {
+			listed.BodyBytes, listed.Truncated = size, false
 		}
 		items = append(items, listed)
 	}
-	writeJSON(w, http.StatusOK, capturesResponse{Items: items})
+	return items, traced
 }
 
 func (s *Server) parseCaptureID(w http.ResponseWriter, r *http.Request) (int64, error) {
@@ -870,6 +878,8 @@ func (s *Server) captureEventID(w http.ResponseWriter, r *http.Request) (int64, 
 
 type capturesResponse struct {
 	Items []captureResponse `json:"items"`
+	// Traced reports that the traffic log holds this request whole.
+	Traced bool `json:"traced"`
 }
 
 type captureResponse struct {

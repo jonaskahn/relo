@@ -17,9 +17,11 @@ type captureReader interface {
 }
 
 // TrafficRecord is one request's exchange as the traffic log keeps it.
+// EventID is the first field on purpose: the log finds a request by that
+// prefix on each line, without decoding the lines it skips.
 type TrafficRecord struct {
-	Timestamp     string               `json:"timestamp"`
 	EventID       int64                `json:"event_id"`
+	Timestamp     string               `json:"timestamp"`
 	RequestID     string               `json:"request_id"`
 	Surface       string               `json:"surface"`
 	Origin        string               `json:"origin"`
@@ -43,13 +45,14 @@ type TrafficAttemptLine struct {
 }
 
 // TrafficMessage is one HTTP message: the method or the status, the target,
-// every header, and the body bytes. The bodies are already redacted.
+// every header, and the body as text. The bodies are already redacted. A body
+// that is not UTF-8 reads lossy here; the state rows keep its raw bytes.
 type TrafficMessage struct {
 	Method    string              `json:"method,omitempty"`
 	URL       string              `json:"url,omitempty"`
 	Status    int                 `json:"status,omitempty"`
 	Headers   map[string][]string `json:"headers,omitempty"`
-	Body      []byte              `json:"body,omitempty"`
+	Body      string              `json:"body,omitempty"`
 	Truncated bool                `json:"truncated,omitempty"`
 }
 
@@ -108,22 +111,23 @@ func (s *Server) captureLimit() int64 {
 const trafficCaptureBytes = maxInboundRead
 
 // wholeBodies names the captures of one request whose whole body the traffic
-// log kept, so the manifest does not show them as cut short.
-func (s *Server) wholeBodies(ctx context.Context, reads captureReader, eventID int64, captures []activity.CaptureHeader) map[int64]bool {
+// log kept, with the size of that body, so the manifest does not show them as
+// cut short. traced reports that the traffic log holds the request at all.
+func (s *Server) wholeBodies(eventID int64, captures []activity.CaptureHeader) (whole map[int64]int64, traced bool) {
 	record, found, err := s.opts.Traffic.Find(eventID)
 	if err != nil || !found {
-		return nil
+		return nil, false
 	}
-	whole := make(map[int64]bool, len(captures))
+	whole = make(map[int64]int64, len(captures))
 	for _, capture := range captures {
 		if !capture.Truncated {
 			continue
 		}
 		if message := trafficMessageFor(record, capture.Kind, capture.Ordinal); message != nil && !message.Truncated {
-			whole[capture.ID] = true
+			whole[capture.ID] = int64(len(message.Body))
 		}
 	}
-	return whole
+	return whole, true
 }
 
 // wholeCaptureBody returns the body the traffic log kept for one capture, and
@@ -155,5 +159,5 @@ func (s *Server) wholeCaptureBody(ctx context.Context, reads captureReader, even
 	if message == nil {
 		return nil, false
 	}
-	return message.Body, true
+	return []byte(message.Body), true
 }
