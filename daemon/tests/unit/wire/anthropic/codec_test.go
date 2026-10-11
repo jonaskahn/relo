@@ -266,6 +266,51 @@ func TestEncodeRequest(t *testing.T) {
 		}
 	})
 
+	t.Run("an OAuth request with account identity carries subscription metadata", func(t *testing.T) {
+		request := newTestRequest(t, canonicalRequest(true), wire.CodecOpts{
+			CredentialRef: "oauth-token", AuthMethod: "oauth",
+			AccountID: "acct-9", DeviceID: "device-1", SessionID: "sess-uuid-1",
+		})
+		body := decodeBody(t, request)
+		metadata, _ := body["metadata"].(map[string]any)
+		var user map[string]any
+		if err := json.Unmarshal([]byte(metadata["user_id"].(string)), &user); err != nil {
+			t.Fatalf("metadata user_id = %v, want a json identity", metadata["user_id"])
+		}
+		if user["account_uuid"] != "acct-9" || user["device_id"] != "device-1" || user["session_id"] != "sess-uuid-1" {
+			t.Fatalf("metadata user = %v, want the account, device, and session", user)
+		}
+		if request.Header.Get("X-Claude-Code-Session-Id") != "sess-uuid-1" {
+			t.Fatalf("session header = %q, want the metadata session", request.Header.Get("X-Claude-Code-Session-Id"))
+		}
+	})
+
+	t.Run("an OAuth request without identity carries no metadata", func(t *testing.T) {
+		body := encodeBody(t, canonicalRequest(true), wire.CodecOpts{CredentialRef: "oauth-token", AuthMethod: "oauth"})
+		if _, found := body["metadata"]; found {
+			t.Fatalf("metadata = %v, want none without identity", body["metadata"])
+		}
+	})
+
+	t.Run("an API-key request never carries subscription metadata", func(t *testing.T) {
+		body := encodeBody(t, canonicalRequest(true), wire.CodecOpts{
+			CredentialRef: "sk-ant", AccountID: "acct-9", SessionID: "sess-uuid-1",
+		})
+		if _, found := body["metadata"]; found {
+			t.Fatalf("metadata = %v, want none on an API-key call", body["metadata"])
+		}
+	})
+
+	t.Run("an off-official OAuth request keeps account identity private", func(t *testing.T) {
+		body := encodeBody(t, canonicalRequest(true), wire.CodecOpts{
+			BaseURL: "http://127.0.0.1:9000", CredentialRef: "oauth-token", AuthMethod: "oauth",
+			AccountID: "acct-9", DeviceID: "device-1", SessionID: "sess-uuid-1",
+		})
+		if _, found := body["metadata"]; found {
+			t.Fatalf("metadata = %v, want none off the official host", body["metadata"])
+		}
+	})
+
 	t.Run("an API-key request carries none of the Claude Code fingerprint", func(t *testing.T) {
 		request := newTestRequest(t, canonicalRequest(true), wire.CodecOpts{CredentialRef: "sk-ant"})
 		if request.URL.RawQuery != "" || request.Header.Get("User-Agent") != "" || request.Header.Get("X-Stainless-Lang") != "" {

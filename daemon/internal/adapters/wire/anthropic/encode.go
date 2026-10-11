@@ -69,6 +69,11 @@ type requestPayload struct {
 	Temperature  *float64        `json:"temperature,omitempty"`
 	Thinking     *thinkingDef    `json:"thinking,omitempty"`
 	OutputConfig *outputConfig   `json:"output_config,omitempty"`
+	Metadata     *metadataDef    `json:"metadata,omitempty"`
+}
+
+type metadataDef struct {
+	UserID string `json:"user_id"`
 }
 
 type toolChoiceDef struct {
@@ -161,6 +166,27 @@ func tokenLimit(maxTokens int) int {
 		return defaultMaxTokens
 	}
 	return maxTokens
+}
+
+func subscriptionMetadata(opts wire.CodecOpts) *metadataDef {
+	fields := map[string]string{}
+	if opts.DeviceID != "" {
+		fields["device_id"] = opts.DeviceID
+	}
+	if opts.AccountID != "" {
+		fields["account_uuid"] = opts.AccountID
+	}
+	if opts.SessionID != "" {
+		fields["session_id"] = opts.SessionID
+	}
+	if len(fields) == 0 {
+		return nil
+	}
+	encoded, err := json.Marshal(fields)
+	if err != nil {
+		return nil
+	}
+	return &metadataDef{UserID: string(encoded)}
 }
 
 func systemPrompt(messages []inference.Message) string {

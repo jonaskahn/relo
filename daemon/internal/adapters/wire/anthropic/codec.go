@@ -77,7 +77,11 @@ func (c *Codec) EncodeRequest(req *inference.Request, opts wire.CodecOpts) (*htt
 	if c.vertex {
 		payload, err = json.Marshal(newVertexPayload(req, oauth, opts))
 	} else {
-		payload, err = json.Marshal(newPayload(req, oauth, opts))
+		request := newPayload(req, oauth, opts)
+		if oauth && officialAnthropicHost(requestBase(c, opts)) {
+			request.Metadata = subscriptionMetadata(opts)
+		}
+		payload, err = json.Marshal(request)
 	}
 	if err != nil {
 		return nil, fmt.Errorf("encode messages request: %w", err)
