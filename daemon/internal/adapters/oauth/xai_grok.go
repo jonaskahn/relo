@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"net/url"
 	"strings"
+	"time"
 )
 
 const (
@@ -85,12 +86,42 @@ func (f *xaiFlow) deviceFlow(ctx context.Context) (*deviceFlow, error) {
 		verificationURL: option(f.settings.Endpoints.VerificationURL, xaiVerifyPage),
 		scopes:          []string{xaiScope},
 		finish:          xaiIdentity,
+		refresh:         xaiRefresh,
 	}, f.settings), nil
 }
 
 func xaiIdentity(_ context.Context, _ tokenClient, response tokenResponse, credential *OAuthCredential) error {
+	if response.RefreshToken == "" {
+		return ErrNoRefreshToken
+	}
 	credential.AccountID, credential.Email = IdentityFromTokens(response.IDToken, response.AccessToken)
+	tightenXAIExpiry(response.AccessToken, credential)
 	return nil
+}
+
+func xaiRefresh(ctx context.Context, client tokenClient, request refreshRequest) (*OAuthCredential, error) {
+	refreshed, err := refreshToken(ctx, refreshOptions{client: client,
+		endpoint: request.Endpoint, clientID: request.ClientID, now: client.clock.Now(), cred: &request.Credential, scopes: request.Scopes})
+	if err != nil {
+		return nil, err
+	}
+	tightenXAIExpiry(refreshed.AccessToken, refreshed)
+	return refreshed, nil
+}
+
+func tightenXAIExpiry(token string, credential *OAuthCredential) {
+	parsed, ok := decodeClaims(token)
+	if !ok {
+		return
+	}
+	exp, ok := parsed.number("exp")
+	if !ok || exp <= 0 {
+		return
+	}
+	expiry := time.Unix(int64(exp), 0)
+	if expiry.Before(credential.ExpiresAt) {
+		credential.ExpiresAt = expiry
+	}
 }
 
 func (f *xaiFlow) endpoints(ctx context.Context) (string, string, error) {
