@@ -984,6 +984,102 @@ func TestCloudCodeAssistEmptyCompletion(t *testing.T) {
 	})
 }
 
+// TestCloudCodeAssistTruncatedStream covers a stream the endpoint ended
+// without a finish reason: a dropped connection, not a short answer. It is
+// refused as retryable, and its id is never filed as the execution the next
+// turn follows.
+func TestCloudCodeAssistTruncatedStream(t *testing.T) {
+	session := "codex-thread:truncated"
+	decode := func(body string) []inference.Event {
+		t.Helper()
+		request := canonicalRequest(false)
+		bound := cloudCodeAssistCodec().Bind(request, wire.CodecOpts{SessionAnchor: session})
+		decoder := bound.NewStreamDecoder()
+		events := pushStreamData(t, decoder, body)
+		closing, err := decoder.Finish()
+		if err != nil {
+			t.Fatalf("Finish() error = %v", err)
+		}
+		return append(events, closing...)
+	}
+	execution := func() (string, bool) {
+		t.Helper()
+		body := assistEnvelope(t, canonicalRequest(false), wire.CodecOpts{
+			CredentialRef: "token", Project: "project-1", SessionAnchor: session,
+		})
+		labels := body["request"].(map[string]any)["labels"].(map[string]any)
+		value, found := labels["last_execution_id"]
+		text, _ := value.(string)
+		return text, found
+	}
+
+	t.Run("text without a finish is refused", func(t *testing.T) {
+		events := decode(`{"response":{"responseId":"exec-t1","candidates":[{"content":{"parts":[{"text":"partial"}]}}]}}`)
+		failure := failureOf(events)
+		if failure == nil || failure.Code != "truncated_completion" {
+			t.Fatalf("failure = %+v, want the truncated stream refused", failure)
+		}
+		if terminalReason(events) != inference.EventReasonError {
+			t.Fatalf("events = %+v, want an error terminal", events)
+		}
+		if id, found := execution(); found {
+			t.Fatalf("last_execution_id = %q, want no execution from a dropped stream", id)
+		}
+	})
+
+	t.Run("a thought-only stop is complete", func(t *testing.T) {
+		events := decode(`{"response":{"candidates":[{"content":{"parts":[{"text":"reasoned","thought":true}]},"finishReason":"STOP"}]}}`)
+		if countKind(events, inference.EventError) != 0 {
+			t.Fatalf("events = %+v, want no failure for a thought-only answer", events)
+		}
+		if terminalReason(events) != inference.EventReasonStop {
+			t.Fatalf("events = %+v, want a stop terminal", events)
+		}
+	})
+
+	t.Run("a usage-only trailer keeps the finish", func(t *testing.T) {
+		decoder := cloudCodeAssistCodec().NewStreamDecoder()
+		pushStreamData(t, decoder, `{"response":{"candidates":[{"content":{"parts":[{"text":"done"}]},"finishReason":"STOP"}]}}`)
+		pushStreamData(t, decoder, `{"response":{"usageMetadata":{"promptTokenCount":5,"candidatesTokenCount":2}}}`)
+		closing, err := decoder.Finish()
+		if err != nil {
+			t.Fatalf("Finish() error = %v", err)
+		}
+		if countKind(closing, inference.EventError) != 0 {
+			t.Fatalf("closing = %+v, want no failure after a finished answer", closing)
+		}
+		if terminalReason(closing) != inference.EventReasonStop {
+			t.Fatalf("closing = %+v, want a stop terminal", closing)
+		}
+	})
+
+	t.Run("an in-band quota refusal keeps its status", func(t *testing.T) {
+		events := decode(`{"response":{"error":{"code":429,"message":"Individual quota reached","status":"RESOURCE_EXHAUSTED"}}}`)
+		failure := failureOf(events)
+		if failure == nil || failure.Code != "RESOURCE_EXHAUSTED" || failure.Status != 429 {
+			t.Fatalf("failure = %+v, want the quota refusal with its status", failure)
+		}
+	})
+
+	t.Run("a blocked prompt is reported", func(t *testing.T) {
+		events := decode(`{"response":{"promptFeedback":{"blockReason":"SAFETY","blockReasonMessage":"blocked"}}}`)
+		failure := failureOf(events)
+		if failure == nil || failure.Code != "safety" {
+			t.Fatalf("failure = %+v, want the prompt block reported", failure)
+		}
+		if terminalReason(events) != inference.EventReasonError {
+			t.Fatalf("events = %+v, want an error terminal", events)
+		}
+	})
+
+	t.Run("a max-tokens finish with calls is tool use", func(t *testing.T) {
+		events := decode(`{"response":{"candidates":[{"content":{"parts":[{"functionCall":{"name":"f","args":{}}}]},"finishReason":"MAX_TOKENS"}]}}`)
+		if terminalReason(events) != inference.EventReasonToolUse {
+			t.Fatalf("events = %+v, want tool_use for the calls it carried", events)
+		}
+	})
+}
+
 // TestCloudCodeAssistClaudeBeta covers the beta a reasoning Claude turn claims
 // by name: the vendor gates interleaved thinking behind it and serves the turn
 // without the reasoning the client asked for when it is missing.
