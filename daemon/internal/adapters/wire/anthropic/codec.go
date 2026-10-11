@@ -72,13 +72,7 @@ func (c *Codec) EncodeRequest(req *inference.Request, opts wire.CodecOpts) (*htt
 		return nil, wire.ErrMissingCredential
 	}
 	oauth := opts.AuthMethod == wire.AuthOAuth
-	var payload []byte
-	var err error
-	if c.vertex {
-		payload, err = json.Marshal(newVertexPayload(req, oauth, opts))
-	} else {
-		payload, err = json.Marshal(newPayload(req, oauth, opts))
-	}
+	payload, err := c.encodePayload(req, oauth, opts)
 	if err != nil {
 		return nil, fmt.Errorf("encode messages request: %w", err)
 	}
@@ -91,6 +85,25 @@ func (c *Codec) EncodeRequest(req *inference.Request, opts wire.CodecOpts) (*htt
 	}
 	c.authorize(request, opts, oauth)
 	return request, nil
+}
+
+func (c *Codec) encodePayload(req *inference.Request, oauth bool, opts wire.CodecOpts) ([]byte, error) {
+	if c.vertex {
+		return json.Marshal(newVertexPayload(req, oauth, opts))
+	}
+	request := newPayload(req, oauth, opts)
+	if !oauth || !officialAnthropicHost(requestBase(c, opts)) {
+		return json.Marshal(request)
+	}
+	request.Metadata = subscriptionMetadata(opts)
+	encoded, err := json.Marshal(request)
+	if err != nil || len(opts.NativeBody) == 0 {
+		return encoded, err
+	}
+	if rebased, ok := rebaseNativeBody(opts.NativeBody, req.Model, request.Metadata); ok {
+		return rebased, nil
+	}
+	return encoded, nil
 }
 
 func (c *Codec) authorize(request *http.Request, opts wire.CodecOpts, oauth bool) {

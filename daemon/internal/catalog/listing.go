@@ -62,6 +62,9 @@ type Authorization struct {
 	BaseURL      string
 	Project      string
 	Signer       func(req *http.Request) error
+	// AccountID is the subscription account the selected credential belongs
+	// to. Codecs that attribute usage to an account read it here.
+	AccountID string
 }
 
 // PerAccountRoster reports whether one connection's model list is the

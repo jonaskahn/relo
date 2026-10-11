@@ -29,16 +29,22 @@ const (
 	// ExtraAPIBaseURL is the endpoint a token minted for a specific host
 	// answers on.
 	ExtraAPIBaseURL = apiBaseExtraKey
+	// ExtraOrgID is the subscription workspace a Claude token draws its
+	// limits from. One login email can hold several workspaces.
+	ExtraOrgID = orgExtraKey
+	// ExtraOrgName is the display name of the workspace ExtraOrgID names.
+	ExtraOrgName = orgNameExtraKey
 )
 
 // Authorization is how one stored credential authenticates a request: the
 // token, the headers that go beside it, and any endpoint the credential
 // itself selects.
 type Authorization struct {
-	Token   string
-	Headers map[string]string
-	BaseURL string
-	Project string
+	Token     string
+	Headers   map[string]string
+	BaseURL   string
+	Project   string
+	AccountID string
 }
 
 // CopilotRequestHeaders returns the editor headers the Copilot API requires,

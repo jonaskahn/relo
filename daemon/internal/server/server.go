@@ -54,7 +54,10 @@ type Options struct {
 	// Sessions holds the synthetic session ids of conversations a client did
 	// not name, so one unlabelled conversation keeps one upstream identity.
 	SessionLeases *account.SessionLeases
-	Version       string
+	// DeviceSeed is the installation secret subscription device ids derive
+	// from. Empty leaves device attribution out of subscription requests.
+	DeviceSeed string
+	Version    string
 	// Catalogs holds the messages this process speaks. A server built
 	// without them loads the ones compiled into the binary.
 	Catalogs *i18n.Catalogs

@@ -110,7 +110,7 @@ func (s *Server) relayClaudeAlias(w http.ResponseWriter, r *http.Request, surfac
 	// The answer is kept beside the request, as on the keyed path, so a
 	// Claude-login request shows both halves of its exchange.
 	answer := newAgentAnswer(w, s.opts.CaptureRedactor, limit)
-	s.relay(relaySpec{writer: answer, request: r, surface: surface, inbound: inbound, canonical: request, origin: inference.OriginExternal, captured: captured})
+	s.relay(relaySpec{writer: answer, request: r, surface: surface, inbound: inbound, canonical: request, origin: inference.OriginExternal, captured: captured, native: body})
 }
 
 func (s *Server) claudeCodeIdentity(ctx context.Context) (clientIdentity, bool) {

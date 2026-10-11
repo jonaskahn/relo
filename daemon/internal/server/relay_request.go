@@ -172,14 +172,19 @@ func (s *Server) attemptHeaders(spec attemptSpec, template catalog.Template, tem
 
 func (s *Server) attemptCodecOptions(spec attemptSpec, extra map[string]string, template catalog.Template, templated bool) wire.CodecOpts {
 	candidate, outcome, host, authorized := spec.candidate, spec.outcome, spec.host, spec.authorized
+	anchor := s.conversationAnchor(outcome, spec.request)
 	return wire.CodecOpts{
 		BaseURL:                endpointBase(candidate, authorized),
 		CredentialRef:          authorized.Token,
 		AuthMethod:             string(authorized.Auth),
 		Mode:                   s.opts.Formats.ModeFor(candidate.Model.APIFormat),
 		Project:                authorized.Project,
+		AccountID:              authorized.AccountID,
+		DeviceID:               s.deviceID(authorized.AccountID),
+		SessionID:              account.ClaudeSessionID(candidate.ProviderID, anchor),
+		NativeBody:             s.nativeBody(outcome, candidate),
 		RequestID:              outcome.requestID,
-		SessionAnchor:          s.conversationAnchor(outcome, spec.request),
+		SessionAnchor:          anchor,
 		ExtraHeaders:           extra,
 		RefusesMaxOutputTokens: templated && template.RefusesMaxOutputTokens,
 		MaxOutput:              candidate.Model.MaxOutput,
@@ -200,6 +205,16 @@ func (s *Server) attemptPromptTokens(outcome *requestOutcome) int64 {
 		return 0
 	}
 	return int64(s.estimateRequestTokens(outcome.request) + max(outcome.request.MaxTokens, 0))
+}
+
+func (s *Server) nativeBody(outcome *requestOutcome, candidate routing.Candidate) []byte {
+	if outcome == nil || len(outcome.native) == 0 {
+		return nil
+	}
+	if candidate.Model.UpstreamID == "" || candidate.Model.UpstreamID != outcome.requested {
+		return nil
+	}
+	return outcome.native
 }
 
 func codexIdentityHeaders(request *http.Request) map[string]string {

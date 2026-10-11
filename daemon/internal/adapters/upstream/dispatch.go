@@ -338,6 +338,7 @@ func (e *Executor) settleDispatchPass(ctx context.Context, pass dispatchPass, nu
 
 func applyRefreshedAuth(options *wire.CodecOpts, next catalog.Authorization) {
 	options.CredentialRef = next.Token
+	options.AccountID = next.AccountID
 	if next.Project != "" {
 		options.Project = next.Project
 	}
