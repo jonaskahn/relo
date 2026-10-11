@@ -11,8 +11,10 @@ import (
 )
 
 var supportedTemplates = map[string]Setting{
-	"claude":       {AutoRefresh: true},
-	"openai-codex": {AutoRefresh: true},
+	"claude":             {AutoRefresh: true},
+	"openai-codex":       {AutoRefresh: true},
+	"google-antigravity": {AutoRefresh: true},
+	"grok":               {AutoRefresh: true},
 }
 
 var (
