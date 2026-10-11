@@ -151,3 +151,39 @@ func TestEnableWritesTheDesktopProfileTheAppCreated(t *testing.T) {
 		t.Fatalf("desktop patch = %s, want the operator's default kept", stripped)
 	}
 }
+
+// A repair takes over a relo provider Relo does not own: the stale entry is
+// removed and the patch is generated again, rather than refused.
+func TestRepairTakesOverAForeignDSHProvider(t *testing.T) {
+	h := newHarness(t, func(string) string { return "http://127.0.0.1:10201" })
+	models := []integration.ModelRef{{ID: "relo-openai-gpt-4o", Name: "GPT-4o"}}
+	withModels(h, &models)
+	home := h.paths.Home
+	t.Setenv("DSH_HOME", filepath.Join(home, ".dsh"))
+
+	patch := filepath.Join(home, ".dsh", "profiles", "web", "cordis.patch.yml")
+	stale := "- id: llm-pi-ai\n  config:\n    providers:\n      relo:\n        displayName: Relo\n        api: openai-completions\n        baseURL: http://127.0.0.1:9999/v1\n        apiKeyEnv: RELO_DSH_API_KEY\n        compat:\n          supportsDeveloperRole: false\n          maxTokensField: max_tokens\n        models: []\n"
+	if err := os.MkdirAll(filepath.Dir(patch), 0o755); err != nil {
+		t.Fatalf("create the web profile: %v", err)
+	}
+	if err := os.WriteFile(patch, []byte(stale), 0o644); err != nil {
+		t.Fatalf("seed the stale patch: %v", err)
+	}
+
+	if _, err := h.manager.Repair(t.Context(), "dsh", "rlo_ak_test"); err != nil {
+		t.Fatalf("Repair() error = %v", err)
+	}
+	written, err := os.ReadFile(patch)
+	if err != nil {
+		t.Fatalf("read the Cordis patch: %v", err)
+	}
+	if strings.Contains(string(written), "127.0.0.1:9999") {
+		t.Fatalf("patch still carries the stale provider:\n%s", written)
+	}
+	if count := strings.Count(string(written), "displayName: Relo"); count != 1 {
+		t.Fatalf("patch carries the relo provider %d times, want one:\n%s", count, written)
+	}
+	if !strings.Contains(string(written), "http://127.0.0.1:10201/v1") {
+		t.Fatalf("patch = %s, want the current address", written)
+	}
+}
