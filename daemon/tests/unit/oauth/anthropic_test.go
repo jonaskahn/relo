@@ -67,3 +67,38 @@ func TestAnthropicLoginKeepsOrganization(t *testing.T) {
 		}
 	})
 }
+
+func TestClaudeIdentityFetch(t *testing.T) {
+	t.Run("bootstrap identity fills account and workspace", func(t *testing.T) {
+		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if r.Header.Get("Authorization") != "Bearer token-1" {
+				t.Errorf("authorization = %q, want the token", r.Header.Get("Authorization"))
+			}
+			if r.Header.Get("anthropic-beta") != "oauth-2025-04-20" {
+				t.Errorf("beta = %q, want the oauth beta", r.Header.Get("anthropic-beta"))
+			}
+			w.Header().Set("Content-Type", "application/json")
+			_, _ = io.WriteString(w, `{"oauth_account":{"account_uuid":"acct-9",`+
+				`"account_email":"a@example.test","organization_uuid":"org-3","organization_name":"Acme"}}`)
+		}))
+		t.Cleanup(server.Close)
+		identity, err := oauth.ClaudeIdentitySource{Endpoint: server.URL}.Fetch(context.Background(), "token-1")
+		if err != nil {
+			t.Fatalf("Fetch() error = %v", err)
+		}
+		if identity.AccountID != "acct-9" || identity.OrgID != "org-3" || identity.OrgName != "Acme" {
+			t.Fatalf("identity = %+v, want the bootstrap account", identity)
+		}
+	})
+
+	t.Run("a refusal stays an error the caller degrades from", func(t *testing.T) {
+		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+			w.WriteHeader(http.StatusUnauthorized)
+		}))
+		t.Cleanup(server.Close)
+		source := oauth.ClaudeIdentitySource{Endpoint: server.URL}
+		if _, err := source.Fetch(context.Background(), "stale"); err == nil {
+			t.Fatal("Fetch() error = nil, want the refusal")
+		}
+	})
+}

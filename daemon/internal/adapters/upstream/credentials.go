@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"strconv"
 	"time"
 
 	"github.com/jonaskahn/relo/internal/account"
@@ -79,6 +80,10 @@ type Options struct {
 	Adapters Adapters
 	Policy   RefreshPolicy
 	Now      func() time.Time
+	// IdentityEndpoint overrides the Claude identity lookup for tests.
+	// IdentityClient is the client that lookup uses.
+	IdentityEndpoint string
+	IdentityClient   *http.Client
 }
 
 // Source resolves the credential one attempt runs with.
@@ -89,6 +94,7 @@ type Source struct {
 	adapters  Adapters
 	policy    RefreshPolicy
 	now       func() time.Time
+	identity  oauth.ClaudeIdentitySource
 	refreshes *refreshGuard
 }
 
@@ -100,7 +106,11 @@ func New(options Options) *Source {
 	}
 	return &Source{
 		pools: options.Pools, secrets: options.Secrets, flows: options.Flows,
-		adapters: options.Adapters, policy: options.Policy, now: now, refreshes: newRefreshGuard(),
+		adapters: options.Adapters, policy: options.Policy, now: now,
+		identity: oauth.ClaudeIdentitySource{
+			Endpoint: options.IdentityEndpoint, HTTPClient: options.IdentityClient,
+		},
+		refreshes: newRefreshGuard(),
 	}
 }
 
@@ -295,6 +305,9 @@ func (s *Source) authorizeSignIn(ctx context.Context, request Request, entry acc
 	if err != nil {
 		return Authorization{}, err
 	}
+	if request.ProviderID == oauth.FlowClaude && credential.AccountID == "" {
+		credential = s.backfillClaudeIdentity(ctx, entry, credential)
+	}
 	return s.signInAuthorization(request.ProviderID, entry, credential)
 }
 
@@ -482,4 +495,27 @@ func (s *Source) write(entry account.PoolEntry, credential oauth.OAuthCredential
 		return fmt.Errorf("store the refreshed credential of %s: %w", entry.ID, err)
 	}
 	return nil
+}
+
+const claudeIdentityRetryKey = "identityRetryAt"
+
+func (s *Source) backfillClaudeIdentity(ctx context.Context, entry account.PoolEntry, credential oauth.OAuthCredential) oauth.OAuthCredential {
+	if retryAt, err := strconv.ParseInt(credential.Extra[claudeIdentityRetryKey], 10, 64); err == nil && s.now().Unix() < retryAt {
+		return credential
+	}
+	identityCtx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+	identity, err := s.identity.Fetch(identityCtx, credential.AccessToken)
+	if credential.Extra == nil {
+		credential.Extra = map[string]string{}
+	}
+	if err != nil {
+		credential.Extra[claudeIdentityRetryKey] = strconv.FormatInt(s.now().Add(time.Hour).Unix(), 10)
+		_ = s.write(entry, credential)
+		return credential
+	}
+	credential.FillClaudeIdentity(identity)
+	delete(credential.Extra, claudeIdentityRetryKey)
+	_ = s.write(entry, credential)
+	return credential
 }

@@ -35,6 +35,7 @@ func NewAnthropicFlow(options ...Option) OAuthFlow {
 		exchange:     anthropicExchange,
 		decode:       anthropicAccount,
 		refresh:      anthropicRefresh,
+		afterLogin:   claudeIdentityHook(ClaudeIdentitySource{}),
 		instructions: "Complete the Claude login in your browser. " +
 			"If the browser cannot reach this machine, paste the final redirect URL when prompted.",
 	}, settings)
