@@ -28,6 +28,9 @@ func (c *cursorStubCodec) RunBidirectional(_ context.Context, call wire.Bidirect
 	if call.Emit != nil {
 		call.Emit(c.events)
 	}
+	if call.Record != nil {
+		call.Record([]byte("framed-run-request"))
+	}
 	c.bodies = append(c.bodies, c.events)
 	return c.events, c.err
 }
@@ -198,6 +201,12 @@ func TestExecuteBidirectional(t *testing.T) {
 		}
 		if got := result.Capture.Request.Headers["Authorization"]; strings.Contains(strings.Join(got, ""), "token") {
 			t.Fatalf("Authorization = %q, want the credential masked", got)
+		}
+		if body := string(result.Capture.Request.Body); body != "framed-run-request" {
+			t.Fatalf("body = %q, want the framed bytes the codec wrote", body)
+		}
+		if _, fabricated := result.Capture.Request.Headers["X-Request-Id"]; fabricated {
+			t.Fatalf("headers = %v, want no header the turn never sent", result.Capture.Request.Headers)
 		}
 	})
 

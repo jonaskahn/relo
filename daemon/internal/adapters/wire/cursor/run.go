@@ -31,6 +31,7 @@ type Runner struct {
 	Request      *inference.Request
 	Selection    *wire.CursorRequest
 	Emit         func([]inference.Event)
+	Record       func(frame []byte)
 	ConnectError func(status int, body []byte) *inference.ErrorInfo
 }
 
@@ -41,6 +42,9 @@ func (r *Runner) Run(ctx context.Context) ([]inference.Event, error) {
 		return nil, err
 	}
 	initial := cursor.Frame(buildRunRequest(history.State, action, r.Selection))
+	if r.Record != nil {
+		r.Record(initial)
+	}
 	reader, writer, response, err := r.openStream(ctx, initial)
 	if err != nil {
 		return nil, err

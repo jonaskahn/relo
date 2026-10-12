@@ -82,6 +82,7 @@ func (e *Executor) converse(ctx context.Context, att attempt, codec wire.Bidirec
 	for attempt := 0; attempt < 2; attempt++ {
 		events, err := codec.RunBidirectional(ctx, wire.BidirectionalCall{
 			Client: e.client, Request: att.exchange.Request, Opts: att.exchange.Options, Emit: emit,
+			Record: recordCursorFrame(att),
 		})
 		if !errors.Is(err, cursor.ErrUnauthorized) || att.exchange.OnUnauthorized == nil || attempt == 1 {
 			return events, err

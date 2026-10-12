@@ -224,6 +224,41 @@ func TestRunTextTurn(t *testing.T) {
 	}
 }
 
+func TestRunRecordsTheInitialFrame(t *testing.T) {
+	server := newFixtureServer(t, func(s *fixtureServer, w http.ResponseWriter, reader *adapterscursor.FrameReader) {
+		_ = parseClientMessage(t, s.next(reader))
+		s.write(w, serverUpdate(14, turnEndedPayload()))
+		for {
+			_, ended, err := reader.Next()
+			if ended || err != nil {
+				return
+			}
+		}
+	})
+	var recorded [][]byte
+	codec := NewCodec(server.server.URL)
+	_, err := codec.RunBidirectional(context.Background(), wire.BidirectionalCall{
+		Client: h2Client(server.server.Client()), Request: testRequest(), Opts: wire.CodecOpts{
+			BaseURL: server.server.URL, CredentialRef: "token", Cursor: testSelection(),
+		},
+		Record: func(frame []byte) { recorded = append(recorded, frame) },
+	})
+	if err != nil {
+		t.Fatalf("RunBidirectional() error = %v", err)
+	}
+	if len(recorded) != 1 {
+		t.Fatalf("recorded %d frames, want the one initial frame", len(recorded))
+	}
+	payloads, end, _, err := adapterscursor.SplitFrames(recorded[0])
+	if err != nil || end != nil || len(payloads) != 1 {
+		t.Fatalf("recorded frame = %v %q %v, want one framed run request", len(payloads), end, err)
+	}
+	run := parseClientMessage(t, payloads[0])
+	if len(run) != 1 || run[0].Number != clientRunRequest {
+		t.Fatalf("recorded message = %+v, want a run request", run)
+	}
+}
+
 func TestRunNativeRejection(t *testing.T) {
 	server := newFixtureServer(t, func(s *fixtureServer, w http.ResponseWriter, reader *adapterscursor.FrameReader) {
 		_ = parseClientMessage(t, s.next(reader))

@@ -10,18 +10,34 @@ import (
 )
 
 // captureCursorExchange records the target and headers of one duplex attempt.
-// The codec writes its Connect frames straight into the stream as it builds
-// them, so there is no buffered body to keep: what an operator needs from a
-// turn that went wrong is where it went and under which credential.
+// The framed Run request the codec writes is kept as the body, so the traffic
+// log shows the exact bytes the upstream parsed.
 func captureCursorExchange(ex Exchange) *CapturedMessage {
 	base := strings.TrimSuffix(firstNonEmpty(ex.Options.BaseURL, cursor.DefaultBaseURL), "/")
 	headers := http.Header{}
 	for name, value := range cursor.Headers(ex.Options.CredentialRef, "", "") {
+		// The capture rebuilds headers it never sent: an empty request id
+		// would claim a header the turn did not carry, so it is left out.
+		if value == "" {
+			continue
+		}
 		headers.Set(name, value)
 	}
 	headers.Set("Content-Type", "application/connect+proto")
 	return &CapturedMessage{
 		Method: http.MethodPost, URL: base + cursor.RunPath, Headers: RedactHeaders(headers),
+	}
+}
+
+// recordCursorFrame keeps the framed Run request one duplex attempt wrote.
+// Binary frames pass redaction through byte for byte, and the tracing log
+// keeps the full body: a refused turn is debugged from what was sent.
+func recordCursorFrame(att attempt) func([]byte) {
+	return func(frame []byte) {
+		if att.capture == nil || att.capture.Request == nil {
+			return
+		}
+		att.capture.Request.Body = RedactBody(frame)
 	}
 }
 

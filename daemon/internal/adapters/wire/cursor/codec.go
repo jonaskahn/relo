@@ -95,6 +95,7 @@ func (c *Codec) RunBidirectional(ctx context.Context, call wire.BidirectionalCal
 		Request:   call.Request,
 		Selection: call.Opts.Cursor,
 		Emit:      call.Emit,
+		Record:    call.Record,
 		ConnectError: func(status int, body []byte) *inference.ErrorInfo {
 			return c.DecodeError(status, body)
 		},

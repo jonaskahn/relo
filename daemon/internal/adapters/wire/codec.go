@@ -212,12 +212,15 @@ type RequestBinder interface {
 }
 
 // BidirectionalCall carries one duplex attempt: what to send, how to send
-// it, and where to emit events as they arrive.
+// it, and where to emit events as they arrive. Record keeps the framed
+// bytes the codec wrote, so the traffic log can show what the upstream
+// parsed; it is nil when the caller keeps nothing.
 type BidirectionalCall struct {
 	Client  *http.Client
 	Request *inference.Request
 	Opts    CodecOpts
 	Emit    func([]inference.Event)
+	Record  func(frame []byte)
 }
 
 // BidirectionalCodec is a CodecModule that converses over one duplex
