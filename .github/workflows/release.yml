@@ -83,23 +83,16 @@ jobs:
           [ -n "$identity" ] || { echo "no Developer ID identity in the imported certificate" >&2; exit 1; }
           echo "APPLE_SIGN_IDENTITY=$identity" >> "$GITHUB_ENV"
 
-      - name: Build and sign macOS app
+      - name: Build, sign, and notarize macOS app
         env:
-          SPARKLE_PUBLIC_ED_KEY: ${{ secrets.SPARKLE_PUBLIC_ED_KEY }}
+          SPARKLE_PUBLIC_ED_KEY: ${{ vars.SPARKLE_PUBLIC_ED_KEY }}
         run: |
+          APPLE_SIGN_IDENTITY="$APPLE_SIGN_IDENTITY" \
+          APPLE_ID="${{ secrets.APPLE_ID }}" \
+          APPLE_TEAM_ID="${{ secrets.APPLE_TEAM_ID }}" \
+          APPLE_APP_SPECIFIC_PASSWORD="${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}" \
           make package-macos VERSION=${{ github.ref_name }}
           rm -f dist/Relo.app
-
-      - name: Notarize
-        env:
-          APPLE_ID: ${{ secrets.APPLE_ID }}
-          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
-          APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
-        run: |
-          for zip in dist/Relo-*.zip; do
-            echo "notarizing $zip"
-            xcrun notarytool submit "$zip" --apple-id "$APPLE_ID" --team-id "$APPLE_TEAM_ID" --password "$APPLE_APP_SPECIFIC_PASSWORD" --wait
-          done
 
       - name: Upload macOS zips
         uses: actions/upload-artifact@v5

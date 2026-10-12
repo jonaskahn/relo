@@ -224,9 +224,9 @@ release-tag:
 	git tag "$(TAG)"
 	git push origin "$(TAG)"
 
-## prompt for release secrets and store them with gh
+## prompt for missing release secrets and store them with gh (ALL=1 to re-ask all)
 update-secrets:
-	./scripts/update-secrets.sh
+	@if [ "$(ALL)" = "1" ]; then ./scripts/update-secrets.sh --all; else ./scripts/update-secrets.sh; fi
 
 # === clean: every derived artifact ===
 

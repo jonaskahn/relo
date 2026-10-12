@@ -31,9 +31,12 @@ settings.
 
 `Relo.app` supports macOS 12 and later; `MACOS_MIN_VERSION` in the Makefile
 is the one place that number lives, and `make package-macos` fails when a
-binary in the bundle requires anything newer. The bundle is ad-hoc signed,
-not notarized, so share `Relo-<version>-universal.zip` and never the bare
-`.app` folder, which loses the symlinks inside `Sparkle.framework`. On
-another Mac the first launch needs `xattr -dr com.apple.quarantine Relo.app`
-or System Settings → Privacy & Security → Open Anyway. The appcast's
-`minimumSystemVersion` in `.github/workflows/ci.yml` must match the floor.
+binary in the bundle requires anything newer. With a Developer ID in the
+keychain the build signs with it and prompts for Apple ID credentials to
+notarize, so the app opens cleanly on another Mac; without one it falls back
+to ad-hoc signing, and the first launch elsewhere needs
+`xattr -dr com.apple.quarantine Relo.app` or System Settings → Privacy &
+Security → Open Anyway. Share `Relo-<version>-universal.zip` and never the
+bare `.app` folder, which loses the symlinks inside `Sparkle.framework`. The
+appcast's `minimumSystemVersion` in `.github/workflows/ci.yml` must match the
+floor.
