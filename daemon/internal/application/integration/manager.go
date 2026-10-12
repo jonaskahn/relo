@@ -46,6 +46,9 @@ var (
 	ErrSurfaceDisabled = errors.New("the surface this agent speaks is not served")
 	// ErrUnsupportedFile reports a plan item no writer handles.
 	ErrUnsupportedFile = errors.New("relo does not write")
+	// ErrRestoreBlocked reports a restore that could not read the copy it
+	// would put back, which only a forced removal gets past.
+	ErrRestoreBlocked = errors.New("the copy Relo snapshotted cannot be read")
 )
 
 var errForeignProviderReason = errors.New("the file already has a relo provider")
@@ -638,8 +641,10 @@ func (m *Manager) Repair(ctx context.Context, id, token string) (View, error) {
 }
 
 // Restore puts the operator's own files back exactly as they were before Relo
-// first wrote them, and removes everything Relo contributed.
-func (m *Manager) Restore(ctx context.Context, id string) (View, error) {
+// first wrote them, and removes everything Relo contributed. A forced restore
+// takes Relo's own contribution out of each file it cannot put back, which is
+// what an operator who no longer holds the snapshot is left with.
+func (m *Manager) Restore(ctx context.Context, id string, force bool) (View, error) {
 	agent, found := m.agents.AgentFor(id)
 	if !found {
 		return View{}, fmt.Errorf("%s: %w", id, ErrUnknownAgent)
@@ -656,15 +661,15 @@ func (m *Manager) Restore(ctx context.Context, id string) (View, error) {
 	if err != nil {
 		return View{}, err
 	}
-	return m.finishRestore(ctx, agent, id, kept)
+	return m.finishRestore(ctx, agent, id, kept, force)
 }
 
-func (m *Manager) finishRestore(ctx context.Context, agent Agent, id string, kept []FileRecord) (View, error) {
+func (m *Manager) finishRestore(ctx context.Context, agent Agent, id string, kept []FileRecord, force bool) (View, error) {
 	// Every snapshot is read before anything is written, so a restore that
 	// cannot complete leaves the operator's files as they were rather than
 	// half rewritten. A failure keeps the stored file rows, which is what
 	// makes the action worth retrying.
-	staged, err := stageRestore(kept)
+	staged, err := stageRestore(agent, kept, force)
 	if err != nil {
 		m.recordFailure(ctx, agent, err)
 		return View{}, err
@@ -1113,7 +1118,10 @@ func (m *Manager) removeCodexContribution(file FileRecord) error {
 		return err
 	}
 	if strings.TrimSpace(stripped) == "" {
-		return os.Remove(file.Path)
+		if err := os.Remove(file.Path); err != nil && !errors.Is(err, os.ErrNotExist) {
+			return fmt.Errorf("remove %s: %w", file.Path, err)
+		}
+		return nil
 	}
 	return m.files.WriteFileAtomic(file.Path, []byte(stripped), 0o644)
 }
@@ -1294,44 +1302,64 @@ func (m *Manager) regenerateMissing(ctx context.Context, agent Agent, file FileR
 	}
 }
 
+// What one staged restore does to one file: put the operator's own copy back,
+// delete a file Relo created where the operator had none, or take Relo's
+// contribution out of a file whose copy cannot be read.
+const (
+	restoreSnapshot = iota
+	removeCreated
+	stripRelo
+)
+
 type stagedRestore struct {
-	path    string
+	agent   Agent
+	file    FileRecord
+	action  int
 	content []byte
-	remove  bool
 	mode    os.FileMode
 }
 
-func stageRestore(files []FileRecord) ([]stagedRestore, error) {
+func stageRestore(agent Agent, files []FileRecord, force bool) ([]stagedRestore, error) {
 	staged := make([]stagedRestore, 0, len(files))
 	for _, file := range files {
 		if file.Kind == KindCodexLauncher {
 			continue
 		}
 		if file.SnapshotPath == "" {
-			staged = append(staged, stagedRestore{path: file.Path, remove: true})
+			staged = append(staged, stagedRestore{agent: agent, file: file, action: removeCreated})
 			continue
 		}
 		content, err := os.ReadFile(file.SnapshotPath)
 		if err != nil {
-			return nil, fmt.Errorf("read the snapshot %s: %w", file.SnapshotPath, err)
+			if !force {
+				return nil, fmt.Errorf("%w %s: %w", ErrRestoreBlocked, file.SnapshotPath, err)
+			}
+			staged = append(staged, stagedRestore{agent: agent, file: file, action: stripRelo})
+			continue
 		}
 		mode := os.FileMode(0o600)
 		if info, err := os.Stat(file.Path); err == nil {
 			mode = info.Mode().Perm()
 		}
-		staged = append(staged, stagedRestore{path: file.Path, content: content, mode: mode})
+		staged = append(staged, stagedRestore{
+			agent: agent, file: file, action: restoreSnapshot, content: content, mode: mode,
+		})
 	}
 	return staged, nil
 }
 
 func (m *Manager) applyRestore(file stagedRestore) error {
-	if file.remove {
-		if err := os.Remove(file.path); err != nil && !errors.Is(err, os.ErrNotExist) {
-			return fmt.Errorf("remove %s: %w", file.path, err)
+	switch file.action {
+	case removeCreated:
+		if err := os.Remove(file.file.Path); err != nil && !errors.Is(err, os.ErrNotExist) {
+			return fmt.Errorf("remove %s: %w", file.file.Path, err)
 		}
 		return nil
+	case stripRelo:
+		return m.removeContribution(file.agent, file.file)
+	default:
+		return m.files.WriteFileAtomic(file.file.Path, file.content, file.mode)
 	}
-	return m.files.WriteFileAtomic(file.path, file.content, file.mode)
 }
 
 func (m *Manager) requireSurface(agent Agent) error {

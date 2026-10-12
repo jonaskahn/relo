@@ -362,6 +362,8 @@ func writeDomainError(w http.ResponseWriter, err error) {
 		errors.Is(err, appcatalog.ErrListAuthoritative),
 		appintegration.RefusalCode(err) == appintegration.CodeForeignKey:
 		writeError(w, http.StatusConflict, "conflict", err.Error())
+	case errors.Is(err, appintegration.ErrRestoreBlocked):
+		writeError(w, http.StatusConflict, "restore_blocked", err.Error())
 	case errors.Is(err, catalog.ErrListRejected), errors.Is(err, catalog.ErrListUnsupported):
 		writeError(w, http.StatusBadGateway, "upstream_unavailable", err.Error())
 	case errors.Is(err, ErrNoLoginFlow):

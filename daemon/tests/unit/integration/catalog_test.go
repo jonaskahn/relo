@@ -61,7 +61,7 @@ func TestEnablePiCreatesTheCatalogAndRestoreKeepsTheFile(t *testing.T) {
 	if err := os.WriteFile(path, append(edited, '\n'), 0o644); err != nil {
 		t.Fatalf("write the catalog: %v", err)
 	}
-	if _, err := h.manager.Restore(context.Background(), "pi"); err != nil {
+	if _, err := h.manager.Restore(context.Background(), "pi", false); err != nil {
 		t.Fatalf("Restore() error = %v", err)
 	}
 	if _, err := os.Stat(path); err != nil {

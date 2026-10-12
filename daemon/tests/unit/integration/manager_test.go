@@ -270,7 +270,7 @@ func TestRestorePutsTheOperatorsFileBack(t *testing.T) {
 	if err := os.WriteFile(configPath, []byte(edited), 0o644); err != nil {
 		t.Fatalf("edit the codex config: %v", err)
 	}
-	if _, err := h.manager.Restore(context.Background(), "codex"); err != nil {
+	if _, err := h.manager.Restore(context.Background(), "codex", false); err != nil {
 		t.Fatalf("Restore() error = %v", err)
 	}
 	if got := readFile(t, configPath); got != original {
@@ -366,7 +366,7 @@ func TestRestoreKeepsTheClientWhenAnOldLauncherIsRecorded(t *testing.T) {
 		t.Fatalf("record the old launcher: %v", err)
 	}
 
-	if _, err := h.manager.Restore(ctx, "codex"); err != nil {
+	if _, err := h.manager.Restore(ctx, "codex", false); err != nil {
 		t.Fatalf("Restore() error = %v", err)
 	}
 	if got := readFile(t, codexPath); got != original {
@@ -770,7 +770,7 @@ func TestEnableCodexListsAProviderAddedAfterClaude(t *testing.T) {
 		{ID: "relo-old-one", Name: "Old"},
 		{ID: "relo-opencode-go-flash", Name: "Flash", Connection: "OpenCode Go"},
 	}
-	if _, err := h.manager.Restore(ctx, "claude-code"); err != nil {
+	if _, err := h.manager.Restore(ctx, "claude-code", false); err != nil {
 		t.Fatalf("Restore(claude-code) error = %v", err)
 	}
 	if _, err := h.manager.Enable(ctx, "codex", "rlo_ak_test"); err != nil {

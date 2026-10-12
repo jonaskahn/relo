@@ -60,6 +60,7 @@ func (s *Server) handleGetIntegrationToken(w http.ResponseWriter, r *http.Reques
 
 type enableIntegrationRequest struct {
 	Overwrite bool `json:"overwrite"`
+	Force     bool `json:"force"`
 }
 
 func (s *Server) handleEnableIntegration(w http.ResponseWriter, r *http.Request) {
@@ -67,13 +68,13 @@ func (s *Server) handleEnableIntegration(w http.ResponseWriter, r *http.Request)
 	if !ok {
 		return
 	}
-	overwrite, ok := s.overwriteRequest(w, r)
-	if !ok {
+	request := enableIntegrationRequest{}
+	if !s.actionRequest(w, r, &request) {
 		return
 	}
 	var result appintegration.IntegrationResult
 	var err error
-	if overwrite {
+	if request.Overwrite {
 		result, err = manager.EnableIntegrationOverwrite(r.Context(), r.PathValue("id"))
 	} else {
 		result, err = manager.EnableIntegration(r.Context(), r.PathValue("id"))
@@ -85,57 +86,56 @@ func (s *Server) handleEnableIntegration(w http.ResponseWriter, r *http.Request)
 	writeJSON(w, http.StatusOK, toIntegrationResultResponse(result))
 }
 
-func (s *Server) overwriteRequest(w http.ResponseWriter, r *http.Request) (bool, bool) {
+func (s *Server) handleDisableIntegration(w http.ResponseWriter, r *http.Request) {
+	manager, ok := s.integrationsOrUnavailable(w, r)
+	if !ok {
+		return
+	}
+	request := enableIntegrationRequest{}
+	if !s.actionRequest(w, r, &request) {
+		return
+	}
+	if err := manager.DisableIntegration(r.Context(), r.PathValue("id"), request.Force); err != nil {
+		writeServiceError(w, err)
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]string{"status": "disabled"})
+}
+
+func (s *Server) actionRequest(w http.ResponseWriter, r *http.Request, request *enableIntegrationRequest) bool {
 	if r.Body == nil {
-		return false, true
+		return true
 	}
 	body, err := io.ReadAll(http.MaxBytesReader(w, r.Body, maxManagementBody))
 	if err != nil {
 		s.fail(w, r, refusal{
 			Status: http.StatusBadRequest, Code: "bad_request", Message: "api.body.invalid",
 		})
-		return false, false
+		return false
 	}
 	if len(bytes.TrimSpace(body)) == 0 {
-		return false, true
+		return true
 	}
-	request, ok := s.decodeOverwriteBody(w, r, body)
-	if !ok {
-		return false, false
-	}
-	return request.Overwrite, true
+	return s.decodeActionBody(w, r, body, request)
 }
 
-func (s *Server) decodeOverwriteBody(w http.ResponseWriter, r *http.Request, body []byte) (*enableIntegrationRequest, bool) {
+func (s *Server) decodeActionBody(w http.ResponseWriter, r *http.Request, body []byte, request *enableIntegrationRequest) bool {
 	decoder := json.NewDecoder(bytes.NewReader(body))
 	decoder.DisallowUnknownFields()
-	var request enableIntegrationRequest
-	if err := decoder.Decode(&request); err != nil {
+	if err := decoder.Decode(request); err != nil {
 		s.fail(w, r, refusal{
 			Status: http.StatusBadRequest, Code: "bad_request", Message: "api.body.invalid",
 			Data: map[string]any{"Detail": err.Error()},
 		})
-		return nil, false
+		return false
 	}
 	if err := decoder.Decode(new(struct{})); !errors.Is(err, io.EOF) {
 		s.fail(w, r, refusal{
 			Status: http.StatusBadRequest, Code: "bad_request", Message: "api.body.single_object",
 		})
-		return nil, false
+		return false
 	}
-	return &request, true
-}
-
-func (s *Server) handleDisableIntegration(w http.ResponseWriter, r *http.Request) {
-	manager, ok := s.integrationsOrUnavailable(w, r)
-	if !ok {
-		return
-	}
-	if err := manager.DisableIntegration(r.Context(), r.PathValue("id")); err != nil {
-		writeServiceError(w, err)
-		return
-	}
-	writeJSON(w, http.StatusOK, map[string]string{"status": "disabled"})
+	return true
 }
 
 func (s *Server) handleRotateIntegration(w http.ResponseWriter, r *http.Request) {

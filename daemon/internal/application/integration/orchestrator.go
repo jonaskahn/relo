@@ -262,8 +262,10 @@ func (s *Service) enableIntegration(ctx context.Context, id string, overwrite bo
 // files back exactly as they were before Relo first wrote them, including a
 // file Relo changed after setup, and only then retires the key the integration
 // owned. A restoration that cannot complete keeps the key and records the
-// error, so the action is worth retrying rather than half done.
-func (s *Service) DisableIntegration(ctx context.Context, id string) error {
+// error, so the action is worth retrying rather than half done. A forced
+// removal strips Relo's contribution out of a file it cannot put back, and
+// completes.
+func (s *Service) DisableIntegration(ctx context.Context, id string, force bool) error {
 	agent, found := s.agents.AgentFor(id)
 	if !found {
 		return fmt.Errorf("%s: %w", id, ErrUnknownIntegration)
@@ -272,7 +274,7 @@ func (s *Service) DisableIntegration(ctx context.Context, id string) error {
 	if err != nil {
 		return err
 	}
-	if _, err := manager.Restore(ctx, agent.ID); err != nil {
+	if _, err := manager.Restore(ctx, agent.ID, force); err != nil {
 		return err
 	}
 	s.restartCodex(ctx, agent.ID)
@@ -437,7 +439,7 @@ func (s *Service) RestoreIntegration(ctx context.Context, id string) error {
 	if err != nil {
 		return err
 	}
-	if _, err := manager.Restore(ctx, agent.ID); err != nil {
+	if _, err := manager.Restore(ctx, agent.ID, false); err != nil {
 		return err
 	}
 	s.restartCodex(ctx, agent.ID)

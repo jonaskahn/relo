@@ -62,7 +62,7 @@ func TestEnableOpenCodeWritesTheProviderAndDisableTakesItBack(t *testing.T) {
 	if _, err := h.manager.Enable(context.Background(), "opencode", "rlo_ak_secret"); err != nil {
 		t.Fatalf("Enable() again error = %v", err)
 	}
-	if _, err := h.manager.Restore(context.Background(), "opencode"); err != nil {
+	if _, err := h.manager.Restore(context.Background(), "opencode", false); err != nil {
 		t.Fatalf("Restore() error = %v", err)
 	}
 	if got := readFile(t, config); got != original {

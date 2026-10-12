@@ -1,5 +1,5 @@
 <div align="center">
-<img src="assets/logo.png" alt="Relo" width="96">
+<img src="assets/logo.svg" alt="Relo" width="96">
 
 <h2>Relo</h2>
 
@@ -7,7 +7,8 @@
 
 </div>
 
-> One local proxy that lets Codex, Claude Code, Cursor and Grok, etc talk to any model, with no config changes.
+> One local proxy that lets Codex, Claude Code, Cursor and Grok, etc. Talk to any model, any provider with no config
+> changes.
 
 ## ▓ CONSOLE
 
