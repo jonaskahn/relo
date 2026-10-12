@@ -38,9 +38,10 @@
 		provider: Provider;
 		allFormats: TemplateFormatOption[];
 		onchanged: (updated: Provider) => void;
+		onmodelschanged?: () => void;
 	}
 
-	let { provider, allFormats, onchanged }: Props = $props();
+	let { provider, allFormats, onchanged, onmodelschanged }: Props = $props();
 
 	const strategies = ['least-loaded', 'round-robin', 'random'] as const;
 
@@ -57,7 +58,7 @@
 	let rankTouched = $state(false);
 	let baseTouched = $state(false);
 	let signInSaved = $state<SignInDraft | null>(null);
-	let signInDraft = $state<SignInDraft>({ autoRefresh: true });
+	let signInDraft = $state<SignInDraft>({ autoRefresh: true, modelPrefixes: [] });
 	let signInState = $state<'loading' | 'ready' | 'error'>('loading');
 	let loadSeq = 0;
 
@@ -147,8 +148,11 @@
 				'/connections/' + encodeURIComponent(id) + '/template-settings'
 			);
 			if (seq !== loadSeq) return;
-			signInSaved = { autoRefresh: body.auto_refresh };
-			signInDraft = { ...signInSaved };
+			signInSaved = {
+				autoRefresh: body.auto_refresh,
+				modelPrefixes: [...(body.model_prefixes ?? [])]
+			};
+			signInDraft = { ...signInSaved, modelPrefixes: [...signInSaved.modelPrefixes] };
 			signInState = 'ready';
 		} catch {
 			if (seq !== loadSeq) return;
@@ -178,8 +182,12 @@
 					'/connections/' + encodeURIComponent(provider.id) + '/template-settings',
 					{ method: 'PATCH', body: JSON.stringify(patch) }
 				);
-				signInSaved = { autoRefresh: saved.auto_refresh };
-				signInDraft = { ...signInSaved };
+				signInSaved = {
+					autoRefresh: saved.auto_refresh,
+					modelPrefixes: [...(saved.model_prefixes ?? signInDraft.modelPrefixes)]
+				};
+				signInDraft = { ...signInSaved, modelPrefixes: [...signInSaved.modelPrefixes] };
+				if (patch.model_prefixes !== undefined) onmodelschanged?.();
 			}
 			notice = $t('ui.pages.providersPage.settings.saved');
 			saveAttempted = false;
@@ -446,6 +454,8 @@
 				<SignInSettingsSection
 					status={signInState}
 					autoRefresh={signInDraft.autoRefresh}
+					modelPrefixes={signInDraft.modelPrefixes}
+					showPrefixes={provider.template_id === 'google-antigravity'}
 					disabled={saving}
 					onretry={() => void loadSignIn(provider.id)}
 					onchange={(next) => (signInDraft = next)}

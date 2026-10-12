@@ -761,7 +761,9 @@
           "antigravityTitle": "Google Antigravity-inloggning",
           "antigravityDescription": "Hur den här Google Antigravity-inloggningen förnyar sin token.",
           "grokTitle": "Grok-inloggning",
-          "grokDescription": "Hur den här Grok-inloggningen förnyar sin token."
+          "grokDescription": "Hur den här Grok-inloggningen förnyar sin token.",
+          "modelPrefixesLabel": "Model families",
+          "modelPrefixesHint": "Comma-separated prefixes the roster keeps, e.g. claude, gemini."
         },
         "add": {
           "title": "Lägg till anslutning",

@@ -761,7 +761,9 @@
           "antigravityTitle": "Přihlášení Google Antigravity",
           "antigravityDescription": "Jak toto přihlášení Google Antigravity obnovuje token.",
           "grokTitle": "Přihlášení Grok",
-          "grokDescription": "Jak toto přihlášení Grok obnovuje token."
+          "grokDescription": "Jak toto přihlášení Grok obnovuje token.",
+          "modelPrefixesLabel": "Model families",
+          "modelPrefixesHint": "Comma-separated prefixes the roster keeps, e.g. claude, gemini."
         },
         "add": {
           "title": "Přidat připojení",

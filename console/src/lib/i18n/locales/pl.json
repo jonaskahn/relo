@@ -761,7 +761,9 @@
           "antigravityTitle": "Logowanie Google Antigravity",
           "antigravityDescription": "Jak to logowanie Google Antigravity odnawia token.",
           "grokTitle": "Logowanie Grok",
-          "grokDescription": "Jak to logowanie Grok odnawia token."
+          "grokDescription": "Jak to logowanie Grok odnawia token.",
+          "modelPrefixesLabel": "Model families",
+          "modelPrefixesHint": "Comma-separated prefixes the roster keeps, e.g. claude, gemini."
         },
         "add": {
           "title": "Dodaj połączenie",

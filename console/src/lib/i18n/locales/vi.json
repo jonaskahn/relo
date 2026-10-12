@@ -761,7 +761,9 @@
           "antigravityTitle": "Đăng nhập Google Antigravity",
           "antigravityDescription": "Đăng nhập Google Antigravity này làm mới token thế nào.",
           "grokTitle": "Đăng nhập Grok",
-          "grokDescription": "Đăng nhập Grok này làm mới token thế nào."
+          "grokDescription": "Đăng nhập Grok này làm mới token thế nào.",
+          "modelPrefixesLabel": "Model families",
+          "modelPrefixesHint": "Comma-separated prefixes the roster keeps, e.g. claude, gemini."
         },
         "add": {
           "title": "Thêm kết nối",

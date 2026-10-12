@@ -7,6 +7,7 @@ import {
 	baseURLMissing,
 	connectionDirty,
 	connectionDraft,
+	parsePrefixes,
 	rankInvalid,
 	signInDirty,
 	signInSection,
@@ -47,11 +48,24 @@ describe('connection settings draft', () => {
 	});
 
 	it('patches only the sign-in choice that changed', () => {
-		const saved = { autoRefresh: true };
+		const saved = { autoRefresh: true, modelPrefixes: ['claude', 'gemini'] };
 
 		expect(signInDirty(saved, saved)).toBe(false);
 		expect(templatePatch(saved, saved)).toBeNull();
-		expect(templatePatch({ autoRefresh: false }, saved)).toEqual({ auto_refresh: false });
+		expect(
+			templatePatch({ autoRefresh: false, modelPrefixes: saved.modelPrefixes }, saved)
+		).toEqual({
+			auto_refresh: false
+		});
+		expect(templatePatch({ autoRefresh: true, modelPrefixes: ['claude'] }, saved)).toEqual({
+			model_prefixes: ['claude']
+		});
+	});
+
+	it('parses a comma list of model prefixes', () => {
+		expect(parsePrefixes('claude, gemini')).toEqual(['claude', 'gemini']);
+		expect(parsePrefixes('  Claude ,, GEMINI, ')).toEqual(['claude', 'gemini']);
+		expect(parsePrefixes('')).toEqual([]);
 	});
 
 	it('names the sign-in section a template shows', () => {

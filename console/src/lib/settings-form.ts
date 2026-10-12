@@ -23,10 +23,12 @@ export interface ConnectionDraft {
 }
 
 /** The sign-in choices stored beside the connection, for a template that stores them: the token
- *  renewal every sign-in has. Whether a model is published twice, at 200K and at 1M, follows from
- *  the model itself, so no stored choice governs it. */
+ *  renewal every sign-in has, and the model families its roster keeps. Whether a model is
+ *  published twice, at 200K and at 1M, follows from the model itself, so no stored choice
+ *  governs it. */
 export interface SignInDraft {
 	autoRefresh: boolean;
+	modelPrefixes: string[];
 }
 
 /** The settings section one sign-in template shows. */
@@ -117,7 +119,26 @@ export function connectionDirty(draft: ConnectionDraft, provider: Provider): boo
 
 /** Reports whether the sign-in fields still differ from what is stored. */
 export function signInDirty(draft: SignInDraft, saved: SignInDraft): boolean {
-	return draft.autoRefresh !== saved.autoRefresh;
+	return (
+		draft.autoRefresh !== saved.autoRefresh ||
+		JSON.stringify(draft.modelPrefixes) !== JSON.stringify(saved.modelPrefixes)
+	);
+}
+
+/** Parses a comma list of model prefixes into the names a roster keeps. */
+export function parsePrefixes(raw: string): string[] {
+	const seen = new Set<string>();
+	for (const part of raw.split(',')) {
+		const trimmed = part.trim().toLowerCase();
+		if (trimmed === '' || trimmed.includes(' ') || trimmed.includes('\t')) continue;
+		seen.add(trimmed);
+	}
+	return [...seen];
+}
+
+/** Formats model prefixes for the settings input. */
+export function formatPrefixes(prefixes: string[]): string {
+	return (prefixes ?? []).join(', ');
 }
 
 /** Reports a rank that is not a whole number. */
@@ -134,8 +155,11 @@ export function baseURLMissing(baseURL: string): boolean {
 export function templatePatch(
 	draft: SignInDraft,
 	saved: SignInDraft
-): { auto_refresh?: boolean } | null {
-	const patch: { auto_refresh?: boolean } = {};
+): { auto_refresh?: boolean; model_prefixes?: string[] } | null {
+	const patch: { auto_refresh?: boolean; model_prefixes?: string[] } = {};
 	if (draft.autoRefresh !== saved.autoRefresh) patch.auto_refresh = draft.autoRefresh;
+	if (JSON.stringify(draft.modelPrefixes) !== JSON.stringify(saved.modelPrefixes)) {
+		patch.model_prefixes = [...draft.modelPrefixes];
+	}
 	return Object.keys(patch).length === 0 ? null : patch;
 }

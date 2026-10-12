@@ -761,7 +761,9 @@
           "antigravityTitle": "Google Antigravity oturumu",
           "antigravityDescription": "Bu Google Antigravity oturumunun belirteci nasıl yenilediği.",
           "grokTitle": "Grok oturumu",
-          "grokDescription": "Bu Grok oturumunun belirteci nasıl yenilediği."
+          "grokDescription": "Bu Grok oturumunun belirteci nasıl yenilediği.",
+          "modelPrefixesLabel": "Model families",
+          "modelPrefixesHint": "Comma-separated prefixes the roster keeps, e.g. claude, gemini."
         },
         "add": {
           "title": "Bağlantı ekle",

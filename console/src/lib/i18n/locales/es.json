@@ -761,7 +761,9 @@
           "antigravityTitle": "Inicio de sesión de Google Antigravity",
           "antigravityDescription": "Cómo este inicio de sesión de Google Antigravity renueva su token.",
           "grokTitle": "Inicio de sesión de Grok",
-          "grokDescription": "Cómo este inicio de sesión de Grok renueva su token."
+          "grokDescription": "Cómo este inicio de sesión de Grok renueva su token.",
+          "modelPrefixesLabel": "Model families",
+          "modelPrefixesHint": "Comma-separated prefixes the roster keeps, e.g. claude, gemini."
         },
         "add": {
           "title": "Añadir conexión",

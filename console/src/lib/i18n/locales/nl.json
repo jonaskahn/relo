@@ -761,7 +761,9 @@
           "antigravityTitle": "Google Antigravity-aanmelding",
           "antigravityDescription": "Hoe deze Google Antigravity-aanmelding het token vernieuwt.",
           "grokTitle": "Grok-aanmelding",
-          "grokDescription": "Hoe deze Grok-aanmelding het token vernieuwt."
+          "grokDescription": "Hoe deze Grok-aanmelding het token vernieuwt.",
+          "modelPrefixesLabel": "Model families",
+          "modelPrefixesHint": "Comma-separated prefixes the roster keeps, e.g. claude, gemini."
         },
         "add": {
           "title": "Verbinding toevoegen",

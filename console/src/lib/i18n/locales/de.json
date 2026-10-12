@@ -761,7 +761,9 @@
           "antigravityTitle": "Google Antigravity-Anmeldung",
           "antigravityDescription": "Wie diese Google Antigravity-Anmeldung ihr Token erneuert.",
           "grokTitle": "Grok-Anmeldung",
-          "grokDescription": "Wie diese Grok-Anmeldung ihr Token erneuert."
+          "grokDescription": "Wie diese Grok-Anmeldung ihr Token erneuert.",
+          "modelPrefixesLabel": "Model families",
+          "modelPrefixesHint": "Comma-separated prefixes the roster keeps, e.g. claude, gemini."
         },
         "add": {
           "title": "Verbindung hinzufügen",

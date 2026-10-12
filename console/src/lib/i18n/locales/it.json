@@ -761,7 +761,9 @@
           "antigravityTitle": "Accesso Google Antigravity",
           "antigravityDescription": "Come questo accesso Google Antigravity rinnova il token.",
           "grokTitle": "Accesso Grok",
-          "grokDescription": "Come questo accesso Grok rinnova il token."
+          "grokDescription": "Come questo accesso Grok rinnova il token.",
+          "modelPrefixesLabel": "Model families",
+          "modelPrefixesHint": "Comma-separated prefixes the roster keeps, e.g. claude, gemini."
         },
         "add": {
           "title": "Aggiungi connessione",

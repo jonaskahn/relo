@@ -761,7 +761,9 @@
           "antigravityTitle": "Вход Google Antigravity",
           "antigravityDescription": "Как этот вход Google Antigravity обновляет токен.",
           "grokTitle": "Вход Grok",
-          "grokDescription": "Как этот вход Grok обновляет токен."
+          "grokDescription": "Как этот вход Grok обновляет токен.",
+          "modelPrefixesLabel": "Model families",
+          "modelPrefixesHint": "Comma-separated prefixes the roster keeps, e.g. claude, gemini."
         },
         "add": {
           "title": "Добавить подключение",

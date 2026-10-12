@@ -761,7 +761,9 @@
           "antigravityTitle": "Google Antigravityのサインイン",
           "antigravityDescription": "このGoogle Antigravityのサインインがトークンを更新する方法です。",
           "grokTitle": "Grokのサインイン",
-          "grokDescription": "このGrokのサインインがトークンを更新する方法です。"
+          "grokDescription": "このGrokのサインインがトークンを更新する方法です。",
+          "modelPrefixesLabel": "Model families",
+          "modelPrefixesHint": "Comma-separated prefixes the roster keeps, e.g. claude, gemini."
         },
         "add": {
           "title": "接続を追加",

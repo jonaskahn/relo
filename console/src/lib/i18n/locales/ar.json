@@ -761,7 +761,9 @@
           "antigravityTitle": "تسجيل الدخول إلى Google Antigravity",
           "antigravityDescription": "كيف يجدّد تسجيل الدخول هذا إلى Google Antigravity رمزه.",
           "grokTitle": "تسجيل الدخول إلى Grok",
-          "grokDescription": "كيف يجدّد تسجيل الدخول هذا إلى Grok رمزه."
+          "grokDescription": "كيف يجدّد تسجيل الدخول هذا إلى Grok رمزه.",
+          "modelPrefixesLabel": "Model families",
+          "modelPrefixesHint": "Comma-separated prefixes the roster keeps, e.g. claude, gemini."
         },
         "add": {
           "title": "إضافة اتصال",

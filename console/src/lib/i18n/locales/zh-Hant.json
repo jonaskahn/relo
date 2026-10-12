@@ -761,7 +761,9 @@
           "antigravityTitle": "Google Antigravity 登入",
           "antigravityDescription": "此 Google Antigravity 登入如何更新權杖。",
           "grokTitle": "Grok 登入",
-          "grokDescription": "此 Grok 登入如何更新權杖。"
+          "grokDescription": "此 Grok 登入如何更新權杖。",
+          "modelPrefixesLabel": "Model families",
+          "modelPrefixesHint": "Comma-separated prefixes the roster keeps, e.g. claude, gemini."
         },
         "add": {
           "title": "新增連線",

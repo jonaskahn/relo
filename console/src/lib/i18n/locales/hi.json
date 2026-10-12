@@ -761,7 +761,9 @@
           "antigravityTitle": "Google Antigravity साइन-इन",
           "antigravityDescription": "यह Google Antigravity साइन-इन अपना टोकन कैसे नवीनीकृत करता है।",
           "grokTitle": "Grok साइन-इन",
-          "grokDescription": "यह Grok साइन-इन अपना टोकन कैसे नवीनीकृत करता है।"
+          "grokDescription": "यह Grok साइन-इन अपना टोकन कैसे नवीनीकृत करता है।",
+          "modelPrefixesLabel": "Model families",
+          "modelPrefixesHint": "Comma-separated prefixes the roster keeps, e.g. claude, gemini."
         },
         "add": {
           "title": "कनेक्शन जोड़ें",

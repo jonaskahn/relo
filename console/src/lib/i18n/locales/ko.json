@@ -761,7 +761,9 @@
           "antigravityTitle": "Google Antigravity 로그인",
           "antigravityDescription": "이 Google Antigravity 로그인이 토큰을 갱신하는 방식입니다.",
           "grokTitle": "Grok 로그인",
-          "grokDescription": "이 Grok 로그인이 토큰을 갱신하는 방식입니다."
+          "grokDescription": "이 Grok 로그인이 토큰을 갱신하는 방식입니다.",
+          "modelPrefixesLabel": "Model families",
+          "modelPrefixesHint": "Comma-separated prefixes the roster keeps, e.g. claude, gemini."
         },
         "add": {
           "title": "연결 추가",
