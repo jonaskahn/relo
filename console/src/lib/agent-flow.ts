@@ -4,6 +4,7 @@
 // means the flow's rules are testable without a modal, and the page holds no
 // branch that decides what the operator reads next.
 
+import { ApiError } from './api';
 import type { IntegrationResult, IntegrationView } from './types';
 
 /** The modal's content. There is no second modal: setup, rotation and their results are steps of
@@ -118,4 +119,14 @@ export function overwrittenFiles(agent: IntegrationView): string[] {
 	return (agent.files ?? [])
 		.filter((file) => file.present && file.drifted)
 		.map((file) => file.path);
+}
+
+/** The daemon's name for a removal it stopped rather than half-finished: Relo holds no copy of
+ *  the operator's file to put back, so only a forced removal gets past it. */
+export const RESTORE_BLOCKED = 'restore_blocked';
+
+/** Reports whether a failed action stopped for that reason, which is the one failure the
+ *  operator can answer by confirming the removal again with the force flag. */
+export function offersForcedRemoval(error: unknown): boolean {
+	return error instanceof ApiError && error.code === RESTORE_BLOCKED;
 }
