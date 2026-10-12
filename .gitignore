@@ -16,6 +16,11 @@
 # Secrets
 .env
 .env.*
+*.p12
+*.pfx
+*.mobileprovision
+signing/
+.signing/
 
 # Python (root packaging scripts)
 __pycache__/

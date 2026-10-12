@@ -28,6 +28,7 @@ DEV_URL  ?= http://127.0.0.1:$(DEV_PORT)
 	ci ci-backend ci-console ci-assets ci-coverage ci-cross-build ci-package-linux \
 	package-linux package-macos package-windows package-all package-clean \
 	test-npm npm-pack ci-npm \
+	release-tag release-check update-secrets \
 	clean
 
 # === help: every target, what it does ===
@@ -209,6 +210,23 @@ npm-pack:
 
 ## installer tests and the tarball
 ci-npm: test-npm npm-pack
+
+# === release: tags, checks, and secrets ===
+
+## fail unless every version declaration matches the tag
+release-check:
+	python3 ./scripts/version.py check "$(TAG)"
+
+## tag the release (TAG=v0.1.0), failing first when versions disagree
+release-tag:
+	@if [ -z "$(TAG)" ]; then echo "usage: make release-tag TAG=v0.1.0" >&2; exit 2; fi
+	@python3 ./scripts/version.py check "$(TAG)"
+	git tag "$(TAG)"
+	git push origin "$(TAG)"
+
+## prompt for release secrets and store them with gh
+update-secrets:
+	./scripts/update-secrets.sh
 
 # === clean: every derived artifact ===
 
