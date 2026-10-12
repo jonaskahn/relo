@@ -264,6 +264,12 @@ func (s *Server) handlePatchTemplateSettings(w http.ResponseWriter, r *http.Requ
 		writeServiceError(w, err)
 		return
 	}
+	if patch.ModelPrefixes != nil && s.opts.CatalogAPI != nil {
+		if _, err := s.opts.CatalogAPI.RefilterProviderModels(r.Context(), r.PathValue("id")); err != nil {
+			writeServiceError(w, err)
+			return
+		}
+	}
 	writeJSON(w, http.StatusOK, toTemplateSettingResponse(stored))
 }
 
@@ -406,7 +412,7 @@ func isClientError(err error) bool {
 		activity.ErrInvalidFilter, activity.ErrInvalidCursor,
 		account.ErrUnknownStrategy,
 		appsettings.ErrInvalidWrite, activity.ErrInvalidRetention,
-		apptemplates.ErrUnsupported,
+		apptemplates.ErrUnsupported, apptemplates.ErrInvalidPrefixes,
 		appcatalog.ErrUnknownModelsDevRef, ErrUnknownStatus,
 		appintegration.ErrRestartUnsupported,
 	}
