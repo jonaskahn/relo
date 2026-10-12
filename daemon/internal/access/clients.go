@@ -225,22 +225,6 @@ var clientProfiles = []ClientProfile{
 		Verify: "Select the Relo model in Kimi Code and send one message.",
 	},
 	{
-		ID:       "gajae",
-		Name:     "Gajae",
-		Summary:  "Add a custom provider to Gajae's model catalog",
-		Protocol: inference.ProtocolOpenAI,
-		Steps: []string{
-			"Add to ~/.gjc/agent/models.yml under \"providers\":",
-			"",
-			"relo:",
-			"  baseUrl: {{base_url}}",
-			"  api: openai-completions",
-			"  models:",
-			"    - id: {{model}}",
-		},
-		Verify: "Select the Relo model in Gajae and send one message.",
-	},
-	{
 		ID:       "dsh",
 		Name:     "DeepSeek Harness",
 		Summary:  "Add a custom provider block to the DeepSeek Harness Cordis patch",
@@ -306,32 +290,6 @@ var clientProfiles = []ClientProfile{
 		Verify: "Select the Relo model in ZCode and send one message.",
 	},
 	{
-		ID:       "prime",
-		Name:     "Prime",
-		Summary:  "Add a custom provider to Prime's model catalog",
-		Protocol: inference.ProtocolOpenAI,
-		Steps: []string{
-			"Add to ~/.prime/agent/models.json under \"providers\":",
-			"",
-			"\"relo\": { \"baseUrl\": \"{{base_url}}\", \"api\": \"openai-completions\",",
-			"  \"apiKey\": \"{{token}}\", \"models\": [{ \"id\": \"{{model}}\" }] }",
-		},
-		Verify: "Select the Relo model in Prime and send one message.",
-	},
-	{
-		ID:       "aside",
-		Name:     "Aside",
-		Summary:  "Add a custom provider to Aside's model catalog",
-		Protocol: inference.ProtocolOpenAI,
-		Steps: []string{
-			"Add to ~/.aside/u/<account>/models.json under \"providers\":",
-			"",
-			"\"relo\": { \"baseUrl\": \"{{base_url}}\", \"api\": \"openai-completions\",",
-			"  \"models\": [{ \"id\": \"{{model}}\" }] }",
-		},
-		Verify: "Select the Relo model in Aside and send one message.",
-	},
-	{
 		ID:       "raycast",
 		Name:     "Raycast AI",
 		Summary:  "Add Relo as a custom provider in Raycast",
@@ -348,19 +306,6 @@ var clientProfiles = []ClientProfile{
 			"        name: Relo",
 		},
 		Verify: "Select the Relo model in Raycast AI and send one message.",
-	},
-	{
-		ID:       "omo",
-		Name:     "OMO",
-		Summary:  "Add a custom provider to OMO's model catalog",
-		Protocol: inference.ProtocolOpenAI,
-		Steps: []string{
-			"Add to ~/.omo/agent/models.json under \"providers\":",
-			"",
-			"\"relo\": { \"baseUrl\": \"{{base_url}}\", \"api\": \"openai-completions\",",
-			"  \"models\": [{ \"id\": \"{{model}}\" }] }",
-		},
-		Verify: "Select the Relo model in OMO and send one message.",
 	},
 }
 

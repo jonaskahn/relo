@@ -3,7 +3,6 @@ package integration_test
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"os"
 	"path/filepath"
 	"strings"
@@ -93,22 +92,6 @@ func TestEnablePiCreatesAMissingCatalog(t *testing.T) {
 	}
 	if strings.Contains(readFile(t, path), "\"relo\"") {
 		t.Fatal("disable left the relo block in the catalog")
-	}
-}
-
-func TestEnableAsideRefusesAnAmbiguousAccount(t *testing.T) {
-	h := newHarness(t, dataPlane)
-	if _, err := h.manager.Enable(context.Background(), "aside", "rlo_ak_secret"); !errors.Is(err, codingclients.ErrAsideAccount) {
-		t.Fatalf("Enable() error = %v, want %v", err, codingclients.ErrAsideAccount)
-	}
-	if err := os.MkdirAll(filepath.Join(h.paths.Home, ".aside", "u", "work"), 0o755); err != nil {
-		t.Fatalf("create an account: %v", err)
-	}
-	if err := os.MkdirAll(filepath.Join(h.paths.Home, ".aside", "u", "play"), 0o755); err != nil {
-		t.Fatalf("create a second account: %v", err)
-	}
-	if _, err := h.manager.Enable(context.Background(), "aside", "rlo_ak_secret"); !errors.Is(err, codingclients.ErrAsideAccount) {
-		t.Fatalf("Enable() error = %v, want %v", err, codingclients.ErrAsideAccount)
 	}
 }
 

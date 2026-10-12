@@ -986,8 +986,7 @@ func (m *Manager) writeCatalog(ctx context.Context, agent Agent, overwrite bool)
 func (m *Manager) previewCatalog(ctx context.Context, agent Agent) []PlannedFile {
 	targets, err := m.paths.ConfigTargets(agent.ID)
 	if err != nil {
-		path := filepath.Join(m.paths.Home(), ".aside", "u")
-		return []PlannedFile{refusedPlan(PlannedFile{Kind: FileAside, Path: path}, err)}
+		return []PlannedFile{refusedPlan(PlannedFile{Kind: KindKey, Path: m.paths.KeyFile(agent.ID)}, err)}
 	}
 	planned := make([]PlannedFile, 0, len(targets))
 	for _, target := range targets {

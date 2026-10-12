@@ -18,7 +18,6 @@ func TestClientVocabularyMatchesTheAdapter(t *testing.T) {
 		{integration.FileOpenCode, codingclients.FileOpenCode},
 		{integration.FileHermes, codingclients.FileHermes},
 		{integration.FileOpenClaw, codingclients.FileOpenClaw},
-		{integration.FileAside, codingclients.FileAside},
 		{integration.FilePi, codingclients.FilePi},
 		{integration.FileOMP, codingclients.FileOMP},
 		{integration.ClaudeGatewayDiscoveryEnv, codingclients.ClaudeGatewayDiscoveryEnv},

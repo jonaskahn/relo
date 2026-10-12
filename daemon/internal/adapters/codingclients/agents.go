@@ -42,14 +42,10 @@ const (
 	ClientHermes   = "hermes"
 	ClientOpenClaw = "openclaw"
 	ClientKimi     = "kimi"
-	ClientGajae    = "gajae"
 	ClientDSH      = "dsh"
 	ClientMCode    = "mcode"
 	ClientZCode    = "zcode"
-	ClientPrime    = "prime"
-	ClientAside    = "aside"
 	ClientRaycast  = "raycast"
-	ClientOMO      = "omo"
 	ClientCline    = "cline"
 )
 
@@ -93,22 +89,14 @@ var agents = []Agent{
 		Summary: "Point OpenClaw at Relo with a custom provider block", ManagesFiles: true, EnvKey: EnvKeyName(ClientOpenClaw)},
 	{ID: ClientKimi, Client: ClientKimi, Protocol: inference.ProtocolOpenAI, Label: "Kimi Code",
 		Summary: "Point Kimi Code at Relo with a custom provider block", ManagesFiles: true, EnvKey: EnvKeyName(ClientKimi)},
-	{ID: ClientGajae, Client: ClientGajae, Protocol: inference.ProtocolOpenAI, Label: "Gajae",
-		Summary: "Point Gajae at Relo with a custom provider catalog", ManagesFiles: true, EnvKey: EnvKeyName(ClientGajae)},
 	{ID: ClientDSH, Client: ClientDSH, Protocol: inference.ProtocolOpenAI, Label: "DeepSeek Harness",
 		Summary: "Point the DeepSeek Harness at Relo with a custom provider block", ManagesFiles: true, EnvKey: EnvKeyName(ClientDSH)},
 	{ID: ClientMCode, Client: ClientMCode, Protocol: inference.ProtocolOpenAI, Label: "MiniMax Code",
 		Summary: "Point MiniMax Code at Relo with a custom provider block", ManagesFiles: true, EnvKey: EnvKeyName(ClientMCode)},
 	{ID: ClientZCode, Client: ClientZCode, Protocol: inference.ProtocolOpenAI, Label: "ZCode",
 		Summary: "Point ZCode at Relo with a custom provider block", ManagesFiles: true, EnvKey: EnvKeyName(ClientZCode)},
-	{ID: ClientPrime, Client: ClientPrime, Protocol: inference.ProtocolOpenAI, Label: "Prime",
-		Summary: "Point Prime at Relo with a custom provider catalog", ManagesFiles: true, EnvKey: EnvKeyName(ClientPrime)},
-	{ID: ClientAside, Client: ClientAside, Protocol: inference.ProtocolOpenAI, Label: "Aside",
-		Summary: "Point Aside at Relo with a custom provider catalog", ManagesFiles: true, EnvKey: EnvKeyName(ClientAside)},
 	{ID: ClientRaycast, Client: ClientRaycast, Protocol: inference.ProtocolOpenAI, Label: "Raycast",
 		Summary: "Point Raycast AI at Relo with a custom provider entry", ManagesFiles: true, EnvKey: EnvKeyName(ClientRaycast)},
-	{ID: ClientOMO, Client: ClientOMO, Protocol: inference.ProtocolOpenAI, Label: "OMO",
-		Summary: "Point OMO at Relo with a custom provider catalog", ManagesFiles: true, EnvKey: EnvKeyName(ClientOMO)},
 }
 
 // AgentFor returns the agent with the given identifier.

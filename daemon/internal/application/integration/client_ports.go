@@ -80,7 +80,6 @@ const (
 	FileOpenCode = "opencode-config"
 	FileHermes   = "hermes-config"
 	FileOpenClaw = "openclaw-config"
-	FileAside    = "aside-models"
 	FilePi       = "pi-models"
 	FileOMP      = "omp-models"
 

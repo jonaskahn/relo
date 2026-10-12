@@ -15,8 +15,8 @@ import (
 // CatalogAgent reports whether Relo writes this agent's provider block itself.
 func CatalogAgent(id string) bool {
 	switch id {
-	case ClientPi, ClientPrime, ClientAside, ClientOMO, ClientZCode, ClientCline,
-		ClientOMP, ClientGajae, ClientDSH, ClientMCode, ClientRaycast, ClientKimi:
+	case ClientPi, ClientZCode, ClientCline,
+		ClientOMP, ClientDSH, ClientMCode, ClientRaycast, ClientKimi:
 		return true
 	default:
 		return false
@@ -26,8 +26,8 @@ func CatalogAgent(id string) bool {
 // CatalogKind reports whether a stored file is one of those provider blocks.
 func CatalogKind(kind string) bool {
 	switch kind {
-	case FilePi, FilePrime, FileAside, FileOMO, FileZCode, FileClineProviders, FileClineModels,
-		FileOMP, FileGajae, FileDSH, FileDSHHeadless, FileDSHDesktop, FileMCode, FileRaycast, FileKimi:
+	case FilePi, FileZCode, FileClineProviders, FileClineModels,
+		FileOMP, FileDSH, FileDSHHeadless, FileDSHDesktop, FileMCode, FileRaycast, FileKimi:
 		return true
 	default:
 		return false
@@ -55,9 +55,9 @@ func MergeKind(kind, existing, baseURL string, models []ModelRef) (string, error
 		return "", err
 	}
 	switch kind {
-	case FilePi, FilePrime, FileAside, FileOMO, FileZCode, FileClineProviders:
+	case FilePi, FileZCode, FileClineProviders:
 		return mergeJSONKind(kind, existing, address, models)
-	case FileOMP, FileGajae, FileMCode:
+	case FileOMP, FileMCode:
 		return mergeYAMLKind(kind, existing, address, models)
 	default:
 		return mergeSpecialKind(kind, existing, address, models)
@@ -66,10 +66,8 @@ func MergeKind(kind, existing, baseURL string, models []ModelRef) (string, error
 
 func mergeJSONKind(kind, existing, address string, models []ModelRef) (string, error) {
 	switch kind {
-	case FilePi, FilePrime:
-		return mergeJSON(existing, []string{"providers", reloProviderID}, piProvider(kind, address, models, true))
-	case FileAside, FileOMO:
-		return mergeJSON(existing, []string{"providers", reloProviderID}, piProvider(kind, address, models, false))
+	case FilePi:
+		return mergeJSON(existing, []string{"providers", reloProviderID}, piProvider(address, models, true))
 	case FileZCode:
 		return mergeJSON(existing, []string{"providers", reloProviderID}, zcodeProvider(address, models))
 	default:
@@ -78,14 +76,10 @@ func mergeJSONKind(kind, existing, address string, models []ModelRef) (string, e
 }
 
 func mergeYAMLKind(kind, existing, address string, models []ModelRef) (string, error) {
-	switch kind {
-	case FileOMP:
+	if kind == FileOMP {
 		return mergeYAMLMap(existing, "providers", ompEntry(address, models))
-	case FileGajae:
-		return mergeYAMLMap(existing, "providers", gajaeEntry(address, models))
-	default:
-		return mergeYAMLMap(existing, "", mcodeEntry(address, models))
 	}
+	return mergeYAMLMap(existing, "", mcodeEntry(address, models))
 }
 
 func mergeSpecialKind(kind, existing, address string, models []ModelRef) (string, error) {
@@ -112,9 +106,9 @@ func StripKind(kind, existing string) (string, error) {
 		err      error
 	)
 	switch kind {
-	case FilePi, FilePrime, FileAside, FileOMO, FileZCode, FileClineProviders, FileClineModels:
+	case FilePi, FileZCode, FileClineProviders, FileClineModels:
 		stripped, err = stripJSON(existing, []string{"providers", reloProviderID})
-	case FileOMP, FileGajae:
+	case FileOMP:
 		stripped, err = stripYAMLMap(existing, "providers")
 	case FileMCode:
 		stripped, err = stripYAMLMap(existing, "")
@@ -139,9 +133,9 @@ func StripKind(kind, existing string) (string, error) {
 // KindHasRelo reports whether the file already names a relo provider.
 func KindHasRelo(kind, existing string) (bool, error) {
 	switch kind {
-	case FilePi, FilePrime, FileAside, FileOMO, FileZCode, FileClineProviders, FileClineModels:
+	case FilePi, FileZCode, FileClineProviders, FileClineModels:
 		return jsonHas(existing, []string{"providers", reloProviderID})
-	case FileOMP, FileGajae:
+	case FileOMP:
 		return yamlHas(existing, "providers")
 	case FileMCode:
 		return yamlHas(existing, "")
@@ -164,9 +158,9 @@ func KindPointsAt(kind, existing, baseURL string, models []ModelRef) bool {
 		return false
 	}
 	switch kind {
-	case FilePi, FilePrime, FileAside, FileOMO, FileZCode, FileClineProviders:
+	case FilePi, FileZCode, FileClineProviders:
 		return jsonKindPointsAt(kind, existing, address, models)
-	case FileOMP, FileGajae, FileMCode:
+	case FileOMP, FileMCode:
 		return yamlKindPointsAt(kind, existing, address, models)
 	default:
 		return specialKindPointsAt(kind, existing, address, models)
@@ -175,10 +169,8 @@ func KindPointsAt(kind, existing, baseURL string, models []ModelRef) bool {
 
 func jsonKindPointsAt(kind, existing, address string, models []ModelRef) bool {
 	switch kind {
-	case FilePi, FilePrime:
-		return jsonPointsAt(existing, piProvider(kind, address, models, true))
-	case FileAside, FileOMO:
-		return jsonPointsAt(existing, piProvider(kind, address, models, false))
+	case FilePi:
+		return jsonPointsAt(existing, piProvider(address, models, true))
 	case FileZCode:
 		return jsonPointsAt(existing, zcodeProvider(address, models))
 	default:
@@ -187,14 +179,10 @@ func jsonKindPointsAt(kind, existing, address string, models []ModelRef) bool {
 }
 
 func yamlKindPointsAt(kind, existing, address string, models []ModelRef) bool {
-	switch kind {
-	case FileOMP:
+	if kind == FileOMP {
 		return yamlPointsAt(existing, "providers", ompEntry(address, models))
-	case FileGajae:
-		return yamlPointsAt(existing, "providers", gajaeEntry(address, models))
-	default:
-		return yamlPointsAt(existing, "", mcodeEntry(address, models))
 	}
+	return yamlPointsAt(existing, "", mcodeEntry(address, models))
 }
 
 func specialKindPointsAt(kind, existing, address string, models []ModelRef) bool {
@@ -227,7 +215,7 @@ func catalogAddress(kind, baseURL string) (string, error) {
 
 func catalogUsesV1(kind string) bool {
 	switch kind {
-	case FilePi, FilePrime, FileAside, FileOMO, FileOMP, FileGajae, FileKimi, FileZCode:
+	case FilePi, FileOMP, FileKimi, FileZCode:
 		return true
 	default:
 		return false
@@ -238,20 +226,12 @@ func kindClient(kind string) string {
 	switch kind {
 	case FilePi:
 		return ClientPi
-	case FilePrime:
-		return ClientPrime
-	case FileAside:
-		return ClientAside
-	case FileOMO:
-		return ClientOMO
 	case FileZCode:
 		return ClientZCode
 	case FileClineProviders, FileClineModels:
 		return ClientCline
 	case FileOMP:
 		return ClientOMP
-	case FileGajae:
-		return ClientGajae
 	case FileDSH, FileDSHHeadless, FileDSHDesktop:
 		return ClientDSH
 	case FileMCode:
@@ -300,13 +280,15 @@ func jsonPointsAt(existing, raw string) bool {
 	return jsonEqual(got, raw)
 }
 
-func piProvider(kind, address string, models []ModelRef, withKey bool) string {
+// piProvider renders the one catalog that names Relo's own key, which is the
+// only client whose file Relo can reach the key for.
+func piProvider(address string, models []ModelRef, withKey bool) string {
 	fields := []string{
 		`"baseUrl":` + jsonString(address),
 		`"api":"openai-completions"`,
 	}
 	if withKey {
-		fields = append(fields, `"apiKey":`+jsonString(dollarKey(kind)))
+		fields = append(fields, `"apiKey":`+jsonString(dollarKey(FilePi)))
 	}
 	fields = append(fields, `"models":`+piModels(models))
 	return "{" + strings.Join(fields, ",") + "}"
@@ -417,10 +399,6 @@ func modelLimitFields(model ModelRef, format func(name string, value int64) stri
 		fields = append(fields, format("maxTokens", *model.MaxOutput))
 	}
 	return fields
-}
-
-func gajaeEntry(address string, models []ModelRef) string {
-	return "relo:\n  baseUrl: " + yamlQuote(address) + "\n  api: openai-completions\n" + yamlIDModels(models)
 }
 
 func mcodeEntry(address string, models []ModelRef) string {

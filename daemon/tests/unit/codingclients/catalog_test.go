@@ -2,9 +2,6 @@ package codingclients_test
 
 import (
 	"encoding/json"
-	"errors"
-	"os"
-	"path/filepath"
 	"strings"
 	"testing"
 
@@ -23,14 +20,10 @@ func TestCatalogMergeKeepsTheRestOfTheFile(t *testing.T) {
 		address  string
 	}{
 		{codingclients.FilePi, `{"theme":"dark","providers":{"openai":{"api":"openai"}}}` + "\n", "$RELO_PI_API_KEY", base + "/v1"},
-		{codingclients.FilePrime, "", "$RELO_PRIME_API_KEY", base + "/v1"},
-		{codingclients.FileAside, `{"providers":{"local":{}}}` + "\n", "", base + "/v1"},
-		{codingclients.FileOMO, "", "", base + "/v1"},
 		{codingclients.FileZCode, `{"providers":{"other":{}}}` + "\n", "$RELO_ZCODE_API_KEY", base + "/v1"},
 		{codingclients.FileClineProviders, `{"providers":{"openai":{"settings":{}}}}` + "\n", "$RELO_CLINE_API_KEY", base},
 		{codingclients.FileClineModels, "", "Relo", base},
 		{codingclients.FileOMP, "theme: dark\nproviders:\n  openai:\n    api: openai\n", "${RELO_OMP_API_KEY}", base + "/v1"},
-		{codingclients.FileGajae, "", "openai-completions", base + "/v1"},
 		{codingclients.FileDSH, "- id: other\n  config:\n    providers:\n      openai:\n        baseURL: http://example\n", "apiKeyEnv: RELO_DSH_API_KEY", base + "/v1"},
 		{codingclients.FileMCode, "editor: vim\n", "${RELO_MCODE_API_KEY}", base},
 		{codingclients.FileRaycast, "providers:\n  - id: openai\n    name: OpenAI\n", "Relo", base},
@@ -173,30 +166,4 @@ func siblingMarker(existing string) string {
 		}
 	}
 	return existing
-}
-
-func TestAsideAccountDirectory(t *testing.T) {
-	home := t.TempDir()
-	paths := codingclients.Paths{Home: home}
-	if _, err := paths.ConfigTargets(codingclients.ClientAside); !errors.Is(err, codingclients.ErrAsideAccount) {
-		t.Fatalf("ConfigTargets() error = %v, want %v", err, codingclients.ErrAsideAccount)
-	}
-	account := filepath.Join(home, ".aside", "u", "work")
-	if err := os.MkdirAll(account, 0o755); err != nil {
-		t.Fatalf("create the account directory: %v", err)
-	}
-	targets, err := paths.ConfigTargets(codingclients.ClientAside)
-	if err != nil {
-		t.Fatalf("ConfigTargets() error = %v", err)
-	}
-	want := filepath.Join(account, "models.json")
-	if len(targets) != 1 || targets[0].Path != want {
-		t.Fatalf("targets = %+v, want %s", targets, want)
-	}
-	if err := os.MkdirAll(filepath.Join(home, ".aside", "u", "play"), 0o755); err != nil {
-		t.Fatalf("create a second account: %v", err)
-	}
-	if _, err := paths.ConfigTargets(codingclients.ClientAside); !errors.Is(err, codingclients.ErrAsideAccount) {
-		t.Fatalf("ConfigTargets() error = %v, want %v", err, codingclients.ErrAsideAccount)
-	}
 }
