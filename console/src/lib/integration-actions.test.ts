@@ -6,6 +6,7 @@ import {
 	isSetupRefusal,
 	keyPathOf,
 	needsAttention,
+	openCodeSetupVersions,
 	refusalCode,
 	setupBlocked,
 	type IntegrationAction
@@ -111,5 +112,14 @@ describe('the guard over a refusal the daemon named', () => {
 		expect(isSetupRefusal('relative_path')).toBe(true);
 		expect(isSetupRefusal('stale_preview')).toBe(false);
 		expect(isSetupRefusal('')).toBe(false);
+	});
+});
+
+describe('the OpenCode set-up generations', () => {
+	test('names both generations when both switches are on', () => {
+		expect(openCodeSetupVersions(true, true)).toBe('v1+v2');
+		expect(openCodeSetupVersions(true, false)).toBe('v1');
+		expect(openCodeSetupVersions(false, true)).toBe('v2');
+		expect(openCodeSetupVersions(false, false)).toBe('');
 	});
 });

@@ -108,6 +108,10 @@ type integrationViewResponse struct {
 	RestartNeeded bool                    `json:"restart_needed,omitempty"`
 	EnvKey        string                  `json:"env_key,omitempty"`
 	Context1M     *bool                   `json:"context_1m,omitempty"`
+	// OpenCodeVersions names which generations hold Relo's provider in the
+	// OpenCode file: v1, v2, or v1+v2. It is empty for every other agent and
+	// when the file holds none.
+	OpenCodeVersions string `json:"open_code_versions,omitempty"`
 }
 
 func toIntegrationViewResponse(view appintegration.IntegrationView) integrationViewResponse {
@@ -120,7 +124,7 @@ func toIntegrationViewResponse(view appintegration.IntegrationView) integrationV
 		Preview: toPlannedFileList(view.Preview), Steps: toStringList(view.Steps),
 		UpdatedAtMs: view.UpdatedAtMs, ModelsStale: view.ModelsStale,
 		RestartNeeded: view.RestartNeeded, EnvKey: view.EnvKey,
-		Context1M: view.Context1M,
+		Context1M: view.Context1M, OpenCodeVersions: view.OpenCodeVersions,
 	}
 }
 

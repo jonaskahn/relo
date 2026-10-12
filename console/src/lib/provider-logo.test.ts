@@ -203,7 +203,9 @@ describe('providerLogoPath', () => {
 			'orcarouter',
 			'other',
 			'shared',
-			'google-antigravity'
+			'google-antigravity',
+			'zcode',
+			'raycast'
 		]) {
 			expect(providerLogoSrc(id), id).not.toBeNull();
 			expect(providerLogoPath(id), id).toBeNull();
@@ -229,14 +231,7 @@ describe('providerLogoPath', () => {
 			'sap-ai-core',
 			'sarvam',
 			'stackit',
-			'synthetic',
-			// Agents with no published mark. Claude Desktop is not here: it wears
-			// Anthropic's mark, which is the point of the alias.
-			'gajae',
-			'prime',
-			'raycast',
-			'aside',
-			'zcode'
+			'synthetic'
 		]) {
 			expect(providerLogoSrc(id), id).toBeNull();
 			expect(providerLogoPath(id), id).toBeNull();

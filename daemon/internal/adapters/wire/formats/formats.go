@@ -9,6 +9,7 @@ import (
 	"github.com/jonaskahn/relo/internal/adapters/wire"
 	"github.com/jonaskahn/relo/internal/adapters/wire/anthropic"
 	"github.com/jonaskahn/relo/internal/adapters/wire/bedrock"
+	"github.com/jonaskahn/relo/internal/adapters/wire/cursor"
 	"github.com/jonaskahn/relo/internal/adapters/wire/google"
 	"github.com/jonaskahn/relo/internal/adapters/wire/kiro"
 	"github.com/jonaskahn/relo/internal/adapters/wire/openaichat"
@@ -49,6 +50,8 @@ func (r *Registry) Outbound(format catalog.APIFormat) (wire.CodecModule, bool) {
 		return bedrock.NewCodec(""), true
 	case catalog.FormatKiro:
 		return kiro.NewCodec(""), true
+	case catalog.FormatCursorAgent:
+		return cursor.NewCodec(""), true
 	default:
 		return nil, false
 	}

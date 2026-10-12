@@ -265,14 +265,6 @@ type antigravityModels struct {
 	DeprecatedModelIDs         map[string]json.RawMessage `json:"deprecatedModelIds"`
 }
 
-var antigravityRetiredModelIDs = map[string]bool{
-	"gemini-3.5-flash-extra-low": true,
-	"gemini-3.5-flash-low":       true,
-	"gemini-3.5-flash-mid":       true,
-	"gemini-3.5-flash-high":      true,
-	"gemini-3-flash-agent":       true,
-}
-
 func (d antigravityModels) agentModelIDs() map[string]bool {
 	ids := make(map[string]bool, len(d.Models))
 	for _, sort := range d.AgentModelSorts {
@@ -311,7 +303,7 @@ func (d antigravityModels) nonAgentModelIDs() map[string]bool {
 
 func antigravityServes(id string, agents, others map[string]bool, deprecated map[string]json.RawMessage) bool {
 	switch {
-	case antigravityRetiredModelIDs[id]:
+	case catalog.RetiredAntigravity(id):
 		return false
 	case deprecated != nil:
 		if _, found := deprecated[id]; found {
@@ -380,26 +372,128 @@ func (l *Lister) postAntigravityList(ctx context.Context, target Target) (*http.
 	return l.client.Do(request)
 }
 
+type antigravityServed struct {
+	id   string
+	name string
+	ctx  *int64
+	max  *int64
+}
+
 func antigravityModelsOf(document antigravityModels) []Listed {
+	served := collectAntigravityServed(document)
+	grouped, singletons := groupAntigravityServed(served)
+	models := make([]Listed, 0, len(grouped)+len(singletons))
+	for logical, members := range grouped {
+		models = append(models, antigravityGrouped(logical, members))
+	}
+	return append(models, singletons...)
+}
+
+func collectAntigravityServed(document antigravityModels) map[string]antigravityServed {
 	agents := document.agentModelIDs()
 	others := document.nonAgentModelIDs()
-	models := make([]Listed, 0, len(document.Models))
+	served := make(map[string]antigravityServed, len(document.Models))
 	for id, entry := range document.Models {
 		if !antigravityServes(id, agents, others, document.DeprecatedModelIDs) {
 			continue
 		}
-		listed := Listed{ID: id, Name: entry.DisplayName}
+		item := antigravityServed{id: id, name: entry.DisplayName}
 		if entry.MaxTokens != nil && *entry.MaxTokens > 0 {
 			budget := *entry.MaxTokens
-			listed.ContextWindow = &budget
+			item.ctx = &budget
 		}
 		if entry.MaxOutputTokens != nil && *entry.MaxOutputTokens > 0 {
 			budget := *entry.MaxOutputTokens
-			listed.MaxOutput = &budget
+			item.max = &budget
 		}
-		models = append(models, listed)
+		served[id] = item
 	}
-	return models
+	return served
+}
+
+func groupAntigravityServed(served map[string]antigravityServed) (map[string][]antigravityServed, []Listed) {
+	grouped := make(map[string][]antigravityServed)
+	singletons := make([]Listed, 0, len(served))
+	for _, item := range served {
+		logical, found := antigravity.Logical(item.id)
+		if !found && antigravity.Variants(item.id) != nil {
+			logical, found = item.id, true
+		}
+		if !found || !isGeminiLogical(logical) {
+			singletons = append(singletons, Listed{ID: item.id, Name: item.name, ContextWindow: item.ctx, MaxOutput: item.max})
+			continue
+		}
+		grouped[logical] = append(grouped[logical], item)
+	}
+	return grouped, singletons
+}
+
+func isGeminiLogical(logical string) bool {
+	return len(logical) >= 6 && logical[:6] == "gemini"
+}
+
+func antigravityGrouped(logical string, members []antigravityServed) Listed {
+	listed := Listed{ID: logical, Name: antigravityGroupName(logical, members)}
+	listed.ContextWindow, listed.MaxOutput = antigravityWidest(members)
+	listed.RequestConfigs, listed.ReasoningEfforts = antigravityBandConfigs(logical, members)
+	supported := true
+	listed.SupportsReasoning = &supported
+	return listed
+}
+
+func antigravityGroupName(logical string, members []antigravityServed) string {
+	for _, member := range members {
+		if member.name != "" {
+			return member.name
+		}
+	}
+	return logical
+}
+
+func antigravityWidest(members []antigravityServed) (*int64, *int64) {
+	var widestCtx, widestMax *int64
+	for _, member := range members {
+		if member.ctx != nil && (widestCtx == nil || *member.ctx > *widestCtx) {
+			budget := *member.ctx
+			widestCtx = &budget
+		}
+		if member.max != nil && (widestMax == nil || *member.max > *widestMax) {
+			budget := *member.max
+			widestMax = &budget
+		}
+	}
+	return widestCtx, widestMax
+}
+
+func antigravityBandConfigs(logical string, members []antigravityServed) ([]catalog.ModelRequestConfig, []string) {
+	var configs []catalog.ModelRequestConfig
+	var efforts []string
+	for band, variant := range antigravity.Variants(logical) {
+		present := antigravityBandMember(members, variant.WireModel)
+		if present == nil {
+			continue
+		}
+		var ctx int64
+		if present.ctx != nil {
+			ctx = *present.ctx
+		}
+		efforts = append(efforts, band)
+		configs = append(configs, catalog.EncodeAntigravityConfig(catalog.AntigravityVariant{
+			LogicalID: logical, Selection: band, Effort: band, Default: band == "medium",
+			WireModel: variant.WireModel, ModelEnum: variant.ModelEnum, MaxOutput: variant.MaxOutput,
+			Context: ctx, Reasoning: true,
+		}))
+	}
+	return configs, efforts
+}
+
+func antigravityBandMember(members []antigravityServed, wire string) *antigravityServed {
+	for i := range members {
+		if members[i].id == wire {
+			return &members[i]
+		}
+	}
+	return nil
 }
 
 func (l *Lister) listBedrock(ctx context.Context, target Target) ([]Listed, error) {

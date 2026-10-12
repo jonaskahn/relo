@@ -33,6 +33,12 @@ type attemptSpec struct {
 	outcome    *requestOutcome
 	host       catalog.Provider
 	authorized catalog.Authorization
+	// cursor is the exact Cursor tuple one cursor-agent attempt sends,
+	// resolved after authorization chose the account.
+	cursor *wire.CursorRequest
+	// antigravity is the exact Cloud Code SKU one attempt sends, resolved
+	// after authorization chose the account.
+	antigravity *wire.AntigravityRequest
 	// prefer is the account a retry stays on. hold reports a failure that
 	// another retry of this account follows, so the account is not held to
 	// account for it yet: a rate limit or server fault a retry may cure.
@@ -46,12 +52,15 @@ func (s *Server) attempt(w http.ResponseWriter, spec attemptSpec, tried map[stri
 		return Result{}, err
 	}
 	spec.host, spec.authorized = host, authorized
+	if err := s.resolveAttemptSelections(&spec, tried); err != nil {
+		return Result{}, err
+	}
 	module, supported := s.opts.Formats.Outbound(spec.candidate.Model.APIFormat)
 	if !supported {
 		return Result{}, fmt.Errorf("%s: %w (%s)",
 			spec.candidate.ProviderID, catalog.ErrUnsupportedFormat, spec.candidate.Model.APIFormat)
 	}
-	announceAttempt(w, spec)
+	s.announceAttempt(w, spec)
 	exchange, err := s.buildAttemptExchange(spec, module, final)
 	if err != nil {
 		return Result{}, err
@@ -65,6 +74,25 @@ func (s *Server) attempt(w http.ResponseWriter, spec attemptSpec, tried map[stri
 	}
 	s.reportAttemptAsync(spec, result)
 	return result, err
+}
+
+func (s *Server) resolveAttemptSelections(spec *attemptSpec, tried map[string][]string) error {
+	if spec.candidate.Model.APIFormat == catalog.FormatCursorAgent {
+		selection, err := s.selectCursorAttempt(spec.request.Context(), spec, tried)
+		if err != nil {
+			return err
+		}
+		spec.cursor = selection
+	}
+	if spec.candidate.Model.APIFormat != catalog.FormatCloudCode {
+		return nil
+	}
+	selection, err := s.selectAntigravityAttempt(spec.request.Context(), spec, tried)
+	if err != nil {
+		return err
+	}
+	spec.antigravity = selection
+	return nil
 }
 
 func (s *Server) reportAttemptAsync(spec attemptSpec, result Result) {
@@ -107,16 +135,35 @@ func (s *Server) resolveAttemptCandidate(spec attemptSpec, tried map[string][]st
 	return host, authorized, nil
 }
 
-func announceAttempt(w http.ResponseWriter, spec attemptSpec) {
+func (s *Server) announceAttempt(w http.ResponseWriter, spec attemptSpec) {
 	outcome, candidate, authorized := spec.outcome, spec.candidate, spec.authorized
 	outcome.providerID, outcome.modelID, outcome.credential = candidate.ProviderID, candidate.ModelID, authorized.Label
 	// A candidate the catalog doubts is still sent, and the warning travels on
 	// the answer so the caller learns what it asked for that the model may not
 	// do. A retryable failure wrote nothing and clears the header again.
-	if len(candidate.Warnings) > 0 {
-		w.Header().Set(warningHeader, strings.Join(candidate.Warnings, "; "))
+	warnings := candidate.Warnings
+	if dropped := s.droppedCeilingWarning(spec); dropped != "" {
+		warnings = append(append([]string(nil), warnings...), dropped)
 	}
-	outcome.warnings = candidate.Warnings
+	if len(warnings) > 0 {
+		w.Header().Set(warningHeader, strings.Join(warnings, "; "))
+	}
+	outcome.warnings = warnings
+}
+
+// droppedCeilingWarning names the output ceiling the attempt leaves out:
+// the request states one and the connection's dialect has no parameter for
+// it. The codec drops it so the turn can run; the warning keeps the drop
+// from being silent.
+func (s *Server) droppedCeilingWarning(spec attemptSpec) string {
+	if spec.outcome == nil || spec.outcome.request == nil || spec.outcome.request.MaxTokens == 0 {
+		return ""
+	}
+	template, templated := s.connectionTemplate(spec.host)
+	if !templated || !template.RefusesMaxOutputTokens {
+		return ""
+	}
+	return "the model ignores the max-output ceiling"
 }
 
 func (s *Server) buildAttemptExchange(spec attemptSpec, module wire.CodecModule, final bool) (Exchange, error) {
@@ -197,6 +244,8 @@ func (s *Server) attemptCodecOptions(spec attemptSpec, extra map[string]string, 
 		LongContext:            outcome.longContext,
 		NativeMillion:          outcome.nativeMillion,
 		PromptTokens:           s.attemptPromptTokens(outcome),
+		Cursor:                 spec.cursor,
+		Antigravity:            spec.antigravity,
 	}
 }
 

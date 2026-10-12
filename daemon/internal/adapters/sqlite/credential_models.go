@@ -161,6 +161,9 @@ func (r *CredentialModelRepo) forget(ctx context.Context, handle execer, credent
 	if _, err := handle.ExecContext(ctx, deleteCredentialRostersSQL, credentialID); err != nil {
 		return fmt.Errorf("forget credential roster: %w", err)
 	}
+	if _, err := handle.ExecContext(ctx, deleteRequestConfigsSQL, credentialID); err != nil {
+		return fmt.Errorf("forget request configs: %w", err)
+	}
 	return nil
 }
 

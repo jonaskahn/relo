@@ -311,18 +311,18 @@ func TestListAntigravityCarriesAdvertisedBudgets(t *testing.T) {
 	for _, item := range listed {
 		budgets[item.ID] = item
 	}
-	full, found := budgets["gemini-3.8-flash"]
+	grouped, found := budgets["gemini-3.8-flash"]
 	if !found {
-		t.Fatalf("listed = %+v, want the advertised model", listed)
+		t.Fatalf("listed = %+v, want the grouped model", listed)
 	}
-	if full.ContextWindow == nil || *full.ContextWindow != 1048576 {
-		t.Fatalf("ContextWindow = %+v, want the advertised context", full.ContextWindow)
+	if grouped.ContextWindow == nil || *grouped.ContextWindow != 1048576 {
+		t.Fatalf("ContextWindow = %+v, want the advertised context", grouped.ContextWindow)
 	}
-	if full.MaxOutput == nil || *full.MaxOutput != 65536 {
-		t.Fatalf("MaxOutput = %+v, want the advertised output", full.MaxOutput)
+	if grouped.MaxOutput == nil || *grouped.MaxOutput != 65536 {
+		t.Fatalf("MaxOutput = %+v, want the advertised output", grouped.MaxOutput)
 	}
-	if bare, found := budgets["gemini-3.8-flash-high"]; !found || bare.ContextWindow != nil || bare.MaxOutput != nil {
-		t.Fatalf("listed = %+v, want no budgets invented for a silent row", listed)
+	if _, found := budgets["gemini-3.8-flash-high"]; found {
+		t.Fatalf("listed = %+v, want the SKU grouped rather than listed", listed)
 	}
 }
 
@@ -395,9 +395,9 @@ func TestListAntigravityKeepsOnlyTheAgentSurface(t *testing.T) {
 	got := antigravityListIDs(t, antigravityListing)
 	want := []string{
 		"claude-opus-4-6-thinking", "claude-sonnet-4-6", "gemini-2.5-pro",
-		"gemini-3.1-flash-image", "gemini-3.1-pro-low", "gemini-3.5-flash-lite",
-		"gemini-3.6-flash-medium", "gemini-3.7-flash-low", "gemini-3.8-flash-high",
-		"gemini-3.8-flash-tiered", "gemini-pro-agent", "gpt-oss-120b-medium",
+		"gemini-3.1-flash-image", "gemini-3.1-pro", "gemini-3.5-flash-lite",
+		"gemini-3.6-flash", "gemini-3.7-flash", "gemini-3.8-flash",
+		"gemini-3.8-flash-tiered", "gpt-oss-120b-medium",
 	}
 	if len(got) != len(want) {
 		t.Fatalf("listed = %v, want %v", got, want)
@@ -419,7 +419,7 @@ func TestListAntigravityWithoutBucketsKeepsWhatItLists(t *testing.T) {
 		"gemini-3.8-flash-high":{"displayName":"Gemini 3.8 Flash (High)"}
 	}}`
 	got := antigravityListIDs(t, body)
-	want := []string{"gemini-3.6-flash-medium", "gemini-3.8-flash-high", "tab_flash_lite_preview"}
+	want := []string{"gemini-3.6-flash", "gemini-3.8-flash", "tab_flash_lite_preview"}
 	if len(got) != len(want) {
 		t.Fatalf("listed = %v, want %v", got, want)
 	}

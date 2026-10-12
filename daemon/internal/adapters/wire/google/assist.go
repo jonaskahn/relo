@@ -583,33 +583,19 @@ func explicitToolConfig(choice *inference.ToolChoice) *toolConfig {
 }
 
 // claudeThinking reports the budget a Claude turn on Cloud Code Assist reasons
-// through. A turn that asked for nothing keeps nothing, so the endpoint
-// applies its own default; a turn that named an effort carries that effort as
-// a budget, and a turn that switched thinking off carries a zero budget with
-// summaries off.
+// through. Claude publishes no effort ladder here, so only thinking off is
+// honored: a turn that asked for nothing keeps nothing, and a turn that named
+// an effort is left to the endpoint default.
 func claudeThinking(req *inference.Request, opts wire.CodecOpts) *thinkingConfig {
 	if req.Reasoning == nil {
 		return nil
 	}
-	level, off := inference.ChooseThinking(req.Reasoning.Effort, opts.ReasoningEfforts, opts.ReasoningToggle)
-	if off || level == "none" {
+	_, off := inference.ChooseThinking(req.Reasoning.Effort, nil, opts.ReasoningToggle)
+	if off || req.Reasoning.Effort == "none" {
 		budget := inference.ClampBudget(0, opts.ReasoningBudgetMin, opts.ReasoningBudgetMax)
 		return &thinkingConfig{ThinkingBudget: &budget, IncludeThoughts: false}
 	}
-	name := level
-	if name == "" {
-		var ok bool
-		name, ok = inference.NormalizeEffort(req.Reasoning.Effort)
-		if !ok {
-			return nil
-		}
-	}
-	budget, ok := inference.EffortBudget(name)
-	if !ok {
-		return nil
-	}
-	budget = inference.ClampBudget(budget, opts.ReasoningBudgetMin, opts.ReasoningBudgetMax)
-	return &thinkingConfig{ThinkingBudget: &budget, IncludeThoughts: true}
+	return nil
 }
 
 // outputCeiling reports the largest completion the vendor serves on this

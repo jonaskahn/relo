@@ -761,7 +761,9 @@
           "antigravityTitle": "تسجيل الدخول إلى Google Antigravity",
           "antigravityDescription": "كيف يجدّد تسجيل الدخول هذا إلى Google Antigravity رمزه.",
           "grokTitle": "تسجيل الدخول إلى Grok",
-          "grokDescription": "كيف يجدّد تسجيل الدخول هذا إلى Grok رمزه."
+          "grokDescription": "كيف يجدّد تسجيل الدخول هذا إلى Grok رمزه.",
+          "modelPrefixesLabel": "Model families",
+          "modelPrefixesHint": "Comma-separated prefixes the roster keeps, e.g. claude, gemini."
         },
         "add": {
           "title": "إضافة اتصال",
@@ -1576,6 +1578,9 @@
         "rotateTitle": "هل تريد تدوير هذا المفتاح؟",
         "rotateBody": "تمت كتابة سر جديد في الملفات التي يملكها Relo. السر السابق يتوقف عن العمل فورا.",
         "removed": "تمت إزالة التكامل.",
+        "forceRemove": "إزالة على أي حال",
+        "forceRemoveTitle": "إزالته على أي حال؟",
+        "forceRemoveBody": "لم يعد Relo يحتفظ بنسخة من إعداداتك، لذا لا يمكنه إعادتها. الإزالة على أي حال تزيل جزء Relo من الملف وتُبقي ما تبقى منه كما هو.",
         "saved": "إعداد التكامل.",
         "rotated": "تم تدوير المفتاح.",
         "repaired": "تم إصلاح التكامل.",
@@ -1606,6 +1611,11 @@
         "context1MOn": "نافذة سياق 1M مفعّلة",
         "context1MOff": "نافذة سياق 1M متوقفة",
         "keyNonePending": "لا يوجد مفتاح بعد. إعداد الوكيل يصدر مفتاحا.",
+        "openCodeVersionsTitle": "إصدار الإعدادات",
+        "openCodeV1": "V1",
+        "openCodeV1Desc": "كتلة الموفر المفردة القديمة",
+        "openCodeV2": "V2",
+        "openCodeV2Desc": "كتلة الموفرين الجمع الحالية",
         "addTitle": "إضافة وكيل",
         "addSubtitle": "اختر وكيلًا وقم بإعداده وشاهد التحقق وهو يثبت التوصيل.",
         "addChooseHint": "اختر وكيلًا لتوصيله.",

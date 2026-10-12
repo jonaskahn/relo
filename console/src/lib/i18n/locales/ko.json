@@ -761,7 +761,9 @@
           "antigravityTitle": "Google Antigravity 로그인",
           "antigravityDescription": "이 Google Antigravity 로그인이 토큰을 갱신하는 방식입니다.",
           "grokTitle": "Grok 로그인",
-          "grokDescription": "이 Grok 로그인이 토큰을 갱신하는 방식입니다."
+          "grokDescription": "이 Grok 로그인이 토큰을 갱신하는 방식입니다.",
+          "modelPrefixesLabel": "Model families",
+          "modelPrefixesHint": "Comma-separated prefixes the roster keeps, e.g. claude, gemini."
         },
         "add": {
           "title": "연결 추가",
@@ -1576,6 +1578,9 @@
         "rotateTitle": "이 키를 로테이션할까요?",
         "rotateBody": "새 시크릿이 Relo 소유 파일에 기록돼요. 이전 시크릿은 즉시 사용할 수 없어요.",
         "removed": "연동을 삭제했어요.",
+        "forceRemove": "강제로 삭제",
+        "forceRemoveTitle": "강제로 삭제할까요?",
+        "forceRemoveBody": "Relo가 더 이상 설정 사본을 보관하지 않아 되돌릴 수 없습니다. 강제 삭제하면 파일에서 Relo 부분만 제거되고 나머지는 그대로 남습니다.",
         "saved": "연동을 설정했어요.",
         "rotated": "키를 로테이션했어요.",
         "repaired": "연동을 복구했어요.",
@@ -1606,6 +1611,11 @@
         "context1MOn": "1M 컨텍스트 켬",
         "context1MOff": "1M 컨텍스트 끔",
         "keyNonePending": "아직 키가 없습니다. 에이전트를 설정하면 발급됩니다.",
+        "openCodeVersionsTitle": "구성 버전",
+        "openCodeV1": "V1",
+        "openCodeV1Desc": "레거시 단일 공급자 블록",
+        "openCodeV2": "V2",
+        "openCodeV2Desc": "현재 복수 공급자 블록",
         "addTitle": "에이전트 추가",
         "addSubtitle": "에이전트를 선택해 설정하고, 검증이 배선을 증명하는지 확인합니다.",
         "addChooseHint": "연결할 에이전트를 선택합니다.",

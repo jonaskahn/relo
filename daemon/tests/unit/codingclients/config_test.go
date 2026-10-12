@@ -126,7 +126,7 @@ func TestMergeOpenCodeIncludesOnlyKnownLimits(t *testing.T) {
 	}
 }
 
-func TestMergeOpenCodeDropsAStalePluralBlock(t *testing.T) {
+func TestMergeOpenCodeReplacesAStalePluralBlock(t *testing.T) {
 	existing := "{\"provider\":{\"other\":true},\"providers\":{\"relo\":{\"stale\":true}}}\n"
 	merged, err := codingclients.MergeOpenCode(existing, baseURL, sampleModels())
 	if err != nil {
@@ -136,8 +136,15 @@ func TestMergeOpenCodeDropsAStalePluralBlock(t *testing.T) {
 	if err := json.Unmarshal([]byte(merged), &document); err != nil {
 		t.Fatalf("merged file does not parse: %v\n%s", err, merged)
 	}
-	if _, ok := document["providers"]; ok {
-		t.Fatalf("merged file = %s, want the stale providers block gone", merged)
+	relo, ok := document["providers"].(map[string]any)["relo"].(map[string]any)
+	if !ok {
+		t.Fatalf("merged file = %s, want the providers block rewritten", merged)
+	}
+	if _, ok := relo["stale"]; ok {
+		t.Fatalf("merged file = %s, want the stale entry gone", merged)
+	}
+	if _, ok := relo["package"]; !ok {
+		t.Fatalf("merged file = %s, want the current generation", merged)
 	}
 	if !codingclients.ProviderPointsAt(codingclients.ClientOpenCode, merged, baseURL, sampleModels()) {
 		t.Fatalf("ProviderPointsAt() = false after merging:\n%s", merged)
@@ -148,6 +155,106 @@ func TestMergeOpenCodeDropsAStalePluralBlock(t *testing.T) {
 	}
 	if strings.Contains(stripped, "relo") {
 		t.Fatalf("stripped file still names Relo:\n%s", stripped)
+	}
+}
+
+func TestMergeOpenCodeVersionsWritesBothGenerations(t *testing.T) {
+	merged, err := codingclients.MergeOpenCodeVersions("", baseURL, sampleModels(), codingclients.OpenCodeBoth)
+	if err != nil {
+		t.Fatalf("MergeOpenCodeVersions() error = %v", err)
+	}
+	var document map[string]any
+	if err := json.Unmarshal([]byte(merged), &document); err != nil {
+		t.Fatalf("merged file does not parse: %v\n%s", err, merged)
+	}
+	v1 := openCodeModelsOf(t, document, "provider")
+	v2 := openCodeModelsOf(t, document, "providers")
+	if _, ok := v1["relo-openai-gpt-4o"]; !ok {
+		t.Fatalf("merged file = %s, want the legacy generation", merged)
+	}
+	if _, ok := v2["relo-openai-gpt-4o"]; !ok {
+		t.Fatalf("merged file = %s, want the current generation", merged)
+	}
+	if !strings.Contains(merged, "@ai-sdk/openai-compatible") || !strings.Contains(merged, "@opencode/ai/providers/openai-compatible") {
+		t.Fatalf("merged file = %s, want both runtimes", merged)
+	}
+	if codingclients.OpenCodeVersionsPresent(merged) != codingclients.OpenCodeBoth {
+		t.Fatalf("present = %q, want both generations", codingclients.OpenCodeVersionsPresent(merged))
+	}
+	again, err := codingclients.MergeOpenCodeVersions(merged, baseURL, sampleModels(), codingclients.OpenCodeBoth)
+	if err != nil {
+		t.Fatalf("MergeOpenCodeVersions() again error = %v", err)
+	}
+	if again != merged {
+		t.Fatalf("a second merge changed the file:\n%s\n---\n%s", merged, again)
+	}
+	if !codingclients.ProviderPointsAt(codingclients.ClientOpenCode, merged, baseURL, sampleModels()) {
+		t.Fatalf("ProviderPointsAt() = false for both generations:\n%s", merged)
+	}
+}
+
+func TestMergeOpenCodeVersionsSwitchCleansUp(t *testing.T) {
+	both, err := codingclients.MergeOpenCodeVersions("", baseURL, sampleModels(), codingclients.OpenCodeBoth)
+	if err != nil {
+		t.Fatalf("MergeOpenCodeVersions() error = %v", err)
+	}
+	current, err := codingclients.MergeOpenCodeVersions(both, baseURL, sampleModels(), codingclients.OpenCodeV2)
+	if err != nil {
+		t.Fatalf("MergeOpenCodeVersions() error = %v", err)
+	}
+	if codingclients.OpenCodeVersionsPresent(current) != codingclients.OpenCodeV2 {
+		t.Fatalf("present = %q, want only the current generation", codingclients.OpenCodeVersionsPresent(current))
+	}
+	legacy, err := codingclients.MergeOpenCodeVersions(both, baseURL, sampleModels(), codingclients.OpenCodeV1)
+	if err != nil {
+		t.Fatalf("MergeOpenCodeVersions() error = %v", err)
+	}
+	if codingclients.OpenCodeVersionsPresent(legacy) != codingclients.OpenCodeV1 {
+		t.Fatalf("present = %q, want only the legacy generation", codingclients.OpenCodeVersionsPresent(legacy))
+	}
+}
+
+func TestMergeOpenCodeVersionsRejectsUnknown(t *testing.T) {
+	if _, err := codingclients.MergeOpenCodeVersions("", baseURL, nil, "v3"); !errors.Is(err, codingclients.ErrUnknownOpenCodeVersions) {
+		t.Fatalf("MergeOpenCodeVersions() error = %v, want %v", err, codingclients.ErrUnknownOpenCodeVersions)
+	}
+}
+
+func TestOpenCodeVersionsPresentReadsTheFile(t *testing.T) {
+	cases := []struct {
+		name     string
+		existing string
+		want     string
+	}{
+		{"empty", "", ""},
+		{"garbage", "{", ""},
+		{"legacy", "{\"provider\":{\"relo\":{}}}", codingclients.OpenCodeV1},
+		{"current", "{\"providers\":{\"relo\":{}}}", codingclients.OpenCodeV2},
+		{"both", "{\"provider\":{\"relo\":{}},\"providers\":{\"relo\":{}}}", codingclients.OpenCodeBoth},
+		{"other", "{\"provider\":{\"other\":true}}", ""},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			if got := codingclients.OpenCodeVersionsPresent(tc.existing); got != tc.want {
+				t.Fatalf("present = %q, want %q", got, tc.want)
+			}
+		})
+	}
+}
+
+func TestOpenCodePointsAtFollowsTheFile(t *testing.T) {
+	legacy, err := codingclients.MergeOpenCodeVersions("", baseURL, sampleModels(), codingclients.OpenCodeV1)
+	if err != nil {
+		t.Fatalf("MergeOpenCodeVersions() error = %v", err)
+	}
+	if !codingclients.ProviderPointsAt(codingclients.ClientOpenCode, legacy, baseURL, sampleModels()) {
+		t.Fatalf("ProviderPointsAt() = false for the legacy generation:\n%s", legacy)
+	}
+	if codingclients.ProviderPointsAt(codingclients.ClientOpenCode, legacy, "http://example.test", sampleModels()) {
+		t.Fatal("ProviderPointsAt() = true after the address changed")
+	}
+	if codingclients.ProviderPointsAt(codingclients.ClientOpenCode, "{\"theme\":\"dark\"}\n", baseURL, sampleModels()) {
+		t.Fatal("ProviderPointsAt() = true when no generation is present")
 	}
 }
 
@@ -253,30 +360,31 @@ func TestClientConfigsTranslateCapabilities(t *testing.T) {
 	if err := json.Unmarshal([]byte(merged), &document); err != nil {
 		t.Fatalf("merged file does not parse: %v\n%s", err, merged)
 	}
-	v1 := openCodeModelsOf(t, document, "provider")
-	if _, ok := document["providers"]; ok {
-		t.Fatalf("merged file = %s, want only the singular provider key", merged)
+	v2 := openCodeModelsOf(t, document, "providers")
+	if _, ok := document["provider"]; ok {
+		t.Fatalf("merged file = %s, want only the plural providers key", merged)
 	}
-	thinkerV1 := v1["thinker"].(map[string]any)
-	if _, ok := thinkerV1["variants"]; ok || thinkerV1["capabilities"] != nil {
-		t.Fatalf("thinker = %v, want attachment and modalities without variants", thinkerV1)
+	thinkerV2 := v2["thinker"].(map[string]any)
+	if _, ok := thinkerV2["variants"]; ok || thinkerV2["attachment"] != nil || thinkerV2["modalities"] != nil {
+		t.Fatalf("thinker = %v, want capabilities without legacy fields", thinkerV2)
 	}
-	if thinkerV1["attachment"] != true {
-		t.Fatalf("attachment = %v, want true", thinkerV1["attachment"])
-	}
-	modalities := thinkerV1["modalities"].(map[string]any)
-	input := modalities["input"].([]any)
+	capabilities := thinkerV2["capabilities"].(map[string]any)
+	input := capabilities["input"].([]any)
 	if len(input) != 2 || input[0] != "text" || input[1] != "image" {
 		t.Fatalf("input = %v, want text and image", input)
 	}
-	plain := v1["plain"].(map[string]any)
-	if _, ok := plain["variants"]; ok || plain["capabilities"] != nil {
-		t.Fatalf("plain = %v, want attachment and modalities without variants", plain)
+	if capabilities["output"].([]any)[0] != "text" {
+		t.Fatalf("capabilities = %v, want text output", capabilities)
 	}
-	if plain["attachment"] != false {
-		t.Fatalf("plain attachment = %v, want false", plain["attachment"])
+	plain := v2["plain"].(map[string]any)
+	if _, ok := plain["variants"]; ok || plain["attachment"] != nil || plain["modalities"] != nil {
+		t.Fatalf("plain = %v, want capabilities without legacy fields", plain)
 	}
-	unknown := v1["unknown"].(map[string]any)
+	plainCapabilities := plain["capabilities"].(map[string]any)
+	if len(plainCapabilities["input"].([]any)) != 1 {
+		t.Fatalf("plain = %v, want text-only input", plain)
+	}
+	unknown := v2["unknown"].(map[string]any)
 	if len(unknown) != 0 {
 		t.Fatalf("unknown = %v, want no invented capabilities", unknown)
 	}
@@ -409,9 +517,9 @@ func TestClientConfigsUseAStatedThinkLadder(t *testing.T) {
 	if err := json.Unmarshal([]byte(merged), &document); err != nil {
 		t.Fatalf("merged file does not parse: %v\n%s", err, merged)
 	}
-	v1 := openCodeModelsOf(t, document, "provider")
+	v2 := openCodeModelsOf(t, document, "providers")
 	for _, id := range []string{"mimo", "thinker"} {
-		if _, ok := v1[id].(map[string]any)["variants"]; ok {
+		if _, ok := v2[id].(map[string]any)["variants"]; ok {
 			t.Fatalf("opencode %s carries variants", id)
 		}
 	}
@@ -432,5 +540,45 @@ func TestClientConfigsUseAStatedThinkLadder(t *testing.T) {
 	thinker := clawModel(t, rows, "thinker")["compat"].(map[string]any)["supportedReasoningEfforts"].([]any)
 	if len(thinker) != 5 {
 		t.Fatalf("openclaw thinker efforts = %v, want the shared ladder", thinker)
+	}
+}
+
+func TestMergeOpenCodeMarksCursorVariantLanes(t *testing.T) {
+	million := int64(1_000_000)
+	models := []codingclients.ModelRef{
+		{ID: "relo-cursor-grok-4.7-1m", Name: "Grok 4.7", Connection: "Cursor", ContextWindow: &million},
+		{ID: "relo-cursor-grok-4.7-1m-fast-1m", Name: "Grok 4.7", Connection: "Cursor", ContextWindow: &million},
+		{ID: "relo-cursor-grok-4.7-1m-max-1m", Name: "Grok 4.7", Connection: "Cursor", ContextWindow: &million, Upstream: "grok-4.7-1m-fast-max"},
+		{ID: "relo-cursor-grok-4.7-1m-fast-max-1m", Name: "Grok 4.7", Connection: "Cursor", ContextWindow: &million},
+		{ID: "relo-openai-gpt-max-1m", Name: "GPT Max", Connection: "OpenAI", ContextWindow: &million},
+	}
+	merged, err := codingclients.MergeOpenCodeVersions("", baseURL, models, codingclients.OpenCodeBoth)
+	if err != nil {
+		t.Fatalf("MergeOpenCodeVersions() error = %v", err)
+	}
+	var document map[string]any
+	if err := json.Unmarshal([]byte(merged), &document); err != nil {
+		t.Fatalf("merged file does not parse: %v\n%s", err, merged)
+	}
+	for _, key := range []string{"provider", "providers"} {
+		names := map[string]string{}
+		for id, model := range openCodeModelsOf(t, document, key) {
+			names[id] = model.(map[string]any)["name"].(string)
+		}
+		if names["relo-cursor-grok-4.7-1m"] != "Grok 4.7 1M on Cursor" {
+			t.Fatalf("%s standard lane = %q, want no variant mark", key, names["relo-cursor-grok-4.7-1m"])
+		}
+		if names["relo-cursor-grok-4.7-1m-fast-1m"] != "Grok 4.7 1M (Fast) on Cursor" {
+			t.Fatalf("%s fast lane = %q, want the fast mark after the window", key, names["relo-cursor-grok-4.7-1m-fast-1m"])
+		}
+		if names["relo-cursor-grok-4.7-1m-max-1m"] != "Grok 4.7 1M (Max) on Cursor" {
+			t.Fatalf("%s max lane = %q, want the max mark after the window", key, names["relo-cursor-grok-4.7-1m-max-1m"])
+		}
+		if names["relo-cursor-grok-4.7-1m-fast-max-1m"] != "Grok 4.7 1M (Fast, Max) on Cursor" {
+			t.Fatalf("%s fast max lane = %q, want fast before max", key, names["relo-cursor-grok-4.7-1m-fast-max-1m"])
+		}
+		if names["relo-openai-gpt-max-1m"] != "GPT Max 1M on OpenAI" {
+			t.Fatalf("%s non-cursor lane = %q, want its own spelling kept", key, names["relo-openai-gpt-max-1m"])
+		}
 	}
 }

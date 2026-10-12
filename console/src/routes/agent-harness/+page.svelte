@@ -5,6 +5,7 @@
 	import { agentAttention } from '$lib/agent-attention.svelte';
 	import {
 		blocked,
+		offersForcedRemoval,
 		overwrittenFiles,
 		resultCodeFor,
 		runningOn,
@@ -93,6 +94,9 @@
 	let pendingConfirm = $state<ConfirmAction | null>(null);
 	let confirmOpen = $state(false);
 	let confirmBusy = $state(false);
+	// A removal the daemon stopped because it holds no copy to put back. The
+	// confirmation stays open and asks the same question with the force flag.
+	let forcingRemove = $state(false);
 
 	// The test side: the models the agent's own key reaches and one turn sent
 	// through it. Both travel the data plane the agent is pointed at.
@@ -401,6 +405,7 @@
 	function ask(action: ConfirmAction, agent: IntegrationView) {
 		detail = agent;
 		confirmFailure = '';
+		forcingRemove = false;
 		pendingConfirm = action;
 		detailOpen = false;
 	}
@@ -442,8 +447,12 @@
 			} else {
 				// The operator's "remove" is the daemon's "disable": Relo takes its
 				// configuration back out, restores what it snapshotted, and retires the
-				// key it minted.
-				await api(integrationPath(agent.id, action), { method: 'POST' });
+				// key it minted. A removal Relo cannot put back asks again with the
+				// force flag, which strips Relo's part out of the file instead.
+				await api(integrationPath(agent.id, action), {
+					method: 'POST',
+					...(forcingRemove ? { body: JSON.stringify({ force: true }) } : {})
+				});
 				agents = patchAgent(agents, {
 					...agent,
 					enabled: false,
@@ -466,41 +475,51 @@
 			}
 		} catch (error) {
 			// The confirmation itself reports the failure, so the operator is not left
-			// wondering whether anything happened.
+			// wondering whether anything happened. One failure the operator can answer
+			// keeps the dialog open and asks the destructive question again.
+			if (action === 'remove' && offersForcedRemoval(error)) {
+				forcingRemove = true;
+				confirmFailure = message(error);
+				confirmBusy = false;
+				return;
+			}
 			confirmFailure = message(error);
-		} finally {
-			confirmBusy = false;
-			confirmOpen = false;
-			confirming = null;
 		}
+		confirmBusy = false;
+		confirmOpen = false;
+		confirming = null;
 	}
 
 	const overwritten = $derived(confirming === 'remove' && detail ? overwrittenFiles(detail) : []);
 
 	const confirmTitle = $derived(
-		confirming === 'remove'
-			? $t('ui.pages.integrationsPage.removeTitle', {
-					values: { label: detail ? labelOf(detail) : '' }
-				})
-			: confirming === 'restore'
-				? $t('ui.pages.integrationsPage.restoreTitle')
-				: confirming === 'overwrite'
-					? $t('ui.pages.integrationsPage.overwriteTitle')
-					: $t('ui.pages.integrationsPage.rotateTitle')
+		forcingRemove
+			? $t('ui.pages.integrationsPage.forceRemoveTitle')
+			: confirming === 'remove'
+				? $t('ui.pages.integrationsPage.removeTitle', {
+						values: { label: detail ? labelOf(detail) : '' }
+					})
+				: confirming === 'restore'
+					? $t('ui.pages.integrationsPage.restoreTitle')
+					: confirming === 'overwrite'
+						? $t('ui.pages.integrationsPage.overwriteTitle')
+						: $t('ui.pages.integrationsPage.rotateTitle')
 	);
 
 	const confirmBody = $derived(
-		confirming === 'remove'
-			? overwritten.length > 0
-				? $t('ui.pages.integrationsPage.removeBodyOverwrite', {
-						values: { count: overwritten.length, files: overwritten.join(', ') }
-					})
-				: $t('ui.pages.integrationsPage.removeBody')
-			: confirming === 'restore'
-				? $t('ui.pages.integrationsPage.restoreBody')
-				: confirming === 'overwrite'
-					? $t('ui.pages.integrationsPage.overwriteBody')
-					: $t('ui.pages.integrationsPage.rotateBody')
+		forcingRemove
+			? $t('ui.pages.integrationsPage.forceRemoveBody')
+			: confirming === 'remove'
+				? overwritten.length > 0
+					? $t('ui.pages.integrationsPage.removeBodyOverwrite', {
+							values: { count: overwritten.length, files: overwritten.join(', ') }
+						})
+					: $t('ui.pages.integrationsPage.removeBody')
+				: confirming === 'restore'
+					? $t('ui.pages.integrationsPage.restoreBody')
+					: confirming === 'overwrite'
+						? $t('ui.pages.integrationsPage.overwriteBody')
+						: $t('ui.pages.integrationsPage.rotateBody')
 	);
 
 	// primary is the modal's one primary for the view step: what the operator most
@@ -772,9 +791,11 @@
 	title={confirmTitle}
 	body={confirmBody}
 	error={confirmFailure}
-	confirmLabel={confirming === 'remove'
-		? $t('ui.pages.integrationsPage.remove')
-		: $t('ui.common.confirm')}
+	confirmLabel={forcingRemove
+		? $t('ui.pages.integrationsPage.forceRemove')
+		: confirming === 'remove'
+			? $t('ui.pages.integrationsPage.remove')
+			: $t('ui.common.confirm')}
 	tone={confirming === 'remove' ? 'destructive' : 'default'}
 	busy={confirmBusy}
 	icon={confirming === 'remove' ? 'trash' : 'alert-triangle'}

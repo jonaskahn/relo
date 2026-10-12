@@ -761,7 +761,9 @@
           "antigravityTitle": "Connexion Google Antigravity",
           "antigravityDescription": "Comment cette connexion Google Antigravity renouvelle son jeton.",
           "grokTitle": "Connexion Grok",
-          "grokDescription": "Comment cette connexion Grok renouvelle son jeton."
+          "grokDescription": "Comment cette connexion Grok renouvelle son jeton.",
+          "modelPrefixesLabel": "Model families",
+          "modelPrefixesHint": "Comma-separated prefixes the roster keeps, e.g. claude, gemini."
         },
         "add": {
           "title": "Ajouter une connexion",
@@ -1576,6 +1578,9 @@
         "rotateTitle": "Renouveler cette clé ?",
         "rotateBody": "Un nouveau secret est écrit dans les fichiers possédés par Relo. L'ancien secret cesse aussitôt de fonctionner.",
         "removed": "Intégration retirée.",
+        "forceRemove": "Forcer la suppression",
+        "forceRemoveTitle": "Forcer la suppression ?",
+        "forceRemoveBody": "Relo ne conserve plus de copie de votre configuration et ne peut pas la restaurer. La suppression forcée retire la part de Relo du fichier et laisse le reste inchangé.",
         "saved": "Intégration configurée.",
         "rotated": "Clé renouvelée.",
         "repaired": "Intégration réparée.",
@@ -1606,6 +1611,11 @@
         "context1MOn": "Fenêtre de contexte 1M activée",
         "context1MOff": "Fenêtre de contexte 1M désactivée",
         "keyNonePending": "Aucune clé pour l'instant. La configuration en crée une.",
+        "openCodeVersionsTitle": "Version de configuration",
+        "openCodeV1": "V1",
+        "openCodeV1Desc": "Bloc de fournisseur singulier hérité",
+        "openCodeV2": "V2",
+        "openCodeV2Desc": "Bloc de fournisseurs pluriel actuel",
         "addTitle": "Ajouter un agent",
         "addSubtitle": "Choisis un agent, configure-le et regarde la vérification prouver le câblage.",
         "addChooseHint": "Choisis un agent à câbler.",

@@ -431,7 +431,7 @@
 
 		<Tabs.Content value="settings" class="tab-panel flex flex-col outline-none">
 			{#key provider}
-				<SettingsTab {provider} allFormats={formats} {onchanged} />
+				<SettingsTab {provider} allFormats={formats} {onchanged} onmodelschanged={reloadModels} />
 			{/key}
 		</Tabs.Content>
 	</Tabs.Root>

@@ -46,6 +46,9 @@ var (
 	ErrSurfaceDisabled = errors.New("the surface this agent speaks is not served")
 	// ErrUnsupportedFile reports a plan item no writer handles.
 	ErrUnsupportedFile = errors.New("relo does not write")
+	// ErrRestoreBlocked reports a restore that could not read the copy it
+	// would put back, which only a forced removal gets past.
+	ErrRestoreBlocked = errors.New("the copy Relo snapshotted cannot be read")
 )
 
 var errForeignProviderReason = errors.New("the file already has a relo provider")
@@ -460,21 +463,36 @@ func (m *Manager) contributionDrifted(agent Agent, file FileRecord, content stri
 	}
 }
 
+// EnableOptions carries per-setup choices beyond overwrite. OpenCodeVersions
+// names which OpenCode generations setup writes: v1, v2, or v1+v2. It is
+// ignored for every other agent, and empty keeps the generations already in
+// the file, writing the current one when the file holds none.
+type EnableOptions struct {
+	Overwrite        bool
+	OpenCodeVersions string
+}
+
 // EnableOverwriting writes everything one agent needs even when the client's
 // file already holds something else: the key file its helper reads, the
 // client's own configuration where Relo manages one, and the helper that
 // starts the daemon on demand. The rest of that file is kept.
 func (m *Manager) EnableOverwriting(ctx context.Context, id, token string) (View, error) {
-	return m.enable(ctx, id, token, true)
+	return m.EnableWith(ctx, id, token, EnableOptions{Overwrite: true})
 }
 
 // Enable wires one agent to Relo, refusing where the client's file already
 // has a provider Relo does not own; EnableOverwriting takes it over instead.
 func (m *Manager) Enable(ctx context.Context, id, token string) (View, error) {
-	return m.enable(ctx, id, token, false)
+	return m.EnableWith(ctx, id, token, EnableOptions{})
 }
 
-func (m *Manager) enable(ctx context.Context, id, token string, overwrite bool) (View, error) {
+// EnableWith wires one agent the way Enable does, honouring the options it is
+// given.
+func (m *Manager) EnableWith(ctx context.Context, id, token string, opts EnableOptions) (View, error) {
+	return m.enable(ctx, id, token, opts)
+}
+
+func (m *Manager) enable(ctx context.Context, id, token string, opts EnableOptions) (View, error) {
 	agent, found := m.agents.AgentFor(id)
 	if !found {
 		return View{}, fmt.Errorf("%s: %w", id, ErrUnknownAgent)
@@ -489,7 +507,7 @@ func (m *Manager) enable(ctx context.Context, id, token string, overwrite bool) 
 	if err := m.writeKeyFile(ctx, agent, token); err != nil {
 		return View{}, err
 	}
-	if err := m.provisionAgentFiles(ctx, agent, token, overwrite); err != nil {
+	if err := m.provisionAgentFiles(ctx, agent, token, opts); err != nil {
 		return View{}, err
 	}
 	if err := m.publishAgentEnv(ctx, agent); err != nil {
@@ -505,13 +523,13 @@ func (m *Manager) enable(ctx context.Context, id, token string, overwrite bool) 
 	return m.Inspect(ctx, id)
 }
 
-func (m *Manager) provisionAgentFiles(ctx context.Context, agent Agent, token string, overwrite bool) error {
+func (m *Manager) provisionAgentFiles(ctx context.Context, agent Agent, token string, opts EnableOptions) error {
 	if err := m.retireLauncher(agent); err != nil {
 		m.recordFailure(ctx, agent, err)
 		return err
 	}
 	if agent.ManagesFiles {
-		if err := m.writeClientFiles(ctx, agent, token, overwrite); err != nil {
+		if err := m.writeClientFiles(ctx, agent, token, opts); err != nil {
 			m.recordFailure(ctx, agent, err)
 			return err
 		}
@@ -638,8 +656,10 @@ func (m *Manager) Repair(ctx context.Context, id, token string) (View, error) {
 }
 
 // Restore puts the operator's own files back exactly as they were before Relo
-// first wrote them, and removes everything Relo contributed.
-func (m *Manager) Restore(ctx context.Context, id string) (View, error) {
+// first wrote them, and removes everything Relo contributed. A forced restore
+// takes Relo's own contribution out of each file it cannot put back, which is
+// what an operator who no longer holds the snapshot is left with.
+func (m *Manager) Restore(ctx context.Context, id string, force bool) (View, error) {
 	agent, found := m.agents.AgentFor(id)
 	if !found {
 		return View{}, fmt.Errorf("%s: %w", id, ErrUnknownAgent)
@@ -652,35 +672,57 @@ func (m *Manager) Restore(ctx context.Context, id string) (View, error) {
 		m.recordFailure(ctx, agent, err)
 		return View{}, err
 	}
-	kept, err := m.stripCatalogFiles(ctx, agent, files)
+	kept, doomed, err := m.stripCatalogFiles(ctx, agent, files, force)
 	if err != nil {
 		return View{}, err
 	}
-	return m.finishRestore(ctx, agent, id, kept)
+	view, err := m.finishRestore(ctx, agent, kept, force)
+	if err != nil {
+		return View{}, err
+	}
+	if warnings := m.removeDoomed(doomed); len(warnings) != 0 {
+		return m.recordRestoreWarning(ctx, agent.ID, warnings)
+	}
+	return view, nil
 }
 
-func (m *Manager) finishRestore(ctx context.Context, agent Agent, id string, kept []FileRecord) (View, error) {
+func (m *Manager) finishRestore(ctx context.Context, agent Agent, kept []FileRecord, force bool) (View, error) {
 	// Every snapshot is read before anything is written, so a restore that
 	// cannot complete leaves the operator's files as they were rather than
 	// half rewritten. A failure keeps the stored file rows, which is what
 	// makes the action worth retrying.
-	staged, err := stageRestore(kept)
+	staged, err := stageRestore(agent, kept, force)
 	if err != nil {
 		m.recordFailure(ctx, agent, err)
 		return View{}, err
 	}
-	if err := m.applyStagedRestore(ctx, agent, staged); err != nil {
+	if err := m.applyStagedRestore(ctx, agent, staged, force); err != nil {
 		return View{}, err
 	}
-	if err := m.clearRestoredState(ctx, agent, id); err != nil {
+	if err := m.clearRestoredState(ctx, agent, agent.ID); err != nil {
 		return View{}, err
 	}
-	return m.recordRestore(ctx, id)
+	return m.recordRestore(ctx, agent.ID)
 }
 
-func (m *Manager) applyStagedRestore(ctx context.Context, agent Agent, staged []stagedRestore) error {
+func (m *Manager) removeDoomed(doomed []FileRecord) []string {
+	warnings := []string{}
+	for _, file := range doomed {
+		if err := os.Remove(file.Path); err != nil && !errors.Is(err, os.ErrNotExist) {
+			warnings = append(warnings, file.Path+": "+err.Error())
+		}
+	}
+	return warnings
+}
+
+func (m *Manager) applyStagedRestore(ctx context.Context, agent Agent, staged []stagedRestore, force bool) error {
 	for _, file := range staged {
 		if err := m.applyRestore(file); err != nil {
+			if force && file.action == stripRelo && RefusalCode(err) == CodeUnrecognised {
+				if rerr := os.Remove(file.file.Path); rerr == nil || errors.Is(rerr, os.ErrNotExist) {
+					continue
+				}
+			}
 			m.recordFailure(ctx, agent, err)
 			return err
 		}
@@ -688,22 +730,31 @@ func (m *Manager) applyStagedRestore(ctx context.Context, agent Agent, staged []
 	return nil
 }
 
-func (m *Manager) stripCatalogFiles(ctx context.Context, agent Agent, files []FileRecord) ([]FileRecord, error) {
+func (m *Manager) stripCatalogFiles(ctx context.Context, agent Agent, files []FileRecord, force bool) ([]FileRecord, []FileRecord, error) {
 	// The snapshot of a catalog file stays a backup. Restore takes the relo
 	// block out of the live file and does not put the snapshot back, so an
 	// edit made after setup survives, and the file is not deleted.
 	kept := make([]FileRecord, 0, len(files))
+	doomed := make([]FileRecord, 0)
 	for _, file := range files {
 		if !m.files.CatalogKind(file.Kind) {
 			kept = append(kept, file)
 			continue
 		}
 		if err := m.stripCatalog(file); err != nil {
-			m.recordFailure(ctx, agent, err)
-			return nil, err
+			if force {
+				doomed = append(doomed, file)
+				continue
+			}
+			blocked := err
+			if RefusalCode(err) == CodeUnrecognised {
+				blocked = fmt.Errorf("%w %s: %w", ErrRestoreBlocked, file.Path, err)
+			}
+			m.recordFailure(ctx, agent, blocked)
+			return nil, nil, blocked
 		}
 	}
-	return kept, nil
+	return kept, doomed, nil
 }
 
 func (m *Manager) clearRestoredState(ctx context.Context, agent Agent, id string) error {
@@ -737,6 +788,22 @@ func (m *Manager) recordRestore(ctx context.Context, id string) (View, error) {
 	return m.Inspect(ctx, id)
 }
 
+func (m *Manager) recordRestoreWarning(ctx context.Context, id string, warnings []string) (View, error) {
+	record, _, err := m.store.Integration(ctx, id)
+	if err != nil {
+		return View{}, err
+	}
+	record.ID, record.Enabled, record.State = id, false, StateOff
+	record.LastError = "removed with warnings: " + strings.Join(warnings, "; ")
+	record.ModelsDigest = ""
+	record.UpdatedAtMs = m.now().UnixMilli()
+	if err := m.store.SaveIntegration(ctx, record); err != nil {
+		return View{}, err
+	}
+	m.appendOp(ctx, id, "restore", strings.Join(warnings, "; "))
+	return m.Inspect(ctx, id)
+}
+
 // writeKeyFile stores the raw client key where the agent's launcher and helper
 // ensureRecord returns one integration's stored row, creating it when the
 
@@ -766,7 +833,7 @@ func (m *Manager) writeKeyFile(ctx context.Context, agent Agent, token string) e
 	})
 }
 
-func (m *Manager) writeClientFiles(ctx context.Context, agent Agent, token string, overwrite bool) error {
+func (m *Manager) writeClientFiles(ctx context.Context, agent Agent, token string, opts EnableOptions) error {
 	switch agent.ID {
 	case "codex":
 		if err := m.writeKeyHelper(ctx, agent, KindCodexHelper); err != nil {
@@ -778,16 +845,16 @@ func (m *Manager) writeClientFiles(ctx context.Context, agent Agent, token strin
 	case "claude-desktop":
 		return m.writeClaudeDesktop(ctx, agent, token)
 	case ClientOpenCode, ClientHermes, ClientOpenClaw:
-		return m.writeManaged(ctx, agent, overwrite)
+		return m.writeManaged(ctx, agent, opts)
 	default:
 		if m.agents.CatalogAgent(agent.ID) {
-			return m.writeCatalog(ctx, agent, overwrite)
+			return m.writeCatalog(ctx, agent, opts.Overwrite)
 		}
 		return nil
 	}
 }
 
-func (m *Manager) writeManaged(ctx context.Context, agent Agent, overwrite bool) error {
+func (m *Manager) writeManaged(ctx context.Context, agent Agent, opts EnableOptions) error {
 	target, err := m.paths.ConfigTarget(agent.ID)
 	if err != nil {
 		return err
@@ -803,14 +870,50 @@ func (m *Manager) writeManaged(ctx context.Context, agent Agent, overwrite bool)
 	if err != nil {
 		return err
 	}
-	if present && !overwrite && !m.owns(ctx, agent.ID, target.Kind) {
+	if present && !opts.Overwrite && !m.owns(ctx, agent.ID, target.Kind) {
 		return foreignProvider()
 	}
-	merged, err := m.files.MergeProvider(agent.ID, existing, m.paths.BaseURL(agent.Protocol), m.modelList())
+	merged, err := m.mergeManaged(agent, existing, opts)
 	if err != nil {
 		return err
 	}
 	return m.writeContribution(ctx, agent, fileContribution{kind: target.Kind, path: target.Path, content: merged, mode: 0o644})
+}
+
+func (m *Manager) mergeManaged(agent Agent, existing string, opts EnableOptions) (string, error) {
+	if agent.ID != ClientOpenCode {
+		return m.files.MergeProvider(agent.ID, existing, m.paths.BaseURL(agent.Protocol), m.modelList())
+	}
+	return m.files.MergeOpenCodeVersions(existing, m.paths.BaseURL(agent.Protocol), m.modelList(), m.openCodeVersions(existing, opts))
+}
+
+func (m *Manager) openCodeVersions(existing string, opts EnableOptions) string {
+	if opts.OpenCodeVersions != "" {
+		return opts.OpenCodeVersions
+	}
+	if present := m.files.OpenCodeVersionsPresent(existing); present != "" {
+		return present
+	}
+	return "v2"
+}
+
+// OpenCodeVersions reports which generations hold Relo's provider in the
+// OpenCode file: v1, v2, v1+v2, or empty when none does. A file Relo cannot
+// read reads as none.
+func (m *Manager) OpenCodeVersions(id string) string {
+	agent, found := m.agents.AgentFor(id)
+	if !found || agent.ID != ClientOpenCode {
+		return ""
+	}
+	target, err := m.paths.ConfigTarget(agent.ID)
+	if err != nil {
+		return ""
+	}
+	existing, err := m.files.ReadRegular(target.Path)
+	if err != nil {
+		return ""
+	}
+	return m.files.OpenCodeVersionsPresent(existing)
 }
 
 // retireMovedTargets drops records for catalog files a client has since
@@ -831,6 +934,13 @@ func (m *Manager) retireMovedTargets(ctx context.Context, id string, targets []C
 			continue
 		}
 		if err := m.stripCatalog(file); err != nil {
+			if RefusalCode(err) == CodeUnrecognised {
+				if derr := m.store.DeleteFile(ctx, id, file.Kind); derr != nil {
+					m.recordFailure(ctx, Agent{ID: id}, derr)
+					return
+				}
+				continue
+			}
 			m.recordFailure(ctx, Agent{ID: id}, err)
 			return
 		}
@@ -876,8 +986,7 @@ func (m *Manager) writeCatalog(ctx context.Context, agent Agent, overwrite bool)
 func (m *Manager) previewCatalog(ctx context.Context, agent Agent) []PlannedFile {
 	targets, err := m.paths.ConfigTargets(agent.ID)
 	if err != nil {
-		path := filepath.Join(m.paths.Home(), ".aside", "u")
-		return []PlannedFile{refusedPlan(PlannedFile{Kind: FileAside, Path: path}, err)}
+		return []PlannedFile{refusedPlan(PlannedFile{Kind: KindKey, Path: m.paths.KeyFile(agent.ID)}, err)}
 	}
 	planned := make([]PlannedFile, 0, len(targets))
 	for _, target := range targets {
@@ -1113,7 +1222,10 @@ func (m *Manager) removeCodexContribution(file FileRecord) error {
 		return err
 	}
 	if strings.TrimSpace(stripped) == "" {
-		return os.Remove(file.Path)
+		if err := os.Remove(file.Path); err != nil && !errors.Is(err, os.ErrNotExist) {
+			return fmt.Errorf("remove %s: %w", file.Path, err)
+		}
+		return nil
 	}
 	return m.files.WriteFileAtomic(file.Path, []byte(stripped), 0o644)
 }
@@ -1285,7 +1397,7 @@ func (m *Manager) regenerateMissing(ctx context.Context, agent Agent, file FileR
 	case KindClaudeHelper:
 		return m.writeKeyHelper(ctx, agent, KindClaudeHelper)
 	case FileOpenCode, FileHermes, FileOpenClaw:
-		return m.writeManaged(ctx, agent, false)
+		return m.writeManaged(ctx, agent, EnableOptions{})
 	default:
 		if m.files.CatalogKind(file.Kind) {
 			return m.writeCatalog(ctx, agent, false)
@@ -1294,44 +1406,64 @@ func (m *Manager) regenerateMissing(ctx context.Context, agent Agent, file FileR
 	}
 }
 
+// What one staged restore does to one file: put the operator's own copy back,
+// delete a file Relo created where the operator had none, or take Relo's
+// contribution out of a file whose copy cannot be read.
+const (
+	restoreSnapshot = iota
+	removeCreated
+	stripRelo
+)
+
 type stagedRestore struct {
-	path    string
+	agent   Agent
+	file    FileRecord
+	action  int
 	content []byte
-	remove  bool
 	mode    os.FileMode
 }
 
-func stageRestore(files []FileRecord) ([]stagedRestore, error) {
+func stageRestore(agent Agent, files []FileRecord, force bool) ([]stagedRestore, error) {
 	staged := make([]stagedRestore, 0, len(files))
 	for _, file := range files {
 		if file.Kind == KindCodexLauncher {
 			continue
 		}
 		if file.SnapshotPath == "" {
-			staged = append(staged, stagedRestore{path: file.Path, remove: true})
+			staged = append(staged, stagedRestore{agent: agent, file: file, action: removeCreated})
 			continue
 		}
 		content, err := os.ReadFile(file.SnapshotPath)
 		if err != nil {
-			return nil, fmt.Errorf("read the snapshot %s: %w", file.SnapshotPath, err)
+			if !force {
+				return nil, fmt.Errorf("%w %s: %w", ErrRestoreBlocked, file.SnapshotPath, err)
+			}
+			staged = append(staged, stagedRestore{agent: agent, file: file, action: stripRelo})
+			continue
 		}
 		mode := os.FileMode(0o600)
 		if info, err := os.Stat(file.Path); err == nil {
 			mode = info.Mode().Perm()
 		}
-		staged = append(staged, stagedRestore{path: file.Path, content: content, mode: mode})
+		staged = append(staged, stagedRestore{
+			agent: agent, file: file, action: restoreSnapshot, content: content, mode: mode,
+		})
 	}
 	return staged, nil
 }
 
 func (m *Manager) applyRestore(file stagedRestore) error {
-	if file.remove {
-		if err := os.Remove(file.path); err != nil && !errors.Is(err, os.ErrNotExist) {
-			return fmt.Errorf("remove %s: %w", file.path, err)
+	switch file.action {
+	case removeCreated:
+		if err := os.Remove(file.file.Path); err != nil && !errors.Is(err, os.ErrNotExist) {
+			return fmt.Errorf("remove %s: %w", file.file.Path, err)
 		}
 		return nil
+	case stripRelo:
+		return m.removeContribution(file.agent, file.file)
+	default:
+		return m.files.WriteFileAtomic(file.file.Path, file.content, file.mode)
 	}
-	return m.files.WriteFileAtomic(file.path, file.content, file.mode)
 }
 
 func (m *Manager) requireSurface(agent Agent) error {

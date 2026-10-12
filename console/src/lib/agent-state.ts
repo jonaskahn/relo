@@ -119,7 +119,15 @@ export function warningKeys(agent: IntegrationView): string[] {
 
 // TESTED_IDS names the clients Relo has verified wiring for. The pill marks that
 // coverage, not whether this machine has set the client up.
-const TESTED_IDS = new Set(['opencode', 'claude-code', 'claude-desktop', 'codex', 'pi', 'omp']);
+const TESTED_IDS = new Set([
+	'opencode',
+	'claude-code',
+	'claude-desktop',
+	'codex',
+	'pi',
+	'omp',
+	'dsh'
+]);
 
 /** Reports whether Relo has verified its wiring for that client. */
 export function isTested(agent: IntegrationView): boolean {
@@ -136,6 +144,25 @@ export function contextOn(agent: IntegrationView): boolean {
  *  can restart them once Relo holds a key. */
 export function restartsClient(agent: IntegrationView): boolean {
 	return agent.enabled && (agent.id === 'opencode' || agent.id === 'codex');
+}
+
+/** The OpenCode config generations on the card chip. Empty means the card shows no chip. */
+export type OpenCodeChip = '' | 'V1' | 'V2' | 'V1+V2';
+
+/** Names the generations chip an OpenCode card shows beside its title, from what the daemon
+ *  read in the file. Every other agent shows none. */
+export function openCodeVersionChip(agent: IntegrationView): OpenCodeChip {
+	if (agent.id !== 'opencode') return '';
+	switch (agent.openCodeVersions) {
+		case 'v1':
+			return 'V1';
+		case 'v2':
+			return 'V2';
+		case 'v1+v2':
+			return 'V1+V2';
+		default:
+			return '';
+	}
 }
 
 /** The console's name for an agent's client, falling back to the client's own id for one the

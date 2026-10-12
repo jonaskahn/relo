@@ -4,7 +4,9 @@ import {
 	addStepBack,
 	addStepNext,
 	blocked,
+	offersForcedRemoval,
 	overwrittenFiles,
+	RESTORE_BLOCKED,
 	resultCodeFor,
 	revealNeedsToken,
 	runningOn,
@@ -12,6 +14,7 @@ import {
 	type AgentAction,
 	type AddStep
 } from './agent-flow';
+import { ApiError } from './api';
 import type { IntegrationResult, IntegrationView } from './types';
 
 function view(patch: Partial<IntegrationView> = {}): IntegrationView {
@@ -119,6 +122,19 @@ describe('what a removal undoes', () => {
 			)
 		).toEqual([]);
 		expect(overwrittenFiles(view())).toEqual([]);
+	});
+});
+
+describe('when a removal can be forced', () => {
+	it('offers the forced removal only for the daemon naming a blocked restore', () => {
+		expect(offersForcedRemoval(new ApiError(409, RESTORE_BLOCKED, 'no snapshot'))).toBe(true);
+	});
+
+	it('offers nothing for any other failure', () => {
+		expect(offersForcedRemoval(new ApiError(500, 'internal_error', 'boom'))).toBe(false);
+		expect(offersForcedRemoval(new ApiError(409, 'conflict', 'foreign key'))).toBe(false);
+		expect(offersForcedRemoval(new Error('no snapshot'))).toBe(false);
+		expect(offersForcedRemoval('restore_blocked')).toBe(false);
 	});
 });
 describe('the add-agent walk', () => {

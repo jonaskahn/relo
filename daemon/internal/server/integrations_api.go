@@ -59,7 +59,9 @@ func (s *Server) handleGetIntegrationToken(w http.ResponseWriter, r *http.Reques
 }
 
 type enableIntegrationRequest struct {
-	Overwrite bool `json:"overwrite"`
+	Overwrite bool   `json:"overwrite"`
+	Force     bool   `json:"force"`
+	Versions  string `json:"versions,omitempty"`
 }
 
 func (s *Server) handleEnableIntegration(w http.ResponseWriter, r *http.Request) {
@@ -67,16 +69,20 @@ func (s *Server) handleEnableIntegration(w http.ResponseWriter, r *http.Request)
 	if !ok {
 		return
 	}
-	overwrite, ok := s.overwriteRequest(w, r)
+	request := enableIntegrationRequest{}
+	if !s.actionRequest(w, r, &request) {
+		return
+	}
+	versions, ok := s.openCodeVersions(w, r, request.Versions)
 	if !ok {
 		return
 	}
 	var result appintegration.IntegrationResult
 	var err error
-	if overwrite {
-		result, err = manager.EnableIntegrationOverwrite(r.Context(), r.PathValue("id"))
+	if request.Overwrite {
+		result, err = manager.EnableIntegrationOverwrite(r.Context(), r.PathValue("id"), versions)
 	} else {
-		result, err = manager.EnableIntegration(r.Context(), r.PathValue("id"))
+		result, err = manager.EnableIntegration(r.Context(), r.PathValue("id"), versions)
 	}
 	if err != nil {
 		writeServiceError(w, err)
@@ -85,45 +91,23 @@ func (s *Server) handleEnableIntegration(w http.ResponseWriter, r *http.Request)
 	writeJSON(w, http.StatusOK, toIntegrationResultResponse(result))
 }
 
-func (s *Server) overwriteRequest(w http.ResponseWriter, r *http.Request) (bool, bool) {
-	if r.Body == nil {
-		return false, true
-	}
-	body, err := io.ReadAll(http.MaxBytesReader(w, r.Body, maxManagementBody))
-	if err != nil {
+// openCodeVersions keeps the generations setup writes: the console sends one
+// of v1, v2, or v1+v2 for OpenCode and anything else is a bad request, while
+// an empty value writes the current generation.
+func (s *Server) openCodeVersions(w http.ResponseWriter, r *http.Request, versions string) (string, bool) {
+	switch versions {
+	case "", "v1", "v2", "v1+v2":
+		if versions == "" {
+			return "v2", true
+		}
+		return versions, true
+	default:
 		s.fail(w, r, refusal{
 			Status: http.StatusBadRequest, Code: "bad_request", Message: "api.body.invalid",
+			Data: map[string]any{"Detail": "versions must be v1, v2, or v1+v2"},
 		})
-		return false, false
+		return "", false
 	}
-	if len(bytes.TrimSpace(body)) == 0 {
-		return false, true
-	}
-	request, ok := s.decodeOverwriteBody(w, r, body)
-	if !ok {
-		return false, false
-	}
-	return request.Overwrite, true
-}
-
-func (s *Server) decodeOverwriteBody(w http.ResponseWriter, r *http.Request, body []byte) (*enableIntegrationRequest, bool) {
-	decoder := json.NewDecoder(bytes.NewReader(body))
-	decoder.DisallowUnknownFields()
-	var request enableIntegrationRequest
-	if err := decoder.Decode(&request); err != nil {
-		s.fail(w, r, refusal{
-			Status: http.StatusBadRequest, Code: "bad_request", Message: "api.body.invalid",
-			Data: map[string]any{"Detail": err.Error()},
-		})
-		return nil, false
-	}
-	if err := decoder.Decode(new(struct{})); !errors.Is(err, io.EOF) {
-		s.fail(w, r, refusal{
-			Status: http.StatusBadRequest, Code: "bad_request", Message: "api.body.single_object",
-		})
-		return nil, false
-	}
-	return &request, true
 }
 
 func (s *Server) handleDisableIntegration(w http.ResponseWriter, r *http.Request) {
@@ -131,11 +115,51 @@ func (s *Server) handleDisableIntegration(w http.ResponseWriter, r *http.Request
 	if !ok {
 		return
 	}
-	if err := manager.DisableIntegration(r.Context(), r.PathValue("id")); err != nil {
+	request := enableIntegrationRequest{}
+	if !s.actionRequest(w, r, &request) {
+		return
+	}
+	if err := manager.DisableIntegration(r.Context(), r.PathValue("id"), request.Force); err != nil {
 		writeServiceError(w, err)
 		return
 	}
 	writeJSON(w, http.StatusOK, map[string]string{"status": "disabled"})
+}
+
+func (s *Server) actionRequest(w http.ResponseWriter, r *http.Request, request *enableIntegrationRequest) bool {
+	if r.Body == nil {
+		return true
+	}
+	body, err := io.ReadAll(http.MaxBytesReader(w, r.Body, maxManagementBody))
+	if err != nil {
+		s.fail(w, r, refusal{
+			Status: http.StatusBadRequest, Code: "bad_request", Message: "api.body.invalid",
+		})
+		return false
+	}
+	if len(bytes.TrimSpace(body)) == 0 {
+		return true
+	}
+	return s.decodeActionBody(w, r, body, request)
+}
+
+func (s *Server) decodeActionBody(w http.ResponseWriter, r *http.Request, body []byte, request *enableIntegrationRequest) bool {
+	decoder := json.NewDecoder(bytes.NewReader(body))
+	decoder.DisallowUnknownFields()
+	if err := decoder.Decode(request); err != nil {
+		s.fail(w, r, refusal{
+			Status: http.StatusBadRequest, Code: "bad_request", Message: "api.body.invalid",
+			Data: map[string]any{"Detail": err.Error()},
+		})
+		return false
+	}
+	if err := decoder.Decode(new(struct{})); !errors.Is(err, io.EOF) {
+		s.fail(w, r, refusal{
+			Status: http.StatusBadRequest, Code: "bad_request", Message: "api.body.single_object",
+		})
+		return false
+	}
+	return true
 }
 
 func (s *Server) handleRotateIntegration(w http.ResponseWriter, r *http.Request) {

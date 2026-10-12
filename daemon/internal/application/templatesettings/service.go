@@ -6,6 +6,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/jonaskahn/relo/internal/clock"
 )
@@ -13,7 +14,7 @@ import (
 var supportedTemplates = map[string]Setting{
 	"claude":             {AutoRefresh: true},
 	"openai-codex":       {AutoRefresh: true},
-	"google-antigravity": {AutoRefresh: true},
+	"google-antigravity": {AutoRefresh: true, ModelPrefixes: []string{"claude", "gemini"}},
 	"grok":               {AutoRefresh: true},
 }
 
@@ -22,18 +23,22 @@ var (
 	ErrNotFound = errors.New("connection not found")
 	// ErrUnsupported reports a connection whose template stores nothing here.
 	ErrUnsupported = errors.New("this connection has no template settings")
+	// ErrInvalidPrefixes reports a model prefix list the roster cannot use.
+	ErrInvalidPrefixes = errors.New("model prefixes must be comma-separated names without spaces")
 )
 
 // Setting is what the connection settings tab reads and writes. Whether a model
 // is published twice, at 200K and at 1M, follows from the model itself now, so
 // no stored choice governs it.
 type Setting struct {
-	AutoRefresh bool
+	AutoRefresh   bool
+	ModelPrefixes []string
 }
 
 // Patch changes only the fields the caller sent.
 type Patch struct {
-	AutoRefresh *bool
+	AutoRefresh   *bool
+	ModelPrefixes *[]string
 }
 
 // Store persists one template's choices. The long-context column is still read
@@ -42,6 +47,8 @@ type Patch struct {
 type Store interface {
 	Get(ctx context.Context, templateID string) (longContext, autoRefresh bool, found bool, err error)
 	Save(ctx context.Context, templateID string, longContext, autoRefresh *bool, nowMs int64) error
+	Prefixes(ctx context.Context, templateID string) ([]string, bool, error)
+	SavePrefixes(ctx context.Context, templateID string, prefixes []string, nowMs int64) error
 }
 
 // Connections names the template behind one connection.
@@ -86,10 +93,18 @@ func (s *Service) Read(ctx context.Context, providerID string) (Setting, error) 
 	if err != nil {
 		return Setting{}, err
 	}
+	defaults := supportedTemplates[templateID]
 	if !found {
-		return supportedTemplates[templateID], nil
+		return defaults, nil
 	}
-	return Setting{AutoRefresh: autoRefresh}, nil
+	prefixes, _, err := s.store.Prefixes(ctx, templateID)
+	if err != nil {
+		return Setting{}, err
+	}
+	if prefixes == nil {
+		prefixes = defaults.ModelPrefixes
+	}
+	return Setting{AutoRefresh: autoRefresh, ModelPrefixes: prefixes}, nil
 }
 
 // Update stores the fields the patch names. Both stored columns are written
@@ -100,7 +115,7 @@ func (s *Service) Update(ctx context.Context, providerID string, patch Patch) (S
 	if err != nil {
 		return Setting{}, err
 	}
-	if patch.AutoRefresh == nil {
+	if patch.AutoRefresh == nil && patch.ModelPrefixes == nil {
 		return s.Read(ctx, providerID)
 	}
 	longContext, autoRefresh, _, err := s.store.Get(ctx, templateID)
@@ -113,7 +128,36 @@ func (s *Service) Update(ctx context.Context, providerID string, patch Patch) (S
 	if err := s.store.Save(ctx, templateID, &longContext, &autoRefresh, s.clock.Now().UnixMilli()); err != nil {
 		return Setting{}, err
 	}
+	if patch.ModelPrefixes != nil {
+		normalized, err := normalizePrefixes(*patch.ModelPrefixes)
+		if err != nil {
+			return Setting{}, err
+		}
+		if err := s.store.SavePrefixes(ctx, templateID, normalized, s.clock.Now().UnixMilli()); err != nil {
+			return Setting{}, err
+		}
+	}
 	return s.Read(ctx, providerID)
+}
+
+func normalizePrefixes(prefixes []string) ([]string, error) {
+	normalized := make([]string, 0, len(prefixes))
+	seen := map[string]bool{}
+	for _, prefix := range prefixes {
+		trimmed := strings.ToLower(strings.TrimSpace(prefix))
+		if trimmed == "" {
+			continue
+		}
+		if strings.ContainsAny(trimmed, " \t,") {
+			return nil, ErrInvalidPrefixes
+		}
+		if seen[trimmed] {
+			continue
+		}
+		seen[trimmed] = true
+		normalized = append(normalized, trimmed)
+	}
+	return normalized, nil
 }
 
 func (s *Service) template(providerID string) (string, error) {

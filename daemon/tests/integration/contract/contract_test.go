@@ -377,6 +377,14 @@ func (s templateStore) Save(ctx context.Context, templateID string, longContext,
 	return s.inner.Save(ctx, templateID, longContext, autoRefresh, nowMs)
 }
 
+func (s templateStore) Prefixes(ctx context.Context, templateID string) ([]string, bool, error) {
+	return s.inner.Prefixes(ctx, templateID)
+}
+
+func (s templateStore) SavePrefixes(ctx context.Context, templateID string, prefixes []string, nowMs int64) error {
+	return s.inner.SavePrefixes(ctx, templateID, prefixes, nowMs)
+}
+
 // templateConns reports no template behind a connection: the contract seed
 // holds custom providers only, so template reads answer with defaults.
 type templateConns struct{}

@@ -761,7 +761,9 @@
           "antigravityTitle": "Login do Google Antigravity",
           "antigravityDescription": "Como este login do Google Antigravity renova o token.",
           "grokTitle": "Login do Grok",
-          "grokDescription": "Como este login do Grok renova o token."
+          "grokDescription": "Como este login do Grok renova o token.",
+          "modelPrefixesLabel": "Model families",
+          "modelPrefixesHint": "Comma-separated prefixes the roster keeps, e.g. claude, gemini."
         },
         "add": {
           "title": "Adicionar conexão",
@@ -1576,6 +1578,9 @@
         "rotateTitle": "Girar esta chave?",
         "rotateBody": "Um novo segredo é gravado nos arquivos do Relo. O segredo anterior para de funcionar na hora.",
         "removed": "Integração removida.",
+        "forceRemove": "Remover mesmo assim",
+        "forceRemoveTitle": "Remover mesmo assim?",
+        "forceRemoveBody": "O Relo não guarda mais uma cópia das suas configurações e não pode restaurá-las. Remover mesmo assim tira a parte do Relo do arquivo e deixa o resto como está.",
         "saved": "Integração configurada.",
         "rotated": "Chave girada.",
         "repaired": "Integração reparada.",
@@ -1606,6 +1611,11 @@
         "context1MOn": "Janela de contexto de 1M ativada",
         "context1MOff": "Janela de contexto de 1M desativada",
         "keyNonePending": "Sem chave ainda. Configurar o agente cria uma.",
+        "openCodeVersionsTitle": "Versão de configuração",
+        "openCodeV1": "V1",
+        "openCodeV1Desc": "Bloco de provedor singular legado",
+        "openCodeV2": "V2",
+        "openCodeV2Desc": "Bloco de provedores plural atual",
         "addTitle": "Adicionar agente",
         "addSubtitle": "Escolha um agente, configure-o e veja a verificação provar a fiação.",
         "addChooseHint": "Escolha um agente para conectar.",

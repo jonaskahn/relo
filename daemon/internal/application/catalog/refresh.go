@@ -5,6 +5,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"sort"
 	"strings"
 	"sync"
 
@@ -122,16 +123,17 @@ func (s *Service) refreshProvider(ctx context.Context, providerID string) (Refre
 		return RefreshResult{Status: RefreshSkipped, ModelsDev: mdState}, nil
 	}
 
-	listed, accountRosters, accountFailures, err := s.fetchRefreshRoster(ctx, host)
+	listed, rosters, accountFailures, err := s.fetchRefreshRoster(ctx, host)
 	if err != nil {
 		return s.recordRefreshFailure(ctx, providerID, atMs, mdState, err)
 	}
-	s.keepAccountRosters(ctx, accountRosters)
+	s.keepAccountRosters(ctx, rosters)
+	s.keepRequestConfigs(ctx, providerID, host.ModelsFormat, rosters)
 
 	existingMap := indexExistingModels(existing)
 	assembly := assembleRefreshRoster(t, host, listed, mdIdx, providerID, existingMap)
 
-	return s.finishRefresh(ctx, providerID, refreshFinish{listed: listed, assembly: assembly, existing: existing, accountRosters: accountRosters, accountFailures: accountFailures, atMs: atMs, mdState: mdState})
+	return s.finishRefresh(ctx, providerID, refreshFinish{listed: listed, assembly: assembly, existing: existing, accountRosters: rosters.ids(), accountFailures: accountFailures, atMs: atMs, mdState: mdState})
 }
 
 func indexExistingModels(existing []catalog.Model) map[string]catalog.Model {
@@ -172,17 +174,33 @@ func (s *Service) openRefreshHost(ctx context.Context, providerID string) (catal
 	if found {
 		host.ModelsSource = t.ModelsSource
 		host.ModelsFormat = t.ModelsFormat
+		t.Prefixes = s.prefixesFor(ctx, host.TemplateID, t.Prefixes)
 	}
 	return host, t, mdIdx, mdState, snap.Models(providerID), nil
 }
 
-func (s *Service) fetchRefreshRoster(ctx context.Context, host catalog.Provider) ([]catalog.Listed, map[string][]string, []string, error) {
+func (s *Service) prefixesFor(ctx context.Context, templateID string, defaults []string) []string {
+	if s.templatePrefixes == nil {
+		return defaults
+	}
+	stored, found := s.templatePrefixes(ctx, templateID)
+	if !found || stored == nil {
+		return defaults
+	}
+	return stored
+}
+
+func (s *Service) fetchRefreshRoster(ctx context.Context, host catalog.Provider) ([]catalog.Listed, *accountRosters, []string, error) {
 	accounts := s.activeAccounts(host.ID)
 	if catalog.PerAccountRoster(host.ModelsFormat) && len(accounts) > 0 {
 		// An account's own entitlement can be narrower than the connection's,
 		// so every account is asked and the union is what the connection
 		// lists. What each account answered is remembered against it.
-		return s.discoverAccounts(ctx, host, accounts)
+		acc, err := s.discoverAccounts(ctx, host, accounts)
+		if err != nil {
+			return nil, nil, acc.failures, err
+		}
+		return acc.union, acc, acc.failures, nil
 	}
 	listed, err := s.DiscoverModels(ctx, host)
 	return listed, nil, nil, err
@@ -202,12 +220,30 @@ func (s *Service) recordRefreshFailure(ctx context.Context, providerID string, a
 	return RefreshResult{Status: RefreshFailed, ModelsDev: mdState}, fmt.Errorf("%s: %w", err, ErrListingFailed)
 }
 
-func (s *Service) keepAccountRosters(ctx context.Context, accountRosters map[string][]string) {
+func (s *Service) keepAccountRosters(ctx context.Context, rosters *accountRosters) {
+	if rosters == nil {
+		return
+	}
 	// A roster that was read is stored whether or not the rest of the refresh
 	// succeeds: it is what the next request filters accounts by.
-	for credentialID, modelIDs := range accountRosters {
+	for credentialID, modelIDs := range rosters.rosters {
 		if err := s.pools.SetRoster(ctx, credentialID, modelIDs, account.ModelSourceListing); err != nil {
 			s.logger.Warn("store an account's model roster", "credential", credentialID, "error", err)
+		}
+	}
+}
+
+// keepRequestConfigs stores one account's exact request tuples beside its
+// roster, so selection resolves the requested selection per account. A
+// dialect that publishes no tuple stores nothing, which clears whatever an
+// earlier roster had left for the account.
+func (s *Service) keepRequestConfigs(ctx context.Context, providerID string, format catalog.ModelsFormat, rosters *accountRosters) {
+	if rosters == nil || !catalog.PerAccountRoster(format) {
+		return
+	}
+	for credentialID, configs := range rosters.configs {
+		if err := s.store.SaveModelRequestConfigs(ctx, providerID, credentialID, configs); err != nil {
+			s.logger.Warn("store an account's request configs", "credential", credentialID, "error", err)
 		}
 	}
 }
@@ -319,6 +355,11 @@ func factsForRefresh(providerID string, entry rosterEntry, mdModel catalog.Model
 		MaxOutput:     entry.MaxOutput,
 		Prices:        provPrices.row(),
 	}
+	providerFact.SupportsTools = entry.SupportsTools
+	providerFact.SupportsReasoning = entry.SupportsReasoning
+	providerFact.SupportsVision = entry.SupportsVision
+	providerFact.ReasoningEfforts = append([]string(nil), entry.ReasoningEfforts...)
+	providerFact.ReasoningToggle = entry.ReasoningToggle
 	if !providerFact.Empty() {
 		facts = append(facts, providerFact)
 	}
@@ -378,27 +419,39 @@ func markRefreshUnavailable(existing []catalog.Model, seen map[string]bool) []st
 type accountRosters struct {
 	union    []catalog.Listed
 	rosters  map[string][]string
+	configs  map[string][]catalog.ModelRequestConfig
 	failures []string
 	firstErr error
 	seen     map[string]bool
+	index    map[string]int
 }
 
-func (s *Service) discoverAccounts(ctx context.Context, host catalog.Provider, entries []account.PoolEntry) ([]catalog.Listed, map[string][]string, []string, error) {
+// ids returns the per-account model ids, or nil when no account was read.
+func (acc *accountRosters) ids() map[string][]string {
+	if acc == nil {
+		return nil
+	}
+	return acc.rosters
+}
+
+func (s *Service) discoverAccounts(ctx context.Context, host catalog.Provider, entries []account.PoolEntry) (*accountRosters, error) {
 	acc := &accountRosters{
 		union:   make([]catalog.Listed, 0, 64),
 		rosters: make(map[string][]string, len(entries)),
+		configs: make(map[string][]catalog.ModelRequestConfig, len(entries)),
 		seen:    map[string]bool{},
+		index:   map[string]int{},
 	}
 	for _, entry := range entries {
 		s.discoverAccountRoster(ctx, host, entry, acc)
 	}
 	if len(acc.rosters) == 0 {
 		if acc.firstErr != nil {
-			return nil, nil, acc.failures, acc.firstErr
+			return acc, acc.firstErr
 		}
-		return nil, nil, acc.failures, fmt.Errorf("%s: %w", host.ID, account.ErrNoCredentials)
+		return acc, fmt.Errorf("%s: %w", host.ID, account.ErrNoCredentials)
 	}
-	return acc.union, acc.rosters, acc.failures, nil
+	return acc, nil
 }
 
 func (s *Service) discoverAccountRoster(ctx context.Context, host catalog.Provider, entry account.PoolEntry, acc *accountRosters) {
@@ -418,12 +471,105 @@ func (s *Service) discoverAccountRoster(ctx context.Context, host catalog.Provid
 	for _, item := range listed {
 		modelIDs = append(modelIDs, item.ID)
 		if acc.seen[item.ID] {
+			acc.mergeRequestConfigs(item)
 			continue
 		}
 		acc.seen[item.ID] = true
+		acc.index[item.ID] = len(acc.union)
 		acc.union = append(acc.union, item)
 	}
 	acc.rosters[entry.ID] = modelIDs
+	acc.configs[entry.ID] = requestConfigsOf(listed)
+}
+
+// requestConfigsOf collects one account's exact request tuples. A successful
+// empty listing clears the account's tuples; a failed listing never reaches
+// here, so its previous tuples stay stored.
+func requestConfigsOf(listed []catalog.Listed) []catalog.ModelRequestConfig {
+	var configs []catalog.ModelRequestConfig
+	for _, item := range listed {
+		configs = append(configs, item.RequestConfigs...)
+	}
+	return configs
+}
+
+// mergeRequestConfigs unions another account's request tuples into the
+// connection roster, so the displayed efforts cover every account while
+// each account's own entitlement stays per-account.
+func (acc *accountRosters) mergeRequestConfigs(item catalog.Listed) {
+	if len(item.RequestConfigs) == 0 {
+		return
+	}
+	position, found := acc.index[item.ID]
+	if !found {
+		return
+	}
+	merged := mergeRequestConfigs(acc.union[position].RequestConfigs, item.RequestConfigs)
+	acc.union[position].RequestConfigs = merged
+	refreshRequestDisplay(&acc.union[position])
+}
+
+func mergeRequestConfigs(into, from []catalog.ModelRequestConfig) []catalog.ModelRequestConfig {
+	seen := make(map[string]bool, len(into)+len(from))
+	merged := make([]catalog.ModelRequestConfig, 0, len(into)+len(from))
+	for _, config := range into {
+		key := config.ModelID + "\x00" + config.Selection
+		if seen[key] {
+			continue
+		}
+		seen[key] = true
+		merged = append(merged, config)
+	}
+	for _, config := range from {
+		key := config.ModelID + "\x00" + config.Selection
+		if seen[key] {
+			continue
+		}
+		seen[key] = true
+		merged = append(merged, config)
+	}
+	sort.Slice(merged, func(i, j int) bool {
+		if merged[i].Selection != merged[j].Selection {
+			return merged[i].Selection < merged[j].Selection
+		}
+		return merged[i].Effort < merged[j].Effort
+	})
+	return merged
+}
+
+func refreshRequestDisplay(entry *catalog.Listed) {
+	efforts, toggle, reasoning, context := requestDisplayOf(entry.RequestConfigs)
+	sort.Strings(efforts)
+	entry.ReasoningEfforts = efforts
+	if toggle {
+		stated := true
+		entry.ReasoningToggle = &stated
+	}
+	if reasoning {
+		supported := true
+		entry.SupportsReasoning = &supported
+	}
+	if context > 0 {
+		entry.ContextWindow = &context
+	}
+}
+
+func requestDisplayOf(configs []catalog.ModelRequestConfig) (efforts []string, toggle, reasoning bool, context int64) {
+	for _, config := range configs {
+		if config.Effort != "" {
+			efforts = append(efforts, config.Effort)
+		}
+		if config.Selection == catalog.CursorSelectToggle {
+			toggle = true
+		}
+		if config.Reasoning {
+			reasoning = true
+		}
+		if config.Context > context {
+			context = config.Context
+		}
+	}
+	return efforts, toggle, reasoning, context
 }
 
 func (s *Service) activeAccounts(providerID string) []account.PoolEntry {

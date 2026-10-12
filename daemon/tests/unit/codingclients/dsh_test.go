@@ -511,3 +511,27 @@ func TestDSHConfigTargetRefusesARelativeHome(t *testing.T) {
 		t.Fatal("ConfigTargets() accepted a relative DSH_HOME")
 	}
 }
+
+func TestDSHEmptyListStripsAndMergesCleanly(t *testing.T) {
+	base := "http://127.0.0.1:10201"
+	models := []codingclients.ModelRef{{ID: "relo-openai-gpt-4o", Name: "GPT-4o"}}
+	stripped, err := codingclients.StripKind(codingclients.FileDSH, "[]\n")
+	if err != nil {
+		t.Fatalf("StripKind() error = %v", err)
+	}
+	var empty []any
+	if err := yaml.Unmarshal([]byte(stripped), &empty); err != nil || len(empty) != 0 {
+		t.Fatalf("StripKind() = %q, want an empty YAML list (%v)", stripped, err)
+	}
+	fromEmpty, err := codingclients.MergeKind(codingclients.FileDSH, "[]\n", base, models)
+	if err != nil {
+		t.Fatalf("MergeKind() error = %v", err)
+	}
+	fromScratch, err := codingclients.MergeKind(codingclients.FileDSH, "", base, models)
+	if err != nil {
+		t.Fatalf("MergeKind() error = %v", err)
+	}
+	if fromEmpty != fromScratch {
+		t.Fatalf("merge from [] differs:\nfrom empty:\n%s\nfrom scratch:\n%s", fromEmpty, fromScratch)
+	}
+}

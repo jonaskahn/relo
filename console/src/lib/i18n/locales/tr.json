@@ -761,7 +761,9 @@
           "antigravityTitle": "Google Antigravity oturumu",
           "antigravityDescription": "Bu Google Antigravity oturumunun belirteci nasıl yenilediği.",
           "grokTitle": "Grok oturumu",
-          "grokDescription": "Bu Grok oturumunun belirteci nasıl yenilediği."
+          "grokDescription": "Bu Grok oturumunun belirteci nasıl yenilediği.",
+          "modelPrefixesLabel": "Model families",
+          "modelPrefixesHint": "Comma-separated prefixes the roster keeps, e.g. claude, gemini."
         },
         "add": {
           "title": "Bağlantı ekle",
@@ -1576,6 +1578,9 @@
         "rotateTitle": "Bu anahtar döndürülsün mü?",
         "rotateBody": "Relo’nun sahip olduğu dosyalara yeni bir gizli anahtar yazılır. Önceki gizli anahtar hemen çalışmayı durdurur.",
         "removed": "Entegrasyon kaldırıldı.",
+        "forceRemove": "Yine de kaldır",
+        "forceRemoveTitle": "Yine de kaldırılsın mı?",
+        "forceRemoveBody": "Relo artık ayarlarınızın bir kopyasını tutmuyor ve geri yükleyemiyor. Yine de kaldırmak dosyadan Relo'nun payını çıkarır, kalanını olduğu gibi bırakır.",
         "saved": "Entegrasyon kuruldu.",
         "rotated": "Anahtar döndürüldü.",
         "repaired": "Entegrasyon onarıldı.",
@@ -1606,6 +1611,11 @@
         "context1MOn": "1M bağlam penceresi açık",
         "context1MOff": "1M bağlam penceresi kapalı",
         "keyNonePending": "Henüz anahtar yok. Ajanı kurmak bir tane üretir.",
+        "openCodeVersionsTitle": "Yapılandırma sürümü",
+        "openCodeV1": "V1",
+        "openCodeV1Desc": "Eski tekil sağlayıcı bloğu",
+        "openCodeV2": "V2",
+        "openCodeV2Desc": "Geçerli çoğul sağlayıcı bloğu",
         "addTitle": "Ajan ekle",
         "addSubtitle": "Bir ajan seç, kur ve doğrulamanın bağlantıyı kanıtlamasını izle.",
         "addChooseHint": "Bağlanacak bir ajan seç.",

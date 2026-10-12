@@ -86,6 +86,16 @@ func NewCatalogRepo(db *DB) *CatalogRepo {
 	return &CatalogRepo{db: db}
 }
 
+// SaveModelRequestConfigs replaces one account's exact request tuples.
+func (r *CatalogRepo) SaveModelRequestConfigs(ctx context.Context, providerID, credentialID string, configs []catalog.ModelRequestConfig) error {
+	return NewRequestConfigRepo(r.db).Save(ctx, providerID, credentialID, configs)
+}
+
+// ModelRequestConfigs returns one account's exact request tuples.
+func (r *CatalogRepo) ModelRequestConfigs(ctx context.Context, providerID, credentialID string) ([]catalog.ModelRequestConfig, error) {
+	return NewRequestConfigRepo(r.db).Load(ctx, providerID, credentialID)
+}
+
 // ListProviders returns every provider, ordered by identifier.
 func (r *CatalogRepo) ListProviders(ctx context.Context) ([]ProviderRow, error) {
 	rows, err := r.db.sql.QueryContext(ctx, "SELECT "+providerColumns+" FROM providers ORDER BY id")

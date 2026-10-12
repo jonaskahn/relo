@@ -54,6 +54,9 @@ func buildRoster(t catalog.Template, mode rosterMode, listed, typed []catalog.Li
 		if t.FilterModels != nil && !t.FilterModels(entry) {
 			return "", false
 		}
+		if !catalog.MatchesPrefix(entry.ID, t.Prefixes) {
+			return "", false
+		}
 		seen[id] = true
 		if t.FormatForModel == nil {
 			return "", true

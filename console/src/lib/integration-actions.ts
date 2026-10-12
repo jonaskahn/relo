@@ -75,6 +75,15 @@ export function refusalCode(
 	return '';
 }
 
+/** Names the OpenCode generations a set-up writes: v1, v2, or v1+v2. Empty means the
+ *  caller sends no versions and the daemon writes its default. */
+export function openCodeSetupVersions(v1: boolean, v2: boolean): string {
+	if (v1 && v2) return 'v1+v2';
+	if (v1) return 'v1';
+	if (v2) return 'v2';
+	return '';
+}
+
 /** Reports a preview Relo will not write even if the operator confirms. */
 export function setupBlocked(code: SetupRefusal): boolean {
 	return code === 'not_installed' || code === 'relative_path' || code === 'unrecognised';

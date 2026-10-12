@@ -761,7 +761,9 @@
           "antigravityTitle": "Autentificare Google Antigravity",
           "antigravityDescription": "Cum această autentificare Google Antigravity își reînnoiește tokenul.",
           "grokTitle": "Autentificare Grok",
-          "grokDescription": "Cum această autentificare Grok își reînnoiește tokenul."
+          "grokDescription": "Cum această autentificare Grok își reînnoiește tokenul.",
+          "modelPrefixesLabel": "Model families",
+          "modelPrefixesHint": "Comma-separated prefixes the roster keeps, e.g. claude, gemini."
         },
         "add": {
           "title": "Adaugă conexiune",
@@ -1576,6 +1578,9 @@
         "rotateTitle": "Rotiți această cheie?",
         "rotateBody": "Un nou secret este scris în fișierele deținute de Relo. Secretul anterior încetează imediat să funcționeze.",
         "removed": "Integrare eliminată.",
+        "forceRemove": "Elimină oricum",
+        "forceRemoveTitle": "Elimini oricum?",
+        "forceRemoveBody": "Relo nu mai păstrează o copie a setărilor tale și nu le poate readuce. Eliminarea forțată scoate partea Relo din fișier și lasă restul neatins.",
         "saved": "Integrare configurată.",
         "rotated": "Cheie rotită.",
         "repaired": "Integrare reparată.",
@@ -1606,6 +1611,11 @@
         "context1MOn": "Fereastră de context 1M activată",
         "context1MOff": "Fereastră de context 1M dezactivată",
         "keyNonePending": "Încă nu există o cheie. Configurarea agentului creează una.",
+        "openCodeVersionsTitle": "Versiunea configurației",
+        "openCodeV1": "V1",
+        "openCodeV1Desc": "Bloc de furnizor singular vechi",
+        "openCodeV2": "V2",
+        "openCodeV2Desc": "Blocul plural actual de furnizori",
         "addTitle": "Adaugă un agent",
         "addSubtitle": "Alege un agent, configurează-l și urmărește cum verificarea dovedește cablarea.",
         "addChooseHint": "Alege un agent de conectat.",

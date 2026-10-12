@@ -761,7 +761,9 @@
           "antigravityTitle": "Google Antigravity साइन-इन",
           "antigravityDescription": "यह Google Antigravity साइन-इन अपना टोकन कैसे नवीनीकृत करता है।",
           "grokTitle": "Grok साइन-इन",
-          "grokDescription": "यह Grok साइन-इन अपना टोकन कैसे नवीनीकृत करता है।"
+          "grokDescription": "यह Grok साइन-इन अपना टोकन कैसे नवीनीकृत करता है।",
+          "modelPrefixesLabel": "Model families",
+          "modelPrefixesHint": "Comma-separated prefixes the roster keeps, e.g. claude, gemini."
         },
         "add": {
           "title": "कनेक्शन जोड़ें",
@@ -1576,6 +1578,9 @@
         "rotateTitle": "इस कुंजी को घुमाएँ?",
         "rotateBody": "Relo के स्वामित्व वाली फ़ाइलों में एक नया रहस्य लिखा गया है। पिछला रहस्य तुरंत काम करना बंद कर देता है.",
         "removed": "एकीकरण हटा दिया गया.",
+        "forceRemove": "फिर भी हटाएँ",
+        "forceRemoveTitle": "फिर भी हटाएँ?",
+        "forceRemoveBody": "Relo अब आपकी सेटिंग्स की कोई प्रति नहीं रखता, इसलिए वह उन्हें वापस नहीं ला सकता। फिर भी हटाने पर फ़ाइल से Relo का हिस्सा हटा दिया जाता है और बाक़ी हिस्सा ज्यों का त्यों रहता है।",
         "saved": "एकीकरण स्थापित किया गया.",
         "rotated": "कुंजी घुमाई गई.",
         "repaired": "एकीकरण की मरम्मत की गई.",
@@ -1606,6 +1611,11 @@
         "context1MOn": "1M संदर्भ विंडो चालू",
         "context1MOff": "1M संदर्भ विंडो बंद",
         "keyNonePending": "अभी कोई कुंजी नहीं। एजेंट सेटअप करने पर बनेगी।",
+        "openCodeVersionsTitle": "कॉन्फ़िग संस्करण",
+        "openCodeV1": "V1",
+        "openCodeV1Desc": "पुराना एकवचन प्रदाता ब्लॉक",
+        "openCodeV2": "V2",
+        "openCodeV2Desc": "वर्तमान बहुवचन प्रदाता ब्लॉक",
         "addTitle": "एजेंट जोड़ें",
         "addSubtitle": "एक एजेंट चुनें, उसे सेट अप करें और देखें कि सत्यापन वायरिंग को साबित करता है।",
         "addChooseHint": "वायर करने के लिए एक एजेंट चुनें।",

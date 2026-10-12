@@ -58,7 +58,7 @@ func TestAgentsListsWhatThisBuildKnows(t *testing.T) {
 	if _, err := h.manager.Disable(context.Background(), "nope"); !errors.Is(err, integration.ErrUnknownAgent) {
 		t.Fatalf("Disable() on an unknown agent error = %v, want %v", err, integration.ErrUnknownAgent)
 	}
-	if _, err := h.manager.Restore(context.Background(), "nope"); !errors.Is(err, integration.ErrUnknownAgent) {
+	if _, err := h.manager.Restore(context.Background(), "nope", false); !errors.Is(err, integration.ErrUnknownAgent) {
 		t.Fatalf("Restore() on an unknown agent error = %v, want %v", err, integration.ErrUnknownAgent)
 	}
 }
@@ -74,7 +74,7 @@ func TestRestoreRemovesAFileReloCreated(t *testing.T) {
 	if _, err := os.Stat(settingsPath); err != nil {
 		t.Fatalf("the settings file Relo created is missing: %v", err)
 	}
-	if _, err := h.manager.Restore(context.Background(), "claude-code"); err != nil {
+	if _, err := h.manager.Restore(context.Background(), "claude-code", false); err != nil {
 		t.Fatalf("Restore() error = %v", err)
 	}
 	if _, err := os.Stat(settingsPath); !errors.Is(err, os.ErrNotExist) {

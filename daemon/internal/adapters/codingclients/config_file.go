@@ -162,7 +162,20 @@ func ConfigDisplayName(model ModelRef) string {
 	if name == "" {
 		name = model.ID
 	}
-	return catalog.ConfigModelName(name, model.Connection, model.ContextWindow)
+	return catalog.ConfigModelName(name, model.Connection, model.ContextWindow, cursorLaneMarker(model))
+}
+
+// cursorLaneMarker names the variant lanes a Cursor model runs: fast, max,
+// or both. Only a Cursor connection qualifies, so a model another provider
+// happens to name with those segments keeps its own spelling.
+func cursorLaneMarker(model ModelRef) string {
+	if !strings.EqualFold(strings.TrimSpace(model.Connection), "cursor") {
+		return ""
+	}
+	if marker := catalog.LaneMarker(model.ID); marker != "" {
+		return marker
+	}
+	return catalog.LaneMarker(model.Upstream)
 }
 
 func namedConfigLabel(model ModelRef) string {

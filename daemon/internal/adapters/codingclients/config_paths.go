@@ -2,7 +2,6 @@
 package codingclients
 
 import (
-	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -18,12 +17,6 @@ const (
 	FileOpenClaw = "openclaw-config"
 	// FilePi is Pi's model catalog.
 	FilePi = "pi-models"
-	// FilePrime is Prime's model catalog.
-	FilePrime = "prime-models"
-	// FileAside is the Aside account catalog Relo merges into.
-	FileAside = "aside-models"
-	// FileOMO is OMO's model catalog.
-	FileOMO = "omo-models"
 	// FileZCode is ZCode's configuration file.
 	FileZCode = "zcode-config"
 	// FileClineProviders is Cline's provider settings file.
@@ -32,8 +25,6 @@ const (
 	FileClineModels = "cline-models"
 	// FileOMP is Oh My Pi's model catalog.
 	FileOMP = "omp-models"
-	// FileGajae is Gajae's model catalog.
-	FileGajae = "gajae-models"
 	// FileDSH is the DeepSeek Harness Cordis patch carrying the profile web.
 	FileDSH = "dsh-settings"
 	// FileDSHHeadless is the Cordis patch of the profile the command line runs.
@@ -49,10 +40,6 @@ const (
 	// FileKimi is Kimi Code's configuration file.
 	FileKimi = "kimi-config"
 )
-
-// ErrAsideAccount reports that Aside has no single account directory under
-// ~/.aside/u, so Relo will not invent an account name.
-var ErrAsideAccount = errors.New("aside has no single account directory")
 
 // ConfigTarget is the file one agent reads and the directory that has to
 // exist before Relo will create or edit that file.
@@ -187,22 +174,14 @@ func absolutePath(raw, home, name string) (string, error) {
 }
 
 // ConfigTargets lists every client file Relo merges a provider block into.
-// Aside resolves the single account directory under ~/.aside/u and refuses
-// to guess when that directory is missing or there is more than one.
 func (p Paths) ConfigTargets(id string) ([]ConfigTarget, error) {
 	switch id {
 	case ClientPi:
 		return fixedTarget(FilePi, filepath.Join(p.Home, ".pi", "agent", "models.json")), nil
-	case ClientPrime:
-		return fixedTarget(FilePrime, filepath.Join(p.Home, ".prime", "agent", "models.json")), nil
-	case ClientOMO:
-		return fixedTarget(FileOMO, filepath.Join(p.Home, ".omo", "agent", "models.json")), nil
 	case ClientZCode:
 		return fixedTarget(FileZCode, filepath.Join(p.Home, ".zcode", "v2", "config.json")), nil
 	case ClientOMP:
 		return fixedTarget(FileOMP, filepath.Join(p.Home, ".omp", "agent", "models.yml")), nil
-	case ClientGajae:
-		return fixedTarget(FileGajae, filepath.Join(p.Home, ".gjc", "agent", "models.yml")), nil
 	case ClientDSH:
 		return p.dshTargets()
 	case ClientMCode:
@@ -224,12 +203,6 @@ func (p Paths) specialConfigTargets(id string) ([]ConfigTarget, error) {
 			{Kind: FileClineProviders, Path: filepath.Join(root, "providers.json"), Dir: root},
 			{Kind: FileClineModels, Path: filepath.Join(root, "models.json"), Dir: root},
 		}, nil
-	case ClientAside:
-		path, err := p.asideModels()
-		if err != nil {
-			return nil, err
-		}
-		return []ConfigTarget{{Kind: FileAside, Path: path, Dir: filepath.Dir(path)}}, nil
 	default:
 		return nil, fmt.Errorf("%s: %w", id, ErrUnrecognisedFile)
 	}
@@ -237,29 +210,4 @@ func (p Paths) specialConfigTargets(id string) ([]ConfigTarget, error) {
 
 func fixedTarget(kind, path string) []ConfigTarget {
 	return []ConfigTarget{{Kind: kind, Path: path, Dir: filepath.Dir(path)}}
-}
-
-func (p Paths) asideModels() (string, error) {
-	root := filepath.Join(p.Home, ".aside", "u")
-	entries, err := os.ReadDir(root)
-	if errors.Is(err, os.ErrNotExist) {
-		return "", fmt.Errorf("aside has no account directory: %w", ErrAsideAccount)
-	}
-	if err != nil {
-		return "", fmt.Errorf("read %s: %w", root, err)
-	}
-	names := make([]string, 0, len(entries))
-	for _, entry := range entries {
-		if entry.IsDir() {
-			names = append(names, entry.Name())
-		}
-	}
-	switch len(names) {
-	case 0:
-		return "", fmt.Errorf("aside has no account directory: %w", ErrAsideAccount)
-	case 1:
-		return filepath.Join(root, names[0], "models.json"), nil
-	default:
-		return "", fmt.Errorf("aside has more than one account directory: %w", ErrAsideAccount)
-	}
 }

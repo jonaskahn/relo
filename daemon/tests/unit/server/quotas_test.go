@@ -7,6 +7,7 @@ import (
 	"strings"
 	"sync"
 	"testing"
+	"time"
 
 	"github.com/jonaskahn/relo/internal/account"
 	"github.com/jonaskahn/relo/internal/activity"
@@ -118,10 +119,16 @@ func TestQuotaRecording(t *testing.T) {
 			t.Fatalf("recorded = %+v, want the failed write to be dropped", calls)
 		}
 		// The failure is worth telling the operator about, never worth
-		// hiding from the log.
-		if !strings.Contains(h.logBuffer.String(), "record the quota a response reported") {
-			t.Fatalf("log = %q, want the quota write failure", h.logBuffer.String())
+		// hiding from the log. Bookkeeping runs behind the response, so the
+		// test waits for it the way the event tests wait for their streams.
+		deadline := time.Now().Add(5 * time.Second)
+		for time.Now().Before(deadline) {
+			if strings.Contains(h.logBuffer.String(), "record the quota a response reported") {
+				return
+			}
+			time.Sleep(2 * time.Millisecond)
 		}
+		t.Fatalf("log = %q, want the quota write failure", h.logBuffer.String())
 	})
 }
 

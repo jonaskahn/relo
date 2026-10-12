@@ -27,7 +27,7 @@ func TestIntegrationWiresAnAgentAndProvesItsKey(t *testing.T) {
 	}
 
 	ctx := context.Background()
-	result, err := daemon.integrations.EnableIntegration(ctx, "codex")
+	result, err := daemon.integrations.EnableIntegration(ctx, "codex", "")
 	if err != nil {
 		t.Fatalf("EnableIntegration() error = %v", err)
 	}
@@ -58,7 +58,7 @@ func TestIntegrationWiresAnAgentAndProvesItsKey(t *testing.T) {
 		t.Fatalf("verify URL = %q, want the data plane's model list", verify.URL)
 	}
 
-	if err := daemon.integrations.DisableIntegration(ctx, "codex"); err != nil {
+	if err := daemon.integrations.DisableIntegration(ctx, "codex", false); err != nil {
 		t.Fatalf("DisableIntegration() error = %v", err)
 	}
 	restored, err := os.ReadFile(configPath)

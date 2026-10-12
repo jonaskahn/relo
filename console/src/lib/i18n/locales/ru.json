@@ -761,7 +761,9 @@
           "antigravityTitle": "Вход Google Antigravity",
           "antigravityDescription": "Как этот вход Google Antigravity обновляет токен.",
           "grokTitle": "Вход Grok",
-          "grokDescription": "Как этот вход Grok обновляет токен."
+          "grokDescription": "Как этот вход Grok обновляет токен.",
+          "modelPrefixesLabel": "Model families",
+          "modelPrefixesHint": "Comma-separated prefixes the roster keeps, e.g. claude, gemini."
         },
         "add": {
           "title": "Добавить подключение",
@@ -1576,6 +1578,9 @@
         "rotateTitle": "Повернуть этот ключ?",
         "rotateBody": "Новый секрет записывается в файлы, которыми владеет Relo. Предыдущий секрет сразу перестаёт работать.",
         "removed": "Интеграция удалена.",
+        "forceRemove": "Удалить принудительно",
+        "forceRemoveTitle": "Удалить принудительно?",
+        "forceRemoveBody": "У Relo больше нет копии ваших настроек, и он не может их вернуть. Принудительное удаление уберёт часть Relo из файла, а остальное оставит без изменений.",
         "saved": "Интеграция настроена.",
         "rotated": "Ключ повёрнут.",
         "repaired": "Интеграция исправлена.",
@@ -1606,6 +1611,11 @@
         "context1MOn": "Окно контекста 1M включено",
         "context1MOff": "Окно контекста 1M выключено",
         "keyNonePending": "Пока нет ключа. Настройка агента создаст его.",
+        "openCodeVersionsTitle": "Версия конфигурации",
+        "openCodeV1": "V1",
+        "openCodeV1Desc": "Устаревший блок единственного провайдера",
+        "openCodeV2": "V2",
+        "openCodeV2Desc": "Актуальный блок множественных провайдеров",
         "addTitle": "Добавить агента",
         "addSubtitle": "Выбери агента, настрой его и посмотри, как проверка подтверждает подключение.",
         "addChooseHint": "Выбери агента для подключения.",

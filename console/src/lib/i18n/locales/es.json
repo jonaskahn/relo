@@ -761,7 +761,9 @@
           "antigravityTitle": "Inicio de sesión de Google Antigravity",
           "antigravityDescription": "Cómo este inicio de sesión de Google Antigravity renueva su token.",
           "grokTitle": "Inicio de sesión de Grok",
-          "grokDescription": "Cómo este inicio de sesión de Grok renueva su token."
+          "grokDescription": "Cómo este inicio de sesión de Grok renueva su token.",
+          "modelPrefixesLabel": "Model families",
+          "modelPrefixesHint": "Comma-separated prefixes the roster keeps, e.g. claude, gemini."
         },
         "add": {
           "title": "Añadir conexión",
@@ -1576,6 +1578,9 @@
         "rotateTitle": "¿Rotar esta clave?",
         "rotateBody": "Un nuevo secreto se escribe en los archivos que posee Relo. El secreto anterior deja de funcionar de inmediato.",
         "removed": "Integración eliminada.",
+        "forceRemove": "Eliminar de todos modos",
+        "forceRemoveTitle": "¿Eliminar de todos modos?",
+        "forceRemoveBody": "Relo ya no guarda una copia de tu configuración y no puede restaurarla. Al eliminar de todos modos se quita la parte de Relo del archivo y el resto se queda como está.",
         "saved": "Integración configurada.",
         "rotated": "Clave rotada.",
         "repaired": "Integración reparada.",
@@ -1606,6 +1611,11 @@
         "context1MOn": "Ventana de contexto de 1M activada",
         "context1MOff": "Ventana de contexto de 1M desactivada",
         "keyNonePending": "Aún no hay clave. Configurar el agente crea una.",
+        "openCodeVersionsTitle": "Versión de configuración",
+        "openCodeV1": "V1",
+        "openCodeV1Desc": "Bloque de proveedor singular heredado",
+        "openCodeV2": "V2",
+        "openCodeV2Desc": "Bloque de proveedores plural actual",
         "addTitle": "Añadir agente",
         "addSubtitle": "Elige un agente, configúralo y observa cómo la verificación demuestra la conexión.",
         "addChooseHint": "Elige un agente para conectar.",

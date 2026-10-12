@@ -135,6 +135,8 @@ linters:
               desc: the transport resolves outbound codecs through the FormatRegistry port
             - pkg: github.com/jonaskahn/relo/internal/adapters/wire/kiro
               desc: the transport resolves outbound codecs through the FormatRegistry port
+            - pkg: github.com/jonaskahn/relo/internal/adapters/wire/cursor
+              desc: the transport resolves outbound codecs through the FormatRegistry port
             - pkg: github.com/jonaskahn/relo/internal/adapters/wire/formats
               desc: the composition root builds the registry and injects it
             - pkg: github.com/jonaskahn/relo/internal/adapters/wire/eventstream

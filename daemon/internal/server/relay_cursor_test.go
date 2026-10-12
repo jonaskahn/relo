@@ -1,0 +1,182 @@
+package server
+
+import (
+	"context"
+	"net/http"
+	"net/http/httptest"
+	"testing"
+
+	"github.com/jonaskahn/relo/internal/account"
+	"github.com/jonaskahn/relo/internal/catalog"
+	"github.com/jonaskahn/relo/internal/inference"
+	"github.com/jonaskahn/relo/internal/routing"
+)
+
+type cursorStubRelay struct {
+	accounts []catalog.Authorization
+	calls    int
+}
+
+func (r *cursorStubRelay) Authorize(_ context.Context, request catalog.AuthRequest) (catalog.Authorization, error) {
+	r.calls++
+	for _, account := range r.accounts {
+		if account.CredentialID == "" {
+			continue
+		}
+		excluded := false
+		for _, id := range request.Selection.Exclude {
+			if id == account.CredentialID {
+				excluded = true
+			}
+		}
+		if !excluded {
+			return account, nil
+		}
+	}
+	return catalog.Authorization{}, account.ErrNoCredentials
+}
+
+func (r *cursorStubRelay) RefreshRejected(_ context.Context, _, _, _ string) (catalog.Authorization, error) {
+	return catalog.Authorization{}, nil
+}
+
+func (r *cursorStubRelay) Report(_ context.Context, _ Outcome) error { return nil }
+
+func (r *cursorStubRelay) Execute(_ context.Context, _ Exchange, _ http.ResponseWriter) (Result, error) {
+	return Result{}, nil
+}
+
+type cursorStubConfigs struct {
+	configs map[string][]catalog.ModelRequestConfig
+}
+
+func (s cursorStubConfigs) ModelRequestConfigs(_ context.Context, _ string, credentialID string) ([]catalog.ModelRequestConfig, error) {
+	return s.configs[credentialID], nil
+}
+
+func cursorTestServer(relay *cursorStubRelay, configs cursorStubConfigs) *Server {
+	return &Server{opts: Options{Relay: relay, RequestConfigs: configs}}
+}
+
+func cursorTestSpec(authorized catalog.Authorization, effort string) *attemptSpec {
+	outcome := &requestOutcome{
+		requestID: "req-1",
+		request:   &inference.Request{Model: "sonnet"},
+	}
+	if effort != "" {
+		outcome.request.Reasoning = &inference.ReasoningConfig{Effort: effort}
+	}
+	return &attemptSpec{
+		request:    httptest.NewRequest(http.MethodPost, "/", nil),
+		candidate:  routing.Candidate{ProviderID: "cursor", ModelID: "sonnet", Model: catalog.Model{ID: "sonnet"}},
+		outcome:    outcome,
+		host:       catalog.Provider{ID: "cursor", Auth: catalog.AuthOAuth},
+		authorized: authorized,
+	}
+}
+
+func cursorVariant(group, selection, effort, details string) catalog.ModelRequestConfig {
+	return catalog.EncodeCursorConfig(catalog.CursorVariant{
+		GroupID: group, Selection: selection, Effort: effort,
+		ModelID: "sonnet", DetailsID: details,
+	})
+}
+
+func TestSelectCursorAttempt(t *testing.T) {
+	first := catalog.Authorization{CredentialID: "cred-a", Label: "a", Token: "a"}
+	second := catalog.Authorization{CredentialID: "cred-b", Label: "b", Token: "b"}
+	configs := cursorStubConfigs{configs: map[string][]catalog.ModelRequestConfig{
+		"cred-a": {
+			cursorVariant("sonnet", "low", "low", "sonnet-low"),
+			cursorVariant("sonnet", "high", "high", "sonnet-high"),
+		},
+		"cred-b": {
+			cursorVariant("sonnet", "medium", "medium", "sonnet-medium"),
+		},
+	}}
+	configs.configs["cred-a"][0].Default = true
+
+	t.Run("an eligible account keeps the attempt", func(t *testing.T) {
+		relay := &cursorStubRelay{accounts: []catalog.Authorization{first, second}}
+		server := cursorTestServer(relay, configs)
+		tried := map[string][]string{}
+		selection, err := server.selectCursorAttempt(context.Background(), cursorTestSpec(first, "high"), tried)
+		if err != nil {
+			t.Fatalf("selectCursorAttempt() error = %v", err)
+		}
+		if selection.DetailsID != "sonnet-high" {
+			t.Fatalf("selection = %+v, want the high tuple", selection)
+		}
+		if relay.calls != 0 {
+			t.Fatalf("authorize calls = %d, want no re-authorization", relay.calls)
+		}
+	})
+
+	t.Run("an ineligible account yields to the next one", func(t *testing.T) {
+		relay := &cursorStubRelay{accounts: []catalog.Authorization{first, second}}
+		server := cursorTestServer(relay, configs)
+		tried := map[string][]string{}
+		spec := cursorTestSpec(first, "medium")
+		selection, err := server.selectCursorAttempt(context.Background(), spec, tried)
+		if err != nil {
+			t.Fatalf("selectCursorAttempt() error = %v", err)
+		}
+		if selection.DetailsID != "sonnet-medium" {
+			t.Fatalf("selection = %+v, want the medium tuple", selection)
+		}
+		if spec.authorized.CredentialID != "cred-b" {
+			t.Fatalf("authorized = %q, want the serving account", spec.authorized.CredentialID)
+		}
+		if len(tried["cursor"]) != 1 || tried["cursor"][0] != "cred-a" {
+			t.Fatalf("tried = %v, want cred-a excluded", tried)
+		}
+	})
+
+	t.Run("no serving account fails the selection", func(t *testing.T) {
+		relay := &cursorStubRelay{accounts: []catalog.Authorization{first}}
+		server := cursorTestServer(relay, configs)
+		spec := cursorTestSpec(first, "medium")
+		if _, err := server.selectCursorAttempt(context.Background(), spec, map[string][]string{}); err == nil {
+			t.Fatal("selectCursorAttempt() succeeded without a serving account")
+		}
+	})
+
+	t.Run("an unknown effort is refused", func(t *testing.T) {
+		relay := &cursorStubRelay{accounts: []catalog.Authorization{first}}
+		server := cursorTestServer(relay, configs)
+		if _, err := server.selectCursorAttempt(context.Background(), cursorTestSpec(first, "nonsense"), map[string][]string{}); err == nil {
+			t.Fatal("selectCursorAttempt() accepted an unknown effort")
+		}
+	})
+
+	t.Run("an empty effort takes the default", func(t *testing.T) {
+		relay := &cursorStubRelay{accounts: []catalog.Authorization{first}}
+		server := cursorTestServer(relay, configs)
+		selection, err := server.selectCursorAttempt(context.Background(), cursorTestSpec(first, ""), map[string][]string{})
+		if err != nil {
+			t.Fatalf("selectCursorAttempt() error = %v", err)
+		}
+		if selection.DetailsID != "sonnet-low" {
+			t.Fatalf("selection = %+v, want the default tuple", selection)
+		}
+	})
+}
+
+func TestCursorConversationID(t *testing.T) {
+	first := cursorConversationID("cursor", "cred-a", "session-1")
+	if first == "" {
+		t.Fatal("conversation id is empty")
+	}
+	if again := cursorConversationID("cursor", "cred-a", "session-1"); again != first {
+		t.Fatalf("conversation = %q, want stability across turns", again)
+	}
+	if other := cursorConversationID("cursor", "cred-b", "session-1"); other == first {
+		t.Fatal("accounts share a conversation id")
+	}
+	if other := cursorConversationID("cursor", "cred-a", "session-2"); other == first {
+		t.Fatal("conversations share an id")
+	}
+	if len(first) != 36 || first[14] != '4' {
+		t.Fatalf("conversation = %q, want a UUID", first)
+	}
+}

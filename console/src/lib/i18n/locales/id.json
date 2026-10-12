@@ -761,7 +761,9 @@
           "antigravityTitle": "Masuk Google Antigravity",
           "antigravityDescription": "Bagaimana masuk Google Antigravity ini memperbarui tokennya.",
           "grokTitle": "Masuk Grok",
-          "grokDescription": "Bagaimana masuk Grok ini memperbarui tokennya."
+          "grokDescription": "Bagaimana masuk Grok ini memperbarui tokennya.",
+          "modelPrefixesLabel": "Model families",
+          "modelPrefixesHint": "Comma-separated prefixes the roster keeps, e.g. claude, gemini."
         },
         "add": {
           "title": "Tambah koneksi",
@@ -1576,6 +1578,9 @@
         "rotateTitle": "Putar kunci ini?",
         "rotateBody": "Rahasia baru ditulis ke file yang dimiliki Relo. Rahasia sebelumnya langsung berhenti bekerja.",
         "removed": "Integrasi dihapus.",
+        "forceRemove": "Hapus tanpa syarat",
+        "forceRemoveTitle": "Hapus tanpa syarat?",
+        "forceRemoveBody": "Relo tidak lagi menyimpan salinan pengaturan Anda sehingga tidak bisa memulihkannya. Menghapus tanpa syarat menghapus bagian Relo dari file dan membiarkan sisanya apa adanya.",
         "saved": "Pengaturan integrasi.",
         "rotated": "Kunci diputar.",
         "repaired": "Integrasi diperbaiki.",
@@ -1606,6 +1611,11 @@
         "context1MOn": "Jendela konteks 1M aktif",
         "context1MOff": "Jendela konteks 1M mati",
         "keyNonePending": "Belum ada kunci. Mengonfigurasi agen akan membuatnya.",
+        "openCodeVersionsTitle": "Versi konfigurasi",
+        "openCodeV1": "V1",
+        "openCodeV1Desc": "Blok penyedia tunggal lawas",
+        "openCodeV2": "V2",
+        "openCodeV2Desc": "Blok penyedia jamak saat ini",
         "addTitle": "Tambah agen",
         "addSubtitle": "Pilih agen, siapkan, dan saksikan verifikasi membuktikan wiring-nya.",
         "addChooseHint": "Pilih agen untuk dihubungkan.",

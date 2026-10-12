@@ -105,3 +105,11 @@ func (s choiceStore) Get(ctx context.Context, templateID string) (bool, bool, bo
 func (s choiceStore) Save(ctx context.Context, templateID string, longContext, autoRefresh *bool, nowMs int64) error {
 	return s.inner.Save(ctx, templateID, longContext, autoRefresh, nowMs)
 }
+
+func (s choiceStore) Prefixes(ctx context.Context, templateID string) ([]string, bool, error) {
+	return s.inner.Prefixes(ctx, templateID)
+}
+
+func (s choiceStore) SavePrefixes(ctx context.Context, templateID string, prefixes []string, nowMs int64) error {
+	return s.inner.SavePrefixes(ctx, templateID, prefixes, nowMs)
+}

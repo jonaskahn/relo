@@ -77,7 +77,7 @@ func listedGroup(snapshot *catalog.Snapshot, advertised map[string]*int64, group
 	})
 	return listedModel{
 		ID:            id,
-		Name:          catalog.ClientModelName(labelOr(group.Label, group.ID), catalog.RouteLabelPrefix, namedWindow(window, snapshot.NativeMillionGroup(group))),
+		Name:          catalog.ClientModelName(labelOr(group.Label, group.ID), catalog.RouteLabelPrefix, namedWindow(window, snapshot.NativeMillionGroup(group)), ""),
 		NativeMillion: snapshot.NativeMillionGroup(group),
 		Suffixed:      snapshot.OffersSuffixedGroup(group),
 		ContextWindow: window,
@@ -94,7 +94,7 @@ func listedStandalone(snapshot *catalog.Snapshot, view listView, model catalog.M
 		label = catalog.StripClaudePrefix(label)
 	}
 	return listedModel{
-		ID: id, Name: catalog.ClientModelName(label, providerLabel(snapshot, model.ProviderID), namedWindow(window, snapshot.MillionAlone(viewModel))),
+		ID: id, Name: catalog.ClientModelName(label, providerLabel(snapshot, model.ProviderID), namedWindow(window, snapshot.MillionAlone(viewModel)), cursorLaneMarker(snapshot, model)),
 		ProviderID: model.ProviderID, SourceModelID: model.ID,
 		NativeMillion: snapshot.MillionAlone(viewModel),
 		Suffixed:      snapshot.OffersSuffixed(viewModel),
@@ -109,6 +109,29 @@ func namedWindow(window *int64, alone bool) *int64 {
 		return nil
 	}
 	return window
+}
+
+// cursorLaneMarker names the variant lanes a Cursor model runs: fast, max,
+// or both. Native lanes carry the cursor-agent format; lanes a Cursor
+// template serves over another format name the lanes in the id itself.
+// Published identifiers carry Relo's own -1m marker after the lanes, so
+// ...-fast-max-1m qualifies. A non-Cursor model that happens to read that
+// way is never marked.
+func cursorLaneMarker(snapshot *catalog.Snapshot, model catalog.Model) string {
+	if model.APIFormat == catalog.FormatCursorAgent {
+		return catalog.LaneMarker(model.ID)
+	}
+	if !cursorTemplate(snapshot, model.ProviderID) {
+		return ""
+	}
+	return catalog.LaneMarker(model.ID)
+}
+
+// cursorTemplate reports whether a provider runs the Cursor sign-in
+// template, so its lanes are Cursor's even when another format serves them.
+func cursorTemplate(snapshot *catalog.Snapshot, providerID string) bool {
+	host, found := snapshot.Provider(providerID)
+	return found && host.TemplateID == "cursor"
 }
 
 func appendListedVariants(entries []listedModel, entry listedModel, enabled bool) []listedModel {

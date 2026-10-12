@@ -761,7 +761,9 @@
           "antigravityTitle": "Google Antigravity-inloggning",
           "antigravityDescription": "Hur den här Google Antigravity-inloggningen förnyar sin token.",
           "grokTitle": "Grok-inloggning",
-          "grokDescription": "Hur den här Grok-inloggningen förnyar sin token."
+          "grokDescription": "Hur den här Grok-inloggningen förnyar sin token.",
+          "modelPrefixesLabel": "Model families",
+          "modelPrefixesHint": "Comma-separated prefixes the roster keeps, e.g. claude, gemini."
         },
         "add": {
           "title": "Lägg till anslutning",
@@ -1576,6 +1578,9 @@
         "rotateTitle": "Rotera den här nyckeln?",
         "rotateBody": "En ny hemlighet skrivs till de filer som Relo äger. Den tidigare hemligheten slutar fungera omedelbart.",
         "removed": "Integrationen har tagits bort.",
+        "forceRemove": "Ta bort ändå",
+        "forceRemoveTitle": "Ta bort ändå?",
+        "forceRemoveBody": "Relo har ingen kopia av dina inställningar kvar och kan inte återställa dem. Att ta bort ändå tar bort Relos del ur filen och lämnar resten som den är.",
         "saved": "Integrationen har konfigurerats.",
         "rotated": "Nyckeln har roterats.",
         "repaired": "Integrationen har reparerats.",
@@ -1606,6 +1611,11 @@
         "context1MOn": "1M-kontextfönster på",
         "context1MOff": "1M-kontextfönster av",
         "keyNonePending": "Ingen nyckel ännu. När agenten ställs in skapas en.",
+        "openCodeVersionsTitle": "Konfigurationsversion",
+        "openCodeV1": "V1",
+        "openCodeV1Desc": "Äldre singular leverantörsblock",
+        "openCodeV2": "V2",
+        "openCodeV2Desc": "Aktuellt plural leverantörsblock",
         "addTitle": "Lägg till agent",
         "addSubtitle": "Välj en agent, konfigurera den och se verifieringen bevisa kopplingen.",
         "addChooseHint": "Välj en agent att koppla upp.",

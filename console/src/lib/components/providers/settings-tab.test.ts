@@ -113,6 +113,8 @@ describe('connection settings', () => {
 			props: {
 				status: 'error',
 				autoRefresh: true,
+				modelPrefixes: [],
+				showPrefixes: false,
 				disabled: false,
 				onretry: () => {},
 				onchange: () => {}

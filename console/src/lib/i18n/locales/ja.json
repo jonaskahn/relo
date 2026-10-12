@@ -761,7 +761,9 @@
           "antigravityTitle": "Google Antigravityのサインイン",
           "antigravityDescription": "このGoogle Antigravityのサインインがトークンを更新する方法です。",
           "grokTitle": "Grokのサインイン",
-          "grokDescription": "このGrokのサインインがトークンを更新する方法です。"
+          "grokDescription": "このGrokのサインインがトークンを更新する方法です。",
+          "modelPrefixesLabel": "Model families",
+          "modelPrefixesHint": "Comma-separated prefixes the roster keeps, e.g. claude, gemini."
         },
         "add": {
           "title": "接続を追加",
@@ -1576,6 +1578,9 @@
         "rotateTitle": "このキーをローテーションしますか？",
         "rotateBody": "新しいシークレットがRelo所有のファイルに書き込まれます。以前のシークレットは直ちに無効になります。",
         "removed": "連携を削除しました。",
+        "forceRemove": "強制的に削除",
+        "forceRemoveTitle": "強制的に削除しますか？",
+        "forceRemoveBody": "Relo は設定の控えを保持していないため、復元できません。強制削除するとファイルから Relo の部分だけが取り除かれ、残りはそのまま残ります。",
         "saved": "連携をセットアップしました。",
         "rotated": "キーをローテーションしました。",
         "repaired": "連携を修復しました。",
@@ -1606,6 +1611,11 @@
         "context1MOn": "1Mコンテキストをオンにしました",
         "context1MOff": "1Mコンテキストをオフにしました",
         "keyNonePending": "まだキーがありません。セットアップすると発行されます。",
+        "openCodeVersionsTitle": "設定バージョン",
+        "openCodeV1": "V1",
+        "openCodeV1Desc": "レガシーの単数プロバイダーブロック",
+        "openCodeV2": "V2",
+        "openCodeV2Desc": "現行の複数プロバイダーブロック",
         "addTitle": "エージェントを追加",
         "addSubtitle": "エージェントを選んでセットアップし、検証が配線を証明するのを確認する。",
         "addChooseHint": "接続するエージェントを選ぶ。",

@@ -29,6 +29,10 @@ type Store interface {
 	CommitProbe(ctx context.Context, conn catalog.ConnectionRecord, cred account.PoolEntry, models []catalog.ModelRecord, facts []catalog.FactsRecord) error
 	RecordRefresh(ctx context.Context, providerID string, atMs int64, refreshErr string) error
 	RefreshProviderModels(ctx context.Context, providerID string, models []catalog.ModelRecord, facts []catalog.FactsRecord, unavailableIDs []string, atMs int64, refreshErr string) error
+	// SaveModelRequestConfigs replaces one account's exact request tuples.
+	SaveModelRequestConfigs(ctx context.Context, providerID, credentialID string, configs []catalog.ModelRequestConfig) error
+	// ModelRequestConfigs returns one account's exact request tuples.
+	ModelRequestConfigs(ctx context.Context, providerID, credentialID string) ([]catalog.ModelRequestConfig, error)
 	SaveModelsDevFacts(ctx context.Context, facts []catalog.FactsRecord, state catalog.ModelsDevStateRecord) error
 	GetModelsDevState(ctx context.Context) (catalog.ModelsDevStateRecord, bool, error)
 }
@@ -93,6 +97,9 @@ type Options struct {
 	ModelsDev   ModelsDev
 	Templates   Templates
 	Logger      *slog.Logger
+	// TemplatePrefixes names the stored model families one template's roster
+	// keeps. Nil keeps the template default.
+	TemplatePrefixes func(ctx context.Context, templateID string) ([]string, bool)
 	// ProxyURL is the outbound proxy from Settings. Empty means no proxy.
 	ProxyURL func() string
 	// AfterReload runs after a successful rebuild. The composition root uses
@@ -104,22 +111,23 @@ type Options struct {
 
 // Service runs the connection and model lifecycle.
 type Service struct {
-	store       Store
-	catalog     *catalog.Catalog
-	pools       *account.Manager
-	entries     account.CredentialRepository
-	accounts    Accounts
-	secrets     SecretStore
-	credentials Credentials
-	direct      DirectAuthorizer
-	discover    ModelLister
-	modelsDev   ModelsDev
-	templates   Templates
-	logger      *slog.Logger
-	proxyURL    func() string
-	afterReload func(ctx context.Context)
-	lifetime    context.Context
-	probes      sync.Map // probeID -> *probeSession
+	store            Store
+	catalog          *catalog.Catalog
+	pools            *account.Manager
+	entries          account.CredentialRepository
+	accounts         Accounts
+	secrets          SecretStore
+	credentials      Credentials
+	direct           DirectAuthorizer
+	discover         ModelLister
+	modelsDev        ModelsDev
+	templates        Templates
+	templatePrefixes func(ctx context.Context, templateID string) ([]string, bool)
+	logger           *slog.Logger
+	proxyURL         func() string
+	afterReload      func(ctx context.Context)
+	lifetime         context.Context
+	probes           sync.Map // probeID -> *probeSession
 }
 
 // New returns the catalog use cases over the given ports.
@@ -137,7 +145,8 @@ func New(options Options) *Service {
 		accounts: options.Accounts,
 		secrets:  options.Secrets, credentials: options.Credentials, direct: options.Direct,
 		discover: options.Discover, modelsDev: options.ModelsDev, templates: options.Templates,
-		lifetime: options.Lifetime, logger: logger, proxyURL: options.ProxyURL, afterReload: options.AfterReload,
+		templatePrefixes: options.TemplatePrefixes,
+		lifetime:         options.Lifetime, logger: logger, proxyURL: options.ProxyURL, afterReload: options.AfterReload,
 	}
 }
 

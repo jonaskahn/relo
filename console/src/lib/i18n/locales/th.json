@@ -761,7 +761,9 @@
           "antigravityTitle": "การลงชื่อเข้าใช้ Google Antigravity",
           "antigravityDescription": "การลงชื่อเข้าใช้ Google Antigravity นี้ต่ออายุโทเคนอย่างไร",
           "grokTitle": "การลงชื่อเข้าใช้ Grok",
-          "grokDescription": "การลงชื่อเข้าใช้ Grok นี้ต่ออายุโทเคนอย่างไร"
+          "grokDescription": "การลงชื่อเข้าใช้ Grok นี้ต่ออายุโทเคนอย่างไร",
+          "modelPrefixesLabel": "Model families",
+          "modelPrefixesHint": "Comma-separated prefixes the roster keeps, e.g. claude, gemini."
         },
         "add": {
           "title": "เพิ่มการเชื่อมต่อ",
@@ -1576,6 +1578,9 @@
         "rotateTitle": "หมุนเวียนคีย์นี้หรือไม่?",
         "rotateBody": "ความลับใหม่จะเขียนลงไฟล์ที่ Relo เป็นเจ้าของ ความลับเดิมหยุดทำงานทันที",
         "removed": "นำอินทิเกรชันออกแล้ว",
+        "forceRemove": "ลบบังคับ",
+        "forceRemoveTitle": "ล้างออกแบบบังคับหรือไม่?",
+        "forceRemoveBody": "Relo ไม่มีสำเนาการตั้งค่าของคุณแล้ว จึงกู้คืนไม่ได้ การล้างออกแบบบังคับจะถอดส่วนของ Relo ออกจากไฟล์ และคงส่วนที่เหลือไว้ตามเดิม",
         "saved": "ตั้งค่าอินทิเกรชันแล้ว",
         "rotated": "หมุนเวียนคีย์แล้ว",
         "repaired": "ซ่อมแซมอินทิเกรชันแล้ว",
@@ -1606,6 +1611,11 @@
         "context1MOn": "เปิดหน้าต่างบริบท 1M",
         "context1MOff": "ปิดหน้าต่างบริบท 1M",
         "keyNonePending": "ยังไม่มีคีย์ การตั้งค่าเอเจนต์จะสร้างคีย์ให้",
+        "openCodeVersionsTitle": "เวอร์ชันการกำหนดค่า",
+        "openCodeV1": "V1",
+        "openCodeV1Desc": "บล็อกผู้ให้บริการเอกพจน์แบบเดิม",
+        "openCodeV2": "V2",
+        "openCodeV2Desc": "บล็อกผู้ให้บริการพหูพจน์ปัจจุบัน",
         "addTitle": "เพิ่มเอเจนต์",
         "addSubtitle": "เลือกเอเจนต์ ตั้งค่า แล้วดูการตรวจสอบพิสูจน์การเชื่อมต่อ",
         "addChooseHint": "เลือกเอเจนต์ที่จะเชื่อมต่อ",

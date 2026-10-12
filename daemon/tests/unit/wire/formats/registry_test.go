@@ -45,6 +45,24 @@ func TestEveryAdvertisedFormatResolves(t *testing.T) {
 	}
 }
 
+// TestCursorAgentResolves pins the template-specific Cursor format: it is
+// not in the generic picker, but the build speaks it for Cursor connections.
+func TestCursorAgentResolves(t *testing.T) {
+	registry := formats.New()
+	codec, supported := registry.Outbound(catalog.FormatCursorAgent)
+	if !supported || codec == nil {
+		t.Fatalf("Outbound(cursor-agent) = %v, %v, want a codec", codec, supported)
+	}
+	if !registry.Streams(catalog.FormatCursorAgent) {
+		t.Fatal("Streams(cursor-agent) = false, want true")
+	}
+	for _, format := range catalog.APIFormats() {
+		if format == catalog.FormatCursorAgent {
+			t.Fatal("cursor-agent is template-specific and must stay out of the generic picker")
+		}
+	}
+}
+
 // TestEverySurfaceResolves pins the inbound half of the registry: a surface
 // Relo serves is a surface this build can decode, and nothing else is.
 func TestEverySurfaceResolves(t *testing.T) {

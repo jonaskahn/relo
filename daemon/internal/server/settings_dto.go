@@ -199,17 +199,19 @@ func toSettingsResponse(settings appsettings.Settings) settingsResponse {
 }
 
 type templateSettingResponse struct {
-	AutoRefresh bool `json:"auto_refresh"`
+	AutoRefresh   bool     `json:"auto_refresh"`
+	ModelPrefixes []string `json:"model_prefixes,omitempty"`
 }
 
 func toTemplateSettingResponse(setting apptemplates.Setting) templateSettingResponse {
-	return templateSettingResponse{AutoRefresh: setting.AutoRefresh}
+	return templateSettingResponse{AutoRefresh: setting.AutoRefresh, ModelPrefixes: setting.ModelPrefixes}
 }
 
 type templateSettingPatchRequest struct {
-	AutoRefresh *bool `json:"auto_refresh,omitempty"`
+	AutoRefresh   *bool     `json:"auto_refresh,omitempty"`
+	ModelPrefixes *[]string `json:"model_prefixes,omitempty"`
 }
 
 func toTemplateSettingPatch(request templateSettingPatchRequest) apptemplates.Patch {
-	return apptemplates.Patch{AutoRefresh: request.AutoRefresh}
+	return apptemplates.Patch{AutoRefresh: request.AutoRefresh, ModelPrefixes: request.ModelPrefixes}
 }

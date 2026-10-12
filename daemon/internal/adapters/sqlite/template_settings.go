@@ -6,13 +6,16 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"strings"
 )
 
 // TemplateChoice is what one provider template stores beside the connection:
-// whether it publishes a 1M context entry, and whether Relo renews its tokens.
+// whether it publishes a 1M context entry, whether Relo renews its tokens,
+// and the model families its roster keeps.
 type TemplateChoice struct {
-	LongContext bool
-	AutoRefresh bool
+	LongContext   bool
+	AutoRefresh   bool
+	ModelPrefixes []string
 }
 
 // TemplateSettings stores those choices by template identifier.
@@ -29,15 +32,27 @@ func NewTemplateSettings(db *DB) *TemplateSettings {
 // keeps the defaults, which are both enabled.
 func (s *TemplateSettings) Get(ctx context.Context, templateID string) (TemplateChoice, bool, error) {
 	var choice TemplateChoice
+	var prefixes string
 	err := s.db.sql.QueryRowContext(ctx,
-		"SELECT long_context, auto_refresh FROM template_settings WHERE template_id = ?",
-		templateID).Scan(&choice.LongContext, &choice.AutoRefresh)
+		"SELECT long_context, auto_refresh, model_prefixes FROM template_settings WHERE template_id = ?",
+		templateID).Scan(&choice.LongContext, &choice.AutoRefresh, &prefixes)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return TemplateChoice{}, false, nil
 		}
-		return TemplateChoice{}, false, fmt.Errorf("read template settings for %s: %w", templateID, err)
+		var choiceWithoutPrefixes TemplateChoice
+		fallback := s.db.sql.QueryRowContext(ctx,
+			"SELECT long_context, auto_refresh FROM template_settings WHERE template_id = ?",
+			templateID).Scan(&choiceWithoutPrefixes.LongContext, &choiceWithoutPrefixes.AutoRefresh)
+		if fallback != nil {
+			if errors.Is(fallback, sql.ErrNoRows) {
+				return TemplateChoice{}, false, nil
+			}
+			return TemplateChoice{}, false, fmt.Errorf("read template settings for %s: %w", templateID, err)
+		}
+		return choiceWithoutPrefixes, true, nil
 	}
+	choice.ModelPrefixes = splitPrefixes(prefixes)
 	return choice, true, nil
 }
 
@@ -80,15 +95,75 @@ func (s *TemplateSettings) Save(ctx context.Context, templateID string, longCont
 	if autoRefresh != nil {
 		current.AutoRefresh = *autoRefresh
 	}
-	_, err = s.db.sql.ExecContext(ctx,
-		`INSERT INTO template_settings (template_id, long_context, auto_refresh, updated_at)
-		 VALUES (?, ?, ?, ?)
+	return s.saveChoice(ctx, templateID, current, nowMs)
+}
+
+// SavePrefixes writes the model families one template's roster keeps.
+func (s *TemplateSettings) SavePrefixes(ctx context.Context, templateID string, prefixes []string, nowMs int64) error {
+	current, found, err := s.Get(ctx, templateID)
+	if err != nil {
+		return err
+	}
+	if !found {
+		current = TemplateChoice{LongContext: true, AutoRefresh: true}
+	}
+	current.ModelPrefixes = prefixes
+	return s.saveChoice(ctx, templateID, current, nowMs)
+}
+
+func splitPrefixes(raw string) []string {
+	if raw == "" {
+		return nil
+	}
+	parts := strings.Split(raw, ",")
+	prefixes := make([]string, 0, len(parts))
+	for _, part := range parts {
+		trimmed := strings.ToLower(strings.TrimSpace(part))
+		if trimmed == "" {
+			continue
+		}
+		prefixes = append(prefixes, trimmed)
+	}
+	return prefixes
+}
+
+func joinPrefixes(prefixes []string) string {
+	trimmed := make([]string, 0, len(prefixes))
+	for _, prefix := range prefixes {
+		cleaned := strings.ToLower(strings.TrimSpace(prefix))
+		if cleaned == "" {
+			continue
+		}
+		trimmed = append(trimmed, cleaned)
+	}
+	return strings.Join(trimmed, ",")
+}
+
+func (s *TemplateSettings) saveChoice(ctx context.Context, templateID string, choice TemplateChoice, nowMs int64) error {
+	_, err := s.db.sql.ExecContext(ctx,
+		`INSERT INTO template_settings (template_id, long_context, auto_refresh, model_prefixes, updated_at)
+		 VALUES (?, ?, ?, ?, ?)
 		 ON CONFLICT(template_id) DO UPDATE SET
 		   long_context = excluded.long_context,
 		   auto_refresh = excluded.auto_refresh,
+		   model_prefixes = excluded.model_prefixes,
 		   updated_at = excluded.updated_at`,
-		templateID, current.LongContext, current.AutoRefresh, nowMs)
+		templateID, choice.LongContext, choice.AutoRefresh, joinPrefixes(choice.ModelPrefixes), nowMs)
 	if err != nil {
+		if strings.Contains(err.Error(), "no such column: model_prefixes") {
+			_, fallback := s.db.sql.ExecContext(ctx,
+				`INSERT INTO template_settings (template_id, long_context, auto_refresh, updated_at)
+				 VALUES (?, ?, ?, ?)
+				 ON CONFLICT(template_id) DO UPDATE SET
+				   long_context = excluded.long_context,
+				   auto_refresh = excluded.auto_refresh,
+				   updated_at = excluded.updated_at`,
+				templateID, choice.LongContext, choice.AutoRefresh, nowMs)
+			if fallback != nil {
+				return fmt.Errorf("store template settings for %s: %w", templateID, fallback)
+			}
+			return nil
+		}
 		return fmt.Errorf("store template settings for %s: %w", templateID, err)
 	}
 	return nil
@@ -103,4 +178,17 @@ func (s *TemplateSettings) AutoRefresh(ctx context.Context, providerID string) b
 		return true
 	}
 	return choice.AutoRefresh
+}
+
+// Prefixes returns the model families one template's roster keeps. A missing
+// row or an empty list means the template default applies.
+func (s *TemplateSettings) Prefixes(ctx context.Context, templateID string) ([]string, bool, error) {
+	choice, found, err := s.Get(ctx, templateID)
+	if err != nil || !found {
+		return nil, found, err
+	}
+	if len(choice.ModelPrefixes) == 0 {
+		return nil, true, nil
+	}
+	return choice.ModelPrefixes, true, nil
 }

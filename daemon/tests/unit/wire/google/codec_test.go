@@ -1151,13 +1151,9 @@ func TestCloudCodeAssistClaudeThinking(t *testing.T) {
 		return mode
 	}
 
-	t.Run("a reasoning turn carries its effort as a budget", func(t *testing.T) {
-		thinking := thinkingOf(inner("claude-sonnet-4-6", &inference.ReasoningConfig{Effort: "high"}))
-		if thinking["thinkingBudget"] != float64(16384) || thinking["includeThoughts"] != true {
-			t.Fatalf("thinkingConfig = %v, want the high budget with summaries", thinking)
-		}
-		if _, present := thinking["thinkingLevel"]; present {
-			t.Fatalf("thinkingConfig = %v, want budget transport without a level", thinking)
+	t.Run("a reasoning turn leaves thinking to the endpoint", func(t *testing.T) {
+		if thinking := thinkingOf(inner("claude-sonnet-4-6", &inference.ReasoningConfig{Effort: "high"})); len(thinking) != 0 {
+			t.Fatalf("thinkingConfig = %v, want none when Claude publishes no effort", thinking)
 		}
 	})
 

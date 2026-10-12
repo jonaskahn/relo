@@ -761,7 +761,9 @@
           "antigravityTitle": "Đăng nhập Google Antigravity",
           "antigravityDescription": "Đăng nhập Google Antigravity này làm mới token thế nào.",
           "grokTitle": "Đăng nhập Grok",
-          "grokDescription": "Đăng nhập Grok này làm mới token thế nào."
+          "grokDescription": "Đăng nhập Grok này làm mới token thế nào.",
+          "modelPrefixesLabel": "Model families",
+          "modelPrefixesHint": "Comma-separated prefixes the roster keeps, e.g. claude, gemini."
         },
         "add": {
           "title": "Thêm kết nối",
@@ -1576,6 +1578,9 @@
         "rotateTitle": "Xoay phím này?",
         "rotateBody": "Một bí mật mới được ghi vào tập tin mà Relo sở hữu. Bí mật trước đó ngừng hoạt động ngay lập tức.",
         "removed": "Đã loại bỏ tích hợp.",
+        "forceRemove": "Vẫn xóa",
+        "forceRemoveTitle": "Vẫn xóa nhé?",
+        "forceRemoveBody": "Relo không còn giữ bản sao cấu hình của bạn nên không thể khôi phục. Xóa dù bản sao đã mất sẽ gỡ phần của Relo khỏi tệp và giữ nguyên phần còn lại.",
         "saved": "Tích hợp thiết lập.",
         "rotated": "Chìa khóa đã được xoay.",
         "repaired": "Đã sửa lỗi tích hợp.",
@@ -1606,6 +1611,11 @@
         "context1MOn": "Đã bật cửa sổ ngữ cảnh 1M",
         "context1MOff": "Đã tắt cửa sổ ngữ cảnh 1M",
         "keyNonePending": "Chưa có khóa. Thiết lập tác nhân sẽ tạo ra khóa.",
+        "openCodeVersionsTitle": "Phiên bản cấu hình",
+        "openCodeV1": "V1",
+        "openCodeV1Desc": "Khối nhà cung cấp số ít cũ",
+        "openCodeV2": "V2",
+        "openCodeV2Desc": "Khối nhà cung cấp số nhiều hiện tại",
         "addTitle": "Thêm tác nhân",
         "addSubtitle": "Chọn một tác nhân, thiết lập rồi xem quá trình xác minh chứng minh kết nối.",
         "addChooseHint": "Chọn một tác nhân để kết nối.",

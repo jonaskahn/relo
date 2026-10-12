@@ -54,14 +54,10 @@ export const CLIENT_OPTIONS: ClientOption[] = [
 	{ id: 'openclaw', label: 'Openclaw', kind: 'agent', protocol: 'openai', logoId: 'openclaw' },
 	// Kimi Code has no mark under its own id, so it wears the published Kimi one.
 	{ id: 'kimi', label: 'Kimi', kind: 'agent', protocol: 'openai', logoId: 'kimi-code-plan-cn' },
-	{ id: 'gajae', label: 'Gajae', kind: 'agent', protocol: 'openai' },
 	{ id: 'dsh', label: 'DeepSeek Harness', kind: 'agent', protocol: 'openai', logoId: 'dsh' },
 	{ id: 'mcode', label: 'Mcode', kind: 'agent', protocol: 'openai', logoId: 'mcode' },
-	{ id: 'zcode', label: 'Zcode', kind: 'agent', protocol: 'openai' },
-	{ id: 'prime', label: 'Prime', kind: 'agent', protocol: 'openai' },
-	{ id: 'aside', label: 'Aside', kind: 'agent', protocol: 'openai' },
-	{ id: 'raycast', label: 'Raycast', kind: 'agent', protocol: 'openai' },
-	{ id: 'omo', label: 'OMO', kind: 'agent', protocol: 'openai' },
+	{ id: 'zcode', label: 'Zcode', kind: 'agent', protocol: 'openai', logoId: 'zcode' },
+	{ id: 'raycast', label: 'Raycast', kind: 'agent', protocol: 'openai', logoId: 'raycast' },
 	// The last two are not clients at all: "Other" stands in for a client the
 	// operator names by hand, and "Shared" is a key reusable across clients. Both
 	// take a mark so the row reads as a choice rather than a gap in the list.

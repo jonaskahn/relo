@@ -761,7 +761,9 @@
           "antigravityTitle": "Google Antigravity 登录",
           "antigravityDescription": "此 Google Antigravity 登录如何续期令牌。",
           "grokTitle": "Grok 登录",
-          "grokDescription": "此 Grok 登录如何续期令牌。"
+          "grokDescription": "此 Grok 登录如何续期令牌。",
+          "modelPrefixesLabel": "Model families",
+          "modelPrefixesHint": "Comma-separated prefixes the roster keeps, e.g. claude, gemini."
         },
         "add": {
           "title": "添加连接",
@@ -1576,6 +1578,9 @@
         "rotateTitle": "更换该密钥？",
         "rotateBody": "新密钥会写入 Relo 拥有的文件，旧密钥立即失效。",
         "removed": "集成已移除。",
+        "forceRemove": "强制移除",
+        "forceRemoveTitle": "仍要移除吗？",
+        "forceRemoveBody": "Relo 已不再保留你的设置副本，无法恢复。强制移除会从文件中去掉 Relo 的部分，其余内容保持不变。",
         "saved": "集成已设置。",
         "rotated": "密钥已更换。",
         "repaired": "集成已修复。",
@@ -1606,6 +1611,11 @@
         "context1MOn": "已开启 1M 上下文窗口",
         "context1MOff": "已关闭 1M 上下文窗口",
         "keyNonePending": "尚无密钥。设置该代理后即会颁发。",
+        "openCodeVersionsTitle": "配置版本",
+        "openCodeV1": "V1",
+        "openCodeV1Desc": "旧版单数提供商块",
+        "openCodeV2": "V2",
+        "openCodeV2Desc": "当前复数提供商块",
         "addTitle": "添加代理",
         "addSubtitle": "选择一个代理并完成设置，然后通过验证确认接线无误。",
         "addChooseHint": "选择要接入的代理。",

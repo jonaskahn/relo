@@ -3,6 +3,7 @@
 package wire
 
 import (
+	"context"
 	"errors"
 	"net/http"
 
@@ -113,6 +114,37 @@ type CodecOpts struct {
 	// PromptTokens estimates the request size the codec will encode, used to
 	// stay on the short-context beta while a 1M-capable model fits in 200K.
 	PromptTokens int64
+	// Cursor carries the exact Cursor request tuple one attempt sends. Nil
+	// on every other format.
+	Cursor *CursorRequest
+	// Antigravity carries the exact Cloud Code SKU one attempt sends. Nil
+	// on every other format.
+	Antigravity *AntigravityRequest
+}
+
+// AntigravityRequest is the exact Cloud Code request tuple one attempt sends:
+// the wire SKU the account's discovery published for the requested band.
+type AntigravityRequest struct {
+	WireModel string
+	ModelEnum string
+	MaxOutput int
+}
+
+// CursorParam is one Cursor model parameter pair.
+type CursorParam struct {
+	ID    string
+	Value string
+}
+
+// CursorRequest is the exact Cursor request tuple one attempt sends: the
+// model triple the account's discovery published for the requested group
+// and effort.
+type CursorRequest struct {
+	ConversationID string
+	ModelID        string
+	DetailsID      string
+	MaxMode        bool
+	Params         []CursorParam
 }
 
 // ApplyCredential writes the credential onto the request according to KeyHeader.
@@ -188,6 +220,28 @@ type CodecModule interface {
 // conversation that produced it.
 type RequestBinder interface {
 	Bind(req *inference.Request, opts CodecOpts) CodecModule
+}
+
+// BidirectionalCall carries one duplex attempt: what to send, how to send
+// it, and where to emit events as they arrive. Record keeps the framed
+// bytes the codec wrote, so the traffic log can show what the upstream
+// parsed; it is nil when the caller keeps nothing.
+type BidirectionalCall struct {
+	Client  *http.Client
+	Request *inference.Request
+	Opts    CodecOpts
+	Emit    func([]inference.Event)
+	Record  func(frame []byte)
+}
+
+// BidirectionalCodec is a CodecModule that converses over one duplex
+// stream: it answers the upstream's own requests while reading its
+// responses, instead of sending one request and reading one response.
+type BidirectionalCodec interface {
+	CodecModule
+	// RunBidirectional converses until the turn ends, emitting canonical
+	// events as they arrive and returning them all once the turn ends.
+	RunBidirectional(ctx context.Context, call BidirectionalCall) ([]inference.Event, error)
 }
 
 // InboundCodec translates one client-facing surface into canonical form

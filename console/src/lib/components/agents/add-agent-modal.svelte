@@ -5,8 +5,9 @@
 	import { labelOf, logoIdOf, refusalDetailKey, refusalOf } from '$lib/agent-state';
 	import { api } from '$lib/api';
 	import type { DataPlaneURLs } from '$lib/client-setup';
-	import { integrationPath, setupBlocked } from '$lib/integration-actions';
+	import { integrationPath, openCodeSetupVersions, setupBlocked } from '$lib/integration-actions';
 	import CenteredModal from '$lib/components/ui/centered-modal.svelte';
+	import FieldSwitch from '$lib/components/ui/field-switch.svelte';
 	import Icon from '$lib/components/ui/icon.svelte';
 	import ProviderLogo from '$lib/components/ui/provider-logo.svelte';
 	import WizardStepper from '$lib/components/ui/wizard-stepper.svelte';
@@ -44,6 +45,10 @@
 	let result = $state<{ state: 'success' | 'failed'; copy: string; token: string } | null>(null);
 	let revealCopied = $state(false);
 	let didWork = $state(false);
+	// The OpenCode generations setup writes. V2 is on by default; both on
+	// writes both blocks into one file.
+	let openCodeV1 = $state(false);
+	let openCodeV2 = $state(true);
 
 	const stepLabels: Record<AddStep, string> = {
 		choose: 'ui.pages.integrationsPage.addStepChoose',
@@ -58,6 +63,20 @@
 	const refusal = $derived(selected ? refusalOf(selected) : '');
 	const blockedSetup = $derived(selected ? setupBlocked(refusalOf(selected)) : true);
 	const refusalKey = $derived(selected && refusal ? refusalDetailKey(refusal) : '');
+	// OpenCode needs at least one generation checked before setup may write.
+	const noVersions = $derived(selected?.id === 'opencode' && !openCodeV1 && !openCodeV2);
+
+	// The set-up body: overwrite when replacing, plus the generations for
+	// OpenCode. Anything else sends what it always sent.
+	function setupBody(agent: IntegrationView, overwrite: boolean): string | undefined {
+		const payload: { overwrite?: boolean; versions?: string } = {};
+		if (overwrite) payload.overwrite = true;
+		if (agent.id === 'opencode') {
+			const versions = openCodeSetupVersions(openCodeV1, openCodeV2);
+			if (versions) payload.versions = versions;
+		}
+		return Object.keys(payload).length > 0 ? JSON.stringify(payload) : undefined;
+	}
 
 	function reset() {
 		step = 'choose';
@@ -70,6 +89,8 @@
 		result = null;
 		revealCopied = false;
 		didWork = false;
+		openCodeV1 = false;
+		openCodeV2 = true;
 	}
 
 	// Opening the flow starts it from the choice, so a second visit never
@@ -103,6 +124,8 @@
 	function pick(agent: IntegrationView) {
 		selected = agent;
 		failure = '';
+		openCodeV1 = false;
+		openCodeV2 = true;
 	}
 
 	function forward() {
@@ -137,13 +160,14 @@
 	// names what restore puts back.
 	async function runSetup(overwrite: boolean) {
 		if (!selected || working || selected.enabled) return;
+		if (selected.id === 'opencode' && !openCodeV1 && !openCodeV2) return;
 		working = true;
 		failure = '';
 		try {
 			const answer = await withMinDelay(
 				api<IntegrationResult>(integrationPath(selected.id, 'setup'), {
 					method: 'POST',
-					body: overwrite ? JSON.stringify({ overwrite: true }) : undefined
+					body: setupBody(selected, overwrite)
 				})
 			);
 			selected = answer.integration;
@@ -309,6 +333,29 @@
 				<!-- The preview is the whole step: what Relo would write, with
 				     the fragment and any refusal reason, before anything changes. -->
 				<AgentWiringSection agent={selected} />
+				{#if selected.id === 'opencode'}
+					<!-- The generations setup writes. Both on writes both
+					     blocks into the one file. -->
+					<div class="flex flex-col gap-1 rounded-panel border border-line bg-surface px-3 py-2">
+						<p class="text-sm font-medium">
+							{$t('ui.pages.integrationsPage.openCodeVersionsTitle')}
+						</p>
+						<FieldSwitch
+							id="opencode-versions-v1"
+							bind:checked={openCodeV1}
+							label={$t('ui.pages.integrationsPage.openCodeV1')}
+							description={$t('ui.pages.integrationsPage.openCodeV1Desc')}
+							disabled={working}
+						/>
+						<FieldSwitch
+							id="opencode-versions-v2"
+							bind:checked={openCodeV2}
+							label={$t('ui.pages.integrationsPage.openCodeV2')}
+							description={$t('ui.pages.integrationsPage.openCodeV2Desc')}
+							disabled={working}
+						/>
+					</div>
+				{/if}
 				{#if refusal === 'foreign_key' && !selected.enabled}
 					<div class="rounded-panel border border-warn/40 bg-warn/5 px-3 py-2.5">
 						<p class="text-sm text-ink">{$t('ui.pages.integrationsPage.overwriteBody')}</p>
@@ -386,12 +433,15 @@
 							{$t('ui.pages.providersPage.add.next')}
 						</Button>
 					{:else if refusal === 'foreign_key'}
-						<Button disabled={working} onclick={() => void runSetup(true)}>
+						<Button disabled={working || noVersions} onclick={() => void runSetup(true)}>
 							<Icon name={working ? 'loader' : 'arrow-back-up'} size={14} spin={working} />
 							{$t('ui.pages.integrationsPage.overwriteAction')}
 						</Button>
 					{:else}
-						<Button disabled={working || blockedSetup} onclick={() => void runSetup(false)}>
+						<Button
+							disabled={working || blockedSetup || noVersions}
+							onclick={() => void runSetup(false)}
+						>
 							<Icon name={working ? 'loader' : 'chevron-right'} size={14} spin={working} />
 							{$t('ui.pages.providersPage.add.next')}
 						</Button>

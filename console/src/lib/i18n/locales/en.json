@@ -761,7 +761,9 @@
           "antigravityTitle": "Google Antigravity sign-in",
           "antigravityDescription": "How this Google Antigravity login renews its token.",
           "grokTitle": "Grok sign-in",
-          "grokDescription": "How this Grok login renews its token."
+          "grokDescription": "How this Grok login renews its token.",
+          "modelPrefixesLabel": "Model families",
+          "modelPrefixesHint": "Comma-separated prefixes the roster keeps, e.g. claude, gemini."
         },
         "add": {
           "title": "Add connection",
@@ -1593,6 +1595,9 @@
         "rotateBody": "A new secret is written to the files Relo owns. The old one stops working right away.",
         "setupSuccessAuto": "The {label} integration is wired and its key is in place.",
         "removed": "Integration removed.",
+        "forceRemove": "Remove anyway",
+        "forceRemoveTitle": "Remove it anyway?",
+        "forceRemoveBody": "Relo no longer holds a copy of your settings and cannot put them back. Removing anyway takes Relo's part out of the file and leaves the rest as it is.",
         "saved": "Integration set up.",
         "rotated": "Key rotated.",
         "repaired": "Integration repaired.",
@@ -1621,7 +1626,12 @@
         "actionFailedWith": "{action} failed: {detail}",
         "context1MOn": "1M context window on",
         "context1MOff": "1M context window off",
-        "keyNonePending": "No key yet. Setting the agent up mints one."
+        "keyNonePending": "No key yet. Setting the agent up mints one.",
+        "openCodeVersionsTitle": "Config version",
+        "openCodeV1": "V1",
+        "openCodeV1Desc": "Legacy singular provider block",
+        "openCodeV2": "V2",
+        "openCodeV2Desc": "Current plural providers block"
       },
       "chatPage": {
         "title": "Chat",

@@ -80,7 +80,7 @@ func TestEnableIntegrationOwnsItsKeyAndDisableRetiresIt(t *testing.T) {
 	h, built := integrationService(t)
 	ctx := context.Background()
 
-	result, err := built.EnableIntegration(ctx, "codex")
+	result, err := built.EnableIntegration(ctx, "codex", "")
 	if err != nil {
 		t.Fatalf("EnableIntegration() error = %v", err)
 	}
@@ -127,7 +127,7 @@ func TestEnableIntegrationOwnsItsKeyAndDisableRetiresIt(t *testing.T) {
 		t.Fatalf("RevokeAccessKey() error = %v, want %v", err, appaccess.ErrOwned)
 	}
 
-	if err := built.DisableIntegration(ctx, "codex"); err != nil {
+	if err := built.DisableIntegration(ctx, "codex", false); err != nil {
 		t.Fatalf("DisableIntegration() error = %v", err)
 	}
 	view, err := built.Integration(ctx, "codex")
@@ -278,7 +278,7 @@ func TestRefreshCodexCatalogLeavesAnUnchangedCatalog(t *testing.T) {
 	t.Setenv("CODEX_HOME", filepath.Join(home, ".codex"))
 	_, built := integrationService(t)
 	ctx := context.Background()
-	if _, err := built.EnableIntegration(ctx, "codex"); err != nil {
+	if _, err := built.EnableIntegration(ctx, "codex", ""); err != nil {
 		t.Fatalf("EnableIntegration() error = %v", err)
 	}
 	path := codingclients.CodexCatalogPath(filepath.Join(home, ".codex", "config.toml"))
@@ -308,7 +308,7 @@ func TestCodexRestartNeededWhenTheDaemonIsOlderThanTheCatalog(t *testing.T) {
 	t.Setenv("CODEX_HOME", codexHome)
 	_, built := integrationService(t)
 	ctx := context.Background()
-	if _, err := built.EnableIntegration(ctx, "codex"); err != nil {
+	if _, err := built.EnableIntegration(ctx, "codex", ""); err != nil {
 		t.Fatalf("EnableIntegration() error = %v", err)
 	}
 	writeCodexDaemonPid(t, codexHome, os.Getpid(), time.Now().Add(-time.Hour).Unix())

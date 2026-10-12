@@ -83,6 +83,10 @@ type IntegrationView struct {
 	// Context1M is the Codex card's 1M button. It is omitted for every other
 	// agent. Highlighted means the 1M window is written on setup.
 	Context1M *bool
+	// OpenCodeVersions names which generations hold Relo's provider in the
+	// OpenCode file: v1, v2, or v1+v2. It is empty for every other agent and
+	// when the file holds none.
+	OpenCodeVersions string
 }
 
 // IntegrationKey is the client key one integration owns, as a console reads
@@ -219,18 +223,19 @@ func (s *Service) Integration(ctx context.Context, id string) (IntegrationView, 
 
 // EnableIntegration wires one agent to Relo: it mints the key the agent runs
 // with, writes the files Relo manages for it, and the helper that starts the
-// daemon when the agent asks for its key.
-func (s *Service) EnableIntegration(ctx context.Context, id string) (IntegrationResult, error) {
-	return s.enableIntegration(ctx, id, false)
+// daemon when the agent asks for its key. Versions names which OpenCode
+// generations setup writes and is ignored for every other agent.
+func (s *Service) EnableIntegration(ctx context.Context, id, versions string) (IntegrationResult, error) {
+	return s.enableIntegration(ctx, id, false, versions)
 }
 
 // EnableIntegrationOverwrite wires one agent the way EnableIntegration does,
 // and replaces a relo provider already in the client's file.
-func (s *Service) EnableIntegrationOverwrite(ctx context.Context, id string) (IntegrationResult, error) {
-	return s.enableIntegration(ctx, id, true)
+func (s *Service) EnableIntegrationOverwrite(ctx context.Context, id, versions string) (IntegrationResult, error) {
+	return s.enableIntegration(ctx, id, true, versions)
 }
 
-func (s *Service) enableIntegration(ctx context.Context, id string, overwrite bool) (IntegrationResult, error) {
+func (s *Service) enableIntegration(ctx context.Context, id string, overwrite bool, versions string) (IntegrationResult, error) {
 	agent, found := s.agents.AgentFor(id)
 	if !found {
 		return IntegrationResult{}, fmt.Errorf("%s: %w", id, ErrUnknownIntegration)
@@ -243,11 +248,7 @@ func (s *Service) enableIntegration(ctx context.Context, id string, overwrite bo
 	if err != nil {
 		return IntegrationResult{}, err
 	}
-	write := manager.Enable
-	if overwrite {
-		write = manager.EnableOverwriting
-	}
-	if _, err := write(ctx, agent.ID, token); err != nil {
+	if _, err := manager.EnableWith(ctx, agent.ID, token, EnableOptions{Overwrite: overwrite, OpenCodeVersions: versions}); err != nil {
 		return IntegrationResult{}, err
 	}
 	s.restartCodex(ctx, agent.ID)
@@ -262,8 +263,10 @@ func (s *Service) enableIntegration(ctx context.Context, id string, overwrite bo
 // files back exactly as they were before Relo first wrote them, including a
 // file Relo changed after setup, and only then retires the key the integration
 // owned. A restoration that cannot complete keeps the key and records the
-// error, so the action is worth retrying rather than half done.
-func (s *Service) DisableIntegration(ctx context.Context, id string) error {
+// error, so the action is worth retrying rather than half done. A forced
+// removal strips Relo's contribution out of a file it cannot put back, and
+// completes.
+func (s *Service) DisableIntegration(ctx context.Context, id string, force bool) error {
 	agent, found := s.agents.AgentFor(id)
 	if !found {
 		return fmt.Errorf("%s: %w", id, ErrUnknownIntegration)
@@ -272,7 +275,7 @@ func (s *Service) DisableIntegration(ctx context.Context, id string) error {
 	if err != nil {
 		return err
 	}
-	if _, err := manager.Restore(ctx, agent.ID); err != nil {
+	if _, err := manager.Restore(ctx, agent.ID, force); err != nil {
 		return err
 	}
 	s.restartCodex(ctx, agent.ID)
@@ -437,7 +440,7 @@ func (s *Service) RestoreIntegration(ctx context.Context, id string) error {
 	if err != nil {
 		return err
 	}
-	if _, err := manager.Restore(ctx, agent.ID); err != nil {
+	if _, err := manager.Restore(ctx, agent.ID, false); err != nil {
 		return err
 	}
 	s.restartCodex(ctx, agent.ID)
@@ -792,6 +795,9 @@ func (s *Service) describeIntegration(ctx context.Context, manager *Manager, age
 	if agent.ID == "codex" {
 		on := view.Context1M
 		described.Context1M = &on
+	}
+	if agent.ID == ClientOpenCode {
+		described.OpenCodeVersions = manager.OpenCodeVersions(agent.ID)
 	}
 	if described.Files == nil {
 		described.Files = []FileView{}
