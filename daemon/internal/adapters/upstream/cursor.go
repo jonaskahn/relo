@@ -121,7 +121,9 @@ func (e *Executor) failBidirectional(run *bidirectionalRun, events []inference.E
 // refusalStatus answers what a failed turn means to the caller. A refusal
 // Cursor named classifies as itself, so a rejected model or an expired sign-in
 // stops after one attempt instead of burning the failover ladder and cooling
-// the connection down; anything unnamed stays a retryable upstream fault.
+// the connection down; anything unnamed stays a retryable upstream fault. A
+// request the codec refused before sending is the caller's to fix, never a
+// reason to try another account.
 func refusalStatus(runErr error) int {
 	var refusal cursorproto.EndStream
 	if errors.As(runErr, &refusal) && refusal.Status != 0 {
@@ -129,6 +131,9 @@ func refusalStatus(runErr error) int {
 	}
 	if errors.Is(runErr, cursor.ErrUnauthorized) {
 		return http.StatusUnauthorized
+	}
+	if errors.Is(runErr, wire.ErrUnsupportedFeature) || errors.Is(runErr, wire.ErrInvalidRequest) {
+		return http.StatusBadRequest
 	}
 	return http.StatusBadGateway
 }

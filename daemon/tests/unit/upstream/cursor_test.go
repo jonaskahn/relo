@@ -3,6 +3,7 @@ package dispatch_test
 import (
 	"context"
 	"errors"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -207,6 +208,23 @@ func TestExecuteBidirectional(t *testing.T) {
 		}
 		if _, fabricated := result.Capture.Request.Headers["X-Request-Id"]; fabricated {
 			t.Fatalf("headers = %v, want no header the turn never sent", result.Capture.Request.Headers)
+		}
+	})
+
+	t.Run("a request the codec cannot express fails fast", func(t *testing.T) {
+		codec := &cursorStubCodec{err: fmt.Errorf("cursor has no temperature control: %w", wire.ErrUnsupportedFeature)}
+		recorder := httptest.NewRecorder()
+		exchange := cursorExchange(codec, false)
+		exchange.Final = false
+		result, err := newExecutor(t).Execute(context.Background(), exchange, recorder)
+		if err == nil {
+			t.Fatal("Execute() succeeded on an inexpressible request")
+		}
+		if result.Retryable {
+			t.Fatalf("result = %+v, want no retry of a request no account can take", result)
+		}
+		if result.Status != http.StatusBadRequest {
+			t.Fatalf("status = %d, want the caller's failure to fix", result.Status)
 		}
 	})
 
