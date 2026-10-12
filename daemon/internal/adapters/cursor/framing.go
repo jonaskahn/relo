@@ -83,36 +83,54 @@ func (r *FrameReader) Next() (payload []byte, ended bool, err error) {
 		return nil, true, nil
 	}
 	for {
-		payloads, end, rest, err := SplitFrames(r.buffer)
-		if err != nil {
+		payload, ended, err := r.nextBuffered()
+		if err != nil || ended || payload != nil {
+			return payload, ended, err
+		}
+		if err := r.fill(); err != nil {
+			if err == io.EOF {
+				return nil, true, nil
+			}
 			return nil, false, err
 		}
-		r.buffer = rest
-		if end {
-			r.ended = true
-		}
-		if len(payloads) > 0 {
-			r.pending = payloads[1:]
-			return payloads[0], false, nil
-		}
-		if end {
-			return nil, true, nil
-		}
-		chunk := make([]byte, 32<<10)
-		read, readErr := r.source.Read(chunk)
-		if read > 0 {
-			r.buffer = append(r.buffer, chunk[:read]...)
-			continue
-		}
-		if readErr != nil {
-			if readErr == io.EOF {
-				if len(r.buffer) == 0 {
-					r.ended = true
-					return nil, true, nil
-				}
-				return nil, false, ErrFrameTruncated
-			}
-			return nil, false, readErr
-		}
 	}
+}
+
+func (r *FrameReader) nextBuffered() ([]byte, bool, error) {
+	payloads, end, rest, err := SplitFrames(r.buffer)
+	if err != nil {
+		return nil, false, err
+	}
+	r.buffer = rest
+	if end {
+		r.ended = true
+	}
+	if len(payloads) > 0 {
+		r.pending = payloads[1:]
+		return payloads[0], false, nil
+	}
+	if end {
+		return nil, true, nil
+	}
+	return nil, false, nil
+}
+
+func (r *FrameReader) fill() error {
+	chunk := make([]byte, 32<<10)
+	read, readErr := r.source.Read(chunk)
+	if read > 0 {
+		r.buffer = append(r.buffer, chunk[:read]...)
+		return nil
+	}
+	if readErr == nil {
+		return nil
+	}
+	if readErr == io.EOF {
+		if len(r.buffer) == 0 {
+			r.ended = true
+			return io.EOF
+		}
+		return ErrFrameTruncated
+	}
+	return readErr
 }

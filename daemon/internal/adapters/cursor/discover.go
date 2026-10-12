@@ -193,27 +193,9 @@ func ParseAvailableModels(body []byte) ([]RichModel, error) {
 }
 
 func parseRichModel(row []Field) (RichModel, bool, error) {
-	name := strings.TrimSpace(FirstString(row, richName))
-	if name == "" || Flag(row, richChatOnly) || Flag(row, richRetention) {
+	model, keep := richModelHead(row)
+	if !keep {
 		return RichModel{}, false, nil
-	}
-	if present(row, richSupportsAgent) && !Flag(row, richSupportsAgent) {
-		return RichModel{}, false, nil
-	}
-	model := RichModel{
-		Name:         name,
-		DisplayName:  richDisplayName(row, name),
-		DefaultOn:    Flag(row, richDefaultOn),
-		Thinking:     Flag(row, richThinking),
-		ImagesStated: present(row, richImages),
-		Images:       Flag(row, richImages),
-		Context:      int64(Uint(row, richContext)),
-		ContextMax:   int64(Uint(row, richContextMax)),
-		AutoMax:      int64(Uint(row, richAutoMax)),
-		AutoExtended: int64(Uint(row, richAutoExtended)),
-		LegacySlugs:  Strings(row, richLegacySlugs),
-		Aliases:      Strings(row, richAliases),
-		Blocked:      map[string]map[string]bool{},
 	}
 	definitions, err := Nested(row, richDefinitions)
 	if err != nil {
@@ -232,6 +214,31 @@ func parseRichModel(row []Field) (RichModel, bool, error) {
 	return model, true, nil
 }
 
+func richModelHead(row []Field) (RichModel, bool) {
+	name := strings.TrimSpace(FirstString(row, richName))
+	if name == "" || Flag(row, richChatOnly) || Flag(row, richRetention) {
+		return RichModel{}, false
+	}
+	if present(row, richSupportsAgent) && !Flag(row, richSupportsAgent) {
+		return RichModel{}, false
+	}
+	return RichModel{
+		Name:         name,
+		DisplayName:  richDisplayName(row, name),
+		DefaultOn:    Flag(row, richDefaultOn),
+		Thinking:     Flag(row, richThinking),
+		ImagesStated: present(row, richImages),
+		Images:       Flag(row, richImages),
+		Context:      int64(Uint(row, richContext)),
+		ContextMax:   int64(Uint(row, richContextMax)),
+		AutoMax:      int64(Uint(row, richAutoMax)),
+		AutoExtended: int64(Uint(row, richAutoExtended)),
+		LegacySlugs:  Strings(row, richLegacySlugs),
+		Aliases:      Strings(row, richAliases),
+		Blocked:      map[string]map[string]bool{},
+	}, true
+}
+
 func richDisplayName(row []Field, fallback string) string {
 	for _, number := range []int{richClientName, richServerName} {
 		if name := strings.TrimSpace(FirstString(row, number)); name != "" {
@@ -239,6 +246,12 @@ func richDisplayName(row []Field, fallback string) string {
 		}
 	}
 	return fallback
+}
+
+// blockedValues names one value list to scan for admin blocks.
+type blockedValues struct {
+	container int
+	field     int
 }
 
 func collectBlockedParams(blocked map[string]map[string]bool, definition []Field) {
@@ -251,34 +264,38 @@ func collectBlockedParams(blocked map[string]map[string]bool, definition []Field
 		return
 	}
 	for _, paramType := range types {
-		markBlockedValues(blocked, id, paramType, booleanValues, booleanBlocked)
-		markBlockedValues(blocked, id, paramType, enumValues, enumBlocked)
+		markBlockedValues(blocked, id, paramType, blockedValues{container: booleanValues, field: booleanBlocked})
+		markBlockedValues(blocked, id, paramType, blockedValues{container: enumValues, field: enumBlocked})
 	}
 }
 
-func markBlockedValues(blocked map[string]map[string]bool, id string, paramType []Field, container, blockedField int) {
-	containers, err := Nested(paramType, container)
+func markBlockedValues(blocked map[string]map[string]bool, id string, paramType []Field, values blockedValues) {
+	containers, err := Nested(paramType, values.container)
 	if err != nil {
 		return
 	}
 	for _, group := range containers {
-		values, err := Nested(group, 1)
-		if err != nil {
+		markBlockedGroup(blocked, id, group, values.field)
+	}
+}
+
+func markBlockedGroup(blocked map[string]map[string]bool, id string, group []Field, blockedField int) {
+	values, err := Nested(group, 1)
+	if err != nil {
+		return
+	}
+	for _, value := range values {
+		if !Flag(value, blockedField) {
 			continue
 		}
-		for _, value := range values {
-			if !Flag(value, blockedField) {
-				continue
-			}
-			name := strings.TrimSpace(FirstString(value, valueName))
-			if name == "" {
-				continue
-			}
-			if blocked[id] == nil {
-				blocked[id] = map[string]bool{}
-			}
-			blocked[id][name] = true
+		name := strings.TrimSpace(FirstString(value, valueName))
+		if name == "" {
+			continue
 		}
+		if blocked[id] == nil {
+			blocked[id] = map[string]bool{}
+		}
+		blocked[id][name] = true
 	}
 }
 
@@ -520,17 +537,28 @@ func groupToListed(group Group) catalog.Listed {
 		vision := true
 		entry.SupportsVision = &vision
 	}
+	for _, member := range group.Members {
+		entry.Cursor = append(entry.Cursor, memberVariant(group, member))
+	}
+	describeCapabilities(group, &entry)
+	return entry
+}
+
+func memberVariant(group Group, member Config) catalog.CursorVariant {
+	return catalog.CursorVariant{
+		GroupID: group.ID, Selection: member.Selection, Effort: member.Effort,
+		Default: member.Selection == group.Default,
+		ModelID: member.ModelID, DetailsID: member.DetailsID, MaxMode: member.MaxMode,
+		Params: cursorParams(member.Params), Context: memberContext(member, group),
+		Images: group.Images, Reasoning: memberReasoning(member),
+	}
+}
+
+func describeCapabilities(group Group, entry *catalog.Listed) {
 	efforts := make([]string, 0, len(group.Members))
 	toggle := false
 	reasoning := false
 	for _, member := range group.Members {
-		entry.Cursor = append(entry.Cursor, catalog.CursorVariant{
-			GroupID: group.ID, Selection: member.Selection, Effort: member.Effort,
-			Default: member.Selection == group.Default,
-			ModelID: member.ModelID, DetailsID: member.DetailsID, MaxMode: member.MaxMode,
-			Params: cursorParams(member.Params), Context: memberContext(member, group),
-			Images: group.Images, Reasoning: memberReasoning(member),
-		})
 		if member.Effort != "" {
 			efforts = append(efforts, member.Effort)
 		}
@@ -551,7 +579,6 @@ func groupToListed(group Group) catalog.Listed {
 		stated := true
 		entry.SupportsReasoning = &stated
 	}
-	return entry
 }
 
 func memberContext(member Config, group Group) int64 {

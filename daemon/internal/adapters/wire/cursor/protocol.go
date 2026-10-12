@@ -217,20 +217,10 @@ func buildClientExec(numericID uint32, execID string, resultField int, result []
 	return client.BytesOut()
 }
 
-// buildRejection encodes a path-shaped rejection carrying the reason.
-func buildRejection(path string) []byte {
-	var rejected cursor.Writer
-	rejected.String(1, path)
-	rejected.String(2, RejectionReason)
-	return rejected.BytesOut()
-}
-
-// buildNativeRejection encodes the refusal of one native execution frame.
 func buildNativeRejection(execField int) (int, []byte) {
 	switch execField {
 	case 2, 14, 52:
 		var rejected cursor.Writer
-		rejected.String(2, "")
 		rejected.String(3, RejectionReason)
 		var result cursor.Writer
 		result.Message(rejectedNoShell, rejected.BytesOut())

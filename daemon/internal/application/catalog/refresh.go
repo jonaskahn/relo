@@ -524,24 +524,7 @@ func mergeCursorVariants(into, from []catalog.CursorVariant) []catalog.CursorVar
 }
 
 func refreshCursorDisplay(entry *catalog.Listed) {
-	efforts := make([]string, 0, len(entry.Cursor))
-	toggle := false
-	reasoning := false
-	var context int64
-	for _, variant := range entry.Cursor {
-		if variant.Effort != "" {
-			efforts = append(efforts, variant.Effort)
-		}
-		if variant.Selection == catalog.CursorSelectToggle {
-			toggle = true
-		}
-		if variant.Reasoning {
-			reasoning = true
-		}
-		if variant.Context > context {
-			context = variant.Context
-		}
-	}
+	efforts, toggle, reasoning, context := cursorDisplayOf(entry.Cursor)
 	sort.Strings(efforts)
 	entry.ReasoningEfforts = efforts
 	if toggle {
@@ -555,6 +538,24 @@ func refreshCursorDisplay(entry *catalog.Listed) {
 	if context > 0 {
 		entry.ContextWindow = &context
 	}
+}
+
+func cursorDisplayOf(variants []catalog.CursorVariant) (efforts []string, toggle, reasoning bool, context int64) {
+	for _, variant := range variants {
+		if variant.Effort != "" {
+			efforts = append(efforts, variant.Effort)
+		}
+		if variant.Selection == catalog.CursorSelectToggle {
+			toggle = true
+		}
+		if variant.Reasoning {
+			reasoning = true
+		}
+		if variant.Context > context {
+			context = variant.Context
+		}
+	}
+	return efforts, toggle, reasoning, context
 }
 
 func (s *Service) activeAccounts(providerID string) []account.PoolEntry {

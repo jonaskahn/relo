@@ -184,55 +184,86 @@ func messageHasImages(message inference.Message) bool {
 	return false
 }
 
+// rootPromptBuilder replays canonical messages into root-prompt JSON
+// blobs, pairing tool results with the assistant calls that issued them.
+type rootPromptBuilder struct {
+	messages []inference.Message
+	cutoff   int
+	store    *Store
+	calls    map[string]string
+	emitted  map[string]bool
+	ids      [][]byte
+}
+
 func buildRootPrompt(req *inference.Request, tools *ToolMap, store *Store, cutoff int) ([][]byte, error) {
-	var ids [][]byte
-	calls := map[string]string{}
-	emitted := map[string]bool{}
-	push := func(value any) []byte {
-		raw, _ := json.Marshal(value)
-		return store.Put(raw)
+	_ = tools
+	builder := &rootPromptBuilder{messages: req.Messages, cutoff: cutoff, store: store,
+		calls: map[string]string{}, emitted: map[string]bool{}}
+	for index := 0; index < cutoff && index < len(builder.messages); index++ {
+		builder.replay(builder.messages[index], index)
 	}
-	for index := 0; index < cutoff && index < len(req.Messages); index++ {
-		message := req.Messages[index]
-		switch message.Role {
-		case inference.RoleUser:
-			if text := messageText(message); text != "" {
-				ids = append(ids, push(map[string]any{"role": "user", "content": []any{map[string]any{"type": "text", "text": text}}}))
-			}
-		case inference.RoleAssistant:
-			rounds := assistantRounds(message)
-			for round, step := range rounds {
-				ids = append(ids, push(map[string]any{"role": "assistant", "content": step}))
-				if round == len(rounds)-1 {
-					continue
-				}
-				for _, result := range roundResults(req, index, cutoff, step, calls) {
-					if emitted[result.id] {
-						continue
-					}
-					emitted[result.id] = true
-					ids = append(ids, push(result.entry))
-				}
-			}
-			for _, call := range assistantCalls(message) {
-				calls[normalizeToolCallID(call.ID)] = call.Name
-			}
-		case inference.RoleTool:
-			if emitted[message.ToolCallID] {
-				continue
-			}
-			name, paired := calls[normalizeToolCallID(message.ToolCallID)]
-			if !paired {
-				if text := toolResultText(message); text != "" {
-					ids = append(ids, push(map[string]any{"role": "assistant", "content": []any{map[string]any{"type": "text", "text": text}}}))
-				}
-				continue
-			}
-			emitted[message.ToolCallID] = true
-			ids = append(ids, push(toolResultEntry(message, name)))
+	return builder.ids, nil
+}
+
+func (b *rootPromptBuilder) push(value any) []byte {
+	raw, _ := json.Marshal(value)
+	return b.store.Put(raw)
+}
+
+func (b *rootPromptBuilder) replay(message inference.Message, index int) {
+	switch message.Role {
+	case inference.RoleUser:
+		b.replayUser(message)
+	case inference.RoleAssistant:
+		b.replayAssistant(message, index)
+	case inference.RoleTool:
+		b.replayResult(message)
+	}
+}
+
+func (b *rootPromptBuilder) replayUser(message inference.Message) {
+	if text := messageText(message); text != "" {
+		b.ids = append(b.ids, b.push(map[string]any{"role": "user", "content": []any{map[string]any{"type": "text", "text": text}}}))
+	}
+}
+
+func (b *rootPromptBuilder) replayAssistant(message inference.Message, index int) {
+	rounds := assistantRounds(message)
+	for round, step := range rounds {
+		b.ids = append(b.ids, b.push(map[string]any{"role": "assistant", "content": step}))
+		if round == len(rounds)-1 {
+			continue
 		}
+		b.replayRound(index, step)
 	}
-	return ids, nil
+	for _, call := range assistantCalls(message) {
+		b.calls[normalizeToolCallID(call.ID)] = call.Name
+	}
+}
+
+func (b *rootPromptBuilder) replayRound(assistant int, step []any) {
+	for _, result := range b.roundResults(assistant, step) {
+		if b.emitted[result.id] {
+			continue
+		}
+		b.emitted[result.id] = true
+		b.ids = append(b.ids, b.push(result.entry))
+	}
+}
+
+func (b *rootPromptBuilder) replayResult(message inference.Message) {
+	if b.emitted[message.ToolCallID] {
+		return
+	}
+	name, paired := b.calls[normalizeToolCallID(message.ToolCallID)]
+	if !paired {
+		if text := toolResultText(message); text != "" {
+			b.ids = append(b.ids, b.push(map[string]any{"role": "assistant", "content": []any{map[string]any{"type": "text", "text": text}}}))
+		}
+		return
+	}
+	b.emitted[message.ToolCallID] = true
+	b.ids = append(b.ids, b.push(toolResultEntry(message, name)))
 }
 
 type roundResult struct {
@@ -240,7 +271,7 @@ type roundResult struct {
 	entry map[string]any
 }
 
-func roundResults(req *inference.Request, assistant, cutoff int, step []any, calls map[string]string) []roundResult {
+func (b *rootPromptBuilder) roundResults(assistant int, step []any) []roundResult {
 	callIDs := map[string]bool{}
 	for _, part := range step {
 		item, ok := part.(map[string]any)
@@ -252,12 +283,12 @@ func roundResults(req *inference.Request, assistant, cutoff int, step []any, cal
 		}
 	}
 	var results []roundResult
-	for index := assistant + 1; index < cutoff && index < len(req.Messages); index++ {
-		message := req.Messages[index]
+	for index := assistant + 1; index < b.cutoff && index < len(b.messages); index++ {
+		message := b.messages[index]
 		if message.Role != inference.RoleTool || !callIDs[normalizeToolCallID(message.ToolCallID)] {
 			continue
 		}
-		name, paired := calls[normalizeToolCallID(message.ToolCallID)]
+		name, paired := b.calls[normalizeToolCallID(message.ToolCallID)]
 		if !paired {
 			name = ""
 		}
@@ -280,10 +311,6 @@ func toolResultEntry(message inference.Message, name string) map[string]any {
 
 func toolResultText(message inference.Message) string {
 	return messageText(inference.Message{Content: message.Content})
-}
-
-func toolResultIsError(message inference.Message) bool {
-	return strings.HasPrefix(strings.TrimSpace(message.Name), "error")
 }
 
 func assistantRounds(message inference.Message) [][]any {
@@ -347,63 +374,87 @@ func toolArgsOf(raw string) map[string]any {
 }
 
 func buildTurns(req *inference.Request, tools *ToolMap, store *Store, cutoff int) ([][]byte, error) {
-	var ids [][]byte
-	index := 0
-	for index < cutoff && index < len(req.Messages) {
-		message := req.Messages[index]
-		if message.Role != inference.RoleUser {
-			index++
-			continue
-		}
-		if text := messageText(message); text == "" && !messageHasImages(message) {
-			index++
-			continue
-		}
-		var user cursor.Writer
-		user.String(userMessageText, messageText(message))
-		user.String(2, turnMessageID())
-		userBlob := store.Put(user.BytesOut())
-		var steps [][]byte
-		index++
-		calls := map[string]inference.ToolCall{}
-		var orphans []inference.Message
-		for index < cutoff && index < len(req.Messages) && req.Messages[index].Role != inference.RoleUser {
-			step := req.Messages[index]
-			switch step.Role {
-			case inference.RoleAssistant:
-				for _, part := range step.Content {
-					if part.Type == inference.ContentTypeText && strings.TrimSpace(part.Text) != "" {
-						steps = append(steps, assistantStep(store, strings.TrimSpace(part.Text)))
-					}
-				}
-				for _, call := range step.ToolCalls {
-					calls[normalizeToolCallID(call.ID)] = call
-				}
-			case inference.RoleTool:
-				if _, paired := calls[normalizeToolCallID(step.ToolCallID)]; !paired {
-					orphans = append(orphans, step)
-				}
-			}
-			index++
-		}
-		for _, call := range turnCalls(req, tools, calls) {
-			steps = append(steps, call)
-		}
-		for _, orphan := range orphans {
-			if text := toolResultText(orphan); text != "" {
-				steps = append(steps, assistantStep(store, text))
-			}
-		}
-		var turn cursor.Writer
-		turn.Bytes(turnUserMessage, userBlob)
-		for _, step := range steps {
-			turn.Bytes(turnSteps, step)
-		}
-		var wrapped cursor.Writer
-		wrapped.Message(1, turn.BytesOut())
-		ids = append(ids, store.Put(wrapped.BytesOut()))
+	builder := &turnBuilder{messages: req.Messages, tools: tools, store: store, cutoff: cutoff}
+	for builder.index < cutoff && builder.index < len(builder.messages) {
+		builder.replayTurn()
 	}
-	return ids, nil
+	return builder.ids, nil
+}
+
+// turnBuilder groups canonical messages into conversation turns: one user
+// message followed by its assistant steps and paired tool results.
+type turnBuilder struct {
+	messages []inference.Message
+	tools    *ToolMap
+	store    *Store
+	cutoff   int
+	index    int
+	ids      [][]byte
+}
+
+func (b *turnBuilder) replayTurn() {
+	message := b.messages[b.index]
+	if message.Role != inference.RoleUser || b.skippable(message) {
+		b.index++
+		return
+	}
+	userBlob := b.userBlob(message)
+	b.index++
+	steps, calls, orphans := b.collectSteps()
+	steps = append(steps, turnCalls(b.messages, b.tools, calls)...)
+	for _, orphan := range orphans {
+		if text := toolResultText(orphan); text != "" {
+			steps = append(steps, assistantStep(b.store, text))
+		}
+	}
+	var turn cursor.Writer
+	turn.Bytes(turnUserMessage, userBlob)
+	for _, step := range steps {
+		turn.Bytes(turnSteps, step)
+	}
+	var wrapped cursor.Writer
+	wrapped.Message(1, turn.BytesOut())
+	b.ids = append(b.ids, b.store.Put(wrapped.BytesOut()))
+}
+
+func (b *turnBuilder) skippable(message inference.Message) bool {
+	return messageText(message) == "" && !messageHasImages(message)
+}
+
+func (b *turnBuilder) userBlob(message inference.Message) []byte {
+	var user cursor.Writer
+	user.String(userMessageText, messageText(message))
+	user.String(2, turnMessageID())
+	return b.store.Put(user.BytesOut())
+}
+
+func (b *turnBuilder) collectSteps() ([][]byte, map[string]inference.ToolCall, []inference.Message) {
+	var steps [][]byte
+	calls := map[string]inference.ToolCall{}
+	var orphans []inference.Message
+	for b.index < b.cutoff && b.index < len(b.messages) && b.messages[b.index].Role != inference.RoleUser {
+		b.collectStep(b.messages[b.index], &steps, calls, &orphans)
+		b.index++
+	}
+	return steps, calls, orphans
+}
+
+func (b *turnBuilder) collectStep(step inference.Message, steps *[][]byte, calls map[string]inference.ToolCall, orphans *[]inference.Message) {
+	switch step.Role {
+	case inference.RoleAssistant:
+		for _, part := range step.Content {
+			if part.Type == inference.ContentTypeText && strings.TrimSpace(part.Text) != "" {
+				*steps = append(*steps, assistantStep(b.store, strings.TrimSpace(part.Text)))
+			}
+		}
+		for _, call := range step.ToolCalls {
+			calls[normalizeToolCallID(call.ID)] = call
+		}
+	case inference.RoleTool:
+		if _, paired := calls[normalizeToolCallID(step.ToolCallID)]; !paired {
+			*orphans = append(*orphans, step)
+		}
+	}
 }
 
 func assistantStep(store *Store, text string) []byte {
@@ -414,8 +465,7 @@ func assistantStep(store *Store, text string) []byte {
 	return store.Put(step.BytesOut())
 }
 
-func turnCalls(req *inference.Request, tools *ToolMap, calls map[string]inference.ToolCall) [][]byte {
-	_ = req
+func turnCalls(messages []inference.Message, tools *ToolMap, calls map[string]inference.ToolCall) [][]byte {
 	var steps [][]byte
 	names := make([]string, 0, len(calls))
 	for id := range calls {
@@ -424,14 +474,14 @@ func turnCalls(req *inference.Request, tools *ToolMap, calls map[string]inferenc
 	sortStrings(names)
 	for _, id := range names {
 		call := calls[id]
-		result, found := pairResult(req, call.ID)
+		result, found := pairResult(messages, call.ID)
 		steps = append(steps, toolCallStep(call, result, found, tools))
 	}
 	return steps
 }
 
-func pairResult(req *inference.Request, callID string) (inference.Message, bool) {
-	for _, message := range req.Messages {
+func pairResult(messages []inference.Message, callID string) (inference.Message, bool) {
+	for _, message := range messages {
 		if message.Role == inference.RoleTool && normalizeToolCallID(message.ToolCallID) == normalizeToolCallID(callID) {
 			return message, true
 		}

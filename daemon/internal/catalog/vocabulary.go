@@ -27,6 +27,9 @@ const (
 	FormatCloudCode       APIFormat = "cloud-code-assist"
 	FormatBedrockConverse APIFormat = "bedrock-converse"
 	FormatKiro            APIFormat = "kiro"
+	// FormatCursorAgent speaks the Cursor agent protocol: a duplex stream
+	// of framed protobuf messages rather than one request and response.
+	FormatCursorAgent APIFormat = "cursor-agent"
 )
 
 // KeyHeader names where a credential key is placed in request headers.

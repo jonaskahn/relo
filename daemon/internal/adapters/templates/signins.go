@@ -310,14 +310,23 @@ var signInTemplates = []signInTemplate{
 	},
 	{
 		Template: Template{
-			ID:                "cursor",
-			Label:             "Cursor",
-			Kind:              KindSignIn,
-			Origin:            catalog.OriginSignIn,
-			Auth:              catalog.AuthOAuth,
-			LoginMethods:      []LoginMethod{{Flow: oauth.FlowCursor, Kind: LoginBrowser}},
-			UnsupportedReason: "No transport yet",
+			ID:             "cursor",
+			Label:          "Cursor",
+			Kind:           KindSignIn,
+			Origin:         catalog.OriginSignIn,
+			Auth:           catalog.AuthOAuth,
+			KeyHeader:      catalog.KeyHeaderBearer,
+			DefaultFormat:  catalog.FormatCursorAgent,
+			DefaultBaseURL: "https://api2.cursor.sh",
+			// The agent service answers only a duplex stream, so a client
+			// that asked for one complete body is served by reassembling
+			// it. It states no max-output ceiling to send.
+			RequiresStream: true, RefusesMaxOutputTokens: true,
+			ModelsSource: "listing",
+			ModelsFormat: catalog.ModelsCursor,
+			LoginMethods: []LoginMethod{{Flow: oauth.FlowCursor, Kind: LoginBrowser}},
 		},
+		authorize: authorizeDefault,
 	},
 	{
 		Template: Template{

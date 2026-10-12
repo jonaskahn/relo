@@ -15,10 +15,8 @@ import (
 
 // fixtureServer speaks the Cursor agent protocol against one scripted turn.
 type fixtureServer struct {
-	t        *testing.T
-	server   *httptest.Server
-	execSeen []uint32
-	mcpSeen  []string
+	t      *testing.T
+	server *httptest.Server
 }
 
 func newFixtureServer(t *testing.T, script func(s *fixtureServer, w http.ResponseWriter, reader *adapterscursor.FrameReader)) *fixtureServer {
@@ -193,9 +191,11 @@ func TestRunTextTurn(t *testing.T) {
 		}
 	})
 	codec := NewCodec(server.server.URL)
-	events, err := codec.RunBidirectional(context.Background(), h2Client(server.server.Client()), testRequest(), wire.CodecOpts{
-		BaseURL: server.server.URL, CredentialRef: "token", Cursor: testSelection(),
-	}, nil)
+	events, err := codec.RunBidirectional(context.Background(), wire.BidirectionalCall{
+		Client: h2Client(server.server.Client()), Request: testRequest(), Opts: wire.CodecOpts{
+			BaseURL: server.server.URL, CredentialRef: "token", Cursor: testSelection(),
+		},
+	})
 	if err != nil {
 		t.Fatalf("RunBidirectional() error = %v", err)
 	}
@@ -266,9 +266,11 @@ func TestRunNativeRejection(t *testing.T) {
 		}
 	})
 	codec := NewCodec(server.server.URL)
-	events, err := codec.RunBidirectional(context.Background(), h2Client(server.server.Client()), testRequest(), wire.CodecOpts{
-		BaseURL: server.server.URL, CredentialRef: "token", Cursor: testSelection(),
-	}, nil)
+	events, err := codec.RunBidirectional(context.Background(), wire.BidirectionalCall{
+		Client: h2Client(server.server.Client()), Request: testRequest(), Opts: wire.CodecOpts{
+			BaseURL: server.server.URL, CredentialRef: "token", Cursor: testSelection(),
+		},
+	})
 	if err != nil {
 		t.Fatalf("RunBidirectional() error = %v", err)
 	}
@@ -318,9 +320,12 @@ func TestRunToolHandoff(t *testing.T) {
 	request.Tools = []inference.Tool{{Name: "read", Description: "read a file", Parameters: []byte(`{"type":"object"}`)}}
 	codec := NewCodec(server.server.URL)
 	var streamed [][]inference.Event
-	events, err := codec.RunBidirectional(context.Background(), h2Client(server.server.Client()), request, wire.CodecOpts{
-		BaseURL: server.server.URL, CredentialRef: "token", Cursor: testSelection(),
-	}, func(batch []inference.Event) { streamed = append(streamed, batch) })
+	events, err := codec.RunBidirectional(context.Background(), wire.BidirectionalCall{
+		Client: h2Client(server.server.Client()), Request: request, Opts: wire.CodecOpts{
+			BaseURL: server.server.URL, CredentialRef: "token", Cursor: testSelection(),
+		},
+		Emit: func(batch []inference.Event) { streamed = append(streamed, batch) },
+	})
 	if err != nil {
 		t.Fatalf("RunBidirectional() error = %v", err)
 	}

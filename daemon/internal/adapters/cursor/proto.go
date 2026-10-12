@@ -120,49 +120,60 @@ func Parse(body []byte) ([]Field, error) {
 	}
 	fields := make([]Field, 0, 8)
 	for len(body) > 0 {
-		field, wire, rest, err := readTag(body)
+		field, rest, err := parseField(body)
 		if err != nil {
 			return nil, err
 		}
 		body = rest
-		switch wire {
-		case wireVarint:
-			value, rest, err := readVarint(body)
-			if err != nil {
-				return nil, err
-			}
-			body = rest
-			fields = append(fields, Field{Number: field, Wire: wire, Varint: value})
-		case wireFixed:
-			if len(body) < 8 {
-				return nil, ErrProtoTruncated
-			}
-			fields = append(fields, Field{Number: field, Wire: wire, Raw: body[:8]})
-			body = body[8:]
-		case wireLength:
-			size, rest, err := readVarint(body)
-			if err != nil {
-				return nil, err
-			}
-			if size > uint64(MaxProtoBytes) {
-				return nil, ErrProtoTooLarge
-			}
-			if uint64(len(rest)) < size {
-				return nil, ErrProtoTruncated
-			}
-			fields = append(fields, Field{Number: field, Wire: wire, Raw: rest[:size]})
-			body = rest[size:]
-		case wireFixed32:
-			if len(body) < 4 {
-				return nil, ErrProtoTruncated
-			}
-			fields = append(fields, Field{Number: field, Wire: wire, Raw: body[:4]})
-			body = body[4:]
-		default:
-			return nil, fmt.Errorf("unknown wire type %d", wire)
-		}
+		fields = append(fields, field)
 	}
 	return fields, nil
+}
+
+func parseField(body []byte) (Field, []byte, error) {
+	field, wire, rest, err := readTag(body)
+	if err != nil {
+		return Field{}, nil, err
+	}
+	switch wire {
+	case wireVarint:
+		value, rest, err := readVarint(rest)
+		if err != nil {
+			return Field{}, nil, err
+		}
+		return Field{Number: field, Wire: wire, Varint: value}, rest, nil
+	case wireLength:
+		return parseDelimited(field, wire, rest)
+	case wireFixed, wireFixed32:
+		return parseFixed(field, wire, rest)
+	default:
+		return Field{}, nil, fmt.Errorf("unknown wire type %d", wire)
+	}
+}
+
+func parseDelimited(field, wire int, body []byte) (Field, []byte, error) {
+	size, rest, err := readVarint(body)
+	if err != nil {
+		return Field{}, nil, err
+	}
+	if size > uint64(MaxProtoBytes) {
+		return Field{}, nil, ErrProtoTooLarge
+	}
+	if uint64(len(rest)) < size {
+		return Field{}, nil, ErrProtoTruncated
+	}
+	return Field{Number: field, Wire: wire, Raw: rest[:size]}, rest[size:], nil
+}
+
+func parseFixed(field, wire int, body []byte) (Field, []byte, error) {
+	width := 8
+	if wire == wireFixed32 {
+		width = 4
+	}
+	if len(body) < width {
+		return Field{}, nil, ErrProtoTruncated
+	}
+	return Field{Number: field, Wire: wire, Raw: body[:width]}, body[width:], nil
 }
 
 func readTag(body []byte) (int, int, []byte, error) {

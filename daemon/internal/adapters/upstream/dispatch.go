@@ -189,6 +189,17 @@ func NewExecutor(client *http.Client, logger *slog.Logger) *Executor {
 // writing anything, so the caller keeps its choice of what the client sees.
 func (e *Executor) Execute(ctx context.Context, ex Exchange, w http.ResponseWriter) (Result, error) {
 	started := time.Now()
+	// A bidirectional codec converses over one duplex stream instead of
+	// sending one request: there is no single request to capture or encode
+	// up front, so it runs before the dispatch passes.
+	if _, ok := ex.Codec.(wire.BidirectionalCodec); ok {
+		st := &dispatchState{capture: &Capture{}}
+		att := attempt{writer: w, exchange: ex, started: started, capture: st.capture, state: st}
+		result, err := e.runBidirectional(ctx, att, started)
+		result.Capture = st.capture
+		result.RefreshSettled = st.refreshSettled
+		return result, err
+	}
 	// A client that asked for one complete answer still gets one: when the
 	// upstream only speaks streams, the request goes out as a stream on a copy
 	// and the answer is reassembled. The canonical request is shared between

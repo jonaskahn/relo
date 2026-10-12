@@ -44,9 +44,6 @@ const (
 	turnedOutput   = 2
 	turnedCacheIn  = 3
 	turnedCacheOut = 4
-
-	mcpCallArgs   = 1
-	mcpCallResult = 2
 )
 
 // ServerMessage is one parsed AgentServerMessage.

@@ -85,7 +85,7 @@ func TestTemplates(t *testing.T) {
 
 	// A row Relo cannot reach yet stays listed and says why in the copy the
 	// console shows beside the disabled row.
-	for _, id := range []string{"cursor", "devin"} {
+	for _, id := range []string{"devin"} {
 		held, ok := Get(id, nil)
 		if !ok {
 			t.Fatalf("template %s not found", id)
@@ -96,6 +96,25 @@ func TestTemplates(t *testing.T) {
 		if held.Kind != KindSignIn {
 			t.Errorf("%s kind = %q, want it listed under an account sign-in", id, held.Kind)
 		}
+	}
+
+	// The Cursor subscription speaks the agent protocol over a duplex
+	// stream, with an account-scoped roster of grouped configurations.
+	cursorTemplate, ok := Get("cursor", nil)
+	if !ok {
+		t.Fatal("cursor template not found")
+	}
+	if cursorTemplate.UnsupportedReason != "" {
+		t.Errorf("cursor unsupported reason = %q, want it routable", cursorTemplate.UnsupportedReason)
+	}
+	if cursorTemplate.DefaultFormat != "cursor-agent" {
+		t.Errorf("cursor default format = %q, want cursor-agent", cursorTemplate.DefaultFormat)
+	}
+	if cursorTemplate.ModelsFormat != "cursor" {
+		t.Errorf("cursor models format = %q, want cursor", cursorTemplate.ModelsFormat)
+	}
+	if !cursorTemplate.RequiresStream {
+		t.Error("cursor template must declare requires_stream")
 	}
 
 	// A package Relo cannot speak names the transport it would need.

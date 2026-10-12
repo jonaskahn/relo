@@ -48,6 +48,9 @@ type harness struct {
 	// refreshes counts the roster refreshes the accounts service starts, so
 	// cleanup can wait for them before the temporary home is removed.
 	refreshes *refreshTracker
+	// credentials authorizes discovery listings; nil serves unauthenticated
+	// listings the way the default harness does.
+	credentials appcatalog.Credentials
 }
 
 func newHarness(t *testing.T) *harness {
@@ -208,7 +211,7 @@ func (h *harness) buildServiceWith(cat *catalog.Catalog, pools *account.Manager,
 	h.service = appcatalog.New(appcatalog.Options{
 		Store: sqlite.NewCatalogRepo(h.db), Catalog: cat, Pools: pools,
 		Entries: sqlite.NewCredentialStore(h.db), Accounts: h.accounts, Secrets: quiet,
-		Credentials: nil, Direct: upstream.Direct,
+		Credentials: h.credentials, Direct: upstream.Direct,
 		Discover: lister, ModelsDev: md, Templates: platform.TemplateRegistry{},
 		Logger: logger, ProxyURL: h.proxyURL,
 	})

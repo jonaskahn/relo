@@ -33,6 +33,9 @@ type attemptSpec struct {
 	outcome    *requestOutcome
 	host       catalog.Provider
 	authorized catalog.Authorization
+	// cursor is the exact Cursor tuple one cursor-agent attempt sends,
+	// resolved after authorization chose the account.
+	cursor *wire.CursorRequest
 	// prefer is the account a retry stays on. hold reports a failure that
 	// another retry of this account follows, so the account is not held to
 	// account for it yet: a rate limit or server fault a retry may cure.
@@ -46,6 +49,13 @@ func (s *Server) attempt(w http.ResponseWriter, spec attemptSpec, tried map[stri
 		return Result{}, err
 	}
 	spec.host, spec.authorized = host, authorized
+	if spec.candidate.Model.APIFormat == catalog.FormatCursorAgent {
+		selection, err := s.selectCursorAttempt(spec.request.Context(), &spec, tried)
+		if err != nil {
+			return Result{}, err
+		}
+		spec.cursor = selection
+	}
 	module, supported := s.opts.Formats.Outbound(spec.candidate.Model.APIFormat)
 	if !supported {
 		return Result{}, fmt.Errorf("%s: %w (%s)",
@@ -197,6 +207,7 @@ func (s *Server) attemptCodecOptions(spec attemptSpec, extra map[string]string, 
 		LongContext:            outcome.longContext,
 		NativeMillion:          outcome.nativeMillion,
 		PromptTokens:           s.attemptPromptTokens(outcome),
+		Cursor:                 spec.cursor,
 	}
 }
 

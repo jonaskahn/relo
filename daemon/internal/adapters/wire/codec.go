@@ -211,6 +211,15 @@ type RequestBinder interface {
 	Bind(req *inference.Request, opts CodecOpts) CodecModule
 }
 
+// BidirectionalCall carries one duplex attempt: what to send, how to send
+// it, and where to emit events as they arrive.
+type BidirectionalCall struct {
+	Client  *http.Client
+	Request *inference.Request
+	Opts    CodecOpts
+	Emit    func([]inference.Event)
+}
+
 // BidirectionalCodec is a CodecModule that converses over one duplex
 // stream: it answers the upstream's own requests while reading its
 // responses, instead of sending one request and reading one response.
@@ -218,7 +227,7 @@ type BidirectionalCodec interface {
 	CodecModule
 	// RunBidirectional converses until the turn ends, emitting canonical
 	// events as they arrive and returning them all once the turn ends.
-	RunBidirectional(ctx context.Context, client *http.Client, req *inference.Request, opts CodecOpts, emit func([]inference.Event)) ([]inference.Event, error)
+	RunBidirectional(ctx context.Context, call BidirectionalCall) ([]inference.Event, error)
 }
 
 // InboundCodec translates one client-facing surface into canonical form

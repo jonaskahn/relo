@@ -157,6 +157,34 @@ func laneKey(variant Variant) string {
 }
 
 func buildGroup(members []Variant) (Group, bool) {
+	bySelection, order := selectMembers(members)
+	first := members[0]
+	group := Group{
+		ID:      laneID(first),
+		Name:    first.BaseName,
+		MaxMode: first.MaxMode,
+		Images:  first.Images,
+		Context: first.Context,
+	}
+	if group.ID == "" {
+		group.ID = first.BaseID
+	}
+	if group.Name == "" {
+		group.Name = group.ID
+	}
+	for _, selection := range order {
+		member := bySelection[selection]
+		group.Members = append(group.Members, memberConfig(selection, member))
+		if member.Context > group.Context {
+			group.Context = member.Context
+		}
+	}
+	sort.Slice(group.Members, func(i, j int) bool { return group.Members[i].Selection < group.Members[j].Selection })
+	group.Default = defaultSelection(bySelection)
+	return group, len(group.Members) > 0
+}
+
+func selectMembers(members []Variant) (map[string]Variant, []string) {
 	bySelection := map[string]Variant{}
 	order := make([]string, 0, len(members))
 	for _, member := range members {
@@ -174,45 +202,26 @@ func buildGroup(members []Variant) (Group, bool) {
 			bySelection[selection] = member
 		}
 	}
-	first := members[0]
-	group := Group{
-		ID:      laneID(first),
-		Name:    first.BaseName,
-		MaxMode: first.MaxMode,
-		Images:  first.Images,
-		Context: first.Context,
+	return bySelection, order
+}
+
+func memberConfig(selection string, member Variant) Config {
+	effort := ""
+	if selection != SelectDefault && selection != SelectOff && selection != SelectToggle {
+		effort = selection
 	}
-	if group.ID == "" {
-		group.ID = first.BaseID
+	wire := member.WireID
+	if wire == "" {
+		wire = member.BaseID
 	}
-	if group.Name == "" {
-		group.Name = group.ID
+	return Config{
+		Selection: selection,
+		Effort:    effort,
+		ModelID:   member.BaseID,
+		DetailsID: wire,
+		MaxMode:   member.MaxMode,
+		Params:    append([]Param(nil), member.Params...),
 	}
-	for _, selection := range order {
-		member := bySelection[selection]
-		effort := ""
-		if selection != SelectDefault && selection != SelectOff && selection != SelectToggle {
-			effort = selection
-		}
-		wire := member.WireID
-		if wire == "" {
-			wire = member.BaseID
-		}
-		group.Members = append(group.Members, Config{
-			Selection: selection,
-			Effort:    effort,
-			ModelID:   member.BaseID,
-			DetailsID: wire,
-			MaxMode:   member.MaxMode,
-			Params:    append([]Param(nil), member.Params...),
-		})
-		if member.Context > group.Context {
-			group.Context = member.Context
-		}
-	}
-	sort.Slice(group.Members, func(i, j int) bool { return group.Members[i].Selection < group.Members[j].Selection })
-	group.Default = defaultSelection(bySelection)
-	return group, len(group.Members) > 0
 }
 
 func variantRank(variant Variant) int {

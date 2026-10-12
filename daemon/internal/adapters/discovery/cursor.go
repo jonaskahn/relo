@@ -19,6 +19,15 @@ import (
 // features on it, so it stays pinned to the verified reference behavior.
 const cursorClientVersion = "cli-2026.09.02-c22c1a3"
 
+// cursorCall is one Cursor listing RPC.
+type cursorCall struct {
+	base    string
+	path    string
+	payload []byte
+	token   string
+	target  Target
+}
+
 func (l *Lister) listCursor(ctx context.Context, target Target) ([]Listed, error) {
 	token := target.Auth.Token
 	if token == "" {
@@ -28,8 +37,14 @@ func (l *Lister) listCursor(ctx context.Context, target Target) ([]Listed, error
 	if base == "" {
 		base = cursor.DefaultBaseURL
 	}
-	usableBody, usableStatus := l.postCursor(ctx, base, cursor.GetUsableModelsPath, cursor.BuildUsableModelsRequest(), token, target)
-	availableBody, availableStatus := l.postCursor(ctx, base, cursor.AvailableModelsPath, cursor.BuildAvailableModelsRequest(), token, target)
+	usableBody, usableStatus := l.postCursor(ctx, cursorCall{
+		base: base, path: cursor.GetUsableModelsPath,
+		payload: cursor.BuildUsableModelsRequest(), token: token, target: target,
+	})
+	availableBody, availableStatus := l.postCursor(ctx, cursorCall{
+		base: base, path: cursor.AvailableModelsPath,
+		payload: cursor.BuildAvailableModelsRequest(), token: token, target: target,
+	})
 	if usableStatus.rejected || availableStatus.rejected {
 		return nil, fmt.Errorf("cursor: %w", ErrListRejected)
 	}
@@ -44,17 +59,17 @@ type cursorStatus struct {
 	rejected bool
 }
 
-func (l *Lister) postCursor(ctx context.Context, base, path string, payload []byte, token string, target Target) ([]byte, cursorStatus) {
-	request, err := http.NewRequestWithContext(ctx, http.MethodPost, base+path, bytes.NewReader(payload))
+func (l *Lister) postCursor(ctx context.Context, call cursorCall) ([]byte, cursorStatus) {
+	request, err := http.NewRequestWithContext(ctx, http.MethodPost, call.base+call.path, bytes.NewReader(call.payload))
 	if err != nil {
 		return nil, cursorStatus{}
 	}
-	for name, value := range cursor.Headers(token, cursorClientVersion, cursorRequestID()) {
+	for name, value := range cursor.Headers(call.token, cursorClientVersion, cursorRequestID()) {
 		request.Header.Set(name, value)
 	}
-	applyHeaders(request, target.Auth.Headers)
-	applyHeaders(request, target.Headers)
-	applyListCredential(request, target)
+	applyHeaders(request, call.target.Auth.Headers)
+	applyHeaders(request, call.target.Headers)
+	applyListCredential(request, call.target)
 	response, err := l.client.Do(request)
 	if err != nil {
 		return nil, cursorStatus{}

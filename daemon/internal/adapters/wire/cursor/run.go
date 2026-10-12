@@ -36,14 +36,7 @@ type Runner struct {
 
 // Run converses until the turn ends and returns every canonical event.
 func (r *Runner) Run(ctx context.Context) ([]inference.Event, error) {
-	if err := Validate(r.Request, r.Selection); err != nil {
-		return nil, err
-	}
-	tools, err := BuildToolMap(r.Request.Tools)
-	if err != nil {
-		return nil, err
-	}
-	history, action, err := BuildHistory(r.Request, tools)
+	tools, history, action, err := r.prepare()
 	if err != nil {
 		return nil, err
 	}
@@ -53,13 +46,9 @@ func (r *Runner) Run(ctx context.Context) ([]inference.Event, error) {
 		return nil, err
 	}
 	defer func() { _ = response.Body.Close }()
-	if response.StatusCode == http.StatusUnauthorized || response.StatusCode == http.StatusForbidden {
+	if err := r.checkStreamStatus(response); err != nil {
 		_ = writer.Close()
-		return nil, ErrUnauthorized
-	}
-	if response.StatusCode < 200 || response.StatusCode >= 300 {
-		_ = writer.Close()
-		return nil, r.statusError(response)
+		return nil, err
 	}
 	conversation := newConversation(tools, history, r.Emit)
 	conversation.write = func(payload []byte) error {
@@ -68,41 +57,44 @@ func (r *Runner) Run(ctx context.Context) ([]inference.Event, error) {
 	}
 	runErr := conversation.converse(ctx, reader)
 	_ = writer.Close()
-	events, err := conversation.finish(runErr)
-	if err != nil {
-		return events, err
+	return conversation.finish(runErr)
+}
+
+func (r *Runner) prepare() (*ToolMap, History, []byte, error) {
+	if err := Validate(r.Request, r.Selection); err != nil {
+		return nil, History{}, nil, err
 	}
-	return events, nil
+	tools, err := BuildToolMap(r.Request.Tools)
+	if err != nil {
+		return nil, History{}, nil, err
+	}
+	history, action, err := BuildHistory(r.Request, tools)
+	if err != nil {
+		return nil, History{}, nil, err
+	}
+	return tools, history, action, nil
+}
+
+func (r *Runner) checkStreamStatus(response *http.Response) error {
+	switch {
+	case response.StatusCode == http.StatusUnauthorized || response.StatusCode == http.StatusForbidden:
+		return ErrUnauthorized
+	case response.StatusCode >= 200 && response.StatusCode < 300:
+		return nil
+	default:
+		return r.statusError(response)
+	}
 }
 
 func (r *Runner) openStream(ctx context.Context, initial []byte) (*cursor.FrameReader, *io.PipeWriter, *http.Response, error) {
-	base := strings.TrimSuffix(r.BaseURL, "/")
-	if base == "" {
-		base = cursor.DefaultBaseURL
-	}
-	body, writer := io.Pipe()
-	request, err := http.NewRequestWithContext(ctx, http.MethodPost, base+cursor.RunPath, body)
+	request, writer, err := streamRequest(ctx, r.BaseURL, r.Token)
 	if err != nil {
-		_ = writer.Close()
 		return nil, nil, nil, err
 	}
-	// A pipe body reports no length, which the transport would read as an
-	// empty body. Unknown length streams the turn until the pipe closes.
-	request.ContentLength = -1
-	headers := cursor.Headers(r.Token, "", newRequestID())
-	headers["Content-Type"] = "application/connect+proto"
-	headers["Te"] = "trailers"
-	for name, value := range headers {
-		request.Header.Set(name, value)
-	}
-	type outcome struct {
-		response *http.Response
-		err      error
-	}
-	done := make(chan outcome, 1)
+	done := make(chan streamOutcome, 1)
 	go func() {
 		response, err := r.Client.Do(request)
-		done <- outcome{response: response, err: err}
+		done <- streamOutcome{response: response, err: err}
 	}()
 	// The initial frame goes out while the server buffers its response
 	// headers: a handler that reads before writing would otherwise wait
@@ -111,7 +103,42 @@ func (r *Runner) openStream(ctx context.Context, initial []byte) (*cursor.FrameR
 		_ = writer.Close()
 		return nil, nil, nil, err
 	}
-	var result outcome
+	result, err := awaitStream(ctx, writer, done)
+	if err != nil {
+		return nil, nil, nil, err
+	}
+	return cursor.NewFrameReader(result.response.Body), writer, result.response, nil
+}
+
+func streamRequest(ctx context.Context, baseURL, token string) (*http.Request, *io.PipeWriter, error) {
+	base := strings.TrimSuffix(baseURL, "/")
+	if base == "" {
+		base = cursor.DefaultBaseURL
+	}
+	body, writer := io.Pipe()
+	request, err := http.NewRequestWithContext(ctx, http.MethodPost, base+cursor.RunPath, body)
+	if err != nil {
+		_ = writer.Close()
+		return nil, nil, err
+	}
+	// A pipe body reports no length, which the transport would read as an
+	// empty body. Unknown length streams the turn until the pipe closes.
+	request.ContentLength = -1
+	headers := cursor.Headers(token, "", newRequestID())
+	headers["Content-Type"] = "application/connect+proto"
+	headers["Te"] = "trailers"
+	for name, value := range headers {
+		request.Header.Set(name, value)
+	}
+	return request, writer, nil
+}
+
+type streamOutcome struct {
+	response *http.Response
+	err      error
+}
+
+func awaitStream(ctx context.Context, writer *io.PipeWriter, done <-chan streamOutcome) (streamOutcome, error) {
 	select {
 	case <-ctx.Done():
 		_ = writer.Close()
@@ -119,14 +146,14 @@ func (r *Runner) openStream(ctx context.Context, initial []byte) (*cursor.FrameR
 		if finished.response != nil {
 			_ = finished.response.Body.Close()
 		}
-		return nil, nil, nil, ctx.Err()
-	case result = <-done:
+		return streamOutcome{}, ctx.Err()
+	case result := <-done:
+		if result.err != nil {
+			_ = writer.Close()
+			return streamOutcome{}, result.err
+		}
+		return result, nil
 	}
-	if result.err != nil {
-		_ = writer.Close()
-		return nil, nil, nil, result.err
-	}
-	return cursor.NewFrameReader(result.response.Body), writer, result.response, nil
 }
 
 func (r *Runner) statusError(response *http.Response) error {
@@ -236,9 +263,13 @@ func (c *conversation) handleUpdate(message ServerMessage) error {
 	case updateTurnEnded:
 		c.applyTurnEnded(message.Update)
 	case updateToolStarted, updateToolCompleted:
-		c.handleToolUpdate(message)
+		return c.handleToolUpdate(message)
 	case updatePartialToolCall:
-		c.handlePartialUpdate(message)
+		return c.handlePartialUpdate(message)
+	case updateToolDelta:
+		// Structured deltas cover native shell/edit calls only; declared
+		// MCP calls always arrive whole over the exec channel.
+		return nil
 	default:
 		return nil
 	}
@@ -286,8 +317,7 @@ func (c *conversation) handleToolUpdate(message ServerMessage) error {
 	if call.ToolCallID == "" {
 		call.ToolCallID = callID
 	}
-	c.emitMCPCall(call, 0, "", false)
-	return nil
+	return c.emitMCPCall(call, 0, "", false)
 }
 
 func mustEncode(fields []cursor.Field) []byte {
@@ -328,7 +358,7 @@ func (c *conversation) handlePartialUpdate(message ServerMessage) error {
 // emitMCPCall publishes one declared tool call for external execution.
 // Update-observed calls publish events only; exec-channel calls always get
 // their acknowledgement reply, which the server waits on.
-func (c *conversation) emitMCPCall(call MCPCall, numericID uint32, execID string, reply bool) {
+func (c *conversation) emitMCPCall(call MCPCall, numericID uint32, execID string, reply bool) error {
 	id := normalizeToolCallID(call.ToolCallID)
 	name := call.ToolName
 	if name == "" {
@@ -336,16 +366,10 @@ func (c *conversation) emitMCPCall(call MCPCall, numericID uint32, execID string
 	}
 	tool, found := c.tools.Canonical(name)
 	if !found {
-		if reply {
-			c.reply(buildClientExec(numericID, execID, resultMCP, buildMCPNotFound(name, c.tools.Names())))
-		}
-		return
+		return c.replyUnknown(name, numericID, execID, reply)
 	}
 	if c.calls[id] {
-		if reply {
-			c.reply(buildClientExec(numericID, execID, resultMCP, buildMCPHandoff()))
-		}
-		return
+		return c.replyHandoff(numericID, execID, reply)
 	}
 	c.calls[id] = true
 	c.toolUse = true
@@ -356,9 +380,21 @@ func (c *conversation) emitMCPCall(call MCPCall, numericID uint32, execID string
 		inference.Event{Kind: inference.EventToolCallEnd, ToolCall: &inference.ToolCallDelta{Index: c.callIndex, ID: id}},
 	)
 	c.callIndex++
+	return c.replyHandoff(numericID, execID, reply)
+}
+
+func (c *conversation) replyUnknown(name string, numericID uint32, execID string, reply bool) error {
 	if reply {
-		c.reply(buildClientExec(numericID, execID, resultMCP, buildMCPHandoff()))
+		return c.reply(buildClientExec(numericID, execID, resultMCP, buildMCPNotFound(name, c.tools.Names())))
 	}
+	return nil
+}
+
+func (c *conversation) replyHandoff(numericID uint32, execID string, reply bool) error {
+	if reply {
+		return c.reply(buildClientExec(numericID, execID, resultMCP, buildMCPHandoff()))
+	}
+	return nil
 }
 
 func (c *conversation) emitPartialCall(callID, name, delta string) {
@@ -416,8 +452,7 @@ func (c *conversation) handleMCPExec(message ServerMessage) error {
 		return err
 	}
 	call.ToolCallID = firstNonEmpty(call.ToolCallID, message.ExecID)
-	c.emitMCPCall(call, message.ExecNumericID, message.ExecID, true)
-	return nil
+	return c.emitMCPCall(call, message.ExecNumericID, message.ExecID, true)
 }
 
 func (c *conversation) handleKV(message ServerMessage) error {

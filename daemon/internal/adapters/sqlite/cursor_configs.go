@@ -40,7 +40,8 @@ func (r *CursorConfigRepo) Save(ctx context.Context, providerID, credentialID st
 		return fmt.Errorf("begin cursor config write: %w", err)
 	}
 	defer func() { _ = tx.Rollback() }()
-	if err := r.replace(ctx, tx, providerID, credentialID, configs); err != nil {
+	save := cursorSave{providerID: providerID, credentialID: credentialID, configs: configs}
+	if err := save.exec(ctx, tx); err != nil {
 		return err
 	}
 	if err := tx.Commit(); err != nil {
@@ -49,30 +50,44 @@ func (r *CursorConfigRepo) Save(ctx context.Context, providerID, credentialID st
 	return nil
 }
 
-func (r *CursorConfigRepo) replace(ctx context.Context, handle execer, providerID, credentialID string, configs []catalog.CursorVariant) error {
-	if _, err := handle.ExecContext(ctx, `DELETE FROM cursor_model_configs WHERE provider_id = ? AND credential_id = ?`, providerID, credentialID); err != nil {
+// cursorSave writes one account's configurations inside a transaction.
+type cursorSave struct {
+	providerID   string
+	credentialID string
+	configs      []catalog.CursorVariant
+}
+
+func (s cursorSave) exec(ctx context.Context, handle execer) error {
+	if _, err := handle.ExecContext(ctx, `DELETE FROM cursor_model_configs WHERE provider_id = ? AND credential_id = ?`, s.providerID, s.credentialID); err != nil {
 		return fmt.Errorf("clear cursor configs: %w", err)
 	}
 	seen := map[string]bool{}
-	for _, config := range configs {
-		if config.GroupID == "" || config.Selection == "" {
-			continue
+	for _, config := range s.configs {
+		if err := s.insert(ctx, handle, seen, config); err != nil {
+			return err
 		}
-		key := config.GroupID + "\x00" + config.Selection
-		if seen[key] {
-			continue
-		}
-		seen[key] = true
-		params, err := json.Marshal(config.Params)
-		if err != nil {
-			return fmt.Errorf("encode cursor params: %w", err)
-		}
-		if _, err := handle.ExecContext(ctx, insertCursorConfigSQL,
-			providerID, credentialID, config.GroupID, config.Selection, config.Effort,
-			boolInt(config.Default), config.ModelID, config.DetailsID, boolInt(config.MaxMode),
-			string(params), config.Context, boolInt(config.Images), boolInt(config.Reasoning)); err != nil {
-			return fmt.Errorf("write cursor config %s: %w", config.GroupID, err)
-		}
+	}
+	return nil
+}
+
+func (s cursorSave) insert(ctx context.Context, handle execer, seen map[string]bool, config catalog.CursorVariant) error {
+	if config.GroupID == "" || config.Selection == "" {
+		return nil
+	}
+	key := config.GroupID + "\x00" + config.Selection
+	if seen[key] {
+		return nil
+	}
+	seen[key] = true
+	params, err := json.Marshal(config.Params)
+	if err != nil {
+		return fmt.Errorf("encode cursor params: %w", err)
+	}
+	if _, err := handle.ExecContext(ctx, insertCursorConfigSQL,
+		s.providerID, s.credentialID, config.GroupID, config.Selection, config.Effort,
+		boolInt(config.Default), config.ModelID, config.DetailsID, boolInt(config.MaxMode),
+		string(params), config.Context, boolInt(config.Images), boolInt(config.Reasoning)); err != nil {
+		return fmt.Errorf("write cursor config %s: %w", config.GroupID, err)
 	}
 	return nil
 }

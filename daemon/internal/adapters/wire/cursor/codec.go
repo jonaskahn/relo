@@ -84,17 +84,17 @@ func (c *Codec) DecodeError(status int, body []byte) *inference.ErrorInfo {
 
 // RunBidirectional converses with the Cursor agent service until the turn
 // ends, emitting canonical events as they arrive.
-func (c *Codec) RunBidirectional(ctx context.Context, client *http.Client, req *inference.Request, opts wire.CodecOpts, emit func([]inference.Event)) ([]inference.Event, error) {
-	if opts.Cursor == nil {
+func (c *Codec) RunBidirectional(ctx context.Context, call wire.BidirectionalCall) ([]inference.Event, error) {
+	if call.Opts.Cursor == nil {
 		return nil, fmt.Errorf("cursor selection: %w", wire.ErrInvalidRequest)
 	}
 	runner := &Runner{
-		Client:    http2Client(client),
-		BaseURL:   firstNonEmpty(opts.BaseURL, c.baseURL),
-		Token:     opts.CredentialRef,
-		Request:   req,
-		Selection: opts.Cursor,
-		Emit:      emit,
+		Client:    http2Client(call.Client),
+		BaseURL:   firstNonEmpty(call.Opts.BaseURL, c.baseURL),
+		Token:     call.Opts.CredentialRef,
+		Request:   call.Request,
+		Selection: call.Opts.Cursor,
+		Emit:      call.Emit,
 		ConnectError: func(status int, body []byte) *inference.ErrorInfo {
 			return c.DecodeError(status, body)
 		},

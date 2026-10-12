@@ -566,6 +566,7 @@ func coreServerOptions(built deps, captures *sqlite.CaptureStore) server.Options
 			Usage: sqlite.NewUsageQuery(built.db), Captures: captures,
 		}),
 		Formats:       wireformats.New(),
+		CursorConfigs: sqlite.NewCatalogRepo(built.db),
 		Ports:         NewPortInspector(),
 		Callbacks:     NewCallbackBridge(built.callbacks),
 		CallbackIcon:  oauth.CallbackIcon,

@@ -43,7 +43,6 @@ type cursorFlow struct {
 	pollURL    string
 	refreshURL string
 	profileURL string
-	userAgent  string
 }
 
 // NewCursorFlow returns the browser login for a Cursor account.
@@ -97,27 +96,9 @@ func (f *cursorFlow) Refresh(ctx context.Context, cred *OAuthCredential) (*OAuth
 	if cred == nil || cred.RefreshToken == "" {
 		return nil, ErrNoRefreshToken
 	}
-	payload := map[string]string{
-		"grant_type":    "refresh_token",
-		"client_id":     cursorClientID,
-		"refresh_token": cred.RefreshToken,
-	}
-	body, status, err := f.client.postJSONRaw(ctx, f.refreshURL, payload, nil)
+	tokens, err := f.renew(ctx, cred.RefreshToken)
 	if err != nil {
-		return nil, fmt.Errorf("refresh the access token: %w", err)
-	}
-	if status < 200 || status >= 300 {
-		return nil, fmt.Errorf("refresh the access token: %w", refreshFailure(responseError{Status: status, Code: errorCode(body)}))
-	}
-	tokens := cursorRefreshTokens{}
-	if err := decodeJSONBody(body, &tokens); err != nil {
 		return nil, err
-	}
-	if tokens.ShouldLogout {
-		return nil, fmt.Errorf("cursor ended this session: %w", ErrRefreshRejected)
-	}
-	if tokens.access() == "" {
-		return nil, ErrTokenResponse
 	}
 	renewed := cursorTokens{AccessToken: tokens.access(), RefreshToken: tokens.refresh()}
 	credential, err := f.credential(renewed, cred)
@@ -131,6 +112,32 @@ func (f *cursorFlow) Refresh(ctx context.Context, cred *OAuthCredential) (*OAuth
 		credential.Email = previous
 	}
 	return credential, nil
+}
+
+func (f *cursorFlow) renew(ctx context.Context, refreshToken string) (cursorRefreshTokens, error) {
+	payload := map[string]string{
+		"grant_type":    "refresh_token",
+		"client_id":     cursorClientID,
+		"refresh_token": refreshToken,
+	}
+	body, status, err := f.client.postJSONRaw(ctx, f.refreshURL, payload, nil)
+	if err != nil {
+		return cursorRefreshTokens{}, fmt.Errorf("refresh the access token: %w", err)
+	}
+	if status < 200 || status >= 300 {
+		return cursorRefreshTokens{}, fmt.Errorf("refresh the access token: %w", refreshFailure(responseError{Status: status, Code: errorCode(body)}))
+	}
+	tokens := cursorRefreshTokens{}
+	if err := decodeJSONBody(body, &tokens); err != nil {
+		return cursorRefreshTokens{}, err
+	}
+	if tokens.ShouldLogout {
+		return cursorRefreshTokens{}, fmt.Errorf("cursor ended this session: %w", ErrRefreshRejected)
+	}
+	if tokens.access() == "" {
+		return cursorRefreshTokens{}, ErrTokenResponse
+	}
+	return tokens, nil
 }
 
 // Validate reports whether the credential can still serve a request.
@@ -160,38 +167,59 @@ func (t cursorRefreshTokens) refresh() string {
 }
 
 func (f *cursorFlow) poll(ctx context.Context, uuid, verifier string) (*OAuthCredential, error) {
-	delay := cursorBaseDelay
-	failures := 0
+	state := cursorPoll{delay: cursorBaseDelay}
 	for attempt := 0; attempt < cursorPollAttempts; attempt++ {
-		if err := waitFor(ctx, f.clock, delay); err != nil {
+		if err := waitFor(ctx, f.clock, state.delay); err != nil {
 			return nil, err
 		}
 		tokens, pending, err := f.pollOnce(ctx, uuid, verifier)
 		if err != nil {
-			if errors.Is(err, errCursorTransient) {
-				failures++
-				if failures >= cursorErrorBudget {
-					return nil, fmt.Errorf("poll the cursor login: %w", ErrLoginCancelled)
-				}
-				delay = min(time.Duration(float64(delay)*cursorBackoff), cursorMaxDelay)
-				continue
-			}
-			return nil, err
-		}
-		if !pending {
-			credential, err := f.credential(tokens, nil)
-			if err != nil {
+			if !errors.Is(err, errCursorTransient) {
 				return nil, err
 			}
-			if email := f.profileEmail(ctx, tokens.AccessToken); email != "" {
-				credential.Email = email
+			if done := state.failed(); done {
+				return nil, fmt.Errorf("poll the cursor login: %w", ErrLoginCancelled)
 			}
-			return credential, nil
+			continue
 		}
-		failures = 0
-		delay = min(time.Duration(float64(delay)*cursorBackoff), cursorMaxDelay)
+		if !pending {
+			return f.finishLogin(ctx, tokens)
+		}
+		state.succeeded()
 	}
 	return nil, fmt.Errorf("poll the cursor login: %w", ErrCallbackTimeout)
+}
+
+func (f *cursorFlow) finishLogin(ctx context.Context, tokens cursorTokens) (*OAuthCredential, error) {
+	credential, err := f.credential(tokens, nil)
+	if err != nil {
+		return nil, err
+	}
+	if email := f.profileEmail(ctx, tokens.AccessToken); email != "" {
+		credential.Email = email
+	}
+	return credential, nil
+}
+
+// cursorPoll tracks the polling backoff and the transient-error budget.
+type cursorPoll struct {
+	delay    time.Duration
+	failures int
+}
+
+func (p *cursorPoll) backoff() {
+	p.delay = min(time.Duration(float64(p.delay)*cursorBackoff), cursorMaxDelay)
+}
+
+func (p *cursorPoll) failed() bool {
+	p.failures++
+	p.backoff()
+	return p.failures >= cursorErrorBudget
+}
+
+func (p *cursorPoll) succeeded() {
+	p.failures = 0
+	p.backoff()
 }
 
 func (f *cursorFlow) pollOnce(ctx context.Context, uuid, verifier string) (cursorTokens, bool, error) {

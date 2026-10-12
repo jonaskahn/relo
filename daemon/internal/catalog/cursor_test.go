@@ -1,14 +1,13 @@
-package cursor
+package catalog
 
 import (
 	"testing"
 
-	"github.com/jonaskahn/relo/internal/catalog"
 	"github.com/jonaskahn/relo/internal/inference"
 )
 
-func selectConfigs() []catalog.CursorVariant {
-	return []catalog.CursorVariant{
+func selectConfigs() []CursorVariant {
+	return []CursorVariant{
 		{GroupID: "sonnet", Selection: "low", Effort: "low", ModelID: "sonnet", DetailsID: "sonnet-low", Default: true},
 		{GroupID: "sonnet", Selection: "high", Effort: "high", ModelID: "sonnet", DetailsID: "sonnet-high"},
 		{GroupID: "sonnet", Selection: "off", ModelID: "sonnet", DetailsID: "sonnet-off"},
@@ -18,41 +17,41 @@ func selectConfigs() []catalog.CursorVariant {
 
 func TestSelectConfig(t *testing.T) {
 	configs := selectConfigs()
-	selected, ok := SelectConfig(configs, "sonnet", "")
+	selected, ok := SelectCursorVariant(configs, "sonnet", "")
 	if !ok || selected.DetailsID != "sonnet-low" {
 		t.Fatalf("Select() = %+v %v, want the default low member", selected, ok)
 	}
-	selected, ok = SelectConfig(configs, "sonnet", "high")
+	selected, ok = SelectCursorVariant(configs, "sonnet", "high")
 	if !ok || selected.DetailsID != "sonnet-high" {
 		t.Fatalf("Select(high) = %+v %v", selected, ok)
 	}
-	selected, ok = SelectConfig(configs, "sonnet", "off")
+	selected, ok = SelectCursorVariant(configs, "sonnet", "off")
 	if !ok || selected.DetailsID != "sonnet-off" {
 		t.Fatalf("Select(off) = %+v %v", selected, ok)
 	}
-	if _, ok := SelectConfig(configs, "sonnet", "max"); ok {
+	if _, ok := SelectCursorVariant(configs, "sonnet", "max"); ok {
 		t.Fatal("Select(max) succeeded without a max member in the lane")
 	}
-	if _, ok := SelectConfig(configs, "sonnet-max", "low"); ok {
+	if _, ok := SelectCursorVariant(configs, "sonnet-max", "low"); ok {
 		t.Fatal("Select(low) crossed into the max lane")
 	}
-	selected, ok = SelectConfig(configs, "sonnet-max", "high")
+	selected, ok = SelectCursorVariant(configs, "sonnet-max", "high")
 	if !ok || !selected.MaxMode {
 		t.Fatalf("Select(max high) = %+v %v", selected, ok)
 	}
-	if _, ok := SelectConfig(configs, "missing", ""); ok {
+	if _, ok := SelectCursorVariant(configs, "missing", ""); ok {
 		t.Fatal("Select() succeeded for an unknown group")
 	}
 }
 
 func TestNormalizeSelection(t *testing.T) {
 	for input, want := range map[string]string{"high": "high", "ultra": "max", "off": "off", "toggle": "toggle", "default": "default"} {
-		got, ok := NormalizeSelection(input)
+		got, ok := NormalizeCursorEffort(input)
 		if !ok || got != want {
-			t.Errorf("NormalizeSelection(%q) = %q %v, want %q", input, got, ok, want)
+			t.Errorf("NormalizeCursorEffort(%q) = %q %v, want %q", input, got, ok, want)
 		}
 	}
-	if _, ok := NormalizeSelection("nonsense"); ok {
+	if _, ok := NormalizeCursorEffort("nonsense"); ok {
 		t.Error("NormalizeSelection(nonsense) succeeded")
 	}
 }
