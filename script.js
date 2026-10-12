@@ -185,4 +185,17 @@
       });
     });
   });
+
+  /* ---------- Scroll cue: starts the story ---------- */
+
+  var cue = document.getElementById("scrollCue");
+  if (cue) {
+    cue.addEventListener("click", function () {
+      var story = document.querySelector(".story-pin");
+      if (!story) return;
+      var top = story.getBoundingClientRect().top + window.scrollY;
+      var range = story.offsetHeight - window.innerHeight;
+      window.scrollTo({ top: top + range * 0.08, behavior: reduced ? "auto" : "smooth" });
+    });
+  }
 })();
