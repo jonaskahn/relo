@@ -34,6 +34,16 @@ jobs:
       - name: Build all platforms
         run: |
           make build-all VERSION=${{ github.ref_name }}
+          ver="${{ github.ref_name }}"
+          ver="${ver#v}"
+          for os in darwin linux; do
+            for arch in arm64 amd64; do
+              tmp="$(mktemp -d)"
+              cp "dist/relo-$os-$arch" "$tmp/relo"
+              tar -czf "dist/relo-$ver-$os-$arch.tar.gz" -C "$tmp" relo
+              rm -rf "$tmp"
+            done
+          done
           cd dist && sha256sum relo-* > checksums.txt && cat checksums.txt
 
       - name: Upload binaries
