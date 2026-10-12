@@ -27,7 +27,7 @@ func TestIntegrationWiresAnAgentAndProvesItsKey(t *testing.T) {
 	}
 
 	ctx := context.Background()
-	result, err := daemon.integrations.EnableIntegration(ctx, "codex")
+	result, err := daemon.integrations.EnableIntegration(ctx, "codex", "")
 	if err != nil {
 		t.Fatalf("EnableIntegration() error = %v", err)
 	}

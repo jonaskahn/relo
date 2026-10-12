@@ -138,7 +138,7 @@ func TestVerifyIntegrationRegeneratesAMissingSettingsFile(t *testing.T) {
 		w.Header().Set("Content-Type", "application/json")
 		_, _ = w.Write([]byte(`{"data":[{"id":"relo-openai-gpt-4o"}]}`))
 	}))
-	answer, err := built.EnableIntegration(context.Background(), "pi")
+	answer, err := built.EnableIntegration(context.Background(), "pi", "")
 	if err != nil {
 		t.Fatalf("EnableIntegration() error = %v", err)
 	}
@@ -204,7 +204,7 @@ func TestVerifyIntegrationAcceptsTheProviderBlock(t *testing.T) {
 		w.Header().Set("Content-Type", "application/json")
 		_, _ = w.Write([]byte(`{"data":[{"id":"relo-openai-gpt-4o"}]}`))
 	}))
-	if _, err := built.EnableIntegration(context.Background(), "pi"); err != nil {
+	if _, err := built.EnableIntegration(context.Background(), "pi", ""); err != nil {
 		t.Fatalf("EnableIntegration() error = %v", err)
 	}
 

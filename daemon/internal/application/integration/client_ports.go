@@ -198,6 +198,13 @@ type ClientFiles interface {
 	KeptDocument(kind string) string
 	// MergeOpenCode merges Relo's provider into the OpenCode configuration.
 	MergeOpenCode(existing, baseURL string, models []ModelRef) (string, error)
+	// MergeOpenCodeVersions merges Relo's provider into the requested OpenCode
+	// generations: v1, v2, or v1+v2. An empty versions value writes the
+	// current generation.
+	MergeOpenCodeVersions(existing, baseURL string, models []ModelRef, versions string) (string, error)
+	// OpenCodeVersionsPresent reports which generations hold a Relo provider:
+	// v1, v2, v1+v2, or empty when none does.
+	OpenCodeVersionsPresent(existing string) string
 	// StripOpenCode takes Relo's provider back out of the OpenCode file.
 	StripOpenCode(existing string) (string, error)
 	// MergeHermes merges Relo's provider into the Hermes configuration.

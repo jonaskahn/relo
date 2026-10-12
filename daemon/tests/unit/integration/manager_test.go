@@ -786,3 +786,42 @@ func TestEnableCodexListsAProviderAddedAfterClaude(t *testing.T) {
 		t.Fatalf("cache = %s, want the new provider's model", cache)
 	}
 }
+
+// TestOpenCodeVersionsRoundTrip wires both generations, keeps them across a
+// repair, and drops the legacy one when setup asks for the current alone.
+func TestOpenCodeVersionsRoundTrip(t *testing.T) {
+	h := newHarness(t, dataPlane)
+	config := filepath.Join(h.paths.Home, ".config", "opencode", "opencode.json")
+	if err := os.MkdirAll(filepath.Dir(config), 0o755); err != nil {
+		t.Fatalf("create the opencode directory: %v", err)
+	}
+	if err := os.WriteFile(config, []byte("{\"theme\":\"dark\"}\n"), 0o644); err != nil {
+		t.Fatalf("seed the opencode config: %v", err)
+	}
+	ctx := context.Background()
+	if _, err := h.manager.EnableWith(ctx, "opencode", "rlo_ak_test", integration.EnableOptions{OpenCodeVersions: "v1+v2"}); err != nil {
+		t.Fatalf("EnableWith(opencode) error = %v", err)
+	}
+	merged := readFile(t, config)
+	if !strings.Contains(merged, "\"theme\":\"dark\"") {
+		t.Fatalf("opencode config = %s, want the operator's keys", merged)
+	}
+	if got := h.manager.OpenCodeVersions("opencode"); got != "v1+v2" {
+		t.Fatalf("OpenCodeVersions() = %q, want both generations", got)
+	}
+	if _, err := h.manager.Repair(ctx, "opencode", "rlo_ak_test"); err != nil {
+		t.Fatalf("Repair(opencode) error = %v", err)
+	}
+	if got := h.manager.OpenCodeVersions("opencode"); got != "v1+v2" {
+		t.Fatalf("OpenCodeVersions() after repair = %q, want both generations kept", got)
+	}
+	if _, err := h.manager.EnableWith(ctx, "opencode", "rlo_ak_test", integration.EnableOptions{Overwrite: true, OpenCodeVersions: "v2"}); err != nil {
+		t.Fatalf("EnableWith(opencode) error = %v", err)
+	}
+	if got := h.manager.OpenCodeVersions("opencode"); got != "v2" {
+		t.Fatalf("OpenCodeVersions() = %q, want only the current generation", got)
+	}
+	if got := h.manager.OpenCodeVersions("codex"); got != "" {
+		t.Fatalf("OpenCodeVersions(codex) = %q, want none", got)
+	}
+}

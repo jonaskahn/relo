@@ -71,7 +71,7 @@ func TestIntegrationTokenReadsTheStoredKey(t *testing.T) {
 	t.Run("an enabled integration answers with the stored secret", func(t *testing.T) {
 		// EnableIntegration writes the key file itself, which is the only
 		// state the token read needs beyond the record.
-		result, err := built.EnableIntegration(ctx, "codex")
+		result, err := built.EnableIntegration(ctx, "codex", "")
 		if err != nil {
 			t.Fatalf("EnableIntegration() error = %v", err)
 		}

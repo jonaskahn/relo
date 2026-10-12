@@ -349,6 +349,20 @@ func (ClientFiles) MergeOpenCode(existing, baseURL string, models []appintegrati
 	return result, fileError(err)
 }
 
+// MergeOpenCodeVersions merges Relo's provider into the requested OpenCode
+// generations: v1, v2, or v1+v2. An empty versions value writes the current
+// generation.
+func (ClientFiles) MergeOpenCodeVersions(existing, baseURL string, models []appintegration.ModelRef, versions string) (string, error) {
+	result, err := codingclients.MergeOpenCodeVersions(existing, baseURL, clientModelRefs(models), versions)
+	return result, fileError(err)
+}
+
+// OpenCodeVersionsPresent reports which generations hold a Relo provider:
+// v1, v2, v1+v2, or empty when none does.
+func (ClientFiles) OpenCodeVersionsPresent(existing string) string {
+	return codingclients.OpenCodeVersionsPresent(existing)
+}
+
 // StripOpenCode takes Relo's provider back out of the OpenCode file.
 func (ClientFiles) StripOpenCode(existing string) (string, error) {
 	result, err := codingclients.StripOpenCode(existing)

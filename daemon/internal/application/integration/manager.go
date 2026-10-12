@@ -463,21 +463,36 @@ func (m *Manager) contributionDrifted(agent Agent, file FileRecord, content stri
 	}
 }
 
+// EnableOptions carries per-setup choices beyond overwrite. OpenCodeVersions
+// names which OpenCode generations setup writes: v1, v2, or v1+v2. It is
+// ignored for every other agent, and empty keeps the generations already in
+// the file, writing the current one when the file holds none.
+type EnableOptions struct {
+	Overwrite        bool
+	OpenCodeVersions string
+}
+
 // EnableOverwriting writes everything one agent needs even when the client's
 // file already holds something else: the key file its helper reads, the
 // client's own configuration where Relo manages one, and the helper that
 // starts the daemon on demand. The rest of that file is kept.
 func (m *Manager) EnableOverwriting(ctx context.Context, id, token string) (View, error) {
-	return m.enable(ctx, id, token, true)
+	return m.EnableWith(ctx, id, token, EnableOptions{Overwrite: true})
 }
 
 // Enable wires one agent to Relo, refusing where the client's file already
 // has a provider Relo does not own; EnableOverwriting takes it over instead.
 func (m *Manager) Enable(ctx context.Context, id, token string) (View, error) {
-	return m.enable(ctx, id, token, false)
+	return m.EnableWith(ctx, id, token, EnableOptions{})
 }
 
-func (m *Manager) enable(ctx context.Context, id, token string, overwrite bool) (View, error) {
+// EnableWith wires one agent the way Enable does, honouring the options it is
+// given.
+func (m *Manager) EnableWith(ctx context.Context, id, token string, opts EnableOptions) (View, error) {
+	return m.enable(ctx, id, token, opts)
+}
+
+func (m *Manager) enable(ctx context.Context, id, token string, opts EnableOptions) (View, error) {
 	agent, found := m.agents.AgentFor(id)
 	if !found {
 		return View{}, fmt.Errorf("%s: %w", id, ErrUnknownAgent)
@@ -492,7 +507,7 @@ func (m *Manager) enable(ctx context.Context, id, token string, overwrite bool) 
 	if err := m.writeKeyFile(ctx, agent, token); err != nil {
 		return View{}, err
 	}
-	if err := m.provisionAgentFiles(ctx, agent, token, overwrite); err != nil {
+	if err := m.provisionAgentFiles(ctx, agent, token, opts); err != nil {
 		return View{}, err
 	}
 	if err := m.publishAgentEnv(ctx, agent); err != nil {
@@ -508,13 +523,13 @@ func (m *Manager) enable(ctx context.Context, id, token string, overwrite bool) 
 	return m.Inspect(ctx, id)
 }
 
-func (m *Manager) provisionAgentFiles(ctx context.Context, agent Agent, token string, overwrite bool) error {
+func (m *Manager) provisionAgentFiles(ctx context.Context, agent Agent, token string, opts EnableOptions) error {
 	if err := m.retireLauncher(agent); err != nil {
 		m.recordFailure(ctx, agent, err)
 		return err
 	}
 	if agent.ManagesFiles {
-		if err := m.writeClientFiles(ctx, agent, token, overwrite); err != nil {
+		if err := m.writeClientFiles(ctx, agent, token, opts); err != nil {
 			m.recordFailure(ctx, agent, err)
 			return err
 		}
@@ -771,7 +786,7 @@ func (m *Manager) writeKeyFile(ctx context.Context, agent Agent, token string) e
 	})
 }
 
-func (m *Manager) writeClientFiles(ctx context.Context, agent Agent, token string, overwrite bool) error {
+func (m *Manager) writeClientFiles(ctx context.Context, agent Agent, token string, opts EnableOptions) error {
 	switch agent.ID {
 	case "codex":
 		if err := m.writeKeyHelper(ctx, agent, KindCodexHelper); err != nil {
@@ -783,16 +798,16 @@ func (m *Manager) writeClientFiles(ctx context.Context, agent Agent, token strin
 	case "claude-desktop":
 		return m.writeClaudeDesktop(ctx, agent, token)
 	case ClientOpenCode, ClientHermes, ClientOpenClaw:
-		return m.writeManaged(ctx, agent, overwrite)
+		return m.writeManaged(ctx, agent, opts)
 	default:
 		if m.agents.CatalogAgent(agent.ID) {
-			return m.writeCatalog(ctx, agent, overwrite)
+			return m.writeCatalog(ctx, agent, opts.Overwrite)
 		}
 		return nil
 	}
 }
 
-func (m *Manager) writeManaged(ctx context.Context, agent Agent, overwrite bool) error {
+func (m *Manager) writeManaged(ctx context.Context, agent Agent, opts EnableOptions) error {
 	target, err := m.paths.ConfigTarget(agent.ID)
 	if err != nil {
 		return err
@@ -808,14 +823,50 @@ func (m *Manager) writeManaged(ctx context.Context, agent Agent, overwrite bool)
 	if err != nil {
 		return err
 	}
-	if present && !overwrite && !m.owns(ctx, agent.ID, target.Kind) {
+	if present && !opts.Overwrite && !m.owns(ctx, agent.ID, target.Kind) {
 		return foreignProvider()
 	}
-	merged, err := m.files.MergeProvider(agent.ID, existing, m.paths.BaseURL(agent.Protocol), m.modelList())
+	merged, err := m.mergeManaged(agent, existing, opts)
 	if err != nil {
 		return err
 	}
 	return m.writeContribution(ctx, agent, fileContribution{kind: target.Kind, path: target.Path, content: merged, mode: 0o644})
+}
+
+func (m *Manager) mergeManaged(agent Agent, existing string, opts EnableOptions) (string, error) {
+	if agent.ID != ClientOpenCode {
+		return m.files.MergeProvider(agent.ID, existing, m.paths.BaseURL(agent.Protocol), m.modelList())
+	}
+	return m.files.MergeOpenCodeVersions(existing, m.paths.BaseURL(agent.Protocol), m.modelList(), m.openCodeVersions(existing, opts))
+}
+
+func (m *Manager) openCodeVersions(existing string, opts EnableOptions) string {
+	if opts.OpenCodeVersions != "" {
+		return opts.OpenCodeVersions
+	}
+	if present := m.files.OpenCodeVersionsPresent(existing); present != "" {
+		return present
+	}
+	return "v2"
+}
+
+// OpenCodeVersions reports which generations hold Relo's provider in the
+// OpenCode file: v1, v2, v1+v2, or empty when none does. A file Relo cannot
+// read reads as none.
+func (m *Manager) OpenCodeVersions(id string) string {
+	agent, found := m.agents.AgentFor(id)
+	if !found || agent.ID != ClientOpenCode {
+		return ""
+	}
+	target, err := m.paths.ConfigTarget(agent.ID)
+	if err != nil {
+		return ""
+	}
+	existing, err := m.files.ReadRegular(target.Path)
+	if err != nil {
+		return ""
+	}
+	return m.files.OpenCodeVersionsPresent(existing)
 }
 
 // retireMovedTargets drops records for catalog files a client has since
@@ -1293,7 +1344,7 @@ func (m *Manager) regenerateMissing(ctx context.Context, agent Agent, file FileR
 	case KindClaudeHelper:
 		return m.writeKeyHelper(ctx, agent, KindClaudeHelper)
 	case FileOpenCode, FileHermes, FileOpenClaw:
-		return m.writeManaged(ctx, agent, false)
+		return m.writeManaged(ctx, agent, EnableOptions{})
 	default:
 		if m.files.CatalogKind(file.Kind) {
 			return m.writeCatalog(ctx, agent, false)

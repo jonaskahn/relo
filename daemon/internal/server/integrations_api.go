@@ -59,8 +59,9 @@ func (s *Server) handleGetIntegrationToken(w http.ResponseWriter, r *http.Reques
 }
 
 type enableIntegrationRequest struct {
-	Overwrite bool `json:"overwrite"`
-	Force     bool `json:"force"`
+	Overwrite bool   `json:"overwrite"`
+	Force     bool   `json:"force"`
+	Versions  string `json:"versions,omitempty"`
 }
 
 func (s *Server) handleEnableIntegration(w http.ResponseWriter, r *http.Request) {
@@ -72,18 +73,41 @@ func (s *Server) handleEnableIntegration(w http.ResponseWriter, r *http.Request)
 	if !s.actionRequest(w, r, &request) {
 		return
 	}
+	versions, ok := s.openCodeVersions(w, r, request.Versions)
+	if !ok {
+		return
+	}
 	var result appintegration.IntegrationResult
 	var err error
 	if request.Overwrite {
-		result, err = manager.EnableIntegrationOverwrite(r.Context(), r.PathValue("id"))
+		result, err = manager.EnableIntegrationOverwrite(r.Context(), r.PathValue("id"), versions)
 	} else {
-		result, err = manager.EnableIntegration(r.Context(), r.PathValue("id"))
+		result, err = manager.EnableIntegration(r.Context(), r.PathValue("id"), versions)
 	}
 	if err != nil {
 		writeServiceError(w, err)
 		return
 	}
 	writeJSON(w, http.StatusOK, toIntegrationResultResponse(result))
+}
+
+// openCodeVersions keeps the generations setup writes: the console sends one
+// of v1, v2, or v1+v2 for OpenCode and anything else is a bad request, while
+// an empty value writes the current generation.
+func (s *Server) openCodeVersions(w http.ResponseWriter, r *http.Request, versions string) (string, bool) {
+	switch versions {
+	case "", "v1", "v2", "v1+v2":
+		if versions == "" {
+			return "v2", true
+		}
+		return versions, true
+	default:
+		s.fail(w, r, refusal{
+			Status: http.StatusBadRequest, Code: "bad_request", Message: "api.body.invalid",
+			Data: map[string]any{"Detail": "versions must be v1, v2, or v1+v2"},
+		})
+		return "", false
+	}
 }
 
 func (s *Server) handleDisableIntegration(w http.ResponseWriter, r *http.Request) {

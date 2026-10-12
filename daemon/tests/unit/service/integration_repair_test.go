@@ -16,7 +16,7 @@ func TestRepairPreservesStoredKey(t *testing.T) {
 	h, built := integrationService(t)
 	ctx := context.Background()
 
-	enabled, err := built.EnableIntegration(ctx, "codex")
+	enabled, err := built.EnableIntegration(ctx, "codex", "")
 	if err != nil {
 		t.Fatalf("EnableIntegration() error = %v", err)
 	}
