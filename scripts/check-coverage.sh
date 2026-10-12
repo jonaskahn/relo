@@ -15,6 +15,13 @@ fail=0
 
 cd "$backend" || exit 1
 
+# The floors in tests/coverage.tsv are measured with the toolchain daemon/go.mod
+# declares. A newer local Go instruments a different set of statements, so the
+# gate would report a different percentage for the same tests; pinning the
+# toolchain keeps one number true for every machine and for CI.
+toolchain="go$(awk '$1 == "go" {print $2; exit}' go.mod)"
+export GOTOOLCHAIN="$toolchain"
+
 declare -A mapped
 profiles=()
 
