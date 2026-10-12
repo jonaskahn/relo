@@ -11,7 +11,7 @@
 
 
 ```console
-$ npm install -g relo
+$ npm install -g @jonaskahn/relo
 $ relo daemon start
 ```
 
@@ -52,7 +52,7 @@ again. The data is never touched by an update.
 ## Uninstalling
 
 ```console
-$ npm uninstall -g relo
+$ npm uninstall -g @jonaskahn/relo
 ```
 
 This keeps your data in `$RELO_HOME`: the preuninstall script stops the daemon,

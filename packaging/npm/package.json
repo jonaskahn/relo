@@ -1,5 +1,5 @@
 {
-	"name": "relo",
+	"name": "@jonaskahn/relo",
 	"version": "0.1.0",
 	"description": "One loopback proxy. Codex, Claude Code, Cursor, and Grok keep their own config and still reach any upstream.",
 	"license": "MIT",

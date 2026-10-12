@@ -76,13 +76,13 @@ $ relo uninstall --wipe      # the same, and deletes $RELO_HOME and its keychain
 and hands the program to whatever installed it: the Windows uninstaller, `apt`/`dnf` on Linux, `npm uninstall -g` on
 npm, or deleting `Relo.app` on macOS. What each native path keeps:
 
-| Path                     | Data                                   |
-|--------------------------|----------------------------------------|
-| `relo uninstall`         | asks; `y` deletes, anything else keeps |
-| Windows: Settings → Apps | asks in a dialog; No keeps             |
-| `apt remove relo`        | keeps (`apt purge relo` deletes)       |
-| `rpm -e relo`            | keeps                                  |
-| `npm uninstall -g relo`  | keeps                                  |
+| Path                               | Data                                   |
+|------------------------------------|----------------------------------------|
+| `relo uninstall`                   | asks; `y` deletes, anything else keeps |
+| Windows: Settings → Apps           | asks in a dialog; No keeps             |
+| `apt remove relo`                  | keeps (`apt purge relo` deletes)       |
+| `rpm -e relo`                      | keeps                                  |
+| `npm uninstall -g @jonaskahn/relo` | keeps                                  |
 
 An update or reinstall always keeps the data and stops the running service first, so nothing is lost by installing
 over a working install.

@@ -1,4 +1,4 @@
-// The preuninstall script runs on `npm uninstall -g relo`, so what matters is
+// The preuninstall script runs on `npm uninstall -g @jonaskahn/relo`, so what matters is
 // that it quiesces the home it is pointed at and exits cleanly either way: an
 // uninstall must not fail because the daemon could not be reached.
 import assert from 'node:assert/strict';

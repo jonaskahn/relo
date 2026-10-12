@@ -150,7 +150,7 @@ jobs:
                 #{hits.uniq.map { |h| "  #{h}" }.join("\n")}
                 Keep updating through that install, or remove it completely first:
                   relo daemon stop --force && relo uninstall --keep-data
-                then remove its program (delete Relo.app, npm uninstall -g relo,
+                then remove its program (delete Relo.app, npm uninstall -g @jonaskahn/relo,
                 apt remove relo), and run brew install again.
               EOS
             end
