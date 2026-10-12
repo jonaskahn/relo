@@ -31,6 +31,9 @@ const (
 	actionUserMessage = 1
 	actionResume      = 2
 	userMessageText   = 1
+	// userActionMessage is the userMessage field of UserMessageAction: the
+	// action carries the wrapper, and the wrapper carries the message.
+	userActionMessage = 1
 
 	execIDField = 1
 	execExecID  = 15
@@ -129,12 +132,17 @@ func buildRunRequest(state, action []byte, selection *wire.CursorRequest) []byte
 	return client.BytesOut()
 }
 
-// buildUserAction encodes a user-message conversation action.
+// buildUserAction encodes a user-message conversation action. The text
+// rides three levels down: the action holds the user-message action, which
+// holds the user message, which holds the text. Fewer levels put the text
+// where a length prefix belongs, and the upstream cannot parse the turn.
 func buildUserAction(text string) []byte {
 	var user cursor.Writer
 	user.String(userMessageText, text)
+	var userAction cursor.Writer
+	userAction.Message(userActionMessage, user.BytesOut())
 	var action cursor.Writer
-	action.Message(actionUserMessage, user.BytesOut())
+	action.Message(actionUserMessage, userAction.BytesOut())
 	return action.BytesOut()
 }
 
@@ -282,30 +290,29 @@ func buildMCPNotFound(name string, available []string) []byte {
 }
 
 // buildKVGet encodes one blob answer, empty when the store holds no blob.
+// The answer is the result message itself: no extra level rides inside,
+// because the server parses the bytes it asked for, not a wrapper.
 func buildKVGet(numericID uint32, blob []byte) []byte {
-	var result cursor.Writer
+	var message cursor.Writer
+	message.Uint32(kvIDField, numericID)
 	if len(blob) > 0 {
 		var answered cursor.Writer
 		answered.Bytes(blobData, blob)
-		result.Message(kvGetResult, answered.BytesOut())
+		message.Message(kvGetResult, answered.BytesOut())
 	} else {
-		result.Empty(kvGetResult)
+		message.Empty(kvGetResult)
 	}
-	var message cursor.Writer
-	message.Uint32(kvIDField, numericID)
-	message.Message(kvGetResult, result.BytesOut())
 	var client cursor.Writer
 	client.Message(clientKVMessage, message.BytesOut())
 	return client.BytesOut()
 }
 
-// buildKVSet encodes one blob-store acknowledgement.
+// buildKVSet encodes one blob-store acknowledgement: the result case set,
+// with nothing inside it.
 func buildKVSet(numericID uint32) []byte {
-	var result cursor.Writer
-	result.Empty(kvSetResult)
 	var message cursor.Writer
 	message.Uint32(kvIDField, numericID)
-	message.Message(kvSetResult, result.BytesOut())
+	message.Empty(kvSetResult)
 	var client cursor.Writer
 	client.Message(clientKVMessage, message.BytesOut())
 	return client.BytesOut()
