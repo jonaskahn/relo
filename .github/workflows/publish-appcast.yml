@@ -1,0 +1,121 @@
+name: Publish Appcast
+
+# Fires only once a release is actually public (draft -> published), so the
+# Sparkle enclosure URL below always resolves for end users.
+on:
+  release:
+    types:
+      - released
+
+permissions:
+  contents: write
+
+jobs:
+  publish-appcast:
+    runs-on: macos-15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Download release zips
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG_NAME: ${{ github.event.release.tag_name }}
+        run: gh release download "$TAG_NAME" --pattern "Relo-*.zip" --dir /tmp/relo-zips
+
+      - name: Locate universal zip
+        id: zip
+        run: |
+          shopt -s nullglob
+          matches=(/tmp/relo-zips/Relo-*-universal.zip)
+          if (( ${#matches[@]} != 1 )); then
+            printf 'Expected exactly one universal zip, found %s.\n' "${#matches[@]}" >&2
+            exit 1
+          fi
+          zip_path="${matches[0]}"
+          echo "path=$zip_path" >> "$GITHUB_OUTPUT"
+          echo "length=$(stat -f%z "$zip_path")" >> "$GITHUB_OUTPUT"
+
+      - name: Read release metadata
+        id: metadata
+        env:
+          ZIP_PATH: ${{ steps.zip.outputs.path }}
+          TAG_NAME: ${{ github.event.release.tag_name }}
+        run: |
+          work=/tmp/relo-release
+          rm -rf "$work" && mkdir -p "$work"
+          ditto -x -k "$ZIP_PATH" "$work"
+          info_plist="$work/Relo.app/Contents/Info.plist"
+          version=$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "$info_plist")
+          build=$(/usr/libexec/PlistBuddy -c 'Print :CFBundleVersion' "$info_plist")
+          minimum_system_version=$(/usr/libexec/PlistBuddy -c 'Print :LSMinimumSystemVersion' "$info_plist")
+          [[ "$TAG_NAME" == "v$version" ]] || {
+            printf 'Tag %s does not match built version %s.\n' "$TAG_NAME" "$version" >&2
+            exit 1
+          }
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "build=$build" >> "$GITHUB_OUTPUT"
+          echo "minimum-system-version=$minimum_system_version" >> "$GITHUB_OUTPUT"
+
+      - name: Download Sparkle tools
+        # Pin Sparkle 2.9.4 tarball SHA256 checksum to prevent untrusted execution.
+        run: |
+          expected_sha256="ce89daf967db1e1893ed3ebd67575ed82d3902563e3191ca92aaec9164fbdef9"
+          curl -fsSL -o /tmp/sparkle.tar.xz \
+            "https://github.com/sparkle-project/Sparkle/releases/download/2.9.4/Sparkle-2.9.4.tar.xz"
+          echo "${expected_sha256}  /tmp/sparkle.tar.xz" | shasum -a 256 -c -
+          mkdir -p /tmp/sparkle-tools
+          tar -xf /tmp/sparkle.tar.xz -C /tmp/sparkle-tools
+
+      - name: Sign zips
+        id: sign
+        env:
+          SPARKLE_PRIVATE_KEY: ${{ secrets.SPARKLE_PRIVATE_ED_KEY }}
+        run: |
+          key_file=$(mktemp)
+          trap 'rm -f "$key_file"' EXIT
+          chmod 600 "$key_file"
+          printf '%s' "$SPARKLE_PRIVATE_KEY" > "$key_file"
+          for zip in /tmp/relo-zips/Relo-*.zip; do
+            echo "Signing $zip..."
+            /tmp/sparkle-tools/bin/sign_update "$zip" --ed-key-file "$key_file"
+          done
+          signature=$(/tmp/sparkle-tools/bin/sign_update "${{ steps.zip.outputs.path }}" --ed-key-file "$key_file" -p)
+          echo "signature=$signature" >> "$GITHUB_OUTPUT"
+
+      - name: Checkout gh-pages
+        uses: actions/checkout@v5
+        with:
+          ref: gh-pages
+          path: gh-pages
+
+      - name: Update appcast
+        env:
+          TAG_NAME: ${{ github.event.release.tag_name }}
+          REPOSITORY: ${{ github.repository }}
+          ZIP_PATH: ${{ steps.zip.outputs.path }}
+          ZIP_LENGTH: ${{ steps.zip.outputs.length }}
+          SIGNATURE: ${{ steps.sign.outputs.signature }}
+        run: |
+          pub_date=$(date -R)
+          zip_url="https://github.com/${REPOSITORY}/releases/download/${TAG_NAME}/$(basename "$ZIP_PATH")"
+          python3 scripts/generate-appcast.py \
+            gh-pages/appcast.xml \
+            "${{ steps.metadata.outputs.version }}" \
+            "${{ steps.metadata.outputs.build }}" \
+            "$zip_url" \
+            "$ZIP_LENGTH" \
+            "$SIGNATURE" \
+            "${{ steps.metadata.outputs.minimum-system-version }}" \
+            "$pub_date"
+
+      - name: Commit and push appcast
+        working-directory: gh-pages
+        env:
+          TAG_NAME: ${{ github.event.release.tag_name }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add appcast.xml
+          git commit -m "chore: publish appcast for $TAG_NAME"
+          git push
