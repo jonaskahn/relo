@@ -157,7 +157,7 @@ a:hover { color: var(--accent-600); }
   outline-offset: 3px;
 }
 
-.dot { color: var(--accent); }
+.dot { color: var(--accent-700); }
 
 .skip-link {
   position: absolute;
@@ -201,7 +201,7 @@ a:hover { color: var(--accent-600); }
 }
 
 .pre-word .l { opacity: 0; }
-.pre-word .l.dot { color: var(--accent); }
+.pre-word .l.dot { color: var(--accent-700); }
 
 .pre-cursor {
   display: inline-block;
@@ -246,7 +246,7 @@ a:hover { color: var(--accent-600); }
 }
 
 .nav-logo:hover { color: inherit; }
-.nav-logo .dot { color: var(--accent); }
+.nav-logo .dot { color: var(--accent-700); }
 
 .nav-actions {
   display: flex;
