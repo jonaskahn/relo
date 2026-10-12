@@ -57,10 +57,10 @@ export const CLIENT_OPTIONS: ClientOption[] = [
 	{ id: 'gajae', label: 'Gajae', kind: 'agent', protocol: 'openai' },
 	{ id: 'dsh', label: 'DeepSeek Harness', kind: 'agent', protocol: 'openai', logoId: 'dsh' },
 	{ id: 'mcode', label: 'Mcode', kind: 'agent', protocol: 'openai', logoId: 'mcode' },
-	{ id: 'zcode', label: 'Zcode', kind: 'agent', protocol: 'openai' },
+	{ id: 'zcode', label: 'Zcode', kind: 'agent', protocol: 'openai', logoId: 'zcode' },
 	{ id: 'prime', label: 'Prime', kind: 'agent', protocol: 'openai' },
 	{ id: 'aside', label: 'Aside', kind: 'agent', protocol: 'openai' },
-	{ id: 'raycast', label: 'Raycast', kind: 'agent', protocol: 'openai' },
+	{ id: 'raycast', label: 'Raycast', kind: 'agent', protocol: 'openai', logoId: 'raycast' },
 	{ id: 'omo', label: 'OMO', kind: 'agent', protocol: 'openai' },
 	// The last two are not clients at all: "Other" stands in for a client the
 	// operator names by hand, and "Shared" is a key reusable across clients. Both

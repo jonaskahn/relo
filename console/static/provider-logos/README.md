@@ -16,8 +16,7 @@ Only the path is copied, so the console keeps drawing these itself.
 
 Ids no icon set publishes stay on the monogram fallback: `aki-io`, `bee`,
 `cortecs`, `crof`, `hpc-ai`, `iteracompute`, `litellm`, `mixlayer`, `pareto`,
-`regolo-ai`, `requesty`, `sap-ai-core`, `sarvam`, `stackit`, `synthetic`, plus
-the agents `aside`, `gajae`, `prime`, `raycast`, `zcode`.
+`regolo-ai`, `requesty`, `sap-ai-core`, `sarvam`, `stackit`, `synthetic`.
 
 A vendor-supplied SVG goes in through `scripts/reduce-mark.mjs`, which strips
 the editor metadata an export carries and keeps only what draws. Add
@@ -112,6 +111,13 @@ purpose-drawn silhouette of the same mark, which is what the console draws.
 - `pi.svg` — supplied by the project, not by either script. The glyph is already
   centred in its `0 0 300 300` viewBox (its ink measures 269.5 × 234 about
   (150.1, 150.0)), so nothing was rescaled.
+- `zcode.svg` — supplied by the project as an Inkscape export carrying two inks: a
+  dark rounded plate behind a white Z. The console masks on alpha, so the plate
+  would read as a filled square rather than a mark. Only the three glyph shapes
+  are kept, as `currentColor` paths in the original
+  `1.17 1.17 27.66 27.65` viewBox, so the Z takes the tile's ink in both themes.
+- `raycast.svg` — reduced through `scripts/reduce-mark.mjs` from Raycast's own
+  mark: one path, one ink, the published `fill-rule:evenodd` kept.
 - `omp.svg` — "Oh My Pi", composed from `pi.svg` rather than drawn: the Pi glyph
   at `scale(0.6)` inside a `currentColor` ring, the ring being the O. A lockup
   reading "O" then "Pi" side by side was rejected because it stops being legible

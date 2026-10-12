@@ -203,7 +203,9 @@ describe('providerLogoPath', () => {
 			'orcarouter',
 			'other',
 			'shared',
-			'google-antigravity'
+			'google-antigravity',
+			'zcode',
+			'raycast'
 		]) {
 			expect(providerLogoSrc(id), id).not.toBeNull();
 			expect(providerLogoPath(id), id).toBeNull();
@@ -234,9 +236,7 @@ describe('providerLogoPath', () => {
 			// Anthropic's mark, which is the point of the alias.
 			'gajae',
 			'prime',
-			'raycast',
-			'aside',
-			'zcode'
+			'aside'
 		]) {
 			expect(providerLogoSrc(id), id).toBeNull();
 			expect(providerLogoPath(id), id).toBeNull();
