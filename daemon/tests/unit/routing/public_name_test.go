@@ -42,28 +42,40 @@ func TestPublicNamesCarryProviderAndModel(t *testing.T) {
 	if got := catalog.ClientModelID("openai", "gpt-4o"); got != "relo-openai-gpt-4o" {
 		t.Errorf("ClientModelID() = %q, want relo-openai-gpt-4o", got)
 	}
-	if got := catalog.ClientModelName("GPT-4o", "OpenAI", nil); got != "GPT-4o on OpenAI" {
+	if got := catalog.ClientModelName("GPT-4o", "OpenAI", nil, false); got != "GPT-4o on OpenAI" {
 		t.Errorf("ClientModelName() = %q, want GPT-4o on OpenAI", got)
 	}
-	if got := catalog.ClientModelName("Claude Opus 4.6 (Thinking)", "Google Antigravity", nil); got != "Claude Opus 4.6 (Thinking) on Google Antigravity" {
+	if got := catalog.ClientModelName("Claude Opus 4.6 (Thinking)", "Google Antigravity", nil, false); got != "Claude Opus 4.6 (Thinking) on Google Antigravity" {
 		t.Errorf("ClientModelName() = %q, want the model before the provider", got)
 	}
 	million := int64(catalog.MillionContext)
-	if got := catalog.ClientModelName("Claude Opus 4.6 (Thinking)", "Google Antigravity", &million); got != "Claude Opus 4.6 (Thinking) 1M on Google Antigravity" {
+	if got := catalog.ClientModelName("Claude Opus 4.6 (Thinking)", "Google Antigravity", &million, false); got != "Claude Opus 4.6 (Thinking) 1M on Google Antigravity" {
 		t.Errorf("ClientModelName() = %q, want the million-token mark", got)
 	}
 	smaller := int64(catalog.MillionContext - 1)
-	if got := catalog.ClientModelName("GPT-4o", "OpenAI", &smaller); got != "GPT-4o on OpenAI" {
+	if got := catalog.ClientModelName("GPT-4o", "OpenAI", &smaller, false); got != "GPT-4o on OpenAI" {
 		t.Errorf("ClientModelName() = %q, want no million-token mark below the window", got)
 	}
-	if got := catalog.ClientModelName("GPT-4o", "", &million); got != "GPT-4o 1M" {
+	if got := catalog.ClientModelName("GPT-4o", "", &million, false); got != "GPT-4o 1M" {
 		t.Errorf("ClientModelName() = %q, want the model alone when the provider is empty", got)
 	}
-	if got := catalog.ClientModelName("Smart Combo", catalog.RouteLabelPrefix, nil); got != "Smart Combo on Relo" {
+	if got := catalog.ClientModelName("Smart Combo", catalog.RouteLabelPrefix, nil, false); got != "Smart Combo on Relo" {
 		t.Errorf("ClientModelName() = %q, want Smart Combo on Relo", got)
 	}
-	if got := catalog.ClientModelName("Smart Combo", catalog.RouteLabelPrefix, &million); got != "Smart Combo 1M on Relo" {
+	if got := catalog.ClientModelName("Smart Combo", catalog.RouteLabelPrefix, &million, false); got != "Smart Combo 1M on Relo" {
 		t.Errorf("ClientModelName() = %q, want Smart Combo 1M on Relo", got)
+	}
+	if got := catalog.ClientModelName("Claude Haiku 5.5", "Cursor", nil, true); got != "Claude Haiku 5.5 Max on Cursor" {
+		t.Errorf("ClientModelName() = %q, want the max lane marked", got)
+	}
+	if got := catalog.ClientModelName("Claude Haiku 5.5", "Cursor", &million, true); got != "Claude Haiku 5.5 1M Max on Cursor" {
+		t.Errorf("ClientModelName() = %q, want the window mark before the max mark", got)
+	}
+	if got := catalog.ClientModelName("Claude Haiku 5.5 Max", "Cursor", nil, true); got != "Claude Haiku 5.5 Max on Cursor" {
+		t.Errorf("ClientModelName() = %q, want an upstream-marked label untouched", got)
+	}
+	if got := catalog.ClientModelName("Climax", "Cursor", nil, true); got != "Climax Max on Cursor" {
+		t.Errorf("ClientModelName() = %q, want a plain suffix without guessing", got)
 	}
 	if got := catalog.ClientRouteID("Smart Combo"); got != "reloc-smart-combo" {
 		t.Errorf("ClientRouteID() = %q, want reloc-smart-combo", got)

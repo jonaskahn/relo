@@ -95,14 +95,22 @@ func ClientModelID(providerID, modelID string) string {
 // ClientModelName is the label Claude Code and Claude Desktop show for one
 // connection's model: the model, then the connection. A million-token window,
 // the same size that earns the [1m] identifier suffix, is marked in front of
-// the connection.
-func ClientModelName(modelLabel, providerLabel string, window *int64) string {
+// the connection, and a max-mode lane is marked after it. A label that
+// already carries the mark keeps its own spelling.
+func ClientModelName(modelLabel, providerLabel string, window *int64, maxMode bool) string {
 	label := strings.TrimSpace(modelLabel)
 	if window != nil && *window >= MillionContext {
 		if label == "" {
 			label = "1M"
 		} else {
 			label += " 1M"
+		}
+	}
+	if maxMode && !HasMaxMarker(label) {
+		if label == "" {
+			label = "Max"
+		} else {
+			label += " Max"
 		}
 	}
 	provider := strings.TrimSpace(providerLabel)
@@ -113,6 +121,17 @@ func ClientModelName(modelLabel, providerLabel string, window *int64) string {
 		return provider
 	}
 	return label + " on " + provider
+}
+
+// HasMaxMarker reports whether a display label already names a max-mode
+// variant: an end-anchored Max with a word boundary, so Climax never
+// qualifies and a marked label is never marked twice.
+func HasMaxMarker(label string) bool {
+	trimmed := strings.TrimSpace(label)
+	if strings.EqualFold(trimmed, "max") {
+		return true
+	}
+	return strings.HasSuffix(strings.ToLower(trimmed), " max")
 }
 
 // StripClaudePrefix drops the vendor word a Claude.ai connection's own models
@@ -129,7 +148,7 @@ func StripClaudePrefix(label string) string {
 // ConfigModelName is the label a client's own configuration file shows: the
 // model, then the provider. A route names Relo as that provider.
 func ConfigModelName(modelLabel, providerLabel string, window *int64) string {
-	return ClientModelName(modelLabel, providerLabel, window)
+	return ClientModelName(modelLabel, providerLabel, window, false)
 }
 
 // ClientRouteID names one route the way a client asks for it.

@@ -77,7 +77,7 @@ func listedGroup(snapshot *catalog.Snapshot, advertised map[string]*int64, group
 	})
 	return listedModel{
 		ID:            id,
-		Name:          catalog.ClientModelName(labelOr(group.Label, group.ID), catalog.RouteLabelPrefix, namedWindow(window, snapshot.NativeMillionGroup(group))),
+		Name:          catalog.ClientModelName(labelOr(group.Label, group.ID), catalog.RouteLabelPrefix, namedWindow(window, snapshot.NativeMillionGroup(group)), false),
 		NativeMillion: snapshot.NativeMillionGroup(group),
 		Suffixed:      snapshot.OffersSuffixedGroup(group),
 		ContextWindow: window,
@@ -94,7 +94,7 @@ func listedStandalone(snapshot *catalog.Snapshot, view listView, model catalog.M
 		label = catalog.StripClaudePrefix(label)
 	}
 	return listedModel{
-		ID: id, Name: catalog.ClientModelName(label, providerLabel(snapshot, model.ProviderID), namedWindow(window, snapshot.MillionAlone(viewModel))),
+		ID: id, Name: catalog.ClientModelName(label, providerLabel(snapshot, model.ProviderID), namedWindow(window, snapshot.MillionAlone(viewModel)), cursorMaxLane(model)),
 		ProviderID: model.ProviderID, SourceModelID: model.ID,
 		NativeMillion: snapshot.MillionAlone(viewModel),
 		Suffixed:      snapshot.OffersSuffixed(viewModel),
@@ -109,6 +109,14 @@ func namedWindow(window *int64, alone bool) *int64 {
 		return nil
 	}
 	return window
+}
+
+// cursorMaxLane reports whether a model id names a max-mode Cursor lane.
+// Grouped Cursor lane ids end in "-max" exactly when the lane runs max mode,
+// so the picker can tell the twin lanes apart. Anything else, including a
+// non-Cursor model that happens to end that way, is never marked.
+func cursorMaxLane(model catalog.Model) bool {
+	return model.APIFormat == catalog.FormatCursorAgent && strings.HasSuffix(model.ID, "-max")
 }
 
 func appendListedVariants(entries []listedModel, entry listedModel, enabled bool) []listedModel {
