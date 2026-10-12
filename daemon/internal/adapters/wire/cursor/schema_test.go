@@ -165,3 +165,40 @@ func TestStrictTurnReplies(t *testing.T) {
 	assertStrict(t, "client", buildKVGet(5, nil))
 	assertStrict(t, "client", buildKVSet(6))
 }
+
+// TestRunRequestAlwaysCarriesConversationState pins the field the server
+// refused a turn for: a request with no history at all must still send the
+// conversation state field, empty when there is nothing to put in it.
+func TestRunRequestAlwaysCarriesConversationState(t *testing.T) {
+	tools, err := BuildToolMap(nil)
+	if err != nil {
+		t.Fatalf("BuildToolMap() error = %v", err)
+	}
+	for name, req := range map[string]*inference.Request{
+		"empty": {Model: "composer-2.5"},
+		"one user message": {Model: "composer-2.5", Messages: []inference.Message{
+			{Role: inference.RoleUser, Content: []inference.ContentPart{{Type: inference.ContentTypeText, Text: "hi"}}}}},
+	} {
+		history, action, err := BuildHistory(req, tools)
+		if err != nil {
+			t.Fatalf("%s: BuildHistory() error = %v", name, err)
+		}
+		client, err := adapterscursor.Parse(buildRunRequest(history.State, action, strictSelection()))
+		if err != nil {
+			t.Fatalf("%s: parse: %v", name, err)
+		}
+		run, err := adapterscursor.Nested(client, clientRunRequest)
+		if err != nil || len(run) == 0 {
+			t.Fatalf("%s: run message = %v %v", name, run, err)
+		}
+		found := false
+		for _, field := range run[0] {
+			if field.Number == runConversationState && field.Wire == 2 {
+				found = true
+			}
+		}
+		if !found {
+			t.Fatalf("%s: run request carries no conversation state", name)
+		}
+	}
+}

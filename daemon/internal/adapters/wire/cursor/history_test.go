@@ -2,6 +2,7 @@ package cursor
 
 import (
 	"encoding/json"
+	"fmt"
 	"testing"
 
 	adapterscursor "github.com/jonaskahn/relo/internal/adapters/cursor"
@@ -172,4 +173,63 @@ func TestToolResultJSON(t *testing.T) {
 	if decoded["role"] != "tool" {
 		t.Fatalf("entry = %v", decoded)
 	}
+}
+
+// TestBuildHistoryHeadAlwaysPopulated covers the refused turn: a request
+// with no history and no system prompt must still carry a system blob at
+// the head of the state, which is what the server reads as conversation
+// state. An empty head is the "Conversation state is required" refusal.
+func TestBuildHistoryHeadAlwaysPopulated(t *testing.T) {
+	tools, err := BuildToolMap(nil)
+	if err != nil {
+		t.Fatalf("BuildToolMap() error = %v", err)
+	}
+	plain := &inference.Request{Model: "composer-2.5", Messages: []inference.Message{
+		{Role: inference.RoleUser, Content: []inference.ContentPart{{Type: inference.ContentTypeText, Text: "hello"}}},
+	}}
+	stated := &inference.Request{Model: "composer-2.5", Messages: []inference.Message{
+		{Role: inference.RoleSystem, Content: []inference.ContentPart{{Type: inference.ContentTypeText, Text: "be brief"}}},
+		{Role: inference.RoleUser, Content: []inference.ContentPart{{Type: inference.ContentTypeText, Text: "hello"}}},
+	}}
+	for name, request := range map[string]*inference.Request{"no system prompt": plain, "with system prompt": stated} {
+		history, _, err := BuildHistory(request, tools)
+		if err != nil {
+			t.Fatalf("%s: BuildHistory() error = %v", name, err)
+		}
+		head, err := headPromptText(history)
+		if err != nil {
+			t.Fatalf("%s: %v", name, err)
+		}
+		if head == "" {
+			t.Fatalf("%s: state head is empty", name)
+		}
+	}
+}
+
+// headPromptText reads the first root-prompt blob's system text.
+func headPromptText(history History) (string, error) {
+	state, err := adapterscursor.Parse(history.State)
+	if err != nil {
+		return "", err
+	}
+	for _, field := range state {
+		if field.Number != stateRootPrompts || field.Wire != 2 {
+			continue
+		}
+		blob, found := history.Store.Get(field.Raw)
+		if !found {
+			return "", fmt.Errorf("blob %x missing", field.Raw)
+		}
+		var entry struct {
+			Role    string `json:"role"`
+			Content string `json:"content"`
+		}
+		if err := json.Unmarshal(blob, &entry); err != nil {
+			return "", err
+		}
+		if entry.Role == "system" {
+			return entry.Content, nil
+		}
+	}
+	return "", nil
 }

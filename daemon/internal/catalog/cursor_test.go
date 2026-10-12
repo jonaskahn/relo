@@ -57,6 +57,26 @@ func TestNormalizeSelection(t *testing.T) {
 	}
 }
 
+// TestSelectConfigWithoutReasoning covers a model whose discovery lists no
+// reasoning choice at all, which is what composer-2.5 stores: one default
+// member and nothing else. Every requested effort, including off, resolves
+// to that member instead of reporting a selection the account lacks.
+func TestSelectConfigWithoutReasoning(t *testing.T) {
+	configs := []CursorVariant{
+		{GroupID: "composer-2.5", Selection: "default", Default: true, ModelID: "composer-2.5", DetailsID: "composer-2.5"},
+		{GroupID: "composer-2.5-fast", Selection: "default", Default: true, ModelID: "composer-2.5", DetailsID: "composer-2.5-fast"},
+	}
+	for _, effort := range []string{"off", "none", "high"} {
+		selected, ok := SelectCursorVariant(configs, "composer-2.5", effort)
+		if !ok || selected.DetailsID != "composer-2.5" {
+			t.Fatalf("Select(%q) = %+v %v, want the default member", effort, selected, ok)
+		}
+	}
+	if _, ok := SelectCursorVariant(configs, "composer-2.5-max", "off"); ok {
+		t.Fatal("Select(off) succeeded for an unknown group")
+	}
+}
+
 func TestRequestEffort(t *testing.T) {
 	if _, stated := RequestEffort(nil); stated {
 		t.Fatal("RequestEffort(nil) reported a stated effort")

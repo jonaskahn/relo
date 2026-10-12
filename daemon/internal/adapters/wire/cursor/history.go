@@ -87,6 +87,7 @@ func BuildHistory(req *inference.Request, tools *ToolMap) (History, []byte, erro
 	store := NewStore()
 	rules := buildSystemRules(req)
 	active, cutoff := activeUserMessage(req)
+	system := systemPromptBlobs(req, store)
 	root, err := buildRootPrompt(req, tools, store, cutoff)
 	if err != nil {
 		return History{}, nil, err
@@ -96,6 +97,9 @@ func BuildHistory(req *inference.Request, tools *ToolMap) (History, []byte, erro
 		return History{}, nil, err
 	}
 	var state cursor.Writer
+	for _, id := range system {
+		state.Bytes(stateRootPrompts, id)
+	}
 	for _, id := range root {
 		state.Bytes(stateRootPrompts, id)
 	}
@@ -109,6 +113,34 @@ func BuildHistory(req *inference.Request, tools *ToolMap) (History, []byte, erro
 		action = buildResumeAction()
 	}
 	return History{State: state.BytesOut(), Rules: rules, Store: store}, action, nil
+}
+
+// systemPromptBlobs stores one JSON blob per system prompt, so the state
+// head always carries the system prompt the way the reference client does.
+// Without a blob the head is empty and the server refuses the turn for
+// missing conversation state.
+func systemPromptBlobs(req *inference.Request, store *Store) [][]byte {
+	var blobs [][]byte
+	for _, message := range req.Messages {
+		if message.Role != inference.RoleSystem {
+			continue
+		}
+		if text := messageText(message); text != "" {
+			blobs = append(blobs, store.Put(systemPromptEntry(text)))
+		}
+	}
+	if len(blobs) == 0 {
+		blobs = append(blobs, store.Put(systemPromptEntry("You are a helpful assistant.")))
+	}
+	return blobs
+}
+
+func systemPromptEntry(content string) []byte {
+	raw, _ := json.Marshal(struct {
+		Role    string `json:"role"`
+		Content string `json:"content"`
+	}{Role: "system", Content: content})
+	return raw
 }
 
 func buildSystemRules(req *inference.Request) [][]byte {

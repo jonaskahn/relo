@@ -122,7 +122,13 @@ func buildRunRequest(state, action []byte, selection *wire.CursorRequest) []byte
 		requested.Message(requestedParams, pair.BytesOut())
 	}
 	var run cursor.Writer
-	run.Message(runConversationState, state)
+	if len(state) == 0 {
+		// The server requires the field to be present, so an empty state is
+		// sent as an empty message rather than omitted.
+		run.Empty(runConversationState)
+	} else {
+		run.Message(runConversationState, state)
+	}
 	run.Message(runAction, action)
 	run.Message(runModelDetails, details.BytesOut())
 	run.Message(runRequestedModel, requested.BytesOut())

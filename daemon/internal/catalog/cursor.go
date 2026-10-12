@@ -59,7 +59,27 @@ func SelectCursorVariant(configs []CursorVariant, groupID, effort string) (Curso
 			return config, true
 		}
 	}
+	// A group whose members are all defaults states no reasoning choice at
+	// all, so any requested effort resolves to that one member instead of
+	// reporting a selection the account does not have.
+	if !groupStatesReasoning(configs, groupID) {
+		return SelectCursorVariant(configs, groupID, "")
+	}
 	return CursorVariant{}, false
+}
+
+// groupStatesReasoning reports whether one group holds any member that
+// selects a reasoning choice: an effort, thinking off, or thinking on.
+func groupStatesReasoning(configs []CursorVariant, groupID string) bool {
+	for _, config := range configs {
+		if config.GroupID != groupID {
+			continue
+		}
+		if config.Selection != CursorSelectDefault && config.Selection != "" {
+			return true
+		}
+	}
+	return false
 }
 
 type cursorWireConfig struct {
