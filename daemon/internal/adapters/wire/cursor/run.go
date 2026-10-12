@@ -57,7 +57,22 @@ func (r *Runner) Run(ctx context.Context) ([]inference.Event, error) {
 	}
 	runErr := conversation.converse(ctx, reader)
 	_ = writer.Close()
-	return conversation.finish(runErr)
+	return conversation.finish(runErr, streamRefusal(reader, response))
+}
+
+// streamRefusal reads why a stream that ended without finishing its turn was
+// stopped. Cursor answers with an end-of-stream frame and repeats the verdict
+// in gRPC trailers; whichever arrived names the refusal.
+func streamRefusal(reader *cursor.FrameReader, response *http.Response) error {
+	if payload, ended := reader.End(); ended {
+		if refusal, ok := cursor.ParseEndStream(payload); ok {
+			return refusal
+		}
+	}
+	if refusal, ok := cursor.TrailerRefusal(response.Trailer); ok {
+		return refusal
+	}
+	return nil
 }
 
 func (r *Runner) prepare() (*ToolMap, History, []byte, error) {
@@ -502,8 +517,10 @@ func (c *conversation) reply(payload []byte) error {
 	return c.write(payload)
 }
 
-// finish ends the turn: usage first, then exactly one terminal event.
-func (c *conversation) finish(runErr error) ([]inference.Event, error) {
+// finish ends the turn: usage first, then exactly one terminal event. A
+// refusal the server sent explains a stream that stopped without finishing, so
+// it is reported instead of the bare fact that the turn ended early.
+func (c *conversation) finish(runErr, refusal error) ([]inference.Event, error) {
 	if runErr != nil {
 		if c.turnDone {
 			return c.events, nil
@@ -511,6 +528,9 @@ func (c *conversation) finish(runErr error) ([]inference.Event, error) {
 		return c.events, runErr
 	}
 	if !c.turnDone {
+		if refusal != nil {
+			return c.events, refusal
+		}
 		return c.events, ErrNoTurnEnd
 	}
 	if c.usedUsage {

@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"time"
 
+	cursorproto "github.com/jonaskahn/relo/internal/adapters/cursor"
 	"github.com/jonaskahn/relo/internal/adapters/wire"
 	"github.com/jonaskahn/relo/internal/adapters/wire/cursor"
 	"github.com/jonaskahn/relo/internal/adapters/wire/sse"
@@ -36,6 +37,10 @@ func (e *Executor) runBidirectional(ctx context.Context, att attempt, started ti
 			fmt.Errorf("%w: no bidirectional run", ErrCodecStreamless))
 	}
 	run := &bidirectionalRun{attempt: att, started: started, collector: newUsageCollector()}
+	// The duplex codec builds its own request, so the exchange is captured
+	// here rather than by the dispatcher: without it the traffic log is
+	// blind to every Cursor turn.
+	att.capture.Request = captureCursorExchange(att.exchange)
 	if att.exchange.Request.Stream {
 		prepareStream(att.writer)
 		run.tracker = &streamWriter{ResponseWriter: att.writer}
@@ -44,6 +49,7 @@ func (e *Executor) runBidirectional(ctx context.Context, att attempt, started ti
 	if run.emitFailed && err == nil {
 		err = fmt.Errorf("encode the upstream events: %w", wire.ErrUnknownEvent)
 	}
+	att.capture.Response = captureCursorRefusal(err)
 	if err != nil {
 		return e.failBidirectional(run, events, err)
 	}
@@ -106,13 +112,24 @@ func (e *Executor) failBidirectional(run *bidirectionalRun, events []inference.E
 			Credential: att.exchange.CredentialLabel, HeaderLatency: att.latency,
 		}, runErr
 	}
-	status := http.StatusBadGateway
-	if errors.Is(runErr, cursor.ErrUnauthorized) {
-		status = http.StatusUnauthorized
-	}
-	result, err := e.fail(att, status, "upstream_unavailable", fmt.Errorf("%w: %v", ErrUpstreamFailed, runErr))
+	result, err := e.fail(att, refusalStatus(runErr), "upstream_unavailable", fmt.Errorf("%w: %v", ErrUpstreamFailed, runErr))
 	result.RefreshSettled = att.state.refreshSettled
 	return result, err
+}
+
+// refusalStatus answers what a failed turn means to the caller. A refusal
+// Cursor named classifies as itself, so a rejected model or an expired sign-in
+// stops after one attempt instead of burning the failover ladder and cooling
+// the connection down; anything unnamed stays a retryable upstream fault.
+func refusalStatus(runErr error) int {
+	var refusal cursorproto.EndStream
+	if errors.As(runErr, &refusal) && refusal.Status != 0 {
+		return refusal.Status
+	}
+	if errors.Is(runErr, cursor.ErrUnauthorized) {
+		return http.StatusUnauthorized
+	}
+	return http.StatusBadGateway
 }
 
 func bidirectionalStreamResult(att attempt, started time.Time, collector *usageCollector, tracker *streamWriter) Result {

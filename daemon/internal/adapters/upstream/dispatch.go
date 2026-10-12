@@ -190,8 +190,9 @@ func NewExecutor(client *http.Client, logger *slog.Logger) *Executor {
 func (e *Executor) Execute(ctx context.Context, ex Exchange, w http.ResponseWriter) (Result, error) {
 	started := time.Now()
 	// A bidirectional codec converses over one duplex stream instead of
-	// sending one request: there is no single request to capture or encode
-	// up front, so it runs before the dispatch passes.
+	// sending one request, so it encodes nothing up front and runs before
+	// the dispatch passes. What it sent is still captured, or the traffic
+	// log would be blind to every stream the provider serves.
 	if _, ok := ex.Codec.(wire.BidirectionalCodec); ok {
 		st := &dispatchState{capture: &Capture{}}
 		att := attempt{writer: w, exchange: ex, started: started, capture: st.capture, state: st}

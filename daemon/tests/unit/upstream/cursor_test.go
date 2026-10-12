@@ -8,6 +8,7 @@ import (
 	"strings"
 	"testing"
 
+	cursorproto "github.com/jonaskahn/relo/internal/adapters/cursor"
 	"github.com/jonaskahn/relo/internal/adapters/upstream"
 	"github.com/jonaskahn/relo/internal/adapters/wire"
 	"github.com/jonaskahn/relo/internal/adapters/wire/cursor"
@@ -147,6 +148,56 @@ func TestExecuteBidirectional(t *testing.T) {
 		}
 		if !result.Retryable || result.Wrote {
 			t.Fatalf("result = %+v, want an unwritten retryable failure", result)
+		}
+	})
+
+	t.Run("a named refusal classifies as itself instead of retrying", func(t *testing.T) {
+		refusal := cursorproto.EndStream{Name: "BAD_MODEL_NAME", Message: "no such model", Status: http.StatusNotFound}
+		codec := &cursorStubCodec{err: refusal}
+		recorder := httptest.NewRecorder()
+		exchange := cursorExchange(codec, false)
+		exchange.Final = false
+		result, err := newExecutor(t).Execute(context.Background(), exchange, recorder)
+		if err == nil {
+			t.Fatal("Execute() succeeded on a refused turn")
+		}
+		if result.Retryable {
+			t.Fatalf("result = %+v, want a refusal the caller has to fix", result)
+		}
+		if result.Status != http.StatusNotFound {
+			t.Fatalf("status = %d, want the refusal's own status", result.Status)
+		}
+	})
+
+	t.Run("a refusal the service calls transient stays retryable", func(t *testing.T) {
+		refusal := cursorproto.EndStream{
+			Name: "INTERNAL", Message: "try again", Status: http.StatusServiceUnavailable,
+		}
+		codec := &cursorStubCodec{err: refusal}
+		recorder := httptest.NewRecorder()
+		exchange := cursorExchange(codec, false)
+		exchange.Final = false
+		result, err := newExecutor(t).Execute(context.Background(), exchange, recorder)
+		if err == nil || !result.Retryable {
+			t.Fatalf("result = %+v %v, want a retryable refusal", result, err)
+		}
+	})
+
+	t.Run("a duplex attempt is captured", func(t *testing.T) {
+		codec := &cursorStubCodec{events: cursorTextEvents()}
+		result, err := newExecutor(t).Execute(context.Background(),
+			cursorExchange(codec, false), httptest.NewRecorder())
+		if err != nil {
+			t.Fatalf("Execute() error = %v", err)
+		}
+		if result.Capture == nil || result.Capture.Request == nil {
+			t.Fatalf("capture = %+v, want the attempt recorded", result.Capture)
+		}
+		if !strings.HasSuffix(result.Capture.Request.URL, "/agent.v1.AgentService/Run") {
+			t.Fatalf("url = %q, want the run target", result.Capture.Request.URL)
+		}
+		if got := result.Capture.Request.Headers["Authorization"]; strings.Contains(strings.Join(got, ""), "token") {
+			t.Fatalf("Authorization = %q, want the credential masked", got)
 		}
 	})
 

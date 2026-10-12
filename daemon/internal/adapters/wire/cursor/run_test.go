@@ -2,6 +2,7 @@ package cursor
 
 import (
 	"context"
+	"errors"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -295,6 +296,64 @@ func mustParseForTest(t *testing.T, raw []byte) []adapterscursor.Field {
 		t.Fatalf("parse: %v", err)
 	}
 	return fields
+}
+
+// writeEnd answers with the Connect end-stream frame that carries a refusal,
+// which is how Cursor stops a stream it will not serve.
+func (s *fixtureServer) writeEnd(w http.ResponseWriter, payload []byte) {
+	s.t.Helper()
+	framed := append([]byte{0x02, 0, 0, 0, byte(len(payload))}, payload...)
+	if _, err := w.Write(framed); err != nil {
+		s.t.Fatalf("write end frame: %v", err)
+	}
+	if flusher, ok := w.(http.Flusher); ok {
+		flusher.Flush()
+	}
+}
+
+// TestRunReportsTheRefusal covers the failure this branch exists for: a stream
+// Cursor refuses must name the refusal, not just report that the turn ended.
+func TestRunReportsTheRefusal(t *testing.T) {
+	server := newFixtureServer(t, func(s *fixtureServer, w http.ResponseWriter, reader *adapterscursor.FrameReader) {
+		_ = parseClientMessage(t, s.next(reader))
+		s.writeEnd(w, []byte(`{"error":{"code":"unknown","message":"model is not available"}}`))
+	})
+	codec := NewCodec(server.server.URL)
+	_, err := codec.RunBidirectional(context.Background(), wire.BidirectionalCall{
+		Client: h2Client(server.server.Client()), Request: testRequest(), Opts: wire.CodecOpts{
+			BaseURL: server.server.URL, CredentialRef: "token", Cursor: testSelection(),
+		},
+	})
+	if err == nil {
+		t.Fatal("RunBidirectional() succeeded on a refused stream")
+	}
+	if errors.Is(err, ErrNoTurnEnd) {
+		t.Fatalf("RunBidirectional() error = %v, want the refusal itself", err)
+	}
+	if !strings.Contains(err.Error(), "model is not available") {
+		t.Fatalf("RunBidirectional() error = %v, want the refusal text", err)
+	}
+}
+
+// TestRunReportsATrailerRefusal covers the second shape the same verdict
+// arrives in, when only the gRPC status came back.
+func TestRunReportsATrailerRefusal(t *testing.T) {
+	server := newFixtureServer(t, func(s *fixtureServer, w http.ResponseWriter, reader *adapterscursor.FrameReader) {
+		_ = parseClientMessage(t, s.next(reader))
+		// The fixture already sent its status, so the verdict has to go out
+		// as a trailer rather than as a header.
+		w.Header().Set(http.TrailerPrefix+"Grpc-Status", "16")
+		w.Header().Set(http.TrailerPrefix+"Grpc-Message", "token%20expired")
+	})
+	codec := NewCodec(server.server.URL)
+	_, err := codec.RunBidirectional(context.Background(), wire.BidirectionalCall{
+		Client: h2Client(server.server.Client()), Request: testRequest(), Opts: wire.CodecOpts{
+			BaseURL: server.server.URL, CredentialRef: "token", Cursor: testSelection(),
+		},
+	})
+	if err == nil || !strings.Contains(err.Error(), "token expired") {
+		t.Fatalf("RunBidirectional() error = %v, want the trailer refusal", err)
+	}
 }
 
 func TestRunToolHandoff(t *testing.T) {
