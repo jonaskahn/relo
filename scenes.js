@@ -79,10 +79,9 @@
 
     /* Captions follow the active scene; the cue leaves as soon as scroll starts. */
     var cap = 0;
-    if (p >= 0.62) cap = 3;
-    else if (p >= 0.36) cap = 2;
+    if (p >= 0.62) cap = 2;
     else if (p >= 0.02) cap = 1;
-    if (p >= 0.88) cap = 4;
+    if (p >= 0.88) cap = 3;
     setCap(cap);
   }
 

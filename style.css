@@ -596,16 +596,16 @@ html[dir="rtl"] .menu:not(.open) nav { transform: translateX(-30%); }
   z-index: 2;
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-rows: repeat(3, minmax(0, 1fr));
   gap: 10px;
   padding: 14px;
-  place-content: center;
   pointer-events: none;
 }
 
 .conn {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr) auto;
-  grid-template-rows: auto auto;
+  grid-template-rows: auto 1fr auto;
   gap: 3px 8px;
   align-items: center;
   padding: 10px 12px;
@@ -618,7 +618,7 @@ html[dir="rtl"] .menu:not(.open) nav { transform: translateX(-30%); }
 }
 
 .conn-logo {
-  grid-row: span 2;
+  grid-row: 1 / 4;
   display: grid;
   place-items: center;
   width: 34px;
@@ -778,6 +778,20 @@ html[dir="rtl"] .menu:not(.open) nav { transform: translateX(-30%); }
 }
 
 .cap.is-active { opacity: 1; translate: 0 0; }
+
+.cue-arrow {
+  display: inline-block;
+  margin-inline-start: 2px;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .cap.is-active .cue-arrow { animation: cue-drop 1.6s ease-in-out infinite; }
+}
+
+@keyframes cue-drop {
+  0%, 100% { transform: translateY(-2px); opacity: 0.65; }
+  50% { transform: translateY(3px); opacity: 1; }
+}
 
 button.cap {
   font: inherit;
