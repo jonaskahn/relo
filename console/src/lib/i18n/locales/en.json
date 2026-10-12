@@ -1624,7 +1624,12 @@
         "actionFailedWith": "{action} failed: {detail}",
         "context1MOn": "1M context window on",
         "context1MOff": "1M context window off",
-        "keyNonePending": "No key yet. Setting the agent up mints one."
+        "keyNonePending": "No key yet. Setting the agent up mints one.",
+        "openCodeVersionsTitle": "Config version",
+        "openCodeV1": "V1",
+        "openCodeV1Desc": "Legacy singular provider block",
+        "openCodeV2": "V2",
+        "openCodeV2Desc": "Current plural providers block"
       },
       "chatPage": {
         "title": "Chat",

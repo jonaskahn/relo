@@ -5,6 +5,7 @@ import {
 	contextOn,
 	isTested,
 	logoIdOf,
+	openCodeVersionChip,
 	patchAgent,
 	refusalDetailKey,
 	refusalOf,
@@ -190,5 +191,21 @@ describe('the agent roster', () => {
 	it('leaves the roster untouched for an agent the daemon does not list', () => {
 		const roster = [agentOf({ id: 'codex', client: 'codex' })];
 		expect(patchAgent(roster, agentOf({ id: 'gone', client: 'gone' }))).toEqual(roster);
+	});
+});
+
+describe('the OpenCode generations chip', () => {
+	it('shows nothing for another agent or an empty reading', () => {
+		expect(openCodeVersionChip(agentOf({ id: 'codex', openCodeVersions: 'v1+v2' }))).toBe('');
+		expect(openCodeVersionChip(agentOf({ id: 'opencode' }))).toBe('');
+		expect(openCodeVersionChip(agentOf({ id: 'opencode', openCodeVersions: 'v3' }))).toBe('');
+	});
+
+	it('names the generations the daemon read in the file', () => {
+		expect(openCodeVersionChip(agentOf({ id: 'opencode', openCodeVersions: 'v1' }))).toBe('V1');
+		expect(openCodeVersionChip(agentOf({ id: 'opencode', openCodeVersions: 'v2' }))).toBe('V2');
+		expect(openCodeVersionChip(agentOf({ id: 'opencode', openCodeVersions: 'v1+v2' }))).toBe(
+			'V1+V2'
+		);
 	});
 });

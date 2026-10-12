@@ -541,6 +541,9 @@ export interface IntegrationView {
 	// context_1m is the Codex card's 1M button. Highlighted means setup
 	// writes the 1M window. Other agents omit it.
 	readonly context_1m?: boolean;
+	// openCodeVersions names which generations hold Relo's provider in the
+	// OpenCode file: v1, v2, or v1+v2. Other agents omit it.
+	readonly openCodeVersions?: string;
 }
 
 /** The client key an agent was given, and the hint that identifies it. */

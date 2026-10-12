@@ -22,6 +22,7 @@
 		labelOf,
 		logoIdOf,
 		needsRepair,
+		openCodeVersionChip,
 		restartsClient,
 		stateKey,
 		stateTone,
@@ -52,6 +53,8 @@
 	// The sentences behind the warnings the card reports, so it renders one
 	// vocabulary of facts rather than a branch per condition.
 	const warnings = $derived(warningKeys(agent).map((key) => $t(key)));
+	// The generations an OpenCode file carries; every other agent shows none.
+	const versionsChip = $derived(openCodeVersionChip(agent));
 </script>
 
 <!-- The summary reads as one line whatever its length, and the tooltip carries
@@ -97,7 +100,14 @@
 			>
 				<ProviderLogo id={logoIdOf(agent)} label={labelOf(agent)} />
 				<div class="w-full min-w-0">
-					<CardTitle class="truncate text-sm">{labelOf(agent)}</CardTitle>
+					<div class="flex min-w-0 items-center gap-1.5">
+						<CardTitle class="truncate text-sm">{labelOf(agent)}</CardTitle>
+						{#if versionsChip}
+							<span class="badge shrink-0 border-line bg-sunken text-muted-foreground">
+								{versionsChip}
+							</span>
+						{/if}
+					</div>
 					{@render summaryLine()}
 				</div>
 			</button>
