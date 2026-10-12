@@ -36,6 +36,9 @@ func parseDSH(content string) error {
 	if strings.TrimSpace(content) == "" {
 		return nil
 	}
+	if strings.TrimSpace(content) == "[]" {
+		return nil
+	}
 	var document []any
 	if err := yaml.Unmarshal([]byte(content), &document); err != nil {
 		return fmt.Errorf("%w (%v)", ErrUnrecognisedFile, err)
@@ -58,6 +61,9 @@ func mergeDSH(existing, baseURL string, models []ModelRef, withDefault bool) (st
 	}
 	if err := parseDSH(existing); err != nil {
 		return "", err
+	}
+	if strings.TrimSpace(existing) == "[]" {
+		existing = ""
 	}
 	lines, err := dropDSHRelo(splitLines(existing))
 	if err == nil && withDefault {
@@ -87,6 +93,9 @@ func mergeDSH(existing, baseURL string, models []ModelRef, withDefault bool) (st
 // patch existed keeps no block behind.
 func StripDSH(existing string) (string, error) {
 	if strings.TrimSpace(existing) == "" {
+		return "", nil
+	}
+	if strings.TrimSpace(existing) == "[]" {
 		return "", nil
 	}
 	if !dshIsPatch(existing) {
