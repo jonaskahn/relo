@@ -35,15 +35,15 @@
 
   function render(p) {
     /* Scene 1: the iPad rises and wakes past the boot mark. */
-    var rise = ease(band(p, 0.0, 0.12));
+    var rise = ease(band(p, 0.0, 0.14));
     ipad.style.transform = 'translateY(' + ((1 - rise) * 48).toFixed(1) + 'px) scale(' + (0.96 + 0.04 * rise).toFixed(3) + ')';
     ipad.style.opacity = String(band(p, 0.0, 0.06));
-    boot.style.opacity = String(1 - band(p, 0.1, 0.18));
+    boot.style.opacity = String(1 - band(p, 0.08, 0.18));
 
     /* Scene 2: nine connection cards fly in and settle into the screen. */
     cards.forEach(function (card, i) {
-      var start = 0.18 + i * 0.018;
-      var t = ease(band(p, start, start + 0.07));
+      var start = 0.16 + i * 0.02;
+      var t = ease(band(p, start, start + 0.09));
       var dir = FLY_FROM[card.dataset.from || 'left'];
       var dx = dir[0] * (1 - t);
       var dy = dir[1] * (1 - t);
@@ -52,38 +52,36 @@
       card.style.transform = 'translate(' + dx.toFixed(1) + '%,' + (dy - leave * 60).toFixed(1) + '%) scale(' + (1 - leave * 0.2).toFixed(3) + ')';
     });
 
-    /* Scene 3: the iPad recedes as the cards leave. */
-    var recede = ease(band(p, 0.54, 0.64));
+    /* Scene 3: the iPad zooms out as the cards leave. */
+    var recede = ease(band(p, 0.54, 0.66));
     if (recede > 0) {
-      ipad.style.transform = 'scale(' + (1 - 0.1 * recede).toFixed(3) + ')';
+      ipad.style.transform = 'scale(' + (1 - 0.15 * recede).toFixed(3) + ')';
     }
-    ipad.style.opacity = String(Math.min(band(p, 0.0, 0.06), 1 - band(p, 0.58, 0.66)));
+    ipad.style.opacity = String(Math.min(band(p, 0.0, 0.06), 1 - band(p, 0.58, 0.68)));
 
-    /* Scene 4: the bag settles; harness marks gather into it. */
+    /* Scene 4: the bag appears; harness marks drop into it. */
     var bagT = ease(band(p, 0.64, 0.72));
     bagScene.style.opacity = String(bagT);
-    var bagScale = 0.92 + 0.08 * bagT;
+    var bagScale = 0.9 + 0.1 * bagT;
     bag.style.transform = 'scale(' + bagScale.toFixed(3) + ')';
 
     flyers.forEach(function (fly, i) {
-      var start = 0.68 + (i % 6) * 0.02 + Math.floor(i / 6) * 0.03;
-      var t = ease(band(p, start, start + 0.07));
-      var spread = 46 - i * 2;
-      var ang = (i / flyers.length) * Math.PI * 2;
-      var sx = Math.cos(ang) * spread;
-      var sy = Math.sin(ang) * spread * 0.7;
+      var start = 0.68 + (i % 8) * 0.018 + Math.floor(i / 8) * 0.05;
+      var raw = band(p, start, start + 0.08);
+      var t = raw * raw;
+      var sx = ((i * 37) % 61) - 30;
+      var drop = (-58 - (i % 4) * 7) * (1 - t);
       var x = sx * (1 - t);
-      var y = sy * (1 - t) - 10 * t;
-      var fade = 1 - band(p, start + 0.06, start + 0.08);
-      fly.style.opacity = String(Math.max(0, Math.min(1, t * 3) * fade));
-      fly.style.transform = 'translate(calc(-50% + ' + x.toFixed(1) + 'vw),' + y.toFixed(1) + 'vh) scale(' + (1 - t * 0.55).toFixed(3) + ')';
+      var fade = 1 - band(p, start + 0.065, start + 0.085);
+      fly.style.opacity = String(Math.max(0, Math.min(1, raw * 3) * fade));
+      fly.style.transform = 'translate(calc(-50% + ' + x.toFixed(1) + 'vw),' + drop.toFixed(1) + 'vh) scale(' + (1 - t * 0.45).toFixed(3) + ')';
     });
 
-    /* Captions follow the active scene. */
+    /* Captions follow the active scene; the cue leaves as soon as scroll starts. */
     var cap = 0;
     if (p >= 0.62) cap = 3;
     else if (p >= 0.36) cap = 2;
-    else if (p >= 0.14) cap = 1;
+    else if (p >= 0.02) cap = 1;
     if (p >= 0.88) cap = 4;
     setCap(cap);
   }

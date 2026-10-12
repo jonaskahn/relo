@@ -533,7 +533,7 @@ html[dir="rtl"] .menu:not(.open) nav { transform: translateX(-30%); }
 .story { position: relative; }
 
 .story-pin {
-  height: 520vh;
+  height: 640vh;
   position: relative;
 }
 
@@ -551,7 +551,7 @@ html[dir="rtl"] .menu:not(.open) nav { transform: translateX(-30%); }
 /* iPad Pro 13: a flat slab. The boot mark wakes into the card grid. */
 .ipad {
   position: relative;
-  width: min(720px, 90vw);
+  width: min(880px, 92vw);
   border: 1px solid var(--line-strong);
   border-radius: 22px;
   background: var(--surface);
@@ -560,14 +560,18 @@ html[dir="rtl"] .menu:not(.open) nav { transform: translateX(-30%); }
   will-change: transform, opacity;
 }
 
+[data-theme="dark"] .ipad { background: var(--raised); }
+
 .screen {
   position: relative;
-  aspect-ratio: 4 / 3;
+  aspect-ratio: 3 / 2;
   border: 1px solid var(--line);
   border-radius: 10px;
   overflow: hidden;
   background: var(--sunken);
 }
+
+[data-theme="dark"] .screen { background: var(--canvas); }
 
 .boot {
   position: absolute;
@@ -710,6 +714,9 @@ html[dir="rtl"] .menu:not(.open) nav { transform: translateX(-30%); }
   letter-spacing: -0.025em;
 }
 
+[data-theme="dark"] .bag,
+[data-theme="dark"] .fly { background: var(--raised); }
+
 .handle {
   position: absolute;
   top: -30px;
@@ -771,6 +778,15 @@ html[dir="rtl"] .menu:not(.open) nav { transform: translateX(-30%); }
 }
 
 .cap.is-active { opacity: 1; translate: 0 0; }
+
+button.cap {
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  pointer-events: auto;
+}
+
+button.cap:hover { border-color: var(--accent-border); }
 
 /* Static fallback: woken iPad, cards in place, captions as a list. */
 .static-story .story-pin { height: auto; }
@@ -1046,9 +1062,11 @@ html[dir="rtl"] .menu:not(.open) nav { transform: translateX(-30%); }
 
   .display { font-size: clamp(1.75rem, 8vw, 2.5rem); }
 
-  .story-pin { height: 560vh; }
+  .story-pin { height: 680vh; }
 
   .ipad { width: 94vw; }
+
+  .screen { aspect-ratio: 3 / 4; }
 
   .cards { gap: 8px; padding: 10px; }
 
