@@ -175,8 +175,17 @@ sed -e "s/__VERSION__/$version/g" -e "s/__SU_PUBLIC_ED_KEY__/$public_key/g" \
 # needs no Apple account; the first launch elsewhere still takes the
 # quarantine step in CONTRIBUTING.md. A Developer ID identity plus
 # notarization is the upgrade path. Nested code is signed before the code
-# that contains it, so --deep is not needed.
-sign() { codesign --force --sign "$identity" "$@"; }
+# that contains it, so --deep is not needed. Developer ID builds seal with
+# the hardened runtime and a secure timestamp: Apple returns Invalid without
+# both, which is the rejection above. Ad-hoc keeps a plain seal so offline
+# builds still work.
+sign() {
+  if [ "$identity" = "-" ]; then
+    codesign --force --sign "$identity" "$@"
+  else
+    codesign --force --options runtime --timestamp --sign "$identity" "$@"
+  fi
+}
 
 # The bundle's own code is sealed last; the arm64 copy below swaps two
 # executables and has to repeat just this part.
