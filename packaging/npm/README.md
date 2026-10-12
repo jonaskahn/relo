@@ -1,5 +1,5 @@
 <div align="center">
-<img src="assets/logo.png" alt="Relo" width="48">
+<img src="assets/logo.png" alt="Relo" width="96">
 
 <h2>Relo</h2>
 
@@ -7,8 +7,9 @@
 
 </div>
 
-> One loopback proxy for Codex, Claude Code, Cursor, and Grok keep their own config and still reach any upstream.
+> One local proxy that lets Codex, Claude Code, Cursor and Grok, etc. Talk to any model, any provider with no config changes.
 
+## Installation
 
 ```console
 $ npm install -g @jonaskahn/relo
