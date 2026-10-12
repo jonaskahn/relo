@@ -2,6 +2,7 @@
 /dist/
 /relo
 /relo.exe
+coverage.out
 
 # Merge leftovers. Git stops before applying a merge that conflicts, and the
 # resolve is manual, so these survive a rebase or a rebase --abort.

@@ -74,6 +74,11 @@ jobs:
 
   coverage:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      # Codecov authenticates the profile upload with the OIDC token, so no
+      # repository secret is involved.
+      id-token: write
     steps:
       - name: Checkout
         uses: actions/checkout@v5
@@ -82,9 +87,21 @@ jobs:
         uses: actions/setup-go@v6
         with:
           go-version-file: daemon/go.mod
+          cache-dependency-path: daemon/go.sum
 
       - name: Coverage gate
         run: make ci-coverage
+        env:
+          COVERAGE_OUT: coverage.out
+
+      - name: Upload coverage
+        uses: codecov/codecov-action@v5
+        with:
+          files: coverage.out
+          use_oidc: true
+          # The per-package gate is the status the repository enforces; the
+          # service only charts what the gate measured.
+          fail_ci_if_error: false
 
   cross-build:
     runs-on: macos-15

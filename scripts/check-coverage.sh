@@ -13,6 +13,17 @@ threshold="${COVERAGE_THRESHOLD:-90.0}"
 mapping="$backend/tests/coverage.tsv"
 fail=0
 
+# A pipeline that charts coverage asks for one profile by naming it here. The
+# path is resolved against the repository root so the caller never has to know
+# which directory the gate measures from.
+coverage_out=""
+if [ -n "${COVERAGE_OUT:-}" ]; then
+  case "$COVERAGE_OUT" in
+    /*) coverage_out="$COVERAGE_OUT" ;;
+    *) coverage_out="$root/$COVERAGE_OUT" ;;
+  esac
+fi
+
 cd "$backend" || exit 1
 
 # The floors in tests/coverage.tsv are measured with the toolchain daemon/go.mod
@@ -96,6 +107,17 @@ while read -r package; do
     fail=1
   fi
 done < <(go list -f '{{.ImportPath}}' ./internal/...)
+
+# One profile for the caller that asked for it: the rows instrument disjoint
+# source packages, so their bodies concatenate into a single valid profile.
+if [ -n "$coverage_out" ]; then
+  {
+    echo "mode: atomic"
+    for file in "${profiles[@]:-}"; do
+      [ -n "$file" ] && tail -n +2 "$file"
+    done
+  } > "$coverage_out"
+fi
 
 for file in "${profiles[@]:-}"; do
   [ -n "$file" ] && rm -f "$file"
