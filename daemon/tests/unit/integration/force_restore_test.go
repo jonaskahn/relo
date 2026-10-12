@@ -106,3 +106,48 @@ func TestForceRestoreStripsWhenASnapshotCannotBeRead(t *testing.T) {
 		t.Fatalf("config = %s, want Relo gone and the theme kept", got)
 	}
 }
+
+// TestRestoreUnrecognisedAsksThenForceDeletes is the rewrite-first,
+// confirm-delete flow: a catalog file Relo cannot parse blocks a normal
+// removal with a confirmable error, and a forced removal deletes that file
+// and retires the integration.
+func TestRestoreUnrecognisedAsksThenForceDeletes(t *testing.T) {
+	h := newHarness(t, dataPlane)
+	path := filepath.Join(h.paths.Home, ".pi", "agent", "models.json")
+	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
+		t.Fatalf("create the pi directory: %v", err)
+	}
+	if err := os.WriteFile(path, []byte("{\"providers\":{}}\n"), 0o644); err != nil {
+		t.Fatalf("seed the catalog: %v", err)
+	}
+	if _, err := h.manager.Enable(context.Background(), "pi", "rlo_ak_secret"); err != nil {
+		t.Fatalf("Enable() error = %v", err)
+	}
+	if err := os.WriteFile(path, []byte("- just-a-list\n"), 0o644); err != nil {
+		t.Fatalf("corrupt the catalog: %v", err)
+	}
+
+	if _, err := h.manager.Restore(context.Background(), "pi", false); !errors.Is(err, integration.ErrRestoreBlocked) {
+		t.Fatalf("Restore() error = %v, want ErrRestoreBlocked", err)
+	}
+	if got := readFile(t, path); got != "- just-a-list\n" {
+		t.Fatalf("catalog = %q, want the file untouched after a blocked restore", got)
+	}
+	if len(h.store.files["pi"]) == 0 {
+		t.Fatal("file rows are gone, want them kept after a blocked restore")
+	}
+
+	view, err := h.manager.Restore(context.Background(), "pi", true)
+	if err != nil {
+		t.Fatalf("Restore(force) error = %v", err)
+	}
+	if view.Enabled || view.State != integration.StateOff {
+		t.Fatalf("state = %q enabled = %v, want off", view.State, view.Enabled)
+	}
+	if _, err := os.Stat(path); !errors.Is(err, os.ErrNotExist) {
+		t.Fatalf("catalog stat = %v, want the unrewritable file deleted", err)
+	}
+	if len(h.store.files["pi"]) != 0 {
+		t.Fatalf("file rows = %v, want none after a forced restore", h.store.files["pi"])
+	}
+}

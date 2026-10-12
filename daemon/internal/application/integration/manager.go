@@ -672,11 +672,18 @@ func (m *Manager) Restore(ctx context.Context, id string, force bool) (View, err
 		m.recordFailure(ctx, agent, err)
 		return View{}, err
 	}
-	kept, err := m.stripCatalogFiles(ctx, agent, files)
+	kept, doomed, err := m.stripCatalogFiles(ctx, agent, files, force)
 	if err != nil {
 		return View{}, err
 	}
-	return m.finishRestore(ctx, agent, kept, force)
+	view, err := m.finishRestore(ctx, agent, kept, force)
+	if err != nil {
+		return View{}, err
+	}
+	if warnings := m.removeDoomed(doomed); len(warnings) != 0 {
+		return m.recordRestoreWarning(ctx, agent.ID, warnings)
+	}
+	return view, nil
 }
 
 func (m *Manager) finishRestore(ctx context.Context, agent Agent, kept []FileRecord, force bool) (View, error) {
@@ -689,7 +696,7 @@ func (m *Manager) finishRestore(ctx context.Context, agent Agent, kept []FileRec
 		m.recordFailure(ctx, agent, err)
 		return View{}, err
 	}
-	if err := m.applyStagedRestore(ctx, agent, staged); err != nil {
+	if err := m.applyStagedRestore(ctx, agent, staged, force); err != nil {
 		return View{}, err
 	}
 	if err := m.clearRestoredState(ctx, agent, agent.ID); err != nil {
@@ -698,9 +705,24 @@ func (m *Manager) finishRestore(ctx context.Context, agent Agent, kept []FileRec
 	return m.recordRestore(ctx, agent.ID)
 }
 
-func (m *Manager) applyStagedRestore(ctx context.Context, agent Agent, staged []stagedRestore) error {
+func (m *Manager) removeDoomed(doomed []FileRecord) []string {
+	warnings := []string{}
+	for _, file := range doomed {
+		if err := os.Remove(file.Path); err != nil && !errors.Is(err, os.ErrNotExist) {
+			warnings = append(warnings, file.Path+": "+err.Error())
+		}
+	}
+	return warnings
+}
+
+func (m *Manager) applyStagedRestore(ctx context.Context, agent Agent, staged []stagedRestore, force bool) error {
 	for _, file := range staged {
 		if err := m.applyRestore(file); err != nil {
+			if force && file.action == stripRelo && RefusalCode(err) == CodeUnrecognised {
+				if rerr := os.Remove(file.file.Path); rerr == nil || errors.Is(rerr, os.ErrNotExist) {
+					continue
+				}
+			}
 			m.recordFailure(ctx, agent, err)
 			return err
 		}
@@ -708,22 +730,31 @@ func (m *Manager) applyStagedRestore(ctx context.Context, agent Agent, staged []
 	return nil
 }
 
-func (m *Manager) stripCatalogFiles(ctx context.Context, agent Agent, files []FileRecord) ([]FileRecord, error) {
+func (m *Manager) stripCatalogFiles(ctx context.Context, agent Agent, files []FileRecord, force bool) ([]FileRecord, []FileRecord, error) {
 	// The snapshot of a catalog file stays a backup. Restore takes the relo
 	// block out of the live file and does not put the snapshot back, so an
 	// edit made after setup survives, and the file is not deleted.
 	kept := make([]FileRecord, 0, len(files))
+	doomed := make([]FileRecord, 0)
 	for _, file := range files {
 		if !m.files.CatalogKind(file.Kind) {
 			kept = append(kept, file)
 			continue
 		}
 		if err := m.stripCatalog(file); err != nil {
-			m.recordFailure(ctx, agent, err)
-			return nil, err
+			if force {
+				doomed = append(doomed, file)
+				continue
+			}
+			blocked := err
+			if RefusalCode(err) == CodeUnrecognised {
+				blocked = fmt.Errorf("%w %s: %w", ErrRestoreBlocked, file.Path, err)
+			}
+			m.recordFailure(ctx, agent, blocked)
+			return nil, nil, blocked
 		}
 	}
-	return kept, nil
+	return kept, doomed, nil
 }
 
 func (m *Manager) clearRestoredState(ctx context.Context, agent Agent, id string) error {
@@ -754,6 +785,22 @@ func (m *Manager) recordRestore(ctx context.Context, id string) (View, error) {
 		return View{}, err
 	}
 	m.appendOp(ctx, id, "restore", "")
+	return m.Inspect(ctx, id)
+}
+
+func (m *Manager) recordRestoreWarning(ctx context.Context, id string, warnings []string) (View, error) {
+	record, _, err := m.store.Integration(ctx, id)
+	if err != nil {
+		return View{}, err
+	}
+	record.ID, record.Enabled, record.State = id, false, StateOff
+	record.LastError = "removed with warnings: " + strings.Join(warnings, "; ")
+	record.ModelsDigest = ""
+	record.UpdatedAtMs = m.now().UnixMilli()
+	if err := m.store.SaveIntegration(ctx, record); err != nil {
+		return View{}, err
+	}
+	m.appendOp(ctx, id, "restore", strings.Join(warnings, "; "))
 	return m.Inspect(ctx, id)
 }
 
@@ -887,6 +934,13 @@ func (m *Manager) retireMovedTargets(ctx context.Context, id string, targets []C
 			continue
 		}
 		if err := m.stripCatalog(file); err != nil {
+			if RefusalCode(err) == CodeUnrecognised {
+				if derr := m.store.DeleteFile(ctx, id, file.Kind); derr != nil {
+					m.recordFailure(ctx, Agent{ID: id}, derr)
+					return
+				}
+				continue
+			}
 			m.recordFailure(ctx, Agent{ID: id}, err)
 			return
 		}
