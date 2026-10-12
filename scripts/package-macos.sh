@@ -10,23 +10,34 @@ version="${version#v}"
 # The Makefile owns the floor; the default only serves a direct run.
 macos_min="${MACOS_MIN_VERSION:-12.0}"
 
-# Ad-hoc signing is the default: it needs no Apple account and still seals
-# every binary, so a build can be copied to another Mac. Pass --apple-id to
-# sign with a Developer ID instead, naming it in APPLE_SIGN_IDENTITY when the
-# keychain holds more than one.
-identity="-"
-for arg in "$@"; do
-  if [ "$arg" = "--apple-id" ]; then
-    identity="${APPLE_SIGN_IDENTITY:-Developer ID Application}"
-  else
-    echo "unknown argument: $arg" >&2
-    exit 2
-  fi
-done
+# Signing resolves before the long build rather than at the signing step.
+# APPLE_SIGN_IDENTITY names the certificate explicitly: CI always sets it to
+# the imported Developer ID and never relies on detection. Locally it is
+# usually unset, and then a single Developer ID in the keychain is used; with
+# none the build falls back to ad-hoc signing, which needs no Apple account
+# and still seals every binary so the app can be copied to another Mac.
+if [ "$#" -gt 0 ]; then
+  echo "unknown argument: $1 (signing is automatic; set APPLE_SIGN_IDENTITY to override)" >&2
+  exit 2
+fi
 
 if [ "$(uname -s)" != "Darwin" ]; then
   echo "building the macOS app requires macOS" >&2
   exit 1
+fi
+
+identity="${APPLE_SIGN_IDENTITY:-}"
+if [ -z "$identity" ]; then
+  count="$(security find-identity -v -p codesigning 2>/dev/null | grep -c "Developer ID Application" || true)"
+  if [ "$count" -eq 1 ]; then
+    identity="Developer ID Application"
+  elif [ "$count" -eq 0 ]; then
+    identity="-"
+  else
+    echo "$count Developer ID identities found; set APPLE_SIGN_IDENTITY to pick one" >&2
+    security find-identity -v -p codesigning >&2
+    exit 1
+  fi
 fi
 
 # Fail before the long build rather than at the signing step, once the whole
@@ -40,6 +51,9 @@ if [ "$identity" != "-" ]; then
     security find-identity -v -p codesigning >&2
     exit 1
   fi
+  echo "signing with \"$identity\""
+else
+  echo "no Developer ID found; signing ad-hoc"
 fi
 
 app="$root/dist/Relo.app"
