@@ -16,7 +16,7 @@
   var bagScene = document.getElementById('bagScene');
   var bag = document.getElementById('bag');
   var flyers = Array.prototype.slice.call(document.querySelectorAll('.fly'));
-  var caps = Array.prototype.slice.call(document.querySelectorAll('.cap'));
+  var cue = document.getElementById('scrollCue');
   if (!pin || !ipad || !boot) return;
 
   function clamp01(x) { return x < 0 ? 0 : x > 1 ? 1 : x; }
@@ -26,12 +26,6 @@
   var FLY_FROM = {
     left: [-260, 0], right: [260, 0], top: [0, -260], bottom: [0, 260]
   };
-
-  function setCap(index) {
-    caps.forEach(function (cap, i) {
-      cap.classList.toggle('is-active', i === index);
-    });
-  }
 
   function render(p) {
     /* Scene 1: the iPad rises and wakes past the boot mark. */
@@ -77,12 +71,11 @@
       fly.style.transform = 'translate(calc(-50% + ' + x.toFixed(1) + 'vw),' + drop.toFixed(1) + 'vh) scale(' + (1 - t * 0.45).toFixed(3) + ')';
     });
 
-    /* Captions follow the active scene; the cue leaves as soon as scroll starts. */
-    var cap = 0;
-    if (p >= 0.62) cap = 2;
-    else if (p >= 0.02) cap = 1;
-    if (p >= 0.88) cap = 3;
-    setCap(cap);
+    if (cue) {
+      var showCue = p < 0.02;
+      cue.classList.toggle('is-active', showCue);
+      cue.disabled = !showCue;
+    }
   }
 
   render(0);
