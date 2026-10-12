@@ -40,10 +40,20 @@ var variants = map[string]map[string]Variant{
 		bandMedium: {WireModel: "gemini-3.5-flash-low", ModelEnum: "MODEL_PLACEHOLDER_M20", MaxOutput: maxOutputGemini},
 		bandHigh:   {WireModel: "gemini-3-flash-agent", ModelEnum: "MODEL_PLACEHOLDER_M132", MaxOutput: maxOutputGemini},
 	},
+	"gemini-3.6-flash": {
+		bandLow:    {WireModel: "gemini-3.6-flash-low", MaxOutput: maxOutputGemini},
+		bandMedium: {WireModel: "gemini-3.6-flash-medium", MaxOutput: maxOutputGemini},
+		bandHigh:   {WireModel: "gemini-3.6-flash-high", MaxOutput: maxOutputGemini},
+	},
 	"gemini-3.7-flash": {
 		bandLow:    {WireModel: "gemini-3.7-flash-low", MaxOutput: maxOutputGemini},
 		bandMedium: {WireModel: "gemini-3.7-flash-medium", MaxOutput: maxOutputGemini},
 		bandHigh:   {WireModel: "gemini-3.7-flash-high", MaxOutput: maxOutputGemini},
+	},
+	"gemini-3.8-flash": {
+		bandLow:    {WireModel: "gemini-3.8-flash-low", MaxOutput: maxOutputGemini},
+		bandMedium: {WireModel: "gemini-3.8-flash-medium", MaxOutput: maxOutputGemini},
+		bandHigh:   {WireModel: "gemini-3.8-flash-high", MaxOutput: maxOutputGemini},
 	},
 	"gemini-3.1-pro": {
 		bandLow:  {WireModel: "gemini-3.1-pro-low", ModelEnum: "MODEL_PLACEHOLDER_M36", MaxOutput: maxOutputPro},
@@ -74,6 +84,32 @@ type Variant struct {
 func Collapse(logical, effort string) (Variant, bool) {
 	variant, found := variants[logical][bandOf(effort)]
 	return variant, found
+}
+
+// Variants reports every wire identity one logical model collapses onto,
+// keyed by band.
+func Variants(logical string) map[string]Variant {
+	rows, found := variants[logical]
+	if !found {
+		return nil
+	}
+	duplicated := make(map[string]Variant, len(rows))
+	for band, variant := range rows {
+		duplicated[band] = variant
+	}
+	return duplicated
+}
+
+// Logical reports the logical model one wire SKU belongs to.
+func Logical(wireID string) (string, bool) {
+	for logical, rows := range variants {
+		for _, variant := range rows {
+			if variant.WireModel == wireID {
+				return logical, true
+			}
+		}
+	}
+	return "", false
 }
 
 func bandOf(effort string) string {

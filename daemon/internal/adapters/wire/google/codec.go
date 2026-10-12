@@ -283,7 +283,10 @@ func (s settings) body(req *inference.Request, mode Mode, opts wire.CodecOpts) (
 	// vendor serves the requested effort on.
 	variant, _ := antigravity.Collapse(req.Model, effortOf(req))
 	wireModel := req.Model
-	if variant.WireModel != "" {
+	if opts.Antigravity != nil && opts.Antigravity.WireModel != "" {
+		wireModel = opts.Antigravity.WireModel
+		variant = antigravity.Variant{WireModel: opts.Antigravity.WireModel, ModelEnum: opts.Antigravity.ModelEnum, MaxOutput: opts.Antigravity.MaxOutput}
+	} else if variant.WireModel != "" {
 		wireModel = variant.WireModel
 	}
 	preimage := sessionPreimage(s.sessionAnchor, req)

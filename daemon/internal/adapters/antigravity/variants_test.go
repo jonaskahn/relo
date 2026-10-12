@@ -24,6 +24,14 @@ func TestCollapse(t *testing.T) {
 		{"3.7 flash medium", "gemini-3.7-flash", "medium", "gemini-3.7-flash-medium", "", maxOutputGemini, true},
 		{"3.7 flash high", "gemini-3.7-flash", "high", "gemini-3.7-flash-high", "", maxOutputGemini, true},
 
+		{"3.8 flash low", "gemini-3.8-flash", "low", "gemini-3.8-flash-low", "", maxOutputGemini, true},
+		{"3.8 flash medium", "gemini-3.8-flash", "medium", "gemini-3.8-flash-medium", "", maxOutputGemini, true},
+		{"3.8 flash high", "gemini-3.8-flash", "high", "gemini-3.8-flash-high", "", maxOutputGemini, true},
+
+		{"3.6 flash low", "gemini-3.6-flash", "low", "gemini-3.6-flash-low", "", maxOutputGemini, true},
+		{"3.6 flash medium", "gemini-3.6-flash", "medium", "gemini-3.6-flash-medium", "", maxOutputGemini, true},
+		{"3.6 flash high", "gemini-3.6-flash", "high", "gemini-3.6-flash-high", "", maxOutputGemini, true},
+
 		{"pro low", "gemini-3.1-pro", "low", "gemini-3.1-pro-low", "MODEL_PLACEHOLDER_M36", maxOutputPro, true},
 		{"pro off", "gemini-3.1-pro", "none", "gemini-3.1-pro-low", "MODEL_PLACEHOLDER_M36", maxOutputPro, true},
 		{"pro high", "gemini-3.1-pro", "high", "gemini-pro-agent", "MODEL_PLACEHOLDER_M16", maxOutputPro, true},

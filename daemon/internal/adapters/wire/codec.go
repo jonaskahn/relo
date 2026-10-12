@@ -117,6 +117,17 @@ type CodecOpts struct {
 	// Cursor carries the exact Cursor request tuple one attempt sends. Nil
 	// on every other format.
 	Cursor *CursorRequest
+	// Antigravity carries the exact Cloud Code SKU one attempt sends. Nil
+	// on every other format.
+	Antigravity *AntigravityRequest
+}
+
+// AntigravityRequest is the exact Cloud Code request tuple one attempt sends:
+// the wire SKU the account's discovery published for the requested band.
+type AntigravityRequest struct {
+	WireModel string
+	ModelEnum string
+	MaxOutput int
 }
 
 // CursorParam is one Cursor model parameter pair.

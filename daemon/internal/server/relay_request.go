@@ -36,6 +36,9 @@ type attemptSpec struct {
 	// cursor is the exact Cursor tuple one cursor-agent attempt sends,
 	// resolved after authorization chose the account.
 	cursor *wire.CursorRequest
+	// antigravity is the exact Cloud Code SKU one attempt sends, resolved
+	// after authorization chose the account.
+	antigravity *wire.AntigravityRequest
 	// prefer is the account a retry stays on. hold reports a failure that
 	// another retry of this account follows, so the account is not held to
 	// account for it yet: a rate limit or server fault a retry may cure.
@@ -49,12 +52,8 @@ func (s *Server) attempt(w http.ResponseWriter, spec attemptSpec, tried map[stri
 		return Result{}, err
 	}
 	spec.host, spec.authorized = host, authorized
-	if spec.candidate.Model.APIFormat == catalog.FormatCursorAgent {
-		selection, err := s.selectCursorAttempt(spec.request.Context(), &spec, tried)
-		if err != nil {
-			return Result{}, err
-		}
-		spec.cursor = selection
+	if err := s.resolveAttemptSelections(&spec, tried); err != nil {
+		return Result{}, err
 	}
 	module, supported := s.opts.Formats.Outbound(spec.candidate.Model.APIFormat)
 	if !supported {
@@ -75,6 +74,25 @@ func (s *Server) attempt(w http.ResponseWriter, spec attemptSpec, tried map[stri
 	}
 	s.reportAttemptAsync(spec, result)
 	return result, err
+}
+
+func (s *Server) resolveAttemptSelections(spec *attemptSpec, tried map[string][]string) error {
+	if spec.candidate.Model.APIFormat == catalog.FormatCursorAgent {
+		selection, err := s.selectCursorAttempt(spec.request.Context(), spec, tried)
+		if err != nil {
+			return err
+		}
+		spec.cursor = selection
+	}
+	if spec.candidate.Model.APIFormat != catalog.FormatCloudCode {
+		return nil
+	}
+	selection, err := s.selectAntigravityAttempt(spec.request.Context(), spec, tried)
+	if err != nil {
+		return err
+	}
+	spec.antigravity = selection
+	return nil
 }
 
 func (s *Server) reportAttemptAsync(spec attemptSpec, result Result) {
@@ -227,6 +245,7 @@ func (s *Server) attemptCodecOptions(spec attemptSpec, extra map[string]string, 
 		NativeMillion:          outcome.nativeMillion,
 		PromptTokens:           s.attemptPromptTokens(outcome),
 		Cursor:                 spec.cursor,
+		Antigravity:            spec.antigravity,
 	}
 }
 
