@@ -492,7 +492,9 @@ html[dir="rtl"] .menu:not(.open) nav { transform: translateX(-30%); }
   line-height: 1.05;
 }
 
-.hero-title span { display: block; }
+.hero-title > span { display: block; }
+
+.hero-title .dot { display: inline; }
 
 .hero-strong { color: var(--accent-700); }
 
