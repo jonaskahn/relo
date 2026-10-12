@@ -532,7 +532,27 @@ func (h *harness) scrubDirs(body []byte) []byte {
 			text = strings.ReplaceAll(text, dir, "<tmpdir>")
 		}
 	}
-	return []byte(text)
+	return []byte(scrubDesktopLibraries(text))
+}
+
+// desktopLibraries names the Claude Desktop library root every platform
+// resolves, so the integrations preview matches whichever platform runs the
+// test. The roots are known and joined with the platform separator, so no
+// pattern ever touches the body.
+func desktopLibraries() []string {
+	home := "<tmpdir>"
+	return []string{
+		codingclients.DesktopConfigLibrary(codingclients.DesktopPaths{Home: home, Platform: "darwin"}),
+		codingclients.DesktopConfigLibrary(codingclients.DesktopPaths{Home: home, Platform: "linux"}),
+		codingclients.DesktopConfigLibrary(codingclients.DesktopPaths{Home: home, Platform: "windows"}),
+	}
+}
+
+func scrubDesktopLibraries(text string) string {
+	for _, library := range desktopLibraries() {
+		text = strings.ReplaceAll(text, library, "<desktop-library>")
+	}
+	return text
 }
 
 func (h *harness) pin(value any) any {
