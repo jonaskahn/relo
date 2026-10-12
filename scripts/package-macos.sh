@@ -76,29 +76,11 @@ lipo -create -output "$app/Contents/MacOS/Relo" \
   "$scratch/relo-darwin-arm64" "$scratch/relo-darwin-amd64"
 chmod +x "$app/Contents/MacOS/Relo"
 
-sparkle_version="2.9.4"
-sparkle_sha256="ce89daf967db1e1893ed3ebd67575ed82d3902563e3191ca92aaec9164fbdef9"
+# shellcheck source=sparkle-keys.sh
+. "$root/scripts/sparkle-keys.sh"
 # Outside dist/ on purpose: `make package-clean` wipes dist, and a fresh
 # 15 MB download on every run is what made packaging look like it hung.
-sparkle_root="${RELO_CACHE:-$HOME/Library/Caches/relo}/sparkle-$sparkle_version"
-if [ ! -d "$sparkle_root/Sparkle.framework" ]; then
-  # Inside scratch so an interrupted run cannot leave a truncated archive
-  # behind for the next one to trip over. --retry covers a stalled
-  # connection; --progress-bar keeps the 15 MB transfer visible even when
-  # make captures stderr, so it never looks like a hung build.
-  archive="$scratch/sparkle-$sparkle_version.tar.xz"
-  curl -fSL --retry 3 --progress-bar -o "$archive" \
-    "https://github.com/sparkle-project/Sparkle/releases/download/${sparkle_version}/Sparkle-${sparkle_version}.tar.xz"
-  echo "${sparkle_sha256}  $archive" | shasum -a 256 -c -
-  mkdir -p "$sparkle_root"
-  tar -xf "$archive" -C "$sparkle_root"
-  if [ ! -d "$sparkle_root/Sparkle.framework" ]; then
-    found="$(find "$sparkle_root" -maxdepth 3 -name Sparkle.framework -type d | head -n 1)"
-    if [ -n "$found" ]; then
-      ln -s "$(cd "$(dirname "$found")" && pwd)/$(basename "$found")" "$sparkle_root/Sparkle.framework"
-    fi
-  fi
-fi
+sparkle_root="$(ensure_sparkle)"
 mkdir -p "$app/Contents/Frameworks"
 rm -rf "$app/Contents/Frameworks/Sparkle.framework"
 cp -R "$sparkle_root/Sparkle.framework" "$app/Contents/Frameworks/Sparkle.framework"
@@ -134,7 +116,13 @@ sips -z 512 512 "$root/packaging/darwin/app-icon.png" --out "$iconset/icon_512x5
 sips -z 1024 1024 "$root/packaging/darwin/app-icon.png" --out "$iconset/icon_512x512@2x.png" >/dev/null
 iconutil -c icns "$iconset" -o "$app/Contents/Resources/icon.icns"
 
+# SPARKLE_PUBLIC_ED_KEY pins the update feed to this publisher; generate the
+# keypair at build time when unset so a local run never needs a stored secret.
 public_key="${SPARKLE_PUBLIC_ED_KEY:-}"
+if [ -z "$public_key" ]; then
+  public_key="$(sparkle_public_key)"
+  echo "generated the Sparkle keypair in the login keychain"
+fi
 sed -e "s/__VERSION__/$version/g" -e "s/__SU_PUBLIC_ED_KEY__/$public_key/g" \
   -e "s/__MACOS_MIN_VERSION__/$macos_min/g" \
   "$root/packaging/darwin/Info.plist" > "$app/Contents/Info.plist"
