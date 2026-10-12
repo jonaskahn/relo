@@ -185,11 +185,11 @@ func TestClaudeSignInDropsTheVendorWord(t *testing.T) {
 		t.Fatalf("published = %+v, want one entry per connection", plain)
 	}
 	signIn := plain["relo-claude-ai-claude-opus-5-5"]
-	if catalog.ConfigModelName(signIn.Name, signIn.Connection, signIn.ContextWindow, false) != "Claude Opus 5.5 1M on Claude.ai" {
+	if catalog.ConfigModelName(signIn.Name, signIn.Connection, signIn.ContextWindow, "") != "Claude Opus 5.5 1M on Claude.ai" {
 		t.Fatalf("published = %+v, want the full name on the OpenAI surface", plain)
 	}
 	api := plain["relo-claude-api-claude-opus-5-5-1m"]
-	if catalog.ConfigModelName(api.Name, api.Connection, api.ContextWindow, false) != "Claude Opus 5.5 1M on Claude API" {
+	if catalog.ConfigModelName(api.Name, api.Connection, api.ContextWindow, "") != "Claude Opus 5.5 1M on Claude API" {
 		t.Fatalf("published = %+v, want the name kept elsewhere", plain)
 	}
 

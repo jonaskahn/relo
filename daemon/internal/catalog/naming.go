@@ -95,9 +95,9 @@ func ClientModelID(providerID, modelID string) string {
 // ClientModelName is the label Claude Code and Claude Desktop show for one
 // connection's model: the model, then the connection. A million-token window,
 // the same size that earns the [1m] identifier suffix, is marked in front of
-// the connection, and a max-mode lane is marked after it. A label that
-// already carries the mark keeps its own spelling.
-func ClientModelName(modelLabel, providerLabel string, window *int64, maxMode bool) string {
+// the connection, and a variant lane marker follows it. A label that already
+// carries the marker keeps its own spelling.
+func ClientModelName(modelLabel, providerLabel string, window *int64, variant string) string {
 	label := strings.TrimSpace(modelLabel)
 	if window != nil && *window >= MillionContext {
 		if label == "" {
@@ -106,11 +106,11 @@ func ClientModelName(modelLabel, providerLabel string, window *int64, maxMode bo
 			label += " 1M"
 		}
 	}
-	if maxMode && !HasMaxMarker(label) {
+	if variant != "" && !HasVariantMarker(label) {
 		if label == "" {
-			label = "Max"
+			label = strings.Trim(strings.TrimSpace(variant), "()")
 		} else {
-			label += " Max"
+			label += " " + variant
 		}
 	}
 	provider := strings.TrimSpace(providerLabel)
@@ -143,6 +143,42 @@ func HasMaxLane(modelID string) bool {
 	return strings.Contains(id, "-max-") || strings.HasSuffix(id, "-max")
 }
 
+// HasFastLane reports whether a model identifier names a fast-mode lane, in
+// the same segment discipline as HasMaxLane, so breakfast never qualifies.
+func HasFastLane(modelID string) bool {
+	id := strings.TrimSpace(modelID)
+	return strings.Contains(id, "-fast-") || strings.HasSuffix(id, "-fast")
+}
+
+// LaneMarker names the variant lanes a model identifier selects, in the
+// order the picker shows them: fast, then max. It is empty when the
+// identifier selects neither.
+func LaneMarker(modelID string) string {
+	switch fast, max := HasFastLane(modelID), HasMaxLane(modelID); {
+	case fast && max:
+		return "(Fast, Max)"
+	case fast:
+		return "(Fast)"
+	case max:
+		return "(Max)"
+	default:
+		return ""
+	}
+}
+
+// HasVariantMarker reports whether a display label already carries a lane
+// marker, so a marked label is never marked twice. Only the markers Relo
+// publishes qualify; a name like Claude Opus 4.6 (Thinking) is untouched.
+func HasVariantMarker(label string) bool {
+	trimmed := strings.TrimSpace(label)
+	for _, marker := range []string{"(Fast, Max)", "(Fast)", "(Max)"} {
+		if strings.HasSuffix(trimmed, marker) {
+			return true
+		}
+	}
+	return HasMaxMarker(label)
+}
+
 // StripClaudePrefix drops the vendor word a Claude.ai connection's own models
 // carry, so the picker reads Opus rather than Claude Opus. Models on any
 // other connection keep their names untouched.
@@ -155,10 +191,10 @@ func StripClaudePrefix(label string) string {
 }
 
 // ConfigModelName is the label a client's own configuration file shows: the
-// model, then the provider. A route names Relo as that provider. A max-mode
-// lane is marked after the window, the way the model list marks it.
-func ConfigModelName(modelLabel, providerLabel string, window *int64, maxMode bool) string {
-	return ClientModelName(modelLabel, providerLabel, window, maxMode)
+// model, then the provider. A route names Relo as that provider. A variant
+// lane marker follows the window, the way the model list marks it.
+func ConfigModelName(modelLabel, providerLabel string, window *int64, variant string) string {
+	return ClientModelName(modelLabel, providerLabel, window, variant)
 }
 
 // ClientRouteID names one route the way a client asks for it.
