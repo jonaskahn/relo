@@ -78,6 +78,7 @@ func TestQuotaRecording(t *testing.T) {
 		if recorder.Code != http.StatusOK {
 			t.Fatalf("status = %d, want the relayed answer", recorder.Code)
 		}
+		h.settle()
 		calls := quota.recorded()
 		if len(calls) != 1 {
 			t.Fatalf("recorded = %+v, want one reading", calls)
