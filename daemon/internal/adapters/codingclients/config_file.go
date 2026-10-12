@@ -162,7 +162,17 @@ func ConfigDisplayName(model ModelRef) string {
 	if name == "" {
 		name = model.ID
 	}
-	return catalog.ConfigModelName(name, model.Connection, model.ContextWindow)
+	return catalog.ConfigModelName(name, model.Connection, model.ContextWindow, cursorMaxLane(model))
+}
+
+// cursorMaxLane reports whether a Cursor model names a max-mode lane in its
+// identifiers. Only a Cursor connection qualifies, so a model another
+// provider happens to name with -max- keeps its own spelling.
+func cursorMaxLane(model ModelRef) bool {
+	if !strings.EqualFold(strings.TrimSpace(model.Connection), "cursor") {
+		return false
+	}
+	return catalog.HasMaxLane(model.ID) || catalog.HasMaxLane(model.Upstream)
 }
 
 func namedConfigLabel(model ModelRef) string {

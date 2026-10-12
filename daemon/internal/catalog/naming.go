@@ -134,6 +134,15 @@ func HasMaxMarker(label string) bool {
 	return strings.HasSuffix(strings.ToLower(trimmed), " max")
 }
 
+// HasMaxLane reports whether a model identifier names a max-mode lane: a
+// -max- segment or a -max suffix. Published identifiers carry Relo's own -1m
+// marker after the lane, so ...-fast-max-1m qualifies while climax and a
+// bare max never do.
+func HasMaxLane(modelID string) bool {
+	id := strings.TrimSpace(modelID)
+	return strings.Contains(id, "-max-") || strings.HasSuffix(id, "-max")
+}
+
 // StripClaudePrefix drops the vendor word a Claude.ai connection's own models
 // carry, so the picker reads Opus rather than Claude Opus. Models on any
 // other connection keep their names untouched.
@@ -146,9 +155,10 @@ func StripClaudePrefix(label string) string {
 }
 
 // ConfigModelName is the label a client's own configuration file shows: the
-// model, then the provider. A route names Relo as that provider.
-func ConfigModelName(modelLabel, providerLabel string, window *int64) string {
-	return ClientModelName(modelLabel, providerLabel, window, false)
+// model, then the provider. A route names Relo as that provider. A max-mode
+// lane is marked after the window, the way the model list marks it.
+func ConfigModelName(modelLabel, providerLabel string, window *int64, maxMode bool) string {
+	return ClientModelName(modelLabel, providerLabel, window, maxMode)
 }
 
 // ClientRouteID names one route the way a client asks for it.

@@ -77,6 +77,16 @@ func TestPublicNamesCarryProviderAndModel(t *testing.T) {
 	if got := catalog.ClientModelName("Climax", "Cursor", nil, true); got != "Climax Max on Cursor" {
 		t.Errorf("ClientModelName() = %q, want a plain suffix without guessing", got)
 	}
+	for _, id := range []string{"sonnet-max", "claude-opus-4-7-1m-fast-max", "relo-cursor-grok-4.7-1m-max-1m"} {
+		if !catalog.HasMaxLane(id) {
+			t.Errorf("HasMaxLane(%q) = false, want a max-mode lane", id)
+		}
+	}
+	for _, id := range []string{"", "max", "climax", "gpt-4o", "maximal-model", "model-maximum"} {
+		if catalog.HasMaxLane(id) {
+			t.Errorf("HasMaxLane(%q) = true, want no lane", id)
+		}
+	}
 	if got := catalog.ClientRouteID("Smart Combo"); got != "reloc-smart-combo" {
 		t.Errorf("ClientRouteID() = %q, want reloc-smart-combo", got)
 	}
@@ -107,17 +117,17 @@ func TestStripClaudePrefixDropsTheVendorWord(t *testing.T) {
 }
 
 func TestConfigModelNameNamesTheProviderAndRelo(t *testing.T) {
-	if got := catalog.ConfigModelName("GPT-4o", "OpenAI", nil); got != "GPT-4o on OpenAI" {
+	if got := catalog.ConfigModelName("GPT-4o", "OpenAI", nil, false); got != "GPT-4o on OpenAI" {
 		t.Errorf("ConfigModelName() = %q, want GPT-4o on OpenAI", got)
 	}
 	million := int64(catalog.MillionContext)
-	if got := catalog.ConfigModelName("Claude Opus 4.6 (Thinking)", "Google Antigravity", &million); got != "Claude Opus 4.6 (Thinking) 1M on Google Antigravity" {
+	if got := catalog.ConfigModelName("Claude Opus 4.6 (Thinking)", "Google Antigravity", &million, false); got != "Claude Opus 4.6 (Thinking) 1M on Google Antigravity" {
 		t.Errorf("ConfigModelName() = %q, want the million-token mark before the provider", got)
 	}
-	if got := catalog.ConfigModelName("Smart Combo", catalog.RouteLabelPrefix, nil); got != "Smart Combo on Relo" {
+	if got := catalog.ConfigModelName("Smart Combo", catalog.RouteLabelPrefix, nil, false); got != "Smart Combo on Relo" {
 		t.Errorf("ConfigModelName() = %q, want a route to name Relo as the provider", got)
 	}
-	if got := catalog.ConfigModelName("Smart Combo", catalog.RouteLabelPrefix, &million); got != "Smart Combo 1M on Relo" {
+	if got := catalog.ConfigModelName("Smart Combo", catalog.RouteLabelPrefix, &million, false); got != "Smart Combo 1M on Relo" {
 		t.Errorf("ConfigModelName() = %q, want a marked route to name Relo as the provider", got)
 	}
 }

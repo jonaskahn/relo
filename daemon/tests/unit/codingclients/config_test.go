@@ -542,3 +542,35 @@ func TestClientConfigsUseAStatedThinkLadder(t *testing.T) {
 		t.Fatalf("openclaw thinker efforts = %v, want the shared ladder", thinker)
 	}
 }
+
+func TestMergeOpenCodeMarksCursorMaxLanes(t *testing.T) {
+	million := int64(1_000_000)
+	models := []codingclients.ModelRef{
+		{ID: "relo-cursor-grok-4.7-1m", Name: "Grok 4.7", Connection: "Cursor", ContextWindow: &million},
+		{ID: "relo-cursor-grok-4.7-1m-max-1m", Name: "Grok 4.7", Connection: "Cursor", ContextWindow: &million, Upstream: "grok-4.7-1m-fast-max"},
+		{ID: "relo-openai-gpt-max-1m", Name: "GPT Max", Connection: "OpenAI", ContextWindow: &million},
+	}
+	merged, err := codingclients.MergeOpenCodeVersions("", baseURL, models, codingclients.OpenCodeBoth)
+	if err != nil {
+		t.Fatalf("MergeOpenCodeVersions() error = %v", err)
+	}
+	var document map[string]any
+	if err := json.Unmarshal([]byte(merged), &document); err != nil {
+		t.Fatalf("merged file does not parse: %v\n%s", err, merged)
+	}
+	for _, key := range []string{"provider", "providers"} {
+		names := map[string]string{}
+		for id, model := range openCodeModelsOf(t, document, key) {
+			names[id] = model.(map[string]any)["name"].(string)
+		}
+		if names["relo-cursor-grok-4.7-1m"] != "Grok 4.7 1M on Cursor" {
+			t.Fatalf("%s standard lane = %q, want no max mark", key, names["relo-cursor-grok-4.7-1m"])
+		}
+		if names["relo-cursor-grok-4.7-1m-max-1m"] != "Grok 4.7 1M Max on Cursor" {
+			t.Fatalf("%s max lane = %q, want the max mark after the window", key, names["relo-cursor-grok-4.7-1m-max-1m"])
+		}
+		if names["relo-openai-gpt-max-1m"] != "GPT Max 1M on OpenAI" {
+			t.Fatalf("%s non-cursor lane = %q, want its own spelling kept", key, names["relo-openai-gpt-max-1m"])
+		}
+	}
+}

@@ -94,7 +94,7 @@ func listedStandalone(snapshot *catalog.Snapshot, view listView, model catalog.M
 		label = catalog.StripClaudePrefix(label)
 	}
 	return listedModel{
-		ID: id, Name: catalog.ClientModelName(label, providerLabel(snapshot, model.ProviderID), namedWindow(window, snapshot.MillionAlone(viewModel)), cursorMaxLane(model)),
+		ID: id, Name: catalog.ClientModelName(label, providerLabel(snapshot, model.ProviderID), namedWindow(window, snapshot.MillionAlone(viewModel)), cursorMaxLane(snapshot, model)),
 		ProviderID: model.ProviderID, SourceModelID: model.ID,
 		NativeMillion: snapshot.MillionAlone(viewModel),
 		Suffixed:      snapshot.OffersSuffixed(viewModel),
@@ -111,12 +111,23 @@ func namedWindow(window *int64, alone bool) *int64 {
 	return window
 }
 
-// cursorMaxLane reports whether a model id names a max-mode Cursor lane.
-// Grouped Cursor lane ids end in "-max" exactly when the lane runs max mode,
-// so the picker can tell the twin lanes apart. Anything else, including a
-// non-Cursor model that happens to end that way, is never marked.
-func cursorMaxLane(model catalog.Model) bool {
-	return model.APIFormat == catalog.FormatCursorAgent && strings.HasSuffix(model.ID, "-max")
+// cursorMaxLane reports whether a model names a max-mode Cursor lane. Native
+// lanes carry the cursor-agent format; lanes a Cursor template serves over
+// another format name max mode in the id itself. Published identifiers carry
+// Relo's own -1m marker after the lane, so ...-fast-max-1m qualifies. A
+// non-Cursor model that happens to read that way is never marked.
+func cursorMaxLane(snapshot *catalog.Snapshot, model catalog.Model) bool {
+	if model.APIFormat == catalog.FormatCursorAgent {
+		return catalog.HasMaxLane(model.ID)
+	}
+	return cursorTemplate(snapshot, model.ProviderID) && catalog.HasMaxLane(model.ID)
+}
+
+// cursorTemplate reports whether a provider runs the Cursor sign-in
+// template, so its lanes are Cursor's even when another format serves them.
+func cursorTemplate(snapshot *catalog.Snapshot, providerID string) bool {
+	host, found := snapshot.Provider(providerID)
+	return found && host.TemplateID == "cursor"
 }
 
 func appendListedVariants(entries []listedModel, entry listedModel, enabled bool) []listedModel {
