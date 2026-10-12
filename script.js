@@ -34,7 +34,7 @@
     });
   }
 
-  /* ---------- Intro ---------- */
+  /* ---------- Intro: typed "Relo." ---------- */
 
   function finishIntro() {
     root.classList.add("is-ready", "is-in", "intro-done");
@@ -60,48 +60,33 @@
     preWord.appendChild(cursor);
 
     spans.forEach(function (span, index) {
-      window.setTimeout(function () { span.style.opacity = "1"; }, 250 + index * 140);
+      window.setTimeout(function () { span.style.opacity = "1"; }, 250 + index * 120);
     });
 
     window.setTimeout(function () {
       preloader.classList.add("out");
       root.classList.add("is-ready");
-    }, 250 + letters.length * 140 + 450);
+    }, 250 + letters.length * 120 + 420);
 
     window.setTimeout(function () {
-      root.classList.add("is-in");
-    }, 250 + letters.length * 140 + 450 + 700);
+      preloader.remove();
+    }, 250 + letters.length * 120 + 420 + 600);
 
-    window.setTimeout(finishIntro, 250 + letters.length * 140 + 450 + 2200);
+    window.setTimeout(finishIntro, 250 + letters.length * 120 + 420 + 560);
   } else {
     finishIntro();
   }
 
-  /* ---------- Nav colour over dark sections ---------- */
-
-  var darkNodes = document.querySelectorAll("[data-dark]");
-
-  if ("IntersectionObserver" in window && darkNodes.length) {
-    var overlapping = new Set();
-    var navObserver = new IntersectionObserver(
-      function (entries) {
-        entries.forEach(function (entry) {
-          if (entry.isIntersecting) overlapping.add(entry.target);
-          else overlapping.delete(entry.target);
-        });
-        body.dataset.nav = overlapping.size ? "dark" : "light";
-      },
-      { rootMargin: "0px 0px -94% 0px" }
-    );
-    darkNodes.forEach(function (node) { navObserver.observe(node); });
-  }
-
-  /* ---------- Menu ---------- */
+  /* ---------- Menu: left drawer ---------- */
 
   var navToggle = document.getElementById("navToggle");
   var menu = document.getElementById("menu");
   var background = document.querySelectorAll("main, footer");
   setMenuLabel();
+
+  function menuLinks() {
+    return menu ? Array.prototype.slice.call(menu.querySelectorAll("a")) : [];
+  }
 
   function setMenuLabel() {
     if (!navToggle) return;
@@ -118,6 +103,12 @@
     body.classList.toggle("menu-open", open);
     body.style.overflow = open ? "hidden" : "";
     background.forEach(function (node) { node.inert = open; });
+    if (open) {
+      var first = menuLinks()[0];
+      if (first) first.focus({ preventScroll: true });
+    } else {
+      navToggle.focus({ preventScroll: true });
+    }
   }
 
   if (navToggle && menu) {
@@ -125,7 +116,7 @@
       setMenu(navToggle.getAttribute("aria-expanded") !== "true");
     });
 
-    menu.querySelectorAll("a").forEach(function (link) {
+    menuLinks().forEach(function (link) {
       link.addEventListener("click", function () { setMenu(false); });
     });
 
@@ -135,40 +126,14 @@
         navToggle.focus();
       }
     });
-  }
 
-  /* ---------- Count-up ---------- */
-
-  var stats = document.querySelectorAll(".stat-num[data-end]");
-
-  function countUp(node) {
-    var end = Number(node.dataset.end);
-    var start = null;
-    var duration = 2000;
-
-    function frame(now) {
-      if (start === null) start = now;
-      var t = Math.min((now - start) / duration, 1);
-      node.textContent = String(Math.round(end * (1 - Math.pow(1 - t, 3))));
-      if (t < 1) window.requestAnimationFrame(frame);
-    }
-
-    node.textContent = "0";
-    window.requestAnimationFrame(frame);
-  }
-
-  if (!reduced && "IntersectionObserver" in window && stats.length) {
-    var statObserver = new IntersectionObserver(
-      function (entries) {
-        entries.forEach(function (entry) {
-          if (!entry.isIntersecting) return;
-          statObserver.unobserve(entry.target);
-          countUp(entry.target);
-        });
-      },
-      { threshold: 0.6 }
-    );
-    stats.forEach(function (node) { statObserver.observe(node); });
+    // Focus stays in the drawer while it is open.
+    document.addEventListener("focusin", function (event) {
+      if (!menu.classList.contains("open")) return;
+      if (menu.contains(event.target)) return;
+      var first = menuLinks()[0];
+      if (first) first.focus({ preventScroll: true });
+    });
   }
 
   /* ---------- Copy ---------- */

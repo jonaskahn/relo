@@ -21,12 +21,6 @@
   <meta name="twitter:title" content="Relo - local LLM gateway">
   <meta name="twitter:description" content="Relo is a local LLM gateway. Codex, Claude Code, Cursor, and Grok keep their own config and still reach any upstream.">
   <meta name="twitter:image" content="https://jonaskahn.github.io/relo/media/logo.png">
-  <style>
-    body { font-size: 16px; }
-    h1 { font-size: 4.5rem; }
-    h2 { font-size: 2.25rem; }
-    h3 { font-size: 1.25rem; }
-  </style>
   <link rel="stylesheet" href="style.css">
   <script>
     (function () {
@@ -73,7 +67,7 @@
   }
   </script>
 </head>
-<body data-nav="light">
+<body>
   <a class="skip-link" href="#main" data-i18n="skip">Skip to content</a>
 
   <div class="preloader" id="preloader" aria-hidden="true">
@@ -104,24 +98,8 @@
   </div>
 
   <main id="main">
-    <section class="scene" id="top">
-      <div class="stage">
-        <div class="hero-text">
-          <div class="hero-enter">
-            <h1 class="hero-title">
-              <span class="h-small" data-i18n="heroSmall">One loopback</span>
-              <span class="h-huge">Proxy<span class="dot">.</span></span>
-            </h1>
-            <div class="hero-side">
-              <p class="hero-lead" data-i18n="lead">Codex, Claude Code, Cursor, and Grok keep their own config and still reach any upstream.</p>
-              <div class="hero-actions">
-                <a class="btn primary" href="#install" data-i18n="install">Install</a>
-                <a class="btn ghost" href="https://github.com/jonaskahn/relo" data-i18n="btnGithub">View on GitHub</a>
-              </div>
-            </div>
-          </div>
-        </div>
-
+    <section class="hero" id="top" aria-labelledby="hero-heading">
+      <div class="hero-grid">
         <figure class="dash">
           <picture>
             <source media="(max-width: 767px)" srcset="media/dashboard-mobile.webp" type="image/webp" width="910" height="1886">
@@ -136,59 +114,55 @@
           </picture>
         </figure>
 
-        <div class="curtain" data-dark>
-          <div class="curtain-copy">
-            <h2 class="statement" data-i18n="statement">Relo is a local LLM gateway. It sits between your coding clients and upstream providers, routes requests, pools accounts, and records usage.</h2>
-            <ul class="stats">
-              <li><span class="stat-num" data-end="3">3</span><span class="stat-label" data-i18n="s1">Loopback ports</span></li>
-              <li><span class="stat-num" data-end="4">4</span><span class="stat-label" data-i18n="s2">Clients tested</span></li>
-              <li><span class="stat-num" data-end="3">3</span><span class="stat-label" data-i18n="s3">Console languages</span></li>
-            </ul>
+        <div class="hero-copy hero-enter">
+          <h1 class="hero-title" id="hero-heading">
+            <span data-i18n="heroSmall">One loopback</span>
+            <span class="hero-strong">Proxy<span class="dot">.</span></span>
+          </h1>
+          <p class="hero-lead" data-i18n="lead">Codex, Claude Code, Cursor, and Grok keep their own config and still reach any upstream.</p>
+          <div class="hero-actions">
+            <a class="btn primary" href="#install" data-i18n="install">Install</a>
+            <a class="btn" href="https://github.com/jonaskahn/relo" data-i18n="btnGithub">View on GitHub</a>
           </div>
         </div>
       </div>
+
+      <div class="panel statement-panel">
+        <p class="statement" data-i18n="statement">Relo is a local LLM gateway. It sits between your coding clients and upstream providers, routes requests, pools accounts, and records usage.</p>
+        <ul class="stats">
+          <li><span class="stat-num mono-data">3</span><span class="stat-label" data-i18n="s1">Loopback ports</span></li>
+          <li><span class="stat-num mono-data">4</span><span class="stat-label" data-i18n="s2">Clients tested</span></li>
+          <li><span class="stat-num mono-data">20</span><span class="stat-label" data-i18n="s3">Console languages</span></li>
+        </ul>
+      </div>
     </section>
 
-    <section class="ports" id="ports" data-dark aria-labelledby="ports-heading">
-      <div class="ticker" aria-hidden="true">
-        <div class="ticker-track">
-          <span>Relo.&nbsp;&nbsp;&nbsp;Relo.&nbsp;&nbsp;&nbsp;Relo.&nbsp;&nbsp;&nbsp;Relo.&nbsp;&nbsp;&nbsp;Relo.&nbsp;&nbsp;&nbsp;Relo.&nbsp;&nbsp;</span>
-          <span>Relo.&nbsp;&nbsp;&nbsp;Relo.&nbsp;&nbsp;&nbsp;Relo.&nbsp;&nbsp;&nbsp;Relo.&nbsp;&nbsp;&nbsp;Relo.&nbsp;&nbsp;&nbsp;Relo.&nbsp;&nbsp;</span>
-        </div>
-      </div>
-      <div class="ports-inner">
-        <h2 id="ports-heading" class="ports-title" data-i18n="s1">Loopback ports</h2>
-        <ul class="ports-row">
-          <li class="port">
-            <div class="port-in">
-              <p class="port-num"><code>10101</code></p>
-              <div>
-                <h3 data-i18n="p1t">Console and management API</h3>
-                <p data-i18n="p1d">Opens at <code>http://127.0.0.1:10101</code>. With <code>[admin] login = true</code>, sign in with the admin token.</p>
-              </div>
-            </div>
-          </li>
-          <li class="port">
-            <div class="port-in">
-              <p class="port-num"><code>10201</code></p>
-              <div>
-                <h3 data-i18n="p2t">OpenAI-compatible <code>/v1/*</code></h3>
-                <p data-i18n="p2d">Clients that speak the OpenAI API point here and authenticate with a client key.</p>
-              </div>
-            </div>
-          </li>
-          <li class="port">
-            <div class="port-in">
-              <p class="port-num"><code>10202</code></p>
-              <div>
-                <h3>Anthropic <code>/v1/*</code></h3>
-                <p data-i18n="p3d">Clients that speak the Anthropic API point here and authenticate with a client key.</p>
-              </div>
-            </div>
-          </li>
-        </ul>
-        <p class="ports-note" data-i18n="note">Client keys hit the data plane. The admin token hits the console. Provider credentials go upstream only.</p>
-      </div>
+    <section class="ports" id="ports" aria-labelledby="ports-heading">
+      <h2 id="ports-heading" class="section-title" data-i18n="s1">Loopback ports</h2>
+      <ul class="ports-row">
+        <li class="port">
+          <p class="port-num"><code>10101</code></p>
+          <div>
+            <h3 data-i18n="p1t">Console and management API</h3>
+            <p data-i18n="p1d">Opens at <code>http://127.0.0.1:10101</code>. With <code>[admin] login = true</code>, sign in with the admin token.</p>
+          </div>
+        </li>
+        <li class="port">
+          <p class="port-num"><code>10201</code></p>
+          <div>
+            <h3 data-i18n="p2t">OpenAI-compatible <code>/v1/*</code></h3>
+            <p data-i18n="p2d">Clients that speak the OpenAI API point here and authenticate with a client key.</p>
+          </div>
+        </li>
+        <li class="port">
+          <p class="port-num"><code>10202</code></p>
+          <div>
+            <h3>Anthropic <code>/v1/*</code></h3>
+            <p data-i18n="p3d">Clients that speak the Anthropic API point here and authenticate with a client key.</p>
+          </div>
+        </li>
+      </ul>
+      <p class="ports-note" data-i18n="note">Client keys hit the data plane. The admin token hits the console. Provider credentials go upstream only.</p>
     </section>
 
     <section class="install" id="install" aria-labelledby="install-heading">
