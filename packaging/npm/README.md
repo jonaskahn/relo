@@ -93,4 +93,4 @@ fails the install rather than writing an executable.
 - [Releases](https://github.com/jonaskahn/relo/releases)
 - [Documentation](https://github.com/jonaskahn/relo#readme)
 
-MIT
+AGPL-3.0-only
