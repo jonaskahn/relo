@@ -47,15 +47,15 @@ func (r *cursorStubRelay) Execute(_ context.Context, _ Exchange, _ http.Response
 }
 
 type cursorStubConfigs struct {
-	configs map[string][]catalog.CursorVariant
+	configs map[string][]catalog.ModelRequestConfig
 }
 
-func (s cursorStubConfigs) CursorConfigs(_ context.Context, _ string, credentialID string) ([]catalog.CursorVariant, error) {
+func (s cursorStubConfigs) ModelRequestConfigs(_ context.Context, _ string, credentialID string) ([]catalog.ModelRequestConfig, error) {
 	return s.configs[credentialID], nil
 }
 
 func cursorTestServer(relay *cursorStubRelay, configs cursorStubConfigs) *Server {
-	return &Server{opts: Options{Relay: relay, CursorConfigs: configs}}
+	return &Server{opts: Options{Relay: relay, RequestConfigs: configs}}
 }
 
 func cursorTestSpec(authorized catalog.Authorization, effort string) *attemptSpec {
@@ -75,17 +75,17 @@ func cursorTestSpec(authorized catalog.Authorization, effort string) *attemptSpe
 	}
 }
 
-func cursorVariant(group, selection, effort, details string) catalog.CursorVariant {
-	return catalog.CursorVariant{
+func cursorVariant(group, selection, effort, details string) catalog.ModelRequestConfig {
+	return catalog.EncodeCursorConfig(catalog.CursorVariant{
 		GroupID: group, Selection: selection, Effort: effort,
 		ModelID: "sonnet", DetailsID: details,
-	}
+	})
 }
 
 func TestSelectCursorAttempt(t *testing.T) {
 	first := catalog.Authorization{CredentialID: "cred-a", Label: "a", Token: "a"}
 	second := catalog.Authorization{CredentialID: "cred-b", Label: "b", Token: "b"}
-	configs := cursorStubConfigs{configs: map[string][]catalog.CursorVariant{
+	configs := cursorStubConfigs{configs: map[string][]catalog.ModelRequestConfig{
 		"cred-a": {
 			cursorVariant("sonnet", "low", "low", "sonnet-low"),
 			cursorVariant("sonnet", "high", "high", "sonnet-high"),

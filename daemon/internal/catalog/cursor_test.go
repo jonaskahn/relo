@@ -1,6 +1,7 @@
 package catalog
 
 import (
+	"slices"
 	"testing"
 
 	"github.com/jonaskahn/relo/internal/inference"
@@ -65,5 +66,42 @@ func TestRequestEffort(t *testing.T) {
 	}
 	if _, stated := RequestEffort(&inference.ReasoningConfig{}); stated {
 		t.Fatal("RequestEffort() reported an unstated effort")
+	}
+}
+
+func TestCursorConfigCoding(t *testing.T) {
+	variant := CursorVariant{
+		GroupID: "sonnet", Selection: "high", Effort: "high", Default: true,
+		ModelID: "sonnet", DetailsID: "sonnet-high", MaxMode: true,
+		Params:  []CursorParam{{ID: "effort", Value: "high"}},
+		Context: 200000, Images: true, Reasoning: true,
+	}
+	stored := EncodeCursorConfig(variant)
+	if stored.ModelID != "sonnet" || stored.Selection != "high" || !stored.Default {
+		t.Fatalf("stored = %+v, want the shared identity kept", stored)
+	}
+	if stored.APIFormat != FormatCursorAgent {
+		t.Fatalf("stored = %+v, want the owning codec named", stored)
+	}
+	decoded, ok := DecodeCursorConfig(stored)
+	if !ok {
+		t.Fatalf("stored = %+v, want the tuple back", stored)
+	}
+	if decoded.GroupID != variant.GroupID || decoded.Selection != variant.Selection ||
+		decoded.Effort != variant.Effort || decoded.Default != variant.Default ||
+		decoded.ModelID != variant.ModelID || decoded.DetailsID != variant.DetailsID ||
+		decoded.MaxMode != variant.MaxMode || decoded.Context != variant.Context ||
+		decoded.Images != variant.Images || decoded.Reasoning != variant.Reasoning ||
+		!slices.Equal(decoded.Params, variant.Params) {
+		t.Fatalf("decoded = %+v, want %+v", decoded, variant)
+	}
+	if _, ok := DecodeCursorConfig(ModelRequestConfig{APIFormat: FormatKiro, WireConfig: "{}"}); ok {
+		t.Fatal("DecodeCursorConfig() read another codec's configuration")
+	}
+	if _, ok := DecodeCursorConfig(ModelRequestConfig{APIFormat: FormatCursorAgent, WireConfig: "{"}); ok {
+		t.Fatal("DecodeCursorConfig() read a broken payload")
+	}
+	if _, ok := DecodeCursorConfig(ModelRequestConfig{APIFormat: FormatCursorAgent, WireConfig: "{}"}); ok {
+		t.Fatal("DecodeCursorConfig() read a payload without the exact triple")
 	}
 }

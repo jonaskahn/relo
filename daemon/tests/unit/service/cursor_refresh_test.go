@@ -144,10 +144,10 @@ func writeCursorRich(t *testing.T, w http.ResponseWriter, variants []cursorFixtu
 	_, _ = w.Write(out.BytesOut())
 }
 
-func cursorSelections(configs []catalog.CursorVariant) []string {
+func cursorSelections(configs []catalog.ModelRequestConfig) []string {
 	selections := make([]string, 0, len(configs))
 	for _, config := range configs {
-		selections = append(selections, config.GroupID+"/"+config.Selection)
+		selections = append(selections, config.ModelID+"/"+config.Selection)
 	}
 	sort.Strings(selections)
 	return selections
@@ -207,7 +207,7 @@ func TestCursorRefreshGroupsAccounts(t *testing.T) {
 		t.Fatalf("efforts = %v, want the union across both accounts", efforts)
 	}
 
-	configs := sqlite.NewCursorConfigRepo(h.db)
+	configs := sqlite.NewRequestConfigRepo(h.db)
 	storedA, err := configs.Load(ctx, "cursor", credA.ID)
 	if err != nil {
 		t.Fatalf("Load(a) error = %v", err)

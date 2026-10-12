@@ -565,13 +565,13 @@ func coreServerOptions(built deps, captures *sqlite.CaptureStore) server.Options
 		Activity: appactivity.New(appactivity.Options{
 			Usage: sqlite.NewUsageQuery(built.db), Captures: captures,
 		}),
-		Formats:       wireformats.New(),
-		CursorConfigs: sqlite.NewCatalogRepo(built.db),
-		Ports:         NewPortInspector(),
-		Callbacks:     NewCallbackBridge(built.callbacks),
-		CallbackIcon:  oauth.CallbackIcon,
-		CallbackPorts: oauth.DefaultRegistry(),
-		DeviceSeed:    deviceSeed(built.home),
+		Formats:        wireformats.New(),
+		RequestConfigs: sqlite.NewCatalogRepo(built.db),
+		Ports:          NewPortInspector(),
+		Callbacks:      NewCallbackBridge(built.callbacks),
+		CallbackIcon:   oauth.CallbackIcon,
+		CallbackPorts:  oauth.DefaultRegistry(),
+		DeviceSeed:     deviceSeed(built.home),
 	}
 }
 

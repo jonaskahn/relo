@@ -197,7 +197,7 @@ func TestGroupsToListedKeepsTuples(t *testing.T) {
 		t.Fatalf("listed = %+v", listed)
 	}
 	entry := listed[0]
-	if entry.ID != "sonnet" || len(entry.Cursor) != 2 {
+	if entry.ID != "sonnet" || len(entry.RequestConfigs) != 2 {
 		t.Fatalf("entry = %+v", entry)
 	}
 	if len(entry.ReasoningEfforts) != 2 || entry.ReasoningToggle != nil {

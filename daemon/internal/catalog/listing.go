@@ -39,9 +39,27 @@ type Listed struct {
 	// ReasoningToggle reports that the listing stated an on/off thinking
 	// switch. Nil means the listing said nothing about a toggle.
 	ReasoningToggle *bool
-	// Cursor carries the exact request configurations behind one Cursor
-	// group. Nil on every other provider.
-	Cursor []CursorVariant
+	// RequestConfigs carries the exact per-account request tuples behind one
+	// grouped model. Nil on providers whose listing needs no exact tuple.
+	RequestConfigs []ModelRequestConfig
+}
+
+// ModelRequestConfig is one account's exact request tuple for one selection
+// inside a grouped model: the shared identity the roster and selection use,
+// plus the opaque wire payload only the owning codec understands.
+type ModelRequestConfig struct {
+	ModelID   string
+	Selection string
+	Effort    string
+	// Default marks the member an empty effort request resolves to.
+	Default   bool
+	APIFormat APIFormat
+	// WireConfig is the codec's exact request tuple as JSON. Its shape
+	// belongs to the owning codec; storage never reads inside it.
+	WireConfig string
+	Context    int64
+	Images     bool
+	Reasoning  bool
 }
 
 // Cursor selection kinds name how one CursorVariant is chosen inside its

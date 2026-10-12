@@ -13,10 +13,10 @@ import (
 	"github.com/jonaskahn/relo/internal/routing"
 )
 
-// CursorConfigSource reads one account's Cursor request tuples. The
+// RequestConfigSource reads one account's exact request tuples. The
 // composition root backs it with the catalog store.
-type CursorConfigSource interface {
-	CursorConfigs(ctx context.Context, providerID, credentialID string) ([]catalog.CursorVariant, error)
+type RequestConfigSource interface {
+	ModelRequestConfigs(ctx context.Context, providerID, credentialID string) ([]catalog.ModelRequestConfig, error)
 }
 
 // selectCursorAttempt resolves the exact Cursor tuple one attempt sends. An
@@ -72,12 +72,18 @@ func (s *Server) matchCursorAccount(ctx context.Context, spec *attemptSpec, trie
 const maxCursorAccounts = 32
 
 func (s *Server) cursorConfigs(ctx context.Context, providerID, credentialID string) ([]catalog.CursorVariant, error) {
-	if s.opts.CursorConfigs == nil || credentialID == "" {
+	if s.opts.RequestConfigs == nil || credentialID == "" {
 		return nil, fmt.Errorf("cursor selection unavailable: no configuration source")
 	}
-	configs, err := s.opts.CursorConfigs.CursorConfigs(ctx, providerID, credentialID)
+	stored, err := s.opts.RequestConfigs.ModelRequestConfigs(ctx, providerID, credentialID)
 	if err != nil {
 		return nil, fmt.Errorf("read the cursor configurations: %w", err)
+	}
+	configs := make([]catalog.CursorVariant, 0, len(stored))
+	for _, config := range stored {
+		if variant, ok := catalog.DecodeCursorConfig(config); ok {
+			configs = append(configs, variant)
+		}
 	}
 	return configs, nil
 }

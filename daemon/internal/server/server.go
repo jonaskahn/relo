@@ -123,13 +123,13 @@ type Options struct {
 	// Formats resolves the codec of an upstream format, so a model whose
 	// format this build has no codec for is refused before anything is sent.
 	Formats FormatRegistry
-	// CursorConfigs reads one account's Cursor request tuples, which is how
+	// RequestConfigs reads one account's exact request tuples, which is how
 	// an attempt resolves the requested group and effort. A server built
 	// without it refuses cursor-agent attempts before anything is sent.
-	CursorConfigs CursorConfigSource
-	Sessions      *Sessions
-	Events        *EventBus
-	Login         LoginRunner
+	RequestConfigs RequestConfigSource
+	Sessions       *Sessions
+	Events         *EventBus
+	Login          LoginRunner
 	// Shutdown, when set, is how a headless daemon ends itself: the stop
 	// route calls it so `relo daemon stop` can end a daemon no terminal owns. A
 	// process that runs the proxy itself, like the tray app, leaves it nil,

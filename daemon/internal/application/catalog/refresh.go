@@ -128,7 +128,7 @@ func (s *Service) refreshProvider(ctx context.Context, providerID string) (Refre
 		return s.recordRefreshFailure(ctx, providerID, atMs, mdState, err)
 	}
 	s.keepAccountRosters(ctx, rosters)
-	s.keepCursorConfigs(ctx, providerID, host.ModelsFormat, rosters)
+	s.keepRequestConfigs(ctx, providerID, host.ModelsFormat, rosters)
 
 	existingMap := indexExistingModels(existing)
 	assembly := assembleRefreshRoster(t, host, listed, mdIdx, providerID, existingMap)
@@ -221,15 +221,17 @@ func (s *Service) keepAccountRosters(ctx context.Context, rosters *accountRoster
 	}
 }
 
-// keepCursorConfigs stores one account's exact Cursor request tuples beside
-// its roster, so selection resolves the requested effort per account.
-func (s *Service) keepCursorConfigs(ctx context.Context, providerID string, format catalog.ModelsFormat, rosters *accountRosters) {
-	if rosters == nil || format != catalog.ModelsCursor {
+// keepRequestConfigs stores one account's exact request tuples beside its
+// roster, so selection resolves the requested selection per account. A
+// dialect that publishes no tuple stores nothing, which clears whatever an
+// earlier roster had left for the account.
+func (s *Service) keepRequestConfigs(ctx context.Context, providerID string, format catalog.ModelsFormat, rosters *accountRosters) {
+	if rosters == nil || !catalog.PerAccountRoster(format) {
 		return
 	}
-	for credentialID, configs := range rosters.cursor {
-		if err := s.store.SaveCursorConfigs(ctx, providerID, credentialID, configs); err != nil {
-			s.logger.Warn("store an account's cursor configs", "credential", credentialID, "error", err)
+	for credentialID, configs := range rosters.configs {
+		if err := s.store.SaveModelRequestConfigs(ctx, providerID, credentialID, configs); err != nil {
+			s.logger.Warn("store an account's request configs", "credential", credentialID, "error", err)
 		}
 	}
 }
@@ -405,7 +407,7 @@ func markRefreshUnavailable(existing []catalog.Model, seen map[string]bool) []st
 type accountRosters struct {
 	union    []catalog.Listed
 	rosters  map[string][]string
-	cursor   map[string][]catalog.CursorVariant
+	configs  map[string][]catalog.ModelRequestConfig
 	failures []string
 	firstErr error
 	seen     map[string]bool
@@ -424,7 +426,7 @@ func (s *Service) discoverAccounts(ctx context.Context, host catalog.Provider, e
 	acc := &accountRosters{
 		union:   make([]catalog.Listed, 0, 64),
 		rosters: make(map[string][]string, len(entries)),
-		cursor:  make(map[string][]catalog.CursorVariant, len(entries)),
+		configs: make(map[string][]catalog.ModelRequestConfig, len(entries)),
 		seen:    map[string]bool{},
 		index:   map[string]int{},
 	}
@@ -457,7 +459,7 @@ func (s *Service) discoverAccountRoster(ctx context.Context, host catalog.Provid
 	for _, item := range listed {
 		modelIDs = append(modelIDs, item.ID)
 		if acc.seen[item.ID] {
-			acc.mergeCursor(item)
+			acc.mergeRequestConfigs(item)
 			continue
 		}
 		acc.seen[item.ID] = true
@@ -465,54 +467,54 @@ func (s *Service) discoverAccountRoster(ctx context.Context, host catalog.Provid
 		acc.union = append(acc.union, item)
 	}
 	acc.rosters[entry.ID] = modelIDs
-	acc.cursor[entry.ID] = cursorConfigsOf(listed)
+	acc.configs[entry.ID] = requestConfigsOf(listed)
 }
 
-// cursorConfigsOf collects one account's exact Cursor tuples. A successful
+// requestConfigsOf collects one account's exact request tuples. A successful
 // empty listing clears the account's tuples; a failed listing never reaches
 // here, so its previous tuples stay stored.
-func cursorConfigsOf(listed []catalog.Listed) []catalog.CursorVariant {
-	var configs []catalog.CursorVariant
+func requestConfigsOf(listed []catalog.Listed) []catalog.ModelRequestConfig {
+	var configs []catalog.ModelRequestConfig
 	for _, item := range listed {
-		configs = append(configs, item.Cursor...)
+		configs = append(configs, item.RequestConfigs...)
 	}
 	return configs
 }
 
-// mergeCursor unions another account's Cursor configurations into the
+// mergeRequestConfigs unions another account's request tuples into the
 // connection roster, so the displayed efforts cover every account while
 // each account's own entitlement stays per-account.
-func (acc *accountRosters) mergeCursor(item catalog.Listed) {
-	if len(item.Cursor) == 0 {
+func (acc *accountRosters) mergeRequestConfigs(item catalog.Listed) {
+	if len(item.RequestConfigs) == 0 {
 		return
 	}
 	position, found := acc.index[item.ID]
 	if !found {
 		return
 	}
-	merged := mergeCursorVariants(acc.union[position].Cursor, item.Cursor)
-	acc.union[position].Cursor = merged
-	refreshCursorDisplay(&acc.union[position])
+	merged := mergeRequestConfigs(acc.union[position].RequestConfigs, item.RequestConfigs)
+	acc.union[position].RequestConfigs = merged
+	refreshRequestDisplay(&acc.union[position])
 }
 
-func mergeCursorVariants(into, from []catalog.CursorVariant) []catalog.CursorVariant {
+func mergeRequestConfigs(into, from []catalog.ModelRequestConfig) []catalog.ModelRequestConfig {
 	seen := make(map[string]bool, len(into)+len(from))
-	merged := make([]catalog.CursorVariant, 0, len(into)+len(from))
-	for _, variant := range into {
-		key := variant.GroupID + "\x00" + variant.Selection
+	merged := make([]catalog.ModelRequestConfig, 0, len(into)+len(from))
+	for _, config := range into {
+		key := config.ModelID + "\x00" + config.Selection
 		if seen[key] {
 			continue
 		}
 		seen[key] = true
-		merged = append(merged, variant)
+		merged = append(merged, config)
 	}
-	for _, variant := range from {
-		key := variant.GroupID + "\x00" + variant.Selection
+	for _, config := range from {
+		key := config.ModelID + "\x00" + config.Selection
 		if seen[key] {
 			continue
 		}
 		seen[key] = true
-		merged = append(merged, variant)
+		merged = append(merged, config)
 	}
 	sort.Slice(merged, func(i, j int) bool {
 		if merged[i].Selection != merged[j].Selection {
@@ -523,8 +525,8 @@ func mergeCursorVariants(into, from []catalog.CursorVariant) []catalog.CursorVar
 	return merged
 }
 
-func refreshCursorDisplay(entry *catalog.Listed) {
-	efforts, toggle, reasoning, context := cursorDisplayOf(entry.Cursor)
+func refreshRequestDisplay(entry *catalog.Listed) {
+	efforts, toggle, reasoning, context := requestDisplayOf(entry.RequestConfigs)
 	sort.Strings(efforts)
 	entry.ReasoningEfforts = efforts
 	if toggle {
@@ -540,19 +542,19 @@ func refreshCursorDisplay(entry *catalog.Listed) {
 	}
 }
 
-func cursorDisplayOf(variants []catalog.CursorVariant) (efforts []string, toggle, reasoning bool, context int64) {
-	for _, variant := range variants {
-		if variant.Effort != "" {
-			efforts = append(efforts, variant.Effort)
+func requestDisplayOf(configs []catalog.ModelRequestConfig) (efforts []string, toggle, reasoning bool, context int64) {
+	for _, config := range configs {
+		if config.Effort != "" {
+			efforts = append(efforts, config.Effort)
 		}
-		if variant.Selection == catalog.CursorSelectToggle {
+		if config.Selection == catalog.CursorSelectToggle {
 			toggle = true
 		}
-		if variant.Reasoning {
+		if config.Reasoning {
 			reasoning = true
 		}
-		if variant.Context > context {
-			context = variant.Context
+		if config.Context > context {
+			context = config.Context
 		}
 	}
 	return efforts, toggle, reasoning, context

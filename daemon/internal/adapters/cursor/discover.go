@@ -538,7 +538,7 @@ func groupToListed(group Group) catalog.Listed {
 		entry.SupportsVision = &vision
 	}
 	for _, member := range group.Members {
-		entry.Cursor = append(entry.Cursor, memberVariant(group, member))
+		entry.RequestConfigs = append(entry.RequestConfigs, catalog.EncodeCursorConfig(memberVariant(group, member)))
 	}
 	describeCapabilities(group, &entry)
 	return entry

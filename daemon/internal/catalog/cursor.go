@@ -2,6 +2,8 @@
 package catalog
 
 import (
+	"encoding/json"
+
 	"github.com/jonaskahn/relo/internal/inference"
 )
 
@@ -58,4 +60,47 @@ func SelectCursorVariant(configs []CursorVariant, groupID, effort string) (Curso
 		}
 	}
 	return CursorVariant{}, false
+}
+
+type cursorWireConfig struct {
+	ModelID   string        `json:"model_id"`
+	DetailsID string        `json:"details_id"`
+	MaxMode   bool          `json:"max_mode"`
+	Params    []CursorParam `json:"params"`
+}
+
+// EncodeCursorConfig stores one Cursor tuple as a request configuration. The
+// wire payload keeps the exact triple the account's discovery published.
+func EncodeCursorConfig(variant CursorVariant) ModelRequestConfig {
+	raw, _ := json.Marshal(cursorWireConfig{
+		ModelID: variant.ModelID, DetailsID: variant.DetailsID,
+		MaxMode: variant.MaxMode, Params: variant.Params,
+	})
+	return ModelRequestConfig{
+		ModelID: variant.GroupID, Selection: variant.Selection, Effort: variant.Effort,
+		Default: variant.Default, APIFormat: FormatCursorAgent, WireConfig: string(raw),
+		Context: variant.Context, Images: variant.Images, Reasoning: variant.Reasoning,
+	}
+}
+
+// DecodeCursorConfig reads one stored Cursor tuple back. It reports false
+// for another codec's configuration, which selection skips rather than
+// sending.
+func DecodeCursorConfig(config ModelRequestConfig) (CursorVariant, bool) {
+	if config.APIFormat != FormatCursorAgent {
+		return CursorVariant{}, false
+	}
+	var wire cursorWireConfig
+	if err := json.Unmarshal([]byte(config.WireConfig), &wire); err != nil {
+		return CursorVariant{}, false
+	}
+	if wire.ModelID == "" || wire.DetailsID == "" {
+		return CursorVariant{}, false
+	}
+	return CursorVariant{
+		GroupID: config.ModelID, Selection: config.Selection, Effort: config.Effort,
+		Default: config.Default, ModelID: wire.ModelID, DetailsID: wire.DetailsID,
+		MaxMode: wire.MaxMode, Params: wire.Params,
+		Context: config.Context, Images: config.Images, Reasoning: config.Reasoning,
+	}, true
 }
