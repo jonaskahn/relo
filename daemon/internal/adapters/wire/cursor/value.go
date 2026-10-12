@@ -127,32 +127,40 @@ func decodeJSONStruct(raw []byte) (any, bool) {
 	}
 	object := map[string]any{}
 	for _, entry := range entries {
-		if entry.Number != structFieldEntry || entry.Wire != 2 {
+		key, value, ok := decodeStructField(entry)
+		if !ok {
 			return nil, false
-		}
-		parts, err := cursor.Parse(entry.Raw)
-		if err != nil {
-			return nil, false
-		}
-		key := ""
-		var value any
-		for _, part := range parts {
-			switch part.Number {
-			case structEntryKey:
-				key = string(part.Raw)
-			case structEntryValue:
-				decoded, ok := decodeJSONValue(part.Raw)
-				if !ok {
-					return nil, false
-				}
-				value = decoded
-			default:
-				return nil, false
-			}
 		}
 		object[key] = value
 	}
 	return object, true
+}
+
+func decodeStructField(entry cursor.Field) (string, any, bool) {
+	if entry.Number != structFieldEntry || entry.Wire != 2 {
+		return "", nil, false
+	}
+	parts, err := cursor.Parse(entry.Raw)
+	if err != nil {
+		return "", nil, false
+	}
+	key := ""
+	var value any
+	for _, part := range parts {
+		switch part.Number {
+		case structEntryKey:
+			key = string(part.Raw)
+		case structEntryValue:
+			decoded, ok := decodeJSONValue(part.Raw)
+			if !ok {
+				return "", nil, false
+			}
+			value = decoded
+		default:
+			return "", nil, false
+		}
+	}
+	return key, value, true
 }
 
 func decodeJSONList(raw []byte) (any, bool) {
@@ -179,13 +187,8 @@ func decodeJSONList(raw []byte) (any, bool) {
 // sent the JSON text itself, so that is the fallback.
 func decodeArgValue(raw []byte) any {
 	if value, ok := decodeJSONValue(raw); ok {
-		if text, isString := value.(string); isString {
-			if looksLikeJSON(text) {
-				var parsed any
-				if err := json.Unmarshal([]byte(text), &parsed); err == nil {
-					return parsed
-				}
-			}
+		if unwrapped, found := unwrapJSONText(value); found {
+			return unwrapped
 		}
 		return value
 	}
@@ -194,6 +197,18 @@ func decodeArgValue(raw []byte) any {
 		return string(raw)
 	}
 	return parsed
+}
+
+func unwrapJSONText(value any) (any, bool) {
+	text, isString := value.(string)
+	if !isString || !looksLikeJSON(text) {
+		return nil, false
+	}
+	var parsed any
+	if err := json.Unmarshal([]byte(text), &parsed); err != nil {
+		return nil, false
+	}
+	return parsed, true
 }
 
 func looksLikeJSON(text string) bool {

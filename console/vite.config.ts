@@ -14,7 +14,7 @@ export default defineConfig({
 		// report says nothing the build log needs, so the check is off.
 		rollupOptions: {
 			checks: {
-				bundlerTimings: false
+				pluginTimings: false
 			}
 		}
 	},
