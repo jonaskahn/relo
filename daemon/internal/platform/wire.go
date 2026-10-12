@@ -209,7 +209,14 @@ func (w *wiring) newCatalogService(edges *AccountEdges, accounts *appaccount.Ser
 		Credentials: w.built.credentials, Direct: upstream.Direct,
 		Discover:  discovery.New(NewHTTPClient()),
 		ModelsDev: modelsdev.NewDirectory(filepath.Join(w.options.Home, "cache"), w.cfg.Catalog.ModelsDevURL, nil),
-		Templates: TemplateRegistry{}, Logger: w.logger, Lifetime: w.ctx,
+		Templates: TemplateRegistry{},
+		TemplatePrefixes: func(ctx context.Context, templateID string) ([]string, bool) {
+			prefixes, found, err := w.templateSettings.Prefixes(ctx, templateID)
+			if err != nil || !found {
+				return nil, found
+			}
+			return prefixes, true
+		}, Logger: w.logger, Lifetime: w.ctx,
 		ProxyURL: func() string {
 			raw, err := config.ReadProxyURL(config.ConfigPath(w.options.Home))
 			if err != nil {
@@ -332,6 +339,16 @@ func (s templateChoiceStore) Get(ctx context.Context, templateID string) (bool, 
 // Save stores one template's context and refresh choices.
 func (s templateChoiceStore) Save(ctx context.Context, templateID string, longContext, autoRefresh *bool, nowMs int64) error {
 	return s.settings.Save(ctx, templateID, longContext, autoRefresh, nowMs)
+}
+
+// Prefixes reads one template's model families.
+func (s templateChoiceStore) Prefixes(ctx context.Context, templateID string) ([]string, bool, error) {
+	return s.settings.Prefixes(ctx, templateID)
+}
+
+// SavePrefixes stores one template's model families.
+func (s templateChoiceStore) SavePrefixes(ctx context.Context, templateID string, prefixes []string, nowMs int64) error {
+	return s.settings.SavePrefixes(ctx, templateID, prefixes, nowMs)
 }
 
 type templateConnections struct {

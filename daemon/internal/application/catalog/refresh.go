@@ -174,8 +174,20 @@ func (s *Service) openRefreshHost(ctx context.Context, providerID string) (catal
 	if found {
 		host.ModelsSource = t.ModelsSource
 		host.ModelsFormat = t.ModelsFormat
+		t.Prefixes = s.prefixesFor(ctx, host.TemplateID, t.Prefixes)
 	}
 	return host, t, mdIdx, mdState, snap.Models(providerID), nil
+}
+
+func (s *Service) prefixesFor(ctx context.Context, templateID string, defaults []string) []string {
+	if s.templatePrefixes == nil {
+		return defaults
+	}
+	stored, found := s.templatePrefixes(ctx, templateID)
+	if !found || stored == nil {
+		return defaults
+	}
+	return stored
 }
 
 func (s *Service) fetchRefreshRoster(ctx context.Context, host catalog.Provider) ([]catalog.Listed, *accountRosters, []string, error) {

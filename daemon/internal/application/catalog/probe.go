@@ -216,6 +216,7 @@ func (s *Service) resolveProbeTemplate(ctx context.Context, req ProbeRequest, md
 		if !found {
 			return catalog.Template{}, "", "", nil, false
 		}
+		t.Prefixes = s.prefixesFor(ctx, t.ID, t.Prefixes)
 		return t, t.Origin, "", nil, true
 	}
 	if req.ProviderID != "" {
@@ -249,6 +250,7 @@ func (s *Service) providerProbeTemplate(ctx context.Context, req ProbeRequest, m
 		t.Kind = catalogTemplate.Kind
 		t.ModelsSource = catalogTemplate.ModelsSource
 		t.FilterModels = catalogTemplate.FilterModels
+		t.Prefixes = s.prefixesFor(ctx, existing.TemplateID, catalogTemplate.Prefixes)
 	}
 	return t, catalog.Origin(existing.Origin), existing.ID, existing.Variables, true
 }

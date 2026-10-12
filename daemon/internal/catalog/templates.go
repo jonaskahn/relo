@@ -105,6 +105,10 @@ type Template struct {
 	// because a provider may mark an entry free or paid in a field its name
 	// does not repeat.
 	FilterModels func(Listed) bool
+	// Prefixes narrows the ids a roster keeps to the families the connection
+	// serves. Empty keeps everything, so a template that declares no prefixes
+	// filters nothing.
+	Prefixes []string
 	// FormatForModel names the upstream wire format one model answers on, for a
 	// provider that serves different models over different protocols. It returns
 	// an empty format to leave the connection's own default in place.

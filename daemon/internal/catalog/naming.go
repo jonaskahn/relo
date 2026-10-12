@@ -282,6 +282,26 @@ func isDigits(text string) bool {
 	return true
 }
 
+// MatchesPrefix reports whether one model id starts with one of the given
+// prefixes, compared case-insensitively. An empty list matches everything,
+// so a template that declares no prefixes filters nothing.
+func MatchesPrefix(id string, prefixes []string) bool {
+	if len(prefixes) == 0 {
+		return true
+	}
+	lowered := strings.ToLower(strings.TrimSpace(id))
+	for _, prefix := range prefixes {
+		trimmed := strings.ToLower(strings.TrimSpace(prefix))
+		if trimmed == "" {
+			continue
+		}
+		if strings.HasPrefix(lowered, trimmed) {
+			return true
+		}
+	}
+	return false
+}
+
 // StripContextSuffix takes the million-token marker a Claude Code client may
 // spell off one requested name, so both spellings of a name reach the same
 // entry.

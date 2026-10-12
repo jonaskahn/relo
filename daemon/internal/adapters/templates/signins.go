@@ -131,7 +131,9 @@ var signInTemplates = []signInTemplate{
 			LoginMethods:   []LoginMethod{{Flow: oauth.FlowGoogleAntigravity, Kind: LoginBrowser}},
 			// Listing and sign-in stay on the IDE fingerprint. A chat request
 			// replaces this header with the CLI fingerprint on the way out.
-			Headers: map[string]string{"User-Agent": antigravity.UserAgent()},
+			Headers:      map[string]string{"User-Agent": antigravity.UserAgent()},
+			FilterModels: AntigravityFilter,
+			Prefixes:     antigravity.DefaultPrefixes(),
 		},
 		authorize: authorizeAntigravity,
 	},
