@@ -176,7 +176,9 @@ func buildToolDef(wireName, canonical, description, schema string) []byte {
 	var def cursor.Writer
 	def.String(defName, wireName)
 	def.String(defDescription, description)
-	def.Bytes(defSchema, []byte(schema))
+	// inputSchema is a google.protobuf.Value on the wire, so the JSON text
+	// has to be encoded rather than copied into the field.
+	def.Bytes(defSchema, encodeSchemaValue([]byte(schema)))
 	def.String(defProvider, providerIdentifier)
 	def.String(defToolName, wireName)
 	_ = canonical

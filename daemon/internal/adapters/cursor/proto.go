@@ -2,8 +2,10 @@
 package cursor
 
 import (
+	"encoding/binary"
 	"errors"
 	"fmt"
+	"math"
 )
 
 // Proto errors name the malformed inputs the decoder refuses.
@@ -102,6 +104,31 @@ func (w *Writer) Message(field int, nested []byte) {
 func (w *Writer) Empty(field int) {
 	w.tag(field, wireLength)
 	w.buf = append(w.buf, 0)
+}
+
+// Present appends a length-delimited field even when its value is empty. A
+// oneof case set to an empty value still has to encode the case itself, which
+// skipping the empty payload would drop.
+func (w *Writer) Present(field int, value []byte) {
+	w.tag(field, wireLength)
+	w.varint(uint64(len(value)))
+	w.buf = append(w.buf, value...)
+}
+
+// PresentVarint appends a varint field even when the value is zero, for the
+// same reason Present exists: the case has to ride the wire, not the value.
+func (w *Writer) PresentVarint(field int, value uint64) {
+	w.tag(field, wireVarint)
+	w.varint(value)
+}
+
+// Double appends a double field, the 64-bit little-endian fixed wire type
+// google.protobuf.Value's number case carries.
+func (w *Writer) Double(field int, value float64) {
+	w.tag(field, wireFixed)
+	var raw [8]byte
+	binary.LittleEndian.PutUint64(raw[:], math.Float64bits(value))
+	w.buf = append(w.buf, raw[:]...)
 }
 
 // Field is one decoded protobuf field.

@@ -5,6 +5,7 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 	"encoding/json"
+	"fmt"
 	"strings"
 
 	"github.com/jonaskahn/relo/internal/adapters/cursor"
@@ -25,7 +26,10 @@ var nativeToolNames = map[string]bool{
 
 // Tool limits keep one hostile client from exhausting the attempt.
 const (
-	maxTools      = 64
+	// A real agent client declares well over a hundred tools once its MCP
+	// servers are attached (Claude Code sends 90-145), so the ceiling only
+	// stops a hostile one.
+	maxTools      = 256
 	maxSchemaJSON = 64 << 10
 )
 
@@ -47,12 +51,12 @@ func BuildToolMap(tools []inference.Tool) (*ToolMap, error) {
 			continue
 		}
 		if len(tool.Parameters) > maxSchemaJSON {
-			return nil, wire.ErrUnsupportedFeature
+			return nil, fmt.Errorf("cursor has no room for the %q schema: %w", tool.Name, wire.ErrUnsupportedFeature)
 		}
 		mapped.byWire[wireName] = tool
 		mapped.names = append(mapped.names, wireName)
 		if len(mapped.names) > maxTools {
-			return nil, wire.ErrUnsupportedFeature
+			return nil, fmt.Errorf("cursor takes at most %d tools, refused at %q: %w", maxTools, tool.Name, wire.ErrUnsupportedFeature)
 		}
 	}
 	return mapped, nil
@@ -87,6 +91,8 @@ func (m *ToolMap) Defs() [][]byte {
 	return defs
 }
 
+// toolSchema normalizes one tool's parameter schema into JSON text, which
+// buildToolDef encodes as the proto Value the upstream actually reads.
 func toolSchema(tool inference.Tool) string {
 	raw := strings.TrimSpace(string(tool.Parameters))
 	if raw == "" {

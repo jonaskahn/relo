@@ -443,12 +443,7 @@ func (c *conversation) emitPartialCall(callID, name, delta string) {
 func mcpArgsJSON(args map[string][]byte) string {
 	decoded := make(map[string]any, len(args))
 	for key, raw := range args {
-		var value any
-		if err := json.Unmarshal(raw, &value); err != nil {
-			decoded[key] = string(raw)
-			continue
-		}
-		decoded[key] = value
+		decoded[key] = decodeArgValue(raw)
 	}
 	encoded, err := json.Marshal(decoded)
 	if err != nil {

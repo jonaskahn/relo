@@ -202,3 +202,20 @@ func TestRunRequestAlwaysCarriesConversationState(t *testing.T) {
 		}
 	}
 }
+
+// TestBuildToolMapServesARealToolSet pins the ceiling a client's own tool set
+// has to fit under. Claude Code declares 90-145 tools once its MCP servers are
+// attached, and every one of them was refused as unrepresentable.
+func TestBuildToolMapServesARealToolSet(t *testing.T) {
+	declared := make([]inference.Tool, 0, 200)
+	for index := 0; index < 200; index++ {
+		declared = append(declared, inference.Tool{Name: "tool_" + itoa(index), Parameters: []byte(`{"type":"object"}`)})
+	}
+	mapped, err := BuildToolMap(declared)
+	if err != nil {
+		t.Fatalf("BuildToolMap() error = %v", err)
+	}
+	if len(mapped.Names()) != len(declared) {
+		t.Fatalf("Declared() = %d tools, want %d", len(mapped.Names()), len(declared))
+	}
+}
