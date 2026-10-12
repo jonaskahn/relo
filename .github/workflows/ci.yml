@@ -24,6 +24,7 @@ jobs:
         uses: actions/setup-go@v6
         with:
           go-version-file: daemon/go.mod
+          cache-dependency-path: daemon/go.sum
 
       - name: CI backend
         run: make ci-backend
@@ -35,7 +36,7 @@ jobs:
         uses: actions/checkout@v5
 
       - name: Set up Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version: 22
           cache: npm
@@ -51,7 +52,7 @@ jobs:
         uses: actions/checkout@v5
 
       - name: Set up Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version: 22
 
@@ -68,6 +69,7 @@ jobs:
         uses: actions/setup-go@v6
         with:
           go-version-file: daemon/go.mod
+          cache-dependency-path: daemon/go.sum
 
       - name: Check artwork
         run: make ci-assets
@@ -113,9 +115,10 @@ jobs:
         uses: actions/setup-go@v6
         with:
           go-version-file: daemon/go.mod
+          cache-dependency-path: daemon/go.sum
 
       - name: Set up Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version: 22
           cache: npm
