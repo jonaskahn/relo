@@ -9,8 +9,6 @@
   <meta name="theme-color" content="#0a0a0a" media="(prefers-color-scheme: dark)">
   <link rel="canonical" href="https://jonaskahn.github.io/relo/">
   <link rel="icon" href="media/logo.png" type="image/png">
-  <link rel="preload" as="image" href="media/dashboard.webp" type="image/webp" media="(min-width: 768px)" fetchpriority="high">
-  <link rel="preload" as="image" href="media/dashboard-mobile.webp" type="image/webp" media="(max-width: 767px)" fetchpriority="high">
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="Relo">
   <meta property="og:title" content="Relo - local LLM gateway">
@@ -41,10 +39,10 @@
       root.lang = lang === 'zh' ? 'zh-Hans' : lang;
       root.dir = lang === 'ar' || lang === 'ur' ? 'rtl' : 'ltr';
       root.classList.add('js');
-      var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) root.classList.add('static-story');
       var seen = false;
       try { seen = sessionStorage.getItem('relo-intro') === '1'; } catch (e) {}
-      if (reduced || seen) root.classList.add('skip-intro');
+      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches || seen) root.classList.add('skip-intro');
       window.setTimeout(function () { root.classList.add('intro-done'); }, 6000);
     })();
   </script>
@@ -91,7 +89,7 @@
   <div class="menu" id="menu" inert>
     <nav aria-label="Page" data-i18n-attr="aria-label:page">
       <a href="#top" style="--i:0" data-i18n="overview">Overview</a>
-      <a href="#ports" style="--i:1" data-i18n="ports">Ports</a>
+      <a href="#providers" style="--i:1" data-i18n="providers">Providers</a>
       <a href="#install" style="--i:2" data-i18n="install">Install</a>
       <a href="https://github.com/jonaskahn/relo" style="--i:3">GitHub</a>
     </nav>
@@ -99,70 +97,164 @@
 
   <main id="main">
     <section class="hero" id="top" aria-labelledby="hero-heading">
-      <div class="hero-grid">
-        <figure class="dash">
-          <picture>
-            <source media="(max-width: 767px)" srcset="media/dashboard-mobile.webp" type="image/webp" width="910" height="1886">
-            <img
-              src="media/dashboard.webp"
-              width="3212"
-              height="2638"
-              fetchpriority="high"
-              alt="Relo console dashboard showing request volume, spend, latency, account health, and the routing map."
-              data-i18n-attr="alt:dashAlt"
-            >
-          </picture>
-        </figure>
-
-        <div class="hero-copy hero-enter">
-          <h1 class="hero-title" id="hero-heading">
-            <span data-i18n="heroSmall">One loopback</span>
-            <span class="hero-strong">Proxy<span class="dot">.</span></span>
-          </h1>
-          <p class="hero-lead" data-i18n="lead">Codex, Claude Code, Cursor, and Grok keep their own config and still reach any upstream.</p>
-          <div class="hero-actions">
-            <a class="btn primary" href="#install" data-i18n="install">Install</a>
-            <a class="btn" href="https://github.com/jonaskahn/relo" data-i18n="btnGithub">View on GitHub</a>
-          </div>
+      <div class="hero-inner hero-enter">
+        <h1 class="hero-title" id="hero-heading">
+          <span data-i18n="heroSmall">Your tools, every model</span>
+          <span class="hero-strong"><span data-i18n="heroStrong">One gateway</span><span class="dot">.</span></span>
+        </h1>
+        <p class="hero-lead" data-i18n="lead">Codex, Claude Code, Cursor, and Grok keep their own config and still reach any upstream.</p>
+        <div class="hero-actions">
+          <a class="btn primary" href="#install" data-i18n="install">Install</a>
+          <a class="btn" href="https://github.com/jonaskahn/relo" data-i18n="btnGithub">View on GitHub</a>
         </div>
-      </div>
-
-      <div class="panel statement-panel">
-        <p class="statement" data-i18n="statement">Relo is a local LLM gateway. It sits between your coding clients and upstream providers, routes requests, pools accounts, and records usage.</p>
         <ul class="stats">
-          <li><span class="stat-num mono-data">3</span><span class="stat-label" data-i18n="s1">Loopback ports</span></li>
-          <li><span class="stat-num mono-data">4</span><span class="stat-label" data-i18n="s2">Clients tested</span></li>
+          <li><span class="stat-num mono-data">240+</span><span class="stat-label" data-i18n="statProviders">Provider templates</span></li>
+          <li><span class="stat-num mono-data">16</span><span class="stat-label" data-i18n="statHarnesses">Agent harnesses</span></li>
           <li><span class="stat-num mono-data">20</span><span class="stat-label" data-i18n="s3">Console languages</span></li>
         </ul>
       </div>
     </section>
 
-    <section class="ports" id="ports" aria-labelledby="ports-heading">
-      <h2 id="ports-heading" class="section-title" data-i18n="s1">Loopback ports</h2>
-      <ul class="ports-row">
-        <li class="port">
-          <p class="port-num"><code>10101</code></p>
-          <div>
-            <h3 data-i18n="p1t">Console and management API</h3>
-            <p data-i18n="p1d">Opens at <code>http://127.0.0.1:10101</code>. With <code>[admin] login = true</code>, sign in with the admin token.</p>
+    <section class="story" id="story" aria-label="How Relo works" data-i18n-attr="aria-label:storyLabel">
+      <div class="story-pin">
+        <div class="stage" id="stage" aria-hidden="true">
+          <div class="ipad" id="ipad">
+            <div class="screen">
+              <div class="boot" id="boot"><span>Relo<span class="dot">.</span></span></div>
+              <div class="cards" id="cards">
+                <article class="conn" data-from="left">
+                  <span class="conn-logo"><img src="media/logos/anthropic.svg" alt="" width="22" height="22" loading="lazy"></span>
+                  <span class="conn-id"><strong>Claude.ai</strong><code>claude</code></span>
+                  <span class="pill ok"><i></i>Ready</span>
+                  <span class="meter"><b style="width:21%"></b></span>
+                </article>
+                <article class="conn" data-from="top">
+                  <span class="conn-logo"><img src="media/logos/openai.svg" alt="" width="22" height="22" loading="lazy"></span>
+                  <span class="conn-id"><strong>ChatGPT</strong><code>openai-codex</code></span>
+                  <span class="pill ok"><i></i>Ready</span>
+                  <span class="meter"><b style="width:7%"></b></span>
+                </article>
+                <article class="conn" data-from="right">
+                  <span class="conn-logo"><img src="media/logos/google.svg" alt="" width="22" height="22" loading="lazy"></span>
+                  <span class="conn-id"><strong>Google</strong><code>google</code></span>
+                  <span class="pill ok"><i></i>Ready</span>
+                  <span class="meter"><b style="width:12%"></b></span>
+                </article>
+                <article class="conn" data-from="left">
+                  <span class="conn-logo"><img src="media/logos/deepseek.svg" alt="" width="22" height="22" loading="lazy"></span>
+                  <span class="conn-id"><strong>DeepSeek</strong><code>deepseek</code></span>
+                  <span class="pill ok"><i></i>Ready</span>
+                  <span class="meter"><b style="width:34%"></b></span>
+                </article>
+                <article class="conn" data-from="bottom">
+                  <span class="conn-logo"><img src="media/logos/xai.svg" alt="" width="22" height="22" loading="lazy"></span>
+                  <span class="conn-id"><strong>Grok</strong><code>grok</code></span>
+                  <span class="pill ok"><i></i>Ready</span>
+                  <span class="meter"><b style="width:5%"></b></span>
+                </article>
+                <article class="conn" data-from="right">
+                  <span class="conn-logo"><img src="media/logos/mistral.svg" alt="" width="22" height="22" loading="lazy"></span>
+                  <span class="conn-id"><strong>Mistral</strong><code>mistral</code></span>
+                  <span class="pill warn"><i></i>Near limit</span>
+                  <span class="meter"><b class="is-warn" style="width:92%"></b></span>
+                </article>
+                <article class="conn" data-from="left">
+                  <span class="conn-logo"><img src="media/logos/openrouter.svg" alt="" width="22" height="22" loading="lazy"></span>
+                  <span class="conn-id"><strong>OpenRouter</strong><code>openrouter</code></span>
+                  <span class="pill ok"><i></i>Ready</span>
+                  <span class="meter"><b style="width:48%"></b></span>
+                </article>
+                <article class="conn" data-from="bottom">
+                  <span class="conn-logo"><img src="media/logos/togetherai.svg" alt="" width="22" height="22" loading="lazy"></span>
+                  <span class="conn-id"><strong>Together</strong><code>togetherai</code></span>
+                  <span class="pill ok"><i></i>Ready</span>
+                  <span class="meter"><b style="width:63%"></b></span>
+                </article>
+                <article class="conn" data-from="right">
+                  <span class="conn-logo"><img src="media/logos/groq.svg" alt="" width="22" height="22" loading="lazy"></span>
+                  <span class="conn-id"><strong>Groq</strong><code>groq</code></span>
+                  <span class="pill ok"><i></i>Ready</span>
+                  <span class="meter"><b style="width:17%"></b></span>
+                </article>
+              </div>
+            </div>
           </div>
-        </li>
-        <li class="port">
-          <p class="port-num"><code>10201</code></p>
-          <div>
-            <h3 data-i18n="p2t">OpenAI-compatible <code>/v1/*</code></h3>
-            <p data-i18n="p2d">Clients that speak the OpenAI API point here and authenticate with a client key.</p>
+
+          <div class="bag-scene" id="bagScene">
+            <div class="flyers" id="flyers">
+              <span class="fly"><img src="media/logos/codex.svg" alt="" width="30" height="30" loading="lazy"></span>
+              <span class="fly"><img src="media/logos/claude-code.svg" alt="" width="30" height="30" loading="lazy"></span>
+              <span class="fly"><img src="media/logos/anthropic.svg" alt="" width="30" height="30" loading="lazy"></span>
+              <span class="fly"><img src="media/logos/cursor.svg" alt="" width="30" height="30" loading="lazy"></span>
+              <span class="fly"><img src="media/logos/grok-build.svg" alt="" width="30" height="30" loading="lazy"></span>
+              <span class="fly"><img src="media/logos/opencode.svg" alt="" width="30" height="30" loading="lazy"></span>
+              <span class="fly"><img src="media/logos/cline.svg" alt="" width="30" height="30" loading="lazy"></span>
+              <span class="fly"><img src="media/logos/pi.svg" alt="" width="30" height="30" loading="lazy"></span>
+              <span class="fly"><img src="media/logos/omp.svg" alt="" width="30" height="30" loading="lazy"></span>
+              <span class="fly"><img src="media/logos/hermes.svg" alt="" width="30" height="30" loading="lazy"></span>
+              <span class="fly"><img src="media/logos/openclaw.svg" alt="" width="30" height="30" loading="lazy"></span>
+              <span class="fly"><img src="media/logos/raycast.svg" alt="" width="30" height="30" loading="lazy"></span>
+            </div>
+            <div class="bag" id="bag">
+              <span class="handle h1"></span><span class="handle h2"></span>
+              <span class="bag-word">Relo<span class="dot">.</span></span>
+            </div>
           </div>
-        </li>
-        <li class="port">
-          <p class="port-num"><code>10202</code></p>
-          <div>
-            <h3>Anthropic <code>/v1/*</code></h3>
-            <p data-i18n="p3d">Clients that speak the Anthropic API point here and authenticate with a client key.</p>
-          </div>
-        </li>
+        </div>
+
+        <div class="captions">
+          <p class="cap is-active" data-cap="0" data-i18n="capLid">Scroll to open the laptop and meet the console.</p>
+          <p class="cap" data-cap="1" data-i18n="capScreens">Dashboard, connections, usage, and agents in one local view.</p>
+          <p class="cap" data-cap="2" data-i18n="capCards">Every provider becomes a connection card with its own quota.</p>
+          <p class="cap" data-cap="3" data-i18n="capBag">Sixteen coding harnesses point at Relo and keep their own setup.</p>
+          <p class="cap" data-cap="4" data-i18n="capDone">One gateway on your machine. Install it below.</p>
+        </div>
+
+        <noscript><p class="hint" data-i18n="capDone">One gateway on your machine. Install it below.</p></noscript>
+      </div>
+    </section>
+
+    <section class="providers" id="providers" aria-labelledby="providers-heading">
+      <h2 id="providers-heading" class="section-title" data-i18n="providers">Providers</h2>
+      <p class="section-lead" data-i18n="providersLead">240 or more connection templates ship with the daemon, each with its own logo. Model prices refresh from the public catalog.</p>
+      <ul class="logo-wall" aria-label="Provider logos" data-i18n-attr="aria-label:providers">
+        <li><img src="media/logos/anthropic.svg" alt="Anthropic" width="26" height="26" loading="lazy"></li>
+        <li><img src="media/logos/openai.svg" alt="OpenAI" width="26" height="26" loading="lazy"></li>
+        <li><img src="media/logos/google.svg" alt="Google" width="26" height="26" loading="lazy"></li>
+        <li><img src="media/logos/deepseek.svg" alt="DeepSeek" width="26" height="26" loading="lazy"></li>
+        <li><img src="media/logos/xai.svg" alt="xAI" width="26" height="26" loading="lazy"></li>
+        <li><img src="media/logos/groq.svg" alt="Groq" width="26" height="26" loading="lazy"></li>
+        <li><img src="media/logos/mistral.svg" alt="Mistral" width="26" height="26" loading="lazy"></li>
+        <li><img src="media/logos/moonshotai-cn.svg" alt="Moonshot AI" width="26" height="26" loading="lazy"></li>
+        <li><img src="media/logos/amazon-bedrock.svg" alt="Amazon Bedrock" width="26" height="26" loading="lazy"></li>
+        <li><img src="media/logos/azure.svg" alt="Azure" width="26" height="26" loading="lazy"></li>
+        <li><img src="media/logos/openrouter.svg" alt="OpenRouter" width="26" height="26" loading="lazy"></li>
+        <li><img src="media/logos/togetherai.svg" alt="Together AI" width="26" height="26" loading="lazy"></li>
+        <li><img src="media/logos/github-copilot.svg" alt="GitHub Copilot" width="26" height="26" loading="lazy"></li>
       </ul>
-      <p class="ports-note" data-i18n="note">Client keys hit the data plane. The admin token hits the console. Provider credentials go upstream only.</p>
+    </section>
+
+    <section class="harness" id="harness" aria-labelledby="harness-heading">
+      <h2 id="harness-heading" class="section-title" data-i18n="harnessTitle">Agent harness</h2>
+      <p class="section-lead" data-i18n="harnessLead">Sixteen coding clients wire into Relo. Tested clients carry the Tested mark in the console.</p>
+      <ul class="chips">
+        <li><img src="media/logos/codex.svg" alt="" width="20" height="20" loading="lazy">Codex CLI</li>
+        <li><img src="media/logos/claude-code.svg" alt="" width="20" height="20" loading="lazy">Claude Code</li>
+        <li><img src="media/logos/anthropic.svg" alt="" width="20" height="20" loading="lazy">Claude Desktop</li>
+        <li><img src="media/logos/cursor.svg" alt="" width="20" height="20" loading="lazy">Cursor</li>
+        <li><img src="media/logos/grok-build.svg" alt="" width="20" height="20" loading="lazy">Grok Build</li>
+        <li><img src="media/logos/opencode.svg" alt="" width="20" height="20" loading="lazy">OpenCode</li>
+        <li><img src="media/logos/cline.svg" alt="" width="20" height="20" loading="lazy">Cline</li>
+        <li><img src="media/logos/pi.svg" alt="" width="20" height="20" loading="lazy">Pi</li>
+        <li><img src="media/logos/omp.svg" alt="" width="20" height="20" loading="lazy">Oh My Pi</li>
+        <li><img src="media/logos/hermes.svg" alt="" width="20" height="20" loading="lazy">Hermes</li>
+        <li><img src="media/logos/openclaw.svg" alt="" width="20" height="20" loading="lazy">OpenClaw</li>
+        <li><img src="media/logos/kimi-code-plan-cn.svg" alt="" width="20" height="20" loading="lazy">Kimi Code</li>
+        <li><img src="media/logos/dsh.svg" alt="" width="20" height="20" loading="lazy">DeepSeek Harness</li>
+        <li><img src="media/logos/mcode.svg" alt="" width="20" height="20" loading="lazy">MiniMax Code</li>
+        <li><img src="media/logos/zcode.svg" alt="" width="20" height="20" loading="lazy">ZCode</li>
+        <li><img src="media/logos/raycast.svg" alt="" width="20" height="20" loading="lazy">Raycast</li>
+      </ul>
     </section>
 
     <section class="install" id="install" aria-labelledby="install-heading">
@@ -173,11 +265,11 @@
             <li>
               <p class="os">macOS</p>
               <div class="command">
-                <pre><code data-copy>brew install --cask jonaskahn/tap/relo</code></pre>
+                <pre><code data-copy><span class="tok-cmd">brew</span> install <span class="tok-flag">--cask</span> jonaskahn/tap/relo</code></pre>
                 <button type="button" class="copy" data-copy-btn aria-label="Copy command" title="Copy command" data-i18n-attr="aria-label:copy;title:copy">
                   <svg class="i-copy" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 0 1 2-2h9"/></svg>
                   <svg class="i-check" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>
-                  <svg class="i-fail" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+                  <svg class="i-fail" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
                 </button>
               </div>
             </li>
@@ -192,19 +284,19 @@
             <li>
               <p class="os" data-i18n="daemon">Daemon only</p>
               <div class="command">
-                <pre><code data-copy>curl -fsSL https://github.com/jonaskahn/relo/releases/latest/download/install.sh | sh</code></pre>
+                <pre><code data-copy><span class="tok-cmd">curl</span> <span class="tok-flag">-fsSL</span> https://github.com/jonaskahn/relo/releases/latest/download/install.sh | <span class="tok-cmd">sh</span></code></pre>
                 <button type="button" class="copy" data-copy-btn aria-label="Copy command" title="Copy command" data-i18n-attr="aria-label:copy;title:copy">
                   <svg class="i-copy" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 0 1 2-2h9"/></svg>
                   <svg class="i-check" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>
-                  <svg class="i-fail" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+                  <svg class="i-fail" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
                 </button>
               </div>
               <div class="command">
-                <pre><code data-copy>irm https://github.com/jonaskahn/relo/releases/latest/download/install.ps1 | iex</code></pre>
+                <pre><code data-copy><span class="tok-cmd">irm</span> https://github.com/jonaskahn/relo/releases/latest/download/install.ps1 | <span class="tok-cmd">iex</span></code></pre>
                 <button type="button" class="copy" data-copy-btn aria-label="Copy command" title="Copy command" data-i18n-attr="aria-label:copy;title:copy">
                   <svg class="i-copy" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 0 1 2-2h9"/></svg>
                   <svg class="i-check" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>
-                  <svg class="i-fail" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+                  <svg class="i-fail" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
                 </button>
               </div>
             </li>
@@ -222,6 +314,8 @@
   </footer>
 
   <script src="i18n.js" defer></script>
+  <script src="motion.js" defer></script>
   <script src="script.js" defer></script>
+  <script src="scenes.js" defer></script>
 </body>
 </html>
