@@ -119,7 +119,7 @@ export function warningKeys(agent: IntegrationView): string[] {
 
 // TESTED_IDS names the clients Relo has verified wiring for. The pill marks that
 // coverage, not whether this machine has set the client up.
-const TESTED_IDS = new Set(['opencode', 'claude-code', 'claude-desktop', 'codex', 'pi', 'omp']);
+const TESTED_IDS = new Set(['opencode', 'claude-code', 'claude-desktop', 'codex', 'pi', 'omp', 'dsh']);
 
 /** Reports whether Relo has verified its wiring for that client. */
 export function isTested(agent: IntegrationView): boolean {

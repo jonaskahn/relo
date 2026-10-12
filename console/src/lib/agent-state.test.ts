@@ -130,6 +130,7 @@ describe('the agent card coverage and controls', () => {
 		expect(isTested(agentOf({ id: 'opencode', client: 'opencode' }))).toBe(true);
 		expect(isTested(agentOf({ id: 'claude-desktop', client: 'claude-desktop' }))).toBe(true);
 		expect(isTested(agentOf({ id: 'cursor', client: 'cursor' }))).toBe(false);
+		expect(isTested(agentOf({ id: 'dsh', client: 'dsh' }))).toBe(true);
 	});
 
 	it('gives a coding agent its own mark, not its vendor mark', () => {
