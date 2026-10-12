@@ -661,10 +661,10 @@ func (m *Manager) Restore(ctx context.Context, id string, force bool) (View, err
 	if err != nil {
 		return View{}, err
 	}
-	return m.finishRestore(ctx, agent, id, kept, force)
+	return m.finishRestore(ctx, agent, kept, force)
 }
 
-func (m *Manager) finishRestore(ctx context.Context, agent Agent, id string, kept []FileRecord, force bool) (View, error) {
+func (m *Manager) finishRestore(ctx context.Context, agent Agent, kept []FileRecord, force bool) (View, error) {
 	// Every snapshot is read before anything is written, so a restore that
 	// cannot complete leaves the operator's files as they were rather than
 	// half rewritten. A failure keeps the stored file rows, which is what
@@ -677,10 +677,10 @@ func (m *Manager) finishRestore(ctx context.Context, agent Agent, id string, kep
 	if err := m.applyStagedRestore(ctx, agent, staged); err != nil {
 		return View{}, err
 	}
-	if err := m.clearRestoredState(ctx, agent, id); err != nil {
+	if err := m.clearRestoredState(ctx, agent, agent.ID); err != nil {
 		return View{}, err
 	}
-	return m.recordRestore(ctx, id)
+	return m.recordRestore(ctx, agent.ID)
 }
 
 func (m *Manager) applyStagedRestore(ctx context.Context, agent Agent, staged []stagedRestore) error {

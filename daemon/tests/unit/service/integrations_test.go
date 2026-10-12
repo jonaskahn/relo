@@ -127,7 +127,7 @@ func TestEnableIntegrationOwnsItsKeyAndDisableRetiresIt(t *testing.T) {
 		t.Fatalf("RevokeAccessKey() error = %v, want %v", err, appaccess.ErrOwned)
 	}
 
-	if err := built.DisableIntegration(ctx, "codex"); err != nil {
+	if err := built.DisableIntegration(ctx, "codex", false); err != nil {
 		t.Fatalf("DisableIntegration() error = %v", err)
 	}
 	view, err := built.Integration(ctx, "codex")
