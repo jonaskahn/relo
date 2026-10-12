@@ -259,6 +259,34 @@ func TestRunRecordsTheInitialFrame(t *testing.T) {
 	}
 }
 
+func TestRunDropsTheCeilingItCannotSend(t *testing.T) {
+	server := newFixtureServer(t, func(s *fixtureServer, w http.ResponseWriter, reader *adapterscursor.FrameReader) {
+		_ = parseClientMessage(t, s.next(reader))
+		s.write(w, serverUpdate(14, turnEndedPayload()))
+		for {
+			_, ended, err := reader.Next()
+			if ended || err != nil {
+				return
+			}
+		}
+	})
+	codec := NewCodec(server.server.URL)
+	request := testRequest()
+	request.MaxTokens = 1024
+	_, err := codec.RunBidirectional(context.Background(), wire.BidirectionalCall{
+		Client: h2Client(server.server.Client()), Request: request, Opts: wire.CodecOpts{
+			BaseURL: server.server.URL, CredentialRef: "token", Cursor: testSelection(),
+			RefusesMaxOutputTokens: true,
+		},
+	})
+	if err != nil {
+		t.Fatalf("RunBidirectional() error = %v, want the ceiling dropped", err)
+	}
+	if request.MaxTokens != 1024 {
+		t.Fatalf("MaxTokens = %d, want the caller's request untouched", request.MaxTokens)
+	}
+}
+
 func TestRunNativeRejection(t *testing.T) {
 	server := newFixtureServer(t, func(s *fixtureServer, w http.ResponseWriter, reader *adapterscursor.FrameReader) {
 		_ = parseClientMessage(t, s.next(reader))

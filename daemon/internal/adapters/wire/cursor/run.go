@@ -25,14 +25,17 @@ var (
 
 // Runner runs one Cursor agent turn over a duplex HTTP stream.
 type Runner struct {
-	Client       *http.Client
-	BaseURL      string
-	Token        string
-	Request      *inference.Request
-	Selection    *wire.CursorRequest
-	Emit         func([]inference.Event)
-	Record       func(frame []byte)
-	ConnectError func(status int, body []byte) *inference.ErrorInfo
+	Client    *http.Client
+	BaseURL   string
+	Token     string
+	Request   *inference.Request
+	Selection *wire.CursorRequest
+	Emit      func([]inference.Event)
+	Record    func(frame []byte)
+	// RefusesMaxOutputTokens drops the request's output ceiling instead of
+	// refusing it, for an upstream whose dialect states no ceiling to send.
+	RefusesMaxOutputTokens bool
+	ConnectError           func(status int, body []byte) *inference.ErrorInfo
 }
 
 // Run converses until the turn ends and returns every canonical event.
@@ -80,14 +83,20 @@ func streamRefusal(reader *cursor.FrameReader, response *http.Response) error {
 }
 
 func (r *Runner) prepare() (*ToolMap, History, []byte, error) {
-	if err := Validate(r.Request, r.Selection); err != nil {
+	request := r.Request
+	if r.RefusesMaxOutputTokens && request.MaxTokens != 0 {
+		dropped := *request
+		dropped.MaxTokens = 0
+		request = &dropped
+	}
+	if err := Validate(request, r.Selection); err != nil {
 		return nil, History{}, nil, err
 	}
-	tools, err := BuildToolMap(r.Request.Tools)
+	tools, err := BuildToolMap(request.Tools)
 	if err != nil {
 		return nil, History{}, nil, err
 	}
-	history, action, err := BuildHistory(r.Request, tools)
+	history, action, err := BuildHistory(request, tools)
 	if err != nil {
 		return nil, History{}, nil, err
 	}
