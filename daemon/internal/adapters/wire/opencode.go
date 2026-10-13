@@ -45,12 +45,22 @@ func OpenCodeFreeHeaders(lane, inboundSession string) (map[string]string, error)
 // freeSessionID is the session one conversation is sent on. It is derived from
 // the lane rather than remembered for it, because a daemon that outlives many
 // conversations would otherwise hold a session for every one it ever served.
+//
+// The gateway reads the client's clock out of the session's hex prefix: the
+// ninth and tenth digits must both read "f", which a timestamp-derived id
+// always carries because it inverts a number whose low twelve bits are set.
+// A prefix that has the shape but not those digits is answered 403
+// FreeTierError, so a hand-made id is told apart from a client's own. Every
+// other digit is free, which is what lets the prefix stay derived here.
 func freeSessionID(lane, inboundSession string) string {
 	if openCodeSession.MatchString(inboundSession) {
 		return inboundSession
 	}
 	digest := sha256.Sum256([]byte(freeSessionDomain + lane))
-	return "ses_" + hex.EncodeToString(digest[:6]) + freeIdentifierTail(digest[6:20])
+	prefix := digest
+	prefix[4] |= 0x0f
+	prefix[5] |= 0xf0
+	return "ses_" + hex.EncodeToString(prefix[:6]) + freeIdentifierTail(digest[6:20])
 }
 
 // freeRequestID names one attempt. Every attempt gets its own, so a retry is

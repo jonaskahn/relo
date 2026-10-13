@@ -137,6 +137,24 @@ func TestOpenCodeFreeSessionIsDerivedRatherThanRemembered(t *testing.T) {
 	}
 }
 
+// TestOpenCodeFreeSessionPrefixCarriesTheGatewaysClock covers the rule the
+// gateway applies past the shape: the ninth and tenth digits of the hex prefix
+// both read "f", which a client's timestamp-derived id always carries. A
+// session that is only shaped right is answered 403, so the prefix the lane
+// derives has to carry those digits whichever conversation names it.
+func TestOpenCodeFreeSessionPrefixCarriesTheGatewaysClock(t *testing.T) {
+	clock := regexp.MustCompile(`^ses_[0-9a-f]{9}ff`)
+	for _, lane := range []string{"lane-a", "lane-b", "codex-thread:t\x00u", ""} {
+		headers, err := wire.OpenCodeFreeHeaders(lane, "")
+		if err != nil {
+			t.Fatalf("OpenCodeFreeHeaders() error = %v", err)
+		}
+		if session := headers["x-opencode-session"]; !clock.MatchString(session) {
+			t.Fatalf("session = %q, want the clock digits the gateway accepts", session)
+		}
+	}
+}
+
 // TestOpenCodeFreeHeadersAreSafeUnderConcurrency covers the callers that read
 // these headers from every request at once: nothing they share is mutable.
 func TestOpenCodeFreeHeadersAreSafeUnderConcurrency(t *testing.T) {
