@@ -11,6 +11,7 @@ import (
 	"maps"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/jonaskahn/relo/internal/activity"
@@ -349,6 +350,15 @@ func (e *Executor) settleDispatchPass(ctx context.Context, pass dispatchPass, nu
 }
 
 func applyRefreshedAuth(options *wire.CodecOpts, next catalog.Authorization) {
+	if next.Auth != "" {
+		options.AuthMethod = string(next.Auth)
+	}
+	if next.KeyHeader != "" {
+		options.KeyHeader = string(next.KeyHeader)
+	}
+	if next.Signer != nil {
+		options.Signer = next.Signer
+	}
 	options.CredentialRef = next.Token
 	options.AccountID = next.AccountID
 	if next.Project != "" {
@@ -357,15 +367,23 @@ func applyRefreshedAuth(options *wire.CodecOpts, next catalog.Authorization) {
 	if next.BaseURL != "" {
 		options.BaseURL = next.BaseURL
 	}
-	if len(next.Headers) == 0 {
-		return
-	}
 	merged := maps.Clone(options.ExtraHeaders)
 	if merged == nil {
 		merged = map[string]string{}
 	}
-	maps.Copy(merged, next.Headers)
+	for name, value := range next.Headers {
+		removeHeaderCaseInsensitive(merged, name)
+		merged[name] = value
+	}
 	options.ExtraHeaders = merged
+}
+
+func removeHeaderCaseInsensitive(headers map[string]string, name string) {
+	for existing := range headers {
+		if strings.EqualFold(existing, name) {
+			delete(headers, existing)
+		}
+	}
 }
 
 func (e *Executor) relay(att attempt, response *http.Response, aggregate bool) (Result, error) {
