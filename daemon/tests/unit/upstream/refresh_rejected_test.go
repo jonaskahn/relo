@@ -50,6 +50,66 @@ func TestExecuteRetriesClaudeUnauthorizedOnce(t *testing.T) {
 	}
 }
 
+// TestExecuteCarriesTheRefreshedConnectionSettings pins that the retry after a
+// refused token is sent under the connection's own authentication, not under
+// the one that was refused: the auth kind, where the key travels, the signer,
+// and the account headers all come from the credential that replaced it. A
+// header the old credential set under another spelling is replaced, not sent
+// twice.
+func TestExecuteCarriesTheRefreshedConnectionSettings(t *testing.T) {
+	var calls atomic.Int32
+	var served *http.Request
+	origin := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		calls.Add(1)
+		if r.Header.Get("Authorization") == "Bearer stale" {
+			http.Error(w, "unauthorized", http.StatusUnauthorized)
+			return
+		}
+		served = r.Clone(r.Context())
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"id":"x","object":"chat.completion","choices":[{"index":0,"message":{"role":"assistant","content":"ok"},"finish_reason":"stop"}],"usage":{"prompt_tokens":1,"completion_tokens":1}}`))
+	}))
+	t.Cleanup(origin.Close)
+
+	exchange := completeExchange(origin.URL)
+	exchange.Final = false
+	exchange.Options.CredentialRef = "stale"
+	exchange.Options.ExtraHeaders = map[string]string{"X-Account": "stale-account"}
+	exchange.OnUnauthorized = func(context.Context) (catalog.Authorization, error) {
+		return catalog.Authorization{
+			Auth: catalog.AuthAPIKey, KeyHeader: catalog.KeyHeaderXGoogApiKey,
+			Token: "fresh", AccountID: "acct-9",
+			Headers: map[string]string{"x-account": "acct-9"},
+			Signer: func(request *http.Request) error {
+				request.Header.Set("X-Signed", "yes")
+				return nil
+			},
+		}, nil
+	}
+	result, err := newExecutor(t).Execute(context.Background(), exchange, httptest.NewRecorder())
+	if err != nil {
+		t.Fatalf("Execute() error = %v", err)
+	}
+	if result.Status != http.StatusOK || calls.Load() != 2 {
+		t.Fatalf("status = %d calls = %d, want a served retry", result.Status, calls.Load())
+	}
+	if served == nil {
+		t.Fatal("the retry never reached the upstream")
+	}
+	if got := served.Header.Get("X-Goog-Api-Key"); got != "fresh" {
+		t.Fatalf("key header = %q, want the refreshed credential", got)
+	}
+	if got := served.Header.Get("Authorization"); got != "" {
+		t.Fatalf("authorization = %q, want no bearer left over", got)
+	}
+	if got := served.Header.Values("X-Account"); len(got) != 1 || got[0] != "acct-9" {
+		t.Fatalf("account headers = %v, want the refreshed one alone", got)
+	}
+	if got := served.Header.Get("X-Signed"); got != "yes" {
+		t.Fatalf("signed header = %q, want the refreshed signer to have run", got)
+	}
+}
+
 func TestExecuteSettlesAFailedRefresh(t *testing.T) {
 	var calls atomic.Int32
 	origin := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
