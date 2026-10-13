@@ -29,6 +29,17 @@ scratch="$(mktemp -d)"
 trap 'rm -rf "$scratch"' EXIT
 mkdir -p "$root/dist"
 
+# makensis is a native Windows program and MSYS bash leaves -DKEY=value
+# alone, so a Unix-style /tmp or /d path never resolves there. Convert every
+# path makensis reads or writes to a Windows path first.
+native_path() {
+  if command -v cygpath >/dev/null 2>&1; then
+    cygpath -m "$1"
+  else
+    printf '%s' "$1"
+  fi
+}
+
 for arch in $arches; do
   binary="$scratch/relo-windows-$arch.exe"
   echo "building the $arch relo.exe"
@@ -36,15 +47,16 @@ for arch in $arches; do
     -ldflags "-s -w -H windowsgui -X github.com/jonaskahn/relo/internal/cli.version=$version" \
     -o "$binary" ./cmd/relo)
 
+  ls -la "$binary"
   outfile="$root/dist/Relo-Setup-$version-$arch.exe"
   echo "building $outfile"
   makensis -V2 \
     -DVERSION="$version" \
-    -DBINARY="$binary" \
-    -DSHIMCMD="$root/packaging/windows/relo.cmd" \
-    -DSHIMSH="$root/packaging/windows/relo" \
-    -DICON="$root/packaging/windows/icon.ico" \
-    -DOUTFILE="$outfile" \
-    "$root/packaging/windows/installer.nsi"
+    -DBINARY="$(native_path "$binary")" \
+    -DSHIMCMD="$(native_path "$root/packaging/windows/relo.cmd")" \
+    -DSHIMSH="$(native_path "$root/packaging/windows/relo")" \
+    -DICON="$(native_path "$root/packaging/windows/icon.ico")" \
+    -DOUTFILE="$(native_path "$outfile")" \
+    "$(native_path "$root/packaging/windows/installer.nsi")"
   ls -la "$outfile"
 done
