@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	"github.com/jonaskahn/relo/internal/adapters/wire"
+	"github.com/jonaskahn/relo/internal/catalog"
 	"github.com/jonaskahn/relo/internal/inference"
 )
 
@@ -71,19 +72,20 @@ func (c *Codec) EncodeRequest(req *inference.Request, opts wire.CodecOpts) (*htt
 	if opts.CredentialRef == "" && opts.AuthMethod != wire.AuthNone {
 		return nil, wire.ErrMissingCredential
 	}
-	oauth := opts.AuthMethod == wire.AuthOAuth
-	payload, err := c.encodePayload(req, oauth, opts)
+	authOAuth := opts.AuthMethod == wire.AuthOAuth
+	claude := authOAuth && (opts.TemplateID == "" || opts.TemplateID == catalog.ClaudeSubscriptionTemplate)
+	payload, err := c.encodePayload(req, claude, opts)
 	if err != nil {
 		return nil, fmt.Errorf("encode messages request: %w", err)
 	}
-	if oauth && !c.vertex {
+	if claude && !c.vertex {
 		payload = patchBillingCCH(payload)
 	}
-	request, err := http.NewRequest(http.MethodPost, c.endpoint(opts, req, oauth), bytes.NewReader(payload))
+	request, err := http.NewRequest(http.MethodPost, c.endpoint(opts, req, claude), bytes.NewReader(payload))
 	if err != nil {
 		return nil, fmt.Errorf("build messages request: %w", err)
 	}
-	c.authorize(request, opts, oauth)
+	c.authorize(request, opts, authOAuth, claude)
 	return request, nil
 }
 
@@ -106,7 +108,7 @@ func (c *Codec) encodePayload(req *inference.Request, oauth bool, opts wire.Code
 	return encoded, nil
 }
 
-func (c *Codec) authorize(request *http.Request, opts wire.CodecOpts, oauth bool) {
+func (c *Codec) authorize(request *http.Request, opts wire.CodecOpts, authOAuth, claude bool) {
 	request.Header.Set("Content-Type", "application/json")
 	if c.vertex {
 		if opts.CredentialRef != "" {
@@ -118,8 +120,15 @@ func (c *Codec) authorize(request *http.Request, opts wire.CodecOpts, oauth bool
 		return
 	}
 	request.Header.Set(VersionHeader, APIVersion)
-	if oauth {
+	if claude {
 		c.authorizeClaudeCode(request, opts)
+		return
+	}
+	if authOAuth {
+		request.Header.Set("Authorization", "Bearer "+opts.CredentialRef)
+		for name, value := range opts.ExtraHeaders {
+			request.Header.Set(name, value)
+		}
 		return
 	}
 	switch {
