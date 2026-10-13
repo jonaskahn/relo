@@ -41,13 +41,19 @@ func TestConversationOfReadsTheHeaderAClientSent(t *testing.T) {
 // taken against a route does not also bind the bare model of the same name and
 // a pin on a bare model survives a plan that named no route at all.
 func TestPinPrefixNamesTheDecision(t *testing.T) {
-	grouped := routing.PinPrefix(routing.Plan{GroupID: "alias", Model: "alias"})
-	if grouped == routing.PinPrefix(routing.Plan{Model: "alias"}) {
-		t.Fatalf("PinPrefix() = %q for both a route and a bare model, want them told apart", grouped)
+	routed := routing.PinPrefix(routing.Plan{GroupID: "alias", Model: "alias"})
+	bare := routing.PinPrefix(routing.Plan{Model: "alias"})
+	if routed == bare {
+		t.Fatalf("PinPrefix() = %q for both a route and a bare model, want them told apart", routed)
 	}
-	if routing.PinPrefix(routing.Plan{GroupID: "", Model: "alias"}) !=
-		routing.PinPrefix(routing.Plan{GroupID: "", Model: "alias"}) {
-		t.Fatalf("PinPrefix() is not stable for one bare model")
+	if again := routing.PinPrefix(routing.Plan{Model: "alias"}); again != bare {
+		t.Fatalf("PinPrefix() = %q then %q for one bare model, want it stable", bare, again)
+	}
+	// A plan naming no route but a different model is a different pin again,
+	// so one conversation's pin cannot bind another's.
+	other := routing.PinPrefix(routing.Plan{Model: "beta"})
+	if other == bare || other == routed {
+		t.Fatalf("PinPrefix() = %q, want a second model to pin apart", other)
 	}
 }
 
