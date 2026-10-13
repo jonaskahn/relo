@@ -25,6 +25,18 @@ const freeIdentifierAlphabet = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijkl
 // so two clients that name the same conversation cannot land on one session.
 const freeSessionDomain = "relo/opencode-free/session/v1\x00"
 
+// freeClientUserAgent identifies the request as the OpenCode client the free
+// lane serves. The gateway refuses a turn whose User-Agent carries no
+// "opencode/" marker, and this is the only header it reads for the client's
+// identity; the project, session aliases, and accept below go out because the
+// client sends them, not because the lane asks for them.
+const freeClientUserAgent = "opencode/latest/2.0.27/cli"
+
+// freeClientProject is the project marker a current client sends. The lane
+// accepts any value once the User-Agent carries its marker, but the header is
+// part of the client's identity and goes out as the client sends it.
+const freeClientProject = "830e1c56fd90dc478c00038a574f71ce499ac237"
+
 // OpenCodeFreeHeaders returns the signed-out CLI headers, with one session
 // per conversation lane and a fresh message identifier for each attempt.
 func OpenCodeFreeHeaders(lane, inboundSession string) (map[string]string, error) {
@@ -32,13 +44,18 @@ func OpenCodeFreeHeaders(lane, inboundSession string) (map[string]string, error)
 	if err != nil {
 		return nil, err
 	}
+	session := freeSessionID(lane, inboundSession)
 	return map[string]string{
-		"Authorization":      "Bearer public",
-		"User-Agent":         "opencode/1.18.33",
-		"x-opencode-client":  "cli",
-		"x-opencode-project": "global",
-		"x-opencode-session": freeSessionID(lane, inboundSession),
-		"x-opencode-request": request,
+		"Authorization":         "Bearer public",
+		"User-Agent":            freeClientUserAgent,
+		"x-opencode-client":     "cli",
+		"x-opencode-project":    freeClientProject,
+		"x-opencode-session":    session,
+		"x-opencode-session-id": session,
+		"x-session-affinity":    session,
+		"x-session-id":          session,
+		"x-opencode-request":    request,
+		"Accept":                "*/*",
 	}, nil
 }
 
