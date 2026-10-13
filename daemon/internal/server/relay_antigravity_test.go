@@ -117,4 +117,26 @@ func TestSelectAntigravityAttempt(t *testing.T) {
 			t.Fatal("selectAntigravityAttempt() succeeded without a serving account")
 		}
 	})
+
+	t.Run("a claude model passes through with no selection", func(t *testing.T) {
+		relay := &attemptStubRelay{accounts: []catalog.Authorization{first, second}}
+		server := attemptTestServer(relay, configs)
+		spec := antigravityTestSpec(first, "high")
+		spec.candidate.ModelID = "claude-sonnet-4-6"
+		spec.candidate.Model = catalog.Model{ID: "claude-sonnet-4-6"}
+		tried := map[string][]string{}
+		selection, err := server.selectAntigravityAttempt(context.Background(), spec, tried)
+		if err != nil {
+			t.Fatalf("selectAntigravityAttempt() error = %v", err)
+		}
+		if selection != nil {
+			t.Fatalf("selection = %+v, want no SKU for a model that names its own id", selection)
+		}
+		if relay.calls != 0 {
+			t.Fatalf("authorize calls = %d, want no re-authorization", relay.calls)
+		}
+		if len(tried) != 0 {
+			t.Fatalf("tried = %v, want no account excluded", tried)
+		}
+	})
 }

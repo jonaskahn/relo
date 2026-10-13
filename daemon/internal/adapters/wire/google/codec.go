@@ -113,11 +113,11 @@ func (c *Codec) EncodeRequest(req *inference.Request, opts wire.CodecOpts) (*htt
 	if err != nil {
 		return nil, fmt.Errorf("build generate content request: %w", err)
 	}
-	c.prepareGoogleRequest(request, mode, req, opts)
+	c.prepareGoogleRequest(request, mode, opts)
 	return request, nil
 }
 
-func (c *Codec) prepareGoogleRequest(request *http.Request, mode Mode, req *inference.Request, opts wire.CodecOpts) {
+func (c *Codec) prepareGoogleRequest(request *http.Request, mode Mode, opts wire.CodecOpts) {
 	request.Header.Set("Content-Type", "application/json")
 	c.authorize(request, opts)
 	for name, value := range opts.ExtraHeaders {
@@ -131,21 +131,6 @@ func (c *Codec) prepareGoogleRequest(request *http.Request, mode Mode, req *infe
 		request.Header.Set("Accept-Encoding", "gzip")
 		request.ContentLength = -1
 	}
-	c.prepareAssistBeta(request, mode, req, opts)
-}
-
-// prepareAssistBeta claims the beta a reasoning turn needs on this transport.
-// Only Claude reasons here, and only while thinking is on: a turn that turned
-// thinking off has nothing to interleave.
-func (c *Codec) prepareAssistBeta(request *http.Request, mode Mode, req *inference.Request, opts wire.CodecOpts) {
-	if mode != ModeCloudCodeAssist || req == nil || !claudeOnAntigravity(req.Model) {
-		return
-	}
-	_, off := inference.ChooseThinking(effortOf(req), opts.ReasoningEfforts, opts.ReasoningToggle)
-	if off || effortOf(req) == "none" {
-		return
-	}
-	request.Header.Set(antigravity.BetaHeader, antigravity.InterleavedThinkingBeta)
 }
 
 // Bind returns a codec that files this attempt's answer under its session, so
@@ -281,14 +266,7 @@ func (s settings) body(req *inference.Request, mode Mode, opts wire.CodecOpts) (
 	// The request keeps the logical model: usage is attributed to it, and the
 	// replay cache is filed under it. Only the envelope names the wire SKU the
 	// vendor serves the requested effort on.
-	variant, _ := antigravity.Collapse(req.Model, effortOf(req))
-	wireModel := req.Model
-	if opts.Antigravity != nil && opts.Antigravity.WireModel != "" {
-		wireModel = opts.Antigravity.WireModel
-		variant = antigravity.Variant{WireModel: opts.Antigravity.WireModel, ModelEnum: opts.Antigravity.ModelEnum, MaxOutput: opts.Antigravity.MaxOutput}
-	} else if variant.WireModel != "" {
-		wireModel = variant.WireModel
-	}
+	wireModel, variant := assistVariant(req, opts)
 	preimage := sessionPreimage(s.sessionAnchor, req)
 	identity := finishAssist(payload, req, assistTurn{
 		anchor:  s.sessionAnchor,
@@ -300,6 +278,23 @@ func (s settings) body(req *inference.Request, mode Mode, opts wire.CodecOpts) (
 		Request: *payload, Model: wireModel,
 		UserAgent: cloudCodeUserAgent, RequestType: cloudCodeRequestType,
 	})
+}
+
+// assistVariant reports the wire SKU one Cloud Code Assist attempt sends.
+// Claude already names its own SKU and thinks through nothing, so it skips
+// the collapse every Gemini effort resolves through.
+func assistVariant(req *inference.Request, opts wire.CodecOpts) (string, antigravity.Variant) {
+	if claudeOnAntigravity(req.Model) {
+		return req.Model, antigravity.ClaudeVariant(req.Model)
+	}
+	variant, _ := antigravity.Collapse(req.Model, effortOf(req))
+	if opts.Antigravity != nil && opts.Antigravity.WireModel != "" {
+		return opts.Antigravity.WireModel, antigravity.Variant{WireModel: opts.Antigravity.WireModel, ModelEnum: opts.Antigravity.ModelEnum, MaxOutput: opts.Antigravity.MaxOutput}
+	}
+	if variant.WireModel != "" {
+		return variant.WireModel, variant
+	}
+	return req.Model, variant
 }
 
 // effortOf reports the canonical effort a request asked for. A request that

@@ -1080,9 +1080,9 @@ func TestCloudCodeAssistTruncatedStream(t *testing.T) {
 	})
 }
 
-// TestCloudCodeAssistClaudeBeta covers the beta a reasoning Claude turn claims
-// by name: the vendor gates interleaved thinking behind it and serves the turn
-// without the reasoning the client asked for when it is missing.
+// TestCloudCodeAssistClaudeBeta covers that a Claude turn never claims a
+// thinking beta on Cloud Code Assist: Claude thinks through nothing here, so
+// any effort the request states is ignored rather than interleaved.
 func TestCloudCodeAssistClaudeBeta(t *testing.T) {
 	beta := func(model, effort string) string {
 		t.Helper()
@@ -1097,19 +1097,13 @@ func TestCloudCodeAssistClaudeBeta(t *testing.T) {
 		return encoded.Header.Get("anthropic-beta")
 	}
 
-	t.Run("a reasoning claude turn claims it", func(t *testing.T) {
+	t.Run("a claude turn never claims it", func(t *testing.T) {
 		for _, model := range []string{"claude-sonnet-4-6", "claude-opus-4-6"} {
-			for _, effort := range []string{"low", "medium", "high"} {
-				if got := beta(model, effort); got != "interleaved-thinking-2025-05-14" {
-					t.Fatalf("anthropic-beta = %q for %s at %s, want the interleaved-thinking beta", got, model, effort)
+			for _, effort := range []string{"", "none", "low", "medium", "high"} {
+				if got := beta(model, effort); got != "" {
+					t.Fatalf("anthropic-beta = %q for %s at %s, want none without thinking", got, model, effort)
 				}
 			}
-		}
-	})
-
-	t.Run("a turn with thinking off does not claim it", func(t *testing.T) {
-		if got := beta("claude-sonnet-4-6", "none"); got != "" {
-			t.Fatalf("anthropic-beta = %q, want none for a turn with thinking off", got)
 		}
 	})
 
@@ -1121,9 +1115,8 @@ func TestCloudCodeAssistClaudeBeta(t *testing.T) {
 }
 
 // TestCloudCodeAssistClaudeThinking covers the thinking a Claude turn carries
-// on Cloud Code Assist: the endpoint reasons through a token budget, so the
-// budget survives here instead of being dropped, and the turn always pins the
-// tool mode even when it declares no tools.
+// on Cloud Code Assist: none, whatever the request states, and the turn always
+// pins the tool mode even when it declares no tools.
 func TestCloudCodeAssistClaudeThinking(t *testing.T) {
 	inner := func(model string, reasoning *inference.ReasoningConfig) map[string]any {
 		t.Helper()
@@ -1151,9 +1144,9 @@ func TestCloudCodeAssistClaudeThinking(t *testing.T) {
 		return mode
 	}
 
-	t.Run("a reasoning turn leaves thinking to the endpoint", func(t *testing.T) {
+	t.Run("a reasoning turn states no thinking", func(t *testing.T) {
 		if thinking := thinkingOf(inner("claude-sonnet-4-6", &inference.ReasoningConfig{Effort: "high"})); len(thinking) != 0 {
-			t.Fatalf("thinkingConfig = %v, want none when Claude publishes no effort", thinking)
+			t.Fatalf("thinkingConfig = %v, want none when Claude thinks through nothing", thinking)
 		}
 	})
 
@@ -1163,10 +1156,10 @@ func TestCloudCodeAssistClaudeThinking(t *testing.T) {
 		}
 	})
 
-	t.Run("thinking off carries a zero budget", func(t *testing.T) {
+	t.Run("thinking off states no thinking either", func(t *testing.T) {
 		thinking := thinkingOf(inner("claude-sonnet-4-6", &inference.ReasoningConfig{Effort: "none"}))
-		if thinking["thinkingBudget"] != float64(0) || thinking["includeThoughts"] != false {
-			t.Fatalf("thinkingConfig = %v, want a zero budget without summaries", thinking)
+		if len(thinking) != 0 {
+			t.Fatalf("thinkingConfig = %v, want none when the effort is ignored", thinking)
 		}
 	})
 
@@ -1435,7 +1428,8 @@ func TestCloudCodeAssistSessionIdentity(t *testing.T) {
 // TestCloudCodeAssistVariantRouting asserts the envelope names the SKU the
 // vendor serves the requested effort on, under the label it reads the SKU's
 // enum from, within the ceiling that SKU accepts. The request itself keeps the
-// logical model, so usage and the replay cache stay filed under it.
+// logical model, so usage and the replay cache stay filed under it. A Claude
+// model names its own id at any effort, with no thinking to resolve.
 func TestCloudCodeAssistVariantRouting(t *testing.T) {
 	cases := []struct {
 		logical string
@@ -1451,7 +1445,7 @@ func TestCloudCodeAssistVariantRouting(t *testing.T) {
 		{"gemini-3.1-pro", "low", "gemini-3.1-pro-low", "MODEL_PLACEHOLDER_M36", 65535},
 		{"gemini-3.1-pro", "high", "gemini-pro-agent", "MODEL_PLACEHOLDER_M16", 65535},
 		{"claude-sonnet-4-6", "high", "claude-sonnet-4-6", "", 64000},
-		{"claude-opus-4-6", "high", "claude-opus-4-6-thinking", "", 64000},
+		{"claude-opus-4-6-thinking", "high", "claude-opus-4-6-thinking", "", 64000},
 		{"gemini-2.0-flash", "high", "gemini-2.0-flash", "", 65536},
 	}
 	for _, test := range cases {
