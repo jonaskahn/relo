@@ -7,8 +7,8 @@ requires: [form-controls, appearance-popover, cards-and-quota, modal-and-dialogs
 # Settings
 
 Route `/settings`. One page of level-1 cards, one per task: **Network** (bind address, console port,
-client protocol ports), **Access and secrets** (external access; the read-only sign-in and vault),
-**Providers** (model directory, proxy, call wait, retry count, failover wait), **Daemon** (start at login,
+client protocol ports), **Access and secrets** (external access; the read-only sign-in and vault), **Providers** (model
+directory, proxy, call wait, retry count, failover wait), **Daemon** (start at login,
 traffic log, log level, update feed), **Retention** (budget and cleanup), **Reclaim space** (maintenance
 sweep), and **Console** (theme, accent, quota display, language). Each card is a level-1 surface with a
 title, a one-line description, and rows of label, helper text and control. Cards wear `flat-surface`: a form
@@ -36,12 +36,12 @@ areas stack under it so a translated label never squeezes a control. Nothing dev
 
 One column below 1280px. From `xl` the small cards pair and Console keeps a full row:
 
-| Row | Cards                            |
-|-----|----------------------------------|
-| 1   | Network + Access and secrets     |
-| 2   | Providers + Daemon               |
-| 3   | Retention + Reclaim space        |
-| 4   | Console (full)                   |
+| Row | Cards                        |
+|-----|------------------------------|
+| 1   | Network + Access and secrets |
+| 2   | Providers + Daemon           |
+| 3   | Retention + Reclaim space    |
+| 4   | Console (full)               |
 
 Pairing is never forced: a card that holds wide fields keeps its own row, and below `xl` everything stacks because a
 paired port or URL row needs the width. Cards in one grid row share their height, and an explicit-save card pins its
