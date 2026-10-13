@@ -227,6 +227,7 @@ func (s *Server) attemptHeaders(spec attemptSpec, template catalog.Template, tem
 	return free, nil
 }
 
+// nolint:funlen
 func (s *Server) attemptCodecOptions(spec attemptSpec, extra map[string]string, template catalog.Template, templated bool) wire.CodecOpts {
 	candidate, outcome, host, authorized := spec.candidate, spec.outcome, spec.host, spec.authorized
 	anchor := s.conversationAnchor(outcome, spec.request)

@@ -166,6 +166,7 @@ func newPoolManager(db *sqlite.DB, secrets secrets.SecretStore, clk clock.Clock,
 		})
 }
 
+// nolint:funlen
 func (w *wiring) catalogLayer() error {
 	templateSettings := sqlite.NewTemplateSettings(w.db)
 	models := catalog.New(sqlite.NewCatalogReader(w.db), NewPoolDirectory(w.built.pools), wireformats.New())

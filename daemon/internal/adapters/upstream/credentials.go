@@ -385,7 +385,7 @@ func (s *Source) refreshed(ctx context.Context, connectionID, templateID string,
 	if !s.autoRefresh(ctx, templateID) {
 		return oauth.OAuthCredential{}, s.requireReauth(ctx, connectionID, entry)
 	}
-	refreshed, err := s.refresh(ctx, templateID, connectionID, entry, stored)
+	refreshed, err := s.refresh(ctx, connectionID, entry, stored)
 	if err != nil {
 		return oauth.OAuthCredential{}, err
 	}
@@ -418,7 +418,7 @@ func (s *Source) RefreshRejected(ctx context.Context, providerID, credentialID, 
 	}
 	next := stored
 	if stored.AccessToken == rejectedToken {
-		next, err = s.refresh(ctx, templateID, connectionID, entry, stored)
+		next, err = s.refresh(ctx, connectionID, entry, stored)
 		if err != nil {
 			return Authorization{}, err
 		}
@@ -455,11 +455,12 @@ func (s *Source) read(entry account.PoolEntry) (oauth.OAuthCredential, error) {
 	return credential, nil
 }
 
-func (s *Source) refresh(ctx context.Context, flowID, connectionID string, entry account.PoolEntry, stored oauth.OAuthCredential) (oauth.OAuthCredential, error) {
+func (s *Source) refresh(ctx context.Context, connectionID string, entry account.PoolEntry, stored oauth.OAuthCredential) (oauth.OAuthCredential, error) {
+	templateID := s.templateFor(connectionID)
 	if s.flows == nil {
-		return oauth.OAuthCredential{}, fmt.Errorf("%s: %w", flowID, oauth.ErrFlowNotFound)
+		return oauth.OAuthCredential{}, fmt.Errorf("%s: %w", templateID, oauth.ErrFlowNotFound)
 	}
-	flow, err := s.flows.Flow(flowID)
+	flow, err := s.flows.Flow(templateID)
 	if err != nil {
 		return oauth.OAuthCredential{}, err
 	}

@@ -108,6 +108,7 @@ func (c *Codec) encodePayload(req *inference.Request, oauth bool, opts wire.Code
 	return encoded, nil
 }
 
+// nolint:funlen
 func (c *Codec) authorize(request *http.Request, opts wire.CodecOpts, authOAuth, claude bool) {
 	request.Header.Set("Content-Type", "application/json")
 	if c.vertex {
