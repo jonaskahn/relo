@@ -23,11 +23,11 @@ const (
 	// caller did not already name a claude-cli agent.
 	CLIUserAgent = "claude-cli/" + CLIVersion + " (external, cli)"
 
-	// ClaudeCodeBeta is the beta profile a subscription inference or usage
-	// call advertises. It matches the profile the installed Claude Code
-	// release sends, so a subscription request is shaped like the client's
-	// own whether its prompt is small or large.
-	ClaudeCodeBeta = "claude-code-20250219,oauth-2025-04-20," +
+	// ClaudeCodeBetaShort is the beta profile a subscription call advertises
+	// while the caller did not name the million-token entry. It matches the
+	// profile the installed Claude Code release sends, so a subscription
+	// request is shaped like the client's own.
+	ClaudeCodeBetaShort = "claude-code-20250219,oauth-2025-04-20," +
 		"interleaved-thinking-2025-05-14,thinking-token-count-2026-05-13," +
 		"context-management-2025-06-27,prompt-caching-scope-2026-01-05," +
 		"mid-conversation-system-2026-04-07,per-turn-control-2026-07-01," +
@@ -36,10 +36,11 @@ const (
 		"dangerous-tool-use-2026-09-03," +
 		"afk-mode-2026-01-31,extended-cache-ttl-2025-04-11"
 
-	// ClaudeCodeBetaShort is the beta profile a subscription inference call
-	// advertises while the request fits the 200K window, so a 1M-capable
-	// model stays in the base rate until its prompt actually grows.
-	ClaudeCodeBetaShort = ClaudeCodeBeta
+	// ClaudeCodeBeta is the profile a call that named a separate million-token
+	// entry advertises: the same list plus the long-context beta, which is an
+	// opt-in the client selects rather than a size the prompt crosses. A model
+	// whose window is a million tokens on its own never sends it.
+	ClaudeCodeBeta = ClaudeCodeBetaShort + "," + contextBeta
 
 	// ClaudeCodeUsageBeta is the beta profile a subscription usage call
 	// advertises. Usage reads the account's windows rather than running
@@ -52,9 +53,9 @@ const (
 		"advisor-tool-2026-03-01,effort-2025-11-24," +
 		"dangerous-tool-use-2026-09-03,extended-cache-ttl-2025-04-11"
 
-	// shortContextTokens bounds the short profile. It mirrors the default
-	// 200K entry, so a larger estimate escalates a 1M-capable model.
-	shortContextTokens = int64(200_000)
+	// contextBeta is the long-context opt-in Claude Code attaches when the
+	// caller selects a separate million-token entry.
+	contextBeta = "context-1m-2025-08-07"
 
 	claudeAcceptEncoding = "gzip, deflate, br, zstd"
 	stainlessLang        = "js"
@@ -124,7 +125,7 @@ func applyClaudeCodeHeaders(request *http.Request, opts wire.CodecOpts) {
 }
 
 func claudeBetaFor(opts wire.CodecOpts) string {
-	if (opts.LongContext || opts.NativeMillion) && opts.PromptTokens > shortContextTokens {
+	if opts.LongContext && !opts.NativeMillion {
 		return ClaudeCodeBeta
 	}
 	return ClaudeCodeBetaShort
