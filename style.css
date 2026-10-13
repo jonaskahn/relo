@@ -1192,19 +1192,18 @@ main,
   gap: 6px;
   height: var(--control-h-sm);
   padding: 0 10px;
-  border: 1px solid var(--line);
+  border: 0;
   border-radius: var(--pill);
   background: transparent;
   color: var(--ink);
   font: inherit;
   font-size: 13px;
   cursor: pointer;
-  transition: background 160ms ease, border-color 160ms ease;
+  transition: background 160ms ease;
 }
 
 .nav-icon:hover {
   background: var(--hover);
-  border-color: var(--line-strong);
 }
 
 [data-theme-toggle] {
@@ -1304,6 +1303,11 @@ main,
   height: 6px;
   border-radius: 50%;
   background: var(--accent);
+}
+
+.kinetic-word {
+  display: inline-block;
+  white-space: nowrap;
 }
 
 [data-kinetic] .c,

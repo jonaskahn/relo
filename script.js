@@ -205,7 +205,9 @@
     var text = untouched ? node.dataset.raw : current;
     node.dataset.raw = text;
     if (!text) return;
-    var parts = mode === "word" ? text.split(/(\s+)/) : text.split("");
+    var parts = mode === "char" && typeof Intl.Segmenter === "function"
+      ? Array.from(new Intl.Segmenter(root.lang, { granularity: "word" }).segment(text), function (part) { return part.segment; })
+      : text.split(/(\s+)/);
     node.textContent = "";
     var index = 0;
     parts.forEach(function (part) {
@@ -213,11 +215,21 @@
         node.appendChild(document.createTextNode(part));
         return;
       }
-      var span = document.createElement("span");
-      span.className = mode === "word" ? "w" : "c";
-      span.textContent = part;
-      span.style.setProperty("--i", index++);
-      node.appendChild(span);
+      var word = document.createElement("span");
+      word.className = mode === "char" ? "kinetic-word" : "w";
+      if (mode === "word") {
+        word.textContent = part;
+        word.style.setProperty("--i", index++);
+      } else {
+        Array.from(part).forEach(function (letter) {
+          var span = document.createElement("span");
+          span.className = "c";
+          span.textContent = letter;
+          span.style.setProperty("--i", index++);
+          word.appendChild(span);
+        });
+      }
+      node.appendChild(word);
     });
     node.dataset.rendered = node.textContent;
     node.dataset.split = "done";
