@@ -15,6 +15,9 @@ permissions:
 
 jobs:
   publish:
+    # A beta publishes a prerelease, and `published` fires for those too: this
+    # job would move npm's `latest` onto a commit nobody asked to install.
+    if: ${{ !github.event.release.prerelease }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout tag

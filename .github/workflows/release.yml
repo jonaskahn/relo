@@ -9,8 +9,21 @@ permissions:
   contents: write
 
 jobs:
+  official:
+    # A tag carrying a prerelease belongs to the beta lane, which publishes its
+    # own artifacts under a prerelease and deliberately leaves the installers,
+    # the tap, npm and the appcast alone. `v*` matches those tags too, so this
+    # is what stops a beta tag from building a second, official release beside
+    # it. An official tag states no prerelease and passes.
+    if: ${{ !contains(github.ref_name, '-') }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Report the release
+        run: echo "building the official release ${{ github.ref_name }}"
+
   binaries:
     name: Build daemon binaries
+    needs: official
     runs-on: ubuntu-latest
     steps:
       - name: Checkout tag
@@ -56,6 +69,7 @@ jobs:
 
   macos:
     name: Build macOS app
+    needs: official
     runs-on: macos-15
     steps:
       - name: Checkout tag
@@ -116,7 +130,7 @@ jobs:
   linux:
     name: Build Linux packages
     runs-on: ubuntu-latest
-    needs: binaries
+    needs: [official, binaries]
     steps:
       - name: Checkout tag
         uses: actions/checkout@v5
@@ -155,7 +169,7 @@ jobs:
   windows:
     name: Build Windows installer
     runs-on: windows-latest
-    needs: binaries
+    needs: [official, binaries]
     steps:
       - name: Checkout tag
         uses: actions/checkout@v5

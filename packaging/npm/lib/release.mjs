@@ -21,6 +21,17 @@ export function tagFromArgs(argv = []) {
 	return null;
 }
 
+// prereleaseTag pins an install to the version this package was published as,
+// and only when that version is a prerelease. A beta published under the beta
+// dist-tag would otherwise resolve "latest" and install the stable binary,
+// which is not the build its caller asked for. A stable package keeps
+// following the latest release, so re-publishing an old stable version still
+// tracks the channel instead of pinning itself.
+export function prereleaseTag(published) {
+	const pinned = version(published);
+	return pinned && /^\d+\.\d+\.\d+-/.test(pinned) ? pinned : null;
+}
+
 // assets resolves the download directory for one release. Without a tag it
 // returns the latest-release directory, which is how a release is always
 // found when no pin is given.

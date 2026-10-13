@@ -28,7 +28,7 @@ DEV_URL  ?= http://127.0.0.1:$(DEV_PORT)
 	ci ci-backend ci-console ci-assets ci-coverage ci-cross-build ci-package-linux \
 	package-linux package-macos package-windows package-all package-clean \
 	test-npm npm-pack ci-npm \
-	release-tag release-check update-secrets \
+	release-tag release-check version-bump update-secrets \
 	clean
 
 # === help: every target, what it does ===
@@ -190,7 +190,7 @@ package-linux: build-console sync-console
 
 ## the macOS bundle
 package-macos: build-console sync-console
-	MACOS_MIN_VERSION=$(MACOS_MIN_VERSION) ./scripts/package-macos.sh
+	MACOS_MIN_VERSION=$(MACOS_MIN_VERSION) BUILD=$(BUILD) ./scripts/package-macos.sh
 	MACOS_MIN_VERSION=$(MACOS_MIN_VERSION) ./scripts/check-macos-target.sh
 
 ## the Windows installer (Relo-Setup)
@@ -216,6 +216,11 @@ ci-npm: test-npm npm-pack
 ## fail unless every version declaration matches the tag
 release-check:
 	python3 ./scripts/version.py check "$(TAG)"
+
+## rewrite every version declaration to the next version (KIND=patch)
+version-bump:
+	@if [ -z "$(KIND)" ]; then echo "usage: make version-bump KIND=patch" >&2; exit 2; fi
+	@python3 ./scripts/version.py bump "$(KIND)"
 
 ## tag the release (TAG=v0.1.0), failing first when versions disagree
 release-tag:

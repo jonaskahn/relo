@@ -12,6 +12,10 @@ permissions:
 
 jobs:
   publish-appcast:
+    # The appcast is the channel every installed Relo follows, so a beta zip in
+    # it would push an unreleased commit onto every user's Mac. `released` fires
+    # for prereleases as well, so the guard is the only thing keeping them out.
+    if: ${{ !github.event.release.prerelease }}
     runs-on: macos-15
     steps:
       - name: Checkout

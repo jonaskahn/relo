@@ -21,7 +21,7 @@
 	<key>CFBundleShortVersionString</key>
 	<string>__VERSION__</string>
 	<key>CFBundleVersion</key>
-	<string>__VERSION__</string>
+	<string>__BUILD__</string>
 	<key>LSMinimumSystemVersion</key>
 	<string>__MACOS_MIN_VERSION__</string>
 	<key>NSHighResolutionCapable</key>
@@ -31,6 +31,6 @@
 	<key>SUPublicEDKey</key>
 	<string>__SU_PUBLIC_ED_KEY__</string>
 	<key>SUEnableAutomaticChecks</key>
-	<true/>
+	<__SU_AUTO_CHECKS__/>
 </dict>
 </plist>

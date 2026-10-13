@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 
-import { REPO, assets, checksumsUrl, tagFromArgs, url, version } from './release.mjs';
+import { REPO, assets, checksumsUrl, prereleaseTag, tagFromArgs, url, version } from './release.mjs';
 
 test('an unset tag follows the latest release', () => {
 	assert.deepEqual(assets(), { base: `${REPO}/releases/latest/download`, version: null });
@@ -30,4 +30,19 @@ test('tagFromArgs reads --relo-version and ignores anything else', () => {
 	assert.equal(tagFromArgs(['--other', '--relo-version', '0.2.0']), '0.2.0');
 	assert.equal(tagFromArgs(['--other']), null);
 	assert.equal(tagFromArgs(['--relo-version']), null);
+});
+
+test('a beta package installs its own release instead of the latest one', () => {
+	assert.equal(prereleaseTag('0.2.0-beta.417.4f3a9c21'), '0.2.0-beta.417.4f3a9c21');
+	assert.equal(prereleaseTag('v0.2.0-rc.1'), '0.2.0-rc.1');
+	assert.equal(
+		checksumsUrl(prereleaseTag('0.2.0-beta.417.4f3a9c21')),
+		`${REPO}/releases/download/v0.2.0-beta.417.4f3a9c21/checksums.txt`
+	);
+});
+
+test('a stable package still follows the latest release', () => {
+	assert.equal(prereleaseTag('0.2.0'), null);
+	assert.equal(prereleaseTag(undefined), null);
+	assert.equal(prereleaseTag(''), null);
 });

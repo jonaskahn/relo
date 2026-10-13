@@ -1,0 +1,67 @@
+name: Bump version
+
+# A release is only the current version until the repository says the next one,
+# so the next cycle's betas have to descend from a version above it. This opens
+# the bump as a pull request: the maintainer sees the six declarations that
+# move, and merging it is what starts the next line. Nothing is committed to
+# main directly, because a merge is the event that publishes a beta.
+#
+# Betas are prereleases and a version bump belongs to a release, so a beta never
+# opens one.
+on:
+  release:
+    types:
+      - published
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  bump:
+    if: ${{ !github.event.release.prerelease }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout the release
+        uses: actions/checkout@v5
+
+      - name: Name the next version
+        id: next
+        env:
+          TAG_NAME: ${{ github.event.release.tag_name }}
+        run: |
+          ./scripts/version.py check "$TAG_NAME"
+          next=$(./scripts/version.py bump patch)
+          branch="chore/bump-$next"
+          echo "version=$next" >> "$GITHUB_OUTPUT"
+          echo "branch=$branch" >> "$GITHUB_OUTPUT"
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git checkout -b "$branch"
+          git add Makefile daemon/internal/cli/root.go console/package.json \
+            console/package-lock.json packaging/npm/package.json README.md
+          git commit -m "chore: bump to $next"
+          git push --force origin "$branch"
+
+      - name: Open the pull request
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION: ${{ steps.next.outputs.version }}
+          BRANCH: ${{ steps.next.outputs.branch }}
+        run: |
+          # A re-run of this workflow has nothing to add: the branch is already
+          # pushed and its pull request already open.
+          if gh pr view --head "$BRANCH" --json number >/dev/null 2>&1; then
+            echo "a pull request for $BRANCH is already open"
+            exit 0
+          fi
+          gh pr create \
+            --base main \
+            --head "$BRANCH" \
+            --title "chore: bump to $VERSION" \
+            --body "$TAG_NAME is released. Every declared version moves to $VERSION,
+            README badge included, so the next betas are $VERSION-beta.* and
+            sort above the release they descend from.
+
+            \`./scripts/version.py check\` reads the six declarations; this PR is
+            its own diff."
