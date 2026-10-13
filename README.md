@@ -3,20 +3,20 @@
 Static page for [Relo](https://github.com/jonaskahn/relo), published at
 <https://relo.ifelse.on/>. This branch holds only the published files.
 
-| Path           | Purpose                                                        |
-| -------------- | -------------------------------------------------------------- |
-| `index.html`   | The page                                                       |
-| `style.css`    | Styles                                                         |
-| `field.js`     | The background canvas                                          |
-| `script.js`    | Menu, theme, language, copy, tabs, terminal                    |
-| `scenes.js`    | Scroll story over the iPad (needs `motion.js`)                 |
-| `motion.js`    | Motion 12.23.24, MIT, vendored for the story                   |
-| `i18n.js`      | Translations for 20 languages                                  |
-| `install.sh`   | Installer for macOS and Linux                                  |
-| `install.ps1`  | Installer for Windows                                          |
-| `appcast.xml`  | Sparkle update feed for `Relo.app`                             |
-| `CNAME`        | The custom domain                                              |
-| `media/`       | Logo, provider marks, JetBrains Mono                           |
+| Path                  | Purpose                                              |
+| --------------------- | ---------------------------------------------------- |
+| `index.html`          | The page                                             |
+| `css/style.css`       | Styles                                               |
+| `js/field.js`         | The background canvas                                |
+| `js/script.js`        | Menu, theme, language, copy, tabs, terminal          |
+| `js/scenes.js`        | Scroll story over the iPad (needs Motion)            |
+| `js/i18n.js`          | Translations for 20 languages                        |
+| `vendor/motion/`      | Motion 12.23.24, MIT, vendored for the story         |
+| `media/`              | Logo, provider marks, JetBrains Mono                 |
+| `install.sh`          | Installer for macOS and Linux                        |
+| `install.ps1`         | Installer for Windows                                |
+| `appcast.xml`         | Sparkle update feed for `Relo.app`                   |
+| `CNAME`               | The custom domain                                    |
 
 No build step. Serve the folder as is, for example `python3 -m http.server`.
 

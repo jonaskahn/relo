@@ -127,7 +127,7 @@ img { display: block; max-width: 100%; height: auto; }
   font-style: normal;
   font-weight: 400;
   font-display: swap;
-  src: url("media/fonts/jetbrains-mono-regular.ttf") format("truetype");
+  src: url("../media/fonts/jetbrains-mono-regular.ttf") format("truetype");
 }
 
 @font-face {
@@ -135,7 +135,7 @@ img { display: block; max-width: 100%; height: auto; }
   font-style: normal;
   font-weight: 600;
   font-display: swap;
-  src: url("media/fonts/jetbrains-mono-semibold.ttf") format("truetype");
+  src: url("../media/fonts/jetbrains-mono-semibold.ttf") format("truetype");
 }
 
 .mono-data {
