@@ -4,6 +4,7 @@ package catalog
 
 import (
 	"encoding/json"
+	"strings"
 
 	"github.com/jonaskahn/relo/internal/inference"
 )
@@ -51,6 +52,28 @@ func AntigravityBand(effort string) string {
 	default:
 		return AntigravityBandMedium
 	}
+}
+
+// antigravityEffortSuffixes are the thinking-effort labels the vendor appends
+// to a Gemini model's display name.
+var antigravityEffortSuffixes = []string{" (Low)", " (Medium)", " (High)", " (Extra Low)"}
+
+// CleanAntigravityGeminiName drops the thinking-effort suffix the vendor
+// appends to a Gemini display name. Relo publishes the model once, its effort
+// chosen per request, so the suffix is not part of the name. A model of another
+// family keeps its name, because the vendor spells those parentheses the same
+// way without meaning an effort.
+func CleanAntigravityGeminiName(modelID, name string) string {
+	cleaned := strings.TrimSpace(name)
+	if !strings.HasPrefix(strings.ToLower(strings.TrimSpace(modelID)), "gemini") {
+		return cleaned
+	}
+	for _, suffix := range antigravityEffortSuffixes {
+		if strings.HasSuffix(cleaned, suffix) {
+			return strings.TrimSpace(strings.TrimSuffix(cleaned, suffix))
+		}
+	}
+	return cleaned
 }
 
 // AntigravityVariant is one exact Antigravity request configuration: the wire

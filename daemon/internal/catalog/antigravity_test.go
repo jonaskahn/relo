@@ -33,6 +33,28 @@ func TestRetiredAntigravity(t *testing.T) {
 	}
 }
 
+func TestCleanAntigravityGeminiName(t *testing.T) {
+	cases := []struct {
+		name string
+		id   string
+		want string
+	}{
+		{"Gemini 3.8 Flash (Medium)", "gemini-3.8-flash", "Gemini 3.8 Flash"},
+		{"Gemini 3.8 Flash (High)", "gemini-3.8-flash", "Gemini 3.8 Flash"},
+		{"Gemini 3.8 Flash (Low)", "gemini-3.8-flash", "Gemini 3.8 Flash"},
+		{"Gemini 3.5 Flash (Extra Low)", "gemini-3.5-flash", "Gemini 3.5 Flash"},
+		{"Gemini 3.8 Flash", "gemini-3.8-flash", "Gemini 3.8 Flash"},
+		{"GPT-OSS 120B (Medium)", "gpt-oss-120b-medium", "GPT-OSS 120B (Medium)"},
+	}
+	for _, test := range cases {
+		t.Run(test.name, func(t *testing.T) {
+			if got := CleanAntigravityGeminiName(test.id, test.name); got != test.want {
+				t.Fatalf("CleanAntigravityGeminiName(%q, %q) = %q, want %q", test.id, test.name, got, test.want)
+			}
+		})
+	}
+}
+
 func TestSelectAntigravityVariant(t *testing.T) {
 	configs := []AntigravityVariant{
 		{LogicalID: "gemini-3.8-flash", Selection: "low", Effort: "low", WireModel: "gemini-3.8-flash-low"},

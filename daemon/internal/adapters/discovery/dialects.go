@@ -456,21 +456,11 @@ func antigravityGroupName(logical string, members []antigravityServed) string {
 		if member.name == "" {
 			continue
 		}
-		if name := cleanAntigravityGeminiName(member.name); name != "" {
+		if name := catalog.CleanAntigravityGeminiName(logical, member.name); name != "" {
 			return name
 		}
 	}
-	return cleanAntigravityGeminiName(logical)
-}
-
-func cleanAntigravityGeminiName(name string) string {
-	cleaned := strings.TrimSpace(name)
-	for _, suffix := range []string{" (Low)", " (Medium)", " (High)", " (Extra Low)"} {
-		if strings.HasSuffix(cleaned, suffix) {
-			return strings.TrimSpace(strings.TrimSuffix(cleaned, suffix))
-		}
-	}
-	return cleaned
+	return catalog.CleanAntigravityGeminiName(logical, logical)
 }
 
 func antigravityWidest(members []antigravityServed) (*int64, *int64) {
