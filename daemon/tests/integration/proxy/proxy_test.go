@@ -310,7 +310,7 @@ func startDaemonSeeded(t *testing.T, s seed) daemon {
 	}
 	credentials := upstream.New(upstream.Options{
 		Pools: platform.NewCredentialPools(pools), Secrets: secrets,
-		Flows: platform.NewFlowRegistry(oauth.DefaultRegistry()), Now: clk.Now,
+		Flows: platform.NewFlowRegistry(oauth.DefaultRegistry(), nil), Now: clk.Now,
 	})
 	home := t.TempDir()
 	keys := appaccess.NewKeys(sqlite.NewAccessKeyStore(db), clk)
