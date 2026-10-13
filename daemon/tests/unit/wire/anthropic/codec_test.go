@@ -333,6 +333,31 @@ func TestEncodeRequest(t *testing.T) {
 	})
 }
 
+// TestOAuthOutsideTheClaudeSubscription pins what an OAuth credential does on
+// a connection that is not Claude's own subscription: it is a bearer token like
+// any other, sent with the connection's headers and with none of the Claude
+// Code fingerprint, which belongs to the one vendor that checks it.
+func TestOAuthOutsideTheClaudeSubscription(t *testing.T) {
+	request := newTestRequest(t, canonicalRequest(true), wire.CodecOpts{
+		BaseURL: "https://gateway.example.com/v1", CredentialRef: "oauth-token",
+		AuthMethod: "oauth", TemplateID: "some-other-subscription",
+		ExtraHeaders: map[string]string{"X-Account": "acct-9"},
+	})
+	if got := request.Header.Get("Authorization"); got != "Bearer oauth-token" {
+		t.Fatalf("authorization = %q, want the bearer token", got)
+	}
+	if got := request.Header.Get("X-Account"); got != "acct-9" {
+		t.Fatalf("account header = %q, want the connection's own header", got)
+	}
+	if request.Header.Get("anthropic-beta") != "" || request.Header.Get("User-Agent") != "" {
+		t.Fatalf("beta = %q, user-agent = %q, want no Claude Code fingerprint",
+			request.Header.Get("anthropic-beta"), request.Header.Get("User-Agent"))
+	}
+	if strings.Contains(rawBody(t, request), "x-anthropic-billing-header") {
+		t.Fatal("body contains the billing header")
+	}
+}
+
 // TestLongContextBetaFollowsTheSelectedEntry pins that the long-context beta
 // is an entry the caller selects, not a size the prompt crosses: naming the
 // separate 1M entry sends it whatever the prompt weighs, and a model whose
