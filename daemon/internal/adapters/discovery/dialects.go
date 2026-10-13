@@ -420,7 +420,13 @@ func groupAntigravityServed(served map[string]antigravityServed) (map[string][]a
 			logical, found = item.id, true
 		}
 		if !found || !isGeminiLogical(logical) {
-			singletons = append(singletons, Listed{ID: item.id, Name: item.name, ContextWindow: item.ctx, MaxOutput: item.max})
+			itemListed := Listed{ID: item.id, Name: item.name, ContextWindow: item.ctx, MaxOutput: item.max}
+			if isClaudeModel(item.id) {
+				noReasoning := false
+				itemListed.SupportsReasoning = &noReasoning
+				itemListed.ReasoningEfforts = []string{}
+			}
+			singletons = append(singletons, itemListed)
 			continue
 		}
 		grouped[logical] = append(grouped[logical], item)
@@ -430,6 +436,10 @@ func groupAntigravityServed(served map[string]antigravityServed) (map[string][]a
 
 func isGeminiLogical(logical string) bool {
 	return len(logical) >= 6 && logical[:6] == "gemini"
+}
+
+func isClaudeModel(id string) bool {
+	return strings.HasPrefix(strings.ToLower(strings.TrimSpace(id)), "claude")
 }
 
 func antigravityGrouped(logical string, members []antigravityServed) Listed {
@@ -443,11 +453,24 @@ func antigravityGrouped(logical string, members []antigravityServed) Listed {
 
 func antigravityGroupName(logical string, members []antigravityServed) string {
 	for _, member := range members {
-		if member.name != "" {
-			return member.name
+		if member.name == "" {
+			continue
+		}
+		if name := cleanAntigravityGeminiName(member.name); name != "" {
+			return name
 		}
 	}
-	return logical
+	return cleanAntigravityGeminiName(logical)
+}
+
+func cleanAntigravityGeminiName(name string) string {
+	cleaned := strings.TrimSpace(name)
+	for _, suffix := range []string{" (Low)", " (Medium)", " (High)", " (Extra Low)"} {
+		if strings.HasSuffix(cleaned, suffix) {
+			return strings.TrimSpace(strings.TrimSuffix(cleaned, suffix))
+		}
+	}
+	return cleaned
 }
 
 func antigravityWidest(members []antigravityServed) (*int64, *int64) {
