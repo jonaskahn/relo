@@ -1,6 +1,9 @@
 package catalog
 
-import "testing"
+import (
+	"slices"
+	"testing"
+)
 
 func TestMatchesPrefix(t *testing.T) {
 	cases := []struct {
@@ -52,6 +55,43 @@ func TestCleanAntigravityGeminiName(t *testing.T) {
 				t.Fatalf("CleanAntigravityGeminiName(%q, %q) = %q, want %q", test.id, test.name, got, test.want)
 			}
 		})
+	}
+}
+
+// TestAntigravityBandCollectsTheLadder pins that the vendor's three bands
+// answer for the whole canonical ladder: the steps below low share the low
+// band, the steps above high share the high one, and an effort the ladder does
+// not name takes the middle band every collapsed model publishes.
+func TestAntigravityBandCollectsTheLadder(t *testing.T) {
+	cases := map[string]string{
+		"none": AntigravityBandLow, "minimal": AntigravityBandLow, "low": AntigravityBandLow,
+		"medium": AntigravityBandMedium, "": AntigravityBandMedium, "nonsense": AntigravityBandMedium,
+		"high": AntigravityBandHigh, "xhigh": AntigravityBandHigh, "max": AntigravityBandHigh,
+	}
+	for effort, want := range cases {
+		if got := AntigravityBand(effort); got != want {
+			t.Errorf("AntigravityBand(%q) = %q, want %q", effort, got, want)
+		}
+	}
+}
+
+// TestSelectAntigravityVariantFallsBackToTheSelection pins the row a vendor
+// wrote before the band names existed: it names the SKU to select on, so the
+// selection alone still resolves it.
+func TestSelectAntigravityVariantFallsBackToTheSelection(t *testing.T) {
+	configs := []AntigravityVariant{{
+		LogicalID: "gemini-3.8-flash", Selection: "high", WireModel: "gemini-3.8-flash-high",
+	}}
+	selected, ok := SelectAntigravityVariant(configs, "gemini-3.8-flash", "max")
+	if !ok || selected.WireModel != "gemini-3.8-flash-high" {
+		t.Fatalf("selected = %+v, %v, want the SKU its selection names", selected, ok)
+	}
+}
+
+func TestAntigravityBandsAreOfferedLowestFirst(t *testing.T) {
+	want := []string{AntigravityBandLow, AntigravityBandMedium, AntigravityBandHigh}
+	if got := AntigravityBands(); !slices.Equal(got, want) {
+		t.Fatalf("AntigravityBands() = %v, want %v", got, want)
 	}
 }
 
