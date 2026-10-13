@@ -215,7 +215,7 @@ jobs:
         env:
           VERSION: ${{ needs.gate.outputs.version }}
         run: |
-          go install github.com/goreleaser/nfpm/v2/cmd/nfpm@latest
+          go install github.com/goreleaser/nfpm/v2/cmd/nfpm@v2.46.0
           # nfpm writes the prerelease as 0.1.0~beta.…, which both deb and rpm
           # read as older than the 0.1.0 release they must not replace.
           make package-linux VERSION="$VERSION"

@@ -8,7 +8,7 @@
 # release version without a leading v.
 #
 # Requires nfpm on PATH:
-#   go install github.com/goreleaser/nfpm/v2/cmd/nfpm@latest
+#   go install github.com/goreleaser/nfpm/v2/cmd/nfpm@v2.46.0
 set -euo pipefail
 
 root="$(cd "$(dirname "$0")/.." && pwd)"
@@ -27,7 +27,7 @@ if ! command -v nfpm >/dev/null 2>&1; then
     PATH="$gopath_bin:$PATH"
     export PATH
   else
-    echo "nfpm is not installed: go install github.com/goreleaser/nfpm/v2/cmd/nfpm@latest" >&2
+    echo "nfpm is not installed: go install github.com/goreleaser/nfpm/v2/cmd/nfpm@v2.46.0" >&2
     exit 1
   fi
 fi
