@@ -12,13 +12,17 @@ import (
 	"github.com/jonaskahn/relo/internal/routing"
 )
 
-type cursorStubRelay struct {
+type attemptStubRelay struct {
 	accounts []catalog.Authorization
+	// requests are the credential contracts the stub was asked to authorize,
+	// so a test can read what one attempt carried.
+	requests []catalog.AuthRequest
 	calls    int
 }
 
-func (r *cursorStubRelay) Authorize(_ context.Context, request catalog.AuthRequest) (catalog.Authorization, error) {
+func (r *attemptStubRelay) Authorize(_ context.Context, request catalog.AuthRequest) (catalog.Authorization, error) {
 	r.calls++
+	r.requests = append(r.requests, request)
 	for _, account := range r.accounts {
 		if account.CredentialID == "" {
 			continue
@@ -36,25 +40,25 @@ func (r *cursorStubRelay) Authorize(_ context.Context, request catalog.AuthReque
 	return catalog.Authorization{}, account.ErrNoCredentials
 }
 
-func (r *cursorStubRelay) RefreshRejected(_ context.Context, _, _, _ string) (catalog.Authorization, error) {
+func (r *attemptStubRelay) RefreshRejected(_ context.Context, _, _, _ string) (catalog.Authorization, error) {
 	return catalog.Authorization{}, nil
 }
 
-func (r *cursorStubRelay) Report(_ context.Context, _ Outcome) error { return nil }
+func (r *attemptStubRelay) Report(_ context.Context, _ Outcome) error { return nil }
 
-func (r *cursorStubRelay) Execute(_ context.Context, _ Exchange, _ http.ResponseWriter) (Result, error) {
+func (r *attemptStubRelay) Execute(_ context.Context, _ Exchange, _ http.ResponseWriter) (Result, error) {
 	return Result{}, nil
 }
 
-type cursorStubConfigs struct {
+type attemptStubConfigs struct {
 	configs map[string][]catalog.ModelRequestConfig
 }
 
-func (s cursorStubConfigs) ModelRequestConfigs(_ context.Context, _ string, credentialID string) ([]catalog.ModelRequestConfig, error) {
+func (s attemptStubConfigs) ModelRequestConfigs(_ context.Context, _ string, credentialID string) ([]catalog.ModelRequestConfig, error) {
 	return s.configs[credentialID], nil
 }
 
-func cursorTestServer(relay *cursorStubRelay, configs cursorStubConfigs) *Server {
+func attemptTestServer(relay *attemptStubRelay, configs attemptStubConfigs) *Server {
 	return &Server{opts: Options{Relay: relay, RequestConfigs: configs}}
 }
 
@@ -85,7 +89,7 @@ func cursorVariant(group, selection, effort, details string) catalog.ModelReques
 func TestSelectCursorAttempt(t *testing.T) {
 	first := catalog.Authorization{CredentialID: "cred-a", Label: "a", Token: "a"}
 	second := catalog.Authorization{CredentialID: "cred-b", Label: "b", Token: "b"}
-	configs := cursorStubConfigs{configs: map[string][]catalog.ModelRequestConfig{
+	configs := attemptStubConfigs{configs: map[string][]catalog.ModelRequestConfig{
 		"cred-a": {
 			cursorVariant("sonnet", "low", "low", "sonnet-low"),
 			cursorVariant("sonnet", "high", "high", "sonnet-high"),
@@ -97,8 +101,8 @@ func TestSelectCursorAttempt(t *testing.T) {
 	configs.configs["cred-a"][0].Default = true
 
 	t.Run("an eligible account keeps the attempt", func(t *testing.T) {
-		relay := &cursorStubRelay{accounts: []catalog.Authorization{first, second}}
-		server := cursorTestServer(relay, configs)
+		relay := &attemptStubRelay{accounts: []catalog.Authorization{first, second}}
+		server := attemptTestServer(relay, configs)
 		tried := map[string][]string{}
 		selection, err := server.selectCursorAttempt(context.Background(), cursorTestSpec(first, "high"), tried)
 		if err != nil {
@@ -113,8 +117,8 @@ func TestSelectCursorAttempt(t *testing.T) {
 	})
 
 	t.Run("an ineligible account yields to the next one", func(t *testing.T) {
-		relay := &cursorStubRelay{accounts: []catalog.Authorization{first, second}}
-		server := cursorTestServer(relay, configs)
+		relay := &attemptStubRelay{accounts: []catalog.Authorization{first, second}}
+		server := attemptTestServer(relay, configs)
 		tried := map[string][]string{}
 		spec := cursorTestSpec(first, "medium")
 		selection, err := server.selectCursorAttempt(context.Background(), spec, tried)
@@ -133,8 +137,8 @@ func TestSelectCursorAttempt(t *testing.T) {
 	})
 
 	t.Run("no serving account fails the selection", func(t *testing.T) {
-		relay := &cursorStubRelay{accounts: []catalog.Authorization{first}}
-		server := cursorTestServer(relay, configs)
+		relay := &attemptStubRelay{accounts: []catalog.Authorization{first}}
+		server := attemptTestServer(relay, configs)
 		spec := cursorTestSpec(first, "medium")
 		if _, err := server.selectCursorAttempt(context.Background(), spec, map[string][]string{}); err == nil {
 			t.Fatal("selectCursorAttempt() succeeded without a serving account")
@@ -142,16 +146,16 @@ func TestSelectCursorAttempt(t *testing.T) {
 	})
 
 	t.Run("an unknown effort is refused", func(t *testing.T) {
-		relay := &cursorStubRelay{accounts: []catalog.Authorization{first}}
-		server := cursorTestServer(relay, configs)
+		relay := &attemptStubRelay{accounts: []catalog.Authorization{first}}
+		server := attemptTestServer(relay, configs)
 		if _, err := server.selectCursorAttempt(context.Background(), cursorTestSpec(first, "nonsense"), map[string][]string{}); err == nil {
 			t.Fatal("selectCursorAttempt() accepted an unknown effort")
 		}
 	})
 
 	t.Run("an empty effort takes the default", func(t *testing.T) {
-		relay := &cursorStubRelay{accounts: []catalog.Authorization{first}}
-		server := cursorTestServer(relay, configs)
+		relay := &attemptStubRelay{accounts: []catalog.Authorization{first}}
+		server := attemptTestServer(relay, configs)
 		selection, err := server.selectCursorAttempt(context.Background(), cursorTestSpec(first, ""), map[string][]string{})
 		if err != nil {
 			t.Fatalf("selectCursorAttempt() error = %v", err)
