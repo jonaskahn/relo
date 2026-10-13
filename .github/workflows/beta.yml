@@ -156,7 +156,7 @@ jobs:
           printf '%s' "$APPLE_SIGN_P12_BASE64" | base64 --decode > "$RUNNER_TEMP/cert.p12"
           security import "$RUNNER_TEMP/cert.p12" -k "$keychain" -P "$APPLE_SIGN_P12_PASSWORD" -T /usr/bin/codesign
           rm -f "$RUNNER_TEMP/cert.p12"
-          security set-keychain-partition-list -S apple-tool:,apple:,codesign: -k actions "$keychain"
+          security set-key-partition-list -S apple-tool:,apple:,codesign: -k actions "$keychain"
           security list-keychains -d user -s "$keychain" $(security list-keychains -d user | tr -d '"')
           identity=$(security find-identity -v -p codesigning "$keychain" | grep "Developer ID Application" | head -n 1 | sed 's/.*) \([A-F0-9]*\) .*/\1/')
           [ -n "$identity" ] || { echo "no Developer ID identity in the imported certificate" >&2; exit 1; }
