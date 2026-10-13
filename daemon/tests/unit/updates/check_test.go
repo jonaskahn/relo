@@ -73,21 +73,43 @@ func TestParseAppcast(t *testing.T) {
 
 func TestNewer(t *testing.T) {
 	tests := []struct {
+		name    string
 		latest  string
 		current string
 		want    bool
 	}{
-		{"0.2.0", "0.1.0", true},
-		{"0.1.0", "0.1.0", false},
-		{"0.1.0", "0.2.0", false},
-		{"v0.2.0", "0.1.9", true},
-		{"0.2.0-beta", "0.1.0", true},
-		{"", "0.1.0", false},
+		{name: "a newer version", latest: "0.2.0", current: "0.1.0", want: true},
+		{name: "the same version", latest: "0.1.0", current: "0.1.0", want: false},
+		{name: "an older version", latest: "0.1.0", current: "0.2.0", want: false},
+		{name: "a v prefix", latest: "v0.2.0", current: "0.1.9", want: true},
+		{name: "a prerelease of a newer version", latest: "0.2.0-beta", current: "0.1.0", want: true},
+		{name: "no version at all", latest: "", current: "0.1.0", want: false},
+		// A beta is published before the release it leads to, so the release is
+		// the newer of the two and has to be offered to the build it replaces.
+		{
+			name:    "the release that supersedes a beta",
+			latest:  "0.1.0",
+			current: "0.1.0-beta.1.98e02113",
+			want:    true,
+		},
+		{name: "a beta never outranks its release", latest: "0.1.0-beta.1", current: "0.1.0", want: false},
+		{name: "a later beta", latest: "0.1.0-beta.2", current: "0.1.0-beta.1", want: true},
+		{
+			name:    "the same beta",
+			latest:  "0.1.0-beta.1.98e02113",
+			current: "0.1.0-beta.1.98e02113",
+			want:    false,
+		},
+		{name: "two builds of one run", latest: "0.1.0-beta.1.a", current: "0.1.0-beta.1.b", want: false},
+		{name: "the run number orders two builds", latest: "0.1.0-beta.418.a", current: "0.1.0-beta.417.z", want: true},
+		{name: "a build suffix states no order", latest: "0.1.1+abc", current: "0.1.1", want: false},
 	}
 	for _, tt := range tests {
-		if got := updates.Newer(tt.latest, tt.current); got != tt.want {
-			t.Fatalf("Newer(%q, %q) = %v, want %v", tt.latest, tt.current, got, tt.want)
-		}
+		t.Run(tt.name, func(t *testing.T) {
+			if got := updates.Newer(tt.latest, tt.current); got != tt.want {
+				t.Fatalf("Newer(%q, %q) = %v, want %v", tt.latest, tt.current, got, tt.want)
+			}
+		})
 	}
 }
 
