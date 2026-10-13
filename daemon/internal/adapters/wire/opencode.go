@@ -320,6 +320,38 @@ func OpenCodeFreeRequest(req *inference.Request, format catalog.APIFormat) (*inf
 	return &copied, shortToolNames(&copied)
 }
 
+// OpenCodeGateway reports whether baseURL reaches an OpenCode gateway lane.
+// The signed-out Zen lane and the paid Go lane share the gateway's contract,
+// including the limit it puts on a tool name, and both the older /zen paths
+// and the current /inference ones count.
+func OpenCodeGateway(baseURL string) bool {
+	parsed, err := url.Parse(strings.TrimSpace(baseURL))
+	if err != nil || parsed.Hostname() == "" {
+		return false
+	}
+	if !strings.EqualFold(parsed.Hostname(), "opencode.ai") {
+		return false
+	}
+	path := strings.ToLower(parsed.EscapedPath())
+	return strings.Contains(path, "/zen") || strings.Contains(path, "/inference")
+}
+
+// OpenCodeGatewayRequest returns the request an OpenCode gateway lane accepts,
+// with the map that names each shortened tool again on the answer. The gateway
+// refuses a tool name past its limit, and a coding session passes it as soon as
+// it loads an MCP server, so the names go out under aliases. A paid lane keeps
+// the client's request whole apart from the names: unlike the signed-out lane
+// it demands no particular tools and refuses no schema keyword. A request whose
+// names all fit is returned unchanged.
+func OpenCodeGatewayRequest(req *inference.Request) (*inference.Request, map[string]string) {
+	if req == nil {
+		return nil, nil
+	}
+	copied := *req
+	copied.Tools = append([]inference.Tool(nil), req.Tools...)
+	return &copied, shortToolNames(&copied)
+}
+
 // OpenCodeGoSessionHeader is the header the OpenCode Go gateway requires
 // before it will route a request to a session.
 const OpenCodeGoSessionHeader = "x-opencode-session"

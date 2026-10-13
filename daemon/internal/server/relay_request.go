@@ -173,7 +173,7 @@ func (s *Server) buildAttemptExchange(spec attemptSpec, module wire.CodecModule,
 	if err != nil {
 		return Exchange{}, err
 	}
-	request, originals := s.modelRequest(outcome.request, candidate, templated, template)
+	request, originals := s.modelRequest(spec, template, templated)
 	exchange := Exchange{
 		ProviderID: candidate.ProviderID, Codec: wire.RestoreToolNames(module, originals),
 		CaptureLimit:   s.captureLimit(),
@@ -456,12 +456,26 @@ func endpointBase(candidate routing.Candidate, authorized catalog.Authorization)
 	return candidate.Model.BaseURL
 }
 
-func (s *Server) modelRequest(request *inference.Request, candidate routing.Candidate, templated bool, template catalog.Template) (*inference.Request, map[string]string) {
-	copied := modelRequest(request, candidate.Model.UpstreamID)
+// modelRequest returns the request one attempt sends, with the map that names
+// each shortened tool again on the answer. The signed-out Zen lane corrects
+// everything its gateway refuses; a paid OpenCode lane shares only the
+// gateway's tool-name limit, so its request stays otherwise whole.
+func (s *Server) modelRequest(spec attemptSpec, template catalog.Template, templated bool) (*inference.Request, map[string]string) {
+	copied := modelRequest(spec.outcome.request, spec.candidate.Model.UpstreamID)
 	if templated && template.ID == catalog.OpenCodeFreeTemplate {
-		return wire.OpenCodeFreeRequest(copied, candidate.Model.APIFormat)
+		return wire.OpenCodeFreeRequest(copied, spec.candidate.Model.APIFormat)
+	}
+	if openCodeGatewayLane(spec.candidate, spec.authorized) {
+		return wire.OpenCodeGatewayRequest(copied)
 	}
 	return copied, nil
+}
+
+func openCodeGatewayLane(candidate routing.Candidate, authorized catalog.Authorization) bool {
+	if candidate.ProviderID == catalog.OpenCodeGoTemplate {
+		return true
+	}
+	return wire.OpenCodeGateway(endpointBase(candidate, authorized))
 }
 
 func modelRequest(request *inference.Request, modelID string) *inference.Request {
