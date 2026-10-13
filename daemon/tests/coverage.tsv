@@ -27,9 +27,9 @@ internal/adapters/oauth	tests/unit/oauth/...,internal/adapters/oauth/...	89
 internal/adapters/quota	tests/unit/quota/...	79
 internal/adapters/secrets	tests/unit/secrets/...	85
 internal/adapters/sqlite	tests/unit/sqlite/...	63
-internal/adapters/upstream	tests/unit/upstream/...	37
-internal/adapters/wire	tests/unit/wire/...	12
-internal/adapters/wire/anthropic	tests/unit/wire/anthropic/...
+internal/adapters/upstream	internal/adapters/upstream/...,tests/unit/upstream/...	37
+internal/adapters/wire	internal/adapters/wire/...,tests/unit/wire/...	12
+internal/adapters/wire/anthropic	internal/adapters/wire/anthropic/...,tests/unit/wire/anthropic/...
 internal/adapters/wire/bedrock	internal/adapters/wire/bedrock/...	56
 internal/adapters/wire/eventstream	internal/adapters/wire/eventstream/...	69
 internal/adapters/wire/formats	tests/unit/wire/formats/...
@@ -37,12 +37,12 @@ internal/adapters/wire/google	tests/unit/wire/google/...	86
 internal/adapters/wire/kiro	internal/adapters/wire/kiro/...	68
 internal/adapters/wire/cursor	internal/adapters/wire/cursor/...	60
 internal/adapters/wire/openaichat	tests/unit/wire/...	47
-internal/adapters/wire/openairesponses	tests/unit/wire/openairesponses/...
+internal/adapters/wire/openairesponses	internal/adapters/wire/openairesponses/...,tests/unit/wire/openairesponses/...
 internal/adapters/wire/sse	tests/unit/wire/sse/...
 internal/adapters/antigravity	tests/unit/quota/...,internal/adapters/antigravity/...	79
 internal/adapters/cursor	internal/adapters/cursor/...	78
 internal/platform	tests/unit/cli/...,tests/unit/platform/...,internal/platform/...	53
-internal/catalog	tests/unit/routing/...,tests/unit/service/...,tests/unit/sqlite/...	70
+internal/catalog	internal/catalog/...,tests/unit/routing/...,tests/unit/service/...,tests/unit/sqlite/...	70
 internal/cli	tests/unit/cli/...	79
 internal/clock	tests/unit/clock/...
 internal/config	tests/unit/config/...	85
@@ -60,7 +60,7 @@ internal/application/routing	tests/unit/service/...,tests/unit/server/...,tests/
 internal/application/status	tests/unit/service/...,tests/unit/server/...	76
 internal/application/templatesettings	tests/unit/service/...	85
 internal/routing	tests/unit/routing/...	33
-internal/server	tests/unit/server/...,tests/integration/contract/...	60
+internal/server	internal/server/...,tests/unit/server/...,tests/integration/contract/...	60
 internal/updates	tests/unit/updates/...	79
 internal/application/catalog	tests/unit/service/...,tests/unit/server/...	77
 internal/adapters/templates	internal/adapters/templates/...	35
