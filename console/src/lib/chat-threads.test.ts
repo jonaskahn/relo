@@ -12,16 +12,22 @@ import {
 	groupThreads,
 	interruptedResult,
 	isChatFormat,
+	newId,
 	newThread,
+	newestThreadId,
 	parseChatStore,
 	readChatPanels,
 	readChatStore,
 	resultOf,
 	retryableTurn,
+	settingsReady,
 	settle,
 	settingsDiffer,
 	sortedThreads,
 	titleFromPrompt,
+	usesRoute,
+	withActive,
+	withThread,
 	withoutThread,
 	writeChatPanels,
 	writeChatStore,
@@ -98,6 +104,30 @@ describe('a thread title', () => {
 	});
 });
 
+describe('identifiers', () => {
+	it('mints a distinct identifier for every thread and turn', () => {
+		const minted = new Set([newId(), newId(), newId()]);
+		expect(minted.size).toBe(3);
+		for (const id of minted) expect(id.length).toBeGreaterThan(0);
+	});
+});
+
+describe('the target a request names', () => {
+	it('is ready only once the choice can be called', () => {
+		const settings = defaultChatSettings();
+		expect(settingsReady(settings)).toBe(false);
+		expect(settingsReady({ ...settings, providerId: 'openai' })).toBe(false);
+		expect(settingsReady({ ...settings, providerId: 'openai', modelId: 'gpt-4o' })).toBe(true);
+	});
+
+	it('is ready for a format test only once a route is named', () => {
+		const routed = { ...defaultChatSettings(), mode: 'format' as const, target: 'route' as const };
+		expect(usesRoute(routed)).toBe(true);
+		expect(settingsReady(routed)).toBe(false);
+		expect(settingsReady({ ...routed, routeId: 'fast' })).toBe(true);
+	});
+});
+
 describe('settling a store', () => {
 	it('keeps a thread that has turns and drops one that has none', () => {
 		const store = withTurns(emptyStore(), thread('a', 1), thread('b', 0));
@@ -139,6 +169,16 @@ describe('reading stored history', () => {
 			parseChatStore(JSON.stringify({ version: 99, activeThreadId: '', threads: [] }))
 		).toBeNull();
 		expect(parseChatStore(JSON.stringify({ activeThreadId: '', threads: [] }))).toBeNull();
+		expect(
+			parseChatStore(JSON.stringify({ version: 1, activeThreadId: '', threads: {} }))
+		).toBeNull();
+		expect(parseChatStore(JSON.stringify(['a']))).toBeNull();
+		expect(parseChatStore('   ')).toBeNull();
+	});
+
+	it('reads a stored value that is not an object at all as nothing', () => {
+		expect(parseChatStore('42')).toBeNull();
+		expect(parseChatStore('"a string"')).toBeNull();
 	});
 
 	it('keeps a thread that is missing an identifier out of the store', () => {
@@ -166,6 +206,12 @@ describe('reading stored history', () => {
 		expect(notice).toBe('blocked');
 	});
 
+	it('names a browser with no storage at all as blocked', () => {
+		const { store, notice } = readChatStore(undefined);
+		expect(store).toEqual(emptyStore());
+		expect(notice).toBe('blocked');
+	});
+
 	it('reads a target stored before the tester could stream as one reply', () => {
 		const parsed = parseChatStore(
 			JSON.stringify({
@@ -182,6 +228,115 @@ describe('reading stored history', () => {
 			})
 		);
 		expect(parsed?.threads[0].settings.stream).toBe(false);
+	});
+
+	it('keeps only the conversations and turns it can make sense of', () => {
+		const parsed = parseChatStore(
+			JSON.stringify({
+				version: 1,
+				activeThreadId: 7,
+				threads: [
+					'a string',
+					{ id: 'no-turns', title: 'kept' },
+					{
+						id: 'a',
+						title: 12,
+						createdAt: 5,
+						turns: ['a string', { id: '', prompt: 'dropped' }, { id: '1', prompt: 'kept' }]
+					}
+				]
+			})
+		);
+		expect(parsed?.activeThreadId).toBe('');
+		expect(parsed?.threads.map((entry) => entry.id)).toEqual(['a']);
+		expect(parsed?.threads[0]).toMatchObject({ title: '', createdAt: 5, updatedAt: 5 });
+		expect(parsed?.threads[0].turns.map((entry) => entry.id)).toEqual(['1']);
+	});
+
+	it('reads a settings block it does not recognise as the defaults', () => {
+		const parsed = parseChatStore(
+			JSON.stringify({
+				version: 1,
+				activeThreadId: 'a',
+				threads: [{ id: 'a', turns: [], title: 'kept', settings: 'direct' }]
+			})
+		);
+		expect(parsed?.threads[0].settings).toEqual(defaultChatSettings());
+	});
+
+	it('settles a stored mode, target, and format it does not know onto the defaults', () => {
+		const parsed = parseChatStore(
+			JSON.stringify({
+				version: 1,
+				activeThreadId: 'a',
+				threads: [
+					{
+						id: 'a',
+						turns: [],
+						title: 'kept',
+						settings: { mode: 'chat', target: 'model', format: 'gemini', maxTokens: 64 }
+					},
+					{
+						id: 'b',
+						turns: [],
+						title: 'kept',
+						settings: { mode: 'format', target: 'route', stream: 'yes' }
+					}
+				]
+			})
+		);
+		expect(parsed?.threads[0].settings).toMatchObject({
+			mode: 'direct',
+			target: 'model',
+			format: 'openai-chat',
+			maxTokens: 64,
+			stream: false
+		});
+		expect(parsed?.threads[1].settings).toMatchObject({
+			mode: 'format',
+			target: 'route',
+			stream: false
+		});
+	});
+
+	it('reads a turn result it cannot place as a failure', () => {
+		const parsed = parseChatStore(
+			JSON.stringify({
+				version: 1,
+				activeThreadId: 'a',
+				threads: [
+					{
+						id: 'a',
+						turns: [
+							{ id: '1', prompt: 'no result' },
+							{ id: '2', prompt: 'blank result', result: 'failed' },
+							{ id: '3', prompt: 'odd status', result: { status: 'weird' } },
+							{
+								id: '4',
+								prompt: 'full',
+								result: {
+									status: 'success',
+									text: 'ok',
+									provider: '',
+									httpStatus: Number.NaN,
+									inputTokens: Number.POSITIVE_INFINITY
+								}
+							}
+						]
+					}
+				]
+			})
+		);
+		const turns = parsed!.threads[0].turns;
+		expect(turns[0].result.status).toBe('failed');
+		expect(turns[1].result.status).toBe('failed');
+		expect(turns[2].result.status).toBe('failed');
+		expect(turns[3].result).toMatchObject({
+			status: 'success',
+			provider: undefined,
+			httpStatus: undefined,
+			inputTokens: undefined
+		});
 	});
 });
 
@@ -205,11 +360,28 @@ describe('writing stored history', () => {
 		expect(writeChatStore(withTurns(emptyStore(), thread('a', 1)), refused)).toBe(false);
 	});
 
+	it('answers false where the browser hands over no storage', () => {
+		expect(writeChatStore(emptyStore(), undefined)).toBe(false);
+		expect(clearChatStore(undefined)).toBe(false);
+	});
+
 	it('clears only the key the console owns', () => {
 		const { storage, read } = memoryStorage();
 		storage.setItem(CHAT_STORAGE_KEY, 'anything');
 		expect(clearChatStore(storage)).toBe(true);
 		expect(read()).toBeNull();
+	});
+
+	it('answers false when the browser refuses the delete', () => {
+		expect(
+			clearChatStore({
+				getItem: () => null,
+				setItem: () => {},
+				removeItem: () => {
+					throw new Error('denied');
+				}
+			})
+		).toBe(false);
 	});
 });
 
@@ -228,6 +400,14 @@ describe('the conversation a request replays', () => {
 			{ role: 'user', content: 'first' },
 			{ role: 'assistant', content: 'one' }
 		]);
+	});
+
+	it('leaves out a success that came back with nothing but whitespace', () => {
+		const store = withTurns(emptyStore(), {
+			...thread('a', 0),
+			turns: [{ id: '1', prompt: 'first', at: 1, result: { status: 'success', text: '  \n ' } }]
+		});
+		expect(contextMessages(activeThread(store)!)).toEqual([]);
 	});
 
 	it('offers a retry for the last turn once it has settled', () => {
@@ -381,6 +561,12 @@ describe('what one answer becomes', () => {
 		expect(result.error).toBe('upstream down');
 		expect(result.errorCode).toBe('upstream_error');
 	});
+
+	it('fills in what a refusal left out rather than leaving it undefined', () => {
+		const result = resultOf({ request_id: 'r1', ok: false, status: 0 } as never);
+		expect(result.text).toBe('');
+		expect(result.error).toBe('');
+	});
 });
 
 describe('the thread rail', () => {
@@ -391,6 +577,34 @@ describe('the thread rail', () => {
 			thread('new', 1, 'success', 20)
 		);
 		expect(sortedThreads(store).map((entry) => entry.id)).toEqual(['new', 'old']);
+	});
+
+	it('reads the open conversation, and none when the selection names nothing', () => {
+		const store = withTurns(emptyStore(), thread('a', 1));
+		expect(activeThread(store)?.id).toBe('a');
+		expect(activeThread({ ...store, activeThreadId: 'gone' })).toBeNull();
+	});
+
+	it('names nothing to fall back on when no conversation is left', () => {
+		expect(newestThreadId([])).toBe('');
+		expect(newestThreadId([thread('a', 1, 'success', 10), thread('b', 1, 'success', 20)])).toBe(
+			'b'
+		);
+	});
+
+	it('selects a conversation without touching the list', () => {
+		const store = withTurns(emptyStore(), thread('a', 1), thread('b', 1));
+		const selected = withActive(store, 'b');
+		expect(selected.activeThreadId).toBe('b');
+		expect(selected.threads).toHaveLength(2);
+	});
+
+	it('replaces a conversation it already holds and appends one it does not', () => {
+		const store = withTurns(emptyStore(), thread('a', 1));
+		const replaced = withThread(store, { ...thread('a', 1), title: 'edited' });
+		expect(replaced.threads).toHaveLength(1);
+		expect(replaced.threads[0].title).toBe('edited');
+		expect(withThread(store, thread('b', 1)).threads.map((entry) => entry.id)).toEqual(['a', 'b']);
 	});
 
 	it('falls back to the newest conversation when the active one is deleted', () => {
@@ -508,6 +722,32 @@ describe('the layout the chat page remembers', () => {
 		expect(
 			readChatPanels({ threads: false, settings: true }, panelsStorage('{"threads":"yes"}'))
 		).toEqual({ threads: false, settings: true });
+		expect(readChatPanels(defaults, panelsStorage('[1, 2]'))).toEqual(defaults);
+		expect(readChatPanels(defaults, panelsStorage('   '))).toEqual(defaults);
+	});
+
+	it('falls back to the defaults when the browser refuses the read', () => {
+		expect(
+			readChatPanels(defaults, {
+				getItem: () => {
+					throw new Error('denied');
+				},
+				setItem: () => {},
+				removeItem: () => {}
+			})
+		).toEqual(defaults);
+	});
+
+	it('answers false when the browser refuses to keep the layout', () => {
+		expect(
+			writeChatPanels(defaults, {
+				getItem: () => null,
+				setItem: () => {
+					throw new Error('quota');
+				},
+				removeItem: () => {}
+			})
+		).toBe(false);
 	});
 
 	it('answers the defaults where the browser hands over no storage', () => {

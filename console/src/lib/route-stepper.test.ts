@@ -5,6 +5,7 @@ import {
 	displayMembers,
 	eligibleMemberCount,
 	emptyRouteDraft,
+	memberCapabilities,
 	memberKind,
 	memberStanding,
 	resolutionReason,
@@ -79,6 +80,65 @@ describe('route validation', () => {
 		const draft = { ...emptyRouteDraft(), id: 'fast' };
 		expect(validateMembers(draft).members).toBe('ui.pages.groupsPage.needMembers');
 		expect(Object.keys(validateMembers({ ...draft, members: [member()] }))).toHaveLength(0);
+	});
+});
+
+describe('member capabilities', () => {
+	const calls = modelOf({
+		provider_id: 'openai',
+		model_id: 'calls',
+		capabilities: { tools: true, reasoning: true, vision: true }
+	});
+	const quiet = modelOf({
+		provider_id: 'claude',
+		model_id: 'quiet',
+		capabilities: { tools: false, reasoning: false, vision: false }
+	});
+	const unread = modelOf({
+		provider_id: 'openai',
+		model_id: 'unread',
+		capabilities: { tools: null, reasoning: null, vision: null }
+	});
+	const meta = {
+		'openai/calls': calls,
+		'claude/quiet': quiet,
+		'openai/unread': unread
+	};
+
+	function draftOf(members: GroupMember[]) {
+		return { ...emptyRouteDraft(), id: 'fast', members };
+	}
+
+	it('promises nothing mixed while every member agrees', () => {
+		const draft = draftOf([
+			member({ model_id: 'calls' }),
+			member({ model_id: 'unread' }),
+			member({ model_id: 'unknown' })
+		]);
+		expect(memberCapabilities(draft, meta)).toEqual({
+			toolsConflict: false,
+			reasoningMixed: false,
+			visionMixed: false
+		});
+		expect(validateMembers(draft, meta)).toEqual({});
+	});
+
+	it('refuses a set whose members disagree on tools, reasoning, or vision', () => {
+		const draft = draftOf([
+			member({ model_id: 'calls' }),
+			member({ provider_id: 'claude', model_id: 'quiet' })
+		]);
+		expect(memberCapabilities(draft, meta)).toEqual({
+			toolsConflict: true,
+			reasoningMixed: true,
+			visionMixed: true
+		});
+		expect(validateMembers(draft, meta).members).toBe('ui.pages.groupsPage.toolsConflict');
+	});
+
+	it('reads an auto member against every connection the console knows', () => {
+		const draft = draftOf([autoMember('calls'), member({ model_id: 'unread', enabled: false })]);
+		expect(memberCapabilities(draft, meta)).toMatchObject({ toolsConflict: false });
 	});
 });
 
@@ -195,6 +255,12 @@ describe('weighted shares', () => {
 		const members = [member({ weight: 0 }), member({ weight: 0 })];
 		expect(weightShare(members[0], members)).toBe(0);
 	});
+
+	it('gives no share to an enabled member that carries no weight of its own', () => {
+		const members = [member({ weight: 0 }), member({ weight: 3 })];
+		expect(weightShare(members[0], members)).toBe(0);
+		expect(weightShare(members[1], members)).toBe(100);
+	});
 });
 
 describe('cheapest display order', () => {
@@ -206,6 +272,7 @@ describe('cheapest display order', () => {
 				member({ model_id: 'b' }),
 				member({ model_id: 'noprice' }),
 				member({ model_id: 'a' }),
+				member({ model_id: 'outprice' }),
 				member({ model_id: 'unknown' })
 			]
 		};
@@ -221,15 +288,26 @@ describe('cheapest display order', () => {
 			'openai/noprice': modelOf({
 				model_id: 'noprice',
 				prices: modelPrices(emptyPrices(), emptyPrices(), emptyPrices())
+			}),
+			'openai/outprice': modelOf({
+				model_id: 'outprice',
+				prices: modelPrices(pricesOf({ output: 7_000_000 }), emptyPrices(), emptyPrices())
 			})
 		};
 		expect(displayMembers(draft, meta).map((entry) => entry.model_id)).toEqual([
 			'a',
 			'b',
+			'outprice',
 			'noprice',
 			'unknown'
 		]);
-		expect(draft.members.map((entry) => entry.model_id)).toEqual(['b', 'noprice', 'a', 'unknown']);
+		expect(draft.members.map((entry) => entry.model_id)).toEqual([
+			'b',
+			'noprice',
+			'a',
+			'outprice',
+			'unknown'
+		]);
 	});
 
 	it('keeps the stored order for every other ordering', () => {
