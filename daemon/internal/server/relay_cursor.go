@@ -56,6 +56,7 @@ func (s *Server) matchCursorAccount(ctx context.Context, spec *attemptSpec, trie
 	}
 	authorized, err := s.opts.Relay.Authorize(ctx, catalog.AuthRequest{
 		ProviderID: candidate.ProviderID, Auth: spec.host.Auth,
+		KeyHeader: spec.host.KeyHeader, Region: spec.host.Variables["region"], Service: spec.host.Variables["service"],
 		Selection: account.Selection{
 			ConversationID: s.conversationAnchor(outcome, spec.request), Surface: string(outcome.kind),
 			RequestID: outcome.requestID, Exclude: tried[candidate.ProviderID], Prefer: spec.prefer,

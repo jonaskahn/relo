@@ -110,12 +110,16 @@ func listRequest(ctx context.Context, target Target, path string) (*http.Request
 		return nil, fmt.Errorf("build the model list request: %w", err)
 	}
 	request.Header.Set("Accept", "application/json")
-	applyHeaders(request, target.Auth.Headers)
+	// Connection headers may add profile metadata, but the selected account
+	// owns credentials and workspace identifiers, so it is applied last.
 	applyHeaders(request, target.Headers)
+	applyHeaders(request, target.Auth.Headers)
 	applyListCredential(request, target)
 
 	if target.Auth.Signer != nil {
-		_ = target.Auth.Signer(request)
+		if err := target.Auth.Signer(request); err != nil {
+			return nil, fmt.Errorf("sign the model list request: %w", err)
+		}
 	}
 	if target.OpenCodeFree {
 		free, err := wire.OpenCodeFreeHeaders("listing", "")

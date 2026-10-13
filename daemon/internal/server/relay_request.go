@@ -112,7 +112,7 @@ func (s *Server) reportAttemptAsync(spec attemptSpec, result Result) {
 }
 
 func (s *Server) resolveAttemptCandidate(spec attemptSpec, tried map[string][]string) (catalog.Provider, catalog.Authorization, error) {
-	candidate, outcome := spec.candidate, spec.outcome
+	candidate := spec.candidate
 	snapshot, found := s.opts.Catalog.Snapshot()
 	if !found {
 		return catalog.Provider{}, catalog.Authorization{}, catalog.ErrNoCatalog
@@ -121,18 +121,28 @@ func (s *Server) resolveAttemptCandidate(spec attemptSpec, tried map[string][]st
 	if !found {
 		return catalog.Provider{}, catalog.Authorization{}, fmt.Errorf("%s: %w", candidate.ProviderID, appcatalog.ErrProviderNotFound)
 	}
-	authorized, err := s.opts.Relay.Authorize(spec.request.Context(), catalog.AuthRequest{
+	authorized, err := s.opts.Relay.Authorize(spec.request.Context(), s.attemptAuthRequest(spec, tried))
+	if err != nil {
+		return catalog.Provider{}, catalog.Authorization{}, withCooldown(s.opts.Pools, candidate.ProviderID, err)
+	}
+	return host, authorized, nil
+}
+
+// attemptAuthRequest names the credential contract one attempt runs under: the
+// connection's auth kind, where its key travels, and the cloud region and
+// service a signer needs, beside the account selection routing made. Every
+// attempt path builds it here so verification and inference agree.
+func (s *Server) attemptAuthRequest(spec attemptSpec, tried map[string][]string) catalog.AuthRequest {
+	host, candidate, outcome := spec.host, spec.candidate, spec.outcome
+	return catalog.AuthRequest{
 		ProviderID: candidate.ProviderID, Auth: host.Auth,
+		KeyHeader: host.KeyHeader, Region: host.Variables["region"], Service: host.Variables["service"],
 		Selection: account.Selection{
 			ConversationID: s.conversationAnchor(outcome, spec.request), Surface: string(outcome.kind),
 			RequestID: outcome.requestID, Exclude: tried[candidate.ProviderID], Prefer: spec.prefer,
 			Models: capabilityIDs(candidate.Model),
 		},
-	})
-	if err != nil {
-		return catalog.Provider{}, catalog.Authorization{}, withCooldown(s.opts.Pools, candidate.ProviderID, err)
 	}
-	return host, authorized, nil
 }
 
 func (s *Server) announceAttempt(w http.ResponseWriter, spec attemptSpec) {
@@ -224,6 +234,8 @@ func (s *Server) attemptCodecOptions(spec attemptSpec, extra map[string]string, 
 		BaseURL:                endpointBase(candidate, authorized),
 		CredentialRef:          authorized.Token,
 		AuthMethod:             string(authorized.Auth),
+		KeyHeader:              string(authorized.KeyHeader),
+		Signer:                 authorized.Signer,
 		Mode:                   s.opts.Formats.ModeFor(candidate.Model.APIFormat),
 		Project:                authorized.Project,
 		AccountID:              authorized.AccountID,
