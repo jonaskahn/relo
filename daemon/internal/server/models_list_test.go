@@ -44,7 +44,7 @@ func TestAnthropicModelListStatesNullWhenUnknown(t *testing.T) {
 func TestAppendListedVariantsPublishesDefaultAndMillionEntries(t *testing.T) {
 	window := int64(catalog.MillionContext)
 	entries := appendListedVariants(nil, listedModel{
-		ID: "relo-claude-work-opus", Name: "Opus 1M on Claude",
+		ID: "relo-claude-work-opus", Name: "Opus (1M) on Claude",
 		ProviderID: "claude-work", SourceModelID: "opus", ContextWindow: &window,
 	}, true)
 	if len(entries) != 1 {
@@ -75,7 +75,7 @@ func TestAppendListedVariantsKeepsSubMillionEntrySingle(t *testing.T) {
 func TestAppendListedVariantsSuffixesASingleMillionEntry(t *testing.T) {
 	window := int64(catalog.MillionContext)
 	entries := appendListedVariants(nil, listedModel{
-		ID: "relo-other-grok-4-7", Name: "Grok 4.7 1M on Other",
+		ID: "relo-other-grok-4-7", Name: "Grok 4.7 (1M) on Other",
 		ProviderID: "other", SourceModelID: "grok-4-7",
 		Suffixed: true, ContextWindow: &window,
 	}, false)

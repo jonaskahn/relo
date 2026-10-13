@@ -94,25 +94,11 @@ func ClientModelID(providerID, modelID string) string {
 
 // ClientModelName is the label Claude Code and Claude Desktop show for one
 // connection's model: the model, then the connection. A million-token window,
-// the same size that earns the [1m] identifier suffix, is marked in front of
-// the connection, and a variant lane marker follows it. A label that already
-// carries the marker keeps its own spelling.
+// fast/max lanes, and any existing bracketed qualifiers are merged side by side
+// inside parentheses: e.g. (1M), (1M, Fast), (1M, Fast, Max),
+// or (1M, Fast, Thinking).
 func ClientModelName(modelLabel, providerLabel string, window *int64, variant string) string {
-	label := strings.TrimSpace(modelLabel)
-	if window != nil && *window >= MillionContext {
-		if label == "" {
-			label = "1M"
-		} else {
-			label += " 1M"
-		}
-	}
-	if variant != "" && !HasVariantMarker(label) {
-		if label == "" {
-			label = strings.Trim(strings.TrimSpace(variant), "()")
-		} else {
-			label += " " + variant
-		}
-	}
+	label := FormatModelLabel(modelLabel, window, variant)
 	provider := strings.TrimSpace(providerLabel)
 	if provider == "" {
 		return label
@@ -121,6 +107,81 @@ func ClientModelName(modelLabel, providerLabel string, window *int64, variant st
 		return provider
 	}
 	return label + " on " + provider
+}
+
+// FormatModelLabel formats a model display label by merging the 1M window mark,
+// variant lanes (Fast, Max), and any existing qualifiers inside parentheses into
+// a single parenthesized group placed at the end of the base name.
+func FormatModelLabel(modelLabel string, window *int64, variant string) string {
+	base, existing := extractParenthesizedQualifier(strings.TrimSpace(modelLabel))
+	items := collectLabelQualifiers(window != nil && *window >= MillionContext, variant, existing)
+	if len(items) == 0 {
+		return base
+	}
+	qualifier := "(" + strings.Join(items, ", ") + ")"
+	if base == "" {
+		return qualifier
+	}
+	return base + " " + qualifier
+}
+
+func collectLabelQualifiers(isMillion bool, variant string, existing []string) []string {
+	var items []string
+	seen := make(map[string]bool)
+	add := func(val string) {
+		trimmed := strings.TrimSpace(val)
+		if trimmed != "" && !seen[trimmed] {
+			seen[trimmed] = true
+			items = append(items, trimmed)
+		}
+	}
+	if isMillion {
+		add("1M")
+	}
+	for _, lane := range parseLaneItems(variant) {
+		add(lane)
+	}
+	for _, item := range existing {
+		add(item)
+	}
+	return items
+}
+
+func extractParenthesizedQualifier(label string) (base string, items []string) {
+	label = strings.TrimSpace(label)
+	if !strings.HasSuffix(label, ")") {
+		return label, nil
+	}
+	openIdx := strings.LastIndex(label, "(")
+	if openIdx == -1 {
+		return label, nil
+	}
+	base = strings.TrimSpace(label[:openIdx])
+	content := label[openIdx+1 : len(label)-1]
+	for _, part := range strings.Split(content, ",") {
+		trimmed := strings.TrimSpace(part)
+		if trimmed != "" {
+			items = append(items, trimmed)
+		}
+	}
+	return base, items
+}
+
+func parseLaneItems(variant string) []string {
+	variant = strings.TrimSpace(variant)
+	if variant == "" {
+		return nil
+	}
+	variant = strings.TrimPrefix(variant, "(")
+	variant = strings.TrimSuffix(variant, ")")
+	var items []string
+	for _, part := range strings.Split(variant, ",") {
+		trimmed := strings.TrimSpace(part)
+		if trimmed != "" {
+			items = append(items, trimmed)
+		}
+	}
+	return items
 }
 
 // HasMaxMarker reports whether a display label already names a max-mode

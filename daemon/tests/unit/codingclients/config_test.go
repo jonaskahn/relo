@@ -565,19 +565,19 @@ func TestMergeOpenCodeMarksCursorVariantLanes(t *testing.T) {
 		for id, model := range openCodeModelsOf(t, document, key) {
 			names[id] = model.(map[string]any)["name"].(string)
 		}
-		if names["relo-cursor-grok-4.7-1m"] != "Grok 4.7 1M on Cursor" {
+		if names["relo-cursor-grok-4.7-1m"] != "Grok 4.7 (1M) on Cursor" {
 			t.Fatalf("%s standard lane = %q, want no variant mark", key, names["relo-cursor-grok-4.7-1m"])
 		}
-		if names["relo-cursor-grok-4.7-1m-fast-1m"] != "Grok 4.7 1M (Fast) on Cursor" {
+		if names["relo-cursor-grok-4.7-1m-fast-1m"] != "Grok 4.7 (1M, Fast) on Cursor" {
 			t.Fatalf("%s fast lane = %q, want the fast mark after the window", key, names["relo-cursor-grok-4.7-1m-fast-1m"])
 		}
-		if names["relo-cursor-grok-4.7-1m-max-1m"] != "Grok 4.7 1M (Max) on Cursor" {
+		if names["relo-cursor-grok-4.7-1m-max-1m"] != "Grok 4.7 (1M, Max) on Cursor" {
 			t.Fatalf("%s max lane = %q, want the max mark after the window", key, names["relo-cursor-grok-4.7-1m-max-1m"])
 		}
-		if names["relo-cursor-grok-4.7-1m-fast-max-1m"] != "Grok 4.7 1M (Fast, Max) on Cursor" {
+		if names["relo-cursor-grok-4.7-1m-fast-max-1m"] != "Grok 4.7 (1M, Fast, Max) on Cursor" {
 			t.Fatalf("%s fast max lane = %q, want fast before max", key, names["relo-cursor-grok-4.7-1m-fast-max-1m"])
 		}
-		if names["relo-openai-gpt-max-1m"] != "GPT Max 1M on OpenAI" {
+		if names["relo-openai-gpt-max-1m"] != "GPT Max (1M) on OpenAI" {
 			t.Fatalf("%s non-cursor lane = %q, want its own spelling kept", key, names["relo-openai-gpt-max-1m"])
 		}
 	}
