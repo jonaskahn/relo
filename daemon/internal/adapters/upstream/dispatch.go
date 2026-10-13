@@ -407,7 +407,7 @@ func (e *Executor) fail(att attempt, status int, code string, cause error) (Resu
 		result.ClassSwitch = switchable
 		return result, cause
 	}
-	writeFailure(att.writer, ex.Inbound, &inference.ErrorInfo{Code: code, Message: cause.Error(), Status: status})
+	writeFailure(att.writer, ex.Inbound, &inference.ErrorInfo{Code: code, Message: cause.Error(), Status: status}, nil)
 	result.Wrote = true
 	return result, cause
 }
