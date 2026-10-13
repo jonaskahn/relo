@@ -19,6 +19,13 @@ var RetiredAntigravityIDs = map[string]bool{
 	"gemini-3-flash-agent":       true,
 }
 
+// ClaudeAntigravity reports whether one Antigravity id names a Claude model.
+// Claude passes through under its own id with no thinking, so it never
+// resolves an effort onto a wire SKU.
+func ClaudeAntigravity(id string) bool {
+	return strings.HasPrefix(strings.ToLower(strings.TrimSpace(id)), "claude")
+}
+
 // RetiredAntigravity reports whether one Antigravity id is retired.
 func RetiredAntigravity(id string) bool {
 	return RetiredAntigravityIDs[id]
