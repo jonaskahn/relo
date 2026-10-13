@@ -1,7 +1,7 @@
 // The wire SKU each logical Antigravity model collapses onto per effort.
 package antigravity
 
-import "slices"
+import "github.com/jonaskahn/relo/internal/catalog"
 
 // The vendor exposes every thinking effort as its own backend SKU, so a
 // logical model never reaches the wire unchanged. MaxOutput is the ceiling
@@ -12,62 +12,44 @@ const (
 	maxOutputClaude = 64000
 )
 
-// The vendor bands are named low, medium, and high. The canonical effort
-// ladder is longer, so each band lists the efforts answering for it and the
-// ladder's top steps join the highest band.
-const (
-	bandLow    = "low"
-	bandMedium = "medium"
-	bandHigh   = "high"
-)
-
-var effortBands = []struct {
-	band    string
-	efforts []string
-}{
-	{bandLow, []string{"none", "minimal", "low"}},
-	{bandMedium, []string{"medium"}},
-	{bandHigh, []string{"high", "xhigh", "max"}},
-}
-
 // A row the vendor has not given an enum leaves ModelEnum empty, so the label
 // stays off the request rather than filled with a guess. A (model, band) pair
 // the vendor does not name is not a row to infer either: Collapse reports it
 // absent and the logical name goes on the wire untouched.
 var variants = map[string]map[string]Variant{
 	"gemini-3.5-flash": {
-		bandLow:    {WireModel: "gemini-3.5-flash-extra-low", ModelEnum: "MODEL_PLACEHOLDER_M187", MaxOutput: maxOutputGemini},
-		bandMedium: {WireModel: "gemini-3.5-flash-low", ModelEnum: "MODEL_PLACEHOLDER_M20", MaxOutput: maxOutputGemini},
-		bandHigh:   {WireModel: "gemini-3-flash-agent", ModelEnum: "MODEL_PLACEHOLDER_M132", MaxOutput: maxOutputGemini},
+		catalog.AntigravityBandLow:    {WireModel: "gemini-3.5-flash-extra-low", ModelEnum: "MODEL_PLACEHOLDER_M187", MaxOutput: maxOutputGemini},
+		catalog.AntigravityBandMedium: {WireModel: "gemini-3.5-flash-low", ModelEnum: "MODEL_PLACEHOLDER_M20", MaxOutput: maxOutputGemini},
+		catalog.AntigravityBandHigh:   {WireModel: "gemini-3-flash-agent", ModelEnum: "MODEL_PLACEHOLDER_M132", MaxOutput: maxOutputGemini},
 	},
 	"gemini-3.6-flash": {
-		bandLow:    {WireModel: "gemini-3.6-flash-low", MaxOutput: maxOutputGemini},
-		bandMedium: {WireModel: "gemini-3.6-flash-medium", MaxOutput: maxOutputGemini},
-		bandHigh:   {WireModel: "gemini-3.6-flash-high", MaxOutput: maxOutputGemini},
+		catalog.AntigravityBandLow:    {WireModel: "gemini-3.6-flash-low", MaxOutput: maxOutputGemini},
+		catalog.AntigravityBandMedium: {WireModel: "gemini-3.6-flash-medium", MaxOutput: maxOutputGemini},
+		catalog.AntigravityBandHigh:   {WireModel: "gemini-3.6-flash-high", MaxOutput: maxOutputGemini},
 	},
 	"gemini-3.7-flash": {
-		bandLow:    {WireModel: "gemini-3.7-flash-low", MaxOutput: maxOutputGemini},
-		bandMedium: {WireModel: "gemini-3.7-flash-medium", MaxOutput: maxOutputGemini},
-		bandHigh:   {WireModel: "gemini-3.7-flash-high", MaxOutput: maxOutputGemini},
+		catalog.AntigravityBandLow:    {WireModel: "gemini-3.7-flash-low", MaxOutput: maxOutputGemini},
+		catalog.AntigravityBandMedium: {WireModel: "gemini-3.7-flash-medium", MaxOutput: maxOutputGemini},
+		catalog.AntigravityBandHigh:   {WireModel: "gemini-3.7-flash-high", MaxOutput: maxOutputGemini},
 	},
 	"gemini-3.8-flash": {
-		bandLow:    {WireModel: "gemini-3.8-flash-low", MaxOutput: maxOutputGemini},
-		bandMedium: {WireModel: "gemini-3.8-flash-medium", MaxOutput: maxOutputGemini},
-		bandHigh:   {WireModel: "gemini-3.8-flash-high", MaxOutput: maxOutputGemini},
+		catalog.AntigravityBandLow:    {WireModel: "gemini-3.8-flash-low", MaxOutput: maxOutputGemini},
+		catalog.AntigravityBandMedium: {WireModel: "gemini-3.8-flash-medium", MaxOutput: maxOutputGemini},
+		catalog.AntigravityBandHigh:   {WireModel: "gemini-3.8-flash-high", MaxOutput: maxOutputGemini},
 	},
 	"gemini-3.1-pro": {
-		bandLow:  {WireModel: "gemini-3.1-pro-low", ModelEnum: "MODEL_PLACEHOLDER_M36", MaxOutput: maxOutputPro},
-		bandHigh: {WireModel: "gemini-pro-agent", ModelEnum: "MODEL_PLACEHOLDER_M16", MaxOutput: maxOutputPro},
+		catalog.AntigravityBandLow:  {WireModel: "gemini-3.1-pro-low", ModelEnum: "MODEL_PLACEHOLDER_M36", MaxOutput: maxOutputPro},
+		catalog.AntigravityBandHigh: {WireModel: "gemini-pro-agent", ModelEnum: "MODEL_PLACEHOLDER_M16", MaxOutput: maxOutputPro},
 	},
 	"claude-sonnet-4-6": {
-		bandLow:    {WireModel: "claude-sonnet-4-6", MaxOutput: maxOutputClaude},
-		bandMedium: {WireModel: "claude-sonnet-4-6", MaxOutput: maxOutputClaude},
-		bandHigh:   {WireModel: "claude-sonnet-4-6", MaxOutput: maxOutputClaude},
+		catalog.AntigravityBandLow:    {WireModel: "claude-sonnet-4-6", MaxOutput: maxOutputClaude},
+		catalog.AntigravityBandMedium: {WireModel: "claude-sonnet-4-6", MaxOutput: maxOutputClaude},
+		catalog.AntigravityBandHigh:   {WireModel: "claude-sonnet-4-6", MaxOutput: maxOutputClaude},
 	},
 	"claude-opus-4-6": {
-		bandLow:    {WireModel: "claude-opus-4-6-thinking", MaxOutput: maxOutputClaude},
-		bandMedium: {WireModel: "claude-opus-4-6-thinking", MaxOutput: maxOutputClaude},
-		bandHigh:   {WireModel: "claude-opus-4-6-thinking", MaxOutput: maxOutputClaude},
+		catalog.AntigravityBandLow:    {WireModel: "claude-opus-4-6-thinking", MaxOutput: maxOutputClaude},
+		catalog.AntigravityBandMedium: {WireModel: "claude-opus-4-6-thinking", MaxOutput: maxOutputClaude},
+		catalog.AntigravityBandHigh:   {WireModel: "claude-opus-4-6-thinking", MaxOutput: maxOutputClaude},
 	},
 }
 
@@ -82,7 +64,7 @@ type Variant struct {
 // Collapse reports the wire identity a logical model collapses onto at one
 // canonical effort, with false for a pair the table does not name.
 func Collapse(logical, effort string) (Variant, bool) {
-	variant, found := variants[logical][bandOf(effort)]
+	variant, found := variants[logical][catalog.AntigravityBand(effort)]
 	return variant, found
 }
 
@@ -110,13 +92,4 @@ func Logical(wireID string) (string, bool) {
 		}
 	}
 	return "", false
-}
-
-func bandOf(effort string) string {
-	for _, entry := range effortBands {
-		if slices.Contains(entry.efforts, effort) {
-			return entry.band
-		}
-	}
-	return bandMedium
 }

@@ -23,6 +23,36 @@ func RetiredAntigravity(id string) bool {
 	return RetiredAntigravityIDs[id]
 }
 
+// The thinking bands the vendor names. Every logical model collapses onto one
+// band per request, and a client chooses the band by asking for an effort.
+const (
+	AntigravityBandLow    = "low"
+	AntigravityBandMedium = "medium"
+	AntigravityBandHigh   = "high"
+)
+
+// AntigravityBands are the bands in the order a picker offers them, lowest
+// first, so a model's thinking levels read in the order a client shows them.
+func AntigravityBands() []string {
+	return []string{AntigravityBandLow, AntigravityBandMedium, AntigravityBandHigh}
+}
+
+// AntigravityBand maps one canonical thinking effort onto the vendor's band.
+// The canonical ladder is longer than the vendor's three tiers: the steps
+// below low share the low band and the steps above high share the high band.
+// An effort outside the ladder takes the middle band, which the vendor lists
+// for every model it collapses.
+func AntigravityBand(effort string) string {
+	switch effort {
+	case "none", "minimal", "low":
+		return AntigravityBandLow
+	case "high", "xhigh", "max":
+		return AntigravityBandHigh
+	default:
+		return AntigravityBandMedium
+	}
+}
+
 // AntigravityVariant is one exact Antigravity request configuration: the wire
 // SKU one effort band of one logical model sends.
 type AntigravityVariant struct {
@@ -95,13 +125,14 @@ func SelectAntigravityVariant(configs []AntigravityVariant, logicalID, effort st
 	if !ok {
 		return AntigravityVariant{}, false
 	}
+	band := AntigravityBand(normalized)
 	for _, config := range configs {
-		if config.LogicalID == logicalID && config.Effort == normalized {
+		if config.LogicalID == logicalID && config.Effort == band {
 			return config, true
 		}
 	}
 	for _, config := range configs {
-		if config.LogicalID == logicalID && config.Selection == normalized {
+		if config.LogicalID == logicalID && config.Selection == band {
 			return config, true
 		}
 	}

@@ -47,6 +47,16 @@ func TestSelectAntigravityVariant(t *testing.T) {
 	if !ok || selected.WireModel != "gemini-3.8-flash-high" {
 		t.Fatalf("high = %+v, %v, want the high SKU", selected, ok)
 	}
+	for _, effort := range []string{"none", "minimal"} {
+		if selected, ok := SelectAntigravityVariant(configs, "gemini-3.8-flash", effort); !ok || selected.WireModel != "gemini-3.8-flash-low" {
+			t.Fatalf("%s = %+v, %v, want the low SKU", effort, selected, ok)
+		}
+	}
+	for _, effort := range []string{"xhigh", "max"} {
+		if selected, ok := SelectAntigravityVariant(configs, "gemini-3.8-flash", effort); !ok || selected.WireModel != "gemini-3.8-flash-high" {
+			t.Fatalf("%s = %+v, %v, want the high SKU", effort, selected, ok)
+		}
+	}
 	if _, ok := SelectAntigravityVariant(configs, "gemini-3.8-flash", "nonsense"); ok {
 		t.Fatal("unknown effort resolved, want no selection")
 	}
