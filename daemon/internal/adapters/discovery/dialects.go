@@ -489,9 +489,14 @@ func antigravityWidest(members []antigravityServed) (*int64, *int64) {
 }
 
 func antigravityBandConfigs(logical string, members []antigravityServed) ([]catalog.ModelRequestConfig, []string) {
+	rows := antigravity.Variants(logical)
 	var configs []catalog.ModelRequestConfig
 	var efforts []string
-	for band, variant := range antigravity.Variants(logical) {
+	for _, band := range catalog.AntigravityBands() {
+		variant, found := rows[band]
+		if !found {
+			continue
+		}
 		present := antigravityBandMember(members, variant.WireModel)
 		if present == nil {
 			continue
@@ -502,7 +507,7 @@ func antigravityBandConfigs(logical string, members []antigravityServed) ([]cata
 		}
 		efforts = append(efforts, band)
 		configs = append(configs, catalog.EncodeAntigravityConfig(catalog.AntigravityVariant{
-			LogicalID: logical, Selection: band, Effort: band, Default: band == "medium",
+			LogicalID: logical, Selection: band, Effort: band, Default: band == catalog.AntigravityBandMedium,
 			WireModel: variant.WireModel, ModelEnum: variant.ModelEnum, MaxOutput: variant.MaxOutput,
 			Context: ctx, Reasoning: true,
 		}))

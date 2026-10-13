@@ -329,6 +329,42 @@ func TestListAntigravityCarriesAdvertisedBudgets(t *testing.T) {
 	}
 }
 
+// TestListAntigravityOrdersThinkingBandsLowFirst pins the order a picker
+// shows: the vendor names each band its own SKU in no particular order, and
+// Relo publishes them lowest first.
+func TestListAntigravityOrdersThinkingBandsLowFirst(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"models":{
+			"gemini-3.8-flash-high":{"displayName":"Gemini 3.8 Flash (High)"},
+			"gemini-3.8-flash-low":{"displayName":"Gemini 3.8 Flash (Low)"},
+			"gemini-3.8-flash-medium":{"displayName":"Gemini 3.8 Flash (Medium)"}
+		}}`))
+	}))
+	t.Cleanup(server.Close)
+
+	listed, err := New(server.Client()).List(context.Background(), Target{
+		Format: catalog.ModelsAntigravity, BaseURL: server.URL,
+		Auth: upstream.Authorization{Token: "tok", KeyHeader: catalog.KeyHeaderBearer},
+	})
+	if err != nil {
+		t.Fatalf("List(antigravity) error = %v", err)
+	}
+	if len(listed) != 1 {
+		t.Fatalf("listed = %+v, want the three bands collapsed onto one model", listed)
+	}
+	got := listed[0].ReasoningEfforts
+	want := []string{"low", "medium", "high"}
+	if len(got) != len(want) {
+		t.Fatalf("ReasoningEfforts = %v, want %v", got, want)
+	}
+	for i := range want {
+		if got[i] != want[i] {
+			t.Fatalf("ReasoningEfforts = %v, want %v", got, want)
+		}
+	}
+}
+
 // antigravityListing is a live-shaped Cloud Code Assist answer: the vendor
 // names what every model is for, and the same models are reachable under a
 // legacy alias.

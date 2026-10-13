@@ -1,7 +1,10 @@
 // Thinking levels map a client effort onto the controls one model accepts.
 package inference
 
-import "strings"
+import (
+	"sort"
+	"strings"
+)
 
 var effortOrder = []string{"none", "minimal", "low", "medium", "high", "xhigh", "max"}
 
@@ -64,6 +67,27 @@ func LowerEffort(name string) (string, bool) {
 		return "", false
 	}
 	return effortOrder[rank-1], true
+}
+
+// OrderEfforts returns the stated efforts on the shared ladder, lowest first.
+// A name outside the ladder follows the ranked ones, so a client shows the
+// levels in the order a model offers them rather than the order a provider
+// happened to name them.
+func OrderEfforts(efforts []string) []string {
+	ordered := append([]string(nil), efforts...)
+	sort.SliceStable(ordered, func(i, j int) bool {
+		leftRank, leftRanked := effortRankOf(ordered[i])
+		rightRank, rightRanked := effortRankOf(ordered[j])
+		switch {
+		case leftRanked && rightRanked:
+			return leftRank < rightRank
+		case leftRanked != rightRanked:
+			return leftRanked
+		default:
+			return ordered[i] < ordered[j]
+		}
+	})
+	return ordered
 }
 
 // ClampBudget keeps a token budget inside the range a model declared.
