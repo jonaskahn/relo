@@ -74,12 +74,13 @@ type RefreshPolicy interface {
 
 // Options tunes a source.
 type Options struct {
-	Pools    Pools
-	Secrets  Secrets
-	Flows    Flows
-	Adapters Adapters
-	Policy   RefreshPolicy
-	Now      func() time.Time
+	Pools            Pools
+	Secrets          Secrets
+	Flows            Flows
+	Adapters         Adapters
+	Policy           RefreshPolicy
+	Now              func() time.Time
+	TemplateResolver func(providerID string) string
 	// IdentityEndpoint overrides the Claude identity lookup for tests.
 	// IdentityClient is the client that lookup uses.
 	IdentityEndpoint string
@@ -94,6 +95,7 @@ type Source struct {
 	adapters  Adapters
 	policy    RefreshPolicy
 	now       func() time.Time
+	resolver  func(providerID string) string
 	identity  oauth.ClaudeIdentitySource
 	refreshes *refreshGuard
 }
@@ -107,6 +109,7 @@ func New(options Options) *Source {
 	return &Source{
 		pools: options.Pools, secrets: options.Secrets, flows: options.Flows,
 		adapters: options.Adapters, policy: options.Policy, now: now,
+		resolver: options.TemplateResolver,
 		identity: oauth.ClaudeIdentitySource{
 			Endpoint: options.IdentityEndpoint, HTTPClient: options.IdentityClient,
 		},
@@ -300,15 +303,26 @@ func directGCP(ctx context.Context, secret string) (Authorization, error) {
 	}, nil
 }
 
+func (s *Source) templateFor(providerID string) string {
+	if s.resolver != nil {
+		if templateID := s.resolver(providerID); templateID != "" {
+			return templateID
+		}
+	}
+	return providerID
+}
+
 func (s *Source) authorizeSignIn(ctx context.Context, request Request, entry account.PoolEntry) (Authorization, error) {
-	credential, err := s.refreshed(ctx, request.ProviderID, entry)
+	connectionID := request.ProviderID
+	templateID := s.templateFor(connectionID)
+	credential, err := s.refreshed(ctx, connectionID, templateID, entry)
 	if err != nil {
 		return Authorization{}, err
 	}
-	if request.ProviderID == oauth.FlowClaude && credential.AccountID == "" {
+	if templateID == oauth.FlowClaude && credential.AccountID == "" {
 		credential = s.backfillClaudeIdentity(ctx, entry, credential)
 	}
-	return s.signInAuthorization(request.ProviderID, entry, credential)
+	return s.signInAuthorization(templateID, entry, credential)
 }
 
 func (s *Source) signInAuthorization(providerID string, entry account.PoolEntry, credential oauth.OAuthCredential) (Authorization, error) {
@@ -360,7 +374,7 @@ func (s *Source) Report(ctx context.Context, outcome Outcome) error {
 	}
 }
 
-func (s *Source) refreshed(ctx context.Context, providerID string, entry account.PoolEntry) (oauth.OAuthCredential, error) {
+func (s *Source) refreshed(ctx context.Context, connectionID, templateID string, entry account.PoolEntry) (oauth.OAuthCredential, error) {
 	stored, err := s.read(entry)
 	if err != nil {
 		return oauth.OAuthCredential{}, err
@@ -368,10 +382,10 @@ func (s *Source) refreshed(ctx context.Context, providerID string, entry account
 	if !stored.ExpiresWithin(s.now(), refreshMargin) {
 		return stored, nil
 	}
-	if !s.autoRefresh(ctx, providerID) {
-		return oauth.OAuthCredential{}, s.requireReauth(ctx, providerID, entry)
+	if !s.autoRefresh(ctx, templateID) {
+		return oauth.OAuthCredential{}, s.requireReauth(ctx, connectionID, entry)
 	}
-	refreshed, err := s.refresh(ctx, providerID, entry, stored)
+	refreshed, err := s.refresh(ctx, templateID, connectionID, entry, stored)
 	if err != nil {
 		return oauth.OAuthCredential{}, err
 	}
@@ -383,31 +397,33 @@ func (s *Source) refreshed(ctx context.Context, providerID string, entry account
 // is refused. When automatic refresh is off, the account asks for a new
 // login instead of calling the token endpoint.
 func (s *Source) RefreshRejected(ctx context.Context, providerID, credentialID, rejectedToken string) (Authorization, error) {
-	entry, found := s.pools.Entry(providerID, credentialID)
+	connectionID := providerID
+	templateID := s.templateFor(connectionID)
+	entry, found := s.pools.Entry(connectionID, credentialID)
 	if !found {
 		return Authorization{}, fmt.Errorf("%s: %w", credentialID, account.ErrNotFound)
 	}
 	if s.flows == nil {
-		return Authorization{}, fmt.Errorf("%s: %w", providerID, oauth.ErrFlowNotFound)
+		return Authorization{}, fmt.Errorf("%s: %w", templateID, oauth.ErrFlowNotFound)
 	}
-	if _, err := s.flows.Flow(providerID); err != nil {
+	if _, err := s.flows.Flow(templateID); err != nil {
 		return Authorization{}, err
 	}
 	stored, err := s.read(entry)
 	if err != nil {
 		return Authorization{}, err
 	}
-	if !s.autoRefresh(ctx, providerID) {
-		return Authorization{}, s.requireReauth(ctx, providerID, entry)
+	if !s.autoRefresh(ctx, templateID) {
+		return Authorization{}, s.requireReauth(ctx, connectionID, entry)
 	}
 	next := stored
 	if stored.AccessToken == rejectedToken {
-		next, err = s.refresh(ctx, providerID, entry, stored)
+		next, err = s.refresh(ctx, templateID, connectionID, entry, stored)
 		if err != nil {
 			return Authorization{}, err
 		}
 	}
-	return s.signInAuthorization(providerID, entry, next)
+	return s.signInAuthorization(templateID, entry, next)
 }
 
 func (s *Source) autoRefresh(ctx context.Context, providerID string) bool {
@@ -439,11 +455,11 @@ func (s *Source) read(entry account.PoolEntry) (oauth.OAuthCredential, error) {
 	return credential, nil
 }
 
-func (s *Source) refresh(ctx context.Context, providerID string, entry account.PoolEntry, stored oauth.OAuthCredential) (oauth.OAuthCredential, error) {
+func (s *Source) refresh(ctx context.Context, flowID, connectionID string, entry account.PoolEntry, stored oauth.OAuthCredential) (oauth.OAuthCredential, error) {
 	if s.flows == nil {
-		return oauth.OAuthCredential{}, fmt.Errorf("%s: %w", providerID, oauth.ErrFlowNotFound)
+		return oauth.OAuthCredential{}, fmt.Errorf("%s: %w", flowID, oauth.ErrFlowNotFound)
 	}
-	flow, err := s.flows.Flow(providerID)
+	flow, err := s.flows.Flow(flowID)
 	if err != nil {
 		return oauth.OAuthCredential{}, err
 	}
@@ -453,7 +469,7 @@ func (s *Source) refresh(ctx context.Context, providerID string, entry account.P
 			if peer, found := s.peerRotated(entry, stored); found {
 				return peer, nil
 			}
-			return oauth.OAuthCredential{}, s.rejected(ctx, providerID, entry, refreshErr)
+			return oauth.OAuthCredential{}, s.rejected(ctx, connectionID, entry, refreshErr)
 		}
 		if writeErr := s.write(entry, *next); writeErr != nil {
 			return oauth.OAuthCredential{}, writeErr

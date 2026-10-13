@@ -175,7 +175,22 @@ func (w *wiring) catalogLayer() error {
 	flows := oauth.DefaultRegistry(oauth.WithHeadless(w.cfg.System.Headless))
 	credentials := upstream.New(upstream.Options{
 		Pools: NewCredentialPools(w.built.pools), Secrets: w.built.secrets,
-		Flows: NewFlowRegistry(flows), Adapters: seedAdapter{}, Policy: templateSettings, Now: w.clk.Now,
+		Flows: NewFlowRegistry(flows, func(providerID string) string {
+			if snapshot, ok := w.models.Snapshot(); ok {
+				if host, ok := snapshot.Provider(providerID); ok {
+					return host.TemplateID
+				}
+			}
+			return providerID
+		}), Adapters: seedAdapter{}, Policy: templateSettings, Now: w.clk.Now,
+		TemplateResolver: func(providerID string) string {
+			if snapshot, ok := w.models.Snapshot(); ok {
+				if host, ok := snapshot.Provider(providerID); ok {
+					return host.TemplateID
+				}
+			}
+			return providerID
+		},
 	})
 	resolver := routing.New(routing.Options{Catalog: models, Pools: w.built.pools, Clock: w.clk, FailoverBackoff: failoverBackoffOf(w.cfg)})
 	credRepo := sqlite.NewCredentialStore(w.db)

@@ -125,7 +125,7 @@ func (w *managementWiring) catalog() error {
 func (w *managementWiring) services() {
 	w.credentials = upstream.New(upstream.Options{
 		Pools: NewCredentialPools(w.pools), Secrets: w.secrets,
-		Flows: NewFlowRegistry(oauth.DefaultRegistry(oauth.WithHeadless(w.cfg.System.Headless))), Adapters: seedAdapter{},
+		Flows: NewFlowRegistry(oauth.DefaultRegistry(oauth.WithHeadless(w.cfg.System.Headless)), nil), Adapters: seedAdapter{},
 		Policy: w.templateSettings, Now: w.clk.Now,
 	})
 	edges := &AccountEdges{}
