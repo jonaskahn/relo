@@ -166,7 +166,6 @@ func newPoolManager(db *sqlite.DB, secrets secrets.SecretStore, clk clock.Clock,
 		})
 }
 
-// nolint:funlen
 func (w *wiring) catalogLayer() error {
 	templateSettings := sqlite.NewTemplateSettings(w.db)
 	models := catalog.New(sqlite.NewCatalogReader(w.db), NewPoolDirectory(w.built.pools), wireformats.New())
@@ -176,22 +175,9 @@ func (w *wiring) catalogLayer() error {
 	flows := oauth.DefaultRegistry(oauth.WithHeadless(w.cfg.System.Headless))
 	credentials := upstream.New(upstream.Options{
 		Pools: NewCredentialPools(w.built.pools), Secrets: w.built.secrets,
-		Flows: NewFlowRegistry(flows, func(providerID string) string {
-			if snapshot, ok := w.models.Snapshot(); ok {
-				if host, ok := snapshot.Provider(providerID); ok {
-					return host.TemplateID
-				}
-			}
-			return providerID
-		}), Adapters: seedAdapter{}, Policy: templateSettings, Now: w.clk.Now,
-		TemplateResolver: func(providerID string) string {
-			if snapshot, ok := w.models.Snapshot(); ok {
-				if host, ok := snapshot.Provider(providerID); ok {
-					return host.TemplateID
-				}
-			}
-			return providerID
-		},
+		Flows:    NewFlowRegistry(flows, w.templateID),
+		Adapters: seedAdapter{}, Policy: templateSettings, Now: w.clk.Now,
+		TemplateResolver: w.templateID,
 	})
 	resolver := routing.New(routing.Options{Catalog: models, Pools: w.built.pools, Clock: w.clk, FailoverBackoff: failoverBackoffOf(w.cfg)})
 	credRepo := sqlite.NewCredentialStore(w.db)
@@ -200,6 +186,21 @@ func (w *wiring) catalogLayer() error {
 	w.built.keys = keys
 	w.credRepo, w.templateSettings, w.models = credRepo, templateSettings, models
 	return nil
+}
+
+// templateID names the template one connection was created from, which is the
+// vendor its login flow and its credential renewal both belong to. A
+// connection the catalog does not resolve is its own template.
+func (w *wiring) templateID(providerID string) string {
+	snapshot, ok := w.models.Snapshot()
+	if !ok {
+		return providerID
+	}
+	host, ok := snapshot.Provider(providerID)
+	if !ok {
+		return providerID
+	}
+	return host.TemplateID
 }
 
 func (w *wiring) services() {
