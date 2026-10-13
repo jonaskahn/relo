@@ -156,7 +156,7 @@ jobs:
 
       - name: Build Linux packages
         run: |
-          go install github.com/goreleaser/nfpm/v2/cmd/nfpm@latest
+          go install github.com/goreleaser/nfpm/v2/cmd/nfpm@v2.46.0
           make package-linux VERSION=${{ github.ref_name }}
 
       - name: Upload Linux packages
@@ -188,7 +188,10 @@ jobs:
           cache-dependency-path: console/package-lock.json
 
       - name: Install NSIS
-        run: choco install nsis -y
+        run: |
+          choco install nsis -y
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          "${env:ProgramFiles(x86)}\NSIS" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
 
       - name: Download binaries
         uses: actions/download-artifact@v5
