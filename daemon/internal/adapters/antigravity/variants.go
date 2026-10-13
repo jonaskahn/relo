@@ -1,4 +1,5 @@
-// The wire SKU each logical Antigravity model collapses onto per effort.
+// The wire SKU each logical Gemini model collapses onto per effort.
+// Claude models pass through unchanged and never consult this table.
 package antigravity
 
 import "github.com/jonaskahn/relo/internal/catalog"
@@ -15,7 +16,8 @@ const (
 // A row the vendor has not given an enum leaves ModelEnum empty, so the label
 // stays off the request rather than filled with a guess. A (model, band) pair
 // the vendor does not name is not a row to infer either: Collapse reports it
-// absent and the logical name goes on the wire untouched.
+// absent and the logical name goes on the wire untouched. Claude models have
+// no rows: they always go on the wire untouched.
 var variants = map[string]map[string]Variant{
 	"gemini-3.5-flash": {
 		catalog.AntigravityBandLow:    {WireModel: "gemini-3.5-flash-extra-low", ModelEnum: "MODEL_PLACEHOLDER_M187", MaxOutput: maxOutputGemini},
@@ -41,16 +43,6 @@ var variants = map[string]map[string]Variant{
 		catalog.AntigravityBandLow:  {WireModel: "gemini-3.1-pro-low", ModelEnum: "MODEL_PLACEHOLDER_M36", MaxOutput: maxOutputPro},
 		catalog.AntigravityBandHigh: {WireModel: "gemini-pro-agent", ModelEnum: "MODEL_PLACEHOLDER_M16", MaxOutput: maxOutputPro},
 	},
-	"claude-sonnet-4-6": {
-		catalog.AntigravityBandLow:    {WireModel: "claude-sonnet-4-6", MaxOutput: maxOutputClaude},
-		catalog.AntigravityBandMedium: {WireModel: "claude-sonnet-4-6", MaxOutput: maxOutputClaude},
-		catalog.AntigravityBandHigh:   {WireModel: "claude-sonnet-4-6", MaxOutput: maxOutputClaude},
-	},
-	"claude-opus-4-6": {
-		catalog.AntigravityBandLow:    {WireModel: "claude-opus-4-6-thinking", MaxOutput: maxOutputClaude},
-		catalog.AntigravityBandMedium: {WireModel: "claude-opus-4-6-thinking", MaxOutput: maxOutputClaude},
-		catalog.AntigravityBandHigh:   {WireModel: "claude-opus-4-6-thinking", MaxOutput: maxOutputClaude},
-	},
 }
 
 // Variant is the wire identity one logical model collapses onto at one
@@ -59,6 +51,12 @@ type Variant struct {
 	WireModel string
 	ModelEnum string
 	MaxOutput int
+}
+
+// ClaudeVariant reports the wire identity one Claude model sends: its own id
+// under the vendor's output ceiling, with no effort mapping.
+func ClaudeVariant(model string) Variant {
+	return Variant{WireModel: model, MaxOutput: maxOutputClaude}
 }
 
 // Collapse reports the wire identity a logical model collapses onto at one
