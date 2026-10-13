@@ -186,6 +186,23 @@ func TestInboundKeepsAnImageInAToolResult(t *testing.T) {
 	}
 }
 
+// TestInboundKeepsAnEmptyToolResultEmpty covers a result a client sent with no
+// output at all: there is nothing to carry back, so the message states none
+// rather than inventing a part.
+func TestInboundKeepsAnEmptyToolResultEmpty(t *testing.T) {
+	request := inboundRequest(t, []byte(`{"model":"gpt-5","input":[
+		{"type":"function_call","call_id":"call_1","name":"read","arguments":"{}"},
+		{"type":"function_call_output","call_id":"call_1"}]}`))
+
+	result := messageWithRole(request.Messages, inference.RoleTool)
+	if result == nil {
+		t.Fatal("the tool result is missing")
+	}
+	if result.ToolCallID != "call_1" || len(result.Content) != 0 {
+		t.Fatalf("message = %+v, want the call with no content", result)
+	}
+}
+
 // TestInboundCoalescesTheCodexTurn replays the item order Codex records for a
 // DeepSeek turn: the tool call, then the reasoning and text of the same turn,
 // then the result. Splitting them replays the call without its thinking, which

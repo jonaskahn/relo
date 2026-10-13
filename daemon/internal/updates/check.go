@@ -219,10 +219,60 @@ func ParseAppcast(body []byte) (version, url string, err error) {
 	return version, url, nil
 }
 
-// Newer reports whether latest is a higher dotted version than current.
+// Newer reports whether latest outranks current: a higher dotted version, or
+// the same version where current carries a prerelease and latest does not.
 func Newer(latest, current string) bool {
-	left := versionParts(latest)
-	right := versionParts(current)
+	return compare(parseVersion(latest), parseVersion(current)) > 0
+}
+
+// parsedVersion is one version as the feed and the running build state it: the
+// dotted numbers, and the prerelease identifiers behind them. A beta exists to
+// be replaced by the release it leads to, so the identifiers only decide the
+// order within a version -- never across it.
+type parsedVersion struct {
+	numbers    []int
+	prerelease []string
+}
+
+func parseVersion(value string) parsedVersion {
+	trimmed := strings.TrimPrefix(strings.TrimSpace(value), "v")
+	// Build metadata states no order, and the numbers stop at the first field
+	// that is not one, so a feed naming a version loosely still compares on
+	// the part it does state.
+	if i := strings.IndexByte(trimmed, '+'); i >= 0 {
+		trimmed = trimmed[:i]
+	}
+	var prerelease []string
+	if i := strings.IndexByte(trimmed, '-'); i >= 0 {
+		if tail := trimmed[i+1:]; tail != "" {
+			prerelease = strings.Split(tail, ".")
+		}
+		trimmed = trimmed[:i]
+	}
+	var numbers []int
+	if trimmed != "" {
+		for _, field := range strings.Split(trimmed, ".") {
+			n, err := strconv.Atoi(field)
+			if err != nil {
+				break
+			}
+			numbers = append(numbers, n)
+		}
+	}
+	return parsedVersion{numbers: numbers, prerelease: prerelease}
+}
+
+// compare orders two versions by their numbers first, so a prerelease of a
+// newer version still outranks an older release, and by the prerelease only
+// where the numbers are equal.
+func compare(left, right parsedVersion) int {
+	if order := compareNumbers(left.numbers, right.numbers); order != 0 {
+		return order
+	}
+	return comparePrerelease(left.prerelease, right.prerelease)
+}
+
+func compareNumbers(left, right []int) int {
 	n := len(left)
 	if len(right) > n {
 		n = len(right)
@@ -236,29 +286,72 @@ func Newer(latest, current string) bool {
 			b = right[i]
 		}
 		if a != b {
-			return a > b
+			return compareInts(a, b)
 		}
 	}
-	return false
+	return 0
 }
 
-func versionParts(value string) []int {
-	trimmed := strings.TrimSpace(value)
-	trimmed = strings.TrimPrefix(trimmed, "v")
-	if i := strings.IndexAny(trimmed, "-+"); i >= 0 {
-		trimmed = trimmed[:i]
+// comparePrerelease reads the two tails: no identifiers is a release and
+// outranks any prerelease of the same version, which is the whole reason a beta
+// never reads as newer than the release that replaces it. Two prereleases are
+// read left to right, and a longer tail wins a shared prefix.
+func comparePrerelease(left, right []string) int {
+	if len(left) == 0 && len(right) == 0 {
+		return 0
 	}
-	if trimmed == "" {
-		return nil
+	if len(left) == 0 {
+		return 1
 	}
-	fields := strings.Split(trimmed, ".")
-	parts := make([]int, 0, len(fields))
-	for _, field := range fields {
-		n, err := strconv.Atoi(field)
-		if err != nil {
-			return parts
+	if len(right) == 0 {
+		return -1
+	}
+	n := len(left)
+	if len(right) < n {
+		n = len(right)
+	}
+	for i := 0; i < n; i++ {
+		if rank := compareIdentifier(left[i], right[i]); rank != 0 {
+			return rank
 		}
-		parts = append(parts, n)
 	}
-	return parts
+	return compareInts(len(left), len(right))
+}
+
+// compareIdentifier orders one identifier. Two numbers order as numbers, and a
+// number always ranks below a word, so `beta.417` precedes `beta.418` whatever
+// the commit hash in the last field says. A number too large to read orders as
+// the word it is written as, which no version Relo ships reaches.
+func compareIdentifier(left, right string) int {
+	leftNumber, leftIsNumber := identifierNumber(left)
+	rightNumber, rightIsNumber := identifierNumber(right)
+	switch {
+	case leftIsNumber && rightIsNumber:
+		return compareInts(leftNumber, rightNumber)
+	case leftIsNumber:
+		return -1
+	case rightIsNumber:
+		return 1
+	default:
+		return strings.Compare(left, right)
+	}
+}
+
+func identifierNumber(value string) (int, bool) {
+	if value == "" {
+		return 0, false
+	}
+	n, err := strconv.Atoi(value)
+	return n, err == nil
+}
+
+func compareInts(a, b int) int {
+	switch {
+	case a < b:
+		return -1
+	case a > b:
+		return 1
+	default:
+		return 0
+	}
 }

@@ -163,6 +163,31 @@ func TestTemplates(t *testing.T) {
 		t.Error("groq names a per-model wire, want the connection's own to stand")
 	}
 
+	// A transport Relo has no codec for is still a transport the vendor
+	// declares, so the model answers on Chat Completions rather than on
+	// whatever the connection itself speaks.
+	openAIGateway := &modelsdev.Index{
+		Providers: map[string]modelsdev.Provider{
+			"openai-gateway": {
+				ID: "openai-gateway", Name: "OpenAI Gateway", NPM: "@ai-sdk/openai",
+				API: "https://gateway.example.com/v1",
+				Models: map[string]modelsdev.Model{
+					"chat-model": {ID: "chat-model", Via: modelsdev.TransportVia{NPM: "@ai-sdk/unknown-sdk"}},
+				},
+			},
+		},
+	}
+	gateway, ok = Get("openai-gateway", openAIGateway)
+	if !ok {
+		t.Fatal("openai-gateway dynamic template not found")
+	}
+	if gateway.DefaultFormat != catalog.FormatOpenAIResp {
+		t.Errorf("openai-gateway default format = %q, want the transport's own", gateway.DefaultFormat)
+	}
+	if got := gateway.FormatForModel("chat-model"); got != catalog.FormatOpenAIChat {
+		t.Errorf("FormatForModel(chat-model) = %q, want %q", got, catalog.FormatOpenAIChat)
+	}
+
 	// A package Relo cannot speak names the transport it would need.
 	unsupported := &modelsdev.Index{
 		Providers: map[string]modelsdev.Provider{

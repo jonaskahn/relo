@@ -71,3 +71,4 @@ Thumbs.db
 npm-debug.log*
 .pnpm-store/
 node_modules/
+.cloudflare/cache

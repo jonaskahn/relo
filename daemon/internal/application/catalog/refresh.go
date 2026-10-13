@@ -11,6 +11,7 @@ import (
 
 	"github.com/jonaskahn/relo/internal/account"
 	"github.com/jonaskahn/relo/internal/catalog"
+	"github.com/jonaskahn/relo/internal/inference"
 )
 
 // EnsureProvider creates the row a template needs and returns the row that
@@ -539,8 +540,7 @@ func mergeRequestConfigs(into, from []catalog.ModelRequestConfig) []catalog.Mode
 
 func refreshRequestDisplay(entry *catalog.Listed) {
 	efforts, toggle, reasoning, context := requestDisplayOf(entry.RequestConfigs)
-	sort.Strings(efforts)
-	entry.ReasoningEfforts = efforts
+	entry.ReasoningEfforts = inference.OrderEfforts(efforts)
 	if toggle {
 		stated := true
 		entry.ReasoningToggle = &stated

@@ -5,10 +5,13 @@ import {
 	canJumpTo,
 	commitBody,
 	connectKindOf,
+	defaultVariables,
 	emptyStepperState,
 	followFormatDefaults,
 	isDirty,
 	presetStepperState,
+	probeCredential,
+	probeTarget,
 	stepAfter,
 	stepBefore,
 	stepsFor,
@@ -72,6 +75,22 @@ describe('the add stepper', () => {
 				null
 			).path
 		).toBe('new');
+	});
+
+	test('a template with no login methods still opens as a sign-in on kind', () => {
+		const signIn = presetStepperState(
+			{ id: 'claude', templateId: 'claude', label: 'Claude', baseURL: '', variables: {} },
+			templateOf({
+				id: 'claude',
+				kind: 'signin',
+				login_methods: undefined,
+				default_format: undefined
+			})
+		);
+		expect(signIn.path).toBe('signin');
+		expect(signIn.loginFlow).toBe('');
+		expect(signIn.apiFormat).toBe('');
+		expect(signIn.baseURL).toBe('https://api.openai.com/v1');
 	});
 
 	test('a sign-in ends at verify, because the login already saved the connection', () => {
@@ -410,5 +429,93 @@ describe('the add stepper', () => {
 			isDirty(stateOf({ deployments: [{ id: 'row7', modelId: 'gpt-4o', pricedAs: '' }] }))
 		).toBe(true);
 		expect(isDirty(stateOf({ custom: { ...emptyStepperState().custom, id: 'lab' } }))).toBe(true);
+	});
+
+	test('every credential shape on its own counts as typed work', () => {
+		const blank = emptyStepperState().credential;
+		const typed = (patch: Partial<typeof blank>) =>
+			isDirty(stateOf({ credential: { ...blank, ...patch } }));
+		expect(typed({ accessKeyId: 'AKIA' })).toBe(true);
+		expect(typed({ secretAccessKey: 'secret' })).toBe(true);
+		expect(typed({ sessionToken: 'token' })).toBe(true);
+		expect(typed({ serviceAccount: '{}' })).toBe(true);
+	});
+
+	test('a base url, a header, a variable, and a custom field each count as typed work', () => {
+		expect(isDirty(stateOf({ baseURL: 'https://proxy.example' }))).toBe(true);
+		expect(isDirty(stateOf({ headers: { 'x-team': 'core' } }))).toBe(true);
+		expect(isDirty(stateOf({ variables: { region: 'eu' } }))).toBe(true);
+		expect(isDirty(stateOf({ custom: { ...emptyStepperState().custom, label: 'Lab' } }))).toBe(
+			true
+		);
+		expect(
+			isDirty(stateOf({ custom: { ...emptyStepperState().custom, baseURL: 'https://x' } }))
+		).toBe(true);
+	});
+
+	test('what a probe asks about follows from the connection it belongs to', () => {
+		expect(probeTarget(stateOf({ path: 'custom' }))).toBe('custom');
+		expect(probeTarget(stateOf({ targetProviderId: 'openai' }))).toBe('provider');
+		expect(probeTarget(stateOf({ templateId: '' }))).toBe('custom');
+		expect(probeTarget(stateOf({ templateId: 'openai' }))).toBe('template');
+	});
+
+	test('a probe carries the credential of the connect kind it was asked for', () => {
+		const state = stateOf({
+			credential: {
+				...emptyStepperState().credential,
+				secret: ' sk-1 ',
+				accessKeyId: ' AKIA ',
+				secretAccessKey: ' shhh ',
+				sessionToken: ' token ',
+				serviceAccount: ' sa ',
+				useAccessKeys: true,
+				useServiceAccount: true
+			}
+		});
+		expect(probeCredential(state, 'signin')).toEqual({ kind: 'oauth', secret: '' });
+		expect(probeCredential(state, 'none')).toEqual({ kind: 'none', secret: '' });
+		expect(probeCredential(state, 'aws')).toEqual({
+			kind: 'aws_keys',
+			secret: JSON.stringify({
+				access_key_id: 'AKIA',
+				secret_access_key: 'shhh',
+				session_token: 'token'
+			})
+		});
+		expect(probeCredential(state, 'gcp')).toEqual({ kind: 'gcp_service_account', secret: 'sa' });
+		expect(probeCredential(state, 'local')).toEqual({ kind: 'api_key', secret: 'sk-1' });
+		expect(
+			probeCredential(
+				stateOf({
+					credential: {
+						...emptyStepperState().credential,
+						secret: ' sk-1 ',
+						useAccessKeys: false,
+						useServiceAccount: false
+					}
+				}),
+				'aws'
+			)
+		).toEqual({ kind: 'api_key', secret: 'sk-1' });
+	});
+
+	test('a template with no options leaves its variable blank', () => {
+		expect(
+			defaultVariables(
+				templateOf({
+					variables: [
+						{
+							name: 'region',
+							label: 'Region',
+							placeholder: '',
+							required: false,
+							options: undefined
+						}
+					]
+				})
+			)
+		).toEqual({ region: '' });
+		expect(defaultVariables(null)).toEqual({});
 	});
 });

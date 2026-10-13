@@ -7,11 +7,12 @@
 // its binary is replaced -- its daemon is stopped and the ports it served
 // are freed -- and the install asks whether to start the new one.
 //
-// The binary always comes from a GitHub release: the latest one, or the tag
-// --relo-version names. Rerun this file by hand with the flag to install a
-// specific release.
+// The binary always comes from a GitHub release: the one --relo-version names,
+// the one this package was published as when that is a prerelease, or the
+// latest release. Rerun this file by hand with the flag to install a specific
+// release.
 import { spawnSync } from 'node:child_process';
-import { existsSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { mkdir, rename, rm, writeFile } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -21,11 +22,12 @@ import { askStart, quiesce, reloHome } from './daemon.mjs';
 import { findConflictingRelo } from './conflict.mjs';
 import { fetchBytes } from './download.mjs';
 import { target } from './platform.mjs';
-import { assets, checksumsUrl, tagFromArgs, url } from './release.mjs';
+import { assets, checksumsUrl, prereleaseTag, tagFromArgs, url } from './release.mjs';
 
 const packageRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const binaryDir = resolve(packageRoot, 'bin');
 const home = reloHome();
+const publishedVersion = JSON.parse(readFileSync(resolve(packageRoot, 'package.json'), 'utf8')).version;
 
 // writeAtomic lands the binary in one rename, so an interrupted install leaves
 // no truncated executable behind for the launcher to find.
@@ -68,7 +70,7 @@ try {
 				'  remove that install first to install this package, or keep using that install instead'
 		);
 	}
-	const destination = await fromRelease(tagFromArgs(process.argv.slice(2)));
+	const destination = await fromRelease(tagFromArgs(process.argv.slice(2)) ?? prereleaseTag(publishedVersion));
 	const answer = await askStart();
 	if (answer === 'yes') {
 		const started = spawnSync(destination, ['daemon', 'start'], { stdio: 'inherit' });

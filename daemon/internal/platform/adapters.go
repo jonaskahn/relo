@@ -116,16 +116,24 @@ func (p *CredentialPools) MarkNeedsReauth(ctx context.Context, providerID, id st
 
 // FlowRegistry adapts the OAuth registry to the credential source.
 type FlowRegistry struct {
-	flows *oauth.Registry
+	flows   *oauth.Registry
+	resolve func(providerID string) string
 }
 
 // NewFlowRegistry returns an adapter over the given flow registry.
-func NewFlowRegistry(flows *oauth.Registry) *FlowRegistry {
-	return &FlowRegistry{flows: flows}
+func NewFlowRegistry(flows *oauth.Registry, resolve func(providerID string) string) *FlowRegistry {
+	return &FlowRegistry{flows: flows, resolve: resolve}
 }
 
 // Flow returns the flow that refreshes one provider's credential.
 func (f *FlowRegistry) Flow(providerID string) (oauth.OAuthFlow, error) {
+	if f.resolve != nil {
+		if templateID := f.resolve(providerID); templateID != "" && templateID != providerID {
+			if flow, err := f.flows.Flow(templateID); err == nil {
+				return flow, nil
+			}
+		}
+	}
 	return f.flows.Flow(providerID)
 }
 

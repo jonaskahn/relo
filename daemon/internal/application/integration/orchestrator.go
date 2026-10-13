@@ -1210,11 +1210,14 @@ func appendSuffixedVariant(models []ModelRef, ref ModelRef) []ModelRef {
 }
 
 func namedRef(snap *catalog.Snapshot, model catalog.Model) ModelRef {
-	return modelRef(model)
+	ref := modelRef(model)
+	ref.Name = antigravityGeminiName(snap, model, ref.Name)
+	return ref
 }
 
 func claudeNamedRef(snap *catalog.Snapshot, model catalog.Model) ModelRef {
 	ref := modelRef(model)
+	ref.Name = antigravityGeminiName(snap, model, ref.Name)
 	if snap.ClaudeSubscription(model.ProviderID) {
 		ref.Name = catalog.StripClaudePrefix(ref.Name)
 	}
@@ -1302,6 +1305,22 @@ func connectionLabel(snap *catalog.Snapshot, providerID string) string {
 }
 
 const chatGPTTemplate = "openai-codex"
+
+// antigravityTemplate is the template of a Google Antigravity connection.
+const antigravityTemplate = "google-antigravity"
+
+// antigravityGeminiName names one model of a Google Antigravity connection.
+// The vendor appends the thinking effort to a Gemini model's display name, and
+// Relo publishes that model once, its effort chosen per request, so the suffix
+// is dropped rather than shown as a second model. A model of another family or
+// another connection keeps its name.
+func antigravityGeminiName(snap *catalog.Snapshot, model catalog.Model, name string) string {
+	host, found := snap.Provider(model.ProviderID)
+	if !found || host.TemplateID != antigravityTemplate {
+		return name
+	}
+	return catalog.CleanAntigravityGeminiName(model.ID, name)
+}
 
 func servedByChatGPT(snap *catalog.Snapshot, providerID string) bool {
 	host, found := snap.Provider(providerID)

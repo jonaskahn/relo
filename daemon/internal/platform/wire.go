@@ -175,7 +175,9 @@ func (w *wiring) catalogLayer() error {
 	flows := oauth.DefaultRegistry(oauth.WithHeadless(w.cfg.System.Headless))
 	credentials := upstream.New(upstream.Options{
 		Pools: NewCredentialPools(w.built.pools), Secrets: w.built.secrets,
-		Flows: NewFlowRegistry(flows), Adapters: seedAdapter{}, Policy: templateSettings, Now: w.clk.Now,
+		Flows:    NewFlowRegistry(flows, w.templateID),
+		Adapters: seedAdapter{}, Policy: templateSettings, Now: w.clk.Now,
+		TemplateResolver: w.templateID,
 	})
 	resolver := routing.New(routing.Options{Catalog: models, Pools: w.built.pools, Clock: w.clk, FailoverBackoff: failoverBackoffOf(w.cfg)})
 	credRepo := sqlite.NewCredentialStore(w.db)
@@ -184,6 +186,21 @@ func (w *wiring) catalogLayer() error {
 	w.built.keys = keys
 	w.credRepo, w.templateSettings, w.models = credRepo, templateSettings, models
 	return nil
+}
+
+// templateID names the template one connection was created from, which is the
+// vendor its login flow and its credential renewal both belong to. A
+// connection the catalog does not resolve is its own template.
+func (w *wiring) templateID(providerID string) string {
+	snapshot, ok := w.models.Snapshot()
+	if !ok {
+		return providerID
+	}
+	host, ok := snapshot.Provider(providerID)
+	if !ok {
+		return providerID
+	}
+	return host.TemplateID
 }
 
 func (w *wiring) services() {

@@ -1,0 +1,373 @@
+name: Beta
+
+# Every green merge to main becomes a beta: the same artifacts a release builds,
+# published under a prerelease tag, on npm's `beta` dist-tag, and in the tap as
+# its own formula. Nothing here writes a stable channel: no release.yml job, no
+# Formula/relo.rb, no npm `latest`, and no appcast entry, so an installed Relo
+# never sees a beta.
+#
+# The version is derived, never committed, so the README badge and the declared
+# versions stay on the release the repository is working towards. It descends
+# from that release with the CI run number for ordering and the commit for
+# traceability: 0.1.0-beta.417.4f3a9c21.
+on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+
+# Not cancellable: every merge was promised a beta, and a newer run does not
+# make an older one unnecessary.
+concurrency:
+  group: beta-${{ github.event.workflow_run.head_branch }}
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  gate:
+    # The CI workflow is the gate: a red or skipped run publishes nothing, and a
+    # branch run is not a merge to main.
+    if: ${{ github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'main' }}
+    runs-on: ubuntu-latest
+    outputs:
+      sha: ${{ steps.beta.outputs.sha }}
+      version: ${{ steps.beta.outputs.version }}
+      build: ${{ steps.beta.outputs.build }}
+      tag: ${{ steps.beta.outputs.tag }}
+    steps:
+      - name: Checkout the merge
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+
+      - name: Name the beta
+        id: beta
+        env:
+          SHA: ${{ github.event.workflow_run.head_sha }}
+          RUN: ${{ github.run_number }}
+        run: |
+          base=$(./scripts/version.py current)
+          base="${base%%-*}"
+          hash="${SHA:0:8}"
+          # 0.1.0 -> 0.1.417: three integers that rise, for the bundle's build
+          # number. A patch line keeps rising until the next release moves it.
+          echo "sha=$SHA" >> "$GITHUB_OUTPUT"
+          echo "version=$base-beta.$RUN.$hash" >> "$GITHUB_OUTPUT"
+          echo "build=${base%.*}.$RUN" >> "$GITHUB_OUTPUT"
+          echo "tag=v$base-beta.$RUN.$hash" >> "$GITHUB_OUTPUT"
+          echo "beta $base-beta.$RUN.$hash ($hash)"
+
+  binaries:
+    name: Build daemon binaries
+    needs: gate
+    runs-on: ubuntu-latest
+    outputs:
+      arm64: ${{ steps.sha.outputs.arm64 }}
+      amd64: ${{ steps.sha.outputs.amd64 }}
+      linux_arm64: ${{ steps.sha.outputs.linux_arm64 }}
+      linux_amd64: ${{ steps.sha.outputs.linux_amd64 }}
+    steps:
+      - name: Checkout the merge
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ needs.gate.outputs.sha }}
+
+      - name: Set up Go
+        uses: actions/setup-go@v6
+        with:
+          go-version-file: daemon/go.mod
+          cache-dependency-path: daemon/go.sum
+
+      - name: Set up Node
+        uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: console/package-lock.json
+
+      - name: Build all platforms
+        env:
+          VERSION: ${{ needs.gate.outputs.version }}
+        run: |
+          make build-all VERSION="$VERSION"
+          ver="$VERSION"
+          ver="${ver#v}"
+          for os in darwin linux; do
+            for arch in arm64 amd64; do
+              tmp="$(mktemp -d)"
+              cp "dist/relo-$os-$arch" "$tmp/relo"
+              tar -czf "dist/relo-$ver-$os-$arch.tar.gz" -C "$tmp" relo
+              rm -rf "$tmp"
+            done
+          done
+          cd dist && sha256sum relo-* > checksums.txt && cat checksums.txt
+
+      - name: Read the tarball shas
+        id: sha
+        env:
+          VERSION: ${{ needs.gate.outputs.version }}
+        run: |
+          ver="${VERSION#v}"
+          echo "arm64=$(grep "relo-$ver-darwin-arm64.tar.gz" dist/checksums.txt | awk '{print $1}')" >> "$GITHUB_OUTPUT"
+          echo "amd64=$(grep "relo-$ver-darwin-amd64.tar.gz" dist/checksums.txt | awk '{print $1}')" >> "$GITHUB_OUTPUT"
+          echo "linux_arm64=$(grep "relo-$ver-linux-arm64.tar.gz" dist/checksums.txt | awk '{print $1}')" >> "$GITHUB_OUTPUT"
+          echo "linux_amd64=$(grep "relo-$ver-linux-amd64.tar.gz" dist/checksums.txt | awk '{print $1}')" >> "$GITHUB_OUTPUT"
+
+      - name: Upload binaries
+        uses: actions/upload-artifact@v5
+        with:
+          name: binaries
+          path: dist/
+          retention-days: 30
+
+  macos:
+    name: Build macOS app
+    needs: gate
+    runs-on: macos-15
+    steps:
+      - name: Checkout the merge
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ needs.gate.outputs.sha }}
+
+      - name: Set up Go
+        uses: actions/setup-go@v6
+        with:
+          go-version-file: daemon/go.mod
+          cache-dependency-path: daemon/go.sum
+
+      - name: Set up Node
+        uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: console/package-lock.json
+
+      - name: Import Developer ID certificate
+        env:
+          APPLE_SIGN_P12_BASE64: ${{ secrets.APPLE_SIGN_P12_BASE64 }}
+          APPLE_SIGN_P12_PASSWORD: ${{ secrets.APPLE_SIGN_P12_PASSWORD }}
+        run: |
+          keychain="$RUNNER_TEMP/signing.keychain-db"
+          security create-keychain -p actions "$keychain"
+          security set-keychain-settings -lut 21600 "$keychain"
+          security unlock-keychain -p actions "$keychain"
+          printf '%s' "$APPLE_SIGN_P12_BASE64" | base64 --decode > "$RUNNER_TEMP/cert.p12"
+          security import "$RUNNER_TEMP/cert.p12" -k "$keychain" -P "$APPLE_SIGN_P12_PASSWORD" -T /usr/bin/codesign
+          rm -f "$RUNNER_TEMP/cert.p12"
+          security set-keychain-partition-list -S apple-tool:,apple:,codesign: -k actions "$keychain"
+          security list-keychains -d user -s "$keychain" $(security list-keychains -d user | tr -d '"')
+          identity=$(security find-identity -v -p codesigning "$keychain" | grep "Developer ID Application" | head -n 1 | sed 's/.*) \([A-F0-9]*\) .*/\1/')
+          [ -n "$identity" ] || { echo "no Developer ID identity in the imported certificate" >&2; exit 1; }
+          echo "APPLE_SIGN_IDENTITY=$identity" >> "$GITHUB_ENV"
+
+      - name: Build, sign, and notarize macOS app
+        env:
+          SPARKLE_PUBLIC_ED_KEY: ${{ vars.SPARKLE_PUBLIC_ED_KEY }}
+          VERSION: ${{ needs.gate.outputs.version }}
+          BUILD: ${{ needs.gate.outputs.build }}
+        run: |
+          APPLE_SIGN_IDENTITY="$APPLE_SIGN_IDENTITY" \
+          APPLE_ID="${{ secrets.APPLE_ID }}" \
+          APPLE_TEAM_ID="${{ secrets.APPLE_TEAM_ID }}" \
+          APPLE_APP_SPECIFIC_PASSWORD="${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}" \
+          make package-macos VERSION="$VERSION" BUILD="$BUILD"
+          rm -f dist/Relo.app
+
+      - name: Upload macOS zips
+        uses: actions/upload-artifact@v5
+        with:
+          name: macos
+          path: dist/
+          retention-days: 30
+
+  linux:
+    name: Build Linux packages
+    needs: [gate, binaries]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout the merge
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ needs.gate.outputs.sha }}
+
+      - name: Set up Go
+        uses: actions/setup-go@v6
+        with:
+          go-version-file: daemon/go.mod
+          cache-dependency-path: daemon/go.sum
+
+      - name: Set up Node
+        uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: console/package-lock.json
+
+      - name: Download binaries
+        uses: actions/download-artifact@v5
+        with:
+          name: binaries
+          path: dist
+
+      - name: Build Linux packages
+        env:
+          VERSION: ${{ needs.gate.outputs.version }}
+        run: |
+          go install github.com/goreleaser/nfpm/v2/cmd/nfpm@latest
+          # nfpm writes the prerelease as 0.1.0~beta.…, which both deb and rpm
+          # read as older than the 0.1.0 release they must not replace.
+          make package-linux VERSION="$VERSION"
+
+      - name: Upload Linux packages
+        uses: actions/upload-artifact@v5
+        with:
+          name: linux
+          path: dist/Relo-Setup-*.{deb,rpm}
+          retention-days: 30
+
+  windows:
+    name: Build Windows installer
+    needs: [gate, binaries]
+    runs-on: windows-latest
+    steps:
+      - name: Checkout the merge
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ needs.gate.outputs.sha }}
+
+      - name: Set up Go
+        uses: actions/setup-go@v6
+        with:
+          go-version-file: daemon/go.mod
+          cache-dependency-path: daemon/go.sum
+
+      - name: Set up Node
+        uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: console/package-lock.json
+
+      - name: Install NSIS
+        run: choco install nsis -y
+
+      - name: Download binaries
+        uses: actions/download-artifact@v5
+        with:
+          name: binaries
+          path: dist
+
+      - name: Build Windows installer
+        shell: bash
+        env:
+          VERSION: ${{ needs.gate.outputs.version }}
+        run: make package-windows VERSION="$VERSION"
+
+      - name: Upload Windows installer
+        uses: actions/upload-artifact@v5
+        with:
+          name: windows
+          path: dist/Relo-Setup-*.exe
+          retention-days: 30
+
+  release:
+    name: Publish the prerelease
+    needs: [gate, binaries, macos, linux, windows]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v5
+        with:
+          path: release
+          merge-multiple: true
+
+      - name: Create the GitHub prerelease
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG_NAME: ${{ needs.gate.outputs.tag }}
+          SHA: ${{ needs.gate.outputs.sha }}
+        run: |
+          ls release/
+          # --prerelease, not --draft: the tarball and zip URLs have to resolve
+          # before the tap formula and the npm package point at them. A
+          # prerelease is also what keeps /releases/latest on the stable one.
+          #
+          # A re-run finds the prerelease this one already created, so the
+          # assets are replaced instead: the tag is the same build either way,
+          # and refusing to re-upload would leave a failed retry stuck at the
+          # release step forever.
+          if gh release view "$TAG_NAME" >/dev/null 2>&1; then
+            echo "$TAG_NAME already exists; replacing its assets"
+            gh release upload "$TAG_NAME" release/* --clobber
+          else
+            gh release create "$TAG_NAME" release/* \
+              --title "$TAG_NAME" \
+              --generate-notes \
+              --prerelease \
+              --target "$SHA"
+          fi
+
+  npm:
+    name: Publish npm beta
+    needs: [gate, release]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      # npm provenance signs the tarball through the OIDC token.
+      id-token: write
+    steps:
+      - name: Checkout the merge
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ needs.gate.outputs.sha }}
+
+      - name: Set up Node
+        uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          registry-url: https://registry.npmjs.org
+
+      - name: Installer tests
+        run: make test-npm
+
+      - name: Name the package
+        id: named
+        env:
+          VERSION: ${{ needs.gate.outputs.version }}
+        run: |
+          cd packaging/npm
+          # An already published version is the end state this job wants, so a
+          # re-run says so instead of failing on npm's immutable versions.
+          if npm view "@jonaskahn/relo@$VERSION" version >/dev/null 2>&1; then
+            echo "published=true" >> "$GITHUB_OUTPUT"
+            echo "$VERSION is already on the registry"
+            exit 0
+          fi
+          npm version "$VERSION" --no-git-tag-version
+          grep '"version"' package.json
+          echo "published=false" >> "$GITHUB_OUTPUT"
+
+      - name: Publish
+        if: steps.named.outputs.published != 'true'
+        working-directory: packaging/npm
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: npm publish --access public --tag beta --provenance
+
+  tap:
+    name: Publish the Homebrew beta formula
+    needs: [gate, binaries, release]
+    uses: ./.github/workflows/release-brew.yml
+    secrets:
+      HOMEBREW_TAP_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
+    with:
+      tag: ${{ needs.gate.outputs.tag }}
+      version: ${{ needs.gate.outputs.version }}
+      arm64_sha: ${{ needs.binaries.outputs.arm64 }}
+      amd64_sha: ${{ needs.binaries.outputs.amd64 }}
+      linux_arm64_sha: ${{ needs.binaries.outputs.linux_arm64 }}
+      linux_amd64_sha: ${{ needs.binaries.outputs.linux_amd64 }}
+      formula_path: Formula/relo-beta.rb
+      class_name: ReloBeta

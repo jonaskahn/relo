@@ -205,6 +205,38 @@ func TestClaudeSignInDropsTheVendorWord(t *testing.T) {
 	}
 }
 
+// TestAntigravityGeminiIsPublishedUnderOneCleanName pins the model a coding
+// client sees on a Google Antigravity connection: the vendor appends the
+// thinking effort to a Gemini display name, and Relo publishes the model once,
+// the effort chosen per request rather than shown as a second model.
+func TestAntigravityGeminiIsPublishedUnderOneCleanName(t *testing.T) {
+	db := testkit.OpenTestDB(t)
+	upstream := testkit.MockUpstream(t, map[string]string{})
+	testkit.CustomProvider(t, db, testkit.Upstream{
+		ID: "google-antigravity", Label: "Google Antigravity", APIFormat: catalog.FormatAnthropic,
+		BaseURL: upstream.URL, Auth: catalog.AuthAPIKey,
+		Models: []string{"gemini-3.8-flash"}, ModelsFormat: catalog.ModelsNone,
+		ContextWindow: catalog.MillionContext, SupportsReason: true,
+	})
+	if _, err := db.SQL().Exec("UPDATE providers SET template_id = 'google-antigravity' WHERE id = 'google-antigravity'"); err != nil {
+		t.Fatalf("set provider template: %v", err)
+	}
+	if _, err := db.SQL().Exec("UPDATE model_facts SET name = ? WHERE provider_id = ? AND model_id = ? AND layer = 'override'",
+		"Gemini 3.8 Flash (Medium)", "google-antigravity", "gemini-3.8-flash"); err != nil {
+		t.Fatalf("name the model: %v", err)
+	}
+	service := NewService(ServiceOptions{Catalog: testkit.ReloadCatalog(t, db, activeAccounts{})})
+
+	plain := indexModels(t, service.publishedModels())
+	ref, found := plain["relo-google-antigravity-gemini-3.8-flash-1m"]
+	if !found {
+		t.Fatalf("published = %+v, want the Gemini model under one entry", plain)
+	}
+	if got := catalog.ConfigModelName(ref.Name, ref.Connection, ref.ContextWindow, ""); got != "Gemini 3.8 Flash (1M) on Google Antigravity" {
+		t.Fatalf("display name = %q, want the thinking effort dropped", got)
+	}
+}
+
 func indexModels(t *testing.T, models []ModelRef) map[string]ModelRef {
 	t.Helper()
 	indexed := make(map[string]ModelRef, len(models))

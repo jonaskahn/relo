@@ -191,7 +191,7 @@ func (h *harness) newServer(port int) *server.Server {
 		Router:        routing.New(routing.Options{Catalog: h.catalog, Pools: pools, FailoverBackoff: account.DefaultFailoverBackoff()}),
 		Relay: platform.NewRelay(upstream.New(upstream.Options{
 			Pools: platform.NewCredentialPools(pools), Secrets: testkit.SecretStore(h.secrets),
-			Flows: platform.NewFlowRegistry(oauth.DefaultRegistry()), Now: h.clock.Now,
+			Flows: platform.NewFlowRegistry(oauth.DefaultRegistry(), nil), Now: h.clock.Now,
 		}), upstream.NewExecutor(&http.Client{}, h.logger)),
 		Templates:       platform.NewTemplateSource(),
 		CaptureRedactor: platform.NewCaptureRedactor(),

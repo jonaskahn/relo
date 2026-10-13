@@ -7,6 +7,22 @@ set -euo pipefail
 root="$(cd "$(dirname "$0")/.." && pwd)"
 version="${VERSION:-0.1.0}"
 version="${version#v}"
+# The bundle states two versions and neither may hold a prerelease: the short
+# version is what Apple reads, and the build number is what an upgrade compares,
+# so a beta takes BUILD and leaves its short version at the release it descends
+# from. The zip name and the binary still carry the full version, so the asset
+# name and `relo version` name the exact build.
+short="${version%%-*}"
+build="${BUILD:-$version}"
+[[ "$build" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || {
+  echo "the bundle's build version must be three integers (got '$build'); pass BUILD=0.1.<run> for a prerelease" >&2
+  exit 1
+}
+# Sparkle reads the appcast, and the appcast only ever names stable releases. A
+# beta would see a stable build number below its own and never update, so it is
+# built not to check at all and is replaced by hand instead.
+auto_checks=true
+[ "$build" != "$version" ] && auto_checks=false
 # The Makefile owns the floor; the default only serves a direct run.
 macos_min="${MACOS_MIN_VERSION:-12.0}"
 
@@ -166,7 +182,9 @@ if [ -z "$public_key" ]; then
   public_key="$(sparkle_public_key)"
   echo "generated the Sparkle keypair in the login keychain"
 fi
-sed -e "s/__VERSION__/$version/g" -e "s/__SU_PUBLIC_ED_KEY__/$public_key/g" \
+sed -e "s/__VERSION__/$short/g" -e "s/__BUILD__/$build/g" \
+  -e "s/__SU_AUTO_CHECKS__/$auto_checks/g" \
+  -e "s/__SU_PUBLIC_ED_KEY__/$public_key/g" \
   -e "s/__MACOS_MIN_VERSION__/$macos_min/g" \
   "$root/packaging/darwin/Info.plist" > "$app/Contents/Info.plist"
 

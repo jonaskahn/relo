@@ -4,6 +4,7 @@ package catalog
 
 import (
 	"encoding/json"
+	"strings"
 
 	"github.com/jonaskahn/relo/internal/inference"
 )
@@ -21,6 +22,58 @@ var RetiredAntigravityIDs = map[string]bool{
 // RetiredAntigravity reports whether one Antigravity id is retired.
 func RetiredAntigravity(id string) bool {
 	return RetiredAntigravityIDs[id]
+}
+
+// The thinking bands the vendor names. Every logical model collapses onto one
+// band per request, and a client chooses the band by asking for an effort.
+const (
+	AntigravityBandLow    = "low"
+	AntigravityBandMedium = "medium"
+	AntigravityBandHigh   = "high"
+)
+
+// AntigravityBands are the bands in the order a picker offers them, lowest
+// first, so a model's thinking levels read in the order a client shows them.
+func AntigravityBands() []string {
+	return []string{AntigravityBandLow, AntigravityBandMedium, AntigravityBandHigh}
+}
+
+// AntigravityBand maps one canonical thinking effort onto the vendor's band.
+// The canonical ladder is longer than the vendor's three tiers: the steps
+// below low share the low band and the steps above high share the high band.
+// An effort outside the ladder takes the middle band, which the vendor lists
+// for every model it collapses.
+func AntigravityBand(effort string) string {
+	switch effort {
+	case "none", "minimal", "low":
+		return AntigravityBandLow
+	case "high", "xhigh", "max":
+		return AntigravityBandHigh
+	default:
+		return AntigravityBandMedium
+	}
+}
+
+// antigravityEffortSuffixes are the thinking-effort labels the vendor appends
+// to a Gemini model's display name.
+var antigravityEffortSuffixes = []string{" (Low)", " (Medium)", " (High)", " (Extra Low)"}
+
+// CleanAntigravityGeminiName drops the thinking-effort suffix the vendor
+// appends to a Gemini display name. Relo publishes the model once, its effort
+// chosen per request, so the suffix is not part of the name. A model of another
+// family keeps its name, because the vendor spells those parentheses the same
+// way without meaning an effort.
+func CleanAntigravityGeminiName(modelID, name string) string {
+	cleaned := strings.TrimSpace(name)
+	if !strings.HasPrefix(strings.ToLower(strings.TrimSpace(modelID)), "gemini") {
+		return cleaned
+	}
+	for _, suffix := range antigravityEffortSuffixes {
+		if strings.HasSuffix(cleaned, suffix) {
+			return strings.TrimSpace(strings.TrimSuffix(cleaned, suffix))
+		}
+	}
+	return cleaned
 }
 
 // AntigravityVariant is one exact Antigravity request configuration: the wire
@@ -95,13 +148,14 @@ func SelectAntigravityVariant(configs []AntigravityVariant, logicalID, effort st
 	if !ok {
 		return AntigravityVariant{}, false
 	}
+	band := AntigravityBand(normalized)
 	for _, config := range configs {
-		if config.LogicalID == logicalID && config.Effort == normalized {
+		if config.LogicalID == logicalID && config.Effort == band {
 			return config, true
 		}
 	}
 	for _, config := range configs {
-		if config.LogicalID == logicalID && config.Selection == normalized {
+		if config.LogicalID == logicalID && config.Selection == band {
 			return config, true
 		}
 	}

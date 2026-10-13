@@ -394,6 +394,15 @@ func TestOpenCodeGatewayRequestLeavesNamesWithinTheLimitAlone(t *testing.T) {
 	}
 }
 
+// A turn that was never built has nothing to shorten, and the caller is told
+// so rather than handed a request it has to test for.
+func TestOpenCodeGatewayRequestWithoutARequest(t *testing.T) {
+	got, originals := wire.OpenCodeGatewayRequest(nil)
+	if got != nil || originals != nil {
+		t.Fatalf("request = %v originals = %v, want neither", got, originals)
+	}
+}
+
 // OpenCodeGateway covers both lanes and both generations of the gateway's
 // paths, and nothing else.
 func TestOpenCodeGatewayRecognizesOnlyTheGatewayLanes(t *testing.T) {

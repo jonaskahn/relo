@@ -318,7 +318,7 @@ func (h *harness) integrationPaths() codingclients.Paths {
 func (h *harness) newCredentials(pools *account.Manager) *upstream.Source {
 	return upstream.New(upstream.Options{
 		Pools: platform.NewCredentialPools(pools), Secrets: testkit.SecretStore(h.secrets),
-		Flows: platform.NewFlowRegistry(oauth.DefaultRegistry()), Now: h.clock.Now,
+		Flows: platform.NewFlowRegistry(oauth.DefaultRegistry(), nil), Now: h.clock.Now,
 	})
 }
 

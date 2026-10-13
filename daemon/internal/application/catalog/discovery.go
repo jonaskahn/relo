@@ -51,6 +51,8 @@ func (s *Service) discoveryCredential(ctx context.Context, host catalog.Provider
 		ProviderID: host.ID,
 		Auth:       host.Auth,
 		KeyHeader:  host.KeyHeader,
+		Region:     host.Variables["region"],
+		Service:    host.Variables["service"],
 		Selection:  account.Selection{Surface: "discovery"},
 	}
 	if credentialID != "" {

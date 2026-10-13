@@ -72,3 +72,33 @@ func TestLowerEffort(t *testing.T) {
 		})
 	}
 }
+
+func TestOrderEfforts(t *testing.T) {
+	cases := []struct {
+		name    string
+		efforts []string
+		want    []string
+	}{
+		{name: "a shuffled ladder reads lowest first", efforts: []string{"high", "low", "medium"}, want: []string{"low", "medium", "high"}},
+		{name: "an unranked name follows the ranked ones", efforts: []string{"toggle", "medium"}, want: []string{"medium", "toggle"}},
+		{name: "the input is left alone", efforts: []string{"high", "low"}, want: []string{"low", "high"}},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			got := OrderEfforts(tc.efforts)
+			if len(got) != len(tc.want) {
+				t.Fatalf("OrderEfforts(%v) = %v, want %v", tc.efforts, got, tc.want)
+			}
+			for i := range tc.want {
+				if got[i] != tc.want[i] {
+					t.Fatalf("OrderEfforts(%v) = %v, want %v", tc.efforts, got, tc.want)
+				}
+			}
+		})
+	}
+	input := []string{"high", "low"}
+	_ = OrderEfforts(input)
+	if input[0] != "high" {
+		t.Fatal("OrderEfforts reordered the caller's slice, want a copy")
+	}
+}

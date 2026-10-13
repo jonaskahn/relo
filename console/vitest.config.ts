@@ -22,7 +22,7 @@ export default defineConfig({
 			// not counted against the threshold.
 			include: ['src/lib/**/*.ts', 'src/routes/**/+page.ts'],
 			exclude: ['src/**/*.test.ts', 'src/lib/i18n/locales/**'],
-			thresholds: { lines: 85, functions: 85, statements: 85, branches: 85 }
+			thresholds: { lines: 90, functions: 90, statements: 90, branches: 90 }
 		}
 	}
 });

@@ -2,33 +2,91 @@ name: Release Homebrew Tap
 
 # Fires only once a release is public (draft -> published), so the tarball
 # URLs below always resolve for end users. Same trigger as publish-appcast.yml.
+#
+# Also callable (workflow_call) so a beta publishes its own formula from this
+# same template: Formula/relo.rb carries the stable channel, Formula/relo-beta.rb
+# the beta one, and neither run ever writes the other's file.
 on:
   release:
     types:
       - published
+  workflow_call:
+    secrets:
+      HOMEBREW_TAP_TOKEN:
+        description: Token that pushes the formula to the tap repository
+        required: true
+    inputs:
+      tag:
+        description: Release tag the formula downloads from, e.g. v0.1.0-beta.12.abcdef12
+        required: true
+        type: string
+      version:
+        description: Version the formula reports, without a leading v
+        required: true
+        type: string
+      arm64_sha:
+        description: sha256 of the macOS arm64 tarball
+        required: true
+        type: string
+      amd64_sha:
+        description: sha256 of the macOS amd64 tarball
+        required: true
+        type: string
+      linux_arm64_sha:
+        description: sha256 of the Linux arm64 tarball
+        required: true
+        type: string
+      linux_amd64_sha:
+        description: sha256 of the Linux amd64 tarball
+        required: true
+        type: string
+      formula_path:
+        description: Formula file to write, relative to the tap root
+        required: true
+        type: string
+      class_name:
+        description: Ruby class name the formula declares
+        required: true
+        type: string
 
 permissions:
   contents: read
 
 jobs:
   bump-tap:
+    # A caller passes inputs and is trusted; on the release event the guard is
+    # what keeps a beta prerelease from overwriting the stable formula.
+    if: ${{ inputs.tag || !github.event.release.prerelease }}
     runs-on: ubuntu-latest
     steps:
-      - name: Download checksums
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          TAG_NAME: ${{ github.event.release.tag_name }}
-        run: |
-          rm -rf /tmp/brew && mkdir -p /tmp/brew
-          gh release download "$TAG_NAME" --pattern "checksums.txt" --dir /tmp/brew
-          cat /tmp/brew/checksums.txt
-
-      - name: Read tarball shas
+      - name: Read the version and tarball shas
         id: sha
         env:
-          TAG_NAME: ${{ github.event.release.tag_name }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+          INPUT_TAG: ${{ inputs.tag }}
+          INPUT_VERSION: ${{ inputs.version }}
+          INPUT_ARM64: ${{ inputs.arm64_sha }}
+          INPUT_AMD64: ${{ inputs.amd64_sha }}
+          INPUT_LINUX_ARM64: ${{ inputs.linux_arm64_sha }}
+          INPUT_LINUX_AMD64: ${{ inputs.linux_amd64_sha }}
         run: |
-          ver="${TAG_NAME#v}"
+          # A caller already holds the tag, the version, and every shas; only
+          # the release path reads them back out of the published checksums.
+          if [ -n "$INPUT_TAG" ]; then
+            echo "tag=$INPUT_TAG" >> "$GITHUB_OUTPUT"
+            echo "version=$INPUT_VERSION" >> "$GITHUB_OUTPUT"
+            echo "arm64=$INPUT_ARM64" >> "$GITHUB_OUTPUT"
+            echo "amd64=$INPUT_AMD64" >> "$GITHUB_OUTPUT"
+            echo "linux_arm64=$INPUT_LINUX_ARM64" >> "$GITHUB_OUTPUT"
+            echo "linux_amd64=$INPUT_LINUX_AMD64" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          rm -rf /tmp/brew && mkdir -p /tmp/brew
+          gh release download "$RELEASE_TAG" --pattern "checksums.txt" --dir /tmp/brew
+          cat /tmp/brew/checksums.txt
+          ver="${RELEASE_TAG#v}"
+          echo "tag=$RELEASE_TAG" >> "$GITHUB_OUTPUT"
           echo "version=$ver" >> "$GITHUB_OUTPUT"
           echo "arm64=$(grep "relo-$ver-darwin-arm64.tar.gz" /tmp/brew/checksums.txt | awk '{print $1}')" >> "$GITHUB_OUTPUT"
           echo "amd64=$(grep "relo-$ver-darwin-amd64.tar.gz" /tmp/brew/checksums.txt | awk '{print $1}')" >> "$GITHUB_OUTPUT"
@@ -44,17 +102,19 @@ jobs:
 
       - name: Render formula
         env:
-          TAG_NAME: ${{ github.event.release.tag_name }}
+          TAG_NAME: ${{ steps.sha.outputs.tag }}
           VERSION: ${{ steps.sha.outputs.version }}
           ARM64_SHA: ${{ steps.sha.outputs.arm64 }}
           AMD64_SHA: ${{ steps.sha.outputs.amd64 }}
           LINUX_ARM64_SHA: ${{ steps.sha.outputs.linux_arm64 }}
           LINUX_AMD64_SHA: ${{ steps.sha.outputs.linux_amd64 }}
+          FORMULA_PATH: ${{ inputs.formula_path || 'Formula/relo.rb' }}
+          CLASS_NAME: ${{ inputs.class_name || 'Relo' }}
         run: |
           [ -n "$ARM64_SHA" ] && [ -n "$AMD64_SHA" ] && [ -n "$LINUX_ARM64_SHA" ] && [ -n "$LINUX_AMD64_SHA" ] || { echo "missing tarball sha" >&2; exit 1; }
-          mkdir -p tap/Formula
-          cat > tap/Formula/relo.rb <<EOF
-          class Relo < Formula
+          mkdir -p "tap/$(dirname "$FORMULA_PATH")"
+          cat > "tap/$FORMULA_PATH" <<EOF
+          class ${CLASS_NAME} < Formula
             desc "Local proxy letting coding agents talk to any model"
             homepage "https://github.com/jonaskahn/relo"
             license "AGPL-3.0-only"
@@ -177,15 +237,16 @@ jobs:
             end
           end
           EOF
-          ruby -c tap/Formula/relo.rb
+          ruby -c "tap/$FORMULA_PATH"
 
       - name: Commit and push tap
         env:
-          TAG_NAME: ${{ github.event.release.tag_name }}
+          TAG_NAME: ${{ steps.sha.outputs.tag }}
+          FORMULA_PATH: ${{ inputs.formula_path || 'Formula/relo.rb' }}
         run: |
           cd tap
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add Formula/relo.rb
-          git commit -m "chore: bump relo to $TAG_NAME" || exit 0
+          git add "$FORMULA_PATH"
+          git commit -m "chore: bump $FORMULA_PATH to $TAG_NAME" || exit 0
           git push

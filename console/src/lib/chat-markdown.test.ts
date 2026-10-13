@@ -94,6 +94,52 @@ describe('the blocks a reply is read as', () => {
 		expect(textOf((list.items[0][0] as { children: Inline[] }).children)).toBe('[ ] todo');
 		expect(textOf((list.items[0][1] as { children: Inline[] }).children)).toBe('indented');
 	});
+
+	it('closes a tilde fence the way a backtick one closes', () => {
+		expect(first(parseMarkdown('~~~python\nprint(1)\n~~~'))).toEqual({
+			kind: 'code',
+			language: 'python',
+			text: 'print(1)'
+		});
+	});
+
+	it('keeps two lines of one item together across a blank line', () => {
+		const list = first(parseMarkdown('- one\n\n  still one\n- two'));
+		expect(list.kind).toBe('list');
+		if (list.kind !== 'list') return;
+		expect(list.items).toHaveLength(2);
+		expect(textOf((list.items[0][0] as { children: Inline[] }).children)).toBe('one');
+		expect(textOf((list.items[0][1] as { children: Inline[] }).children)).toBe('still one');
+	});
+
+	it('pads a short row out to the width of its header', () => {
+		const table = first(parseMarkdown('| a | b | c |\n| --- | --- | --- |\n| 1 |'));
+		expect(table.kind).toBe('table');
+		if (table.kind !== 'table') return;
+		expect(table.rows[0]).toHaveLength(3);
+		expect(table.rows[0][2]).toEqual([]);
+	});
+
+	it('drops a cell past the width of its header', () => {
+		const table = first(parseMarkdown('| a |\n| --- |\n| 1 | 2 | 3 |'));
+		expect(table.kind).toBe('table');
+		if (table.kind !== 'table') return;
+		expect(table.rows[0].map(textOf)).toEqual(['1']);
+	});
+
+	it('reads a centred column and leaves an undelimited one unaligned', () => {
+		expect(first(parseMarkdown('| a | b | c |\n| :-: | --- | --- |'))).toMatchObject({
+			kind: 'table',
+			align: ['center', null, null]
+		});
+	});
+
+	it('reads an escaped pipe inside a cell as one', () => {
+		const table = first(parseMarkdown('| a | b |\n| --- | --- |\n| x \\| y |'));
+		expect(table.kind).toBe('table');
+		if (table.kind !== 'table') return;
+		expect(textOf(table.rows[0][0])).toBe('x | y');
+	});
 });
 
 describe('the marks inside a line', () => {
@@ -142,6 +188,42 @@ describe('the marks inside a line', () => {
 		const nodes = parseInline('[x](javascript:alert(1))');
 		expect(nodes.every((node) => node.kind === 'text')).toBe(true);
 		expect(textOf(nodes)).toBe('[x](javascript:alert(1))');
+	});
+
+	it('shows an image as a link labelled with its description', () => {
+		expect(parseInline('![a cat](https://example.com/cat.png)')).toEqual([
+			{
+				kind: 'link',
+				href: 'https://example.com/cat.png',
+				children: [{ kind: 'text', text: 'a cat' }]
+			}
+		]);
+	});
+
+	it('unwinds the escapes an image description carries', () => {
+		const nodes = parseInline('![a \\* cat\\*](https://example.com/cat.png)');
+		expect(nodes[0]).toMatchObject({ children: [{ kind: 'text', text: 'a * cat*' }] });
+	});
+
+	it('reads an address written between angle brackets, spaces and all', () => {
+		expect(parseInline('[docs](<https://example.com/a b>)')[0]).toMatchObject({
+			href: 'https://example.com/a b'
+		});
+	});
+
+	it('reads only the first word of an address written without brackets', () => {
+		expect(parseInline('[docs](https://example.com/guide "the guide")')[0]).toMatchObject({
+			href: 'https://example.com/guide'
+		});
+	});
+
+	it('leaves a bracket that never closes as text', () => {
+		expect(parseInline('[unclosed')).toEqual([{ kind: 'text', text: '[unclosed' }]);
+	});
+
+	it('reads an escaped bracket and parenthesis as the characters they stand for', () => {
+		expect(parseInline('\\[not a link\\]')).toEqual([{ kind: 'text', text: '[not a link]' }]);
+		expect(parseInline('\\(not a link\\)')).toEqual([{ kind: 'text', text: '(not a link)' }]);
 	});
 
 	it('reads a bare address without the full stop a sentence adds', () => {
