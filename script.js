@@ -4,7 +4,6 @@
   var root = document.documentElement;
   var body = document.body;
   var reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  var finePointer = window.matchMedia("(hover: hover) and (pointer: fine)").matches;
 
   function t(key) {
     return window.relo && window.relo.t ? window.relo.t(key) : key;
@@ -333,61 +332,6 @@
     });
   });
 
-  /* ---------- Depth: tilt, magnetism, cursor light ---------- */
-
-  if (finePointer && !reduced) {
-    var tilt = document.querySelector("[data-tilt]");
-    if (tilt) {
-      var tiltTarget = { x: 0, y: 0 };
-      var tiltNow = { x: 0, y: 0 };
-      tilt.addEventListener("pointermove", function (event) {
-        var rect = tilt.getBoundingClientRect();
-        tiltTarget.x = ((event.clientX - rect.left) / rect.width - 0.5) * 2;
-        tiltTarget.y = ((event.clientY - rect.top) / rect.height - 0.5) * 2;
-      });
-      tilt.addEventListener("pointerleave", function () {
-        tiltTarget.x = 0;
-        tiltTarget.y = 0;
-      });
-      (function settle() {
-        tiltNow.x += (tiltTarget.x - tiltNow.x) * 0.08;
-        tiltNow.y += (tiltTarget.y - tiltNow.y) * 0.08;
-        tilt.style.setProperty("--tx", tiltNow.x.toFixed(3));
-        tilt.style.setProperty("--ty", tiltNow.y.toFixed(3));
-        window.requestAnimationFrame(settle);
-      })();
-    }
-
-    /* The cursor light: one set of coordinates the CSS turns into a highlight
-       on every glass panel. */
-    window.addEventListener("pointermove", function (event) {
-      root.style.setProperty("--mx", event.clientX + "px");
-      root.style.setProperty("--my", event.clientY + "px");
-    }, { passive: true });
-
-    document.querySelectorAll(".channel, .terminal").forEach(function (node) {
-      node.addEventListener("pointermove", function (event) {
-        var rect = node.getBoundingClientRect();
-        node.style.setProperty("--lx", (event.clientX - rect.left) + "px");
-        node.style.setProperty("--ly", (event.clientY - rect.top) + "px");
-      });
-    });
-
-    document.querySelectorAll("[data-magnetic]").forEach(function (node) {
-      node.addEventListener("pointermove", function (event) {
-        var rect = node.getBoundingClientRect();
-        var dx = (event.clientX - (rect.left + rect.width / 2)) * 0.22;
-        var dy = (event.clientY - (rect.top + rect.height / 2)) * 0.32;
-        node.style.setProperty("--pull-x", Math.max(-7, Math.min(7, dx)).toFixed(1) + "px");
-        node.style.setProperty("--pull-y", Math.max(-5, Math.min(5, dy)).toFixed(1) + "px");
-      });
-      node.addEventListener("pointerleave", function () {
-        node.style.setProperty("--pull-x", "0px");
-        node.style.setProperty("--pull-y", "0px");
-      });
-    });
-  }
-
   /* ---------- The nav: condense, and show how far down the page you are ---------- */
 
   var nav = document.getElementById("nav");
@@ -660,11 +604,6 @@
       child.style.setProperty("--i", index);
     });
   });
-
-  /* The curtain covers the entrance, so the hero may settle straight away
-     rather than waiting out the old typed intro. */
-  root.classList.add("is-ready");
-  window.setTimeout(function () { root.classList.add("intro-done"); }, 1400);
 
   applyKinetic();
   reveal();

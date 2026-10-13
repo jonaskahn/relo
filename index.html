@@ -40,10 +40,6 @@
       root.dir = lang === 'ar' || lang === 'ur' ? 'rtl' : 'ltr';
       root.classList.add('js');
       if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) root.classList.remove('static-story');
-      var seen = false;
-      try { seen = sessionStorage.getItem('relo-intro') === '1'; } catch (e) {}
-      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches || seen) root.classList.add('skip-intro');
-      window.setTimeout(function () { root.classList.add('intro-done'); }, 6000);
     })();
   </script>
   <script type="application/ld+json">
@@ -69,8 +65,6 @@
   <a class="skip-link" href="#main" data-i18n="skip">Skip to content</a>
 
   <canvas class="field" id="field" aria-hidden="true"></canvas>
-  <canvas class="curtain" id="curtain" aria-hidden="true"></canvas>
-  <div class="grain" aria-hidden="true"></div>
 
 
 
@@ -109,16 +103,16 @@
 
   <main id="main">
     <section class="hero" id="top" data-field="hero" aria-labelledby="hero-heading">
-      <div class="hero-inner hero-enter" data-tilt>
+      <div class="hero-inner hero-enter">
         <p class="hero-eyebrow" data-i18n="eyebrow">Local LLM gateway</p>
         <h1 class="hero-title" id="hero-heading">
           <span class="hero-small" data-i18n="heroSmall" data-kinetic>Your tools, connected</span>
-          <span class="hero-strong"><span data-i18n="heroStrong" data-kinetic data-scan>One local gateway</span><span class="dot">.</span></span>
+          <span class="hero-strong"><span data-i18n="heroStrong" data-kinetic>One local gateway</span><span class="dot">.</span></span>
         </h1>
         <p class="hero-lead" data-i18n="lead" data-words>Connect your AI coding tools to the providers you choose. Route requests and track usage in one local console.</p>
         <p class="ticker mono-data" aria-hidden="true"><span class="ticker-line" id="ticker"></span></p>
         <div class="hero-actions">
-          <a class="btn primary" href="#install" data-magnetic data-i18n="install">Install</a>
+          <a class="btn primary" href="#install" data-i18n="install">Install</a>
           <a class="btn ghost" href="https://github.com/jonaskahn/relo" data-arrow data-i18n="btnGithub">View on GitHub</a>
         </div>
         <ul class="stats">
@@ -295,7 +289,6 @@
               <svg class="i-copy" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 0 1 2-2h9"/></svg>
               <svg class="i-check" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>
               <svg class="i-fail" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
-              <span class="copy-burst" aria-hidden="true"></span>
             </button>
           </div>
           <p class="ch-note" data-i18n="shellUnix"></p>
@@ -311,7 +304,6 @@
               <svg class="i-copy" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 0 1 2-2h9"/></svg>
               <svg class="i-check" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>
               <svg class="i-fail" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
-              <span class="copy-burst" aria-hidden="true"></span>
             </button>
           </div>
           <p class="ch-note" data-i18n="chBrewNote"></p>
@@ -327,7 +319,6 @@
               <svg class="i-copy" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 0 1 2-2h9"/></svg>
               <svg class="i-check" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>
               <svg class="i-fail" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
-              <span class="copy-burst" aria-hidden="true"></span>
             </button>
           </div>
           <p class="ch-note" data-i18n="chNpmNote"></p>
@@ -356,7 +347,6 @@
               <svg class="i-copy" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 0 1 2-2h9"/></svg>
               <svg class="i-check" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>
               <svg class="i-fail" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
-              <span class="copy-burst" aria-hidden="true"></span>
             </button>
           </div>
           <p class="ch-note" data-i18n="shellUnix"></p>
@@ -372,7 +362,6 @@
               <svg class="i-copy" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 0 1 2-2h9"/></svg>
               <svg class="i-check" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>
               <svg class="i-fail" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
-              <span class="copy-burst" aria-hidden="true"></span>
             </button>
           </div>
           <p class="ch-note" data-i18n="chBrewNote"></p>
@@ -388,7 +377,6 @@
               <svg class="i-copy" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 0 1 2-2h9"/></svg>
               <svg class="i-check" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>
               <svg class="i-fail" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
-              <span class="copy-burst" aria-hidden="true"></span>
             </button>
           </div>
           <p class="ch-note" data-i18n="chNpmNote"></p>
@@ -418,7 +406,6 @@
               <svg class="i-copy" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 0 1 2-2h9"/></svg>
               <svg class="i-check" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>
               <svg class="i-fail" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
-              <span class="copy-burst" aria-hidden="true"></span>
             </button>
           </div>
           <p class="ch-note" data-i18n="shellWindows"></p>
@@ -434,7 +421,6 @@
               <svg class="i-copy" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 0 1 2-2h9"/></svg>
               <svg class="i-check" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>
               <svg class="i-fail" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
-              <span class="copy-burst" aria-hidden="true"></span>
             </button>
           </div>
           <p class="ch-note" data-i18n="chNpmNote"></p>

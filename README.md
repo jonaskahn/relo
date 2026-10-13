@@ -7,8 +7,8 @@ source code lives on `main`.
 | Path              | Purpose                                                             |
 | ----------------- | ------------------------------------------------------------------- |
 | `index.html`      | The page                                                            |
-| `style.css`       | Styles, including the "2050 layer" at the end (glass, depth, motion) |
-| `field.js`        | The signal field canvas, the intro curtain, the shared rAF loop      |
+| `style.css`       | Styles, ending in the page layer (glass, arrivals, terminal) |
+| `field.js`        | The field canvas and its shared rAF loop                            |
 | `scenes.js`       | Scroll-driven product story (needs `motion.js`)                      |
 | `motion.js`       | Motion 12.23.24, MIT, vendored for the scroll story                  |
 | `script.js`       | Menu, theme, language, copy, tabs, the terminal replay               |
@@ -56,16 +56,16 @@ the channels the site itself recommends.
 
 ## The page
 
-One canvas `#field` sits behind everything: a grid of nodes that pulses travel
-along, out of a tool, through the core, into a provider. Each section asks the
-field for a different mood through `data-field` (`hero`, `story`, `providers`,
-`install`), the pointer lights what it passes over, and the first load
-assembles "Relo." out of the same particles before they scatter into the grid.
+One canvas `#field` sits behind everything: a quiet grid of nodes that pulses
+travel along, out of a tool, through the core, into a provider. Each section
+nudges the density through `data-field` (`hero`, `story`, `providers`,
+`install`). Everything rides one `requestAnimationFrame`; the loop stops when
+the tab is hidden, and under `prefers-reduced-motion` the field draws a single
+still frame and the rest of the page keeps its end state with no travel.
 
-Everything rides one `requestAnimationFrame`. The loop stops when the tab is
-hidden or the section is offscreen, and under `prefers-reduced-motion` the
-field draws a single still frame and every other effect keeps its end state
-with no travel. Motion is limited to transform, opacity and filter.
+The look is deliberately spare: one accent, layered neutral surfaces, and no
+effect that does not carry meaning. Motion is limited to transform, opacity
+and filter, so the page stays on the compositor.
 
 The story scrolls an iPad Pro 13 through boot, a nine-card connection grid,
 and a harness bag, all driven by one scroll-progress value in `scenes.js`.
