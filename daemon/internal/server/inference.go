@@ -36,7 +36,10 @@ const (
 	// connection with many accounts cannot consume the whole request.
 	maxAccountsPerMember = 4
 	// retryWaitLow and retryWaitHigh bound the random wait before an account
-	// is retried.
+	// is retried, and retryWaitHigh is also the longest provider wait one
+	// request retries through. A longer wait belongs to the account's cooldown:
+	// the request moves to the next account or member instead of sitting on the
+	// provider's clock.
 	retryWaitLow          = time.Second
 	retryWaitHigh         = 3 * time.Second
 	contextLimitTolerance = 2_560
@@ -301,7 +304,8 @@ func (d *sendDriver) stepAttempt(candidate routing.Candidate, lastCandidate bool
 		// while a refusal a retry cannot cure is reported at once.
 		prefer: walk.account,
 		hold: func(result Result) bool {
-			return walk.retries < walk.maxRetries && retryCurable(result.Status)
+			return retriesSameAccount(result) && walk.retries < walk.maxRetries &&
+				retryCurable(result.Status)
 		},
 	}
 	result, err := d.s.attempt(d.w, spec, d.tried, final)
@@ -355,7 +359,10 @@ func (d *sendDriver) handleAttemptFailure(failed failedAttempt, err error) walkA
 	walk.pending, walk.pendingErr, walk.attempted = result, err, true
 	if d.retriesAccount(walk, result) {
 		if !d.s.waitBeforeRetry(d.r.Context(), walk.retries, result.RetryAfter) {
-			d.s.record(context.WithoutCancel(d.r.Context()), d.outcome, result)
+			// The wait was cut short, so no attempt follows. Answer the
+			// refusal the request already earned rather than leaving the
+			// handler with an empty success when the caller is gone.
+			d.s.answerFailed(d, d.outcome, result, err)
 			return walkAnswered
 		}
 		walk.retries++
@@ -366,16 +373,30 @@ func (d *sendDriver) handleAttemptFailure(failed failedAttempt, err error) walkA
 
 // retriesAccount reports whether the failed account is asked again. A failure
 // that says something about the account or the model, or that the connection's
-// policy made retryable, is not cured by asking the same account again.
+// policy made retryable, is not cured by asking the same account again, and
+// neither is a provider wait longer than one request may spend.
 func (d *sendDriver) retriesAccount(walk *memberWalk, result Result) bool {
-	credential := credentialKeyOf(result)
-	if credential == "" || result.ClassSwitch || sameProviderRetry(result) && result.Status != http.StatusTooManyRequests {
+	if !retriesSameAccount(result) {
 		return false
 	}
+	credential := credentialKeyOf(result)
 	if walk.account != credential {
 		walk.account, walk.retries = credential, 0
 	}
 	return walk.retries < walk.maxRetries
+}
+
+// retriesSameAccount reports whether a failure is one the retry budget would
+// spend on the same account: a transient answer the account may survive, and a
+// wait the provider named that fits inside one request. A longer wait is left
+// to the account's cooldown so the answer is not held open on the provider's
+// clock.
+func retriesSameAccount(result Result) bool {
+	if credentialKeyOf(result) == "" || result.ClassSwitch ||
+		sameProviderRetry(result) && result.Status != http.StatusTooManyRequests {
+		return false
+	}
+	return result.RetryAfter <= retryWaitHigh
 }
 
 func (d *sendDriver) answerUnretryable(failed failedAttempt) walkAction {
