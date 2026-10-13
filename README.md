@@ -10,20 +10,13 @@
 <a href="https://github.com/jonaskahn/relo/releases"><img src="https://img.shields.io/badge/version-0.1.0-blue" alt="Version"></a>
 <a href="https://www.npmjs.com/package/@jonaskahn/relo"><img src="https://img.shields.io/npm/v/@jonaskahn/relo" alt="npm"></a>
 
+<p><i>Let your harness agents talk to any model, any provider with no config changes.</i></p>
+
 </div>
 
-> One local proxy that lets Codex, Claude Code, Cursor and Grok, etc. Talk to any model, any provider with no config
-> changes.
+---
 
 ## ▓ CONSOLE
-
-|                                                                              |                                                                        |                                                                     |
-|------------------------------------------------------------------------------|------------------------------------------------------------------------|---------------------------------------------------------------------|
-| Dashboard                                                                    | Connections                                                            | Groups                                                              |
-| <img src="assets/demo/dashboard-02.webp" alt="Dashboard" width="320">        | <img src="assets/demo/connections.webp" alt="Connections" width="320"> | <img src="assets/demo/groups-add.webp" alt="Groups" width="320">    |
-| Agent Harness                                                                | Add agent                                                              | Usage                                                               |
-| <img src="assets/demo/agents-overview.webp" alt="Agent Harness" width="320"> | <img src="assets/demo/agents-add.webp" alt="Add agent" width="320">    | <img src="assets/demo/usage-overview.webp" alt="Usage" width="320"> |
-
 <div align="center">
 <img src="assets/demo/demo-vid.gif" alt="Relo demo: using Relo from Codex" width="960">
 <br>
@@ -32,7 +25,25 @@
 
 ## ▓ INSTALL
 
-Relo has not been released yet, so there is nothing to install. Please wait for the first release.
+Pick one. Every installer refuses to stack a second Relo.
+
+```console
+$ curl -fsSL https://relo.ifelse.one/install.sh | sh   # macOS, Linux
+$ irm https://relo.ifelse.one/install.ps1 | iex       # Windows, PowerShell
+```
+
+| Channel   | Command                                                              |
+|-----------|----------------------------------------------------------------------|
+| Script    | the two lines above; `install.sh --help` lists the flags             |
+| Homebrew  | `brew install jonaskahn/apps/relo`                                   |
+| npm       | `npm i -g @jonaskahn/relo` (Node 22+)                                |
+| macOS app | `Relo-<version>-universal.zip`                                       |
+| Linux     | `Relo-Setup-<version>-amd64.deb` or `Relo-Setup-<version>-amd64.rpm` |
+| Windows   | `Relo-Setup-<version>-amd64.exe`                                     |
+
+The setup files come from the [latest release](https://github.com/jonaskahn/relo/releases/latest); the app then
+updates itself. The script installs the daemon binary: it verifies the download against `checksums.txt`, frees the
+ports Relo serves, and starts the daemon.
 
 ## ▓ START
 
