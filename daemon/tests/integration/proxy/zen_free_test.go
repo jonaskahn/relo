@@ -20,7 +20,12 @@ import (
 // credential. A mock that enforces exactly that is what proves Relo's request
 // satisfies the lane, rather than proving only that Relo can send a body.
 const (
-	zenSessionShape = "^ses_[0-9a-f]{12}[0-9A-Za-z]{14}$"
+	// The session's hex prefix carries the client's clock: the ninth and tenth
+	// digits both read "f", which a timestamp-derived id always carries. The
+	// gateway refuses a session shaped right but carrying another value there,
+	// so the mock holds the rule that tells a client's own id from a hand-made
+	// one. The request identifier is read for its shape alone.
+	zenSessionShape = "^ses_[0-9a-f]{9}ff[0-9a-f][0-9A-Za-z]{14}$"
 	zenRequestShape = "^msg_[0-9a-f]{12}[0-9A-Za-z]{14}$"
 )
 
@@ -428,7 +433,7 @@ func zenRefusal(r *http.Request, body map[string]any) string {
 		}
 	}
 	if !zenIDMatches(zenSession, r.Header.Get("x-opencode-session")) {
-		return "the session identifier is not the shape the gateway accepts"
+		return "the session identifier does not carry the gateway's clock"
 	}
 	if !zenIDMatches(zenRequest, r.Header.Get("x-opencode-request")) {
 		return "the request identifier is not the shape the gateway accepts"
@@ -625,7 +630,7 @@ func TestZenFreeServesACompleteAnswerFromAStreamOnlyGateway(t *testing.T) {
 			}
 		}
 		if !zenIDMatches(zenSession, attempt.headers.Get("x-opencode-session")) {
-			t.Errorf("session = %q, want the shape the gateway accepts",
+			t.Errorf("session = %q, want the identity the gateway accepts",
 				attempt.headers.Get("x-opencode-session"))
 		}
 		if !zenIDMatches(zenRequest, attempt.headers.Get("x-opencode-request")) {
