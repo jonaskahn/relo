@@ -14,6 +14,7 @@ on:
   workflow_run:
     workflows: [CI]
     types: [completed]
+    branches: [main]
 
 # Not cancellable: every merge was promised a beta, and a newer run does not
 # make an older one unnecessary.
@@ -26,9 +27,8 @@ permissions:
 
 jobs:
   gate:
-    # The CI workflow is the gate: a red or skipped run publishes nothing, and a
-    # branch run is not a merge to main.
-    if: ${{ github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'main' }}
+    # Only successful CI for a push to main may publish a beta.
+    if: ${{ github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'main' && github.event.workflow_run.event == 'push' }}
     runs-on: ubuntu-latest
     outputs:
       sha: ${{ steps.beta.outputs.sha }}
