@@ -96,14 +96,15 @@ type output struct {
 
 func main() {
 	root := flag.String("root", "..", "repository root the sources are read from and the outputs written under")
+	check := flag.Bool("check", false, "compare the committed files with the rendering instead of writing them")
 	flag.Parse()
-	if err := generate(*root); err != nil {
+	if err := generate(*root, *check); err != nil {
 		fmt.Fprintln(os.Stderr, "genicons:", err)
 		os.Exit(1)
 	}
 }
 
-func generate(root string) error {
+func generate(root string, check bool) error {
 	logo, err := renderBrand(filepath.Join(root, logoSource))
 	if err != nil {
 		return err
@@ -121,10 +122,10 @@ func generate(root string) error {
 	if !hasInk(mark) {
 		return ErrEmptyMark
 	}
-	return writeAll(root, logo, mark)
+	return writeAll(root, logo, mark, check)
 }
 
-func writeAll(root string, logo, mark *image.RGBA) error {
+func writeAll(root string, logo, mark *image.RGBA, check bool) error {
 	// The macOS master and the favicon are the one geometry drawn inside the
 	// macOS grid. Everything else fills its canvas, because nothing draws it
 	// within a rounded frame of its own.
@@ -134,43 +135,43 @@ func writeAll(root string, logo, mark *image.RGBA) error {
 		// The repo logo is the plate at the brand-art size, so the README
 		// shows a full square rather than a floating shadow.
 		{filepath.Join(root, "assets", "logo.png"), func(path string) error {
-			return writePNG(path, logo)
+			return writePNG(path, logo, check)
 		}},
 		// The macOS master keeps the canvas margins and the baked shadow the
 		// Dock expects from a legacy icns.
 		{filepath.Join(root, "packaging", "darwin", "app-icon.png"), func(path string) error {
-			return writePNG(path, mac)
+			return writePNG(path, mac, check)
 		}},
 		// The Dock icon is set from a single PNG at runtime, where the system
 		// draws it in its own slot and scales the backing image to match, so
 		// it carries the full-resolution master rather than one screen size.
 		{filepath.Join(trayDir, "app-icon.png"), func(path string) error {
-			return writePNG(path, mac)
+			return writePNG(path, mac, check)
 		}},
 		{filepath.Join(root, "packaging", "windows", "icon.ico"), func(path string) error {
-			return writeICO(path, logo, winSizes)
+			return writeICO(path, logo, winSizes, check)
 		}},
 		// The icon every listener serves, and the copy the console build
 		// ships: one rendering, written to both trees so the icon an inference
 		// port shows is the icon the console shows.
 		{filepath.Join(root, "daemon", "internal", "server", "assets", "favicon.ico"), func(path string) error {
-			return writeICO(path, mac, faviconSizes)
+			return writeICO(path, mac, faviconSizes, check)
 		}},
 		{filepath.Join(root, "console", "static", "favicon.ico"), func(path string) error {
-			return writeICO(path, mac, faviconSizes)
+			return writeICO(path, mac, faviconSizes, check)
 		}},
 		{filepath.Join(trayDir, "icon.png"), func(path string) error {
-			return writePNG(path, scale(mark, trayIconSize, trayIconSize))
+			return writePNG(path, scale(mark, trayIconSize, trayIconSize), check)
 		}},
 		{filepath.Join(trayDir, "icon-template.png"), func(path string) error {
-			return writePNG(path, templateMask(scale(mark, templateIconSize, templateIconSize)))
+			return writePNG(path, templateMask(scale(mark, templateIconSize, templateIconSize)), check)
 		}},
 	}
 	for _, size := range linuxSizes {
 		outputs = append(outputs, output{
 			filepath.Join(root, "packaging", "linux", "icons", fmt.Sprintf("%dx%d", size, size), "apps", "relo.png"),
 			func(path string) error {
-				return writePNG(path, scale(logo, size, size))
+				return writePNG(path, scale(logo, size, size), check)
 			},
 		})
 	}
@@ -178,7 +179,9 @@ func writeAll(root string, logo, mark *image.RGBA) error {
 		if err := output.write(output.path); err != nil {
 			return err
 		}
-		fmt.Println("wrote", output.path)
+		if !check {
+			fmt.Println("wrote", output.path)
+		}
 	}
 	return nil
 }
@@ -329,7 +332,10 @@ func templateMask(src *image.RGBA) *image.RGBA {
 	return dst
 }
 
-func writePNG(path string, img image.Image) error {
+func writePNG(path string, img image.Image, check bool) error {
+	if check {
+		return checkPNG(path, img)
+	}
 	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
 		return err
 	}
@@ -339,6 +345,56 @@ func writePNG(path string, img image.Image) error {
 	}
 	defer func() { _ = file.Close() }()
 	return png.Encode(file, img)
+}
+
+// The committed rendering is compared as decoded pixels rather than as bytes:
+// compressing the same pixels is the encoder's business, and the encoder's
+// output changes between Go releases.
+func checkPNG(path string, img image.Image) error {
+	committed, err := os.ReadFile(path)
+	if err != nil {
+		return fmt.Errorf("%s is missing", path)
+	}
+	decoded, err := png.Decode(bytes.NewReader(committed))
+	if err != nil {
+		return fmt.Errorf("decode %s: %w", path, err)
+	}
+	expected, err := decodePNG(img)
+	if err != nil {
+		return err
+	}
+	if !samePixels(decoded, expected) {
+		return fmt.Errorf("%s differs from the generated file (run make icons)", path)
+	}
+	return nil
+}
+
+// A PNG carries straight alpha and an image.RGBA carries premultiplied alpha,
+// so comparing a committed file with the source image directly differs by
+// rounding on an antialiased edge; the round trip removes that.
+func decodePNG(img image.Image) (image.Image, error) {
+	var buf bytes.Buffer
+	if err := png.Encode(&buf, img); err != nil {
+		return nil, err
+	}
+	return png.Decode(bytes.NewReader(buf.Bytes()))
+}
+
+func samePixels(a, b image.Image) bool {
+	if a.Bounds() != b.Bounds() {
+		return false
+	}
+	bounds := a.Bounds()
+	for y := bounds.Min.Y; y < bounds.Max.Y; y++ {
+		for x := bounds.Min.X; x < bounds.Max.X; x++ {
+			ar, ag, ab, aa := a.At(x, y).RGBA()
+			br, bg, bb, ba := b.At(x, y).RGBA()
+			if ar != br || ag != bg || ab != bb || aa != ba {
+				return false
+			}
+		}
+	}
+	return true
 }
 
 // scale resamples src to the given square size. Large reductions step through
@@ -356,7 +412,10 @@ func scale(src image.Image, width, height int) *image.RGBA {
 	return dst
 }
 
-func writeICO(path string, src image.Image, sizes []int) error {
+func writeICO(path string, src image.Image, sizes []int, check bool) error {
+	if check {
+		return checkICO(path, src, sizes)
+	}
 	entries := make([]icoEntry, 0, len(sizes))
 	for _, size := range sizes {
 		var buf bytes.Buffer
@@ -373,6 +432,61 @@ func writeICO(path string, src image.Image, sizes []int) error {
 		return err
 	}
 	return os.WriteFile(path, encoded, 0o644)
+}
+
+// Like checkPNG the comparison is on the decoded payloads, because the ICO
+// entries are PNGs and their bytes move with the Go release.
+func checkICO(path string, src image.Image, sizes []int) error {
+	committed, err := os.ReadFile(path)
+	if err != nil {
+		return fmt.Errorf("%s is missing", path)
+	}
+	entries, err := decodeICO(committed)
+	if err != nil {
+		return fmt.Errorf("decode %s: %w", path, err)
+	}
+	if len(entries) != len(sizes) {
+		return fmt.Errorf("%s carries %d sizes, want %d (run make icons)", path, len(entries), len(sizes))
+	}
+	for i, size := range sizes {
+		decoded, err := png.Decode(bytes.NewReader(entries[i].data))
+		if err != nil {
+			return fmt.Errorf("decode %s: %w", path, err)
+		}
+		expected, err := decodePNG(scale(src, size, size))
+		if err != nil {
+			return err
+		}
+		if entries[i].size != size || !samePixels(decoded, expected) {
+			return fmt.Errorf("%s differs from the generated file (run make icons)", path)
+		}
+	}
+	return nil
+}
+
+func decodeICO(encoded []byte) ([]icoEntry, error) {
+	if len(encoded) < 6 || binary.LittleEndian.Uint16(encoded[2:4]) != 1 {
+		return nil, errors.New("the ICO header is not an icon")
+	}
+	count := int(binary.LittleEndian.Uint16(encoded[4:6]))
+	entries := make([]icoEntry, 0, count)
+	for i := 0; i < count; i++ {
+		start := 6 + 16*i
+		if start+16 > len(encoded) {
+			return nil, errors.New("the ICO directory is truncated")
+		}
+		size := int(encoded[start])
+		if size == 0 {
+			size = 256
+		}
+		length := int(binary.LittleEndian.Uint32(encoded[start+8 : start+12]))
+		offset := int(binary.LittleEndian.Uint32(encoded[start+12 : start+16]))
+		if offset < 0 || length < 0 || offset+length > len(encoded) {
+			return nil, errors.New("an ICO payload is out of range")
+		}
+		entries = append(entries, icoEntry{size: size, data: encoded[offset : offset+length]})
+	}
+	return entries, nil
 }
 
 // encodeICO lays out the ICO directory and the PNG payloads it points at.

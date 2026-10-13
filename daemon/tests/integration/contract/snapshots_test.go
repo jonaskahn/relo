@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+	"time"
 )
 
 var update = flag.Bool("update", false, "rewrite the contract fixtures from the current behavior")
@@ -42,6 +43,15 @@ func (h *harness) runSnapshots(t *testing.T, dir string, cases []snapshotCase) {
 			body = strings.NewReader(expand(c.body, vars))
 		}
 		response := h.managementWithBody(t, c.method, path, body)
+		if c.name == "settings-run-retention" {
+			// Saving the budget answers before the cleanup it queues
+			// finishes, and the queued run refuses this one while it holds
+			// the maintenance lock. The queued pass is quick and running it
+			// again reports the same stored budget against the same rows,
+			// so wait out the transient conflict and compare the idle
+			// answer.
+			response = h.settleRetentionRun(t, c, path, body, response)
+		}
 		if response.Code != c.wantStatus {
 			t.Fatalf("%s: %s %s = %d, want %d (body %s)", c.name, c.method, path, response.Code, c.wantStatus, response.Body.String())
 		}
@@ -59,6 +69,28 @@ func (h *harness) runSnapshots(t *testing.T, dir string, cases []snapshotCase) {
 			vars[lastSegment(c.capture)] = text
 		}
 	}
+}
+
+// settleRetentionRun re-issues the scheduled cleanup while the queued pass
+// from the budget save still holds the maintenance lock, so the case records
+// the idle report instead of the transient conflict.
+func (h *harness) settleRetentionRun(t *testing.T, c snapshotCase, path string, body *strings.Reader, first *httptest.ResponseRecorder) *httptest.ResponseRecorder {
+	t.Helper()
+	response := first
+	deadline := time.Now().Add(10 * time.Second)
+	for response.Code == http.StatusConflict {
+		if !time.Now().Before(deadline) {
+			t.Fatalf("%s: the queued cleanup still holds the maintenance lock (body %s)", c.name, response.Body.String())
+		}
+		time.Sleep(5 * time.Millisecond)
+		if body != nil {
+			if _, err := body.Seek(0, io.SeekStart); err != nil {
+				t.Fatalf("rewind the retention request body: %v", err)
+			}
+		}
+		response = h.managementWithBody(t, c.method, path, body)
+	}
+	return response
 }
 
 func (h *harness) managementWithBody(t *testing.T, method, path string, body *strings.Reader) *httptest.ResponseRecorder {

@@ -13,7 +13,7 @@ description: |
   Run `relo daemon start` for the app with its tray icon, or `relo daemon run`
   to keep it in the foreground.
 homepage: https://github.com/jonaskahn/relo
-license: MIT
+license: AGPL-3.0-only
 # An update must not leave the old daemon holding the ports, and a removal has
 # to stop the service and unregister autostart before the binary is gone.
 scripts:

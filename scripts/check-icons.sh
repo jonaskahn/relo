@@ -1,60 +1,60 @@
 #!/usr/bin/env bash
 # Fails when the committed artwork no longer matches what the brand
 # sources generate, whether the sources are the plated logo.svg or the
-# bare logo-mark.svg the tray reads. The icons are rendered into a
-# temporary tree, so a developer's working copy is never rewritten by
-# the check.
+# bare logo-mark.svg the tray reads. genicons compares the rasters as
+# decoded pixels rather than as bytes: compressing the same rendering is
+# the encoder's business, and the encoder's output moves between Go
+# releases, so a byte compare reports drift no designer caused. oksvg
+# antialiasing moves with the build platform, so the pixel check only
+# binds on linux/amd64, where CI runs; other hosts prove the generator
+# runs and every derived file exists. The Windows resource object is
+# generated into a temporary tree, so a developer's working copy is never
+# rewritten by the check.
 set -euo pipefail
 
 root="$(cd "$(dirname "$0")/.." && pwd)"
 staging="$(mktemp -d)"
 trap 'rm -rf "$staging"' EXIT
 
-mkdir -p "$staging/assets"
-cp "$root/assets/logo.svg" "$staging/assets/"
-cp "$root/assets/logo-mark.svg" "$staging/assets/"
-
 echo "=== Relo asset drift check ==="
-(cd "$root/daemon" && go run ./tools/genicons -root "$staging" >/dev/null)
-"$root/scripts/gen-syso.sh" "$staging/daemon/cmd/relo" >/dev/null
-
-# oksvg antialiasing is not identical across GOARCH, so the committed
-# rasters are the linux/amd64 rendering CI produces. Other hosts still
-# prove genicons runs and that every derived file is present.
 host="$(cd "$root/daemon" && go env GOHOSTOS)/$(cd "$root/daemon" && go env GOHOSTARCH)"
+if [ "$host" = "linux/amd64" ]; then
+  (cd "$root/daemon" && go run ./tools/genicons -root "$root" -check)
+else
+  echo "host is $host, not linux/amd64: proving the generator runs and every derived file exists"
+  mkdir -p "$staging/assets"
+  cp "$root/assets/logo.svg" "$staging/assets/"
+  cp "$root/assets/logo-mark.svg" "$staging/assets/"
+  (cd "$root/daemon" && go run ./tools/genicons -root "$staging" >/dev/null)
+  for derived in \
+    assets/logo.png \
+    packaging/darwin/app-icon.png \
+    daemon/internal/desktop/assets/app-icon.png \
+    daemon/internal/desktop/assets/icon.png \
+    daemon/internal/desktop/assets/icon-template.png \
+    packaging/windows/icon.ico \
+    daemon/internal/server/assets/favicon.ico \
+    console/static/favicon.ico \
+    packaging/linux/icons/16x16/apps/relo.png \
+    packaging/linux/icons/1024x1024/apps/relo.png; do
+    if [ -f "$staging/$derived" ] && [ -f "$root/$derived" ]; then
+      continue
+    fi
+    echo "FAIL: $root/$derived is missing (run make icons)"
+    exit 1
+  done
+fi
 
+# The resource object wraps the committed icon and the generator is pinned,
+# so it compares byte for byte.
+"$root/scripts/gen-syso.sh" "$staging/daemon/cmd/relo" >/dev/null
 drift=0
-compare() {
-  local generated="$1" committed="$2"
-  if [ ! -f "$committed" ]; then
-    echo "FAIL: $committed is missing"
-    drift=1
-    return
-  fi
-  if cmp -s "$generated" "$committed"; then
-    return
-  fi
-  if [ "$host" != "linux/amd64" ]; then
-    return
-  fi
-  echo "FAIL: $committed differs from the generated file (run make icons)"
-  drift=1
-}
-
-compare "$staging/assets/logo.png" "$root/assets/logo.png"
-compare "$staging/packaging/darwin/app-icon.png" "$root/packaging/darwin/app-icon.png"
-compare "$staging/daemon/internal/desktop/assets/icon.png" "$root/daemon/internal/desktop/assets/icon.png"
-compare "$staging/daemon/internal/desktop/assets/icon-template.png" "$root/daemon/internal/desktop/assets/icon-template.png"
-compare "$staging/packaging/windows/icon.ico" "$root/packaging/windows/icon.ico"
-for size in 16 24 32 48 64 128 256 512 1024; do
-  icon="packaging/linux/icons/${size}x${size}/apps/relo.png"
-  compare "$staging/$icon" "$root/$icon"
-done
-compare "$staging/daemon/internal/server/assets/favicon.ico" "$root/daemon/internal/server/assets/favicon.ico"
-compare "$staging/console/static/favicon.ico" "$root/console/static/favicon.ico"
-# The Windows resource object: icon.ico linked into every relo.exe.
 for arch in amd64 arm64; do
-  compare "$staging/daemon/cmd/relo/relo_windows_$arch.syso" "$root/daemon/cmd/relo/relo_windows_$arch.syso"
+  syso="daemon/cmd/relo/relo_windows_$arch.syso"
+  if ! cmp -s "$staging/$syso" "$root/$syso"; then
+    echo "FAIL: $root/$syso differs from the generated file (run make icons)"
+    drift=1
+  fi
 done
 if ! cmp -s "$root/assets/logo.svg" "$root/console/static/logo.svg"; then
   echo "FAIL: $root/console/static/logo.svg differs from assets/logo.svg (run make icons)"

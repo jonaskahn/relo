@@ -1,0 +1,39 @@
+name: Release npm
+
+# Fires only once a release is public, because the installer this package runs
+# downloads its binary from the release assets. Same trigger as the Homebrew
+# tap and the appcast.
+on:
+  release:
+    types:
+      - published
+
+permissions:
+  contents: read
+  # npm provenance signs the tarball through the OIDC token.
+  id-token: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout tag
+        uses: actions/checkout@v5
+
+      - name: Check versions match tag
+        run: ./scripts/version.py check ${{ github.event.release.tag_name }}
+
+      - name: Set up Node
+        uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          registry-url: https://registry.npmjs.org
+
+      - name: Installer tests
+        run: make test-npm
+
+      - name: Publish
+        working-directory: packaging/npm
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: npm publish --access public --provenance

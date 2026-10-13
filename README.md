@@ -5,6 +5,11 @@
 
 <code>▚▚▚▚▚▚▚ Light • Fast • Reliable ▚▚▚▚▚▚▚</code>
 
+<a href="https://github.com/jonaskahn/relo/actions/workflows/ci.yml"><img src="https://github.com/jonaskahn/relo/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
+<a href="https://codecov.io/gh/jonaskahn/relo"><img src="https://codecov.io/gh/jonaskahn/relo/branch/main/graph/badge.svg" alt="Coverage"></a>
+<a href="https://github.com/jonaskahn/relo/releases"><img src="https://img.shields.io/badge/version-0.1.0-blue" alt="Version"></a>
+<a href="https://www.npmjs.com/package/@jonaskahn/relo"><img src="https://img.shields.io/npm/v/@jonaskahn/relo" alt="npm"></a>
+
 </div>
 
 > One local proxy that lets Codex, Claude Code, Cursor and Grok, etc. Talk to any model, any provider with no config
@@ -76,13 +81,13 @@ $ relo uninstall --wipe      # the same, and deletes $RELO_HOME and its keychain
 and hands the program to whatever installed it: the Windows uninstaller, `apt`/`dnf` on Linux, `npm uninstall -g` on
 npm, or deleting `Relo.app` on macOS. What each native path keeps:
 
-| Path                     | Data                                   |
-|--------------------------|----------------------------------------|
-| `relo uninstall`         | asks; `y` deletes, anything else keeps |
-| Windows: Settings → Apps | asks in a dialog; No keeps             |
-| `apt remove relo`        | keeps (`apt purge relo` deletes)       |
-| `rpm -e relo`            | keeps                                  |
-| `npm uninstall -g relo`  | keeps                                  |
+| Path                               | Data                                   |
+|------------------------------------|----------------------------------------|
+| `relo uninstall`                   | asks; `y` deletes, anything else keeps |
+| Windows: Settings → Apps           | asks in a dialog; No keeps             |
+| `apt remove relo`                  | keeps (`apt purge relo` deletes)       |
+| `rpm -e relo`                      | keeps                                  |
+| `npm uninstall -g @jonaskahn/relo` | keeps                                  |
 
 An update or reinstall always keeps the data and stops the running service first, so nothing is lost by installing
 over a working install.

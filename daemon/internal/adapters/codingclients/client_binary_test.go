@@ -98,8 +98,14 @@ func TestFindClientBinary(t *testing.T) {
 		{"the bun bin", filepath.Join(".bun", "bin")},
 		{"the npm-global bin", filepath.Join(".npm-global", "bin")},
 		{"the npm bin", filepath.Join(".npm", "bin")},
-		{"the pnpm home", filepath.Join("Library", "pnpm")},
 	}
+	// The pnpm home moves with the platform exactly like the resolver's
+	// own list: Library on macOS, the XDG share on Linux.
+	pnpmDir := filepath.Join(".local", "share", "pnpm")
+	if runtime.GOOS == "darwin" {
+		pnpmDir = filepath.Join("Library", "pnpm")
+	}
+	rows = append(rows, struct{ name, dir string }{"the pnpm home", pnpmDir})
 	for _, row := range rows {
 		home := filepath.Join(tempDir, "homes", strings.ReplaceAll(row.dir, string(filepath.Separator), "_"))
 		writeExecutable(t, filepath.Join(home, row.dir, "opencode"))

@@ -348,6 +348,10 @@ func (h *harness) integrationPaths() codingclients.Paths {
 	h.volatileDirs = []string{home, state}
 	h.t.Setenv("CODEX_HOME", filepath.Join(home, ".codex"))
 	h.t.Setenv("CLAUDE_CONFIG_DIR", filepath.Join(home, ".claude"))
+	// The Claude Desktop library on Linux follows XDG_CONFIG_HOME, which a
+	// CI runner exports for its own user, so pin it to the harness home;
+	// otherwise the preview carries a path no scrubber knows.
+	h.t.Setenv("XDG_CONFIG_HOME", filepath.Join(home, ".config"))
 	return codingclients.Paths{
 		Home: home, StateHome: state,
 		DataPlane: func(protocol string) string {
@@ -532,7 +536,27 @@ func (h *harness) scrubDirs(body []byte) []byte {
 			text = strings.ReplaceAll(text, dir, "<tmpdir>")
 		}
 	}
-	return []byte(text)
+	return []byte(scrubDesktopLibraries(text))
+}
+
+// desktopLibraries names the Claude Desktop library root every platform
+// resolves, so the integrations preview matches whichever platform runs the
+// test. The roots are known and joined with the platform separator, so no
+// pattern ever touches the body.
+func desktopLibraries() []string {
+	home := "<tmpdir>"
+	return []string{
+		codingclients.DesktopConfigLibrary(codingclients.DesktopPaths{Home: home, Platform: "darwin"}),
+		codingclients.DesktopConfigLibrary(codingclients.DesktopPaths{Home: home, Platform: "linux"}),
+		codingclients.DesktopConfigLibrary(codingclients.DesktopPaths{Home: home, Platform: "windows"}),
+	}
+}
+
+func scrubDesktopLibraries(text string) string {
+	for _, library := range desktopLibraries() {
+		text = strings.ReplaceAll(text, library, "<desktop-library>")
+	}
+	return text
 }
 
 func (h *harness) pin(value any) any {

@@ -1,8 +1,8 @@
 {
-	"name": "relo",
+	"name": "@jonaskahn/relo",
 	"version": "0.1.0",
-	"description": "One loopback proxy. Codex, Claude Code, Cursor, and Grok keep their own config and still reach any upstream.",
-	"license": "MIT",
+	"description": "One local proxy that lets Codex, Claude Code, Cursor and Grok, etc. Talk to any model, any provider with no config changes",
+	"license": "AGPL-3.0-only",
 	"type": "module",
 	"homepage": "https://github.com/jonaskahn/relo#readme",
 	"repository": {
