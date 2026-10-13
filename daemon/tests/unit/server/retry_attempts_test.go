@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/jonaskahn/relo/internal/inference"
 )
@@ -76,6 +77,36 @@ func TestAccountIsRetriedItsCountThenTheNextAccountServes(t *testing.T) {
 	}
 	if got := h.upstream.requestCount() - before; got != 8 {
 		t.Fatalf("upstream requests = %d, want the cooling connection left alone", got)
+	}
+}
+
+// TestAProviderWaitLongerThanARetryMovesOn pins the walk against a provider
+// that names a wait far longer than one request may spend: the account is left
+// to its cooldown and the next account answers, instead of the request sitting
+// on the provider's clock until the caller gives up.
+func TestAProviderWaitLongerThanARetryMovesOn(t *testing.T) {
+	h := newHarness(t)
+	h.secrets[spareCredentialRef] = "sk-second"
+	h.server = h.newServerWithCredentials(h.cfg.Server.Port, defaultEntry(), spareEntry())
+	setRetryAttempts(t, h, "openai", 3)
+	h.upstream.status = http.StatusTooManyRequests
+	h.upstream.headers = map[string]string{"Retry-After": "1625156"}
+
+	body := `{"model":"claude-relo-openai--gpt-4o","max_tokens":16,"stream":true,"messages":[{"role":"user","content":"hi"}]}`
+	before := h.upstream.requestCount()
+	started := time.Now()
+
+	response := h.dataPlaneOn(inference.ProtocolAnthropic, http.MethodPost, "/v1/messages", dataPlaneToken,
+		strings.NewReader(body))
+
+	if response.Code != http.StatusTooManyRequests {
+		t.Fatalf("status = %d, body = %s, want the provider's own refusal", response.Code, response.Body.String())
+	}
+	if got := h.upstream.requestCount() - before; got != 2 {
+		t.Fatalf("upstream requests = %d, want one per account and no long retry", got)
+	}
+	if elapsed := time.Since(started); elapsed > 5*time.Second {
+		t.Fatalf("elapsed = %v, want the answer without the provider's wait", elapsed)
 	}
 }
 

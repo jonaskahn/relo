@@ -44,7 +44,9 @@ with validation, never an environment variable.
 
 **Retries live inside a connection; failover moves between connections.** A refused
 account is retried `retry_attempts` times — 1, 3, or 5, stored globally with a
-per-connection override — with a random 1–3s wait between tries. Only when those are
+per-connection override — with a random 1–3s wait between tries. A wait the provider
+names that is longer than that window is left to the account's own cooldown, so the
+request moves on at once instead of sitting on the provider's clock. Only when those are
 spent does the request reach the next account of the connection, and only when every
 account has answered does it leave the connection for the next route member. A route
 never retries a member of its own: one member is the connection's whole walk. A refusal

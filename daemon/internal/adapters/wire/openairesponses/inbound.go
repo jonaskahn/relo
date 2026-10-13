@@ -724,8 +724,30 @@ func toolMessage(item inputItem) inference.Message {
 	return inference.Message{
 		Role:       inference.RoleTool,
 		ToolCallID: item.CallID,
-		Content:    []inference.ContentPart{{Type: inference.ContentTypeText, Text: string(item.Output)}},
+		Content:    toolResultParts(item.Output),
 	}
+}
+
+// toolResultParts reads the content a result arrived with. A result without an
+// image is one text part, as it always was; a result carrying an image keeps it
+// beside its text, because flattening to text is what loses a file the client
+// returned.
+func toolResultParts(output *toolOutput) []inference.ContentPart {
+	if output == nil {
+		return nil
+	}
+	if !output.carriesImage() {
+		return []inference.ContentPart{{Type: inference.ContentTypeText, Text: output.joinedText()}}
+	}
+	parts := make([]inference.ContentPart, 0, len(output.parts))
+	for _, part := range output.parts {
+		if part.Type == contentInputImage {
+			parts = append(parts, inference.ContentPart{Type: inference.ContentTypeImage, ImageURL: part.ImageURL})
+			continue
+		}
+		parts = append(parts, inference.ContentPart{Type: inference.ContentTypeText, Text: part.Text})
+	}
+	return parts
 }
 
 func decodeContent(parts []contentItem) []inference.ContentPart {

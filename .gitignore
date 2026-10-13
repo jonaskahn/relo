@@ -14,6 +14,9 @@ coverage.out
 /.relo/
 /config.toml
 
+# Local traffic capture proxy for debugging upstream requests (never commit)
+/debugger/
+
 # Secrets
 .env
 .env.*

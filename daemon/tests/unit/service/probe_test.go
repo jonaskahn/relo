@@ -10,6 +10,7 @@ import (
 	"net/url"
 	"path/filepath"
 	"sort"
+	"strings"
 	"testing"
 	"time"
 
@@ -457,7 +458,7 @@ func TestProbeOpenCodeFreeKeepsFreeModels(t *testing.T) {
 	if len(got) != 2 || got[0] != "big-pickle=listing" || got[1] != "exo-free=listing" {
 		t.Fatalf("roster = %v, want the two free models the listing published", got)
 	}
-	if authorization != "Bearer public" || userAgent != "opencode/1.18.33" {
+	if authorization != "Bearer public" || !strings.Contains(userAgent, "opencode/") {
 		t.Fatalf("authorization = %q, user agent = %q", authorization, userAgent)
 	}
 	if !proxied {

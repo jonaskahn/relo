@@ -333,9 +333,11 @@ func TestEncodeRequest(t *testing.T) {
 	})
 }
 
-// TestLongContextBetaIsTheSameProfile pins that a 1M-capable model stays on
-// the short profile while it fits 200K and escalates only above it.
-func TestLongContextBetaIsTheSameProfile(t *testing.T) {
+// TestLongContextBetaFollowsTheSelectedEntry pins that the long-context beta
+// is an entry the caller selects, not a size the prompt crosses: naming the
+// separate 1M entry sends it whatever the prompt weighs, and a model whose
+// window is a million tokens on its own never sends it.
+func TestLongContextBetaFollowsTheSelectedEntry(t *testing.T) {
 	opts := wire.CodecOpts{
 		CredentialRef: "oauth-token", AuthMethod: "oauth", SessionAnchor: "sess-1",
 		ExtraHeaders: map[string]string{"X-Api-Key": "sk-caller"},
@@ -351,8 +353,8 @@ func TestLongContextBetaIsTheSameProfile(t *testing.T) {
 		ExtraHeaders: map[string]string{"X-Api-Key": "sk-caller"},
 		LongContext:  true,
 	})
-	if got := small.Header.Get("anthropic-beta"); got != anthropic.ClaudeCodeBetaShort || retiredBeta(got) {
-		t.Fatalf("beta = %q, want the short profile for a small 1M request", got)
+	if got := small.Header.Get("anthropic-beta"); got != anthropic.ClaudeCodeBeta || !contextBetaSent(got) {
+		t.Fatalf("beta = %q, want the long profile for the selected 1M entry", got)
 	}
 
 	long := newTestRequest(t, canonicalRequest(true), wire.CodecOpts{
@@ -360,8 +362,8 @@ func TestLongContextBetaIsTheSameProfile(t *testing.T) {
 		ExtraHeaders: map[string]string{"X-Api-Key": "sk-caller"},
 		LongContext:  true, PromptTokens: 200_001,
 	})
-	if got := long.Header.Get("anthropic-beta"); got != anthropic.ClaudeCodeBeta || retiredBeta(got) {
-		t.Fatalf("beta = %q, want the long profile for a large 1M request", got)
+	if got := long.Header.Get("anthropic-beta"); got != anthropic.ClaudeCodeBeta || !contextBetaSent(got) {
+		t.Fatalf("beta = %q, want the long profile for a large request on the 1M entry", got)
 	}
 
 	native := newTestRequest(t, canonicalRequest(true), wire.CodecOpts{
@@ -369,12 +371,12 @@ func TestLongContextBetaIsTheSameProfile(t *testing.T) {
 		ExtraHeaders: map[string]string{"X-Api-Key": "sk-caller"},
 		LongContext:  true, NativeMillion: true, PromptTokens: 200_001,
 	})
-	if got := native.Header.Get("anthropic-beta"); got != anthropic.ClaudeCodeBeta || retiredBeta(got) {
-		t.Fatalf("beta = %q, want the long profile for a large native 1M request", got)
+	if got := native.Header.Get("anthropic-beta"); got != anthropic.ClaudeCodeBetaShort || contextBetaSent(got) {
+		t.Fatalf("beta = %q, want the short profile for a native 1M model", got)
 	}
 }
 
-func retiredBeta(value string) bool {
+func contextBetaSent(value string) bool {
 	return strings.Contains(value, "context-1m-2025-08-07")
 }
 
@@ -393,7 +395,7 @@ func TestClaudeCodeOAuthFingerprint(t *testing.T) {
 	if request.Header.Get("Authorization") != "Bearer oauth-token" {
 		t.Fatalf("authorization = %q", request.Header.Get("Authorization"))
 	}
-	if got := request.Header.Get("anthropic-beta"); got != anthropic.ClaudeCodeBetaShort || retiredBeta(got) {
+	if got := request.Header.Get("anthropic-beta"); got != anthropic.ClaudeCodeBetaShort || contextBetaSent(got) {
 		t.Fatalf("beta = %q, want the short Claude Code profile", got)
 	}
 	if request.Header.Get("User-Agent") != anthropic.CLIUserAgent || request.Header.Get("x-app") != "cli" {

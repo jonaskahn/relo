@@ -179,7 +179,7 @@ func fromModelsDevProvider(p modelsdev.Provider) Template {
 		baseURL = defaultBase
 	}
 
-	return Template{
+	t := Template{
 		ID:                  p.ID,
 		Label:               DisplayName(p.ID, p.Name),
 		Kind:                KindKey,
@@ -196,6 +196,45 @@ func fromModelsDevProvider(p modelsdev.Provider) Template {
 		KeyEnv:              p.Env,
 		UnsupportedReason:   unsupported,
 	}
+	if unsupported == "" {
+		t.FormatForModel = modelTransportFormats(p, fmtChoice)
+	}
+	return t
+}
+
+// modelTransportFormats returns the per-model wire a provider's own models
+// declare for themselves. models.dev records a transport beside a model when it
+// answers on a different wire than its provider's own, which is what a
+// connection serving several protocols needs per model: the OpenCode gateways
+// publish one model list across Chat Completions, Responses, and Messages. A
+// provider whose models declare no such transport gets no hook, and a model the
+// dataset does not describe keeps the connection's own format.
+func modelTransportFormats(p modelsdev.Provider, connectionFormat catalog.APIFormat) func(string) catalog.APIFormat {
+	formats := make(map[string]catalog.APIFormat, len(p.Models))
+	for id, model := range p.Models {
+		if format, found := transportAPIFormat(model.Via); found && format != connectionFormat {
+			formats[id] = format
+		}
+	}
+	if len(formats) == 0 {
+		return nil
+	}
+	return func(id string) catalog.APIFormat { return formats[id] }
+}
+
+// transportAPIFormat names the wire format one model's own transport
+// declaration speaks. A declaration this build has no codec for names no
+// format, so the model keeps its connection's own rather than being sent on a
+// wire it may not answer on.
+func transportAPIFormat(transport catalog.ModelsDevTransport) (catalog.APIFormat, bool) {
+	npm := strings.TrimSpace(transport.NPM)
+	if npm == "" || exoticTransports[npm] {
+		return "", false
+	}
+	if mapped, found := sdkTransports[npm]; found {
+		return mapped.format, true
+	}
+	return catalog.FormatOpenAIChat, true
 }
 
 func formatOptions(fmtChoice catalog.APIFormat, modelsChoice catalog.ModelsFormat, baseURL, unsupported string) []FormatOption {

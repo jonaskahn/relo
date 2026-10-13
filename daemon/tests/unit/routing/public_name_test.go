@@ -49,33 +49,42 @@ func TestPublicNamesCarryProviderAndModel(t *testing.T) {
 		t.Errorf("ClientModelName() = %q, want the model before the provider", got)
 	}
 	million := int64(catalog.MillionContext)
-	if got := catalog.ClientModelName("Claude Opus 4.6 (Thinking)", "Google Antigravity", &million, ""); got != "Claude Opus 4.6 (Thinking) 1M on Google Antigravity" {
-		t.Errorf("ClientModelName() = %q, want the million-token mark", got)
+	if got := catalog.ClientModelName("Claude Opus 4.6 (Thinking)", "Google Antigravity", &million, ""); got != "Claude Opus 4.6 (1M, Thinking) on Google Antigravity" {
+		t.Errorf("ClientModelName() = %q, want the million-token mark merged side by side", got)
 	}
 	smaller := int64(catalog.MillionContext - 1)
 	if got := catalog.ClientModelName("GPT-4o", "OpenAI", &smaller, ""); got != "GPT-4o on OpenAI" {
 		t.Errorf("ClientModelName() = %q, want no million-token mark below the window", got)
 	}
-	if got := catalog.ClientModelName("GPT-4o", "", &million, ""); got != "GPT-4o 1M" {
+	if got := catalog.ClientModelName("GPT-4o", "", &million, ""); got != "GPT-4o (1M)" {
 		t.Errorf("ClientModelName() = %q, want the model alone when the provider is empty", got)
 	}
 	if got := catalog.ClientModelName("Smart Combo", catalog.RouteLabelPrefix, nil, ""); got != "Smart Combo on Relo" {
 		t.Errorf("ClientModelName() = %q, want Smart Combo on Relo", got)
 	}
-	if got := catalog.ClientModelName("Smart Combo", catalog.RouteLabelPrefix, &million, ""); got != "Smart Combo 1M on Relo" {
-		t.Errorf("ClientModelName() = %q, want Smart Combo 1M on Relo", got)
+	if got := catalog.ClientModelName("Smart Combo", catalog.RouteLabelPrefix, &million, ""); got != "Smart Combo (1M) on Relo" {
+		t.Errorf("ClientModelName() = %q, want Smart Combo (1M) on Relo", got)
 	}
 	if got := catalog.ClientModelName("Claude Haiku 5.5", "Cursor", nil, "(Max)"); got != "Claude Haiku 5.5 (Max) on Cursor" {
 		t.Errorf("ClientModelName() = %q, want the max lane marked", got)
 	}
-	if got := catalog.ClientModelName("Claude Haiku 5.5", "Cursor", &million, "(Max)"); got != "Claude Haiku 5.5 1M (Max) on Cursor" {
-		t.Errorf("ClientModelName() = %q, want the window mark before the max mark", got)
+	if got := catalog.ClientModelName("Claude Haiku 5.5", "Cursor", &million, "(Max)"); got != "Claude Haiku 5.5 (1M, Max) on Cursor" {
+		t.Errorf("ClientModelName() = %q, want the window mark and max mark merged", got)
 	}
-	if got := catalog.ClientModelName("Grok 4.7", "Cursor", &million, "(Fast, Max)"); got != "Grok 4.7 1M (Fast, Max) on Cursor" {
-		t.Errorf("ClientModelName() = %q, want fast before max", got)
+	if got := catalog.ClientModelName("Grok 4.7", "Cursor", &million, "(Fast, Max)"); got != "Grok 4.7 (1M, Fast, Max) on Cursor" {
+		t.Errorf("ClientModelName() = %q, want 1M, fast, max merged", got)
 	}
-	if got := catalog.ClientModelName("Claude Haiku 5.5 Max", "Cursor", nil, "(Max)"); got != "Claude Haiku 5.5 Max on Cursor" {
-		t.Errorf("ClientModelName() = %q, want an upstream-marked label untouched", got)
+	if got := catalog.ClientModelName("Sonnet (Thinking)", "Cursor", &million, "(Fast)"); got != "Sonnet (1M, Fast, Thinking) on Cursor" {
+		t.Errorf("ClientModelName() = %q, want Sonnet (1M, Fast, Thinking) on Cursor", got)
+	}
+	if got := catalog.ClientModelName("Sonnet (Thinking)", "Cursor", &million, "(Fast, Max)"); got != "Sonnet (1M, Fast, Max, Thinking) on Cursor" {
+		t.Errorf("ClientModelName() = %q, want Sonnet (1M, Fast, Max, Thinking) on Cursor", got)
+	}
+	if got := catalog.ClientModelName("Gemini 3.8 Flash", "Google Antigravity", &million, ""); got != "Gemini 3.8 Flash (1M) on Google Antigravity" {
+		t.Errorf("ClientModelName() = %q, want Gemini 3.8 Flash (1M) on Google Antigravity", got)
+	}
+	if got := catalog.ClientModelName("Claude Haiku 5.5 Max", "Cursor", nil, "(Max)"); got != "Claude Haiku 5.5 Max (Max) on Cursor" {
+		t.Errorf("ClientModelName() = %q, want an upstream-marked label lane-marked", got)
 	}
 	if got := catalog.ClientModelName("Climax", "Cursor", nil, "(Max)"); got != "Climax (Max) on Cursor" {
 		t.Errorf("ClientModelName() = %q, want a plain suffix without guessing", got)
@@ -145,13 +154,13 @@ func TestConfigModelNameNamesTheProviderAndRelo(t *testing.T) {
 		t.Errorf("ConfigModelName() = %q, want GPT-4o on OpenAI", got)
 	}
 	million := int64(catalog.MillionContext)
-	if got := catalog.ConfigModelName("Claude Opus 4.6 (Thinking)", "Google Antigravity", &million, ""); got != "Claude Opus 4.6 (Thinking) 1M on Google Antigravity" {
+	if got := catalog.ConfigModelName("Claude Opus 4.6 (Thinking)", "Google Antigravity", &million, ""); got != "Claude Opus 4.6 (1M, Thinking) on Google Antigravity" {
 		t.Errorf("ConfigModelName() = %q, want the million-token mark before the provider", got)
 	}
 	if got := catalog.ConfigModelName("Smart Combo", catalog.RouteLabelPrefix, nil, ""); got != "Smart Combo on Relo" {
 		t.Errorf("ConfigModelName() = %q, want a route to name Relo as the provider", got)
 	}
-	if got := catalog.ConfigModelName("Smart Combo", catalog.RouteLabelPrefix, &million, ""); got != "Smart Combo 1M on Relo" {
+	if got := catalog.ConfigModelName("Smart Combo", catalog.RouteLabelPrefix, &million, ""); got != "Smart Combo (1M) on Relo" {
 		t.Errorf("ConfigModelName() = %q, want a marked route to name Relo as the provider", got)
 	}
 }

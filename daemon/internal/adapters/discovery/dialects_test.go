@@ -315,6 +315,9 @@ func TestListAntigravityCarriesAdvertisedBudgets(t *testing.T) {
 	if !found {
 		t.Fatalf("listed = %+v, want the grouped model", listed)
 	}
+	if grouped.Name != "Gemini 3.8 Flash" {
+		t.Fatalf("grouped.Name = %q, want Gemini 3.8 Flash without effort label", grouped.Name)
+	}
 	if grouped.ContextWindow == nil || *grouped.ContextWindow != 1048576 {
 		t.Fatalf("ContextWindow = %+v, want the advertised context", grouped.ContextWindow)
 	}
@@ -406,6 +409,33 @@ func TestListAntigravityKeepsOnlyTheAgentSurface(t *testing.T) {
 		if got[i] != want[i] {
 			t.Fatalf("listed = %v, want %v", got, want)
 		}
+	}
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(antigravityListing))
+	}))
+	t.Cleanup(server.Close)
+	rawListed, err := New(server.Client()).List(context.Background(), Target{
+		Format: catalog.ModelsAntigravity, BaseURL: server.URL,
+		Auth: upstream.Authorization{Token: "tok", KeyHeader: catalog.KeyHeaderBearer},
+	})
+	if err != nil {
+		t.Fatalf("List error = %v", err)
+	}
+	byID := map[string]Listed{}
+	for _, m := range rawListed {
+		byID[m.ID] = m
+	}
+	if sonnet, ok := byID["claude-sonnet-4-6"]; !ok {
+		t.Fatal("claude-sonnet-4-6 missing from listed models")
+	} else if sonnet.SupportsReasoning == nil || *sonnet.SupportsReasoning != false {
+		t.Fatalf("sonnet.SupportsReasoning = %v, want false for Claude in Antigravity", sonnet.SupportsReasoning)
+	}
+	if gemini, ok := byID["gemini-3.8-flash"]; !ok {
+		t.Fatal("gemini-3.8-flash missing from listed models")
+	} else if gemini.Name != "Gemini 3.8 Flash" {
+		t.Fatalf("gemini.Name = %q, want clean Gemini 3.8 Flash", gemini.Name)
 	}
 }
 

@@ -123,23 +123,27 @@ func TestConversationAnchorLeasesASession(t *testing.T) {
 	})
 }
 
-func TestNativeBodyStaysOnTheRequestedModel(t *testing.T) {
+// TestNativeBodyFollowsTheWireFamily pins that the client's own Messages body
+// is reused whenever the attempt speaks the Messages wire, whatever spelling
+// named the target: an alias or a route member must not cost the client its
+// native controls. A candidate on another wire family rebuilds.
+func TestNativeBodyFollowsTheWireFamily(t *testing.T) {
 	server := &Server{}
 	native := []byte(`{"model":"claude-sonnet-5-5"}`)
-	same := routing.Candidate{Model: catalog.Model{UpstreamID: "claude-sonnet-5-5"}}
-	if got := server.nativeBody(&requestOutcome{requested: "claude-sonnet-5-5", native: native}, same); string(got) != string(native) {
+	messages := routing.Candidate{Model: catalog.Model{APIFormat: catalog.FormatAnthropic, UpstreamID: "claude-sonnet-5-5"}}
+	if got := server.nativeBody(&requestOutcome{requested: "claude-relo-claude--claude-sonnet-5-5", native: native}, messages); string(got) != string(native) {
 		t.Fatalf("native body = %q, want the original request", got)
 	}
 
-	t.Run("a remapped model rebuilds from the canonical request", func(t *testing.T) {
-		other := routing.Candidate{Model: catalog.Model{UpstreamID: "claude-opus-4-6"}}
-		if got := server.nativeBody(&requestOutcome{requested: "claude-sonnet-5-5", native: native}, other); got != nil {
-			t.Fatalf("native body = %q, want no reuse across models", got)
+	t.Run("another wire family rebuilds from the canonical request", func(t *testing.T) {
+		chat := routing.Candidate{Model: catalog.Model{APIFormat: catalog.FormatOpenAIChat, UpstreamID: "gpt-5"}}
+		if got := server.nativeBody(&requestOutcome{requested: "claude-sonnet-5-5", native: native}, chat); got != nil {
+			t.Fatalf("native body = %q, want no reuse across wire families", got)
 		}
 	})
 
 	t.Run("a request without a native body rebuilds", func(t *testing.T) {
-		if got := server.nativeBody(&requestOutcome{requested: "claude-sonnet-5-5"}, same); got != nil {
+		if got := server.nativeBody(&requestOutcome{requested: "claude-sonnet-5-5"}, messages); got != nil {
 			t.Fatalf("native body = %q, want no reuse without one", got)
 		}
 	})

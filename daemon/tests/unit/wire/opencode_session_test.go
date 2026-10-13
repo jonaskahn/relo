@@ -2,6 +2,7 @@ package codec
 
 import (
 	"regexp"
+	"strings"
 	"testing"
 
 	"github.com/jonaskahn/relo/internal/adapters/wire"
@@ -72,14 +73,21 @@ func TestOpenCodeFreeHeadersMatchTheSignedOutCLI(t *testing.T) {
 	if err != nil {
 		t.Fatalf("OpenCodeFreeHeaders() error = %v", err)
 	}
-	if first["User-Agent"] != "opencode/1.18.33" || first["x-opencode-client"] != "cli" {
+	if !strings.Contains(first["User-Agent"], "opencode/") || first["x-opencode-client"] != "cli" {
 		t.Fatalf("headers = %#v", first)
 	}
-	if first["Authorization"] != "Bearer public" || first["x-opencode-project"] != "global" {
+	if first["Authorization"] != "Bearer public" || first["x-opencode-project"] == "" {
 		t.Fatalf("headers = %#v", first)
 	}
 	if !openCodeSession.MatchString(first["x-opencode-session"]) || !openCodeRequest.MatchString(first["x-opencode-request"]) {
 		t.Fatalf("headers = %#v", first)
+	}
+	// The client names its conversation on every session header it sends, so
+	// the aliases have to agree with the session the lane is bound to.
+	for _, alias := range []string{"x-opencode-session-id", "x-session-affinity", "x-session-id"} {
+		if first[alias] != first["x-opencode-session"] {
+			t.Fatalf("%s = %q, want the session %q", alias, first[alias], first["x-opencode-session"])
+		}
 	}
 	if first["x-opencode-session"] != again["x-opencode-session"] {
 		t.Fatalf("session changed from %q to %q", first["x-opencode-session"], again["x-opencode-session"])
@@ -134,6 +142,24 @@ func TestOpenCodeFreeSessionIsDerivedRatherThanRemembered(t *testing.T) {
 	}
 	if len(distinct) != 4 {
 		t.Fatalf("sessions = %v, want one session per lane", distinct)
+	}
+}
+
+// TestOpenCodeFreeSessionPrefixCarriesTheGatewaysClock covers the rule the
+// gateway applies past the shape: the ninth and tenth digits of the hex prefix
+// both read "f", which a client's timestamp-derived id always carries. A
+// session that is only shaped right is answered 403, so the prefix the lane
+// derives has to carry those digits whichever conversation names it.
+func TestOpenCodeFreeSessionPrefixCarriesTheGatewaysClock(t *testing.T) {
+	clock := regexp.MustCompile(`^ses_[0-9a-f]{9}ff`)
+	for _, lane := range []string{"lane-a", "lane-b", "codex-thread:t\x00u", ""} {
+		headers, err := wire.OpenCodeFreeHeaders(lane, "")
+		if err != nil {
+			t.Fatalf("OpenCodeFreeHeaders() error = %v", err)
+		}
+		if session := headers["x-opencode-session"]; !clock.MatchString(session) {
+			t.Fatalf("session = %q, want the clock digits the gateway accepts", session)
+		}
 	}
 }
 

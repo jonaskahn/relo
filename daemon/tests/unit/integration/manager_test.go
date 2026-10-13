@@ -647,7 +647,7 @@ func TestClaudeCacheKeepsPickerNamesOffOtherClients(t *testing.T) {
 		t.Fatalf("Enable(claude-code) error = %v", err)
 	}
 	cache := readFile(t, codingclients.GatewayCachePath(h.paths.ClaudeConfigDir()))
-	for _, want := range []string{"GPT-4o 1M on OpenAI", "claude-relo-openai--gpt-4o[1m]"} {
+	for _, want := range []string{"GPT-4o (1M) on OpenAI", "claude-relo-openai--gpt-4o[1m]"} {
 		if !strings.Contains(cache, want) {
 			t.Fatalf("cache = %s, want %s", cache, want)
 		}

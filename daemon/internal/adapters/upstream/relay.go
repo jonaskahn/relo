@@ -66,6 +66,7 @@ func openStreamRun(att attempt, response *http.Response, decoder wire.StreamDeco
 	// already wrote its own error frame, so both keep that answer and stay
 	// out of the routing memory: an ambiguous answer is neither a success
 	// nor a refusal to remember.
+	relayAnswerFacts(att.writer.Header(), response.Header)
 	prepareStream(att.writer)
 	run := &streamRun{
 		sink:      sink,
@@ -228,6 +229,7 @@ func (e *Executor) answerRelayEvents(att attempt, response *http.Response, colle
 		Status: response.StatusCode, Duration: time.Since(att.started), Model: att.exchange.Request.Model,
 		Credential: att.exchange.CredentialLabel, HeaderLatency: att.latency, Wrote: true,
 	}
+	relayAnswerFacts(att.writer.Header(), response.Header)
 	att.writer.Header().Set("Content-Type", "application/json")
 	att.writer.WriteHeader(response.StatusCode)
 	if _, err := att.writer.Write(payload); err != nil {
@@ -291,7 +293,7 @@ func (e *Executor) relayRejection(att attempt, response *http.Response) (Result,
 		result.ClassSwitch = switchable
 		return result, fmt.Errorf("%w: %d %s", ErrUpstreamStatus, response.StatusCode, info.Message)
 	}
-	writeFailure(att.writer, att.exchange.Inbound, info)
+	writeFailure(att.writer, att.exchange.Inbound, info, response.Header)
 	result.Wrote = true
 	return result, fmt.Errorf("%w: %d %s", ErrUpstreamStatus, response.StatusCode, info.Message)
 }
@@ -317,6 +319,28 @@ func prepareStream(w http.ResponseWriter) {
 	w.WriteHeader(http.StatusOK)
 }
 
+// answerFacts are the upstream's own facts about the answer it gave: how to
+// correlate it, how long it asked the caller to wait, and the quota windows it
+// reported. A client reads them to decide whether to retry and to show a
+// limit, so they travel with the answer Relo writes.
+var answerFacts = map[string]bool{
+	"request-id":     true,
+	"retry-after":    true,
+	"x-should-retry": true,
+}
+
+func relayAnswerFacts(dst http.Header, src http.Header) {
+	for name, values := range src {
+		lower := strings.ToLower(name)
+		if !answerFacts[lower] && !strings.HasPrefix(lower, "anthropic-ratelimit-") {
+			continue
+		}
+		for _, value := range values {
+			dst.Add(name, value)
+		}
+	}
+}
+
 type streamWriter struct {
 	http.ResponseWriter
 	writeErr error
@@ -339,7 +363,7 @@ func (t *streamWriter) Flush() {
 	}
 }
 
-func writeFailure(w http.ResponseWriter, inbound wire.InboundCodec, info *inference.ErrorInfo) {
+func writeFailure(w http.ResponseWriter, inbound wire.InboundCodec, info *inference.ErrorInfo, upstream http.Header) {
 	status := info.Status
 	if status == 0 {
 		status = http.StatusBadGateway
@@ -358,6 +382,7 @@ func writeFailure(w http.ResponseWriter, inbound wire.InboundCodec, info *infere
 			payload = []byte(`{"error":{"type":"internal_error","message":"encoding the error failed"}}`)
 		}
 	}
+	relayAnswerFacts(w.Header(), upstream)
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
 	_, _ = w.Write(payload)

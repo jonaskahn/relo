@@ -39,6 +39,10 @@ type LoginKind string
 // OpenCodeFreeTemplate is the signed-out OpenCode Zen connection.
 const OpenCodeFreeTemplate = "opencode-free"
 
+// OpenCodeGoTemplate is the paid OpenCode Go connection, which shares the
+// gateway's tool-name limit with the signed-out lane.
+const OpenCodeGoTemplate = "opencode-go"
+
 // KiloFreeTemplate is the keyless Kilo gateway connection. Every model it
 // serves logs the prompt at the vendor, so it is offered for throwaway work
 // and never for anything an operator would not hand the vendor.

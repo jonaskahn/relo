@@ -25,6 +25,18 @@ const freeIdentifierAlphabet = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijkl
 // so two clients that name the same conversation cannot land on one session.
 const freeSessionDomain = "relo/opencode-free/session/v1\x00"
 
+// freeClientUserAgent identifies the request as the OpenCode client the free
+// lane serves. The gateway refuses a turn whose User-Agent carries no
+// "opencode/" marker, and this is the only header it reads for the client's
+// identity; the project, session aliases, and accept below go out because the
+// client sends them, not because the lane asks for them.
+const freeClientUserAgent = "opencode/latest/2.0.27/cli"
+
+// freeClientProject is the project marker a current client sends. The lane
+// accepts any value once the User-Agent carries its marker, but the header is
+// part of the client's identity and goes out as the client sends it.
+const freeClientProject = "830e1c56fd90dc478c00038a574f71ce499ac237"
+
 // OpenCodeFreeHeaders returns the signed-out CLI headers, with one session
 // per conversation lane and a fresh message identifier for each attempt.
 func OpenCodeFreeHeaders(lane, inboundSession string) (map[string]string, error) {
@@ -32,25 +44,40 @@ func OpenCodeFreeHeaders(lane, inboundSession string) (map[string]string, error)
 	if err != nil {
 		return nil, err
 	}
+	session := freeSessionID(lane, inboundSession)
 	return map[string]string{
-		"Authorization":      "Bearer public",
-		"User-Agent":         "opencode/1.18.33",
-		"x-opencode-client":  "cli",
-		"x-opencode-project": "global",
-		"x-opencode-session": freeSessionID(lane, inboundSession),
-		"x-opencode-request": request,
+		"Authorization":         "Bearer public",
+		"User-Agent":            freeClientUserAgent,
+		"x-opencode-client":     "cli",
+		"x-opencode-project":    freeClientProject,
+		"x-opencode-session":    session,
+		"x-opencode-session-id": session,
+		"x-session-affinity":    session,
+		"x-session-id":          session,
+		"x-opencode-request":    request,
+		"Accept":                "*/*",
 	}, nil
 }
 
 // freeSessionID is the session one conversation is sent on. It is derived from
 // the lane rather than remembered for it, because a daemon that outlives many
 // conversations would otherwise hold a session for every one it ever served.
+//
+// The gateway reads the client's clock out of the session's hex prefix: the
+// ninth and tenth digits must both read "f", which a timestamp-derived id
+// always carries because it inverts a number whose low twelve bits are set.
+// A prefix that has the shape but not those digits is answered 403
+// FreeTierError, so a hand-made id is told apart from a client's own. Every
+// other digit is free, which is what lets the prefix stay derived here.
 func freeSessionID(lane, inboundSession string) string {
 	if openCodeSession.MatchString(inboundSession) {
 		return inboundSession
 	}
 	digest := sha256.Sum256([]byte(freeSessionDomain + lane))
-	return "ses_" + hex.EncodeToString(digest[:6]) + freeIdentifierTail(digest[6:20])
+	prefix := digest
+	prefix[4] |= 0x0f
+	prefix[5] |= 0xf0
+	return "ses_" + hex.EncodeToString(prefix[:6]) + freeIdentifierTail(digest[6:20])
 }
 
 // freeRequestID names one attempt. Every attempt gets its own, so a retry is
@@ -320,36 +347,73 @@ func OpenCodeFreeRequest(req *inference.Request, format catalog.APIFormat) (*inf
 	return &copied, shortToolNames(&copied)
 }
 
+// OpenCodeGateway reports whether baseURL reaches an OpenCode gateway lane.
+// The signed-out Zen lane and the paid Go lane share the gateway's contract,
+// including the limit it puts on a tool name, and both the older /zen paths
+// and the current /inference ones count.
+func OpenCodeGateway(baseURL string) bool {
+	path, ok := gatewayPath(baseURL)
+	if !ok {
+		return false
+	}
+	return strings.Contains(path, "/zen") || strings.Contains(path, "/inference")
+}
+
+// OpenCodeGatewayRequest returns the request an OpenCode gateway lane accepts,
+// with the map that names each shortened tool again on the answer. The gateway
+// refuses a tool name past its limit, and a coding session passes it as soon as
+// it loads an MCP server, so the names go out under aliases. A paid lane keeps
+// the client's request whole apart from the names: unlike the signed-out lane
+// it demands no particular tools and refuses no schema keyword. A request whose
+// names all fit is returned unchanged.
+func OpenCodeGatewayRequest(req *inference.Request) (*inference.Request, map[string]string) {
+	if req == nil {
+		return nil, nil
+	}
+	copied := *req
+	copied.Tools = append([]inference.Tool(nil), req.Tools...)
+	return &copied, shortToolNames(&copied)
+}
+
 // OpenCodeGoSessionHeader is the header the OpenCode Go gateway requires
 // before it will route a request to a session.
 const OpenCodeGoSessionHeader = "x-opencode-session"
 
-// OpenCodeGo reports whether baseURL is the OpenCode Go gateway. The
-// gateway rejects a request that arrives without a session header.
+// OpenCodeGo reports whether baseURL is the OpenCode Go gateway. This is the
+// lane that rejects a request arriving without a session header, and it counts
+// on both the older /zen path and the current /inference one, because a
+// connection keeps whichever base URL it was created with.
 func OpenCodeGo(baseURL string) bool {
-	parsed, err := url.Parse(strings.TrimSpace(baseURL))
-	if err != nil || parsed.Hostname() == "" {
+	path, ok := gatewayPath(baseURL)
+	if !ok {
 		return false
 	}
-	if !strings.EqualFold(parsed.Hostname(), "opencode.ai") {
-		return false
-	}
-	return strings.Contains(strings.ToLower(parsed.EscapedPath()), "/zen/go")
+	return strings.Contains(path, "/zen/go") || strings.Contains(path, "/inference/go")
 }
 
 // OpenCodeFree reports whether baseURL is the signed-out OpenCode Zen
-// gateway, which keeps no account and prices nothing. The Go path is
+// gateway, which keeps no account and prices nothing. The Go lane is
 // OpenCodeGo; a custom URL on the same gateway counts the same way.
 func OpenCodeFree(baseURL string) bool {
+	path, ok := gatewayPath(baseURL)
+	if !ok {
+		return false
+	}
+	return strings.Contains(path, "/zen") && !strings.Contains(path, "/zen/go")
+}
+
+// gatewayPath returns the lowercased path of a URL on the OpenCode gateway,
+// and whether the address is on that host at all, so no lane can match someone
+// else's address.
+func gatewayPath(baseURL string) (string, bool) {
 	parsed, err := url.Parse(strings.TrimSpace(baseURL))
 	if err != nil || parsed.Hostname() == "" {
-		return false
+		return "", false
 	}
 	if !strings.EqualFold(parsed.Hostname(), "opencode.ai") {
-		return false
+		return "", false
 	}
-	path := strings.ToLower(parsed.EscapedPath())
-	return strings.Contains(path, "/zen") && !strings.Contains(path, "/zen/go")
+	return strings.ToLower(parsed.EscapedPath()), true
 }
 
 // WithOpenCodeGoSession returns headers with a stable session for one

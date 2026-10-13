@@ -117,6 +117,52 @@ func TestTemplates(t *testing.T) {
 		t.Error("cursor template must declare requires_stream")
 	}
 
+	// A gateway publishes one model list across several protocols, and each
+	// model declares the transport it answers on. The template has to name that
+	// wire per model, or the connection would send every model on its own.
+	gateways := &modelsdev.Index{
+		Providers: map[string]modelsdev.Provider{
+			"opencode-go": {
+				ID: "opencode-go", Name: "OpenCode Go", NPM: "@ai-sdk/openai-compatible",
+				API: "https://opencode.ai/inference/go/v1",
+				Models: map[string]modelsdev.Model{
+					"deepseek-v4.1-flash": {ID: "deepseek-v4.1-flash"},
+					"gpt-6-luna":          {ID: "gpt-6-luna", Via: modelsdev.TransportVia{NPM: "@ai-sdk/openai"}},
+					"claude-haiku-5-5":    {ID: "claude-haiku-5-5", Via: modelsdev.TransportVia{NPM: "@ai-sdk/anthropic"}},
+					"azure-model":         {ID: "azure-model", Via: modelsdev.TransportVia{NPM: "@ai-sdk/amazon-bedrock/mantle"}},
+				},
+			},
+		},
+	}
+	gateway, ok := Get("opencode-go", gateways)
+	if !ok {
+		t.Fatal("opencode-go dynamic template not found")
+	}
+	if gateway.DefaultFormat != catalog.FormatOpenAIChat {
+		t.Errorf("opencode-go default format = %q, want the connection's own", gateway.DefaultFormat)
+	}
+	if gateway.FormatForModel == nil {
+		t.Fatal("opencode-go names no per-model wire")
+	}
+	wantFormats := map[string]catalog.APIFormat{
+		"gpt-6-luna":          catalog.FormatOpenAIResp,
+		"claude-haiku-5-5":    catalog.FormatAnthropic,
+		"deepseek-v4.1-flash": "",
+		"azure-model":         "",
+		"unknown-model":       "",
+	}
+	for id, want := range wantFormats {
+		if got := gateway.FormatForModel(id); got != want {
+			t.Errorf("FormatForModel(%q) = %q, want %q", id, got, want)
+		}
+	}
+
+	// A provider whose models declare no transport of their own gets no hook,
+	// so nothing about an ordinary connection changes.
+	if groq.FormatForModel != nil {
+		t.Error("groq names a per-model wire, want the connection's own to stand")
+	}
+
 	// A package Relo cannot speak names the transport it would need.
 	unsupported := &modelsdev.Index{
 		Providers: map[string]modelsdev.Provider{

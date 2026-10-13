@@ -22,9 +22,14 @@ func TestOpenCodeFreeIsNotOpenCodeGo(t *testing.T) {
 		{baseURL: "https://opencode.ai/zen", free: true},
 		{baseURL: "https://OPENCODE.AI/zen/v1", free: true},
 		{baseURL: "https://opencode.ai/zen/go/v1", goPath: true},
+		// The gateway's current Go path is the same lane as the older one.
+		{baseURL: "https://opencode.ai/inference/go/v1", goPath: true},
+		// The paid Console path is neither the Go lane nor the signed-out one.
+		{baseURL: "https://opencode.ai/inference/v1"},
 		{baseURL: "https://opencode.ai/v1"},
 		{baseURL: "https://api.opencode.ai/zen/v1"},
 		{baseURL: "https://openrouter.ai/api/v1"},
+		{baseURL: "https://opencode.ai.evil.test/zen/v1"},
 		{baseURL: ""},
 		{baseURL: "://nonsense"},
 	}
@@ -329,5 +334,87 @@ func TestOpenCodeFreeRequestLeavesNamesWithinTheLimitAlone(t *testing.T) {
 	}
 	if len(originals) != 0 {
 		t.Fatalf("originals = %v, want no map for a turn that renamed nothing", originals)
+	}
+}
+
+// The paid gateways share the signed-out lane's tool-name limit, and a paid
+// lane must keep the client's request otherwise whole: it declares no tool of
+// its own, refuses no schema keyword, and dictates no ceiling.
+func TestOpenCodeGatewayRequestShortensOnlyTheNames(t *testing.T) {
+	original := &inference.Request{
+		MaxTokens:  4,
+		Tools:      []inference.Tool{{Name: mcpToolName, Parameters: json.RawMessage(`{"type":"object","properties":{"path":{"type":"string","pattern":"^[^\\0]*$"}}}`)}},
+		ToolChoice: &inference.ToolChoice{Mode: inference.ToolChoiceTool, Name: mcpToolName},
+		Messages: []inference.Message{{
+			Role:      inference.RoleAssistant,
+			ToolCalls: []inference.ToolCall{{ID: "call_1", Name: mcpToolName}},
+		}},
+	}
+	got, originals := wire.OpenCodeGatewayRequest(original)
+
+	alias := got.Tools[0].Name
+	if alias == mcpToolName || len(alias) > 64 {
+		t.Fatalf("tool name = %q, want a name of at most 64 characters", alias)
+	}
+	if originals[alias] != mcpToolName {
+		t.Fatalf("originals = %v, want the alias read back as the client's name", originals)
+	}
+	if got.ToolChoice == nil || got.ToolChoice.Name != alias {
+		t.Fatalf("tool choice = %+v, want the demand under the same alias", got.ToolChoice)
+	}
+	if got.Messages[0].ToolCalls[0].Name != alias {
+		t.Fatalf("replayed call = %q, want the alias its declaration went out under",
+			got.Messages[0].ToolCalls[0].Name)
+	}
+	if len(got.Tools) != 1 {
+		t.Fatalf("tools = %v, want the client's own declarations and no lane tool", got.Tools)
+	}
+	if got.MaxTokens != 4 {
+		t.Fatalf("max tokens = %d, want the client's own ceiling", got.MaxTokens)
+	}
+	if !strings.Contains(string(got.Tools[0].Parameters), "pattern") {
+		t.Fatalf("parameters = %s, want the paid lane to keep the client's schema",
+			got.Tools[0].Parameters)
+	}
+	if original.Tools[0].Name != mcpToolName || original.ToolChoice.Name != mcpToolName ||
+		original.Messages[0].ToolCalls[0].Name != mcpToolName {
+		t.Fatal("the caller's request was rewritten, want every name it arrived with")
+	}
+}
+
+// A turn whose names all fit stays exactly as it is, so the paid lane pays
+// nothing for a session that names nothing past the limit.
+func TestOpenCodeGatewayRequestLeavesNamesWithinTheLimitAlone(t *testing.T) {
+	got, originals := wire.OpenCodeGatewayRequest(&inference.Request{Tools: []inference.Tool{{Name: "read"}}})
+	if got.Tools[0].Name != "read" {
+		t.Fatalf("tool name = %q, want it left alone", got.Tools[0].Name)
+	}
+	if len(originals) != 0 {
+		t.Fatalf("originals = %v, want no map for a turn that renamed nothing", originals)
+	}
+}
+
+// OpenCodeGateway covers both lanes and both generations of the gateway's
+// paths, and nothing else.
+func TestOpenCodeGatewayRecognizesOnlyTheGatewayLanes(t *testing.T) {
+	for _, baseURL := range []string{
+		"https://opencode.ai/zen/v1",
+		"https://opencode.ai/zen/go/v1",
+		"https://opencode.ai/inference/v1",
+		"https://opencode.ai/inference/go/v1",
+	} {
+		if !wire.OpenCodeGateway(baseURL) {
+			t.Errorf("OpenCodeGateway(%q) = false, want the gateway lane", baseURL)
+		}
+	}
+	for _, baseURL := range []string{
+		"https://api.openai.com/v1",
+		"https://opencode.ai/v1",
+		"https://example.test/zen/v1",
+		"",
+	} {
+		if wire.OpenCodeGateway(baseURL) {
+			t.Errorf("OpenCodeGateway(%q) = true, want another connection left alone", baseURL)
+		}
 	}
 }

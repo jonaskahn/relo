@@ -135,7 +135,7 @@ func TestWriteCodexCatalogClonesANativeTemplate(t *testing.T) {
 		Connection: "OpenCode Go", ContextWindow: &window, Reasoning: &reasoning,
 	}})
 	row := rows[0]
-	if row["slug"] != "relo-opencode-go-deepseek-flash" || row["display_name"] != "DeepSeek Flash 1M on OpenCode Go" {
+	if row["slug"] != "relo-opencode-go-deepseek-flash" || row["display_name"] != "DeepSeek Flash (1M) on OpenCode Go" {
 		t.Fatalf("names = %v / %v, want the slug and the model by its connection", row["slug"], row["display_name"])
 	}
 	if row["description"] != "Routed via Relo" {

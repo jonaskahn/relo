@@ -29,8 +29,8 @@ func TestModelListingNamesEveryEntryForAnAgent(t *testing.T) {
 	// The connection is not the Claude.ai sign-in, so a million-token model
 	// is published once, under the 1M suffix alone, rather than beside a
 	// base-rate twin that would misreport it.
-	if openAI["relo-openai-gpt-4o-1m"] != "GPT-4o 1M on OpenAI" ||
-		openAI["reloc-combo-1m"] != "Combo 1M on Relo" {
+	if openAI["relo-openai-gpt-4o-1m"] != "GPT-4o (1M) on OpenAI" ||
+		openAI["reloc-combo-1m"] != "Combo (1M) on Relo" {
 		t.Fatalf("listing = %v, want the model and route names under the suffix alone", openAI)
 	}
 	if _, found := openAI["relo-openai-gpt-4o"]; found {
@@ -62,7 +62,7 @@ func TestModelListingNamesEveryEntryForAnAgent(t *testing.T) {
 	// The entry is a million tokens on its own connection without the beta
 	// twin, so it keeps the suffixed name: the marker is its entry, not a
 	// second row beside a base one.
-	if messages["claude-relo-openai--gpt-4o[1m]"] != "GPT-4o 1M on OpenAI" {
+	if messages["claude-relo-openai--gpt-4o[1m]"] != "GPT-4o (1M) on OpenAI" {
 		t.Fatalf("listing = %v, want the 1M model under its suffixed name", messages)
 	}
 	if _, bare := messages["claude-relo-openai--gpt-4o"]; bare {
@@ -72,7 +72,7 @@ func TestModelListingNamesEveryEntryForAnAgent(t *testing.T) {
 		t.Fatalf("listing = %v, want the model id after the separator", messages)
 	}
 	// The route above the same member reads the same way.
-	if messages["claude-reloc-combo[1m]"] != "Combo 1M on Relo" {
+	if messages["claude-reloc-combo[1m]"] != "Combo (1M) on Relo" {
 		t.Fatalf("listing = %v, want the 1M route under its suffixed name", messages)
 	}
 	for id := range messages {
