@@ -137,6 +137,53 @@ func TestEncodeRequest(t *testing.T) {
 	})
 }
 
+// TestToolResultEncoding pins the Responses item contract for a tool result:
+// the output field is required, so an empty result is sent as an empty string,
+// and an image the client returned survives as a content list rather than
+// being flattened to text.
+func TestToolResultEncoding(t *testing.T) {
+	t.Run("an empty result still carries the required output", func(t *testing.T) {
+		request := conversationRequest()
+		request.Messages[len(request.Messages)-1] = inference.Message{
+			Role: inference.RoleTool, ToolCallID: "call_1",
+		}
+		result := findItem(encodeBody(t, request)["input"].([]any), "function_call_output")
+		if result == nil {
+			t.Fatal("the tool result item is missing")
+		}
+		output, present := result["output"]
+		if !present || output != "" {
+			t.Fatalf("output = %v (present %v), want the required empty string", output, present)
+		}
+	})
+
+	t.Run("an image result becomes a content list", func(t *testing.T) {
+		request := conversationRequest()
+		request.Messages[len(request.Messages)-1] = inference.Message{
+			Role: inference.RoleTool, ToolCallID: "call_1",
+			Content: []inference.ContentPart{
+				{Type: inference.ContentTypeText, Text: "the file"},
+				{Type: inference.ContentTypeImage, ImageURL: "data:image/png;base64,AAAA"},
+			},
+		}
+		result := findItem(encodeBody(t, request)["input"].([]any), "function_call_output")
+		if result == nil {
+			t.Fatal("the tool result item is missing")
+		}
+		output, ok := result["output"].([]any)
+		if !ok || len(output) != 2 {
+			t.Fatalf("output = %v, want a content list of two parts", result["output"])
+		}
+		if first := output[0].(map[string]any); first["type"] != "input_text" || first["text"] != "the file" {
+			t.Fatalf("first part = %v, want the text", first)
+		}
+		if second := output[1].(map[string]any); second["type"] != "input_image" ||
+			second["image_url"] != "data:image/png;base64,AAAA" {
+			t.Fatalf("second part = %v, want the image", second)
+		}
+	})
+}
+
 func TestCodexHeaders(t *testing.T) {
 	token := testJWT(t, map[string]any{
 		"https://api.openai.com/auth": map[string]any{

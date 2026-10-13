@@ -166,6 +166,26 @@ func TestInboundReadsAResultMadeOfContentItems(t *testing.T) {
 	}
 }
 
+// TestInboundKeepsAnImageInAToolResult covers a result whose content is an
+// image: flattening it to text is what dropped the file the model had read.
+func TestInboundKeepsAnImageInAToolResult(t *testing.T) {
+	request := inboundRequest(t, []byte(`{"model":"gpt-5","input":[
+		{"type":"function_call","call_id":"call_1","name":"read","arguments":"{}"},
+		{"type":"function_call_output","call_id":"call_1","output":[
+			{"type":"input_text","text":"a screenshot"},
+			{"type":"input_image","image_url":"data:image/png;base64,AAAA"}]}]}`))
+
+	result := messageWithRole(request.Messages, inference.RoleTool)
+	if result == nil {
+		t.Fatal("the tool result is missing")
+	}
+	if len(result.Content) != 2 ||
+		result.Content[0].Type != inference.ContentTypeText || result.Content[0].Text != "a screenshot" ||
+		result.Content[1].Type != inference.ContentTypeImage || result.Content[1].ImageURL != "data:image/png;base64,AAAA" {
+		t.Fatalf("content = %+v, want the text and the image", result.Content)
+	}
+}
+
 // TestInboundCoalescesTheCodexTurn replays the item order Codex records for a
 // DeepSeek turn: the tool call, then the reasoning and text of the same turn,
 // then the result. Splitting them replays the call without its thinking, which

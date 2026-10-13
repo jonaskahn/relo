@@ -129,23 +129,59 @@ func (i *Inbound) customEndFrames(call *callState) []wire.SSEEvent {
 	})...)
 }
 
-type toolOutput string
+// toolOutput is the result of a tool call. The wire accepts either one string
+// or a list of text and image parts, and the field is required, so an empty
+// result travels as an empty string rather than being left out. The list shape
+// is kept whenever it carries an image, because a flattened result would lose
+// the content the model was asked to read.
+type toolOutput struct {
+	text  string
+	parts []contentItem
+}
+
+// MarshalJSON renders the output as the wire's plain string unless the result
+// carried content only the list shape can hold.
+func (o toolOutput) MarshalJSON() ([]byte, error) {
+	if len(o.parts) == 0 {
+		return json.Marshal(o.text)
+	}
+	return json.Marshal(o.parts)
+}
 
 // UnmarshalJSON accepts either shape a client sends a result in.
 func (o *toolOutput) UnmarshalJSON(data []byte) error {
 	var text string
 	if err := json.Unmarshal(data, &text); err == nil {
-		*o = toolOutput(text)
+		o.text, o.parts = text, nil
 		return nil
 	}
 	var parts []contentItem
 	if err := json.Unmarshal(data, &parts); err != nil {
 		return err
 	}
-	var joined strings.Builder
-	for _, part := range parts {
-		joined.WriteString(part.Text)
-	}
-	*o = toolOutput(joined.String())
+	o.text, o.parts = "", parts
 	return nil
+}
+
+// carriesImage reports whether the result holds an image only the list shape
+// can keep.
+func (o *toolOutput) carriesImage() bool {
+	for _, part := range o.parts {
+		if part.Type == contentInputImage && part.ImageURL != "" {
+			return true
+		}
+	}
+	return false
+}
+
+// joinedText is the result's plain text, joined from the parts a list carried.
+func (o *toolOutput) joinedText() string {
+	if len(o.parts) == 0 {
+		return o.text
+	}
+	var builder strings.Builder
+	for _, part := range o.parts {
+		builder.WriteString(part.Text)
+	}
+	return builder.String()
 }

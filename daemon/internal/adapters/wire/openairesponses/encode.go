@@ -52,7 +52,7 @@ type inputItem struct {
 	Name             string        `json:"name,omitempty"`
 	Arguments        string        `json:"arguments,omitempty"`
 	Input            string        `json:"input,omitempty"`
-	Output           toolOutput    `json:"output,omitempty"`
+	Output           *toolOutput   `json:"output,omitempty"`
 	ID               string        `json:"id,omitempty"`
 	Status           string        `json:"status,omitempty"`
 	Summary          []summaryPart `json:"summary,omitempty"`
@@ -178,9 +178,33 @@ func joinInstruction(existing, text string) string {
 
 func encodeMessage(message inference.Message) []inputItem {
 	if message.Role == inference.RoleTool {
-		return []inputItem{{Type: itemFunctionCallOutput, CallID: message.ToolCallID, Output: toolOutput(textOf(message.Content))}}
+		return []inputItem{{Type: itemFunctionCallOutput, CallID: message.ToolCallID, Output: toolResultOutput(message.Content)}}
 	}
 	return append(messageItems(message), functionCallItems(message.ToolCalls)...)
+}
+
+// toolResultOutput renders a canonical tool result the way the Responses wire
+// carries it. A text-only result stays the plain string every destination
+// accepts; a result carrying an image becomes the content list that keeps it,
+// in the order the client returned it.
+func toolResultOutput(parts []inference.ContentPart) *toolOutput {
+	output := &toolOutput{}
+	for _, part := range parts {
+		switch part.Type {
+		case inference.ContentTypeImage:
+			if part.ImageURL != "" {
+				output.parts = append(output.parts, contentItem{Type: contentInputImage, ImageURL: part.ImageURL})
+			}
+		case inference.ContentTypeText:
+			if part.Text != "" {
+				output.parts = append(output.parts, contentItem{Type: contentInputText, Text: part.Text})
+			}
+		}
+	}
+	if !output.carriesImage() {
+		return &toolOutput{text: textOf(parts)}
+	}
+	return output
 }
 
 func messageItems(message inference.Message) []inputItem {
