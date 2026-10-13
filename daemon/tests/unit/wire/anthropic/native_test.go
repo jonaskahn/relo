@@ -76,3 +76,49 @@ func TestNativeBodyReuse(t *testing.T) {
 		}
 	})
 }
+
+// TestNativeBodyKeepsTheClientsBytes pins that retargeting rewrites only the
+// model and the account attribution. Everything else — the prompt text Claude
+// Code writes with angle brackets, numbers too large for a float, and the
+// member order the client chose — must reach the upstream as the client sent it.
+func TestNativeBodyKeepsTheClientsBytes(t *testing.T) {
+	parts := `{"model":"claude-relo-claude--claude-sonnet-4","max_tokens":128000,` +
+		`"system":[{"type":"text","text":"<system-reminder>keep</system-reminder>"}],` +
+		`"tools":[{"name":"Run","input_schema":{"type":"object","properties":{"limit":{"const":9007199254740993}}}}],` +
+		`"context_management":{"edits":[{"type":"clear_thinking_20251015","keep":"all"}]},` +
+		`"thinking":{"type":"adaptive","display":"updates"},` +
+		`"metadata":{"user_id":"{\"account_uuid\":\"caller\"}"},` +
+		`"messages":[{"role":"user","content":[{"type":"text","text":"hi"}]}]}`
+
+	raw := rawBody(t, newTestRequest(t, canonicalRequest(true), wire.CodecOpts{
+		CredentialRef: "oauth-token", AuthMethod: "oauth",
+		AccountID: "acct-9", DeviceID: "device-1", SessionID: "sess-1",
+		NativeBody: []byte(parts),
+	}))
+
+	if !strings.Contains(raw, "<system-reminder>keep</system-reminder>") {
+		t.Fatalf("body = %s, want the client's own text kept as bytes", raw)
+	}
+	if !strings.Contains(raw, "9007199254740993") {
+		t.Fatalf("body = %s, want the client's own number", raw)
+	}
+	if !strings.Contains(raw, `"thinking":{"type":"adaptive","display":"updates"}`) {
+		t.Fatalf("body = %s, want the client's own thinking control", raw)
+	}
+	if !strings.Contains(raw, `"model":"claude-sonnet-4"`) {
+		t.Fatalf("body = %s, want the selected upstream model", raw)
+	}
+
+	order := []string{`"max_tokens"`, `"system"`, `"tools"`, `"context_management"`, `"thinking"`, `"metadata"`, `"messages"`}
+	previous := -1
+	for _, name := range order {
+		at := strings.Index(raw, name)
+		if at < 0 {
+			t.Fatalf("body = %s, want %s kept", raw, name)
+		}
+		if at < previous {
+			t.Fatalf("body = %s, want the client's member order kept", raw)
+		}
+		previous = at
+	}
+}
