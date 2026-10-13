@@ -7,6 +7,7 @@ import (
 
 	"github.com/jonaskahn/relo/internal/adapters/sqlite"
 	"github.com/jonaskahn/relo/internal/catalog"
+	"github.com/jonaskahn/relo/internal/clock"
 	"github.com/jonaskahn/relo/internal/routing"
 	"github.com/jonaskahn/relo/tests/testkit"
 )
@@ -27,6 +28,14 @@ func (accounts) Coverage(string, catalog.Model) (int, int) { return 1, 1 }
 
 func newRouter(t *testing.T, strategy catalog.Strategy) (*routing.Router, *catalog.Catalog) {
 	t.Helper()
+	router, models := newClockedRouter(t, strategy, nil)
+	return router, models
+}
+
+// newClockedRouter builds the same router over a chosen clock, so a test that
+// measures a wait advances time the router reads.
+func newClockedRouter(t *testing.T, strategy catalog.Strategy, clk clock.Clock) (*routing.Router, *catalog.Catalog) {
+	t.Helper()
 	db := testkit.OpenTestDB(t)
 	upstream := testkit.MockUpstream(t, map[string]string{})
 	testkit.CustomProvider(t, db, testkit.Upstream{
@@ -46,7 +55,7 @@ func newRouter(t *testing.T, strategy catalog.Strategy) (*routing.Router, *catal
 		t.Fatalf("SaveGroup() error = %v", err)
 	}
 	models := testkit.ReloadCatalog(t, db, accounts{})
-	return routing.New(routing.Options{Catalog: models}), models
+	return routing.New(routing.Options{Catalog: models, Clock: clk}), models
 }
 
 func firstModel(plan routing.Plan) string {

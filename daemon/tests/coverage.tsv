@@ -59,7 +59,7 @@ internal/application/settings	tests/unit/service/...,tests/unit/server/...,tests
 internal/application/routing	tests/unit/service/...,tests/unit/server/...,tests/unit/routing/...	66
 internal/application/status	tests/unit/service/...,tests/unit/server/...	76
 internal/application/templatesettings	tests/unit/service/...	85
-internal/routing	tests/unit/routing/...	33
+internal/routing	tests/unit/routing/...	93
 internal/server	internal/server/...,tests/unit/server/...,tests/integration/contract/...	60
 internal/updates	tests/unit/updates/...	79
 internal/application/catalog	tests/unit/service/...,tests/unit/server/...	77
