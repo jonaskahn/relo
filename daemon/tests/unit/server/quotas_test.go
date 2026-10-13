@@ -215,6 +215,10 @@ func TestQuotaEndpoint(t *testing.T) {
 		if recorder := h.dataPlane(http.MethodPost, "/v1/chat/completions", dataPlaneToken, strings.NewReader(streamingBody())); recorder.Code != http.StatusOK {
 			t.Fatalf("status = %d, want the relayed answer", recorder.Code)
 		}
+		// Bookkeeping runs behind the response, so the freshness note the
+		// live reading carries may not have landed yet; settle the same way
+		// the recording test settles before reading what the response sent.
+		h.settle()
 		var payload struct {
 			Items []struct {
 				Stale bool `json:"stale"`
