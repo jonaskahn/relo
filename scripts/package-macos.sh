@@ -125,10 +125,17 @@ mkdir -p "$app/Contents/MacOS" "$app/Contents/Resources" "$root/dist"
 scratch="$(mktemp -d)"
 trap 'rm -rf "$scratch"' EXIT
 
+# The internal linker's -macos flag exists only on newer Go (1.27+ writes
+# minos 13.0 by default); older linkers lack it and already target the floor.
+macos_ldflag=""
+if go tool link -h 2>&1 | grep -q -- "-macos"; then
+  macos_ldflag=" -macos=$macos_min"
+fi
+
 for arch in arm64 amd64; do
   echo "building the $arch binary"
   (cd "$root/daemon" && GOOS=darwin GOARCH="$arch" CGO_ENABLED=0 go build -trimpath \
-    -ldflags "-s -w -macos=$macos_min -X github.com/jonaskahn/relo/internal/cli.version=$version" \
+    -ldflags "-s -w$macos_ldflag -X github.com/jonaskahn/relo/internal/cli.version=$version" \
     -o "$scratch/relo-darwin-$arch" ./cmd/relo)
 done
 lipo -create -output "$app/Contents/MacOS/Relo" \
