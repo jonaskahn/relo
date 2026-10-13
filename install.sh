@@ -16,7 +16,10 @@ DEFAULT_OPENAI=10201
 DEFAULT_ANTHROPIC=10202
 DEFAULT_GEMINI=10203
 RECEIPT=".relo-install"
-BAR_WIDTH=25
+BAR_WIDTH=20
+TERMINAL=0
+[ ! -t 1 ] || TERMINAL=1
+CONSOLE_READY=0
 
 # ---------------------------------------------------------------- output ----
 
@@ -40,11 +43,17 @@ else
 fi
 
 say() { printf '%s\n' "$*"; }
-rule() { say "${DIM}────────────────────────────────────────────────────────────${OFF}"; }
-step() { printf '  %s▸%s %s\n' "$RED" "$OFF" "$*"; }
-done_() { printf '  %s✓%s %s\n' "$GREEN" "$OFF" "$*"; }
-note() { printf '  %s·%s %s\n' "$SLATE" "$OFF" "$*"; }
-oops() { printf '  %s✗%s %s\n' "$RED" "$OFF" "$*"; }
+rule() { say "  ${DIM}----------------------------------------${OFF}"; }
+step() { printf '  %s>%s %s\n' "$RED" "$OFF" "$*"; }
+done_() { printf '  %s+%s %s\n' "$GREEN" "$OFF" "$*"; }
+note() { printf '  %si%s %s\n' "$SLATE" "$OFF" "$*"; }
+oops() { printf '  %s!%s %s\n' "$RED" "$OFF" "$*"; }
+section() {
+	say ""
+	rule
+	say "  ${RED}$1 / 04${OFF}  ${BOLD}$2${OFF}"
+	say ""
+}
 
 die() {
 	oops "$1" >&2
@@ -56,17 +65,19 @@ die() {
 have() { command -v "$1" >/dev/null 2>&1; }
 
 banner() {
-	if [ "$COLOR" = 0 ]; then
-		say ""; say "Relo."; say ""
-		return 0
+	say ""
+	if [ "$TERMINAL" = 1 ]; then
+		say "  ${RED}██████  ${OFF}${BOLD}███████ ██       ██████${OFF}"
+		say "  ${RED}██   ██ ${OFF}${BOLD}██      ██      ██    ██${OFF}"
+		say "  ${RED}██████  ${OFF}${BOLD}█████   ██      ██    ██${OFF}"
+		say "  ${RED}██  ██  ${OFF}${BOLD}██      ██      ██    ██${OFF}"
+		say "  ${RED}██   ██ ${OFF}${BOLD}███████ ███████  ██████${OFF}"
+	else
+		say "  RELO"
 	fi
 	say ""
-	say "   ${RED}██████╗ ${ROSE}███████╗${OFF}"
-	say "   ${RED}██╔══██╗${ROSE}██╔════╝${OFF}"
-	say "   ${RED}██████╔╝${ROSE}█████╗  ${OFF}"
-	say "   ${RED}██╔══██╗${ROSE}██╔══╝  ${OFF}"
-	say "   ${RED}██║  ██║${ROSE}███████╗${OFF}"
-	say "   ${RED}╚═╝  ╚═╝${ROSE}╚══════╝${OFF}  ${BOLD}one daemon${OFF}${DIM} · ${OFF}${BOLD}many tools${OFF}${DIM} · ${OFF}${BOLD}every provider${OFF}"
+	say "  ${BOLD}One daemon. Your tools. Every provider.${OFF}"
+	say "  ${DIM}Let's get Relo ready on ${OS}/${ARCH}.${OFF}"
 	say ""
 }
 
@@ -93,7 +104,7 @@ Usage: install.sh [options]
   --no-start        do not start the daemon after installing
   --no-autostart    do not register Relo to start at login
   --force-ports     take a Relo port from another program without asking
-  -y, --yes         answer yes to every prompt
+  -y, --yes         use the selected settings without prompting
   --help            this text
 
 Environment: RELO_VERSION, RELO_INSTALL_DIR, RELO_HOME, RELO_INSTALL_YES,
@@ -119,25 +130,29 @@ while [ $# -gt 0 ]; do
 done
 
 # The script usually arrives on stdin, so prompts come from the terminal.
-if [ -r /dev/tty ] && [ -t 1 ] && [ "$ASSUME_YES" = 0 ]; then
+if [ "$TERMINAL" = 1 ] && [ "$ASSUME_YES" = 0 ] && ( : </dev/tty ) 2>/dev/null; then
 	INTERACTIVE=1
 fi
 
 ask() {
 	# ask <prompt> <fallback>
-	printf '  %s ' "$1" >/dev/tty 2>/dev/null || return 0
-	IFS= read -r answer </dev/tty 2>/dev/null || answer=""
+	printf '  %s> %s%s ' "$RED" "$1" "$OFF" >/dev/tty
+	IFS= read -r answer </dev/tty || die "Setup canceled: the terminal input closed."
 	[ -n "$answer" ] || answer="$2"
 	printf '%s' "$answer"
 }
 
 confirm() {
 	# confirm <prompt>; true when the answer is yes
-	answer="$(ask "$1" "n")"
-	case "$answer" in
-	y | Y | yes | YES | Yes) return 0 ;;
-	*) return 1 ;;
-	esac
+	[ "$INTERACTIVE" = 1 ] || return 1
+	while :; do
+		answer="$(ask "$1 [y/N]" "n")" || return 1
+		case "$answer" in
+		y | Y | yes | YES | Yes) return 0 ;;
+		n | N | no | NO | No) return 1 ;;
+		*) note "Please type y for yes or n for no. Enter means no." >/dev/tty ;;
+		esac
+	done
 }
 
 # ------------------------------------------------------------- detection ----
@@ -260,7 +275,7 @@ bar() {
 	out=""
 	i=0
 	while [ "$i" -lt "$BAR_WIDTH" ]; do
-		if [ "$i" -lt "$filled" ]; then out="$out█"; else out="$out░"; fi
+		if [ "$i" -lt "$filled" ]; then out="$out#"; else out="$out-"; fi
 		i=$((i + 1))
 	done
 	printf '%s' "$out"
@@ -269,6 +284,12 @@ bar() {
 fetch_with_progress() {
 	# fetch_with_progress <url> <dest> <label>
 	url="$1"; dest="$2"; label="$3"
+	if [ "$TERMINAL" = 0 ]; then
+		step "Downloading $label"
+		fetch_file "$url" "$dest"
+		done_ "Downloaded $label"
+		return 0
+	fi
 	total="$(content_length "$url" || true)"
 	case "$total" in
 	'' | *[!0-9]*) total="";; # unknown or non-numeric: fall back to the plain download
@@ -280,6 +301,7 @@ fetch_with_progress() {
 		return 0
 	fi
 
+	step "Downloading $label"
 	( fetch_file "$url" "$dest" ) &
 	pid=$!
 	started="$(date +%s)"
@@ -293,15 +315,15 @@ fetch_with_progress() {
 		[ "$elapsed" -gt 0 ] || elapsed=1
 		percent=$((now * 100 / total))
 		[ "$percent" -gt 100 ] && percent=100
-		printf '\r  %s▸%s %s %s%s%s %3d%%  %s/%s MB  %s KB/s   ' \
-			"$RED" "$OFF" "$label" "$ROSE" "$(bar "$percent")" "$OFF" \
+		printf '\r    %s[%s]%s %3d%%  %s/%s MB  %s KB/s   ' \
+			"$ROSE" "$(bar "$percent")" "$OFF" \
 			"$percent" "$((now / 1048576))" "$((total / 1048576))" "$(((now / 1024) / elapsed))"
 		sleep 0.2 2>/dev/null || sleep 1
 	done
 
 	if wait "$pid"; then
-		printf '\r  %s✓%s %s %s%s%s 100%%  %s/%s MB                \n' \
-			"$GREEN" "$OFF" "$label" "$GREEN" "$(bar 100)" "$OFF" \
+		printf '\r    %s[%s]%s 100%%  %s/%s MB                \n' \
+			"$GREEN" "$(bar 100)" "$OFF" \
 			"$((total / 1048576))" "$((total / 1048576))"
 	else
 		printf '\n'
@@ -406,14 +428,14 @@ free_ports() {
 		[ "$port" != "0" ] || continue
 		holders="$(port_holders "$port")"
 		if [ -z "$holders" ]; then
-			printf '  %s·%s %-6s free\n' "$SLATE" "$OFF" "$port"
+			printf '  %si%s %-6s available\n' "$SLATE" "$OFF" "$port"
 			continue
 		fi
 		while IFS=' ' read -r pid name; do
 			[ -n "$pid" ] || continue
 			case "$(printf '%s' "$name" | tr '[:upper:]' '[:lower:]')" in
 			relo | relo.exe | relo-desktop | relo-desktop.exe | relolauncher)
-				printf '  %s✓%s %-6s stopping %s (pid %s)\n' "$GREEN" "$OFF" "$port" "$name" "$pid"
+				printf '  %s+%s %-6s stopping %s (pid %s)\n' "$GREEN" "$OFF" "$port" "$name" "$pid"
 				kill_port "$pid"
 				;;
 			*)
@@ -436,7 +458,8 @@ EOF
 				"Nothing was installed." \
 				"Rerun with --force-ports to take them, or free them yourself."
 		else
-			confirm "  Stop the program holding$list?" ||
+			note "Stopping another program may interrupt its work."
+			confirm "Stop the program using ports$list?" ||
 				die "Ports${list} are held by another program" "Nothing was installed."
 		fi
 		for port in $FOREIGN_PORTS; do
@@ -500,38 +523,49 @@ start_daemon() {
 
 	server_port="$(printf '%s\n' "$PORTS" | head -n 1)"
 	[ -n "$server_port" ] || server_port="$DEFAULT_PORT"
-	printf '  %s◐%s waiting for http://127.0.0.1:%s/healthz ' "$SLATE" "$OFF" "$server_port"
+	step "Waiting for the console to respond"
 	i=0
 	while [ "$i" -lt 20 ]; do
 		body="$(curl -fsS --max-time 2 "http://127.0.0.1:$server_port/healthz" 2>/dev/null || true)"
 		if [ -n "$body" ]; then
 			version="$(printf '%s' "$body" | sed -n 's/.*"version"[ ]*:[ ]*"\([^"]*\)".*/\1/p')"
-			printf '\n  %s✓%s Console is up on %shttp://127.0.0.1:%s%s\n' \
+			CONSOLE_READY=1
+			printf '  %s+%s Console is ready at %shttp://127.0.0.1:%s%s\n' \
 				"$GREEN" "$OFF" "$BOLD" "$server_port" "$OFF"
 			[ -n "$version" ] && note "Reported version: $version"
 			return 0
 		fi
-		printf '.'
 		i=$((i + 1))
 		sleep 0.5 2>/dev/null || sleep 1
 	done
-	printf '\n  %s·%s The console is not answering yet. Try: relo daemon status\n' "$SLATE" "$OFF"
+	note "The console is not answering yet. Try: relo daemon status"
 }
 
 summary() {
 	server_port="$(printf '%s\n' "$PORTS" | head -n 1)"
 	say ""
 	rule
-	say "  ${BOLD}Relo ${RESOLVED_VERSION} is installed.${OFF}"
+	say "  ${GREEN}+${OFF} ${BOLD}Relo ${RESOLVED_VERSION} is installed.${OFF}"
 	say ""
-	say "  binary      $BIN"
-	say "  state       $RELO_HOME_DIR"
-	say "  console     ${RED}http://127.0.0.1:${server_port:-$DEFAULT_PORT}${OFF}"
-	say "  channel     script  ${DIM}(Homebrew, npm, and the setup files are refused from here)${OFF}"
+	say "  ${DIM}Binary${OFF}   $BIN"
+	say "  ${DIM}Data${OFF}     $RELO_HOME_DIR"
 	say ""
-	say "  ${DIM}relo daemon status${OFF}       how it is doing"
-	say "  ${DIM}relo daemon restart${OFF}      restart it"
-	say "  ${DIM}relo autostart disable${OFF}   do not start at login"
+	if [ "$CONSOLE_READY" = 1 ]; then
+		say "  ${BOLD}Your next step${OFF}"
+		say "  Open the console and add your first connection:"
+	else
+		say "  ${BOLD}Ready when you are${OFF}"
+		say "  Start Relo, then open the console:"
+		say "    \"$BIN\" daemon start"
+	fi
+	say "  ${RED}http://127.0.0.1:${server_port:-$DEFAULT_PORT}${OFF}"
+	say ""
+	say "  ${DIM}Useful commands${OFF}"
+	say "    relo daemon status       Check how Relo is doing"
+	say "    relo daemon restart      Restart Relo"
+	say "    relo autostart disable   Turn off start at login"
+	say ""
+	note "To update, run this installer again."
 	rule
 	say ""
 }
@@ -540,25 +574,54 @@ summary() {
 
 options_screen() {
 	banner
-	say "  ${BOLD}Relo installer${OFF} ${DIM}· ${OS}/${ARCH}${OFF}"
+	section "01" "Make it yours"
+	say "  You're one Enter away. Want to make a change first?"
 	say ""
 	while :; do
-		if [ "$START_AFTER" = 1 ]; then start_label="yes"; else start_label="no"; fi
-		if [ "$AUTOSTART" = 1 ]; then auto_label="yes"; else auto_label="no"; fi
-		say "  ${RED}1${OFF}  version      ${BOLD}${VERSION:-latest}${OFF}"
-		say "  ${RED}2${OFF}  install to   ${BOLD}${INSTALL_DIR}${OFF}"
-		say "  ${RED}3${OFF}  start after  ${BOLD}${start_label}${OFF}"
-		say "  ${RED}4${OFF}  autostart    ${BOLD}${auto_label}${OFF}"
+		if [ "$START_AFTER" = 1 ]; then start_label="${GREEN}[ON ]${OFF}"; else start_label="${SLATE}[OFF]${OFF}"; fi
+		if [ "$AUTOSTART" = 1 ]; then auto_label="${GREEN}[ON ]${OFF}"; else auto_label="${SLATE}[OFF]${OFF}"; fi
+		[ "$START_AFTER" = 1 ] || auto_label="${AMBER}[ --]${OFF}"
+		if [ -n "$VERSION" ]; then version_hint="(pinned release)"; else version_hint="(recommended)"; fi
+		say "  ${DIM}INSTALLATION${OFF}"
+		say "  ${DIM}----------------------------------------${OFF}"
+		say "  ${RED}[1]${OFF} ${BOLD}Release${OFF}"
+		say "      ${VERSION:-Latest stable} ${DIM}${version_hint}${OFF}"
 		say ""
-		choice="$(ask "Change [1-4], or Enter to install:" "")"
+		say "  ${RED}[2]${OFF} ${BOLD}Install folder${OFF}"
+		say "      $INSTALL_DIR"
+		say ""
+		say "  ${DIM}ON YOUR SCHEDULE${OFF}"
+		say "  ${DIM}----------------------------------------${OFF}"
+		say "  ${RED}[3]${OFF} ${start_label} ${BOLD}Start after install${OFF}"
+		say "      ${DIM}Have the console ready as soon as we're done.${OFF}"
+		say ""
+		say "  ${RED}[4]${OFF} ${auto_label} ${BOLD}Start at login${OFF}"
+		if [ "$START_AFTER" = 1 ]; then
+			say "      ${DIM}Keep Relo ready whenever you sign in.${OFF}"
+		else
+			say "      ${AMBER}Not changed (start after install is off)${OFF}"
+		fi
+		say ""
+		say "  ${RED}${BOLD}>>>  Press Enter to continue installation${OFF}"
+		say "  ${DIM}     1-4 to adjust a setting / q to cancel${OFF}"
+		say ""
+		choice="$(ask "What would you like to do?" "")"
 		say ""
 		case "$choice" in
 		"") break ;;
-		1) VERSION="$(ask "Version (blank for latest):" "")" ;;
-		2) INSTALL_DIR="$(ask "Install directory:" "$INSTALL_DIR")" ;;
+		1)
+			note "Enter a release such as v0.1.0. Leave blank for latest stable."
+			VERSION="$(ask "Which release?" "")"
+			;;
+		2)
+			note "Press Enter to keep $INSTALL_DIR."
+			INSTALL_DIR="$(ask "Where should Relo be installed?" "$INSTALL_DIR")"
+			resolve_paths
+			;;
 		3) [ "$START_AFTER" = 1 ] && START_AFTER=0 || START_AFTER=1 ;;
 		4) [ "$AUTOSTART" = 1 ] && AUTOSTART=0 || AUTOSTART=1 ;;
-		*) note "Pick 1 to 4, or press Enter." ;;
+		q | Q) note "Setup canceled. Nothing was changed."; exit 0 ;;
+		*) note "Choose 1, 2, 3 or 4; Enter to install; q to cancel." ;;
 		esac
 		say ""
 	done
@@ -593,13 +656,14 @@ main() {
 		options_screen
 	else
 		banner
-		say "  ${BOLD}Relo installer${OFF} ${DIM}· ${OS}/${ARCH}${OFF}"
-		say ""
+		section "01" "Use your selected settings"
+		note "Running without prompts. Use --help to see setup options."
 	fi
 
 	reject_foreign
 	done_ "No other Relo installation is in the way"
 
+	section "02" "Download Relo"
 	resolve_version
 	note "Release ${RESOLVED_VERSION}"
 
@@ -613,6 +677,7 @@ main() {
 		note "This release publishes no checksums.txt"
 	fi
 
+	section "03" "Install Relo"
 	stop_daemon
 	read_ports
 	free_ports
@@ -644,6 +709,7 @@ main() {
 		;;
 	esac
 
+	section "04" "Get you ready"
 	start_daemon
 	summary
 }

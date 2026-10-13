@@ -31,7 +31,10 @@ $Releases = if ($env:RELO_RELEASE_BASE) { $env:RELO_RELEASE_BASE } else { "https
 $Receipt = '.relo-install'
 $DefaultPort = 10101
 $DefaultPorts = @(10201, 10202, 10203)
-$BarWidth = 25
+$BarWidth = 20
+$script:ConsoleReady = $false
+$script:Terminal = $false
+try { $script:Terminal = -not [Console]::IsOutputRedirected } catch { }
 
 if ($env:RELO_INSTALL_YES -eq '1') { $Yes = $true }
 
@@ -40,15 +43,19 @@ if ($env:RELO_INSTALL_YES -eq '1') { $Yes = $true }
 $script:Color = $false
 try { $script:Color = [bool]$Host.UI.SupportsVirtualTerminal } catch { $script:Color = $false }
 if ($env:NO_COLOR) { $script:Color = $false }
+if (-not $script:Terminal) { $script:Color = $false }
 
-function Write-Plain([string] $Text) {
-	if ($script:Color) { Write-Host $Text } else { Write-Host $Text }
+function Write-Step([string] $Text) { Write-Host ("  " + (Paint '>' 'red') + " $Text") }
+function Write-OK([string] $Text) { Write-Host ("  " + (Paint '+' 'green') + " $Text") }
+function Write-Note([string] $Text) { Write-Host ("  " + (Paint 'i' 'slate') + " $Text") }
+function Write-Oops([string] $Text) { Write-Host ("  " + (Paint '!' 'red') + " $Text") }
+function Write-Rule { Write-Host (Paint '  ----------------------------------------' 'dim') }
+function Write-Section([string] $Number, [string] $Text) {
+	Write-Host ''
+	Write-Rule
+	Write-Host ("  " + (Paint "$Number / 04" 'red') + "  " + (Paint $Text 'bold'))
+	Write-Host ''
 }
-
-function Write-Step([string] $Text) { Write-Host ("  " + (Paint '▸' 'red') + " $Text") }
-function Write-OK([string] $Text) { Write-Host ("  " + (Paint '✓' 'green') + " $Text") }
-function Write-Note([string] $Text) { Write-Host ("  " + (Paint '·' 'slate') + " " + (Paint $Text 'dim')) }
-function Write-Oops([string] $Text) { Write-Host ("  " + (Paint '✗' 'red') + " $Text") }
 
 function Paint([string] $Text, [string] $Tone) {
 	if (-not $script:Color) { return $Text }
@@ -59,18 +66,26 @@ function Paint([string] $Text, [string] $Tone) {
 		'amber' { return "$([char]27)[38;2;230;170;60m$Text$([char]27)[0m" }
 		'slate' { return "$([char]27)[38;2;140;140;155m$Text$([char]27)[0m" }
 		'dim' { return "$([char]27)[2m$Text$([char]27)[0m" }
+		'bold' { return "$([char]27)[1m$Text$([char]27)[0m" }
 		default { return $Text }
 	}
 }
 
 function Write-Banner {
 	Write-Host ''
-	Write-Host ("   " + (Paint '██████╗ ' 'red') + (Paint '███████╗' 'rose'))
-	Write-Host ("   " + (Paint '██╔══██╗' 'red') + (Paint '██╔════╝' 'rose'))
-	Write-Host ("   " + (Paint '██████╔╝' 'red') + (Paint '█████╗  ' 'rose'))
-	Write-Host ("   " + (Paint '██╔══██╗' 'red') + (Paint '██╔══╝  ' 'rose'))
-	Write-Host ("   " + (Paint '██║  ██║' 'red') + (Paint '███████╗' 'rose'))
-	Write-Host ("   " + (Paint '╚═╝  ╚═╝' 'red') + (Paint '╚══════╝' 'rose') + "  one daemon · many tools · every provider")
+	if ($script:Terminal) {
+		$block = [string][char]0x2588
+		Write-Host ((Paint ('  ######  '.Replace('#', $block)) 'red') + (Paint ('####### ##       ######'.Replace('#', $block)) 'bold'))
+		Write-Host ((Paint ('  ##   ## '.Replace('#', $block)) 'red') + (Paint ('##      ##      ##    ##'.Replace('#', $block)) 'bold'))
+		Write-Host ((Paint ('  ######  '.Replace('#', $block)) 'red') + (Paint ('#####   ##      ##    ##'.Replace('#', $block)) 'bold'))
+		Write-Host ((Paint ('  ##  ##  '.Replace('#', $block)) 'red') + (Paint ('##      ##      ##    ##'.Replace('#', $block)) 'bold'))
+		Write-Host ((Paint ('  ##   ## '.Replace('#', $block)) 'red') + (Paint ('####### #######  ######'.Replace('#', $block)) 'bold'))
+	} else {
+		Write-Host '  RELO'
+	}
+	Write-Host ''
+	Write-Host (Paint '  One daemon. Your tools. Every provider.' 'bold')
+	Write-Host (Paint "  Let's get Relo ready on windows/$ArchName." 'dim')
 	Write-Host ''
 }
 
@@ -95,7 +110,7 @@ Usage: install.ps1 [options]
   -NoStart         do not start the daemon after installing
   -NoAutostart     do not register Relo to start at login
   -ForcePorts      take a Relo port from another program without asking
-  -Yes             answer yes to every prompt
+  -Yes             use the selected settings without prompting
   -Help            this text
 
 Environment: RELO_VERSION, RELO_INSTALL_DIR, RELO_HOME, RELO_INSTALL_YES,
@@ -184,14 +199,15 @@ function Get-RemoteLength([string] $Url) {
 }
 
 function Get-Bar([int] $Percent) {
-	$filled = [int]($Percent * $BarWidth / 100)
-	$full = ([string][char]0x2588) * $filled
-	$empty = ([string][char]0x2591) * ($BarWidth - $filled)
+	$filled = [int][Math]::Floor($Percent * $BarWidth / 100)
+	$full = '#' * $filled
+	$empty = '-' * ($BarWidth - $filled)
 	return "$full$empty"
 }
 
 function Save-Remote([string] $Url, [string] $Destination, [string] $Label) {
-	$total = Get-RemoteLength $Url
+	Write-Step "Downloading $Label"
+	$total = if ($script:Terminal) { Get-RemoteLength $Url } else { 0 }
 	$request = [System.Net.HttpWebRequest]::Create($Url)
 	$request.UserAgent = 'relo-installer'
 	$request.AllowAutoRedirect = $true
@@ -209,6 +225,7 @@ function Save-Remote([string] $Url, [string] $Destination, [string] $Label) {
 		while (($read = $stream.Read($buffer, 0, $buffer.Length)) -gt 0) {
 			$out.Write($buffer, 0, $read)
 			$written += $read
+			if (-not $script:Terminal) { continue }
 			if ($lastDraw.ElapsedMilliseconds -lt 150) { continue }
 			$lastDraw.Restart()
 			if ($total -gt 0) {
@@ -216,10 +233,10 @@ function Save-Remote([string] $Url, [string] $Destination, [string] $Label) {
 				if ($percent -gt 100) { $percent = 100 }
 				$seconds = [Math]::Max($watch.Elapsed.TotalSeconds, 0.1)
 				$rate = [int]($written / 1024 / $seconds)
-				Write-Host ("`r  " + (Paint '▸' 'red') + " $Label " + (Paint (Get-Bar $percent) 'rose') +
+				Write-Host ("`r    " + (Paint ("[" + (Get-Bar $percent) + "]") 'rose') +
 					(" {0,3}%  {1}/{2} MB  {3} KB/s   " -f $percent, [int]($written / 1MB), [int]($total / 1MB), $rate)) -NoNewline
 			} else {
-				Write-Host ("`r  " + (Paint '▸' 'red') + " $Label " + ("{0} MB   " -f [int]($written / 1MB))) -NoNewline
+				Write-Host ("`r    " + ("{0} MB downloaded   " -f [int]($written / 1MB))) -NoNewline
 			}
 		}
 	} finally {
@@ -228,11 +245,13 @@ function Save-Remote([string] $Url, [string] $Destination, [string] $Label) {
 		$response.Close()
 	}
 
-	if ($total -gt 0) {
-		Write-Host ("`r  " + (Paint '✓' 'green') + " $Label " + (Paint (Get-Bar 100) 'green') +
+	if (-not $script:Terminal) {
+		Write-OK "Downloaded $Label"
+	} elseif ($total -gt 0) {
+		Write-Host ("`r    " + (Paint ("[" + (Get-Bar 100) + "]") 'green') +
 			(" 100%  {0}/{1} MB                " -f [int]($total / 1MB), [int]($total / 1MB)))
 	} else {
-		Write-Host ("`r  " + (Paint '✓' 'green') + " $Label                    ")
+		Write-Host ("`r    " + (Paint 'Download complete.' 'green') + '                    ')
 	}
 }
 
@@ -335,12 +354,12 @@ function Clear-Ports {
 		if ($port -le 0) { continue }
 		$holders = Get-PortHolders $port
 		if ($holders.Count -eq 0) {
-			Write-Host ("  " + (Paint '·' 'slate') + (" {0,-6} free" -f $port))
+			Write-Host ("  " + (Paint 'i' 'slate') + (" {0,-6} available" -f $port))
 			continue
 		}
 		foreach ($holder in $holders) {
 			if ($holder.Name -match '^(?i)relo(-desktop)?$') {
-				Write-Host ("  " + (Paint '✓' 'green') + (" {0,-6} stopping {1} (pid {2})" -f $port, $holder.Name, $holder.Pid))
+				Write-Host ("  " + (Paint '+' 'green') + (" {0,-6} stopping {1} (pid {2})" -f $port, $holder.Name, $holder.Pid))
 				Stop-Holder $holder
 			} else {
 				Write-Host ("  " + (Paint '!' 'amber') + (" {0,-6} held by {1} (pid {2})" -f $port, $holder.Name, $holder.Pid))
@@ -352,15 +371,15 @@ function Clear-Ports {
 	if ($foreign.Count -gt 0) {
 		$list = ' ' + (($foreign | Select-Object -Unique) -join ' ')
 		if (-not $ForcePorts) {
-			if ($Yes) {
+			if ($Yes -or -not $interactive) {
 				Fail "Ports$list are held by another program" @(
 					'Nothing was installed.',
 					'Rerun with -ForcePorts to take them, or free them yourself.'
 				)
 			}
 			Write-Host ''
-			$answer = Read-Host "  Stop the program holding$list? [y/N]"
-			if ($answer -notmatch '^(?i)y') {
+			Write-Note 'Stopping another program may interrupt its work.'
+			if (-not (Confirm-Setup "Stop the program using ports$list?")) {
 				Fail "Ports$list are held by another program" @('Nothing was installed.')
 			}
 		}
@@ -410,71 +429,122 @@ function Start-Daemon {
 	}
 
 	$port = if ($CheckPorts.Count -gt 0) { $CheckPorts[0] } else { $DefaultPort }
-	Write-Host ("  " + (Paint '◐' 'slate') + " waiting for http://127.0.0.1:$port/healthz ") -NoNewline
+	Write-Step 'Waiting for the console to respond'
 	for ($i = 0; $i -lt 20; $i++) {
 		try {
 			$body = Invoke-RestMethod "http://127.0.0.1:$port/healthz" -TimeoutSec 2
-			Write-Host ''
-			Write-OK "Console is up on http://127.0.0.1:$port"
+			$script:ConsoleReady = $true
+			Write-OK "Console is ready at http://127.0.0.1:$port"
 			if ($body.version) { Write-Note "Reported version: $($body.version)" }
 			return
 		} catch {
-			Write-Host '.' -NoNewline
 			Start-Sleep -Milliseconds 500
 		}
 	}
-	Write-Host ''
 	Write-Note 'The console is not answering yet. Try: relo daemon status'
 }
 
 function Write-Summary {
 	$port = if ($CheckPorts.Count -gt 0) { $CheckPorts[0] } else { $DefaultPort }
 	Write-Host ''
-	Write-Host ("  " + (Paint '—' 'dim') + ('─' * 58))
-	Write-Host ("  Relo $ResolvedVersion is installed.")
+	Write-Rule
+	Write-OK (Paint "Relo $ResolvedVersion is installed." 'bold')
 	Write-Host ''
-	Write-Host "  binary      $Bin"
-	Write-Host "  state       $ReloHome"
-	Write-Host ("  console     " + (Paint "http://127.0.0.1:$port" 'red'))
-	Write-Host ("  channel     script  " + (Paint '(Relo-Setup and npm are refused from here)' 'dim'))
+	Write-Host ("  " + (Paint 'Binary' 'dim') + "   $Bin")
+	Write-Host ("  " + (Paint 'Data' 'dim') + "     $ReloHome")
 	Write-Host ''
-	Write-Host ("  " + (Paint 'relo daemon status' 'dim') + '       how it is doing')
-	Write-Host ("  " + (Paint 'relo daemon restart' 'dim') + '      restart it')
-	Write-Host ("  " + (Paint 'relo autostart disable' 'dim') + '   do not start at login')
-	Write-Host ("  " + (Paint '—' 'dim') + ('─' * 58))
+	if ($script:ConsoleReady) {
+		Write-Host (Paint '  Your next step' 'bold')
+		Write-Host '  Open the console and add your first connection:'
+	} else {
+		Write-Host (Paint '  Ready when you are' 'bold')
+		Write-Host '  Start Relo, then open the console:'
+		Write-Host "    & `"$Bin`" daemon start"
+	}
+	Write-Host (Paint "  http://127.0.0.1:$port" 'red')
+	Write-Host ''
+	Write-Host (Paint '  Useful commands' 'dim')
+	Write-Host '    relo daemon status       Check how Relo is doing'
+	Write-Host '    relo daemon restart      Restart Relo'
+	Write-Host '    relo autostart disable   Turn off start at login'
+	Write-Host ''
+	Write-Note 'To update, run this installer again.'
+	Write-Rule
 	Write-Host ''
 }
 
 # -------------------------------------------------------------- the prompt --
 
+function Read-Setup([string] $Prompt) {
+	$value = Read-Host (Paint "  > $Prompt" 'red')
+	if ($null -eq $value) { Fail 'Setup canceled: the terminal input closed.' @() }
+	return $value.Trim()
+}
+
+function Confirm-Setup([string] $Prompt) {
+	while ($true) {
+		$answer = Read-Setup "$Prompt [y/N]"
+		switch -Regex ($answer) {
+			'^(y|yes)$' { return $true }
+			'^(n|no)?$' { return $false }
+			default { Write-Note 'Please type y for yes or n for no. Enter means no.' }
+		}
+	}
+}
+
 function Invoke-Options {
 	Write-Banner
-	Write-Host "  Relo installer · windows/$ArchName"
+	Write-Section '01' 'Make it yours'
+	Write-Host "  You're one Enter away. Want to make a change first?"
 	Write-Host ''
 	while ($true) {
-		$startLabel = if ($NoStart) { 'no' } else { 'yes' }
-		$autoLabel = if ($NoAutostart) { 'no' } else { 'yes' }
-		$versionLabel = if ($Version) { $Version } else { 'latest' }
-		Write-Host ("  " + (Paint '1' 'red') + "  version      $versionLabel")
-		Write-Host ("  " + (Paint '2' 'red') + "  install to   $Dir")
-		Write-Host ("  " + (Paint '3' 'red') + "  start after  $startLabel")
-		Write-Host ("  " + (Paint '4' 'red') + "  autostart    $autoLabel")
+		$startLabel = if ($NoStart) { Paint '[OFF]' 'slate' } else { Paint '[ON ]' 'green' }
+		$autoLabel = if ($NoAutostart) { Paint '[OFF]' 'slate' } else { Paint '[ON ]' 'green' }
+		if ($NoStart) { $autoLabel = Paint '[ --]' 'amber' }
+		$versionLabel = if ($Version) { $Version } else { 'Latest stable' }
+		$versionHint = if ($Version) { '(pinned release)' } else { '(recommended)' }
+		Write-Host (Paint '  INSTALLATION' 'dim')
+		Write-Rule
+		Write-Host ("  " + (Paint '[1]' 'red') + ' ' + (Paint 'Release' 'bold'))
+		Write-Host ("      $versionLabel " + (Paint $versionHint 'dim'))
 		Write-Host ''
-		$choice = Read-Host '  Change [1-4], or Enter to install'
+		Write-Host ("  " + (Paint '[2]' 'red') + ' ' + (Paint 'Install folder' 'bold'))
+		Write-Host "      $Dir"
+		Write-Host ''
+		Write-Host (Paint '  ON YOUR SCHEDULE' 'dim')
+		Write-Rule
+		Write-Host ("  " + (Paint '[3]' 'red') + " $startLabel " + (Paint 'Start after install' 'bold'))
+		Write-Host (Paint "      Have the console ready as soon as we're done." 'dim')
+		Write-Host ''
+		Write-Host ("  " + (Paint '[4]' 'red') + " $autoLabel " + (Paint 'Start at login' 'bold'))
+		if ($NoStart) {
+			Write-Host (Paint '      Not changed (start after install is off)' 'amber')
+		} else {
+			Write-Host (Paint '      Keep Relo ready whenever you sign in.' 'dim')
+		}
+		Write-Host ''
+		Write-Host (Paint (Paint '  >>>  Press Enter to continue installation' 'bold') 'red')
+		Write-Host (Paint '       1-4 to adjust a setting / q to cancel' 'dim')
+		Write-Host ''
+		$choice = Read-Setup 'What would you like to do?'
 		Write-Host ''
 		switch ($choice) {
 			'' { }
 			'1' {
-				$value = Read-Host '  Version (blank for latest)'
+				Write-Note 'Enter a release such as v0.1.0. Leave blank for latest stable.'
+				$value = Read-Setup 'Which release?'
 				$script:Version = $value
 			}
 			'2' {
-				$value = Read-Host "  Install directory [$Dir]"
+				Write-Note "Press Enter to keep $Dir."
+				$value = Read-Setup 'Where should Relo be installed?'
 				if ($value) { $script:Dir = $value }
+				Resolve-Paths
 			}
-			'3' { $script:NoStart = [switch](-not $NoStart.IsPresent) }
-			'4' { $script:NoAutostart = [switch](-not $NoAutostart.IsPresent) }
-			default { Write-Note 'Pick 1 to 4, or press Enter.' }
+			'3' { $script:NoStart = [switch](-not [bool]$NoStart) }
+			'4' { $script:NoAutostart = [switch](-not [bool]$NoAutostart) }
+			'q' { Write-Note 'Setup canceled. Nothing was changed.'; exit 0 }
+			default { Write-Note 'Choose 1, 2, 3 or 4; Enter to install; q to cancel.' }
 		}
 		if ($choice -eq '') { break }
 		Write-Host ''
@@ -509,19 +579,20 @@ Get-Platform
 Resolve-Paths
 
 $interactive = $false
-try { $interactive = -not $Yes -and -not [Console]::IsInputRedirected } catch { $interactive = $false }
+try { $interactive = $script:Terminal -and -not $Yes -and -not [Console]::IsInputRedirected } catch { $interactive = $false }
 
 if ($interactive) {
 	Invoke-Options
 } else {
 	Write-Banner
-	Write-Host "  Relo installer · windows/$ArchName"
-	Write-Host ''
+	Write-Section '01' 'Use your selected settings'
+	Write-Note 'Running without prompts. Use -Help to see setup options.'
 }
 
 Test-Foreign
 Write-OK 'No other Relo installation is in the way'
 
+Write-Section '02' 'Download Relo'
 Resolve-Version
 Write-Note "Release $ResolvedVersion"
 
@@ -538,6 +609,7 @@ try {
 		Write-Note 'This release publishes no checksums.txt'
 	}
 
+	Write-Section '03' 'Install Relo'
 	Stop-Daemon
 	Read-Ports
 	Clear-Ports
@@ -557,6 +629,7 @@ try {
 
 	Add-ToPath $Dir
 
+	Write-Section '04' 'Get you ready'
 	Start-Daemon
 	Write-Summary
 } finally {
