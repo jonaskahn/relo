@@ -325,14 +325,10 @@ func OpenCodeFreeRequest(req *inference.Request, format catalog.APIFormat) (*inf
 // including the limit it puts on a tool name, and both the older /zen paths
 // and the current /inference ones count.
 func OpenCodeGateway(baseURL string) bool {
-	parsed, err := url.Parse(strings.TrimSpace(baseURL))
-	if err != nil || parsed.Hostname() == "" {
+	path, ok := gatewayPath(baseURL)
+	if !ok {
 		return false
 	}
-	if !strings.EqualFold(parsed.Hostname(), "opencode.ai") {
-		return false
-	}
-	path := strings.ToLower(parsed.EscapedPath())
 	return strings.Contains(path, "/zen") || strings.Contains(path, "/inference")
 }
 
@@ -356,32 +352,41 @@ func OpenCodeGatewayRequest(req *inference.Request) (*inference.Request, map[str
 // before it will route a request to a session.
 const OpenCodeGoSessionHeader = "x-opencode-session"
 
-// OpenCodeGo reports whether baseURL is the OpenCode Go gateway. The
-// gateway rejects a request that arrives without a session header.
+// OpenCodeGo reports whether baseURL is the OpenCode Go gateway. This is the
+// lane that rejects a request arriving without a session header, and it counts
+// on both the older /zen path and the current /inference one, because a
+// connection keeps whichever base URL it was created with.
 func OpenCodeGo(baseURL string) bool {
-	parsed, err := url.Parse(strings.TrimSpace(baseURL))
-	if err != nil || parsed.Hostname() == "" {
+	path, ok := gatewayPath(baseURL)
+	if !ok {
 		return false
 	}
-	if !strings.EqualFold(parsed.Hostname(), "opencode.ai") {
-		return false
-	}
-	return strings.Contains(strings.ToLower(parsed.EscapedPath()), "/zen/go")
+	return strings.Contains(path, "/zen/go") || strings.Contains(path, "/inference/go")
 }
 
 // OpenCodeFree reports whether baseURL is the signed-out OpenCode Zen
-// gateway, which keeps no account and prices nothing. The Go path is
+// gateway, which keeps no account and prices nothing. The Go lane is
 // OpenCodeGo; a custom URL on the same gateway counts the same way.
 func OpenCodeFree(baseURL string) bool {
+	path, ok := gatewayPath(baseURL)
+	if !ok {
+		return false
+	}
+	return strings.Contains(path, "/zen") && !strings.Contains(path, "/zen/go")
+}
+
+// gatewayPath returns the lowercased path of a URL on the OpenCode gateway,
+// and whether the address is on that host at all, so no lane can match someone
+// else's address.
+func gatewayPath(baseURL string) (string, bool) {
 	parsed, err := url.Parse(strings.TrimSpace(baseURL))
 	if err != nil || parsed.Hostname() == "" {
-		return false
+		return "", false
 	}
 	if !strings.EqualFold(parsed.Hostname(), "opencode.ai") {
-		return false
+		return "", false
 	}
-	path := strings.ToLower(parsed.EscapedPath())
-	return strings.Contains(path, "/zen") && !strings.Contains(path, "/zen/go")
+	return strings.ToLower(parsed.EscapedPath()), true
 }
 
 // WithOpenCodeGoSession returns headers with a stable session for one
