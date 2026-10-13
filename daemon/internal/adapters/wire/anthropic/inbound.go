@@ -29,6 +29,7 @@ const (
 type Inbound struct {
 	suffix     string
 	model      string
+	native     []byte
 	seq        int
 	started    bool
 	blockIndex int
@@ -71,7 +72,14 @@ func (i *Inbound) DecodeRequest(r *http.Request) (*inference.Request, error) {
 		return nil, err
 	}
 	i.model = canonical.Model
+	i.native = body
 	return canonical, nil
+}
+
+// NativeBody returns the client body this codec decoded, so a routed attempt
+// on the Messages wire keeps the controls only the client's own shape carries.
+func (i *Inbound) NativeBody() []byte {
+	return i.native
 }
 
 // EncodeResponseEvent renders one canonical event as Messages SSE frames.

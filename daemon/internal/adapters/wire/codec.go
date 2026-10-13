@@ -252,3 +252,10 @@ type InboundCodec interface {
 	EncodeResponseEvent(event inference.Event) ([]SSEEvent, error)
 	EncodeResponse(events []inference.Event) ([]byte, error)
 }
+
+// NativeBodyCarrier is an inbound codec that kept the client body it decoded,
+// so an attempt on the client's own wire family reuses the shape the client
+// built instead of a rebuild that drops its native controls.
+type NativeBodyCarrier interface {
+	NativeBody() []byte
+}

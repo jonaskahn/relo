@@ -113,8 +113,18 @@ func (s *Server) handleInference(surface inferenceSurface) http.HandlerFunc {
 			s.recordUnreadable(r, surface, captured, answer)
 			return
 		}
-		s.relay(relaySpec{writer: answer, request: r, surface: surface, inbound: inbound, canonical: request, origin: inference.OriginExternal, captured: captured})
+		s.relay(relaySpec{writer: answer, request: r, surface: surface, inbound: inbound, canonical: request, origin: inference.OriginExternal, captured: captured, native: inboundNativeBody(inbound)})
 	}
+}
+
+// inboundNativeBody returns the client body an inbound codec kept, which a
+// routed attempt reuses when it speaks the client's own wire family.
+func inboundNativeBody(inbound wire.InboundCodec) []byte {
+	carrier, ok := inbound.(wire.NativeBodyCarrier)
+	if !ok {
+		return nil
+	}
+	return carrier.NativeBody()
 }
 
 type relaySpec struct {

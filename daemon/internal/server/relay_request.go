@@ -256,11 +256,16 @@ func (s *Server) attemptPromptTokens(outcome *requestOutcome) int64 {
 	return int64(s.estimateRequestTokens(outcome.request) + max(outcome.request.MaxTokens, 0))
 }
 
+// nativeBody returns the client's own body when the attempt speaks the client's
+// wire family, so an alias or a route member keeps the shape the client built
+// instead of a rebuild that drops its native controls. Routing already decided
+// that the candidate serves the requested model, so the two spellings never
+// have to match.
 func (s *Server) nativeBody(outcome *requestOutcome, candidate routing.Candidate) []byte {
 	if outcome == nil || len(outcome.native) == 0 {
 		return nil
 	}
-	if candidate.Model.UpstreamID == "" || candidate.Model.UpstreamID != outcome.requested {
+	if candidate.Model.APIFormat != catalog.FormatAnthropic {
 		return nil
 	}
 	return outcome.native
