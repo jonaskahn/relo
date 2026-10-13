@@ -103,6 +103,17 @@ func TestNewer(t *testing.T) {
 		{name: "two builds of one run", latest: "0.1.0-beta.1.a", current: "0.1.0-beta.1.b", want: false},
 		{name: "the run number orders two builds", latest: "0.1.0-beta.418.a", current: "0.1.0-beta.417.z", want: true},
 		{name: "a build suffix states no order", latest: "0.1.1+abc", current: "0.1.1", want: false},
+		// The tail is read field by field, so a number always ranks below a
+		// word whatever the build hash beside it says, and a tail that stops
+		// early is the shorter of the two.
+		{name: "a number ranks below a word", latest: "0.1.0-beta.a", current: "0.1.0-beta.1", want: true},
+		{name: "a word ranks above a number", latest: "0.1.0-beta.1", current: "0.1.0-beta.a", want: false},
+		{name: "the shorter tail ranks below", latest: "0.1.0-beta", current: "0.1.0-beta.1", want: false},
+		{name: "the longer tail ranks above", latest: "0.1.0-beta.1", current: "0.1.0-beta", want: true},
+		{name: "an empty tail field ranks below a word", latest: "0.1.0-beta.a", current: "0.1.0-beta.", want: true},
+		// A version field that is not a number ends the reading: the rest of
+		// the version is not compared, so what follows decides nothing.
+		{name: "a field that is not a number ends the version", latest: "0.1.x.9", current: "0.1.0", want: false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
