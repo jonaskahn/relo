@@ -482,6 +482,11 @@ func endpointBase(candidate routing.Candidate, authorized catalog.Authorization)
 // gateway's tool-name limit, so its request stays otherwise whole.
 func (s *Server) modelRequest(spec attemptSpec, template catalog.Template, templated bool) (*inference.Request, map[string]string) {
 	copied := modelRequest(spec.outcome.request, spec.candidate.Model.UpstreamID)
+	if spec.candidate.Model.APIFormat == catalog.FormatCloudCode && isClaudeAntigravity(spec.candidate) {
+		// Claude thinks through nothing on this transport, so a stated
+		// effort never reaches the codec.
+		copied.Reasoning = nil
+	}
 	if templated && template.ID == catalog.OpenCodeFreeTemplate {
 		return wire.OpenCodeFreeRequest(copied, spec.candidate.Model.APIFormat)
 	}

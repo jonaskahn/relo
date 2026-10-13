@@ -36,6 +36,43 @@ func TestRetiredAntigravity(t *testing.T) {
 	}
 }
 
+func TestClaudeAntigravity(t *testing.T) {
+	for _, id := range []string{"claude-sonnet-4-6", "claude-opus-4-6-thinking", " CLAUDE-sonnet-4-6 "} {
+		if !ClaudeAntigravity(id) {
+			t.Fatalf("ClaudeAntigravity(%q) = false, want the Claude family kept", id)
+		}
+	}
+	for _, id := range []string{"gemini-3.8-flash", "gpt-oss-120b-medium", ""} {
+		if ClaudeAntigravity(id) {
+			t.Fatalf("ClaudeAntigravity(%q) = true, want only the Claude family", id)
+		}
+	}
+}
+
+// TestAntigravityClaudeStatesNoThinking pins that a Claude model on the
+// Antigravity roster resolves without thinking controls, even when the model
+// index or an operator override states a ladder: the vendor serves the id as
+// listed and any stated effort is ignored on the way out.
+func TestAntigravityClaudeStatesNoThinking(t *testing.T) {
+	yes := true
+	res := &Model{ID: "claude-sonnet-4-6"}
+	resolveModelCapabilities(res,
+		Provider{ModelsFormat: ModelsAntigravity},
+		FactsRecord{SupportsReasoning: &yes, ReasoningEfforts: []string{"low", "medium", "high", "max"}, ReasoningToggle: &yes, ReasoningBudget: &yes},
+		FactsRecord{SupportsReasoning: &yes},
+		FactsRecord{SupportsReasoning: &yes, ReasoningEfforts: []string{"low", "medium", "high", "max"}, ReasoningBudget: &yes},
+	)
+	if res.SupportsReasoning == nil || *res.SupportsReasoning {
+		t.Fatalf("SupportsReasoning = %v, want false for Claude on Antigravity", res.SupportsReasoning)
+	}
+	if len(res.ReasoningEfforts) != 0 || res.ReasoningToggle || res.ReasoningBudget {
+		t.Fatalf("reasoning = %+v, want no ladder, toggle, or budget", res)
+	}
+	if res.ReasoningBudgetMin != nil || res.ReasoningBudgetMax != nil {
+		t.Fatalf("budget bounds = %v/%v, want none", res.ReasoningBudgetMin, res.ReasoningBudgetMax)
+	}
+}
+
 func TestCleanAntigravityGeminiName(t *testing.T) {
 	cases := []struct {
 		name string

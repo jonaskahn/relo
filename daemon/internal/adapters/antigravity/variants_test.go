@@ -36,10 +36,8 @@ func TestCollapse(t *testing.T) {
 		{"pro off", "gemini-3.1-pro", "none", "gemini-3.1-pro-low", "MODEL_PLACEHOLDER_M36", maxOutputPro, true},
 		{"pro high", "gemini-3.1-pro", "high", "gemini-pro-agent", "MODEL_PLACEHOLDER_M16", maxOutputPro, true},
 
-		{"sonnet low", "claude-sonnet-4-6", "low", "claude-sonnet-4-6", "", maxOutputClaude, true},
-		{"sonnet high", "claude-sonnet-4-6", "high", "claude-sonnet-4-6", "", maxOutputClaude, true},
-		{"opus low", "claude-opus-4-6", "minimal", "claude-opus-4-6-thinking", "", maxOutputClaude, true},
-		{"opus high", "claude-opus-4-6", "max", "claude-opus-4-6-thinking", "", maxOutputClaude, true},
+		{"a claude model stays itself", "claude-sonnet-4-6", "high", "", "", 0, false},
+		{"an opus model stays itself", "claude-opus-4-6-thinking", "max", "", "", 0, false},
 
 		{"the ladder above the top band clamps down", "gemini-3.5-flash", "max", "gemini-3-flash-agent", "MODEL_PLACEHOLDER_M132", maxOutputGemini, true},
 
@@ -74,5 +72,17 @@ func TestCollapseLeavesUnnamedBandsAlone(t *testing.T) {
 	variant, collapsed := Collapse("gemini-3.1-pro", "medium")
 	if collapsed {
 		t.Fatalf("Collapse(gemini-3.1-pro, medium) = %+v, want no row", variant)
+	}
+}
+
+// TestClaudeVariantKeepsItsOwnID pins that a Claude model reaches the wire
+// under its own id: no effort maps it onto another SKU.
+func TestClaudeVariantKeepsItsOwnID(t *testing.T) {
+	variant := ClaudeVariant("claude-sonnet-4-6")
+	if variant.WireModel != "claude-sonnet-4-6" {
+		t.Fatalf("WireModel = %q, want the model's own id", variant.WireModel)
+	}
+	if variant.MaxOutput != maxOutputClaude {
+		t.Fatalf("MaxOutput = %d, want %d", variant.MaxOutput, maxOutputClaude)
 	}
 }

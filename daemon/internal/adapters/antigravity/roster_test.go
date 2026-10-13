@@ -33,7 +33,13 @@ func TestLogical(t *testing.T) {
 	if _, found := Logical("gemini-9.9-flash-high"); found {
 		t.Fatal("Logical() found an unknown SKU, want no row")
 	}
+	if _, found := Logical("claude-sonnet-4-6"); found {
+		t.Fatal("Logical() found a Claude model, want no row")
+	}
 	if Variants("gemini-3.8-flash") == nil {
 		t.Fatal("Variants() = nil, want the band rows")
+	}
+	if Variants("claude-sonnet-4-6") != nil {
+		t.Fatal("Variants() named a Claude model, want no rows")
 	}
 }

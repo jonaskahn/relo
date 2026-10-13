@@ -760,6 +760,18 @@ func resolveModelCapabilities(res *Model, host Provider, ov, pr, md FactsRecord)
 	res.ReasoningBudget = boolValue(pickBool(ov.ReasoningBudget, pr.ReasoningBudget, md.ReasoningBudget))
 	res.ReasoningBudgetMin = pickInt64(ov.ReasoningBudgetMin, pr.ReasoningBudgetMin, md.ReasoningBudgetMin)
 	res.ReasoningBudgetMax = pickInt64(ov.ReasoningBudgetMax, pr.ReasoningBudgetMax, md.ReasoningBudgetMax)
+	if host.ModelsFormat == ModelsAntigravity && ClaudeAntigravity(res.ID) {
+		// Claude reaches the wire under its own id with no thinking, so a
+		// ladder inherited from the model index or an operator override
+		// must not surface as thinking controls.
+		no := false
+		res.SupportsReasoning = &no
+		res.ReasoningEfforts = []string{}
+		res.ReasoningToggle = false
+		res.ReasoningBudget = false
+		res.ReasoningBudgetMin = nil
+		res.ReasoningBudgetMax = nil
+	}
 }
 
 func resolveModelPricing(res *Model, ov, pr, md FactsRecord) {

@@ -12,7 +12,12 @@ import (
 )
 
 // selectAntigravityAttempt resolves the exact Cloud Code SKU one attempt sends.
+// Claude passes through under its own id: any thinking the request states is
+// ignored rather than resolved onto a SKU.
 func (s *Server) selectAntigravityAttempt(ctx context.Context, spec *attemptSpec, tried map[string][]string) (*wire.AntigravityRequest, error) {
+	if isClaudeAntigravity(spec.candidate) {
+		return nil, nil
+	}
 	effort := ""
 	if spec.outcome.request != nil {
 		effort, _ = catalog.RequestEffort(spec.outcome.request.Reasoning)
@@ -92,4 +97,12 @@ func (s *Server) excludeAntigravityAccount(spec *attemptSpec, tried map[string][
 
 func antigravitySelectionError(candidate routing.Candidate, _ string) error {
 	return fmt.Errorf("no account serves the requested effort for %s: %w", candidate.ModelID, wire.ErrUnsupportedFeature)
+}
+
+// isClaudeAntigravity reports whether one attempt names a Claude model, which
+// the vendor serves under its own id with no thinking to resolve.
+func isClaudeAntigravity(candidate routing.Candidate) bool {
+	return catalog.ClaudeAntigravity(candidate.ModelID) ||
+		catalog.ClaudeAntigravity(candidate.Model.ID) ||
+		catalog.ClaudeAntigravity(candidate.Model.UpstreamID)
 }
