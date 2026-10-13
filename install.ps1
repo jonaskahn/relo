@@ -13,7 +13,8 @@
 param(
 	[string] $Version = $env:RELO_VERSION,
 	[string] $Dir = $env:RELO_INSTALL_DIR,
-	[string] $Home = $env:RELO_HOME,
+	[Alias('Home')]
+	[string] $ReloHome = $env:RELO_HOME,
 	[switch] $NoStart,
 	[switch] $NoAutostart,
 	[switch] $ForcePorts,
@@ -122,8 +123,8 @@ function Resolve-Paths {
 		$script:Dir = Join-Path $env:LOCALAPPDATA 'Relo\bin'
 	}
 	$script:Dir = [Environment]::ExpandEnvironmentVariables($Dir)
-	if (-not $Home -or $Home -eq '') {
-		$script:Home = Join-Path $env:USERPROFILE '.relo'
+	if (-not $ReloHome -or $ReloHome -eq '') {
+		$script:ReloHome = Join-Path $env:USERPROFILE '.relo'
 	}
 	$script:Bin = Join-Path $Dir 'relo.exe'
 }
@@ -263,7 +264,7 @@ function Test-Checksum([string] $File, [string] $Sums, [string] $Name) {
 # -------------------------------------------------------------- the ports ---
 
 function Read-Ports {
-	$config = Join-Path $Home 'config.toml'
+	$config = Join-Path $ReloHome 'config.toml'
 	$script:CheckPorts = @()
 	if (Test-Path $config) {
 		$section = ''
@@ -433,7 +434,7 @@ function Write-Summary {
 	Write-Host ("  Relo $ResolvedVersion is installed.")
 	Write-Host ''
 	Write-Host "  binary      $Bin"
-	Write-Host "  state       $Home"
+	Write-Host "  state       $ReloHome"
 	Write-Host ("  console     " + (Paint "http://127.0.0.1:$port" 'red'))
 	Write-Host ("  channel     script  " + (Paint '(Relo-Setup and npm are refused from here)' 'dim'))
 	Write-Host ''
@@ -520,7 +521,6 @@ if ($interactive) {
 
 Test-Foreign
 Write-OK 'No other Relo installation is in the way'
-$script:Home = $Home
 
 Resolve-Version
 Write-Note "Release $ResolvedVersion"
