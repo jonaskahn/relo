@@ -1,10 +1,10 @@
 # Relo installer for Windows: the daemon, from the latest release.
 #
-#   irm https://relo.ifelse.on/install.ps1 | iex
+#   irm https://relo.ifelse.one/install.ps1 | iex
 #
 # With arguments (PowerShell cannot pass them through a pipe):
 #
-#   & ([scriptblock]::Create((irm https://relo.ifelse.on/install.ps1))) -NoStart
+#   & ([scriptblock]::Create((irm https://relo.ifelse.one/install.ps1))) -NoStart
 #
 # The script installs exactly one binary. An installation that belongs to
 # another channel -- the Relo-Setup installer or npm -- is refused instead of

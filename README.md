@@ -1,7 +1,7 @@
 # Relo site
 
 Static page for [Relo](https://github.com/jonaskahn/relo), published at
-<https://relo.ifelse.on/>. This branch holds only the published files.
+<https://relo.ifelse.one/>. This branch holds only the published files.
 
 | Path                  | Purpose                                              |
 | --------------------- | ---------------------------------------------------- |
@@ -23,11 +23,11 @@ No build step. Serve the folder as is, for example `python3 -m http.server`.
 The installers sit at the site root so one line is enough:
 
 ```sh
-curl -fsSL https://relo.ifelse.on/install.sh | sh
+curl -fsSL https://relo.ifelse.one/install.sh | sh
 ```
 
 ```powershell
-irm https://relo.ifelse.on/install.ps1 | iex
+irm https://relo.ifelse.one/install.ps1 | iex
 ```
 
 They install the daemon from the latest release. An installation that belongs

@@ -1,7 +1,7 @@
 #!/bin/sh
 # Relo installer: the daemon, from the latest release, on macOS and Linux.
 #
-#   curl -fsSL https://relo.ifelse.on/install.sh | sh
+#   curl -fsSL https://relo.ifelse.one/install.sh | sh
 #
 # The script installs exactly one binary. An installation that belongs to
 # another channel -- Homebrew, npm, the macOS app, a .deb or a .rpm -- is

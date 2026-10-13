@@ -444,7 +444,7 @@
   function transcript(kind) {
     if (kind === "ps1") {
       return [
-        { kind: "cmd", text: "PS> irm https://relo.ifelse.on/install.ps1 | iex" },
+        { kind: "cmd", text: "PS> irm https://relo.ifelse.one/install.ps1 | iex" },
         { kind: "blank" },
         { kind: "out", text: "  Relo.  one daemon · many tools · every provider", cls: "accent" },
         { kind: "out", text: "  Relo installer · windows/amd64", cls: "dim" },
@@ -460,7 +460,7 @@
       ];
     }
     return [
-      { kind: "cmd", text: "curl -fsSL https://relo.ifelse.on/install.sh | sh" },
+      { kind: "cmd", text: "curl -fsSL https://relo.ifelse.one/install.sh | sh" },
       { kind: "blank" },
       { kind: "out", text: "  Relo.  one daemon · many tools · every provider", cls: "accent" },
       { kind: "out", text: "  Relo installer · darwin/arm64", cls: "dim" },
@@ -495,8 +495,8 @@
     termBody.innerHTML = "";
     if (termTitle) {
       termTitle.textContent = replayScript === "ps1"
-        ? "powershell — relo.ifelse.on/install.ps1"
-        : "zsh — relo.ifelse.on/install.sh";
+        ? "powershell — relo.ifelse.one/install.ps1"
+        : "zsh — relo.ifelse.one/install.sh";
     }
 
     var steps = transcript(replayScript);
