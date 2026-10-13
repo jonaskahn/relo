@@ -136,7 +136,7 @@ else
 fi
 
 missing NPM_TOKEN && prompt_secret NPM_TOKEN "npm access token (empty to skip)"
-missing HOMEBREW_TAP_TOKEN && prompt_secret HOMEBREW_TAP_TOKEN "Homebrew tap token, PAT with contents:write on homebrew-relo (empty to skip)"
+missing HOMEBREW_TAP_TOKEN && prompt_secret HOMEBREW_TAP_TOKEN "Homebrew tap token, PAT with contents:write on homebrew-apps (empty to skip)"
 missing APPLE_ID && prompt_secret APPLE_ID "Apple ID email (empty to skip)"
 missing APPLE_APP_SPECIFIC_PASSWORD && prompt_secret APPLE_APP_SPECIFIC_PASSWORD "app-specific password (empty to skip)"
 
