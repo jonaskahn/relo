@@ -76,6 +76,16 @@ jobs:
         with:
           ref: ${{ needs.gate.outputs.sha }}
 
+      - name: Assert an Apple silicon runner
+        run: |
+          # macos-15 is the arm64 image (macos-15-intel is the x86_64 one), but
+          # the label is a convention, not a guarantee. Every darwin, linux, and
+          # windows binary below is cross-compiled from this one host, so an
+          # Intel runner has to fail here rather than quietly become the base.
+          arch=$(uname -m)
+          [ "$arch" = arm64 ] || { echo "runner is $arch, want arm64" >&2; exit 1; }
+          echo "building every platform from an $arch host"
+
       - name: Set up Go
         uses: actions/setup-go@v6
         with:
