@@ -105,22 +105,14 @@ jobs:
           # service only charts what the gate measured.
           fail_ci_if_error: false
 
-      - name: Checkout gh-pages
-        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-        uses: actions/checkout@v5
-        with:
-          ref: gh-pages
-          path: gh-pages
-
       - name: Publish coverage badge
         if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-        working-directory: gh-pages
         run: |
-          python3 ../scripts/coverage-badge.py ../coverage.out coverage.svg
+          python3 scripts/coverage-badge.py coverage.out assets/coverage.svg
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add coverage.svg
-          git diff --cached --quiet || git commit -m "chore: publish coverage badge"
+          git add assets/coverage.svg
+          git diff --cached --quiet || git commit -m "chore: publish coverage badge [skip ci]"
           git push
 
   cross-build:
