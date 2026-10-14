@@ -11,6 +11,7 @@ import (
 	"net/http"
 	"os"
 	"reflect"
+	"regexp"
 	"runtime"
 	"strings"
 	"testing"
@@ -405,6 +406,12 @@ func contextBetaSent(value string) bool {
 	return strings.Contains(value, "context-1m-2025-08-07")
 }
 
+var uuidV4Pattern = regexp.MustCompile(`^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$`)
+
+func isUUIDv4(value string) bool {
+	return uuidV4Pattern.MatchString(value)
+}
+
 func TestClaudeCodeOAuthFingerprint(t *testing.T) {
 	opts := wire.CodecOpts{
 		CredentialRef: "oauth-token", AuthMethod: "oauth", SessionAnchor: "sess-1",
@@ -443,9 +450,9 @@ func TestClaudeCodeOAuthFingerprint(t *testing.T) {
 		t.Fatalf("stainless = %v", request.Header)
 	}
 	body := rawBody(t, request)
-	sum := sha256.Sum256([]byte("59cf53e54c78o2.1.296"))
+	sum := sha256.Sum256([]byte("59cf53e54c78o2.1.299"))
 	suffix := hex.EncodeToString(sum[:])[:3]
-	if !strings.Contains(body, "cc_version=2.1.296."+suffix) || strings.Contains(body, "cch=00000") {
+	if !strings.Contains(body, "cc_version=2.1.299."+suffix) || strings.Contains(body, "cch=00000") {
 		t.Fatalf("body missing the patched billing header: %s", body)
 	}
 	again := rawBody(t, newTestRequest(t, canonicalRequest(true), opts))
@@ -453,7 +460,7 @@ func TestClaudeCodeOAuthFingerprint(t *testing.T) {
 		t.Fatal("billing checksum changed between two encodes of the same request")
 	}
 
-	t.Run("a caller authorization is dropped and a claude-cli user agent is forwarded", func(t *testing.T) {
+	t.Run("an operator may override the fingerprint on the official host", func(t *testing.T) {
 		forwarded := newTestRequest(t, canonicalRequest(false), wire.CodecOpts{
 			CredentialRef: "oauth-token", AuthMethod: "oauth",
 			ExtraHeaders: map[string]string{
@@ -469,8 +476,55 @@ func TestClaudeCodeOAuthFingerprint(t *testing.T) {
 		if forwarded.Header.Get("User-Agent") != "claude-cli/9.9.9 (external, cli)" {
 			t.Fatalf("user-agent = %q, want the caller claude-cli agent", forwarded.Header.Get("User-Agent"))
 		}
-		if forwarded.Header.Get("anthropic-beta") != anthropic.ClaudeCodeBetaShort || forwarded.Header.Get("X-Custom") != "keep" {
+		if forwarded.Header.Get("anthropic-beta") != "context-1m-2025-08-07" || forwarded.Header.Get("X-Custom") != "keep" {
 			t.Fatalf("beta = %q, custom = %q", forwarded.Header.Get("anthropic-beta"), forwarded.Header.Get("X-Custom"))
+		}
+	})
+
+	t.Run("a subscription attempt carries the native correlation headers", func(t *testing.T) {
+		first := newTestRequest(t, canonicalRequest(false), wire.CodecOpts{
+			CredentialRef: "oauth-token", AuthMethod: "oauth",
+		})
+		second := newTestRequest(t, canonicalRequest(false), wire.CodecOpts{
+			CredentialRef: "oauth-token", AuthMethod: "oauth",
+		})
+		if first.Header.Get("anthropic-dispatch-id") != "v2d" {
+			t.Fatalf("dispatch-id = %q, want v2d", first.Header.Get("anthropic-dispatch-id"))
+		}
+		if first.Header.Get("x-claude-code-request-class") != "main" {
+			t.Fatalf("request-class = %q, want main", first.Header.Get("x-claude-code-request-class"))
+		}
+		clientID, promptID := first.Header.Get("x-client-request-id"), first.Header.Get("x-claude-code-prompt-id")
+		if !isUUIDv4(clientID) || !isUUIDv4(promptID) {
+			t.Fatalf("client-request-id = %q, prompt-id = %q, want v4 UUIDs", clientID, promptID)
+		}
+		if clientID == promptID {
+			t.Fatal("the two correlation ids match, want independent values")
+		}
+		if second.Header.Get("x-client-request-id") == clientID ||
+			second.Header.Get("x-claude-code-prompt-id") == promptID {
+			t.Fatal("correlation ids repeat across attempts, want fresh values")
+		}
+	})
+
+	t.Run("the long-context beta follows the upstream model generation", func(t *testing.T) {
+		long := func(model string) string {
+			return newTestRequest(t, canonicalRequest(true), wire.CodecOpts{
+				CredentialRef: "oauth-token", AuthMethod: "oauth", SessionAnchor: "sess-1",
+				LongContext: true, UpstreamModel: model,
+			}).Header.Get("anthropic-beta")
+		}
+		if got := long("claude-opus-4-6"); got != anthropic.ClaudeCodeBeta || !contextBetaSent(got) {
+			t.Fatalf("beta = %q, want the long profile for opus 4.6", got)
+		}
+		if got := long("claude-sonnet-4-5"); got != anthropic.ClaudeCodeBeta || !contextBetaSent(got) {
+			t.Fatalf("beta = %q, want the long profile for sonnet 4.5", got)
+		}
+		if got := long("claude-opus-5-0"); got != anthropic.ClaudeCodeBetaShort || contextBetaSent(got) {
+			t.Fatalf("beta = %q, want the short profile past 4.6", got)
+		}
+		if got := long(""); got != anthropic.ClaudeCodeBeta || !contextBetaSent(got) {
+			t.Fatalf("beta = %q, want the legacy long profile without a model", got)
 		}
 	})
 
