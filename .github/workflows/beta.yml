@@ -1,10 +1,11 @@
 name: Beta
 
-# Every green merge to main becomes a beta: daemon tarballs published under a
-# prerelease tag, on npm's `beta` dist-tag, and in the tap as its own formula.
-# Nothing here writes a stable channel: no release.yml job, no
-# Formula/relo.rb, no npm `latest`, and no appcast entry, so an installed Relo
-# never sees a beta. No macOS app, Linux, or Windows packages.
+# Every green merge to main becomes a beta: daemon binaries built on macOS,
+# published under a prerelease tag, on npm's `beta` dist-tag, and in the tap
+# as its own formula. Windows ships as a raw binary only, no desktop
+# installer. Nothing here writes a stable channel: no release.yml job, no
+# Formula/relo.rb, no npm `latest`, and no appcast entry, so an installed
+# Relo never sees a beta. No macOS app or Linux packages.
 #
 # The version is derived, never committed, so the README badge and the declared
 # versions stay on the release the repository is working towards. It descends
@@ -61,7 +62,9 @@ jobs:
   binaries:
     name: Build daemon binaries
     needs: gate
-    runs-on: ubuntu-latest
+    # M-series runner: Go cross-compiles every platform with CGO off, so one
+    # macOS host builds all binaries and no other OS runner is needed.
+    runs-on: macos-15
     outputs:
       arm64: ${{ steps.sha.outputs.arm64 }}
       amd64: ${{ steps.sha.outputs.amd64 }}
@@ -93,15 +96,19 @@ jobs:
           make build-all VERSION="$VERSION"
           ver="$VERSION"
           ver="${ver#v}"
-          for os in darwin linux; do
+          for os in darwin linux windows; do
             for arch in arm64 amd64; do
+              ext=""
+              if [ "$os" = "windows" ]; then ext=".exe"; fi
               tmp="$(mktemp -d)"
-              cp "dist/relo-$os-$arch" "$tmp/relo"
-              tar -czf "dist/relo-$ver-$os-$arch.tar.gz" -C "$tmp" relo
+              cp "dist/relo-$os-$arch$ext" "$tmp/relo$ext"
+              tar -czf "dist/relo-$ver-$os-$arch.tar.gz" -C "$tmp" "relo$ext"
               rm -rf "$tmp"
             done
           done
-          cd dist && sha256sum relo-*.tar.gz > checksums.txt && cat checksums.txt
+          # shasum, not sha256sum: the latter does not exist on macOS. The
+          # output format is the same, so the sha parsing below still holds.
+          cd dist && shasum -a 256 relo-*.tar.gz > checksums.txt && cat checksums.txt
 
       - name: Read the tarball shas
         id: sha
@@ -121,6 +128,7 @@ jobs:
           path: |
             dist/*.tar.gz
             dist/checksums.txt
+            dist/relo-windows-*.exe
           retention-days: 30
 
   release:
