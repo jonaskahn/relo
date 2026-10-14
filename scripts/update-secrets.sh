@@ -1,9 +1,11 @@
 #!/usr/bin/env bash
 # Stores release secrets with gh. Every value travels through stdin, never the
-# argument list, so a secret never appears in ps output or shell history. Only
-# secrets missing from the repository are asked for: existing ones are left
-# untouched unless --all re-asks everything. Keys that exist locally (Sparkle
-# keypair, Developer ID .p12, Team ID) can be generated at runtime; the script
+# argument list, so a secret never appears in ps output or shell history. Names
+# are auto-detected from .github/workflows (secrets.X / vars.X, minus automatic
+# tokens like GITHUB_TOKEN); every name is always prompted, empty input skips
+# (so existing values are kept unless overwritten). Pass NAMEs to override detection ("FOO" = secret,
+# "VAR:FOO" / "vars.FOO" = variable); --list prints the names without asking.
+# Keys that exist locally (Sparkle keypair, Developer ID .p12, Team ID) can be generated at runtime; the script
 # asks before reading them, and generated files stay under /Volumes/WS/Secret.
 set -euo pipefail
 
@@ -21,31 +23,68 @@ if ! gh auth status >/dev/null 2>&1; then
   exit 1
 fi
 
-ask_all=0
-if [ "${1:-}" = "--all" ]; then
-  ask_all=1
-elif [ -n "${1:-}" ]; then
-  echo "usage: update-secrets.sh [--all]" >&2
-  exit 2
+list_only=0
+only_names=""
+for arg in "$@"; do
+  case "$arg" in
+    --all) ;; # accepted for compatibility; every name is always prompted now
+    --list) list_only=1 ;;
+    -h|--help)
+      echo "usage: update-secrets.sh [--all] [--list] [NAME...]" >&2
+      echo "  no NAMEs: auto-detect secrets.X / vars.X from .github/workflows" >&2
+      echo "  NAMEs: only prompt for those names (VAR:NAME forces a variable)" >&2
+      exit 0 ;;
+    --*) echo "usage: update-secrets.sh [--all] [--list] [NAME...]" >&2; exit 2 ;;
+    *) only_names="$only_names $arg" ;;
+  esac
+done
+# NAMEs override auto-detection: "FOO" = secret, "VAR:FOO" = variable.
+only_names="$(printf '%s' "$only_names" | xargs 2>/dev/null || printf '%s' "$only_names")"
+
+# Auto-detect every secrets.NAME / vars.NAME referenced by workflows, minus
+# automatic tokens (e.g. GITHUB_TOKEN) that never need `gh secret set`.
+detect_names() {
+  grep -rhoE '(secrets|vars)\.[A-Za-z0-9_]+' "$root/.github/workflows" 2>/dev/null \
+    | sort -u | grep -v 'GITHUB_TOKEN' || true
+}
+
+if [ -n "$only_names" ]; then
+  detected="$only_names"
+else
+  detected="$(detect_names)"
+fi
+
+if [ "$list_only" -eq 1 ]; then
+  printf '%s\n' $detected
+  exit 0
 fi
 
 existing="$(gh secret list 2>/dev/null | awk '{print $1}')"
 existing_vars="$(gh variable list 2>/dev/null | awk '{print $1}')"
 
-missing() {
-  [ "$ask_all" -eq 1 ] && return 0
-  printf '%s\n' "$existing" | grep -qxF "$1" && return 1 || return 0
+# already_set prints " (already set)" when the name exists, else "".
+already_set() {
+  printf '%s\n' "$existing" | grep -qxF "$1" && printf ' (already set)' || true
 }
 
-missing_var() {
-  [ "$ask_all" -eq 1 ] && return 0
-  printf '%s\n' "$existing_vars" | grep -qxF "$1" && return 1 || return 0
+already_set_var() {
+  printf '%s\n' "$existing_vars" | grep -qxF "$1" && printf ' (already set)' || true
+}
+
+# read_tty reads one line into the named variable from the terminal, so prompts
+# still work when stdin is piped. Falls back to stdin with no tty attached.
+read_tty() {
+  if [ -r /dev/tty ]; then
+    IFS= read -rs "$1" < /dev/tty
+  else
+    IFS= read -rs "$1"
+  fi
 }
 
 prompt_secret() {
   local name="$1" label="$2" value
-  printf '%s: ' "$label"
-  IFS= read -rs value
+  printf '%s: ' "$label" > /dev/tty 2>/dev/null || printf '%s: ' "$label"
+  read_tty value
   printf '\n'
   if [ -z "$value" ]; then
     echo "skipping $name (empty)"
@@ -58,10 +97,24 @@ prompt_secret() {
 
 ask_yes() {
   local answer
-  printf '%s [y/N]: ' "$1"
-  IFS= read -rs answer
+  printf '%s [y/N]: ' "$1" > /dev/tty 2>/dev/null || printf '%s [y/N]: ' "$1"
+  read_tty answer
   printf '\n'
   [ "$answer" = "y" ] || [ "$answer" = "Y" ]
+}
+
+prompt_var() {
+  local name="$1" label="$2" value
+  printf '%s: ' "$label" > /dev/tty 2>/dev/null || printf '%s: ' "$label"
+  read_tty value
+  printf '\n'
+  if [ -z "$value" ]; then
+    echo "skipping $name (empty)"
+    return 0
+  fi
+  printf '%s' "$value" | gh variable set "$name"
+  echo "set $name variable"
+  unset value
 }
 
 secret_dir="/Volumes/WS/Secret/macos"
@@ -112,32 +165,52 @@ export_p12() {
   fi
 }
 
-if missing SPARKLE_PRIVATE_ED_KEY || missing_var SPARKLE_PUBLIC_ED_KEY; then
-  if ask_yes "generate the Sparkle keypair at runtime and set it as secrets?"; then
-    generate_sparkle
-  else
-    missing SPARKLE_PRIVATE_ED_KEY && prompt_secret SPARKLE_PRIVATE_ED_KEY "Sparkle EdDSA private key (empty to skip)"
-    missing_var SPARKLE_PUBLIC_ED_KEY && prompt_secret SPARKLE_PUBLIC_ED_KEY "Sparkle EdDSA public key (empty to skip)"
-  fi
+if [ -z "$only_names" ]; then
+if ask_yes "generate the Sparkle keypair at runtime and set it as secrets?"; then
+  generate_sparkle
 else
-  echo "Sparkle keys already set"
+  prompt_secret SPARKLE_PRIVATE_ED_KEY "Sparkle EdDSA private key$(already_set SPARKLE_PRIVATE_ED_KEY) (empty to skip)"
+  prompt_var SPARKLE_PUBLIC_ED_KEY "Sparkle EdDSA public key$(already_set_var SPARKLE_PUBLIC_ED_KEY) (empty to skip)"
 fi
 
-if missing APPLE_SIGN_P12_BASE64 || missing APPLE_SIGN_P12_PASSWORD || missing APPLE_TEAM_ID; then
-  if ask_yes "export the Developer ID .p12 at runtime and set it as secrets?"; then
-    export_p12
-  else
-    missing APPLE_SIGN_P12_BASE64 && prompt_secret APPLE_SIGN_P12_BASE64 "Developer ID .p12 as base64 (empty to skip)"
-    missing APPLE_SIGN_P12_PASSWORD && prompt_secret APPLE_SIGN_P12_PASSWORD ".p12 password (empty to skip)"
-    missing APPLE_TEAM_ID && prompt_secret APPLE_TEAM_ID "Apple Team ID (empty to skip)"
-  fi
+if ask_yes "export the Developer ID .p12 at runtime and set it as secrets?"; then
+  export_p12
 else
-  echo "Apple signing secrets already set"
+  prompt_secret APPLE_SIGN_P12_BASE64 "Developer ID .p12 as base64$(already_set APPLE_SIGN_P12_BASE64) (empty to skip)"
+  prompt_secret APPLE_SIGN_P12_PASSWORD ".p12 password$(already_set APPLE_SIGN_P12_PASSWORD) (empty to skip)"
+  prompt_secret APPLE_TEAM_ID "Apple Team ID$(already_set APPLE_TEAM_ID) (empty to skip)"
+fi
 fi
 
-missing NPM_TOKEN && prompt_secret NPM_TOKEN "npm access token (empty to skip)"
-missing HOMEBREW_TAP_TOKEN && prompt_secret HOMEBREW_TAP_TOKEN "Homebrew tap token, PAT with contents:write on homebrew-apps (empty to skip)"
-missing APPLE_ID && prompt_secret APPLE_ID "Apple ID email (empty to skip)"
-missing APPLE_APP_SPECIFIC_PASSWORD && prompt_secret APPLE_APP_SPECIFIC_PASSWORD "app-specific password (empty to skip)"
+prompt_detected() {
+  local entry kind name label
+  for entry in $detected; do
+    case "$entry" in
+      secrets.*) kind=secret; name="${entry#secrets.}" ;;
+      vars.*) kind=var; name="${entry#vars.}" ;;
+      VAR:*) kind=var; name="${entry#VAR:}" ;;
+      *) kind=secret; name="$entry" ;;
+    esac
+    # Sparkle / Apple signing have runtime generators above; the generic
+    # loop only handles the rest so each name is asked for exactly once.
+    case "$name" in
+      SPARKLE_PRIVATE_ED_KEY|SPARKLE_PUBLIC_ED_KEY|APPLE_SIGN_P12_BASE64|APPLE_SIGN_P12_PASSWORD|APPLE_TEAM_ID) continue ;;
+    esac
+    label="$name (empty to skip)"
+    case "$name" in
+      HOMEBREW_TAP_TOKEN) label="Homebrew tap token, PAT with contents:write on homebrew-apps (empty to skip)" ;;
+      APPLE_APP_SPECIFIC_PASSWORD) label="app-specific password (empty to skip)" ;;
+      APPLE_ID) label="Apple ID email (empty to skip)" ;;
+      NPM_TOKEN) label="npm access token (empty to skip)" ;;
+    esac
+    if [ "$kind" = "var" ]; then
+      prompt_var "$name" "$label$(already_set_var "$name")"
+    else
+      prompt_secret "$name" "$label$(already_set "$name")"
+    fi
+  done
+}
+
+prompt_detected
 
 echo "done; verify with: gh secret list"
