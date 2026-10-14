@@ -9,33 +9,47 @@ import (
 	"net/http/httptest"
 	"os"
 	"path/filepath"
-	"strconv"
 	"strings"
 	"testing"
 
+	"github.com/jonaskahn/relo/internal/adapters/codingclients"
 	appaccess "github.com/jonaskahn/relo/internal/application/access"
 	appintegration "github.com/jonaskahn/relo/internal/application/integration"
-	"github.com/jonaskahn/relo/internal/config"
+	"github.com/jonaskahn/relo/internal/inference"
+	"github.com/jonaskahn/relo/internal/platform"
+	"github.com/jonaskahn/relo/tests/testkit"
 )
 
 // dataPlaneProbeService builds a service whose data plane is one test server, so a
 // probe can be asserted on without a daemon listening on a fixed port. Both
 // client protocols point at the same server: what tells them apart is the
-// path and the credential header a probe sends, which is what the tests read.
+// prefix and the credential header a probe sends, which is what the tests read.
 func dataPlaneProbeService(t *testing.T, handler http.Handler) (*harness, *appintegration.Service, *httptest.Server) {
 	t.Helper()
-	server := httptest.NewServer(handler)
-	t.Cleanup(server.Close)
-	port, err := strconv.Atoi(strings.TrimPrefix(server.URL, "http://127.0.0.1:"))
-	if err != nil {
-		t.Fatalf("parse the test server address %s: %v", server.URL, err)
-	}
+	probed := httptest.NewServer(handler)
+	t.Cleanup(probed.Close)
 	h := newHarness(t)
-	settings := &config.Config{}
-	settings.Server.Bind = "127.0.0.1"
-	settings.Server.DataPlane.OpenAI = port
-	settings.Server.DataPlane.Anthropic = port
-	return h, integrationUseCases(t, h, settings, t.TempDir()), server
+	logger, _ := testkit.TestLogger(t)
+	relo, err := os.Executable()
+	if err != nil {
+		relo = ""
+	}
+	clientPaths := codingclients.Paths{
+		Home: t.TempDir(), StateHome: h.home, Relo: relo,
+		DataPlane: func(protocol string) string {
+			return probed.URL + inference.DataPlanePath(protocol)
+		},
+	}
+	built := appintegration.NewService(appintegration.ServiceOptions{
+		Paths:     platform.NewPathResolver(clientPaths),
+		Agents:    platform.NewAgentRegistry(),
+		Files:     platform.NewClientFiles(clientPaths),
+		Processes: platform.NewAgentProcesses(),
+		Wire:      platform.NewWireCodec(),
+		Store:     platform.NewIntegrationStore(h.db), Keys: h.keys, Catalog: h.catalog,
+		Logger: logger, Now: h.clock.Now,
+	})
+	return h, built, probed
 }
 
 // writeIntegrationKey stores the raw client key one agent runs with, which is
@@ -87,8 +101,8 @@ func TestIntegrationModelsSpeakTheClientsProtocol(t *testing.T) {
 			if !read.OK || read.Status != http.StatusOK {
 				t.Fatalf("read = %+v, want the data plane's answer", read)
 			}
-			if gotPath != "/v1/models" {
-				t.Fatalf("path = %q, want the model listing", gotPath)
+			if want := inference.DataPlanePath(testCase.protocol) + "/v1/models"; gotPath != want {
+				t.Fatalf("path = %q, want %q", gotPath, want)
 			}
 			if testCase.protocol == "anthropic" {
 				if gotKey != "rlo_ak_secret" || gotVersion == "" || gotBearer != "" {
@@ -253,7 +267,7 @@ func TestIntegrationChatSendsATurnThroughTheKey(t *testing.T) {
 		raw, _ := io.ReadAll(r.Body)
 		gotBody = string(raw)
 		w.Header().Set("Content-Type", "application/json")
-		if r.URL.Path == "/v1/messages" {
+		if strings.HasSuffix(r.URL.Path, "/v1/messages") {
 			_, _ = w.Write([]byte(`{"content":[{"type":"text","text":"bonjour"}]}`))
 			return
 		}
@@ -272,7 +286,7 @@ func TestIntegrationChatSendsATurnThroughTheKey(t *testing.T) {
 		if !answer.OK || answer.Text != "hi there" {
 			t.Fatalf("answer = %+v, want the text the shape carried", answer)
 		}
-		if gotPath != "/v1/chat/completions" || gotBearer != "Bearer rlo_ak_secret" {
+		if !strings.HasSuffix(gotPath, "/v1/chat/completions") || gotBearer != "Bearer rlo_ak_secret" {
 			t.Fatalf("request = %q bearer %q, want the chat surface and the key", gotPath, gotBearer)
 		}
 		var body map[string]any
@@ -298,7 +312,7 @@ func TestIntegrationChatSendsATurnThroughTheKey(t *testing.T) {
 		if !answer.OK || answer.Text != "bonjour" {
 			t.Fatalf("answer = %+v, want the text blocks the shape carried", answer)
 		}
-		if gotPath != "/v1/messages" || gotKey != "rlo_ak_secret" || gotVersion == "" {
+		if !strings.HasSuffix(gotPath, "/v1/messages") || gotKey != "rlo_ak_secret" || gotVersion == "" {
 			t.Fatalf("request = %q key %q version %q, want the messages surface and the key", gotPath, gotKey, gotVersion)
 		}
 	})

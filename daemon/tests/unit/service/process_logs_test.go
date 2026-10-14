@@ -29,7 +29,7 @@ func processLogHome(t *testing.T) (string, *appstatus.Service) {
 			`{"level":"warning","msg":"serving stale quota","provider":"deepseek","time":"2026-10-05T17:35:24.100000+07:00"}`+"\n"+
 			`{"level":"info","msg":"http request","method":"POST","path":"/v1/chat/completions","status":200,"duration_ms":7585,"time":"2026-10-05T17:35:24.970648+07:00"}`+"\n"+
 			`{"level":"error","msg":"upstream attempt failed","provider":"deepseek","status":429,"time":"2026-10-05T17:35:25.100000+07:00"}`+"\n"+
-			`{"addr":"127.0.0.1:10101","level":"info","msg":"relo serving","openai":"127.0.0.1:10201","time":"2026-10-05T16:49:24.352649+07:00"}`+"\n")
+			`{"addr":"127.0.0.1:10101","level":"info","msg":"relo serving","openai":"http://127.0.0.1:10101/inference","anthropic":"http://127.0.0.1:10101/inference-claude","time":"2026-10-05T16:49:24.352649+07:00"}`+"\n")
 	return home, appstatus.New(appstatus.Options{Home: home})
 }
 
@@ -152,7 +152,7 @@ func TestDaemonLogsTailsAfter(t *testing.T) {
 			`{"level":"warning","msg":"serving stale quota","provider":"deepseek","time":"2026-10-05T17:35:24.100000+07:00"}`+"\n"+
 			`{"level":"info","msg":"http request","method":"POST","path":"/v1/chat/completions","status":200,"duration_ms":7585,"time":"2026-10-05T17:35:24.970648+07:00"}`+"\n"+
 			`{"level":"error","msg":"upstream attempt failed","provider":"deepseek","status":429,"time":"2026-10-05T17:35:25.100000+07:00"}`+"\n"+
-			`{"addr":"127.0.0.1:10101","level":"info","msg":"relo serving","openai":"127.0.0.1:10201","time":"2026-10-05T16:49:24.352649+07:00"}`+"\n"+
+			`{"addr":"127.0.0.1:10101","level":"info","msg":"relo serving","openai":"http://127.0.0.1:10101/inference","anthropic":"http://127.0.0.1:10101/inference-claude","time":"2026-10-05T16:49:24.352649+07:00"}`+"\n"+
 			`{"level":"error","msg":"quota sweep failed","error":"context canceled","time":"2026-10-05T17:35:26.100000+07:00"}`+"\n")
 	tail, err := reads.DaemonLogs(ctx, appstatus.DaemonLogQuery{After: first.End})
 	if err != nil {

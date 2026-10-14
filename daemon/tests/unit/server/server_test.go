@@ -118,11 +118,11 @@ func TestRoutes(t *testing.T) {
 		standardCfg.Admin.Login = true
 		harness.server = harness.newServerWithConfig(&standardCfg, defaultEntry())
 		moved := map[string]string{
-			"/v1/chat/completions": "127.0.0.1:10201/v1",
-			"/v1/responses":        "127.0.0.1:10201/v1",
-			"/v1/messages":         "127.0.0.1:10202/v1",
-			"/v1/models":           "127.0.0.1:10201/v1",
-			"/agent/v1/responses":  "127.0.0.1:10201/v1",
+			"/v1/chat/completions": "127.0.0.1:10101/inference/v1",
+			"/v1/responses":        "127.0.0.1:10101/inference/v1",
+			"/v1/messages":         "127.0.0.1:10101/inference-claude/v1",
+			"/v1/models":           "127.0.0.1:10101/inference/v1",
+			"/agent/v1/responses":  "127.0.0.1:10101/inference/v1",
 		}
 		for path, want := range moved {
 			response := harness.management(http.MethodPost, path, dataPlaneToken, strings.NewReader("{}"))

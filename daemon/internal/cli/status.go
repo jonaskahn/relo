@@ -45,8 +45,8 @@ type StatusReport struct {
 	Language  string             `json:"language"`
 }
 
-// DataPlaneAddress is one client protocol and the address its listener
-// answers on.
+// DataPlaneAddress is one client protocol and the prefixed address the
+// single listener answers it on.
 type DataPlaneAddress struct {
 	Protocol string `json:"protocol"`
 	BaseURL  string `json:"base_url"`

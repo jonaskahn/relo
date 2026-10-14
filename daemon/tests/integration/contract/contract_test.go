@@ -27,7 +27,6 @@ import (
 	wireformats "github.com/jonaskahn/relo/internal/adapters/wire/formats"
 	"github.com/jonaskahn/relo/internal/catalog"
 	"github.com/jonaskahn/relo/internal/config"
-	"github.com/jonaskahn/relo/internal/inference"
 	"github.com/jonaskahn/relo/internal/platform"
 	"github.com/jonaskahn/relo/internal/server"
 	"github.com/jonaskahn/relo/tests/testkit"
@@ -144,7 +143,6 @@ func newHarness(t *testing.T) *harness {
 
 func defaultConfig() *config.Config {
 	cfg := config.DefaultConfig()
-	cfg.Server.DataPlane = config.DataPlaneConfig{}
 	cfg.Admin.Login = true
 	return &cfg
 }
@@ -355,10 +353,7 @@ func (h *harness) integrationPaths() codingclients.Paths {
 	return codingclients.Paths{
 		Home: home, StateHome: state,
 		DataPlane: func(protocol string) string {
-			if protocol == inference.ProtocolOpenAI {
-				return "http://127.0.0.1:10201"
-			}
-			return ""
+			return h.cfg.DataPlaneBaseURL(protocol)
 		},
 	}
 }

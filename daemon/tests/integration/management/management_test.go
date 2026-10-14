@@ -48,14 +48,6 @@ func startDaemonWithConfig(t *testing.T, configBody string) *daemon {
 	t.Cleanup(keyring.MockInit)
 
 	home := testkit.TempHome(t)
-	// A daemon a test starts takes free data plane ports, including when a
-	// test supplies other config sections, so it never collides with a daemon.
-	openai, anthropic := freePort(t), freePort(t)
-	for anthropic == openai {
-		anthropic = freePort(t)
-	}
-	configBody += "\n[server.data_plane]\nopenai = " + strconv.Itoa(openai) +
-		"\nanthropic = " + strconv.Itoa(anthropic) + "\n"
 	if configBody != "" {
 		if err := os.WriteFile(config.ConfigPath(home), []byte(configBody), 0o600); err != nil {
 			t.Fatalf("write the config: %v", err)

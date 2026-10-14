@@ -33,8 +33,7 @@ func integrationService(t *testing.T) (*harness, *appintegration.Service) {
 	h := newHarness(t)
 	settings := &config.Config{}
 	settings.Server.Bind = "127.0.0.1"
-	settings.Server.DataPlane.OpenAI = 10201
-	settings.Server.DataPlane.Anthropic = 10202
+	settings.Server.Port = 10101
 	return h, integrationUseCases(t, h, settings, t.TempDir())
 }
 
@@ -65,11 +64,7 @@ func integrationUseCases(t *testing.T, h *harness, settings *config.Config, home
 
 // dataPlaneURL answers the address one client protocol is served on.
 func dataPlaneURL(cfg *config.Config, protocol string) string {
-	address := cfg.DataPlaneAddr(protocol)
-	if address == "" {
-		return ""
-	}
-	return "http://" + address
+	return cfg.DataPlaneBaseURL(protocol)
 }
 
 // TestEnableIntegrationOwnsItsKeyAndDisableRetiresIt is the ownership rule: the

@@ -14,8 +14,6 @@ import (
 func TestShutdownClosesEventStreams(t *testing.T) {
 	cfg := config.DefaultConfig()
 	cfg.Server.Port = 0
-	cfg.Server.DataPlane.OpenAI = 0
-	cfg.Server.DataPlane.Anthropic = 0
 	served := New(Options{Config: &cfg})
 	ready := make(chan Addrs, 1)
 	served.OnReady(func(addrs Addrs) { ready <- addrs })
@@ -129,8 +127,6 @@ func TestShutdownSavesRecordsAndKeepsRequestValues(t *testing.T) {
 func TestStopReceiptSurvivesImmediateConnectionClosure(t *testing.T) {
 	cfg := config.DefaultConfig()
 	cfg.Server.Port = 0
-	cfg.Server.DataPlane.OpenAI = 0
-	cfg.Server.DataPlane.Anthropic = 0
 	served := New(Options{Config: &cfg, AdminToken: "shutdown-test"})
 	served.opts.Shutdown = func() { _ = served.Shutdown(context.Background()) }
 	ready := make(chan Addrs, 1)

@@ -29,8 +29,7 @@ func TestDaemonLifecycle(t *testing.T) {
 
 	home := testkit.TempHome(t)
 	port := freePort(t)
-	dataPlanePort := freePort(t)
-	writeConfig(t, home, port, dataPlanePort)
+	writeConfig(t, home, port)
 	logger, logBuffer := testkit.TestLogger(t)
 	ctx, cancel := context.WithCancel(context.Background())
 	serving := make(chan error, 1)
@@ -78,7 +77,7 @@ func TestDaemonLifecycle(t *testing.T) {
 	})
 
 	t.Run("the data plane rejects requests without the token", func(t *testing.T) {
-		response := postJSON(t, dataPlanePort, "/v1/chat/completions", "", "{}")
+		response := postJSON(t, port, "/inference/v1/chat/completions", "", "{}")
 		if response.StatusCode != http.StatusUnauthorized {
 			t.Fatalf("status = %d, want 401", response.StatusCode)
 		}
@@ -99,7 +98,7 @@ func TestDaemonLifecycle(t *testing.T) {
 		if err := json.NewDecoder(response.Body).Decode(&payload); err != nil {
 			t.Fatalf("decode the refusal: %v", err)
 		}
-		want := "http://127.0.0.1:" + strconv.Itoa(dataPlanePort) + "/v1"
+		want := "http://127.0.0.1:" + strconv.Itoa(port) + "/inference/v1"
 		if !strings.Contains(payload.Error.Message, want) {
 			t.Fatalf("message = %q, want it to name %s", payload.Error.Message, want)
 		}
@@ -134,13 +133,18 @@ func TestDaemonLifecycle(t *testing.T) {
 			t.Fatalf("addr = %v, want the bound address", report["addr"])
 		}
 		dataPlane, ok := report["data_plane"].([]any)
-		if !ok || len(dataPlane) != 1 {
-			t.Fatalf("data_plane = %v, want the one protocol this home serves", report["data_plane"])
+		if !ok || len(dataPlane) != 2 {
+			t.Fatalf("data_plane = %v, want one prefix per protocol", report["data_plane"])
 		}
-		address, _ := dataPlane[0].(map[string]any)
-		if address["protocol"] != inference.ProtocolOpenAI ||
-			address["base_url"] != "http://127.0.0.1:"+strconv.Itoa(dataPlanePort) {
-			t.Fatalf("data_plane entry = %v, want the OpenAI-compatible port", address)
+		wantPrefixes := map[string]string{
+			inference.ProtocolOpenAI:    "http://127.0.0.1:" + strconv.Itoa(port) + "/inference",
+			inference.ProtocolAnthropic: "http://127.0.0.1:" + strconv.Itoa(port) + "/inference-claude",
+		}
+		for _, entry := range dataPlane {
+			address, _ := entry.(map[string]any)
+			if wantPrefixes[address["protocol"].(string)] != address["base_url"] {
+				t.Fatalf("data_plane entry = %v, want %v", address, wantPrefixes)
+			}
 		}
 	})
 
@@ -196,17 +200,15 @@ func baseURL(port int) string {
 	return "http://127.0.0.1:" + strconv.Itoa(port)
 }
 
-// writeConfig gives the daemon under test ports this machine can actually
-// bind, so a development daemon holding the defaults never makes the suite
+// writeConfig gives the daemon under test a port this machine can actually
+// bind, so a development daemon holding the default never makes the suite
 // fail on a collision.
-func writeConfig(t *testing.T, home string, port, dataPlanePort int) {
+func writeConfig(t *testing.T, home string, port int) {
 	t.Helper()
 	if err := os.MkdirAll(home, 0o700); err != nil {
 		t.Fatalf("create the state directory: %v", err)
 	}
-	content := "[server]\nbind = \"127.0.0.1\"\nport = " + strconv.Itoa(port) +
-		"\n\n[server.data_plane]\nopenai = " + strconv.Itoa(dataPlanePort) +
-		"\nanthropic = 0\ngemini = 0\n"
+	content := "[server]\nbind = \"127.0.0.1\"\nport = " + strconv.Itoa(port) + "\n"
 	if err := os.WriteFile(config.ConfigPath(home), []byte(content), 0o600); err != nil {
 		t.Fatalf("write the development config: %v", err)
 	}
