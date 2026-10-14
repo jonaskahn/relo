@@ -239,7 +239,7 @@ func TestLoggingMiddleware(t *testing.T) {
 func TestStartAndShutdown(t *testing.T) {
 	t.Run("the listener serves on an ephemeral port", func(t *testing.T) {
 		harness := newHarness(t)
-		harness.server = harness.newServerWithConfig(freeConfig(t), defaultEntry())
+		harness.server = harness.newServerWithPort(0)
 		ctx, cancel := context.WithCancel(context.Background())
 		defer cancel()
 		serving := make(chan error, 1)
@@ -270,17 +270,23 @@ func TestStartAndShutdown(t *testing.T) {
 		harness := newHarness(t)
 		harness.upstream.waitForCancel = make(chan struct{})
 		harness.upstream.cancelled = make(chan struct{})
-		harness.server = harness.newServerWithConfig(freeConfig(t), defaultEntry())
+		harness.server = harness.newServerWithPort(0)
+		handler, found := harness.server.DataPlaneHandler(inference.ProtocolOpenAI)
+		if !found {
+			t.Fatal("the server has no OpenAI handler")
+		}
+		dataPlane := httptest.NewServer(handler)
+		t.Cleanup(dataPlane.Close)
 		ctx, cancel := context.WithCancel(context.Background())
 		defer cancel()
 		serving := make(chan error, 1)
 		go func() { serving <- harness.server.Start(ctx) }()
-		dataPlane := waitForDataPlaneAddress(t, harness.server, inference.ProtocolOpenAI)
+		waitForAddress(t, harness.server.Addr)
 
 		response := make(chan *http.Response, 1)
 		failure := make(chan error, 1)
 		go func() {
-			request, err := http.NewRequest(http.MethodPost, "http://"+dataPlane+"/v1/chat/completions", strings.NewReader(streamingBody()))
+			request, err := http.NewRequest(http.MethodPost, dataPlane.URL+"/v1/chat/completions", strings.NewReader(streamingBody()))
 			if err != nil {
 				failure <- err
 				return
