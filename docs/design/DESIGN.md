@@ -22,7 +22,7 @@ stretched list. Every element earns its place; complexity lives one level deeper
 4. **Status is never colour alone.** Warn and danger pair fixed semantic colours with text and an icon.
 5. **One control height.** Controls in a row share `--control-h` (38px, 44px on touch).
 6. **Sentence case.** No uppercase, no tracked labels.
-7. **22 locales.** Every copy key exists in all of them. Truncate only identifiers, with a tooltip.
+7. **23 locales.** Every copy key exists in all of them. Truncate only identifiers, with a tooltip.
 8. **One primary action per view.** Actions pair icon and label; icon-only controls carry `aria-label` and a tooltip.
 9. **Never stack modals.** Steps swap the content of one modal; destructive actions use AlertDialog.
 10. **Real data.** Missing is a dash; empty lists say what is missing.

@@ -123,7 +123,7 @@ $ make dev-setup      # writes .dev/relo, leaves ~/.relo alone
 $ make ci
 ```
 
-Go 1.26+, Node 20+. No CGO. See [CONTRIBUTING.md](CONTRIBUTING.md) and [docs/](docs/README.md) for the
+Go 1.26+, Node 22+. No CGO. See [CONTRIBUTING.md](CONTRIBUTING.md) and [docs/](docs/README.md) for the
 rest, [SECURITY.md](SECURITY.md) to report a vulnerability, and [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) for
 bundled licenses.
 

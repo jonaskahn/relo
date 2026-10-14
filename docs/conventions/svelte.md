@@ -9,7 +9,7 @@ Read [CONTRIBUTING.md](../../CONTRIBUTING.md) and the
 planning or writing console UI code. This guide applies to `console/`.
 
 Theme tokens live in `console/src/app.css`; a component reads them instead of
-inventing its own color. Status always pairs color with an icon or a word.
+inventing its own color.
 
 Rules are mandatory unless marked *(prefer)*.
 
@@ -292,7 +292,6 @@ Semantics and accessibility:
 
 1. Use semantic elements (`<button>`, `<a href>`, `<label for>`, `<form>`).
    No `onclick` on `<div>`.
-2. Every `{#each}` keyed by stable id.
 
 ---
 

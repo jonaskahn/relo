@@ -43,7 +43,7 @@ if err := tray.Run(); err != nil {
 
 ```bash
 go build ./...                              # build
-go test ./...                               # test (86 tests)
+go test ./...                               # test
 golangci-lint run --timeout=5m              # lint
 cd examples/basic && go run .               # run example
 ```

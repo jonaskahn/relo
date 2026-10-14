@@ -73,7 +73,7 @@ serves. Do not invent customers, benchmarks, or claims about upstream behavior.
 
 ## Accessibility & Inclusion
 
-The console ships in 22 languages — English, German, Simplified and
+The console ships in 23 languages — English, Arabic, German, Simplified and
 Traditional Chinese, French, Spanish, Italian, Brazilian Portuguese, Dutch,
 Swedish, Polish, Czech, Romanian, Russian, Ukrainian, Japanese, Korean,
 Hindi, Indonesian, Vietnamese, Thai, and Turkish — each named in the
