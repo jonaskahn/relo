@@ -61,10 +61,10 @@ type servedProtocol struct {
 func (s *Server) servedProtocols() []servedProtocol {
 	served := make([]servedProtocol, 0, len(dataPlaneProtocols()))
 	for _, protocol := range dataPlaneProtocols() {
-		if len(protocol.surfaces) == 0 {
+		if inference.DataPlanePath(protocol.id) == "" {
 			continue
 		}
-		if inference.DataPlanePath(protocol.id) == "" {
+		if len(protocol.surfaces) == 0 {
 			continue
 		}
 		served = append(served, servedProtocol{dataPlaneProtocol: protocol})
@@ -154,11 +154,9 @@ func (s *Server) dataPlaneBaseURL(path string) (string, bool) {
 	if !found {
 		return "", false
 	}
-	prefix := inference.DataPlanePath(protocol)
-	if prefix == "" {
-		return "", false
-	}
-	return "http://" + s.opts.Config.Server.Addr() + prefix, true
+	// A named protocol always owns a surface, and every surfaced protocol
+	// has a data plane prefix, so the prefix lookup cannot miss.
+	return "http://" + s.opts.Config.Server.Addr() + inference.DataPlanePath(protocol), true
 }
 
 func inferencePathProtocol(path string) (string, bool) {

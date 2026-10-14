@@ -39,6 +39,10 @@ func TestContextBetaApplies(t *testing.T) {
 		"":                         true,
 		"not-a-model":              true,
 		"claude-opus-4-5-20251101": true,
+		// A version the parser matches but the number cannot hold keeps the
+		// legacy behavior instead of failing the beta decision.
+		"claude-opus-99999999999999999999999-1": true,
+		"claude-opus-4-99999999999999999999999": true,
 	}
 	for model, want := range cases {
 		if got := contextBetaApplies(model); got != want {

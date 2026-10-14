@@ -409,6 +409,71 @@ func TestEnableAndRepairPushTheKeyToTheOpenCodeService(t *testing.T) {
 	}
 }
 
+// TestRotateIntegrationKeyMintsAKeyAndRestartsTheService covers rotation end
+// to end: the old token stops working, the files carry the new one, and the
+// background server is told to pick it up.
+func TestRotateIntegrationKeyMintsAKeyAndRestartsTheService(t *testing.T) {
+	_, built := integrationService(t)
+	configHome := t.TempDir()
+	if err := os.MkdirAll(filepath.Join(configHome, "opencode"), 0o755); err != nil {
+		t.Fatalf("create the opencode config directory: %v", err)
+	}
+	t.Setenv("XDG_CONFIG_HOME", configHome)
+	binDir := t.TempDir()
+	marker := filepath.Join(t.TempDir(), "ran")
+	script := "#!/bin/sh\nprintf '%s\\n' \"$*\" >> " + marker + "\n"
+	if err := os.WriteFile(filepath.Join(binDir, "opencode"), []byte(script), 0o755); err != nil {
+		t.Fatalf("write the stub launcher: %v", err)
+	}
+	t.Setenv("PATH", binDir)
+	ctx := context.Background()
+	enabled, err := built.EnableIntegration(ctx, "opencode", "")
+	if err != nil {
+		t.Fatalf("EnableIntegration(opencode) error = %v", err)
+	}
+	rotated, err := built.RotateIntegrationKey(ctx, "opencode")
+	if err != nil {
+		t.Fatalf("RotateIntegrationKey(opencode) error = %v", err)
+	}
+	if strings.TrimSpace(rotated.Token) == "" || rotated.Token == enabled.Token {
+		t.Fatal("RotateIntegrationKey(opencode) did not mint a fresh token")
+	}
+	got, err := os.ReadFile(marker)
+	if err != nil {
+		t.Fatalf("read the stub marker: %v", err)
+	}
+	if strings.Count(string(got), "service restart\n") != 2 {
+		t.Fatalf("launcher restarts = %q, want one per setup and rotation", got)
+	}
+	if _, err := built.RotateIntegrationKey(ctx, "missing"); !errors.Is(err, appintegration.ErrUnknownIntegration) {
+		t.Fatalf("RotateIntegrationKey(missing) error = %v, want %v", err, appintegration.ErrUnknownIntegration)
+	}
+}
+
+// TestEnableIntegrationSurvivesAFailedRestart pins the restart as best
+// effort: when the OpenCode launcher fails the setup still succeeds and only
+// logs the failure, so a broken service binary does not block setup.
+func TestEnableIntegrationSurvivesAFailedRestart(t *testing.T) {
+	_, built := integrationService(t)
+	configHome := t.TempDir()
+	if err := os.MkdirAll(filepath.Join(configHome, "opencode"), 0o755); err != nil {
+		t.Fatalf("create the opencode config directory: %v", err)
+	}
+	t.Setenv("XDG_CONFIG_HOME", configHome)
+	binDir := t.TempDir()
+	if err := os.WriteFile(filepath.Join(binDir, "opencode"), []byte("#!/bin/sh\nexit 1\n"), 0o755); err != nil {
+		t.Fatalf("write the failing stub launcher: %v", err)
+	}
+	t.Setenv("PATH", binDir)
+	enabled, err := built.EnableIntegration(context.Background(), "opencode", "")
+	if err != nil {
+		t.Fatalf("EnableIntegration(opencode) error = %v", err)
+	}
+	if strings.TrimSpace(enabled.Token) == "" {
+		t.Fatal("EnableIntegration(opencode) minted no token")
+	}
+}
+
 func writeCodexDaemonPid(t *testing.T, home string, pid int, startSeconds int64) {
 	t.Helper()
 	dir := filepath.Join(home, "app-server-daemon")

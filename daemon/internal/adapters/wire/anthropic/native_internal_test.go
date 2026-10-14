@@ -57,6 +57,8 @@ func TestRebaseNativeBodyNormalizesThinkingDisplay(t *testing.T) {
 			want: `{"type":"adaptive","display":"omitted"}`},
 		{name: "no display is left alone", thinking: `{"type":"enabled","budget_tokens":1024}`,
 			want: `{"type":"enabled","budget_tokens":1024}`},
+		{name: "a display that is not a string is left alone", thinking: `{"type":"adaptive","display":42}`,
+			want: `{"type":"adaptive","display":42}`},
 		{name: "a thinking field that is not an object is left alone", thinking: `"adaptive"`,
 			want: `"adaptive"`},
 	}
