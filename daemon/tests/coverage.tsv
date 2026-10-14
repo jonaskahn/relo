@@ -50,7 +50,7 @@ internal/dashboard	tests/unit/dashboard/...
 internal/desktop	tests/unit/desktop/...,internal/desktop/...	46
 internal/platform/autostart	tests/unit/platform/autostart/...	81
 internal/i18n	tests/unit/i18n/...	81
-internal/adapters/codingclients	tests/unit/codingclients/...,tests/unit/integration/...	78
+internal/adapters/codingclients	tests/unit/codingclients/...,tests/unit/integration/...,internal/adapters/codingclients/...	82
 internal/application/integration	tests/unit/integration/...,tests/unit/service/...,internal/application/integration/...	71
 internal/application/access	tests/unit/access/...,tests/unit/service/...,tests/unit/server/...	78
 internal/application/account	tests/unit/service/...,tests/unit/server/...	82

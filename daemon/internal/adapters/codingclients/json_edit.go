@@ -61,7 +61,7 @@ func spliceAt(content string, objStart int, path []string, raw string) (string, 
 }
 
 func deleteKey(content string, path []string) (string, error) {
-	if strings.TrimSpace(content) == "" {
+	if len(path) == 0 || strings.TrimSpace(content) == "" {
 		return content, nil
 	}
 	if !json.Valid([]byte(content)) {
