@@ -4,7 +4,6 @@ package config
 import (
 	"errors"
 	"fmt"
-	"github.com/jonaskahn/relo/internal/inference"
 	"net"
 	"net/url"
 	"strings"
@@ -16,7 +15,6 @@ import (
 // as the rule the value broke.
 var (
 	ErrInvalidPort             = errors.New("must be between 1 and 65535, or 0 to leave it off")
-	ErrDuplicatePort           = errors.New("must differ from every other port")
 	ErrInvalidBind             = errors.New("must be a valid IP address")
 	ErrInvalidLogLevel         = errors.New("must be one of: debug, info, warn, error")
 	ErrInvalidLanguage         = errors.New("must be auto, or one of the languages Relo ships")
@@ -91,29 +89,7 @@ func validateServer(cfg *Config) error {
 	if err := validateBind("server.bind", cfg.Server.Bind); err != nil {
 		return err
 	}
-	if err := validatePort("server.port", cfg.Server.Port); err != nil {
-		return err
-	}
-	return validateDataPlane(cfg)
-}
-
-func validateDataPlane(cfg *Config) error {
-	claimed := map[int]string{cfg.Server.Port: "server.port"}
-	for _, protocol := range inference.DataPlaneProtocols() {
-		path := "server.data_plane." + protocol
-		port := cfg.Server.DataPlane.Port(protocol)
-		if port == 0 {
-			continue
-		}
-		if err := validatePort(path, port); err != nil {
-			return err
-		}
-		if owner, taken := claimed[port]; taken {
-			return fmt.Errorf("%s: %w (%s already uses %d)", path, ErrDuplicatePort, owner, port)
-		}
-		claimed[port] = path
-	}
-	return nil
+	return validatePort("server.port", cfg.Server.Port)
 }
 
 func validateBind(path, bind string) error {
@@ -136,26 +112,6 @@ func validatePort(path string, port int) error {
 		return fmt.Errorf("%s: %w", path, ErrInvalidPort)
 	}
 	return nil
-}
-
-// DataPlaneListener is one data plane port the configuration asks for: the
-// protocol it carries and the port it binds.
-type DataPlaneListener struct {
-	Protocol string
-	Port     int
-}
-
-// DataPlaneListeners lists every protocol the configuration gives a port, in
-// protocol order. Only the protocols the server has surfaces for are opened;
-// this is what the configuration asks for.
-func (c Config) DataPlaneListeners() []DataPlaneListener {
-	listeners := make([]DataPlaneListener, 0, len(inference.DataPlaneProtocols()))
-	for _, protocol := range inference.DataPlaneProtocols() {
-		if port := c.Server.DataPlane.Port(protocol); port > 0 {
-			listeners = append(listeners, DataPlaneListener{Protocol: protocol, Port: port})
-		}
-	}
-	return listeners
 }
 
 func validateLogLevel(level string) error {

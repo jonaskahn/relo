@@ -17,15 +17,9 @@
 # ── Serve: how clients reach Relo ───────────────────────────────────────────
 [server]
   bind = "127.0.0.1"  # loopback by default; expose it deliberately
-  port = 10101        # the console, the management API, and the login callbacks
-
-  # The data plane answers on a port of its own per client protocol, so a
-  # client points at the address its own ecosystem expects. A protocol whose
-  # port is 0 is not opened.
-  [server.data_plane]
-    openai = 10201    # POST /v1/chat/completions, POST /v1/responses, GET /v1/models
-    anthropic = 10202 # POST /v1/messages, GET /v1/models
-    gemini = 10203    # reserved until Relo serves the Gemini shape
+  port = 10101        # the console, the management API, the login callbacks,
+                      # and the data plane: /inference/v1/* speaks OpenAI,
+                      # /inference-claude/v1/* speaks Anthropic
 
 # ── Reach out: how Relo gets to providers and their directories ────────────
 [proxy]

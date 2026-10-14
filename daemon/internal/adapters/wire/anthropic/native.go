@@ -8,9 +8,10 @@ import (
 
 // rebaseNativeBody retargets a client Messages body at the selected model
 // and account instead of rebuilding it. The caller's system blocks, cache
-// controls, tools, and native controls travel byte for byte; only the model
-// and the account attribution reflect the attempt Relo actually runs. A body
-// that is not a Messages object falls back to the canonical encoder.
+// controls, tools, and native controls travel byte for byte; only the model,
+// the account attribution, and a thinking display this API refuses reflect
+// the attempt Relo actually runs. A body that is not a Messages object falls
+// back to the canonical encoder.
 //
 // The body is edited as raw JSON members rather than decoded into `any`: a
 // round trip through Go values escapes HTML, coerces numbers through a float,
@@ -33,6 +34,8 @@ func rebaseNativeBody(raw []byte, model string, metadata *metadataDef) ([]byte, 
 				continue
 			}
 			current.value = metadataValue(metadata)
+		case "thinking":
+			current.value = normalizeThinkingDisplay(current.value)
 		}
 		rebuilt = append(rebuilt, current)
 	}
@@ -118,5 +121,43 @@ func modelValue(model string) json.RawMessage {
 
 func metadataValue(metadata *metadataDef) json.RawMessage {
 	encoded, _ := json.Marshal(map[string]string{"user_id": metadata.UserID})
+	return encoded
+}
+
+// normalizeThinkingDisplay rewrites a thinking object so its display field
+// holds a value the public Messages API accepts. The API rejects "updates",
+// a value Claude Code speaks but only its own surface understands, and
+// answers 400 for it. An unrecognized value becomes "omitted", the nearest
+// public equivalent: the model still thinks, and the stream stays one this
+// relay already knows how to read. A display this wire accepts is left as the
+// client wrote it, and so is a thinking field that is not an object.
+func normalizeThinkingDisplay(raw json.RawMessage) json.RawMessage {
+	fields, ok := topLevelMembers(raw)
+	if !ok {
+		return raw
+	}
+	changed := false
+	for index := range fields {
+		if fields[index].key != "display" {
+			continue
+		}
+		var display string
+		if err := json.Unmarshal(fields[index].value, &display); err != nil {
+			continue
+		}
+		switch display {
+		case "summarized", "omitted":
+			continue
+		}
+		fields[index].value = json.RawMessage(`"omitted"`)
+		changed = true
+	}
+	if !changed {
+		return raw
+	}
+	encoded, err := encodeMembers(fields)
+	if err != nil {
+		return raw
+	}
 	return encoded
 }

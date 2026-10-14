@@ -252,6 +252,7 @@ func (s *Service) enableIntegration(ctx context.Context, id string, overwrite bo
 		return IntegrationResult{}, err
 	}
 	s.restartCodex(ctx, agent.ID)
+	s.restartOpenCode(ctx, agent.ID, token)
 	view, err := s.describeIntegration(ctx, manager, agent)
 	if err != nil {
 		return IntegrationResult{}, err
@@ -300,6 +301,7 @@ func (s *Service) RotateIntegrationKey(ctx context.Context, id string) (Integrat
 	if _, err := manager.Rotate(ctx, agent.ID, token); err != nil {
 		return IntegrationResult{}, err
 	}
+	s.restartOpenCode(ctx, agent.ID, token)
 	view, err := s.describeIntegration(ctx, manager, agent)
 	if err != nil {
 		return IntegrationResult{}, err
@@ -350,6 +352,7 @@ func (s *Service) RepairIntegration(ctx context.Context, id string) (Integration
 		return IntegrationResult{}, err
 	}
 	s.restartCodex(ctx, agent.ID)
+	s.restartOpenCode(ctx, agent.ID, token)
 	view, err := s.describeIntegration(ctx, manager, agent)
 	if err != nil {
 		return IntegrationResult{}, err
@@ -418,6 +421,15 @@ func (s *Service) restartCodex(ctx context.Context, id string) {
 	}
 	if err := s.processes.RestartCodexDaemon(ctx, filepath.Dir(s.paths.CodexConfig()), s.paths.Home()); err != nil && s.logger != nil {
 		s.logger.Warn("restart the Codex app-server", "error", err)
+	}
+}
+
+func (s *Service) restartOpenCode(ctx context.Context, id, token string) {
+	if id != ClientOpenCode {
+		return
+	}
+	if err := s.processes.RestartOpenCodeService(ctx, s.paths.Home(), token); err != nil && s.logger != nil {
+		s.logger.Warn("restart the OpenCode service", "error", err)
 	}
 }
 
@@ -519,7 +531,7 @@ func (s *Service) IntegrationToken(ctx context.Context, id string) (string, erro
 }
 
 // IntegrationModels reads the model list one integration's key reaches. The
-// call travels the port the client itself is pointed at and speaks the
+// call travels the prefix the client itself is pointed at and speaks the
 // protocol that client speaks, so the identifiers an operator picks from are
 // the ones the agent would send.
 func (s *Service) IntegrationModels(ctx context.Context, id string) (IntegrationModels, error) {
@@ -562,7 +574,7 @@ func describeModelsRead(url string, response *http.Response, body []byte) Integr
 
 // IntegrationChat sends one prompt through the surface the client speaks, with
 // the key the client runs with. A listing proves the key is accepted; a turn
-// proves the whole path an agent uses, from its own port to a model's answer.
+// proves the whole path an agent uses, from its own prefix to a model's answer.
 func (s *Service) IntegrationChat(ctx context.Context, id string, request IntegrationChatRequest) (IntegrationChat, error) {
 	model := strings.TrimSpace(request.Model)
 	prompt := strings.TrimSpace(request.Prompt)
@@ -914,21 +926,24 @@ type ServiceOptions struct {
 	Catalog   *catalog.Catalog
 	Logger    *slog.Logger
 	Now       func() time.Time
+	// ClaudeAuth reports login or proxy. Nil detects it on this machine.
+	ClaudeAuth func() ClaudeAuth
 }
 
 // Service is the integration setup use cases: what Relo knows about every
 // coding client, and the actions an operator runs on one.
 type Service struct {
-	paths     PathResolver
-	agents    AgentRegistry
-	files     ClientFiles
-	processes AgentProcesses
-	wire      WireCodec
-	store     Store
-	keys      *appaccess.Keys
-	catalog   *catalog.Catalog
-	logger    *slog.Logger
-	now       func() time.Time
+	paths      PathResolver
+	agents     AgentRegistry
+	files      ClientFiles
+	processes  AgentProcesses
+	wire       WireCodec
+	store      Store
+	keys       *appaccess.Keys
+	catalog    *catalog.Catalog
+	logger     *slog.Logger
+	now        func() time.Time
+	claudeAuth func() ClaudeAuth
 	// running holds the action each agent has in flight, so a second run of
 	// the same action waits rather than racing the first over the same files.
 	running sync.Map
@@ -949,6 +964,7 @@ func NewService(options ServiceOptions) *Service {
 		processes: options.Processes, wire: options.Wire,
 		store: options.Store, keys: options.Keys,
 		catalog: options.Catalog, logger: logger, now: now,
+		claudeAuth: options.ClaudeAuth,
 	}
 }
 
@@ -1085,6 +1101,7 @@ func (s *Service) manager() (*Manager, error) {
 		Paths: s.paths, Agents: s.agents, Files: s.files,
 		Store: s.store, Logger: s.logger, Now: s.now,
 		Models: s.publishedModels, ClaudeModels: s.claudePickerModels,
+		ClaudeAuth: s.claudeAuth,
 	}), nil
 }
 

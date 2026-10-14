@@ -857,13 +857,10 @@ export interface SystemSettings {
 	readonly updates_download: string;
 }
 
-/** Where the management listener and the data plane answer. */
+/** Where the single listener answers. */
 export interface ServerSettings {
 	readonly bind: string;
 	readonly port: number;
-	readonly openai_port: number;
-	readonly anthropic_port: number;
-	readonly gemini_port: number;
 }
 
 /** How the daemon reaches providers and their model directory: the outbound proxy, the

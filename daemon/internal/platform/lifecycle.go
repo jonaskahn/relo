@@ -537,11 +537,7 @@ func servicePorts(home string, port int) []int {
 }
 
 func servicePortCandidates(configured config.Config, override int) []int {
-	candidates := []int{configured.Server.Port, override}
-	for _, listener := range configured.DataPlaneListeners() {
-		candidates = append(candidates, listener.Port)
-	}
-	return candidates
+	return []int{configured.Server.Port, override}
 }
 
 func collectServicePorts(candidates []int) []int {

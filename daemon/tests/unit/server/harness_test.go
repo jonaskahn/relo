@@ -6,7 +6,6 @@ import (
 	"github.com/jonaskahn/relo/internal/inference"
 	"io"
 	"log/slog"
-	"net"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -296,10 +295,7 @@ func (h *harness) integrationPaths() codingclients.Paths {
 	paths := codingclients.Paths{
 		Home: home, StateHome: h.t.TempDir(),
 		DataPlane: func(protocol string) string {
-			if protocol == inference.ProtocolOpenAI {
-				return "http://127.0.0.1:10201"
-			}
-			return ""
+			return "http://127.0.0.1:10101" + inference.DataPlanePath(protocol)
 		},
 	}
 	if got, want := paths.CodexConfig(), filepath.Join(home, ".codex", "config.toml"); got != want {
@@ -529,13 +525,10 @@ func (h *harness) settle() {
 	}
 }
 
-// defaultConfig is the configuration the handler tests build servers from. No
-// data plane port is asked for, so a test that never starts a listener never
-// takes one, and the handler tests reach a protocol's routes through
-// DataPlaneHandler instead.
+// defaultConfig is the configuration the handler tests build servers from.
+// The handler tests reach a protocol's routes through DataPlaneHandler.
 func defaultConfig() *config.Config {
 	cfg := config.DefaultConfig()
-	cfg.Server.DataPlane = config.DataPlaneConfig{}
 	// The guard the handler tests exercise is the one an operator asks for by
 	// turning the login on; a test of the open console turns it back off.
 	cfg.Admin.Login = true
@@ -556,28 +549,15 @@ func (h *harness) storeBootConfig(t *testing.T) {
 	}
 }
 
-// freeConfig asks for ports this machine can bind: an ephemeral one for the
-// management listener and one per protocol, so a test that starts a server
-// never collides with a daemon or with another test.
+// freeConfig asks for an ephemeral management listener, so a test that
+// starts a server never collides with a daemon or with another test.
 func freeConfig(t *testing.T) *config.Config {
 	t.Helper()
 	cfg := config.DefaultConfig()
 	cfg.Server.Bind = "127.0.0.1"
 	cfg.Server.Port = 0
-	cfg.Server.DataPlane = config.DataPlaneConfig{OpenAI: freePort(t), Anthropic: freePort(t)}
 	cfg.Admin.Login = true
 	return &cfg
-}
-
-// freePort returns a port nothing is listening on right now.
-func freePort(t *testing.T) int {
-	t.Helper()
-	listener, err := net.Listen("tcp", "127.0.0.1:0")
-	if err != nil {
-		t.Fatalf("find a free port: %v", err)
-	}
-	defer func() { _ = listener.Close() }()
-	return listener.Addr().(*net.TCPAddr).Port
 }
 
 func request(method, path, token string, body io.Reader) *http.Request {
@@ -711,19 +691,16 @@ func waitForAddress(t *testing.T, address func() string) string {
 	return ""
 }
 
-// waitForDataPlaneAddress polls until the server records the address it bound
-// for one protocol, which happens once every listener is up.
+// waitForDataPlaneAddress returns the prefixed address one protocol answers
+// on once the single listener is bound.
 func waitForDataPlaneAddress(t *testing.T, built *server.Server, protocol string) string {
 	t.Helper()
-	deadline := time.Now().Add(5 * time.Second)
-	for time.Now().Before(deadline) {
-		if addr := built.DataPlaneAddrs()[protocol]; addr != "" {
-			return addr
-		}
-		time.Sleep(5 * time.Millisecond)
+	management := waitForAddress(t, built.Addr)
+	prefix := inference.DataPlanePath(protocol)
+	if prefix == "" {
+		t.Fatalf("the server serves no %s prefix", protocol)
 	}
-	t.Fatalf("the server never bound the %s listener", protocol)
-	return ""
+	return management + prefix
 }
 
 func portOf(t *testing.T, rawURL string) int {

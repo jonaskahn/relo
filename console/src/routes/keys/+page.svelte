@@ -76,10 +76,10 @@
 	const urls = $derived<DataPlaneURLs>({
 		openai:
 			(dataPlane.find((entry) => entry.protocol === 'openai') ?? dataPlane[0])?.base_url ??
-			'http://127.0.0.1:10201',
+			'http://127.0.0.1:10101/inference',
 		anthropic:
 			(dataPlane.find((entry) => entry.protocol === 'anthropic') ?? dataPlane[1])?.base_url ??
-			'http://127.0.0.1:10202'
+			'http://127.0.0.1:10101/inference-claude'
 	});
 
 	// Destructive confirmations

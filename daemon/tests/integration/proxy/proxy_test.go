@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -258,9 +259,6 @@ func startDaemonSeeded(t *testing.T, s seed) daemon {
 	cfg := config.DefaultConfig()
 	cfg.Server.Bind = "127.0.0.1"
 	cfg.Server.Port = 0
-	// The data plane refuses a port of zero, so each protocol asks for one
-	// this machine can bind rather than the default another test may hold.
-	cfg.Server.DataPlane = config.DataPlaneConfig{OpenAI: freePort(t), Anthropic: freePort(t)}
 	db := testkit.OpenTestDB(t)
 	recorder, err := sqlite.NewUsageRecorder(db, logger)
 	if err != nil {
@@ -352,11 +350,7 @@ func startDaemonSeeded(t *testing.T, s seed) daemon {
 	clientPaths := codingclients.Paths{
 		Home: userHome, StateHome: home, Relo: relo,
 		DataPlane: func(protocol string) string {
-			address := cfg.DataPlaneAddr(protocol)
-			if address == "" {
-				return ""
-			}
-			return "http://" + address
+			return cfg.DataPlaneBaseURL(protocol)
 		},
 	}
 	integrations := appintegration.NewService(appintegration.ServiceOptions{
@@ -412,7 +406,7 @@ func startDaemonSeeded(t *testing.T, s seed) daemon {
 		}
 	})
 	return daemon{
-		addr:         waitForAddr(t, instance.Addr),
+		addr:         boundManagement(t, &cfg, instance),
 		dataPlane:    waitForDataPlane(t, instance, inference.ProtocolOpenAI),
 		db:           db,
 		instance:     instance,
@@ -421,19 +415,34 @@ func startDaemonSeeded(t *testing.T, s seed) daemon {
 	}
 }
 
-// waitForDataPlane waits until the daemon records the address it bound for
-// one protocol, which happens once every listener is up.
+// boundManagement waits for the single listener and writes its port back to
+// the configuration the integrations service reads, so a probe travels the
+// bound address rather than the ephemeral port the daemon asked for.
+func boundManagement(t *testing.T, cfg *config.Config, instance *server.Server) string {
+	t.Helper()
+	management := waitForAddr(t, instance.Addr)
+	_, port, err := net.SplitHostPort(management)
+	if err != nil {
+		t.Fatalf("parse the bound address %s: %v", management, err)
+	}
+	bound, err := strconv.Atoi(port)
+	if err != nil {
+		t.Fatalf("parse the bound port %s: %v", management, err)
+	}
+	cfg.Server.Port = bound
+	return management
+}
+
+// waitForDataPlane returns the prefixed address one protocol answers on
+// once the single listener is bound.
 func waitForDataPlane(t *testing.T, instance *server.Server, protocol string) string {
 	t.Helper()
-	deadline := time.Now().Add(10 * time.Second)
-	for time.Now().Before(deadline) {
-		if addr := instance.DataPlaneAddrs()[protocol]; addr != "" {
-			return addr
-		}
-		time.Sleep(5 * time.Millisecond)
+	management := waitForAddr(t, instance.Addr)
+	prefix := inference.DataPlanePath(protocol)
+	if prefix == "" {
+		t.Fatalf("the daemon serves no %s prefix", protocol)
 	}
-	t.Fatalf("the daemon never bound the %s listener", protocol)
-	return ""
+	return management + prefix
 }
 
 // settle waits for the log writes a request queued to land, because those rows
@@ -586,16 +595,4 @@ func waitForAddr(t *testing.T, address func() string) string {
 	}
 	t.Fatal("the daemon never bound its listener")
 	return ""
-}
-
-// freePort returns a port nothing is listening on right now, so a test binds
-// the one it asked for instead of the default another test may hold.
-func freePort(t *testing.T) int {
-	t.Helper()
-	listener, err := net.Listen("tcp", "127.0.0.1:0")
-	if err != nil {
-		t.Fatalf("find a free port: %v", err)
-	}
-	defer func() { _ = listener.Close() }()
-	return listener.Addr().(*net.TCPAddr).Port
 }

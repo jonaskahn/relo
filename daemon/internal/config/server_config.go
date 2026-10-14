@@ -14,17 +14,14 @@ import (
 // ServerConfigPatch names the listener choices a settings save carries; a nil
 // field keeps the stored value.
 type ServerConfigPatch struct {
-	Bind          *string
-	Port          *int
-	OpenAIPort    *int
-	AnthropicPort *int
-	GeminiPort    *int
+	Bind *string
+	Port *int
 }
 
-// UpdateServerConfig stores where the management listener and the data plane
-// answer. The whole candidate configuration is checked first, so a bind or a
-// port that would leave the next start unaccepted is refused. The rest of the
-// startup file stays.
+// UpdateServerConfig stores where the single listener answers. The whole
+// candidate configuration is checked first, so a bind or a port that would
+// leave the next start unaccepted is refused. The rest of the startup file
+// stays.
 func UpdateServerConfig(path string, patch ServerConfigPatch) error {
 	appearanceMu.Lock()
 	defer appearanceMu.Unlock()
@@ -55,15 +52,6 @@ func applyServerPatch(candidate *Config, patch ServerConfigPatch) {
 	if patch.Port != nil {
 		candidate.Server.Port = *patch.Port
 	}
-	if patch.OpenAIPort != nil {
-		candidate.Server.DataPlane.OpenAI = *patch.OpenAIPort
-	}
-	if patch.AnthropicPort != nil {
-		candidate.Server.DataPlane.Anthropic = *patch.AnthropicPort
-	}
-	if patch.GeminiPort != nil {
-		candidate.Server.DataPlane.Gemini = *patch.GeminiPort
-	}
 }
 
 func writeServerPatch(updated string, patch ServerConfigPatch) string {
@@ -72,15 +60,6 @@ func writeServerPatch(updated string, patch ServerConfigPatch) string {
 	}
 	if patch.Port != nil {
 		updated = upsertTableKey(updated, "server", "port", strconv.Itoa(*patch.Port))
-	}
-	if patch.OpenAIPort != nil {
-		updated = upsertTableKey(updated, "server.data_plane", "openai", strconv.Itoa(*patch.OpenAIPort))
-	}
-	if patch.AnthropicPort != nil {
-		updated = upsertTableKey(updated, "server.data_plane", "anthropic", strconv.Itoa(*patch.AnthropicPort))
-	}
-	if patch.GeminiPort != nil {
-		updated = upsertTableKey(updated, "server.data_plane", "gemini", strconv.Itoa(*patch.GeminiPort))
 	}
 	return updated
 }

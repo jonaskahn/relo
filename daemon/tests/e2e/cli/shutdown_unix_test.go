@@ -16,7 +16,6 @@ import (
 func TestShutdownDeadlineSurvivesBlockedLogger(t *testing.T) {
 	binary := buildBinary(t)
 	home := newHome(t)
-	writeServeConfig(t, home)
 	port := freePort(t)
 	command := exec.Command(binary, "daemon", "run", "--home", home, "--port", fmt.Sprint(port))
 	command.Env = commandEnv(home)

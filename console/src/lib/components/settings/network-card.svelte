@@ -8,7 +8,6 @@
 	import SettingsCard from './settings-card.svelte';
 	import SettingsRow from './settings-row.svelte';
 	import SettingsSave from './settings-save.svelte';
-	import Field from '$lib/components/ui/field.svelte';
 	import Input from '$lib/components/ui/input.svelte';
 	import { cloneDraft, draftDirty } from '$lib/settings-draft';
 	import type { ServerSettings } from '$lib/types';
@@ -30,15 +29,8 @@
 	const dirty = $derived(draftDirty(draft, saved));
 
 	const portProblem = $derived.by(() => {
-		const ports = [draft.port, draft.openai_port, draft.anthropic_port, draft.gemini_port];
-		if (ports.some((port) => !Number.isInteger(port) || port < 0 || port > 65535)) {
+		if (!Number.isInteger(draft.port) || draft.port < 1 || draft.port > 65535) {
 			return $t('ui.settingsPage.portInvalid');
-		}
-		const seen = new Set<number>();
-		for (const port of ports) {
-			if (port === 0) continue;
-			if (seen.has(port)) return $t('ui.settingsPage.duplicatePort');
-			seen.add(port);
 		}
 		return '';
 	});
@@ -95,46 +87,6 @@
 				disabled={saving}
 				aria-label={$t('ui.settingsPage.portLabel')}
 			/>
-		</SettingsRow>
-		<SettingsRow
-			label={$t('ui.settingsPage.dataPlaneLabel')}
-			hint={$t('ui.settingsPage.dataPlaneHint')}
-		>
-			<div class="grid grid-cols-3 gap-2">
-				<Field id="port-openai" label="OpenAI">
-					<Input
-						id="port-openai"
-						type="number"
-						min="0"
-						max="65535"
-						class="mono-data max-sm:h-11"
-						bind:value={draft.openai_port}
-						disabled={saving}
-					/>
-				</Field>
-				<Field id="port-anthropic" label="Anthropic">
-					<Input
-						id="port-anthropic"
-						type="number"
-						min="0"
-						max="65535"
-						class="mono-data max-sm:h-11"
-						bind:value={draft.anthropic_port}
-						disabled={saving}
-					/>
-				</Field>
-				<Field id="port-gemini" label="Gemini">
-					<Input
-						id="port-gemini"
-						type="number"
-						min="0"
-						max="65535"
-						class="mono-data max-sm:h-11"
-						bind:value={draft.gemini_port}
-						disabled={saving}
-					/>
-				</Field>
-			</div>
 		</SettingsRow>
 	</div>
 	{#if problem}

@@ -34,11 +34,8 @@ type wireSystem struct {
 }
 
 type wireServer struct {
-	Bind          string `json:"bind"`
-	Port          int    `json:"port"`
-	OpenAIPort    int    `json:"openai_port"`
-	AnthropicPort int    `json:"anthropic_port"`
-	GeminiPort    int    `json:"gemini_port"`
+	Bind string `json:"bind"`
+	Port int    `json:"port"`
 }
 
 type wireAccess struct {
@@ -187,31 +184,30 @@ func TestSystemPatchStoresTheTrafficLog(t *testing.T) {
 	}
 }
 
-// TestNetworkPatchStoresTheListeners covers the network card: the listeners
-// round-trip, a restart is reported, and an impossible listener is refused.
+// TestNetworkPatchStoresTheListeners covers the network card: the listener
+// round-trips, a restart is reported, and an impossible bind is refused.
 func TestNetworkPatchStoresTheListeners(t *testing.T) {
 	h := newHarness(t)
 
-	patch := `{"bind":"127.0.0.1","port":12000,"openai_port":12001,"anthropic_port":12002,"gemini_port":0}`
+	patch := `{"bind":"127.0.0.1","port":12000}`
 	saved := h.management(http.MethodPatch, "/api/v1/settings/network", adminToken, strings.NewReader(patch))
 	if saved.Code != http.StatusOK {
 		t.Fatalf("PATCH network status = %d, body = %s", saved.Code, saved.Body.String())
 	}
 	want := wireServer{
-		Bind: "127.0.0.1", Port: 12000, OpenAIPort: 12001, AnthropicPort: 12002, GeminiPort: 0,
+		Bind: "127.0.0.1", Port: 12000,
 	}
 	if got := decodeGroup[wireServer](t, saved.Body); got != want {
 		t.Fatalf("server = %+v, want %+v", got, want)
 	}
 	read := h.management(http.MethodGet, "/api/v1/settings", adminToken, nil)
 	if settings := decodeSettings(t, read.Body); settings.Server != want || !settings.RestartPending {
-		t.Fatalf("settings = %+v, want the stored listeners and a pending restart", settings)
+		t.Fatalf("settings = %+v, want the stored listener and a pending restart", settings)
 	}
 
-	duplicate := `{"bind":"127.0.0.1","port":12000,"openai_port":12000,"anthropic_port":12002,"gemini_port":0}`
-	refused := h.management(http.MethodPatch, "/api/v1/settings/network", adminToken, strings.NewReader(duplicate))
+	refused := h.management(http.MethodPatch, "/api/v1/settings/network", adminToken, strings.NewReader(`{"bind":"not-an-ip","port":12000}`))
 	if refused.Code != http.StatusBadRequest {
-		t.Fatalf("duplicate port status = %d, want 400 (body %s)", refused.Code, refused.Body.String())
+		t.Fatalf("bad bind status = %d, want 400 (body %s)", refused.Code, refused.Body.String())
 	}
 }
 

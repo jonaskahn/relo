@@ -126,7 +126,9 @@ scratch="$(mktemp -d)"
 trap 'rm -rf "$scratch"' EXIT
 
 # The internal linker's -macos flag exists only on newer Go (1.27+ writes
-# minos 13.0 by default); older linkers lack it and already target the floor.
+# minos 13.0 by default); older linkers lack the flag and already target the
+# floor. Either way the per-slice check below enforces the floor before
+# lipo, so a wrong toolchain fails fast instead of after notarization.
 macos_ldflag=""
 if go tool link -h 2>&1 | grep -q -- "-macos"; then
   macos_ldflag=" -macos=$macos_min"
@@ -137,6 +139,11 @@ for arch in arm64 amd64; do
   (cd "$root/daemon" && GOOS=darwin GOARCH="$arch" CGO_ENABLED=0 go build -trimpath \
     -ldflags "-s -w$macos_ldflag -X github.com/jonaskahn/relo/internal/cli.version=$version" \
     -o "$scratch/relo-darwin-$arch" ./cmd/relo)
+  slice_minos="$(vtool -show-build "$scratch/relo-darwin-$arch" | awk '$1 == "minos" { print $2 }' | sort -Vu | tail -n 1)"
+  if [ "$slice_minos" != "$macos_min" ]; then
+    echo "relo-darwin-$arch targets macOS $slice_minos, want $macos_min" >&2
+    exit 1
+  fi
 done
 lipo -create -output "$app/Contents/MacOS/Relo" \
   "$scratch/relo-darwin-arm64" "$scratch/relo-darwin-amd64"

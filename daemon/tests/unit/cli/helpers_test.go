@@ -134,26 +134,10 @@ func useFreePorts(t *testing.T, home string) {
 
 // writePort replaces the state directory's configuration with one that
 // listens on the given port, which is how a test points a command at the
-// endpoint it stubbed. The data plane takes free ports of its own, because
-// a daemon a test starts must never want the port another package's daemon
-// is already serving on.
+// endpoint it stubbed.
 func writePort(t *testing.T, home, port string) {
 	t.Helper()
-	used := map[string]bool{port: true}
-	next := func() string {
-		t.Helper()
-		for {
-			candidate := strconv.Itoa(freePort(t))
-			if !used[candidate] {
-				used[candidate] = true
-				return candidate
-			}
-		}
-	}
-	body := "[server]\nbind = \"127.0.0.1\"\nport = " + port + "\n" +
-		"\n[server.data_plane]\nopenai = " + next() +
-		"\nanthropic = " + next() +
-		"\ngemini = " + next() + "\n"
+	body := "[server]\nbind = \"127.0.0.1\"\nport = " + port + "\n"
 	if err := os.WriteFile(config.ConfigPath(home), []byte(body), 0o600); err != nil {
 		t.Fatalf("write config: %v", err)
 	}

@@ -7,7 +7,6 @@ import (
 	"path/filepath"
 	"runtime"
 	"slices"
-	"strconv"
 	"strings"
 	"testing"
 
@@ -136,10 +135,6 @@ func TestLoadConfigValidDefaults(t *testing.T) {
 			},
 			Server: config.ServerConfig{
 				Bind: "127.0.0.1", Port: 12000,
-				DataPlane: config.DataPlaneConfig{
-					OpenAI: config.DefaultOpenAIPort, Anthropic: config.DefaultAnthropicPort,
-					Gemini: config.DefaultGeminiPort,
-				},
 			},
 			Secrets: config.SecretsConfig{Keychain: true, KeyFile: secrets.DefaultKeyFile},
 			Admin:   config.AdminConfig{},
@@ -394,11 +389,6 @@ func TestValidateConfig(t *testing.T) {
 		{"invalid port returns field path", func(cfg *config.Config) { cfg.Server.Port = 70000 }, config.ErrInvalidPort, "server.port"},
 		{"invalid bind returns field path", func(cfg *config.Config) { cfg.Server.Bind = "localhost" }, config.ErrInvalidBind, "server.bind"},
 		{"invalid log level returns field path", func(cfg *config.Config) { cfg.System.Logging.Level = "trace" }, config.ErrInvalidLogLevel, "system.logging.level"},
-		{"a data plane port out of range returns its field path",
-			func(cfg *config.Config) { cfg.Server.DataPlane.Anthropic = 70000 }, config.ErrInvalidPort, "server.data_plane.anthropic"},
-		{"a negative data plane port returns its field path",
-			func(cfg *config.Config) { cfg.Server.DataPlane.OpenAI = -1 }, config.ErrInvalidPort, "server.data_plane.openai"},
-		{"a protocol may be left off", func(cfg *config.Config) { cfg.Server.DataPlane.Gemini = 0 }, nil, ""},
 		{"login off inside loopback is accepted", func(cfg *config.Config) { cfg.Admin.Login = false }, nil, ""},
 		{"an IPv6 loopback bind is accepted", func(cfg *config.Config) { cfg.Server.Bind = "::1" }, nil, ""},
 		{"login on inside loopback is accepted", func(cfg *config.Config) { cfg.Admin.Login = true }, nil, ""},
@@ -413,12 +403,6 @@ func TestValidateConfig(t *testing.T) {
 				cfg.Admin.AllowExternal = true
 				cfg.Server.Bind = "0.0.0.0"
 			}, nil, ""},
-		{"two protocols may not share a port",
-			func(cfg *config.Config) { cfg.Server.DataPlane.Anthropic = cfg.Server.DataPlane.OpenAI },
-			config.ErrDuplicatePort, "server.data_plane.anthropic"},
-		{"a data plane port may not take the management port",
-			func(cfg *config.Config) { cfg.Server.DataPlane.OpenAI = cfg.Server.Port },
-			config.ErrDuplicatePort, "server.data_plane.openai"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -442,20 +426,16 @@ func TestValidateConfig(t *testing.T) {
 }
 
 // the configuration, the status API, and the setup steps all read.
-func TestDataPlanePorts(t *testing.T) {
+func TestDataPlaneBaseURLs(t *testing.T) {
 	cfg := config.DefaultConfig()
 
-	t.Run("the defaults name one port per protocol", func(t *testing.T) {
-		for protocol, want := range map[string]int{
-			inference.ProtocolOpenAI:    config.DefaultOpenAIPort,
-			inference.ProtocolAnthropic: config.DefaultAnthropicPort,
-			inference.ProtocolGemini:    config.DefaultGeminiPort,
+	t.Run("the defaults name one prefix per protocol", func(t *testing.T) {
+		for protocol, want := range map[string]string{
+			inference.ProtocolOpenAI:    "http://127.0.0.1:10101/inference",
+			inference.ProtocolAnthropic: "http://127.0.0.1:10101/inference-claude",
 		} {
-			if got := cfg.Server.DataPlane.Port(protocol); got != want {
-				t.Fatalf("port of %s = %d, want %d", protocol, got, want)
-			}
-			if got := config.DefaultDataPlanePort(protocol); got != want {
-				t.Fatalf("default port of %s = %d, want %d", protocol, got, want)
+			if got := cfg.DataPlaneBaseURL(protocol); got != want {
+				t.Fatalf("base URL of %s = %q, want %q", protocol, got, want)
 			}
 			if !inference.ProtocolKnown(protocol) {
 				t.Fatalf("%s is not a known protocol", protocol)
@@ -466,47 +446,15 @@ func TestDataPlanePorts(t *testing.T) {
 		}
 	})
 
-	t.Run("a protocol Relo does not serve has no port", func(t *testing.T) {
-		if got := cfg.Server.DataPlane.Port("nothing"); got != 0 {
-			t.Fatalf("port = %d, want none", got)
+	t.Run("a protocol Relo does not serve has no address", func(t *testing.T) {
+		if got := cfg.DataPlaneBaseURL("nothing"); got != "" {
+			t.Fatalf("base URL = %q, want empty", got)
 		}
-		if got := config.DefaultDataPlanePort("nothing"); got != 0 {
-			t.Fatalf("default port = %d, want none", got)
+		if got := cfg.DataPlaneBaseURL(inference.ProtocolGemini); got != "" {
+			t.Fatalf("base URL = %q, want empty for a protocol with no prefix", got)
 		}
 		if inference.ProtocolKnown("nothing") {
 			t.Fatal("an unknown protocol reported itself as served")
-		}
-	})
-
-	t.Run("the address of one protocol is its own bind and port", func(t *testing.T) {
-		if got := cfg.Server.DataPlaneAddr(inference.ProtocolAnthropic); got != "127.0.0.1:"+strconv.Itoa(config.DefaultAnthropicPort) {
-			t.Fatalf("address = %q, want the configured port", got)
-		}
-		// The whole-config spelling reaches the same answer, so a surface
-		// holding a Config rather than its server block reads one address.
-		if got := cfg.DataPlaneAddr(inference.ProtocolAnthropic); got != cfg.Server.DataPlaneAddr(inference.ProtocolAnthropic) {
-			t.Fatalf("address = %q, want the server block's", got)
-		}
-		// A protocol no listener answers on has no address to hand a client.
-		if got := cfg.DataPlaneAddr("nothing"); got != "" {
-			t.Fatalf("address = %q, want empty for a protocol with no port", got)
-		}
-	})
-
-	t.Run("only the protocols with a port are listeners", func(t *testing.T) {
-		listeners := cfg.DataPlaneListeners()
-		if len(listeners) != 3 {
-			t.Fatalf("listeners = %+v, want one per protocol", listeners)
-		}
-		cfg.Server.DataPlane.Anthropic = 0
-		listeners = cfg.DataPlaneListeners()
-		if len(listeners) != 2 {
-			t.Fatalf("listeners = %+v, want the two protocols left on", listeners)
-		}
-		for _, listener := range listeners {
-			if listener.Protocol == inference.ProtocolAnthropic {
-				t.Fatal("a protocol left off still reported a listener")
-			}
 		}
 	})
 }

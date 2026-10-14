@@ -257,7 +257,7 @@ func TestManagementContract(t *testing.T) {
 		{name: "settings-patch-language", method: http.MethodPatch, path: "/api/v1/settings/language", body: `{"language":"de"}`, wantStatus: http.StatusOK},
 		{name: "settings-patch-appearance", method: http.MethodPatch, path: "/api/v1/settings/appearance", body: `{"accent":"blue","theme":"dark","quota_display":"remaining"}`, wantStatus: http.StatusOK},
 		{name: "settings-patch-access", method: http.MethodPatch, path: "/api/v1/settings/access", body: `{"allow_external":false}`, wantStatus: http.StatusOK},
-		{name: "settings-patch-network", method: http.MethodPatch, path: "/api/v1/settings/network", body: `{"bind":"127.0.0.1","port":12000,"openai_port":12001,"anthropic_port":12002,"gemini_port":0}`, wantStatus: http.StatusOK},
+		{name: "settings-patch-network", method: http.MethodPatch, path: "/api/v1/settings/network", body: `{"bind":"127.0.0.1","port":12000}`, wantStatus: http.StatusOK},
 		{name: "settings-patch-providers", method: http.MethodPatch, path: "/api/v1/settings/providers", body: `{"catalog_url":"https://models.example.test/api.json","proxy_url":"","timeout_seconds":300,"retry_attempts":3}`, wantStatus: http.StatusOK},
 		{name: "settings-patch-system", method: http.MethodPatch, path: "/api/v1/settings/system", body: `{"autostart":true,"log_level":"debug","updates_url":"","updates_download":""}`, wantStatus: http.StatusOK},
 		{name: "settings-get-after", method: http.MethodGet, path: "/api/v1/settings", wantStatus: http.StatusOK},

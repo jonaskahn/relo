@@ -27,7 +27,6 @@ import (
 	wireformats "github.com/jonaskahn/relo/internal/adapters/wire/formats"
 	"github.com/jonaskahn/relo/internal/catalog"
 	"github.com/jonaskahn/relo/internal/config"
-	"github.com/jonaskahn/relo/internal/inference"
 	"github.com/jonaskahn/relo/internal/platform"
 	"github.com/jonaskahn/relo/internal/server"
 	"github.com/jonaskahn/relo/tests/testkit"
@@ -144,7 +143,6 @@ func newHarness(t *testing.T) *harness {
 
 func defaultConfig() *config.Config {
 	cfg := config.DefaultConfig()
-	cfg.Server.DataPlane = config.DataPlaneConfig{}
 	cfg.Admin.Login = true
 	return &cfg
 }
@@ -218,6 +216,10 @@ func (h *harness) newServer(port int) *server.Server {
 			Wire:      platform.NewWireCodec(),
 			Store:     platform.NewIntegrationStore(h.db), Catalog: h.catalog,
 			Keys: h.keys, Now: h.clock.Now,
+			// The fake home holds no Claude login, so pin proxy: otherwise
+			// the preview reads the real machine keychain and differs
+			// between macOS and Linux runners.
+			ClaudeAuth: func() appintegration.ClaudeAuth { return appintegration.ClaudeAuthProxy },
 		}),
 		Events:       h.events,
 		Sessions:     h.sessions,
@@ -355,10 +357,7 @@ func (h *harness) integrationPaths() codingclients.Paths {
 	return codingclients.Paths{
 		Home: home, StateHome: state,
 		DataPlane: func(protocol string) string {
-			if protocol == inference.ProtocolOpenAI {
-				return "http://127.0.0.1:10201"
-			}
-			return ""
+			return h.cfg.DataPlaneBaseURL(protocol)
 		},
 	}
 }

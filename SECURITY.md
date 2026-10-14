@@ -27,9 +27,11 @@ What Relo protects, so you can judge whether something is a vulnerability:
 - **Loopback by default.** The daemon binds to `127.0.0.1`. Turning the admin
   sign-in off on a non-loopback bind is refused at startup unless
   `admin.allow_external` is set.
-- **Separate credentials.** Client keys reach only the data plane. The admin
-  token reaches only the management API and console. Upstream credentials are
-  never sent to agents.
+- **Separate credentials.** Client keys authenticate only the data-plane
+  prefixes (`/inference/*`, `/inference-claude/*`). The admin token reaches
+  only the management API and console. Upstream credentials are never sent to
+  agents. The data plane shares the listener with the console, so exposing the
+  port exposes the console sign-in too: `[admin] login = true` guards it.
 - **Secrets at rest.** Account credentials live in the OS keychain, or in
   `$RELO_HOME/secrets.enc` sealed by `$RELO_HOME/secret.key`.
 - **CSRF.** Every management API write needs an `X-CSRF-Token` header matching

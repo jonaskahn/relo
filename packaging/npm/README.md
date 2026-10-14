@@ -1,97 +1,59 @@
 <div align="center">
-<img src="assets/logo.png" alt="Relo" width="96">
+<img src="https://raw.githubusercontent.com/jonaskahn/relo/main/assets/logo.svg" alt="Relo" width="96">
 
 <h2>Relo</h2>
 
 <code>▚▚▚▚▚▚▚ Light • Fast • Reliable ▚▚▚▚▚▚▚</code>
 
+<a href="https://www.npmjs.com/package/@jonaskahn/relo"><img src="https://img.shields.io/npm/v/@jonaskahn/relo?label=npm%40latest" alt="npm latest"></a>
+<a href="https://www.npmjs.com/package/@jonaskahn/relo?activeTab=versions"><img src="https://img.shields.io/npm/v/@jonaskahn/relo/beta" alt="npm beta"></a>
+
+<p><i>Let your harness agents talk to any model, any provider with no config changes.</i></p>
+
 </div>
 
-> One local proxy that lets Codex, Claude Code, Cursor and Grok, etc. Talk to any model, any provider with no config changes.
+---
 
-## Installation
+## Install
 
 ```console
-$ npm install -g @jonaskahn/relo
-$ relo daemon start
+$ npm i -g @jonaskahn/relo        # latest stable (Node 22+)
+$ npm i -g @jonaskahn/relo@beta   # fresh from main
 ```
 
-## What you get
+Installs the `relo` binary, verified against the release checksums. State
+lives in `~/.relo` (`$RELO_HOME`), shared with every other installer. Never
+installed twice: if another Relo is on your PATH, this one refuses and tells
+you where it found it.
 
-This package installs the `relo` binary and puts a `relo` command on your
-PATH. It is the daemon with its tray icon, downloaded from the GitHub release
-and verified against the release checksums.
+## Start
 
-`relo` runs headless where there is no desktop session — a container or a
-server — and shows its tray icon where there is one. The installers
-(`Relo-Setup-*.exe` on Windows, the `Relo-Setup-*.deb` / `Relo-Setup-*.rpm`
-packages on Linux, and `Relo.app` on macOS) install the same binary.
+```console
+$ relo daemon start                 # console at http://127.0.0.1:10101
+```
 
-Every install provides the `relo` command, so they are never installed
-together: if another relo is already on your PATH, this install refuses and
-tells you where it found it. Removing that install first lets this package
-take over.
+One port serves everything: the console, the management API, and the data
+plane (`/inference` speaks OpenAI, `/inference-claude` speaks Anthropic).
 
-Supported hosts: macOS, Linux, and Windows on both Intel and Apple Silicon (or
-their ARM equivalents). State lives in `$RELO_HOME`, `~/.relo` by default, so
-an npm install and a `.deb` install share the same configuration.
+## Update
 
-## Updates
-
-The postinstall stops a running relo before replacing the binary: it asks the
-old build to drain, ends the processes of this home that still hold a
-configured port, and checks the ports are free before it writes the new one. A
-port another program holds fails the install rather than killing that program:
+The installer stops the running daemon, swaps the binary, and checks the port
+is free. Your data is never touched. If another program holds the port, the
+install fails instead of killing it:
 
 ```
 relo: install failed -- something else is listening on port 10101
 ```
 
-Free the port, or point `$RELO_HOME/config.toml` at another one, and install
-again. The data is never touched by an update.
-
-## Uninstalling
+## Uninstall
 
 ```console
-$ npm uninstall -g @jonaskahn/relo
+$ npm uninstall -g @jonaskahn/relo   # keeps your data
+$ relo uninstall --wipe               # removes data too
 ```
-
-This keeps your data in `$RELO_HOME`: the preuninstall script stops the daemon,
-frees its ports, and turns off start-at-login. To remove the data as well, use
-the daemon itself, which also removes the program:
-
-```console
-$ relo uninstall --wipe
-```
-
-Without a flag, `relo uninstall` asks whether the data goes.
-
-## Install options
-
-The installer downloads the daemon binary from a GitHub release: the latest
-one by default, or the tag `--relo-version` names when the installer is run
-by hand:
-
-```console
-$ node "$(npm root -g)/relo/lib/install.mjs" --relo-version 0.2.0
-```
-
-## Troubleshooting
-
-An install that printed a platform or checksum error left nothing behind, so
-fix the cause and run the installer again:
-
-```console
-$ node "$(npm root -g)/relo/lib/install.mjs"
-```
-
-Downloads are verified against `checksums.txt` from the release. A mismatch
-fails the install rather than writing an executable.
 
 ## Links
 
-- [Source](https://github.com/jonaskahn/relo)
-- [Releases](https://github.com/jonaskahn/relo/releases)
-- [Documentation](https://github.com/jonaskahn/relo#readme)
+[Source](https://github.com/jonaskahn/relo) · [Releases](https://github.com/jonaskahn/relo/releases) · [Docs](https://github.com/jonaskahn/relo#readme)
 
 AGPL-3.0-only

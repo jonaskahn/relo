@@ -215,8 +215,7 @@ jobs:
               EOS
             end
 
-            # Ends a daemon a previous Relo left running and frees the console and
-            # data-plane ports its config.toml names, so an upgrade or reinstall
+            # Ends a daemon a previous Relo left running and frees the port its config.toml names, so an upgrade or reinstall
             # never hands the new binary a port the old one still holds. During an
             # upgrade the linked command is the previous keg, which is what
             # recognises the running daemon. Best effort: nothing to stop is fine.

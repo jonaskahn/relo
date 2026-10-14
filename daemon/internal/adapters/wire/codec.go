@@ -111,6 +111,10 @@ type CodecOpts struct {
 	// NativeMillion reports that the named entry is a million tokens on its own,
 	// so the long-context beta does not apply and must be left off the request.
 	NativeMillion bool
+	// UpstreamModel is the identifier sent to the provider, which gates
+	// version-dependent wire details such as the long-context beta. Empty
+	// keeps the legacy behavior.
+	UpstreamModel string
 	// PromptTokens estimates the request size the codec will encode, which a
 	// codec uses for the capacity a target promises rather than for the beta
 	// a caller explicitly named.

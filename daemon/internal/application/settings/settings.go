@@ -60,13 +60,10 @@ type SystemSettings struct {
 	UpdatesDownload string
 }
 
-// ServerSettings is where the management listener and the data plane answer.
+// ServerSettings is where the single listener answers.
 type ServerSettings struct {
-	Bind          string
-	Port          int
-	OpenAIPort    int
-	AnthropicPort int
-	GeminiPort    int
+	Bind string
+	Port int
 }
 
 // ProvidersSettings is how the daemon reaches providers and their
@@ -234,9 +231,6 @@ func readSystemServer(settings *Settings, file config.Config) {
 	}
 	settings.Server = ServerSettings{
 		Bind: file.Server.Bind, Port: file.Server.Port,
-		OpenAIPort:    file.Server.DataPlane.OpenAI,
-		AnthropicPort: file.Server.DataPlane.Anthropic,
-		GeminiPort:    file.Server.DataPlane.Gemini,
 	}
 }
 
@@ -423,16 +417,15 @@ func (s *Service) SaveAccess(allowExternal bool) error {
 	return nil
 }
 
-// SaveNetwork stores where the management listener and the data plane answer.
-// A bind or a port that would leave the next start unaccepted is refused.
+// SaveNetwork stores where the single listener answers. A bind or a port
+// that would leave the next start unaccepted is refused.
 func (s *Service) SaveNetwork(server ServerSettings) (ServerSettings, error) {
 	if err := config.UpdateServerConfig(s.configPath, config.ServerConfigPatch{
-		Bind:       &server.Bind,
-		Port:       &server.Port,
-		OpenAIPort: &server.OpenAIPort, AnthropicPort: &server.AnthropicPort, GeminiPort: &server.GeminiPort,
+		Bind: &server.Bind,
+		Port: &server.Port,
 	}); err != nil {
 		if errors.Is(err, config.ErrInvalidBind) || errors.Is(err, config.ErrInvalidPort) ||
-			errors.Is(err, config.ErrDuplicatePort) || errors.Is(err, config.ErrLoginOffOutsideLoopback) {
+			errors.Is(err, config.ErrLoginOffOutsideLoopback) {
 			return ServerSettings{}, fmt.Errorf("%w: %v", ErrInvalidWrite, err)
 		}
 		return ServerSettings{}, err

@@ -103,11 +103,8 @@ func TestUpdateServerConfigRoundTrip(t *testing.T) {
 	}
 	bind := "127.0.0.1"
 	port := 12000
-	openAI := 12001
-	anthropic := 12002
-	gemini := 0
 	if err := config.UpdateServerConfig(path, config.ServerConfigPatch{
-		Bind: &bind, Port: &port, OpenAIPort: &openAI, AnthropicPort: &anthropic, GeminiPort: &gemini,
+		Bind: &bind, Port: &port,
 	}); err != nil {
 		t.Fatal(err)
 	}
@@ -118,15 +115,12 @@ func TestUpdateServerConfigRoundTrip(t *testing.T) {
 	if file.Server.Bind != bind || file.Server.Port != port {
 		t.Fatalf("server = %+v, want %s:%d", file.Server, bind, port)
 	}
-	if file.Server.DataPlane.OpenAI != openAI || file.Server.DataPlane.Anthropic != anthropic || file.Server.DataPlane.Gemini != 0 {
-		t.Fatalf("data plane = %+v, want the stored ports", file.Server.DataPlane)
-	}
 	content, err := os.ReadFile(path)
 	if err != nil {
 		t.Fatal(err)
 	}
 	text := string(content)
-	for _, kept := range []string{"[server]", "[server.data_plane]", "[admin]", "login = true", "timeout_seconds = 180"} {
+	for _, kept := range []string{"[server]", "[admin]", "login = true", "timeout_seconds = 180"} {
 		if !strings.Contains(text, kept) {
 			t.Fatalf("update dropped %q:\n%s", kept, text)
 		}
@@ -147,11 +141,6 @@ func TestUpdateServerConfigRefusesImpossibleListeners(t *testing.T) {
 	if err := config.UpdateServerConfig(path, config.ServerConfigPatch{Port: &badPort}); !errors.Is(err, config.ErrInvalidPort) {
 		t.Fatalf("UpdateServerConfig() error = %v, want ErrInvalidPort", err)
 	}
-	first, second := 12001, 12001
-	if err := config.UpdateServerConfig(path, config.ServerConfigPatch{Port: &first, OpenAIPort: &second}); !errors.Is(err, config.ErrDuplicatePort) {
-		t.Fatalf("UpdateServerConfig() error = %v, want ErrDuplicatePort", err)
-	}
-
 	// A non-loopback bind needs the sign-in or external access on.
 	source = "[admin]\nlogin = false\nallow_external = false\n"
 	if err := os.WriteFile(path, []byte(source), 0o600); err != nil {

@@ -1,7 +1,6 @@
-// Package server exposes the HTTP listeners Relo runs: the management
-// listener carrying the API and the dashboard operators use, and one data
-// plane listener per client protocol, which is the address an AI client
-// points at.
+// Package server exposes the HTTP listener Relo runs: the single listener
+// carrying the management API, the dashboard operators use, the login
+// callbacks, and the data plane address an AI client points at.
 package server
 
 import (
@@ -10,7 +9,6 @@ import (
 	"fmt"
 	"io"
 	"log/slog"
-	"maps"
 	"net"
 	"net/http"
 	"sync"
@@ -178,15 +176,10 @@ type FormatRegistry interface {
 	InboundRegistry
 }
 
-// ListenerManagement names the management listener in the address maps this
-// package reports: the console, the management API, the login callbacks.
-const ListenerManagement = "management"
-
-// Addrs names every address one process bound: the management listener, and
-// each data plane protocol under its identifier.
+// Addrs names the address one process bound: the single listener serving
+// the console, the management API, and the data plane prefixes.
 type Addrs struct {
 	Management string
-	DataPlane  map[string]string
 }
 
 // SetDashboard attaches the console this process serves. A server without
@@ -242,7 +235,6 @@ type Server struct {
 	mu                sync.RWMutex
 	servers           []*http.Server
 	addr              string
-	dataPlane         map[string]string
 	onReady           func(addrs Addrs)
 	lifetime          context.Context
 	cancel            context.CancelFunc
@@ -268,7 +260,6 @@ func New(opts Options) *Server {
 		oauth: newOAuthOperations(MaxSessions), events: opts.Events,
 		gate:         NewAccessKeyGate(opts.AccessKeys, opts.Clock, opts.Logger),
 		nativeClient: &http.Client{},
-		dataPlane:    map[string]string{},
 		bookkeeping:  newBookkeeping(),
 		sweep:        sweepJob{state: sweepIdle},
 		lifetime:     lifetime, cancel: cancel, persistence: persistence, cancelPersistence: cancelPersistence,
@@ -365,20 +356,9 @@ func (s *Server) Addr() string {
 	return s.addr
 }
 
-// DataPlaneAddrs returns the bound address of every data plane listener,
-// keyed by the protocol it carries. A protocol this process does not serve
-// is absent rather than empty.
-func (s *Server) DataPlaneAddrs() map[string]string {
-	s.mu.RLock()
-	defer s.mu.RUnlock()
-	addrs := make(map[string]string, len(s.dataPlane))
-	maps.Copy(addrs, s.dataPlane)
-	return addrs
-}
-
-// Addrs returns every address this process bound.
+// Addrs returns the address this process bound.
 func (s *Server) Addrs() Addrs {
-	return Addrs{Management: s.Addr(), DataPlane: s.DataPlaneAddrs()}
+	return Addrs{Management: s.Addr()}
 }
 
 func (s *Server) countInFlight(next http.Handler) http.Handler {
@@ -414,35 +394,16 @@ func (s *Server) InvalidateAccessKey(id string) {
 }
 
 type boundListener struct {
-	name     string
 	listener net.Listener
 	handler  http.Handler
 }
 
 func (s *Server) bind() ([]boundListener, error) {
-	requests := []struct {
-		name    string
-		addr    string
-		handler http.Handler
-	}{{name: ListenerManagement, addr: s.opts.Config.Server.Addr(), handler: s.Handler()}}
-	for _, served := range s.servedProtocols() {
-		requests = append(requests, struct {
-			name    string
-			addr    string
-			handler http.Handler
-		}{name: served.id, addr: s.opts.Config.Server.DataPlaneAddr(served.id),
-			handler: LoggingMiddleware(s.opts.Logger, s.dataPlaneHandler(served.dataPlaneProtocol))})
+	listener, err := listen(s.opts.Config.Server.Addr())
+	if err != nil {
+		return nil, fmt.Errorf("management listener: %w", err)
 	}
-	bound := make([]boundListener, 0, len(requests))
-	for _, request := range requests {
-		listener, err := listen(request.addr)
-		if err != nil {
-			closeListeners(bound)
-			return nil, fmt.Errorf("%s listener: %w", request.name, err)
-		}
-		bound = append(bound, boundListener{name: request.name, listener: listener, handler: request.handler})
-	}
-	return bound, nil
+	return []boundListener{{listener: listener, handler: s.Handler()}}, nil
 }
 
 func closeListeners(bound []boundListener) {
@@ -477,17 +438,12 @@ func (s *Server) serve(ctx context.Context, bound []boundListener) error {
 
 func (s *Server) publishListeners(bound []boundListener) ([]*http.Server, func(Addrs)) {
 	servers := make([]*http.Server, 0, len(bound))
-	dataPlane := map[string]string{}
 	management := ""
 	for _, item := range bound {
 		server := &http.Server{Handler: item.handler, ReadHeaderTimeout: readHeaderTimeout,
 			BaseContext: func(net.Listener) context.Context { return s.lifetime }}
 		servers = append(servers, server)
-		if item.name == ListenerManagement {
-			management = item.listener.Addr().String()
-			continue
-		}
-		dataPlane[item.name] = item.listener.Addr().String()
+		management = item.listener.Addr().String()
 	}
 	s.mu.Lock()
 	if s.stopping {
@@ -497,7 +453,6 @@ func (s *Server) publishListeners(bound []boundListener) ([]*http.Server, func(A
 	}
 	s.servers = servers
 	s.addr = management
-	s.dataPlane = dataPlane
 	onReady := s.onReady
 	s.mu.Unlock()
 	return servers, onReady

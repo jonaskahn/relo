@@ -30,9 +30,9 @@ are configured in the console.
 
 ## Operating Context
 
-The management API and console run on a loopback listener at `:10101` by
-default. Inference surfaces use their own configured loopback ports; the
-default OpenAI-compatible and Anthropic ports are `:10201` and `:10202`.
+The management API, the console, and the data plane share one loopback listener at `:10101` by
+default. Inference surfaces live under path prefixes: `/inference` speaks the OpenAI-compatible
+protocol and `/inference-claude` speaks the Anthropic protocol.
 State lives in `RELO_HOME` (default `~/.relo`), including configuration,
 SQLite, the admin token, and runtime files. Provider credentials live in an
 encrypted file sealed by a local key, or in the OS keychain when

@@ -1,24 +1,17 @@
-// Default configuration: ports, homes, and the boot baseline.
+// Default configuration: the boot baseline.
 package config
 
 import (
 	"log/slog"
 
 	"github.com/jonaskahn/relo/internal/i18n"
-	"github.com/jonaskahn/relo/internal/inference"
 )
 
-// Shipped defaults are the startup baseline a fresh home runs on: loopback
-// listeners, ports, log level, index source, and update feed.
+// Shipped defaults are the startup baseline a fresh home runs on: the
+// loopback listener, log level, index source, and update feed.
 const (
-	DefaultServerBind = "127.0.0.1"
-	DefaultServerPort = 10101
-	// DefaultOpenAIPort The data plane answers on its own ports, one per client protocol, so a
-	// client points at the address its ecosystem expects. The management
-	// listener keeps 10101 for the console, the API, and the login callbacks.
-	DefaultOpenAIPort      = 10201
-	DefaultAnthropicPort   = 10202
-	DefaultGeminiPort      = 10203
+	DefaultServerBind      = "127.0.0.1"
+	DefaultServerPort      = 10101
 	DefaultLogLevel        = "info"
 	DefaultModelsDevURL    = "https://models.dev/api.json"
 	DefaultReloHome        = ".relo"
@@ -40,21 +33,6 @@ const (
 	DefaultFailoverCooldownSeconds = 0
 )
 
-// DefaultDataPlanePort returns the port a protocol listens on when the
-// configuration names none, and zero for a protocol Relo does not serve.
-func DefaultDataPlanePort(protocol string) int {
-	switch protocol {
-	case inference.ProtocolOpenAI:
-		return DefaultOpenAIPort
-	case inference.ProtocolAnthropic:
-		return DefaultAnthropicPort
-	case inference.ProtocolGemini:
-		return DefaultGeminiPort
-	default:
-		return 0
-	}
-}
-
 // DefaultAutostart is the shipped default: a proxy an operator relies on
 // should come back after a restart.
 const DefaultAutostart = true
@@ -72,9 +50,6 @@ func DefaultConfig() Config {
 		},
 		Server: ServerConfig{
 			Bind: DefaultServerBind, Port: DefaultServerPort,
-			DataPlane: DataPlaneConfig{
-				OpenAI: DefaultOpenAIPort, Anthropic: DefaultAnthropicPort, Gemini: DefaultGeminiPort,
-			},
 		},
 		Upstream: UpstreamConfig{
 			TimeoutSeconds:          DefaultUpstreamTimeoutSeconds,

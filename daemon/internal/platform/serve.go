@@ -13,7 +13,6 @@ import (
 	"os"
 	"os/signal"
 	"path/filepath"
-	"sort"
 	"strconv"
 	"sync/atomic"
 	"syscall"
@@ -23,6 +22,7 @@ import (
 	"github.com/jonaskahn/relo/internal/access"
 	"github.com/jonaskahn/relo/internal/adapters/sqlite"
 	"github.com/jonaskahn/relo/internal/config"
+	"github.com/jonaskahn/relo/internal/inference"
 	// Login items are stored next to the tray code; the daemon uses them
 	// without importing the desktop surface.
 	"github.com/jonaskahn/relo/internal/platform/autostart"
@@ -239,14 +239,12 @@ func serveWired(ctx context.Context, wired wired, cfg *config.Config, logger *sl
 }
 
 func serveFields(cfg *config.Config, wired wired) []any {
-	fields := []any{
+	return []any{
 		"addr", cfg.Server.Addr(),
 		"secret_mode", string(wired.secrets.Mode()),
+		"openai", cfg.DataPlaneBaseURL(inference.ProtocolOpenAI),
+		"anthropic", cfg.DataPlaneBaseURL(inference.ProtocolAnthropic),
 	}
-	for _, listener := range cfg.DataPlaneListeners() {
-		fields = append(fields, listener.Protocol, cfg.Server.DataPlaneAddr(listener.Protocol))
-	}
-	return fields
 }
 
 func observeSignals() *signalCause {
@@ -279,23 +277,10 @@ func (c *signalCause) text() string {
 }
 
 func boundListeners(addrs server.Addrs) []string {
-	listeners := make([]string, 0, 1+len(addrs.DataPlane))
-	if addrs.Management != "" {
-		listeners = append(listeners, addrs.Management)
+	if addrs.Management == "" {
+		return nil
 	}
-	names := make([]string, 0, len(addrs.DataPlane))
-	for name := range addrs.DataPlane {
-		names = append(names, name)
-	}
-	sort.Strings(names)
-	for _, name := range names {
-		address := addrs.DataPlane[name]
-		if address == "" || address == addrs.Management {
-			continue
-		}
-		listeners = append(listeners, address)
-	}
-	return listeners
+	return []string{addrs.Management}
 }
 
 func runtimeConfig(options Options) (*config.Config, error) {

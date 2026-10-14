@@ -102,8 +102,11 @@ func TestNativeBodyKeepsTheClientsBytes(t *testing.T) {
 	if !strings.Contains(raw, "9007199254740993") {
 		t.Fatalf("body = %s, want the client's own number", raw)
 	}
-	if !strings.Contains(raw, `"thinking":{"type":"adaptive","display":"updates"}`) {
-		t.Fatalf("body = %s, want the client's own thinking control", raw)
+	if strings.Contains(raw, `"display":"updates"`) {
+		t.Fatalf("body = %s, want display:updates normalized away", raw)
+	}
+	if !strings.Contains(raw, `"type":"adaptive"`) {
+		t.Fatalf("body = %s, want the client's own thinking type kept", raw)
 	}
 	if !strings.Contains(raw, `"model":"claude-sonnet-4"`) {
 		t.Fatalf("body = %s, want the selected upstream model", raw)

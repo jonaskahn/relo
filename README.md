@@ -7,8 +7,10 @@
 
 <a href="https://github.com/jonaskahn/relo/actions/workflows/ci.yml"><img src="https://github.com/jonaskahn/relo/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
 <a href="https://codecov.io/gh/jonaskahn/relo"><img src="https://codecov.io/gh/jonaskahn/relo/branch/main/graph/badge.svg" alt="Coverage"></a>
+<a href="https://github.com/jonaskahn/relo/actions/workflows/ci.yml"><img src="assets/coverage.svg" alt="Coverage"></a>
 <a href="https://github.com/jonaskahn/relo/releases"><img src="https://img.shields.io/badge/version-0.1.0-blue" alt="Version"></a>
-<a href="https://www.npmjs.com/package/@jonaskahn/relo"><img src="https://img.shields.io/npm/v/@jonaskahn/relo" alt="npm"></a>
+<a href="https://www.npmjs.com/package/@jonaskahn/relo"><img src="https://img.shields.io/npm/v/@jonaskahn/relo?label=npm%40latest" alt="npm latest"></a>
+<a href="https://www.npmjs.com/package/@jonaskahn/relo?activeTab=versions"><img src="https://img.shields.io/npm/v/@jonaskahn/relo/beta" alt="npm beta"></a>
 
 <p><i>Let your harness agents talk to any model, any provider with no config changes.</i></p>
 
@@ -36,7 +38,7 @@ $ irm https://relo.ifelse.one/install.ps1 | iex       # Windows, PowerShell
 |-----------|----------------------------------------------------------------------|
 | Script    | the two lines above; `install.sh --help` lists the flags             |
 | Homebrew  | `brew install jonaskahn/apps/relo`                                   |
-| npm       | `npm i -g @jonaskahn/relo` (Node 22+)                                |
+| npm       | `npm i -g @jonaskahn/relo[@beta]` (Node 22+)                         |
 | macOS app | `Relo-<version>-universal.zip`                                       |
 | Linux     | `Relo-Setup-<version>-amd64.deb` or `Relo-Setup-<version>-amd64.rpm` |
 | Windows   | `Relo-Setup-<version>-amd64.exe`                                     |
@@ -58,11 +60,14 @@ Loopback only. `[admin] login = true` puts a sign-in in front, using `$RELO_HOME
 
 ## ▓ SURFACES
 
-| Port    | Speaks                      |
-|---------|-----------------------------|
-| `10101` | console + management API    |
-| `10201` | OpenAI-compatible (`/v1/*`) |
-| `10202` | Anthropic (`/v1/*`)         |
+| Port    | Speaks                                              |
+|---------|-----------------------------------------------------|
+| `10101` | console + management API + data plane               |
+
+| Prefix             | Speaks                      |
+|--------------------|-----------------------------|
+| `/inference`       | OpenAI-compatible (`/v1/*`) |
+| `/inference-claude`| Anthropic (`/v1/*`)         |
 
 Client keys hit the data plane. The admin token hits the console. Provider credentials go upstream only.
 

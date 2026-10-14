@@ -14,8 +14,8 @@ import (
 )
 
 // TestDataPlaneListeners starts a server the way the daemon does and checks
-// every listener it bound: each one answers for its own protocol behind a
-// client key, and for nothing else.
+// the single listener it bound: each prefix answers for its own protocol
+// behind a client key, and for nothing else.
 func TestDataPlaneListeners(t *testing.T) {
 	cfg := freeConfig(t)
 
@@ -28,20 +28,19 @@ func TestDataPlaneListeners(t *testing.T) {
 	openai := waitForDataPlaneAddress(t, harness.server, inference.ProtocolOpenAI)
 	anthropic := waitForDataPlaneAddress(t, harness.server, inference.ProtocolAnthropic)
 
-	t.Run("each protocol answers on the port the configuration gave it", func(t *testing.T) {
-		for protocol, address := range map[string]string{
-			inference.ProtocolOpenAI: openai, inference.ProtocolAnthropic: anthropic,
-		} {
-			if want := "127.0.0.1:" + strconv.Itoa(cfg.Server.DataPlane.Port(protocol)); address != want {
-				t.Fatalf("%s bound %q, want %q", protocol, address, want)
-			}
+	t.Run("each protocol answers under its own prefix", func(t *testing.T) {
+		if !strings.HasSuffix(openai, "/inference") {
+			t.Fatalf("openai bound %q, want the /inference prefix", openai)
 		}
-		if openai == management || anthropic == management {
-			t.Fatal("a data plane listener took the management address")
+		if !strings.HasSuffix(anthropic, "/inference-claude") {
+			t.Fatalf("anthropic bound %q, want the /inference-claude prefix", anthropic)
+		}
+		if !strings.HasPrefix(openai, management) || !strings.HasPrefix(anthropic, management) {
+			t.Fatal("a data plane prefix left the management listener")
 		}
 	})
 
-	t.Run("every port answers the health probe in the open", func(t *testing.T) {
+	t.Run("every prefix answers the health probe in the open", func(t *testing.T) {
 		for _, address := range []string{management, openai, anthropic} {
 			response := httpGetOn(t, "http://"+address+"/healthz", "")
 			if response.StatusCode != http.StatusOK {
@@ -51,7 +50,7 @@ func TestDataPlaneListeners(t *testing.T) {
 		}
 	})
 
-	t.Run("every port answers the browser's own icon request in the open", func(t *testing.T) {
+	t.Run("every prefix answers the browser's own icon request in the open", func(t *testing.T) {
 		for _, address := range []string{management, openai, anthropic} {
 			response := httpGetOn(t, "http://"+address+"/favicon.ico", "")
 			if response.StatusCode != http.StatusOK {
@@ -72,11 +71,11 @@ func TestDataPlaneListeners(t *testing.T) {
 		}
 	})
 
-	t.Run("each port relays its own shape behind a client key", func(t *testing.T) {
+	t.Run("each prefix relays its own shape behind a client key", func(t *testing.T) {
 		response := httpPostTo(t, "http://"+openai+"/v1/chat/completions", dataPlaneToken, streamingBody())
 		defer func() { _ = response.Body.Close() }()
 		if response.StatusCode != http.StatusOK {
-			t.Fatalf("the OpenAI-compatible port = %d, want 200", response.StatusCode)
+			t.Fatalf("the OpenAI-compatible prefix = %d, want 200", response.StatusCode)
 		}
 		body, err := io.ReadAll(response.Body)
 		if err != nil || !strings.Contains(string(body), "[DONE]") {
@@ -84,15 +83,15 @@ func TestDataPlaneListeners(t *testing.T) {
 		}
 	})
 
-	t.Run("a port refuses the shape of another protocol", func(t *testing.T) {
+	t.Run("a prefix refuses the shape of another protocol", func(t *testing.T) {
 		response := httpPostTo(t, "http://"+openai+"/v1/messages", dataPlaneToken, "{}")
 		defer func() { _ = response.Body.Close() }()
 		if response.StatusCode != http.StatusNotFound {
-			t.Fatalf("the OpenAI-compatible port answered an Anthropic shape with %d", response.StatusCode)
+			t.Fatalf("the OpenAI-compatible prefix answered an Anthropic shape with %d", response.StatusCode)
 		}
 	})
 
-	t.Run("a port refuses a request with no client key", func(t *testing.T) {
+	t.Run("a prefix refuses a request with no client key", func(t *testing.T) {
 		for _, target := range []string{
 			"http://" + openai + "/v1/chat/completions",
 			"http://" + anthropic + "/v1/messages",
@@ -114,11 +113,9 @@ func TestDataPlaneListeners(t *testing.T) {
 	case <-time.After(15 * time.Second):
 		t.Fatal("the daemon did not stop")
 	}
-	for _, address := range []string{management, openai, anthropic} {
-		if conn, err := net.DialTimeout("tcp", address, 500*time.Millisecond); err == nil {
-			_ = conn.Close()
-			t.Fatalf("%s still accepts connections after shutdown", address)
-		}
+	if conn, err := net.DialTimeout("tcp", management, 500*time.Millisecond); err == nil {
+		_ = conn.Close()
+		t.Fatalf("%s still accepts connections after shutdown", management)
 	}
 }
 
@@ -133,15 +130,15 @@ func TestDataPlanePortBusy(t *testing.T) {
 	port := busy.Addr().(*net.TCPAddr).Port
 
 	cfg := freeConfig(t)
-	cfg.Server.DataPlane.OpenAI = port
+	cfg.Server.Port = port
 	harness := newHarness(t)
 	harness.server = harness.newServerWithConfig(cfg, defaultEntry())
 	err = harness.server.Start(context.Background())
 	if err == nil {
 		t.Fatal("Start() error = nil, want the busy port refused")
 	}
-	if !strings.Contains(err.Error(), inference.ProtocolOpenAI) || !strings.Contains(err.Error(), strconv.Itoa(port)) {
-		t.Fatalf("Start() error = %v, want it to name the %s port %d", err, inference.ProtocolOpenAI, port)
+	if !strings.Contains(err.Error(), "management listener") || !strings.Contains(err.Error(), strconv.Itoa(port)) {
+		t.Fatalf("Start() error = %v, want it to name the management port %d", err, port)
 	}
 }
 

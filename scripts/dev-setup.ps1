@@ -1,7 +1,7 @@
-# Writes the development state directory once, with its own console port, its
-# own data plane ports, and no login-item registration, so a run started from
-# an editor never collides with the daemon on ~/.relo. An existing
-# configuration is left alone: a developer's edits outrank this script.
+# Writes the development state directory once, with its own console port and
+# no login-item registration, so a run started from an editor never collides
+# with the daemon on ~/.relo. An existing configuration is left alone: a
+# developer's edits outrank this script.
 # Mirrors scripts/dev-setup.sh for Windows contributors without bash/make.
 param([int]$Port = 10201)
 $ErrorActionPreference = "Stop"
@@ -17,9 +17,6 @@ if (Test-Path $config) {
     exit 0
 }
 
-$openai = $Port + 100
-$anthropic = $Port + 101
-$gemini = $Port + 102
 $text = @"
 # The development state directory, written once by scripts/dev-setup.ps1.
 
@@ -33,13 +30,6 @@ level = "debug"
 [server]
 bind = "127.0.0.1"
 port = $Port
-
-# The data plane sits above the console port, so a development run never
-# competes with a daemon on the default addresses.
-[server.data_plane]
-openai = $openai
-anthropic = $anthropic
-gemini = $gemini
 
 [secrets]
 keychain = false

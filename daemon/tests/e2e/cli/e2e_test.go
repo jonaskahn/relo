@@ -70,7 +70,6 @@ func TestBinaryCommands(t *testing.T) {
 
 	t.Run("start serves in the background and stop ends it", func(t *testing.T) {
 		lifecycleHome := newHome(t)
-		writeServeConfig(t, lifecycleHome)
 		lifecycleEnv := commandEnv(lifecycleHome)
 		port := freePort(t)
 		// Whatever the assertions do, the daemon this test starts does not
@@ -128,7 +127,6 @@ func TestBinaryCommands(t *testing.T) {
 
 	t.Run("serve starts, answers, and stops on interrupt", func(t *testing.T) {
 		serveHome := newHome(t)
-		writeServeConfig(t, serveHome)
 		port := freePort(t)
 		command := exec.Command(binary, "daemon", "run",
 			"--home", serveHome,
@@ -273,18 +271,6 @@ func freePort(t *testing.T) int {
 	}
 	defer func() { _ = listener.Close() }()
 	return listener.Addr().(*net.TCPAddr).Port
-}
-
-// writeServeConfig gives one serve run its own data plane ports. The machine
-// default would be whatever daemon the machine already runs, and a run that
-// cannot bind its listener stops instead of answering.
-func writeServeConfig(t *testing.T, home string) {
-	t.Helper()
-	ports := fmt.Sprintf("[server.data_plane]\nopenai = %d\nanthropic = %d\ngemini = %d\n",
-		freePort(t), freePort(t), freePort(t))
-	if err := os.WriteFile(filepath.Join(home, "config.toml"), []byte(ports), 0o600); err != nil {
-		t.Fatalf("write the serve config: %v", err)
-	}
 }
 
 func waitForHealthz(t *testing.T, port int) {

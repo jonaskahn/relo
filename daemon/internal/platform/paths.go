@@ -33,9 +33,5 @@ func dataPlaneBaseURL(cfg *config.Config, protocol string) string {
 	if cfg == nil {
 		return ""
 	}
-	address := cfg.DataPlaneAddr(protocol)
-	if address == "" {
-		return ""
-	}
-	return "http://" + address
+	return cfg.DataPlaneBaseURL(protocol)
 }

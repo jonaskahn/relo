@@ -65,46 +65,11 @@ type UsageConfig struct {
 	OverviewMetrics []string `toml:"overview_metrics"`
 }
 
-// ServerConfig configures the listener that serves the management API, the
-// dashboard, and the login callbacks, and the ports the data plane answers
-// on.
+// ServerConfig configures the single listener serving the management API,
+// the dashboard, the login callbacks, and the data plane prefixes.
 type ServerConfig struct {
-	Bind      string          `toml:"bind"`
-	Port      int             `toml:"port"`
-	DataPlane DataPlaneConfig `toml:"data_plane"`
-}
-
-// DataPlaneConfig names the port one client protocol is served on.
-type DataPlaneConfig struct {
-	OpenAI    int `toml:"openai"`
-	Anthropic int `toml:"anthropic"`
-	Gemini    int `toml:"gemini"`
-}
-
-// Port returns the configured port of one protocol, and zero when the
-// protocol is not served.
-func (c DataPlaneConfig) Port(protocol string) int {
-	switch protocol {
-	case inference.ProtocolOpenAI:
-		return c.OpenAI
-	case inference.ProtocolAnthropic:
-		return c.Anthropic
-	case inference.ProtocolGemini:
-		return c.Gemini
-	default:
-		return 0
-	}
-}
-
-// DataPlaneAddr returns the host:port one protocol's listener binds, and an
-// empty string for a protocol this configuration gives no port, so a caller
-// never reads an address that no listener answers on.
-func (s ServerConfig) DataPlaneAddr(protocol string) string {
-	port := s.DataPlane.Port(protocol)
-	if port <= 0 {
-		return ""
-	}
-	return net.JoinHostPort(s.Bind, strconv.Itoa(port))
+	Bind string `toml:"bind"`
+	Port int    `toml:"port"`
 }
 
 // SecretsConfig configures where provider credentials are stored.
@@ -137,8 +102,18 @@ func (c ServerConfig) Addr() string {
 	return net.JoinHostPort(c.Bind, strconv.Itoa(c.Port))
 }
 
-// DataPlaneAddr returns the host:port one client protocol answers on, so a
-// caller can hand a client its address without reading the server block.
-func (c Config) DataPlaneAddr(protocol string) string {
-	return c.Server.DataPlaneAddr(protocol)
+// DataPlaneBaseURL returns the address a client of one protocol points at,
+// and an empty string for a protocol the daemon does not serve.
+func (c ServerConfig) DataPlaneBaseURL(protocol string) string {
+	prefix := inference.DataPlanePath(protocol)
+	if prefix == "" {
+		return ""
+	}
+	return "http://" + c.Addr() + prefix
+}
+
+// DataPlaneBaseURL returns the address a client of one protocol points at,
+// so a caller can hand a client its address without reading the server block.
+func (c Config) DataPlaneBaseURL(protocol string) string {
+	return c.Server.DataPlaneBaseURL(protocol)
 }

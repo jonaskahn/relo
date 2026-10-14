@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
-# Writes the development state directory once, with its own console port, its
-# own data plane ports, and no login-item registration, so a run started from
-# an editor never collides with the daemon on ~/.relo. An existing
-# configuration is left alone: a developer's edits outrank this script.
+# Writes the development state directory once, with its own console port and
+# no login-item registration, so a run started from an editor never collides
+# with the daemon on ~/.relo. An existing configuration is left alone: a
+# developer's edits outrank this script.
 set -euo pipefail
 
 root="$(cd "$(dirname "$0")/.." && pwd)"
@@ -31,13 +31,6 @@ level = "debug"
 [server]
 bind = "127.0.0.1"
 port = $port
-
-# The data plane sits above the console port, so a development run never
-# competes with a daemon on the default addresses.
-[server.data_plane]
-openai = $((port + 100))
-anthropic = $((port + 101))
-gemini = $((port + 102))
 
 [secrets]
 keychain = false

@@ -63,33 +63,25 @@ type systemSettingsRequest struct {
 }
 
 type serverSettingsResponse struct {
-	Bind          string `json:"bind"`
-	Port          int    `json:"port"`
-	OpenAIPort    int    `json:"openai_port"`
-	AnthropicPort int    `json:"anthropic_port"`
-	GeminiPort    int    `json:"gemini_port"`
+	Bind string `json:"bind"`
+	Port int    `json:"port"`
 }
 
 func toServerSettingsResponse(server appsettings.ServerSettings) serverSettingsResponse {
 	return serverSettingsResponse{
-		Bind: server.Bind, Port: server.Port, OpenAIPort: server.OpenAIPort,
-		AnthropicPort: server.AnthropicPort, GeminiPort: server.GeminiPort,
+		Bind: server.Bind, Port: server.Port,
 	}
 }
 
 func toServerSettings(request serverSettingsRequest) appsettings.ServerSettings {
 	return appsettings.ServerSettings{
-		Bind: request.Bind, Port: request.Port, OpenAIPort: request.OpenAIPort,
-		AnthropicPort: request.AnthropicPort, GeminiPort: request.GeminiPort,
+		Bind: request.Bind, Port: request.Port,
 	}
 }
 
 type serverSettingsRequest struct {
-	Bind          string `json:"bind"`
-	Port          int    `json:"port"`
-	OpenAIPort    int    `json:"openai_port"`
-	AnthropicPort int    `json:"anthropic_port"`
-	GeminiPort    int    `json:"gemini_port"`
+	Bind string `json:"bind"`
+	Port int    `json:"port"`
 }
 
 type providersSettingsResponse struct {

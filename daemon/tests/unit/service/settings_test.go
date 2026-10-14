@@ -81,11 +81,6 @@ download = "https://example.test/releases"
 bind = "0.0.0.0"
 port = 12000
 
-[server.data_plane]
-openai = 12001
-anthropic = 12002
-gemini = 12003
-
 [proxy]
 url = "https://proxy.example:8443"
 
@@ -121,7 +116,7 @@ key_file = "/tmp/other.key"
 		t.Fatalf("system = %+v, want the stored choices", settings.System)
 	}
 	wantServer := appsettings.ServerSettings{
-		Bind: "0.0.0.0", Port: 12000, OpenAIPort: 12001, AnthropicPort: 12002, GeminiPort: 12003,
+		Bind: "0.0.0.0", Port: 12000,
 	}
 	if settings.Server != wantServer {
 		t.Fatalf("server = %+v, want %+v", settings.Server, wantServer)
@@ -359,13 +354,13 @@ func TestExternalAccessReadsTheStoredChoice(t *testing.T) {
 	}
 }
 
-// TestSaveNetworkStoresTheListeners covers where the daemon listens: the
-// choices round-trip, and a port another listener already claims is refused.
+// TestSaveNetworkStoresTheListener covers where the daemon listens: the
+// choices round-trip, and an impossible bind is refused.
 func TestSaveNetworkStoresTheListeners(t *testing.T) {
 	harness := newHarness(t)
 	ctx := context.Background()
 	want := appsettings.ServerSettings{
-		Bind: "127.0.0.1", Port: 12000, OpenAIPort: 12001, AnthropicPort: 12002, GeminiPort: 0,
+		Bind: "127.0.0.1", Port: 12000,
 	}
 	saved, err := harness.settings.SaveNetwork(want)
 	if err != nil {
@@ -382,9 +377,8 @@ func TestSaveNetworkStoresTheListeners(t *testing.T) {
 		t.Fatalf("stored server = %+v, want %+v", stored.Server, want)
 	}
 
-	duplicate := want
-	duplicate.OpenAIPort = duplicate.Port
-	if _, err := harness.settings.SaveNetwork(duplicate); !errors.Is(err, appsettings.ErrInvalidWrite) {
+	refused := appsettings.ServerSettings{Bind: "not-an-ip", Port: 12000}
+	if _, err := harness.settings.SaveNetwork(refused); !errors.Is(err, appsettings.ErrInvalidWrite) {
 		t.Fatalf("SaveNetwork() error = %v, want an invalid write", err)
 	}
 	if stored, err = harness.settings.Read(ctx); err != nil || stored.Server != want {

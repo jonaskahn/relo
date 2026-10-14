@@ -16,19 +16,18 @@ export function reloHome(env = process.env) {
 	return env.RELO_HOME?.trim() || join(homedir(), '.relo');
 }
 
-const DEFAULTS = { port: 10101, openai: 10201, anthropic: 10202, gemini: 10203 };
+const DEFAULTS = { port: 10101 };
 
-// servicePorts lists the ports a home opens: the management port plus one per
-// client protocol. A protocol whose port is 0 is not opened.
+// servicePorts lists the port a home opens: the single listener's port. A
+// zero port asks for an ephemeral one, which no scan can name.
 export function servicePorts(configText = '') {
-	const found = {};
+	let found;
 	for (const line of configText.split('\n')) {
-		const match = line.match(/^\s*(port|openai|anthropic|gemini)\s*=\s*(\d+)/);
-		if (match) found[match[1]] ??= Number(match[2]);
+		const match = line.match(/^\s*port\s*=\s*(\d+)/);
+		if (match) found ??= Number(match[1]);
 	}
-	return ['port', 'openai', 'anthropic', 'gemini']
-		.map((key) => found[key] ?? DEFAULTS[key])
-		.filter((port) => port !== 0);
+	const port = found ?? DEFAULTS.port;
+	return port === 0 ? [] : [port];
 }
 
 // runtimePid reads the pid a daemon published, or null when no usable file

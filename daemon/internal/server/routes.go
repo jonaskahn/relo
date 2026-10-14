@@ -4,7 +4,6 @@ package server
 import (
 	"github.com/jonaskahn/relo/internal/inference"
 	"net/http"
-	"strconv"
 	"strings"
 )
 
@@ -17,7 +16,7 @@ const (
 	messagesPath        = inferencePrefix + "/messages"
 	modelsPath          = inferencePrefix + "/models"
 	// retiredAgentPrefix is the prefix the inference surfaces answered on
-	// before every protocol got a port of its own. The management listener
+	// before they moved under the data plane prefixes. The management listener
 	// still claims it, so a client left pointing at it is told where to go.
 	retiredAgentPrefix = "/agent"
 	// CallbackPrefix is the subtree a browser lands on after a provider
@@ -29,7 +28,11 @@ const (
 
 var managementExemptPaths = []string{"/logo.svg", LoginPath, authLoginPath, authSessionPath}
 
-var managementExemptPrefixes = []string{"/_app/", CallbackPrefix, inferencePrefix + "/", retiredAgentPrefix + "/"}
+var managementExemptPrefixes = []string{
+	"/_app/", CallbackPrefix, inferencePrefix + "/", retiredAgentPrefix + "/",
+	inference.DataPlanePath(inference.ProtocolOpenAI) + "/",
+	inference.DataPlanePath(inference.ProtocolAnthropic) + "/",
+}
 
 type healthResponse struct {
 	Status  string `json:"status"`
@@ -45,7 +48,7 @@ func dataPlaneProtocols() []dataPlaneProtocol {
 	return []dataPlaneProtocol{
 		{id: inference.ProtocolOpenAI, surfaces: []inferenceSurface{chatCompletionsSurface(), responsesSurface()}},
 		{id: inference.ProtocolAnthropic, surfaces: []inferenceSurface{messagesSurface()}},
-		// The Gemini port is reserved: the codec that would answer it exists,
+		// The Gemini prefix is reserved: the codec that would answer it exists,
 		// the inbound surface that would drive it does not yet.
 		{id: inference.ProtocolGemini},
 	}
@@ -53,17 +56,18 @@ func dataPlaneProtocols() []dataPlaneProtocol {
 
 type servedProtocol struct {
 	dataPlaneProtocol
-	port int
 }
 
 func (s *Server) servedProtocols() []servedProtocol {
 	served := make([]servedProtocol, 0, len(dataPlaneProtocols()))
 	for _, protocol := range dataPlaneProtocols() {
-		port := s.opts.Config.Server.DataPlane.Port(protocol.id)
-		if port <= 0 || len(protocol.surfaces) == 0 {
+		if inference.DataPlanePath(protocol.id) == "" {
 			continue
 		}
-		served = append(served, servedProtocol{dataPlaneProtocol: protocol, port: port})
+		if len(protocol.surfaces) == 0 {
+			continue
+		}
+		served = append(served, servedProtocol{dataPlaneProtocol: protocol})
 	}
 	return served
 }
@@ -150,11 +154,9 @@ func (s *Server) dataPlaneBaseURL(path string) (string, bool) {
 	if !found {
 		return "", false
 	}
-	port := s.opts.Config.Server.DataPlane.Port(protocol)
-	if port <= 0 {
-		return "", false
-	}
-	return "http://" + s.opts.Config.Server.Bind + ":" + strconv.Itoa(port), true
+	// A named protocol always owns a surface, and every surfaced protocol
+	// has a data plane prefix, so the prefix lookup cannot miss.
+	return "http://" + s.opts.Config.Server.Addr() + inference.DataPlanePath(protocol), true
 }
 
 func inferencePathProtocol(path string) (string, bool) {
@@ -186,11 +188,19 @@ func (s *Server) managementRoutes() *http.ServeMux {
 	mux.HandleFunc("GET "+statusPath, s.handleStatus)
 	mux.HandleFunc(retiredAgentPrefix+"/", s.handleInferencePathRetired)
 	mux.HandleFunc(inferencePrefix+"/", s.handleInferencePathRetired)
+	s.registerDataPlane(mux)
 	s.registerCallbacks(mux)
 	s.registerManagementAPI(mux)
 	s.registerEvents(mux)
 	s.registerDashboard(mux)
 	return mux
+}
+
+func (s *Server) registerDataPlane(mux *http.ServeMux) {
+	for _, protocol := range s.servedProtocols() {
+		prefix := inference.DataPlanePath(protocol.id)
+		mux.Handle(prefix+"/", http.StripPrefix(prefix, s.dataPlaneHandler(protocol.dataPlaneProtocol)))
+	}
 }
 
 func (s *Server) handleHealthz(w http.ResponseWriter, _ *http.Request) {

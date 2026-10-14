@@ -25,11 +25,11 @@ const (
 )
 
 // ErrProtocolDisabled reports a client that cannot be set up because the
-// protocol it speaks is not served on any port.
+// protocol it speaks is not served under any prefix.
 var ErrProtocolDisabled = errors.New("the protocol this client speaks is not served")
 
 // ClientProfile is one AI coding client Relo can hand a key to: what it is
-// called, the protocol whose port it points at, the steps that point it at
+// called, the protocol whose prefix it points at, the steps that point it at
 // the data plane, and the command that proves the wiring works.
 type ClientProfile struct {
 	ID       string
@@ -337,20 +337,20 @@ func KnownClientIDs() string {
 // package needs to hand a client an address. The caller passes the startup
 // configuration, so this package reads no configuration type of its own.
 type Listener interface {
-	// DataPlaneAddr returns the host:port a protocol answers on, and an empty
-	// string when no port serves it.
-	DataPlaneAddr(protocol string) string
+	// DataPlaneBaseURL returns the address a protocol answers on, and an
+	// empty string when it is not served.
+	DataPlaneBaseURL(protocol string) string
 }
 
 // ClientBaseURL is the address a client of one protocol points at. It reports
-// ErrProtocolDisabled when no port serves the protocol, because an address on
-// no port would only mislead the operator reading it.
+// ErrProtocolDisabled when no prefix serves the protocol, because an address
+// with no listener would only mislead the operator reading it.
 func ClientBaseURL(protocol string, listener Listener) (string, error) {
-	address := listener.DataPlaneAddr(protocol)
-	if address == "" {
-		return "", fmt.Errorf("server.data_plane.%s: %w", protocol, ErrProtocolDisabled)
+	baseURL := listener.DataPlaneBaseURL(protocol)
+	if baseURL == "" {
+		return "", fmt.Errorf("protocol %s: %w", protocol, ErrProtocolDisabled)
 	}
-	return "http://" + address, nil
+	return baseURL, nil
 }
 
 // SetupFill is the data one profile's steps are filled in with.
