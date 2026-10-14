@@ -202,6 +202,13 @@ jobs:
           VERSION: ${{ needs.gate.outputs.version }}
         run: |
           cd packaging/npm
+          # Never let a stable version out through this workflow: only a
+          # prerelease may publish, and it always goes under the beta tag,
+          # so npm's `latest` is never moved.
+          case "$VERSION" in
+            *-beta.*) ;;
+            *) echo "refusing to publish non-beta version $VERSION" >&2; exit 1 ;;
+          esac
           # An already published version is the end state this job wants, so a
           # re-run says so instead of failing on npm's immutable versions.
           if npm view "@jonaskahn/relo@$VERSION" version >/dev/null 2>&1; then
@@ -223,6 +230,8 @@ jobs:
   tap:
     name: Publish the Homebrew beta formula
     needs: [gate, binaries, release]
+    # Pinned to the beta formula: the stable Formula/relo.rb is never
+    # written from this workflow, so brew's latest stays on releases.
     uses: ./.github/workflows/release-brew.yml
     secrets:
       HOMEBREW_TAP_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
