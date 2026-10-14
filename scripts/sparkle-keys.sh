@@ -28,7 +28,7 @@ ensure_sparkle() {
   archive="$scratch/sparkle-$sparkle_version.tar.xz"
   curl -fSL --retry 3 --progress-bar -o "$archive" \
     "https://github.com/sparkle-project/Sparkle/releases/download/${sparkle_version}/Sparkle-${sparkle_version}.tar.xz"
-  echo "${sparkle_sha256}  $archive" | shasum -a 256 -c -
+  echo "${sparkle_sha256}  $archive" | shasum -a 256 -c - >&2
   mkdir -p "$cache"
   tar -xf "$archive" -C "$cache"
   if [ ! -d "$cache/Sparkle.framework" ]; then

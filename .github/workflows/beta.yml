@@ -173,7 +173,7 @@ jobs:
           APPLE_TEAM_ID="${{ secrets.APPLE_TEAM_ID }}" \
           APPLE_APP_SPECIFIC_PASSWORD="${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}" \
           make package-macos VERSION="$VERSION" BUILD="$BUILD"
-          rm -f dist/Relo.app
+          rm -rf dist/Relo.app
 
       - name: Upload macOS zips
         uses: actions/upload-artifact@v5

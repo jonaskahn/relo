@@ -25,7 +25,8 @@ fi
 # dist/ and never outlasts this run. One build ships: relo.exe is a
 # GUI-subsystem binary, so a shortcut or a login start never flashes a
 # console, and the relo.cmd shim beside it is what a terminal runs.
-scratch="$(mktemp -d)"
+# Git Bash and native tools can resolve /tmp differently; use the repository path.
+scratch="$(mktemp -d "$root/.relo-windows.XXXXXX")"
 trap 'rm -rf "$scratch"' EXIT
 mkdir -p "$root/dist"
 
