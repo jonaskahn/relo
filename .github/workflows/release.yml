@@ -24,7 +24,11 @@ jobs:
   binaries:
     name: Build daemon binaries
     needs: official
-    runs-on: ubuntu-latest
+    # Apple silicon, like the beta lane: Go cross-compiles every platform with
+    # CGO off, so one macOS host builds every daemon binary this release ships.
+    # The .deb, .rpm, and installer jobs still run on their own OS, where the
+    # packager they need is native.
+    runs-on: macos-15
     steps:
       - name: Checkout tag
         uses: actions/checkout@v5
@@ -58,7 +62,10 @@ jobs:
               rm -rf "$tmp"
             done
           done
-          cd dist && sha256sum relo-* > checksums.txt && cat checksums.txt
+          # shasum, not sha256sum: the latter does not exist on macOS. The
+          # output format is the same, so the sha parsing in release-brew.yml
+          # still holds.
+          cd dist && shasum -a 256 relo-* > checksums.txt && cat checksums.txt
 
       - name: Upload binaries
         uses: actions/upload-artifact@v5
