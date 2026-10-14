@@ -12,18 +12,26 @@ import sys
 
 
 def total_coverage(path):
-    statements = covered = 0
+    # The gate concatenates one profile per test package, so the same block
+    # appears once per package that instruments it. Merge duplicates the way
+    # go tool cover does: a statement counts once, covered when any run
+    # covered it.
+    blocks = {}
     with open(path) as profile:
         for line in profile:
             parts = line.split()
             if len(parts) != 3 or parts[0] == "mode:":
                 continue
-            count = int(parts[2])
-            statements += int(parts[1])
-            if count > 0:
-                covered += int(parts[1])
+            statements = int(parts[1])
+            covered = int(parts[2]) > 0
+            if parts[0] in blocks:
+                blocks[parts[0]][1] = blocks[parts[0]][1] or covered
+            else:
+                blocks[parts[0]] = [statements, covered]
+    statements = sum(count for count, _ in blocks.values())
     if statements == 0:
         raise ValueError(f"no statements in {path}")
+    covered = sum(count for count, hit in blocks.values() if hit)
     return 100.0 * covered / statements
 
 
