@@ -57,14 +57,9 @@ func (s *Server) statusReport(ctx context.Context) statusResponse {
 
 func (s *Server) dataPlaneAddresses() []dataPlaneAddress {
 	served := s.servedProtocols()
-	bound := s.DataPlaneAddrs()
 	addresses := make([]dataPlaneAddress, 0, len(served))
 	for _, protocol := range served {
-		addr := bound[protocol.id]
-		if addr == "" {
-			addr = s.opts.Config.Server.DataPlaneAddr(protocol.id)
-		}
-		addresses = append(addresses, dataPlaneAddress{Protocol: protocol.id, BaseURL: "http://" + addr})
+		addresses = append(addresses, dataPlaneAddress{Protocol: protocol.id, BaseURL: s.opts.Config.DataPlaneBaseURL(protocol.id)})
 	}
 	return addresses
 }

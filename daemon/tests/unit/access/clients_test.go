@@ -2,7 +2,6 @@ package access_test
 
 import (
 	"errors"
-	"strconv"
 	"strings"
 	"testing"
 
@@ -12,11 +11,11 @@ import (
 )
 
 func TestClientBaseURL(t *testing.T) {
-	t.Run("each protocol names the port it answers on", func(t *testing.T) {
+	t.Run("each protocol names the prefix it answers on", func(t *testing.T) {
 		cfg := config.DefaultConfig()
 		for protocol, want := range map[string]string{
-			inference.ProtocolOpenAI:    "http://127.0.0.1:10201",
-			inference.ProtocolAnthropic: "http://127.0.0.1:10202",
+			inference.ProtocolOpenAI:    "http://127.0.0.1:10101/inference",
+			inference.ProtocolAnthropic: "http://127.0.0.1:10101/inference-claude",
 		} {
 			got, err := access.ClientBaseURL(protocol, cfg.Server)
 			if err != nil {
@@ -28,17 +27,16 @@ func TestClientBaseURL(t *testing.T) {
 		}
 	})
 
-	t.Run("a protocol with no port is refused", func(t *testing.T) {
+	t.Run("a protocol with no prefix is refused", func(t *testing.T) {
 		cfg := config.DefaultConfig()
-		cfg.Server.DataPlane.OpenAI = 0
-		if _, err := access.ClientBaseURL(inference.ProtocolOpenAI, cfg); !errors.Is(err, access.ErrProtocolDisabled) {
+		if _, err := access.ClientBaseURL(inference.ProtocolGemini, cfg.Server); !errors.Is(err, access.ErrProtocolDisabled) {
 			t.Fatalf("ClientBaseURL() error = %v, want %v", err, access.ErrProtocolDisabled)
 		}
 	})
 }
 
-// TestProfilesNameTheirOwnPort guards the one thing a step must never do:
-// send a client to a listener that does not speak its protocol.
+// TestProfilesNameTheirOwnPrefix guards the one thing a step must never do:
+// send a client to a prefix that does not speak its protocol.
 func TestProfilesNameTheirOwnPort(t *testing.T) {
 	cfg := config.DefaultConfig()
 	for _, profile := range access.ClientProfiles() {
@@ -51,18 +49,23 @@ func TestProfilesNameTheirOwnPort(t *testing.T) {
 		}
 		fill := access.SetupFill{Token: "relo_test", BaseURL: baseURL, Model: access.DefaultModel}
 		for _, step := range profile.Instructions(fill) {
-			if strings.Contains(step, ":10101") {
-				t.Fatalf("%s: step %q points at the management listener", profile.ID, step)
+			if !strings.Contains(step, baseURL) {
+				continue
 			}
-			for other, port := range map[string]int{
-				inference.ProtocolOpenAI:    config.DefaultOpenAIPort,
-				inference.ProtocolAnthropic: config.DefaultAnthropicPort,
+			for other, prefix := range map[string]string{
+				inference.ProtocolOpenAI:    "/inference",
+				inference.ProtocolAnthropic: "/inference-claude",
 			} {
 				if other == profile.Protocol {
 					continue
 				}
-				if strings.Contains(step, ":"+strconv.Itoa(port)) {
-					t.Fatalf("%s: step %q points at the %s port", profile.ID, step, other)
+				if strings.Contains(step, prefix) && !strings.Contains(step, baseURL) {
+					t.Fatalf("%s: step %q points at the %s prefix", profile.ID, step, other)
+				}
+			}
+			for _, port := range []string{":10201", ":10202"} {
+				if strings.Contains(step, port) {
+					t.Fatalf("%s: step %q points at a retired port", profile.ID, step)
 				}
 			}
 		}
@@ -74,9 +77,9 @@ func TestCodexStepsUseTheManagedKey(t *testing.T) {
 	if !found {
 		t.Fatal("ClientProfileFor(codex) not found")
 	}
-	fill := access.SetupFill{Token: "relo_test", BaseURL: "http://127.0.0.1:10201", Model: access.DefaultModel}
+	fill := access.SetupFill{Token: "relo_test", BaseURL: "http://127.0.0.1:10101/inference", Model: access.DefaultModel}
 	joined := strings.Join(profile.Instructions(fill), "\n")
-	for _, want := range []string{"RELO_CODEX_API_KEY", "http://127.0.0.1:10201/v1"} {
+	for _, want := range []string{"RELO_CODEX_API_KEY", "http://127.0.0.1:10101/inference/v1"} {
 		if !strings.Contains(joined, want) {
 			t.Fatalf("codex steps = %q, want %s", joined, want)
 		}
@@ -91,14 +94,14 @@ func TestDesktopStepsDoNotInstallAnAuthSource(t *testing.T) {
 	if !found {
 		t.Fatal("ClientProfileFor(claude-desktop) not found")
 	}
-	fill := access.SetupFill{Token: "relo_test", BaseURL: "http://127.0.0.1:10202", Model: access.DefaultModel}
+	fill := access.SetupFill{Token: "relo_test", BaseURL: "http://127.0.0.1:10101/inference-claude", Model: access.DefaultModel}
 	joined := strings.Join(append(profile.Instructions(fill), profile.Verification(fill)), "\n")
 	for _, forbidden := range []string{"apiKey", "ANTHROPIC_AUTH_TOKEN", "relo_test"} {
 		if strings.Contains(joined, forbidden) {
 			t.Fatalf("desktop steps = %q, want no %s", joined, forbidden)
 		}
 	}
-	if !strings.Contains(joined, "http://127.0.0.1:10202") {
+	if !strings.Contains(joined, "http://127.0.0.1:10101/inference-claude") {
 		t.Fatalf("desktop steps = %q, want the Anthropic surface", joined)
 	}
 }

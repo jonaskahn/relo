@@ -137,8 +137,24 @@ func (c ServerConfig) Addr() string {
 	return net.JoinHostPort(c.Bind, strconv.Itoa(c.Port))
 }
 
+// DataPlaneBaseURL returns the address a client of one protocol points at,
+// and an empty string for a protocol the daemon does not serve.
+func (c ServerConfig) DataPlaneBaseURL(protocol string) string {
+	prefix := inference.DataPlanePath(protocol)
+	if prefix == "" {
+		return ""
+	}
+	return "http://" + c.Addr() + prefix
+}
+
 // DataPlaneAddr returns the host:port one client protocol answers on, so a
 // caller can hand a client its address without reading the server block.
 func (c Config) DataPlaneAddr(protocol string) string {
 	return c.Server.DataPlaneAddr(protocol)
+}
+
+// DataPlaneBaseURL returns the address a client of one protocol points at,
+// so a caller can hand a client its address without reading the server block.
+func (c Config) DataPlaneBaseURL(protocol string) string {
+	return c.Server.DataPlaneBaseURL(protocol)
 }
