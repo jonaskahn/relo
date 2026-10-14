@@ -1,5 +1,6 @@
 # Build output
 /dist/
+/release/
 /relo
 /relo.exe
 coverage.out

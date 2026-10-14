@@ -101,7 +101,7 @@ jobs:
               rm -rf "$tmp"
             done
           done
-          cd dist && sha256sum relo-* > checksums.txt && cat checksums.txt
+          cd dist && sha256sum relo-*.tar.gz > checksums.txt && cat checksums.txt
 
       - name: Read the tarball shas
         id: sha
@@ -118,7 +118,9 @@ jobs:
         uses: actions/upload-artifact@v5
         with:
           name: binaries
-          path: dist/
+          path: |
+            dist/*.tar.gz
+            dist/checksums.txt
           retention-days: 30
 
   release:
@@ -126,6 +128,11 @@ jobs:
     needs: [gate, binaries]
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout the merge
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ needs.gate.outputs.sha }}
+
       - name: Download all artifacts
         uses: actions/download-artifact@v5
         with:
