@@ -596,4 +596,3 @@ func waitForAddr(t *testing.T, address func() string) string {
 	t.Fatal("the daemon never bound its listener")
 	return ""
 }
-

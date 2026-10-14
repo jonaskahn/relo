@@ -58,11 +58,14 @@ Loopback only. `[admin] login = true` puts a sign-in in front, using `$RELO_HOME
 
 ## ▓ SURFACES
 
-| Port    | Speaks                      |
-|---------|-----------------------------|
-| `10101` | console + management API    |
-| `10201` | OpenAI-compatible (`/v1/*`) |
-| `10202` | Anthropic (`/v1/*`)         |
+| Port    | Speaks                                              |
+|---------|-----------------------------------------------------|
+| `10101` | console + management API + data plane               |
+
+| Prefix             | Speaks                      |
+|--------------------|-----------------------------|
+| `/inference`       | OpenAI-compatible (`/v1/*`) |
+| `/inference-claude`| Anthropic (`/v1/*`)         |
 
 Client keys hit the data plane. The admin token hits the console. Provider credentials go upstream only.
 

@@ -16,7 +16,7 @@ const (
 	messagesPath        = inferencePrefix + "/messages"
 	modelsPath          = inferencePrefix + "/models"
 	// retiredAgentPrefix is the prefix the inference surfaces answered on
-	// before every protocol got a port of its own. The management listener
+	// before they moved under the data plane prefixes. The management listener
 	// still claims it, so a client left pointing at it is told where to go.
 	retiredAgentPrefix = "/agent"
 	// CallbackPrefix is the subtree a browser lands on after a provider
@@ -48,7 +48,7 @@ func dataPlaneProtocols() []dataPlaneProtocol {
 	return []dataPlaneProtocol{
 		{id: inference.ProtocolOpenAI, surfaces: []inferenceSurface{chatCompletionsSurface(), responsesSurface()}},
 		{id: inference.ProtocolAnthropic, surfaces: []inferenceSurface{messagesSurface()}},
-		// The Gemini port is reserved: the codec that would answer it exists,
+		// The Gemini prefix is reserved: the codec that would answer it exists,
 		// the inbound surface that would drive it does not yet.
 		{id: inference.ProtocolGemini},
 	}

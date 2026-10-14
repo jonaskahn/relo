@@ -6,7 +6,6 @@ import (
 	"github.com/jonaskahn/relo/internal/inference"
 	"io"
 	"log/slog"
-	"net"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -559,17 +558,6 @@ func freeConfig(t *testing.T) *config.Config {
 	cfg.Server.Port = 0
 	cfg.Admin.Login = true
 	return &cfg
-}
-
-// freePort returns a port nothing is listening on right now.
-func freePort(t *testing.T) int {
-	t.Helper()
-	listener, err := net.Listen("tcp", "127.0.0.1:0")
-	if err != nil {
-		t.Fatalf("find a free port: %v", err)
-	}
-	defer func() { _ = listener.Close() }()
-	return listener.Addr().(*net.TCPAddr).Port
 }
 
 func request(method, path, token string, body io.Reader) *http.Request {

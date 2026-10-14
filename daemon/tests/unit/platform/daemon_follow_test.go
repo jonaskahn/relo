@@ -163,8 +163,7 @@ func writeRuntime(t *testing.T, home string, published platform.Runtime) {
 
 func writeIsolatedPorts(t *testing.T, home string, port int) {
 	t.Helper()
-	body := "[server]\nbind = \"127.0.0.1\"\nport = " + strconv.Itoa(port) +
-		"\n\n[server.data_plane]\nopenai = 0\nanthropic = 0\ngemini = 0\n"
+	body := "[server]\nbind = \"127.0.0.1\"\nport = " + strconv.Itoa(port) + "\n"
 	if err := os.WriteFile(config.ConfigPath(home), []byte(body), 0o600); err != nil {
 		t.Fatalf("write config: %v", err)
 	}

@@ -25,11 +25,11 @@ const (
 )
 
 // ErrProtocolDisabled reports a client that cannot be set up because the
-// protocol it speaks is not served on any port.
+// protocol it speaks is not served under any prefix.
 var ErrProtocolDisabled = errors.New("the protocol this client speaks is not served")
 
 // ClientProfile is one AI coding client Relo can hand a key to: what it is
-// called, the protocol whose port it points at, the steps that point it at
+// called, the protocol whose prefix it points at, the steps that point it at
 // the data plane, and the command that proves the wiring works.
 type ClientProfile struct {
 	ID       string

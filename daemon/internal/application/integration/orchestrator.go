@@ -531,7 +531,7 @@ func (s *Service) IntegrationToken(ctx context.Context, id string) (string, erro
 }
 
 // IntegrationModels reads the model list one integration's key reaches. The
-// call travels the port the client itself is pointed at and speaks the
+// call travels the prefix the client itself is pointed at and speaks the
 // protocol that client speaks, so the identifiers an operator picks from are
 // the ones the agent would send.
 func (s *Service) IntegrationModels(ctx context.Context, id string) (IntegrationModels, error) {
@@ -574,7 +574,7 @@ func describeModelsRead(url string, response *http.Response, body []byte) Integr
 
 // IntegrationChat sends one prompt through the surface the client speaks, with
 // the key the client runs with. A listing proves the key is accepted; a turn
-// proves the whole path an agent uses, from its own port to a model's answer.
+// proves the whole path an agent uses, from its own prefix to a model's answer.
 func (s *Service) IntegrationChat(ctx context.Context, id string, request IntegrationChatRequest) (IntegrationChat, error) {
 	model := strings.TrimSpace(request.Model)
 	prompt := strings.TrimSpace(request.Prompt)

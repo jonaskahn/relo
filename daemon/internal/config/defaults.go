@@ -10,8 +10,8 @@ import (
 // Shipped defaults are the startup baseline a fresh home runs on: the
 // loopback listener, log level, index source, and update feed.
 const (
-	DefaultServerBind = "127.0.0.1"
-	DefaultServerPort = 10101
+	DefaultServerBind      = "127.0.0.1"
+	DefaultServerPort      = 10101
 	DefaultLogLevel        = "info"
 	DefaultModelsDevURL    = "https://models.dev/api.json"
 	DefaultReloHome        = ".relo"
