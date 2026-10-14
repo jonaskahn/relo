@@ -3,12 +3,15 @@ package anthropic
 
 import (
 	"bytes"
+	"crypto/rand"
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
 	"net/http"
 	"net/url"
+	"regexp"
 	"runtime"
+	"strconv"
 	"strings"
 
 	"github.com/jonaskahn/relo/internal/adapters/wire"
@@ -17,11 +20,11 @@ import (
 
 const (
 	// CLIVersion is the Claude Code release a subscription request claims to be.
-	CLIVersion = "2.1.296"
+	CLIVersion = "2.1.299"
 
 	// CLIUserAgent is the User-Agent a subscription request sends when the
 	// caller did not already name a claude-cli agent.
-	CLIUserAgent = "claude-cli/" + CLIVersion + " (external, cli)"
+	CLIUserAgent = "claude-cli/" + CLIVersion + " (external, sdk-cli)"
 
 	// ClaudeCodeBetaShort is the beta profile a subscription call advertises
 	// while the caller did not name the million-token entry. It matches the
@@ -30,11 +33,10 @@ const (
 	ClaudeCodeBetaShort = "claude-code-20250219,oauth-2025-04-20," +
 		"interleaved-thinking-2025-05-14,thinking-token-count-2026-05-13," +
 		"context-management-2025-06-27,prompt-caching-scope-2026-01-05," +
-		"mid-conversation-system-2026-04-07,per-turn-control-2026-07-01," +
-		"mid-conversation-tool-changes-2026-07-01,inline-tools-2026-09-15," +
-		"advisor-tool-2026-03-01,effort-2025-11-24," +
-		"dangerous-tool-use-2026-09-03," +
-		"afk-mode-2026-01-31,extended-cache-ttl-2025-04-11"
+		"advisor-tool-2026-03-01,advanced-tool-use-2025-11-20,effort-2025-11-24," +
+		"dangerous-tool-use-2026-09-03,thinking-binding-controls-2026-08-01," +
+		"afk-mode-2026-01-31,extended-cache-ttl-2025-04-11," +
+		"cache-diagnosis-2026-04-07,message-threads-2026-08-12"
 
 	// ClaudeCodeBeta is the profile a call that named a separate million-token
 	// entry advertises: the same list plus the long-context beta, which is an
@@ -67,7 +69,13 @@ const (
 	cchSeed              = 0x4d659218e32a3268
 	fingerprintSalt      = "59cf53e54c78"
 	officialHost         = "api.anthropic.com"
+	// dispatchID is the dispatch tag every native subscription call sends.
+	dispatchID = "v2d"
+	// requestClassMain is the request class a main-turn call advertises.
+	requestClassMain = "main"
 )
+
+var modelVersion = regexp.MustCompile(`-(\d+)-(\d+)`)
 
 func (c *Codec) authorizeClaudeCode(request *http.Request, opts wire.CodecOpts) {
 	official := officialAnthropicHost(requestBase(c, opts))
@@ -75,7 +83,9 @@ func (c *Codec) authorizeClaudeCode(request *http.Request, opts wire.CodecOpts) 
 	applyClaudeCodeHeaders(request, opts)
 	if !official {
 		copyHeaders(request, opts.ExtraHeaders, overridableOffOfficial)
+		return
 	}
+	copyHeaders(request, opts.ExtraHeaders, overridableOnOfficial)
 }
 
 func requestBase(codec *Codec, opts wire.CodecOpts) string {
@@ -115,6 +125,10 @@ func applyClaudeCodeHeaders(request *http.Request, opts wire.CodecOpts) {
 	request.Header.Set(BetaHeader, claudeBetaFor(opts))
 	request.Header.Set("x-app", "cli")
 	request.Header.Set("User-Agent", claudeUserAgent(opts.ExtraHeaders))
+	request.Header.Set("anthropic-dispatch-id", dispatchID)
+	request.Header.Set("x-claude-code-request-class", requestClassMain)
+	request.Header.Set("x-client-request-id", newRequestUUID())
+	request.Header.Set("x-claude-code-prompt-id", newRequestUUID())
 	if session := claudeSession(opts); session != "" {
 		request.Header.Set("X-Claude-Code-Session-Id", session)
 	}
@@ -125,10 +139,41 @@ func applyClaudeCodeHeaders(request *http.Request, opts wire.CodecOpts) {
 }
 
 func claudeBetaFor(opts wire.CodecOpts) string {
-	if opts.LongContext && !opts.NativeMillion {
+	if opts.LongContext && !opts.NativeMillion && contextBetaApplies(opts.UpstreamModel) {
 		return ClaudeCodeBeta
 	}
 	return ClaudeCodeBetaShort
+}
+
+// contextBetaApplies reports whether the upstream model takes the opt-in
+// long-context beta. Only opus and sonnet at 4.6 or older keep it; an empty
+// or unparseable model id keeps the legacy behavior of sending it.
+func contextBetaApplies(model string) bool {
+	version := modelVersion.FindStringSubmatch(model)
+	if version == nil {
+		return true
+	}
+	major, err := strconv.Atoi(version[1])
+	if err != nil {
+		return true
+	}
+	minor, err := strconv.Atoi(version[2])
+	if err != nil {
+		return true
+	}
+	return major < 4 || (major == 4 && minor <= 6)
+}
+
+// newRequestUUID returns a random v4 UUID for a per-attempt correlation
+// header. It IDs one attempt, so retries of a conversation never share one.
+func newRequestUUID() string {
+	var id [16]byte
+	if _, err := rand.Read(id[:]); err != nil {
+		return ""
+	}
+	id[6] = id[6]&0x0f | 0x40
+	id[8] = id[8]&0x3f | 0x80
+	return fmt.Sprintf("%x-%x-%x-%x-%x", id[0:4], id[4:6], id[6:8], id[8:10], id[10:16])
 }
 
 func claudeUserAgent(headers map[string]string) string {
@@ -203,11 +248,20 @@ func notAuthorization(name string) bool {
 
 func overridableOffOfficial(name string) bool {
 	switch strings.ToLower(name) {
-	case "anthropic-beta", "user-agent", "x-app":
+	case "anthropic-beta", "user-agent", "x-app",
+		"anthropic-dispatch-id", "x-claude-code-prompt-id",
+		"x-claude-code-request-class", "x-client-request-id":
 		return true
 	default:
 		return strings.HasPrefix(strings.ToLower(name), "x-stainless-")
 	}
+}
+
+// overridableOnOfficial names the fingerprint headers an operator may pin
+// through ExtraHeaders on the official host. Authorization is never on the
+// list: the selected credential owns it.
+func overridableOnOfficial(name string) bool {
+	return overridableOffOfficial(name)
 }
 
 func headerValue(headers map[string]string, name string) string {
@@ -221,7 +275,7 @@ func headerValue(headers map[string]string, name string) string {
 
 func billingHeader(firstUser string) string {
 	return "x-anthropic-billing-header: cc_version=" + CLIVersion + "." + versionSuffix(firstUser) +
-		"; cc_entrypoint=cli; " + cchPlaceholder + ";\n"
+		"; cc_entrypoint=sdk-cli; " + cchPlaceholder + ";\n"
 }
 
 func versionSuffix(firstUser string) string {
