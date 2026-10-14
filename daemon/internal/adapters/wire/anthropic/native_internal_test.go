@@ -39,6 +39,41 @@ func TestRebaseNativeBodyAddsTheModelItWasNotGiven(t *testing.T) {
 	}
 }
 
+// TestRebaseNativeBodyNormalizesThinkingDisplay pins the one client control
+// retargeting does rewrite. Claude Code asks for thinking updates, a value the
+// public Messages API refuses with a 400, so an unknown display becomes the
+// nearest value this API accepts. A display it does accept is the client's own.
+func TestRebaseNativeBodyNormalizesThinkingDisplay(t *testing.T) {
+	cases := []struct {
+		name     string
+		thinking string
+		want     string
+	}{
+		{name: "an unknown display becomes omitted", thinking: `{"type":"adaptive","display":"updates"}`,
+			want: `{"type":"adaptive","display":"omitted"}`},
+		{name: "summarized is kept", thinking: `{"type":"adaptive","display":"summarized"}`,
+			want: `{"type":"adaptive","display":"summarized"}`},
+		{name: "omitted is kept", thinking: `{"type":"adaptive","display":"omitted"}`,
+			want: `{"type":"adaptive","display":"omitted"}`},
+		{name: "no display is left alone", thinking: `{"type":"enabled","budget_tokens":1024}`,
+			want: `{"type":"enabled","budget_tokens":1024}`},
+		{name: "a thinking field that is not an object is left alone", thinking: `"adaptive"`,
+			want: `"adaptive"`},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			body := `{"model":"m","thinking":` + tc.thinking + `,"messages":[{"role":"user","content":[]}]}`
+			rebuilt, ok := rebaseNativeBody([]byte(body), "claude-sonnet-4", nil)
+			if !ok {
+				t.Fatal("want the body retargeted")
+			}
+			if want := `"thinking":` + tc.want; !strings.Contains(string(rebuilt), want) {
+				t.Fatalf("body = %s, want %s", rebuilt, want)
+			}
+		})
+	}
+}
+
 // TestInboundKeepsTheClientsOwnBody pins that the body the client sent is the
 // body an attempt on the Messages wire reuses, byte for byte.
 func TestInboundKeepsTheClientsOwnBody(t *testing.T) {
