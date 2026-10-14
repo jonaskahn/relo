@@ -274,7 +274,7 @@
           <button type="button" role="tab" id="tab-macos" aria-controls="panel-macos" aria-selected="true" tabindex="0" data-os="macos"><span class="tab-glyph"><svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor" aria-hidden="true"><path d="M16.4 12.6c0-2 1.6-3 1.7-3.1-.9-1.4-2.4-1.6-2.9-1.6-1.2-.1-2.4.7-3 .7s-1.6-.7-2.6-.7c-1.3 0-2.6.8-3.3 2-1.4 2.4-.4 6 1 8 .7 1 1.5 2 2.6 2 1 0 1.4-.6 2.7-.6s1.6.6 2.7.6 1.8-1 2.5-2c.8-1.2 1.1-2.3 1.1-2.4-.1 0-2.5-1-2.5-3.9zM14.6 6.3c.5-.7.9-1.6.8-2.6-.8 0-1.8.5-2.4 1.2-.5.6-.9 1.6-.8 2.5.9.1 1.9-.4 2.4-1.1z"/></svg></span>macOS</button>
           <button type="button" role="tab" id="tab-linux" aria-controls="panel-linux" aria-selected="false" tabindex="-1" data-os="linux"><span class="tab-glyph"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2.6c2 0 3.2 1.6 3.2 3.6 0 2 .7 2.9 1.5 4.4.8 1.6 1.6 2.9 1.6 4.6 0 2.4-2.6 4-6.3 4s-6.3-1.6-6.3-4c0-1.7.8-3 1.6-4.6.8-1.5 1.5-2.4 1.5-4.4 0-2 1.2-3.6 3.2-3.6z"/><path d="M10.4 6.4h.01M13.6 6.4h.01M10.8 16.6c.7.5 1.7.5 2.4 0"/></svg></span>Linux</button>
           <button type="button" role="tab" id="tab-windows" aria-controls="panel-windows" aria-selected="false" tabindex="-1" data-os="windows"><span class="tab-glyph"><svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor" aria-hidden="true"><path d="M3.5 6.2l7.1-1v7h-7.1zM11.6 5.1l8.9-1.2v8.3h-8.9zM3.5 13.4h7.1v7l-7.1-1zM11.6 13.4h8.9v8.3l-8.9-1.2z"/></svg></span>Windows</button>
-            <span class="os-lens" id="osLens" aria-hidden="true"></span>
+            <span class="os-lens" aria-hidden="true"></span>
           </div>
         <div class="os-panel" id="panel-macos" role="tabpanel" aria-labelledby="tab-macos">
         <article class="channel is-chosen" data-channel="script">
@@ -437,7 +437,6 @@
         </article>
         </div>
           <p class="pick-one"><span class="pick-line" aria-hidden="true"></span><span data-i18n="pickOne">Pick one. Every installer refuses to stack a second Relo.</span></p>
-          <p class="beta-line"><span class="beta-tag" data-i18n="betaTag">Beta</span><span data-i18n="betaLead">Try the next build before it is released.</span><code data-copy>brew install jonaskahn/apps/relo-beta</code><code data-copy>npm i -g @jonaskahn/relo@beta</code></p>
         </div>
 
         <aside class="terminal" id="terminal" aria-label="Installation preview" data-i18n-attr="aria-label:termLabel">
@@ -451,6 +450,105 @@
           <pre class="term-body" id="termBody" aria-hidden="true"></pre>
           <p class="sr-only" data-i18n="termAlt">A terminal running the installer: it picks the release, shows a download bar, verifies the checksum, frees the Relo ports, installs the binary, and starts the daemon.</p>
         </aside>
+      </div>
+    </section>
+
+    <section class="install beta" id="beta" data-field="beta" aria-labelledby="beta-heading">
+      <h2 class="display" id="beta-heading" data-i18n="betaTitle">Try the beta</h2>
+      <p class="section-lead" data-i18n="betaLead">The next build, before it is released.</p>
+
+      <div class="channels">
+        <div class="os-tabs" role="tablist" aria-label="Operating system" data-i18n-attr="aria-label:osLabel">
+        <button type="button" role="tab" id="tab-beta-macos" aria-controls="panel-beta-macos" aria-selected="true" tabindex="0" data-os="beta-macos"><span class="tab-glyph"><svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor" aria-hidden="true"><path d="M16.4 12.6c0-2 1.6-3 1.7-3.1-.9-1.4-2.4-1.6-2.9-1.6-1.2-.1-2.4.7-3 .7s-1.6-.7-2.6-.7c-1.3 0-2.6.8-3.3 2-1.4 2.4-.4 6 1 8 .7 1 1.5 2 2.6 2 1 0 1.4-.6 2.7-.6s1.6.6 2.7.6 1.8-1 2.5-2c.8-1.2 1.1-2.3 1.1-2.4-.1 0-2.5-1-2.5-3.9zM14.6 6.3c.5-.7.9-1.6.8-2.6-.8 0-1.8.5-2.4 1.2-.5.6-.9 1.6-.8 2.5.9.1 1.9-.4 2.4-1.1z"/></svg></span>macOS</button>
+        <button type="button" role="tab" id="tab-beta-linux" aria-controls="panel-beta-linux" aria-selected="false" tabindex="-1" data-os="beta-linux"><span class="tab-glyph"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2.6c2 0 3.2 1.6 3.2 3.6 0 2 .7 2.9 1.5 4.4.8 1.6 1.6 2.9 1.6 4.6 0 2.4-2.6 4-6.3 4s-6.3-1.6-6.3-4c0-1.7.8-3 1.6-4.6.8-1.5 1.5-2.4 1.5-4.4 0-2 1.2-3.6 3.2-3.6z"/><path d="M10.4 6.4h.01M13.6 6.4h.01M10.8 16.6c.7.5 1.7.5 2.4 0"/></svg></span>Linux</button>
+        <button type="button" role="tab" id="tab-beta-windows" aria-controls="panel-beta-windows" aria-selected="false" tabindex="-1" data-os="beta-windows"><span class="tab-glyph"><svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor" aria-hidden="true"><path d="M3.5 6.2l7.1-1v7h-7.1zM11.6 5.1l8.9-1.2v8.3h-8.9zM3.5 13.4h7.1v7l-7.1-1zM11.6 13.4h8.9v8.3l-8.9-1.2z"/></svg></span>Windows</button>
+          <span class="os-lens" aria-hidden="true"></span>
+        </div>
+      <div class="os-panel" id="panel-beta-macos" role="tabpanel" aria-labelledby="tab-beta-macos">
+      <article class="channel is-chosen" data-channel="brew">
+        <header class="ch-head">
+          <span class="ch-glyph" aria-hidden="true"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3h7l3 3v15H7z"/><path d="M9 9h7M9 13h7M9 17h4"/></svg></span>
+          <h3 class="ch-name" data-i18n="chBrew"></h3>
+        <span class="ch-badge" data-i18n="recommended">Recommended</span>
+        </header>
+        <div class="command">
+          <pre><code data-copy>brew install jonaskahn/apps/relo-beta</code></pre>
+          <button type="button" class="copy" data-copy-btn aria-label="Copy command" title="Copy command" data-i18n-attr="aria-label:copy;title:copy">
+            <svg class="i-copy" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 0 1 2-2h9"/></svg>
+            <svg class="i-check" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>
+            <svg class="i-fail" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+          </button>
+        </div>
+        <p class="ch-note" data-i18n="chBrewBetaNote"></p>
+      </article>
+      <article class="channel" data-channel="npm">
+        <header class="ch-head">
+          <span class="ch-glyph" aria-hidden="true"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"/><path d="M12 12l8-4.5M12 12v9M12 12L4 7.5"/></svg></span>
+          <h3 class="ch-name" data-i18n="chNpm"></h3>
+        </header>
+        <div class="command">
+          <pre><code data-copy>npm i -g @jonaskahn/relo@beta</code></pre>
+          <button type="button" class="copy" data-copy-btn aria-label="Copy command" title="Copy command" data-i18n-attr="aria-label:copy;title:copy">
+            <svg class="i-copy" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 0 1 2-2h9"/></svg>
+            <svg class="i-check" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>
+            <svg class="i-fail" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+          </button>
+        </div>
+        <p class="ch-note" data-i18n="chNpmBetaNote"></p>
+      </article>
+      </div>
+      <div class="os-panel" id="panel-beta-linux" role="tabpanel" aria-labelledby="tab-beta-linux" hidden>
+      <article class="channel is-chosen" data-channel="brew">
+        <header class="ch-head">
+          <span class="ch-glyph" aria-hidden="true"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3h7l3 3v15H7z"/><path d="M9 9h7M9 13h7M9 17h4"/></svg></span>
+          <h3 class="ch-name" data-i18n="chBrew"></h3>
+        <span class="ch-badge" data-i18n="recommended">Recommended</span>
+        </header>
+        <div class="command">
+          <pre><code data-copy>brew install jonaskahn/apps/relo-beta</code></pre>
+          <button type="button" class="copy" data-copy-btn aria-label="Copy command" title="Copy command" data-i18n-attr="aria-label:copy;title:copy">
+            <svg class="i-copy" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 0 1 2-2h9"/></svg>
+            <svg class="i-check" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>
+            <svg class="i-fail" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+          </button>
+        </div>
+        <p class="ch-note" data-i18n="chBrewBetaNote"></p>
+      </article>
+      <article class="channel" data-channel="npm">
+        <header class="ch-head">
+          <span class="ch-glyph" aria-hidden="true"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"/><path d="M12 12l8-4.5M12 12v9M12 12L4 7.5"/></svg></span>
+          <h3 class="ch-name" data-i18n="chNpm"></h3>
+        </header>
+        <div class="command">
+          <pre><code data-copy>npm i -g @jonaskahn/relo@beta</code></pre>
+          <button type="button" class="copy" data-copy-btn aria-label="Copy command" title="Copy command" data-i18n-attr="aria-label:copy;title:copy">
+            <svg class="i-copy" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 0 1 2-2h9"/></svg>
+            <svg class="i-check" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>
+            <svg class="i-fail" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+          </button>
+        </div>
+        <p class="ch-note" data-i18n="chNpmBetaNote"></p>
+      </article>
+      </div>
+      <div class="os-panel" id="panel-beta-windows" role="tabpanel" aria-labelledby="tab-beta-windows" hidden>
+      <article class="channel is-chosen" data-channel="npm">
+        <header class="ch-head">
+          <span class="ch-glyph" aria-hidden="true"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"/><path d="M12 12l8-4.5M12 12v9M12 12L4 7.5"/></svg></span>
+          <h3 class="ch-name" data-i18n="chNpm"></h3>
+        <span class="ch-badge" data-i18n="recommended">Recommended</span>
+        </header>
+        <div class="command">
+          <pre><code data-copy>npm i -g @jonaskahn/relo@beta</code></pre>
+          <button type="button" class="copy" data-copy-btn aria-label="Copy command" title="Copy command" data-i18n-attr="aria-label:copy;title:copy">
+            <svg class="i-copy" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 0 1 2-2h9"/></svg>
+            <svg class="i-check" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>
+            <svg class="i-fail" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+          </button>
+        </div>
+        <p class="ch-note" data-i18n="chNpmBetaNote"></p>
+      </article>
+      </div>
+        <p class="pick-one"><span class="pick-line" aria-hidden="true"></span><span data-i18n="betaNote">Beta never replaces your stable install.</span></p>
       </div>
     </section>
   </main>

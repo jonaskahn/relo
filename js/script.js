@@ -368,9 +368,14 @@
   /* ---------- The install section: tabs, and a terminal that shows the work ---------- */
 
   var tabs = Array.prototype.slice.call(document.querySelectorAll('.os-tabs [role="tab"]'));
-  var lens = document.getElementById("osLens");
+
+  function lensFor(tab) {
+    var list = tab.closest(".os-tabs");
+    return list && list.querySelector(".os-lens");
+  }
 
   function moveLens(tab, animate) {
+    var lens = lensFor(tab);
     if (!lens || !tab) return;
     var rect = tab.getBoundingClientRect();
     var parent = tab.parentElement.getBoundingClientRect();
@@ -379,17 +384,20 @@
     lens.classList.toggle("no-anim", !animate);
   }
 
-  function selectOs(name, animate, focus) {
-    tabs.forEach(function (tab) {
-      var on = tab.dataset.os === name;
-      tab.setAttribute("aria-selected", on ? "true" : "false");
-      tab.tabIndex = on ? 0 : -1;
+  function selectOs(tab, animate, focus) {
+    var name = tab.dataset.os;
+    var scope = tab.closest("section") || document;
+    var group = Array.prototype.slice.call(scope.querySelectorAll('.os-tabs [role="tab"]'));
+    group.forEach(function (peer) {
+      var on = peer === tab;
+      peer.setAttribute("aria-selected", on ? "true" : "false");
+      peer.tabIndex = on ? 0 : -1;
       if (on && animate) {
-        moveLens(tab, true);
-        if (focus) tab.focus({ preventScroll: true });
+        moveLens(peer, true);
+        if (focus) peer.focus({ preventScroll: true });
       }
     });
-    var panels = document.querySelectorAll(".os-panel");
+    var panels = scope.querySelectorAll(".os-panel");
     panels.forEach(function (panel) {
       var on = panel.id === "panel-" + name;
       if (on) {
@@ -401,6 +409,7 @@
         panel.hidden = true;
       }
     });
+    if (!tab.closest("#install")) return;
     if (name === "windows") replayScript = "ps1";
     else replayScript = "sh";
     startReplay(true);
@@ -411,17 +420,19 @@
   });
 
   tabs.forEach(function (tab) {
-    tab.addEventListener("click", function () { selectOs(tab.dataset.os, true, false); });
+    tab.addEventListener("click", function () { selectOs(tab, true, false); });
     tab.addEventListener("keydown", function (event) {
-      var index = tabs.indexOf(tab);
+      var scope = tab.closest("section") || document;
+      var group = Array.prototype.slice.call(scope.querySelectorAll('.os-tabs [role="tab"]'));
+      var index = group.indexOf(tab);
       var next = null;
-      if (event.key === "ArrowRight") next = tabs[(index + 1) % tabs.length];
-      else if (event.key === "ArrowLeft") next = tabs[(index - 1 + tabs.length) % tabs.length];
-      else if (event.key === "Home") next = tabs[0];
-      else if (event.key === "End") next = tabs[tabs.length - 1];
+      if (event.key === "ArrowRight") next = group[(index + 1) % group.length];
+      else if (event.key === "ArrowLeft") next = group[(index - 1 + group.length) % group.length];
+      else if (event.key === "Home") next = group[0];
+      else if (event.key === "End") next = group[group.length - 1];
       if (!next) return;
       event.preventDefault();
-      selectOs(next.dataset.os, true, true);
+      selectOs(next, true, true);
     });
   });
 
