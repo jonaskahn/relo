@@ -216,6 +216,10 @@ func (h *harness) newServer(port int) *server.Server {
 			Wire:      platform.NewWireCodec(),
 			Store:     platform.NewIntegrationStore(h.db), Catalog: h.catalog,
 			Keys: h.keys, Now: h.clock.Now,
+			// The fake home holds no Claude login, so pin proxy: otherwise
+			// the preview reads the real machine keychain and differs
+			// between macOS and Linux runners.
+			ClaudeAuth: func() appintegration.ClaudeAuth { return appintegration.ClaudeAuthProxy },
 		}),
 		Events:       h.events,
 		Sessions:     h.sessions,

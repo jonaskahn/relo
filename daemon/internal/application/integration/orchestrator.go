@@ -926,21 +926,24 @@ type ServiceOptions struct {
 	Catalog   *catalog.Catalog
 	Logger    *slog.Logger
 	Now       func() time.Time
+	// ClaudeAuth reports login or proxy. Nil detects it on this machine.
+	ClaudeAuth func() ClaudeAuth
 }
 
 // Service is the integration setup use cases: what Relo knows about every
 // coding client, and the actions an operator runs on one.
 type Service struct {
-	paths     PathResolver
-	agents    AgentRegistry
-	files     ClientFiles
-	processes AgentProcesses
-	wire      WireCodec
-	store     Store
-	keys      *appaccess.Keys
-	catalog   *catalog.Catalog
-	logger    *slog.Logger
-	now       func() time.Time
+	paths      PathResolver
+	agents     AgentRegistry
+	files      ClientFiles
+	processes  AgentProcesses
+	wire       WireCodec
+	store      Store
+	keys       *appaccess.Keys
+	catalog    *catalog.Catalog
+	logger     *slog.Logger
+	now        func() time.Time
+	claudeAuth func() ClaudeAuth
 	// running holds the action each agent has in flight, so a second run of
 	// the same action waits rather than racing the first over the same files.
 	running sync.Map
@@ -961,6 +964,7 @@ func NewService(options ServiceOptions) *Service {
 		processes: options.Processes, wire: options.Wire,
 		store: options.Store, keys: options.Keys,
 		catalog: options.Catalog, logger: logger, now: now,
+		claudeAuth: options.ClaudeAuth,
 	}
 }
 
@@ -1097,6 +1101,7 @@ func (s *Service) manager() (*Manager, error) {
 		Paths: s.paths, Agents: s.agents, Files: s.files,
 		Store: s.store, Logger: s.logger, Now: s.now,
 		Models: s.publishedModels, ClaudeModels: s.claudePickerModels,
+		ClaudeAuth: s.claudeAuth,
 	}), nil
 }
 
