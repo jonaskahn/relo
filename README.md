@@ -36,7 +36,7 @@ $ irm https://relo.ifelse.one/install.ps1 | iex       # Windows, PowerShell
 |-----------|----------------------------------------------------------------------|
 | Script    | the two lines above; `install.sh --help` lists the flags             |
 | Homebrew  | `brew install jonaskahn/apps/relo`                                   |
-| npm       | `npm i -g @jonaskahn/relo` (Node 22+)                                |
+| npm       | `npm i -g @jonaskahn/relo[@beta]` (Node 22+)                         |
 | macOS app | `Relo-<version>-universal.zip`                                       |
 | Linux     | `Relo-Setup-<version>-amd64.deb` or `Relo-Setup-<version>-amd64.rpm` |
 | Windows   | `Relo-Setup-<version>-amd64.exe`                                     |
