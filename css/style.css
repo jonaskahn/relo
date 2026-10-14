@@ -1603,6 +1603,26 @@ main,
   opacity: 0.4;
 }
 
+.beta-line {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 10px;
+  margin: 10px 0 0;
+  color: var(--muted);
+  font-size: 12.5px;
+}
+
+.beta-tag {
+  padding: 1px 8px;
+  border: 1px solid var(--accent-border);
+  border-radius: var(--pill);
+  background: var(--accent-50);
+  color: var(--accent-700);
+  font-size: 11px;
+  font-weight: 600;
+}
+
 /* ---------- The terminal ---------- */
 
 .terminal {

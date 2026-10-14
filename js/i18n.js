@@ -533,6 +533,8 @@
       installLead: "One daemon. Pick the channel you already use.",
       recommended: "Recommended",
       pickOne: "Pick one. Every installer refuses to stack a second Relo.",
+      betaTag: "Beta",
+      betaLead: "Try the next build before it is released.",
       chScript: "Install script",
       chBrew: "Homebrew",
       chNpm: "npm",
