@@ -11,21 +11,11 @@ import { test } from 'node:test';
 
 const script = resolve(dirname(fileURLToPath(import.meta.url)), 'uninstall.mjs');
 
-// scratchHome is a home on ports of its own, so the quiesce never looks at the
-// ports a developer's own daemon serves.
-function scratchHome(ports) {
+// scratchHome is a home on a port of its own, so the quiesce never looks at the
+// port a developer's own daemon serves.
+function scratchHome(port) {
 	const home = mkdtempSync(join(tmpdir(), 'relo-uninstall-'));
-	writeFileSync(
-		join(home, 'config.toml'),
-		[
-			'[server]',
-			`port = ${ports[0]}`,
-			'[server.data_plane]',
-			`openai = ${ports[1]}`,
-			`anthropic = ${ports[2]}`,
-			`gemini = ${ports[3]}`
-		].join('\n')
-	);
+	writeFileSync(join(home, 'config.toml'), ['[server]', `port = ${port}`].join('\n'));
 	return home;
 }
 
@@ -44,12 +34,12 @@ test('the package declares the preuninstall script it ships', async () => {
 });
 
 test('a removal with nothing running succeeds quietly', () => {
-	const result = uninstall(scratchHome([49301, 49401, 49402, 49403]));
+	const result = uninstall(scratchHome(49301));
 	assert.equal(result.status, 0, result.stderr);
 });
 
 test('a removal never reports the runtime file it could not touch', () => {
-	const home = scratchHome([49311, 49411, 49412, 49413]);
+	const home = scratchHome(49311);
 	writeFileSync(join(home, 'runtime.json'), '{"address":"127.0.0.1:49311","instance_id":"gone","pid":0}');
 	const result = uninstall(home);
 	assert.equal(result.status, 0, result.stderr);

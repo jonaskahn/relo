@@ -16,15 +16,14 @@ import {
 	servicePorts
 } from './daemon.mjs';
 
-test('service ports fall back to the daemon defaults', () => {
-	assert.deepEqual(servicePorts(''), [10101, 10201, 10202, 10203]);
+test('service ports fall back to the daemon default', () => {
+	assert.deepEqual(servicePorts(''), [10101]);
 });
 
-test('service ports follow config.toml and skip a zeroed protocol', () => {
-	const config = ['[server]', 'port = 19101', '[server.data_plane]', 'openai = 19201', 'anthropic = 0'].join(
-		'\n'
-	);
-	assert.deepEqual(servicePorts(config), [19101, 19201, 10203]);
+test('service ports follow config.toml, and a zero port names no scan', () => {
+	const config = ['[server]', 'port = 19101'].join('\n');
+	assert.deepEqual(servicePorts(config), [19101]);
+	assert.deepEqual(servicePorts('[server]\nport = 0'), []);
 });
 
 test('runtime pid reads the published pid, or null', () => {
@@ -82,24 +81,21 @@ test('a process serves its home by runtime pid or command line', () => {
 	);
 });
 
-// A home on ports of its own, so a quiesce never looks at the ports a developer's
+// A home on a port of its own, so a quiesce never looks at the port a developer's
 // own daemon serves.
-function scratchHome(ports) {
+function scratchHome(port) {
 	const home = mkdtempSync(join(tmpdir(), 'relo-quiesce-'));
-	writeFileSync(
-		join(home, 'config.toml'),
-		['[server]', `port = ${ports[0]}`, '[server.data_plane]', `openai = ${ports[1]}`, `anthropic = ${ports[2]}`, `gemini = ${ports[3]}`].join('\n')
-	);
+	writeFileSync(join(home, 'config.toml'), ['[server]', `port = ${port}`].join('\n'));
 	return home;
 }
 
 test('a quiesce of a home with nothing running is not a failure', () => {
-	const home = scratchHome([49101, 49201, 49202, 49203]);
+	const home = scratchHome(49101);
 	assert.deepEqual(quiesce(home), { stopped: false });
 });
 
 test('a quiesce fails when another program still listens on a configured port', async () => {
-	const home = scratchHome([49111, 49211, 49212, 49213]);
+	const home = scratchHome(49111);
 	const holder = createServer();
 	await new Promise((resolve) => holder.listen(49111, '127.0.0.1', resolve));
 	after(() => holder.close());
