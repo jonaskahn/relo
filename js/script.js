@@ -617,9 +617,26 @@
     if (!platform) platform = navigator.platform || "";
     if (!platform) platform = navigator.userAgent || "";
     platform = platform.toLowerCase();
-    if (platform.indexOf("win") >= 0) return "windows";
     if (platform.indexOf("mac") >= 0 || platform.indexOf("darwin") >= 0) return "macos";
-    return "linux";
+    if (platform.indexOf("win") >= 0) return "windows";
+    if (platform.indexOf("linux") >= 0 || platform.indexOf("x11") >= 0) return "linux";
+    return "macos";
+  }
+
+  function placeLenses() {
+    document.querySelectorAll(".os-tabs").forEach(function (list) {
+      var active = list.querySelector('[role="tab"][aria-selected="true"]');
+      if (active) moveLens(active, false);
+    });
+  }
+
+  function preselectOs() {
+    var os = guessOs();
+    document.querySelectorAll(".os-tabs").forEach(function (list) {
+      var tab = list.querySelector('[role="tab"][data-os="' + os + '"], [role="tab"][data-os$="-' + os + '"]');
+      if (tab) selectOs(tab, false, false);
+    });
+    placeLenses();
   }
 
   document.querySelectorAll(".os-panel").forEach(function (panel) {
@@ -632,7 +649,7 @@
   reveal();
   nextTrip();
   buildLang();
-  selectOs(guessOs(), true, false);
+  preselectOs();
 
   document.addEventListener("relo:lang", function () {
     applyKinetic();
@@ -644,12 +661,10 @@
   if (ticker && !reduced) window.setInterval(nextTrip, 2600);
 
   window.addEventListener("resize", function () {
-    var active = document.querySelector('.os-tabs [aria-selected="true"]');
-    if (active) moveLens(active, false);
+    placeLenses();
   });
 
   window.setTimeout(function () {
-    var active = document.querySelector('.os-tabs [aria-selected="true"]');
-    if (active) moveLens(active, false);
+    placeLenses();
   }, 400);
 })();
