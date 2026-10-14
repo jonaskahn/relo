@@ -252,6 +252,7 @@ func (s *Service) enableIntegration(ctx context.Context, id string, overwrite bo
 		return IntegrationResult{}, err
 	}
 	s.restartCodex(ctx, agent.ID)
+	s.restartOpenCode(ctx, agent.ID, token)
 	view, err := s.describeIntegration(ctx, manager, agent)
 	if err != nil {
 		return IntegrationResult{}, err
@@ -300,6 +301,7 @@ func (s *Service) RotateIntegrationKey(ctx context.Context, id string) (Integrat
 	if _, err := manager.Rotate(ctx, agent.ID, token); err != nil {
 		return IntegrationResult{}, err
 	}
+	s.restartOpenCode(ctx, agent.ID, token)
 	view, err := s.describeIntegration(ctx, manager, agent)
 	if err != nil {
 		return IntegrationResult{}, err
@@ -350,6 +352,7 @@ func (s *Service) RepairIntegration(ctx context.Context, id string) (Integration
 		return IntegrationResult{}, err
 	}
 	s.restartCodex(ctx, agent.ID)
+	s.restartOpenCode(ctx, agent.ID, token)
 	view, err := s.describeIntegration(ctx, manager, agent)
 	if err != nil {
 		return IntegrationResult{}, err
@@ -418,6 +421,15 @@ func (s *Service) restartCodex(ctx context.Context, id string) {
 	}
 	if err := s.processes.RestartCodexDaemon(ctx, filepath.Dir(s.paths.CodexConfig()), s.paths.Home()); err != nil && s.logger != nil {
 		s.logger.Warn("restart the Codex app-server", "error", err)
+	}
+}
+
+func (s *Service) restartOpenCode(ctx context.Context, id, token string) {
+	if id != ClientOpenCode {
+		return
+	}
+	if err := s.processes.RestartOpenCodeService(ctx, s.paths.Home(), token); err != nil && s.logger != nil {
+		s.logger.Warn("restart the OpenCode service", "error", err)
 	}
 }
 

@@ -374,6 +374,46 @@ func TestRestartIntegrationRestartsTheOpenCodeService(t *testing.T) {
 	}
 }
 
+// TestEnableAndRepairPushTheKeyToTheOpenCodeService is the stale-service
+// regression: setup and repair mint or reuse the integration key, and the
+// background server expands that key from its own stored environment, so
+// both actions must store the key there. Otherwise Verify reports a valid
+// key while a live run fails with an invalid API key.
+func TestEnableAndRepairPushTheKeyToTheOpenCodeService(t *testing.T) {
+	_, built := integrationService(t)
+	configHome := t.TempDir()
+	if err := os.MkdirAll(filepath.Join(configHome, "opencode"), 0o755); err != nil {
+		t.Fatalf("create the opencode config directory: %v", err)
+	}
+	t.Setenv("XDG_CONFIG_HOME", configHome)
+	binDir := t.TempDir()
+	marker := filepath.Join(t.TempDir(), "ran")
+	script := "#!/bin/sh\nprintf '%s\\n' \"$*\" >> " + marker + "\n"
+	if err := os.WriteFile(filepath.Join(binDir, "opencode"), []byte(script), 0o755); err != nil {
+		t.Fatalf("write the stub launcher: %v", err)
+	}
+	t.Setenv("PATH", binDir)
+	ctx := context.Background()
+	enabled, err := built.EnableIntegration(ctx, "opencode", "")
+	if err != nil {
+		t.Fatalf("EnableIntegration(opencode) error = %v", err)
+	}
+	if strings.TrimSpace(enabled.Token) == "" {
+		t.Fatal("EnableIntegration(opencode) minted no token")
+	}
+	if _, err := built.RepairIntegration(ctx, "opencode"); err != nil {
+		t.Fatalf("RepairIntegration(opencode) error = %v", err)
+	}
+	got, err := os.ReadFile(marker)
+	if err != nil {
+		t.Fatalf("read the stub marker: %v", err)
+	}
+	set := "service set env RELO_OPENCODE_API_KEY " + strings.TrimSpace(enabled.Token) + "\n"
+	if want := set + "service restart\n" + set + "service restart\n"; string(got) != want {
+		t.Fatalf("launcher args = %q, want %q", got, want)
+	}
+}
+
 func writeCodexDaemonPid(t *testing.T, home string, pid int, startSeconds int64) {
 	t.Helper()
 	dir := filepath.Join(home, "app-server-daemon")
