@@ -2,7 +2,10 @@ import { describe, expect, it } from 'vitest';
 import { CLIENT_OPTIONS, setupSnippet } from './client-setup';
 import { providerLogoSrc } from './provider-logo';
 
-const urls = { openai: 'http://127.0.0.1:10201', anthropic: 'http://127.0.0.1:10202' };
+const urls = {
+	openai: 'http://127.0.0.1:10101/inference',
+	anthropic: 'http://127.0.0.1:10101/inference-claude'
+};
 
 describe('CLIENT_OPTIONS', () => {
 	it('keeps one entry per client and the shared kind', () => {
@@ -25,10 +28,10 @@ describe('CLIENT_OPTIONS', () => {
 });
 
 describe('setupSnippet', () => {
-	it('writes the Codex config block against the OpenAI port', () => {
+	it('writes the Codex config block against the OpenAI prefix', () => {
 		const snippet = setupSnippet('codex', urls, 'relo-sk-1');
 		expect(snippet.language).toBe('toml');
-		expect(snippet.code).toContain('base_url = "http://127.0.0.1:10201/v1"');
+		expect(snippet.code).toContain('base_url = "http://127.0.0.1:10101/inference/v1"');
 		expect(snippet.code).toContain('env_key = "RELO_CODEX_API_KEY"');
 		expect(snippet.code).toContain('export RELO_CODEX_API_KEY="relo-sk-1"');
 		expect(snippet.code).not.toContain('RELO_TOKEN');
@@ -38,7 +41,7 @@ describe('setupSnippet', () => {
 		for (const clientId of ['claude-code', 'claude-desktop']) {
 			const snippet = setupSnippet(clientId, urls, 'relo-sk-2');
 			expect(snippet.language).toBe('shell');
-			expect(snippet.code).toContain('ANTHROPIC_BASE_URL=http://127.0.0.1:10202');
+			expect(snippet.code).toContain('ANTHROPIC_BASE_URL=http://127.0.0.1:10101/inference-claude');
 			expect(snippet.code).not.toContain('ANTHROPIC_AUTH_TOKEN');
 			expect(snippet.code).not.toContain('apiKey');
 		}
@@ -46,7 +49,7 @@ describe('setupSnippet', () => {
 
 	it('falls back to OpenAI-shaped exports', () => {
 		const snippet = setupSnippet('cursor', urls, 'relo-sk-3');
-		expect(snippet.code).toContain('OPENAI_BASE_URL=http://127.0.0.1:10201/v1');
+		expect(snippet.code).toContain('OPENAI_BASE_URL=http://127.0.0.1:10101/inference/v1');
 	});
 
 	// A client nobody added a row for still has to produce a snippet rather
@@ -55,7 +58,7 @@ describe('setupSnippet', () => {
 	it('falls back to the OpenAI exports for a client it does not know', () => {
 		const snippet = setupSnippet('a-client-from-the-future', urls, 'relo-sk-4');
 		expect(snippet.language).toBe('shell');
-		expect(snippet.code).toContain('OPENAI_BASE_URL=http://127.0.0.1:10201/v1');
+		expect(snippet.code).toContain('OPENAI_BASE_URL=http://127.0.0.1:10101/inference/v1');
 	});
 
 	it('gives every row a snippet that names the daemon', () => {
