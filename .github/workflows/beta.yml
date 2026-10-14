@@ -1,10 +1,10 @@
 name: Beta
 
-# Every green merge to main becomes a beta: the same artifacts a release builds,
-# published under a prerelease tag, on npm's `beta` dist-tag, and in the tap as
-# its own formula. Nothing here writes a stable channel: no release.yml job, no
+# Every green merge to main becomes a beta: daemon tarballs published under a
+# prerelease tag, on npm's `beta` dist-tag, and in the tap as its own formula.
+# Nothing here writes a stable channel: no release.yml job, no
 # Formula/relo.rb, no npm `latest`, and no appcast entry, so an installed Relo
-# never sees a beta.
+# never sees a beta. No macOS app, Linux, or Windows packages.
 #
 # The version is derived, never committed, so the README badge and the declared
 # versions stay on the release the repository is working towards. It descends
@@ -121,163 +121,9 @@ jobs:
           path: dist/
           retention-days: 30
 
-  macos:
-    name: Build macOS app
-    needs: gate
-    runs-on: macos-15
-    steps:
-      - name: Checkout the merge
-        uses: actions/checkout@v5
-        with:
-          ref: ${{ needs.gate.outputs.sha }}
-
-      - name: Set up Go
-        uses: actions/setup-go@v6
-        with:
-          go-version-file: daemon/go.mod
-          cache-dependency-path: daemon/go.sum
-
-      - name: Set up Node
-        uses: actions/setup-node@v5
-        with:
-          node-version: 22
-          cache: npm
-          cache-dependency-path: console/package-lock.json
-
-      - name: Import Developer ID certificate
-        env:
-          APPLE_SIGN_P12_BASE64: ${{ secrets.APPLE_SIGN_P12_BASE64 }}
-          APPLE_SIGN_P12_PASSWORD: ${{ secrets.APPLE_SIGN_P12_PASSWORD }}
-        run: |
-          keychain="$RUNNER_TEMP/signing.keychain-db"
-          security create-keychain -p actions "$keychain"
-          security set-keychain-settings -lut 21600 "$keychain"
-          security unlock-keychain -p actions "$keychain"
-          printf '%s' "$APPLE_SIGN_P12_BASE64" | base64 --decode > "$RUNNER_TEMP/cert.p12"
-          security import "$RUNNER_TEMP/cert.p12" -k "$keychain" -P "$APPLE_SIGN_P12_PASSWORD" -T /usr/bin/codesign
-          rm -f "$RUNNER_TEMP/cert.p12"
-          security set-key-partition-list -S apple-tool:,apple:,codesign: -k actions "$keychain"
-          security list-keychains -d user -s "$keychain" $(security list-keychains -d user | tr -d '"')
-          identity=$(security find-identity -v -p codesigning "$keychain" | grep "Developer ID Application" | head -n 1 | sed 's/.*) \([A-F0-9]*\) .*/\1/')
-          [ -n "$identity" ] || { echo "no Developer ID identity in the imported certificate" >&2; exit 1; }
-          echo "APPLE_SIGN_IDENTITY=$identity" >> "$GITHUB_ENV"
-
-      - name: Build, sign, and notarize macOS app
-        env:
-          SPARKLE_PUBLIC_ED_KEY: ${{ vars.SPARKLE_PUBLIC_ED_KEY }}
-          VERSION: ${{ needs.gate.outputs.version }}
-          BUILD: ${{ needs.gate.outputs.build }}
-        run: |
-          APPLE_SIGN_IDENTITY="$APPLE_SIGN_IDENTITY" \
-          APPLE_ID="${{ secrets.APPLE_ID }}" \
-          APPLE_TEAM_ID="${{ secrets.APPLE_TEAM_ID }}" \
-          APPLE_APP_SPECIFIC_PASSWORD="${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}" \
-          make package-macos VERSION="$VERSION" BUILD="$BUILD"
-          rm -rf dist/Relo.app
-
-      - name: Upload macOS zips
-        uses: actions/upload-artifact@v5
-        with:
-          name: macos
-          path: dist/
-          retention-days: 30
-
-  linux:
-    name: Build Linux packages
-    needs: [gate, binaries]
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout the merge
-        uses: actions/checkout@v5
-        with:
-          ref: ${{ needs.gate.outputs.sha }}
-
-      - name: Set up Go
-        uses: actions/setup-go@v6
-        with:
-          go-version-file: daemon/go.mod
-          cache-dependency-path: daemon/go.sum
-
-      - name: Set up Node
-        uses: actions/setup-node@v5
-        with:
-          node-version: 22
-          cache: npm
-          cache-dependency-path: console/package-lock.json
-
-      - name: Download binaries
-        uses: actions/download-artifact@v5
-        with:
-          name: binaries
-          path: dist
-
-      - name: Build Linux packages
-        env:
-          VERSION: ${{ needs.gate.outputs.version }}
-        run: |
-          go install github.com/goreleaser/nfpm/v2/cmd/nfpm@v2.46.0
-          # nfpm writes the prerelease as 0.1.0~beta.…, which both deb and rpm
-          # read as older than the 0.1.0 release they must not replace.
-          make package-linux VERSION="$VERSION"
-
-      - name: Upload Linux packages
-        uses: actions/upload-artifact@v5
-        with:
-          name: linux
-          path: dist/Relo-Setup-*.{deb,rpm}
-          retention-days: 30
-
-  windows:
-    name: Build Windows installer
-    needs: [gate, binaries]
-    runs-on: windows-latest
-    steps:
-      - name: Checkout the merge
-        uses: actions/checkout@v5
-        with:
-          ref: ${{ needs.gate.outputs.sha }}
-
-      - name: Set up Go
-        uses: actions/setup-go@v6
-        with:
-          go-version-file: daemon/go.mod
-          cache-dependency-path: daemon/go.sum
-
-      - name: Set up Node
-        uses: actions/setup-node@v5
-        with:
-          node-version: 22
-          cache: npm
-          cache-dependency-path: console/package-lock.json
-
-      - name: Install NSIS
-        run: |
-          choco install nsis -y
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          "${env:ProgramFiles(x86)}\NSIS" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
-
-      - name: Download binaries
-        uses: actions/download-artifact@v5
-        with:
-          name: binaries
-          path: dist
-
-      - name: Build Windows installer
-        shell: bash
-        env:
-          VERSION: ${{ needs.gate.outputs.version }}
-        run: make package-windows VERSION="$VERSION"
-
-      - name: Upload Windows installer
-        uses: actions/upload-artifact@v5
-        with:
-          name: windows
-          path: dist/Relo-Setup-*.exe
-          retention-days: 30
-
   release:
     name: Publish the prerelease
-    needs: [gate, binaries, macos, linux, windows]
+    needs: [gate, binaries]
     runs-on: ubuntu-latest
     steps:
       - name: Download all artifacts
