@@ -4,7 +4,6 @@ package server
 import (
 	"github.com/jonaskahn/relo/internal/inference"
 	"net/http"
-	"strconv"
 	"strings"
 )
 
@@ -29,7 +28,11 @@ const (
 
 var managementExemptPaths = []string{"/logo.svg", LoginPath, authLoginPath, authSessionPath}
 
-var managementExemptPrefixes = []string{"/_app/", CallbackPrefix, inferencePrefix + "/", retiredAgentPrefix + "/"}
+var managementExemptPrefixes = []string{
+	"/_app/", CallbackPrefix, inferencePrefix + "/", retiredAgentPrefix + "/",
+	inference.DataPlanePath(inference.ProtocolOpenAI) + "/",
+	inference.DataPlanePath(inference.ProtocolAnthropic) + "/",
+}
 
 type healthResponse struct {
 	Status  string `json:"status"`
@@ -53,17 +56,18 @@ func dataPlaneProtocols() []dataPlaneProtocol {
 
 type servedProtocol struct {
 	dataPlaneProtocol
-	port int
 }
 
 func (s *Server) servedProtocols() []servedProtocol {
 	served := make([]servedProtocol, 0, len(dataPlaneProtocols()))
 	for _, protocol := range dataPlaneProtocols() {
-		port := s.opts.Config.Server.DataPlane.Port(protocol.id)
-		if port <= 0 || len(protocol.surfaces) == 0 {
+		if len(protocol.surfaces) == 0 {
 			continue
 		}
-		served = append(served, servedProtocol{dataPlaneProtocol: protocol, port: port})
+		if inference.DataPlanePath(protocol.id) == "" {
+			continue
+		}
+		served = append(served, servedProtocol{dataPlaneProtocol: protocol})
 	}
 	return served
 }
@@ -150,11 +154,11 @@ func (s *Server) dataPlaneBaseURL(path string) (string, bool) {
 	if !found {
 		return "", false
 	}
-	port := s.opts.Config.Server.DataPlane.Port(protocol)
-	if port <= 0 {
+	prefix := inference.DataPlanePath(protocol)
+	if prefix == "" {
 		return "", false
 	}
-	return "http://" + s.opts.Config.Server.Bind + ":" + strconv.Itoa(port), true
+	return "http://" + s.opts.Config.Server.Addr() + prefix, true
 }
 
 func inferencePathProtocol(path string) (string, bool) {
@@ -186,11 +190,19 @@ func (s *Server) managementRoutes() *http.ServeMux {
 	mux.HandleFunc("GET "+statusPath, s.handleStatus)
 	mux.HandleFunc(retiredAgentPrefix+"/", s.handleInferencePathRetired)
 	mux.HandleFunc(inferencePrefix+"/", s.handleInferencePathRetired)
+	s.registerDataPlane(mux)
 	s.registerCallbacks(mux)
 	s.registerManagementAPI(mux)
 	s.registerEvents(mux)
 	s.registerDashboard(mux)
 	return mux
+}
+
+func (s *Server) registerDataPlane(mux *http.ServeMux) {
+	for _, protocol := range s.servedProtocols() {
+		prefix := inference.DataPlanePath(protocol.id)
+		mux.Handle(prefix+"/", http.StripPrefix(prefix, s.dataPlaneHandler(protocol.dataPlaneProtocol)))
+	}
 }
 
 func (s *Server) handleHealthz(w http.ResponseWriter, _ *http.Request) {

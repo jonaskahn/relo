@@ -24,3 +24,16 @@ func ProtocolKnown(protocol string) bool {
 	}
 	return false
 }
+
+// DataPlanePath returns the path prefix one protocol is served under on the
+// single listener, and an empty string for a protocol with no surfaces.
+func DataPlanePath(protocol string) string {
+	switch protocol {
+	case ProtocolOpenAI:
+		return "/inference"
+	case ProtocolAnthropic:
+		return "/inference-claude"
+	default:
+		return ""
+	}
+}
