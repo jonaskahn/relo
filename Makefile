@@ -222,12 +222,9 @@ version-bump:
 	@if [ -z "$(KIND)" ]; then echo "usage: make version-bump KIND=patch" >&2; exit 2; fi
 	@python3 ./scripts/version.py bump "$(KIND)"
 
-## tag the release (TAG=v0.1.0), failing first when versions disagree
+## tag the release from latest main (default TAG is the current version)
 release-tag:
-	@if [ -z "$(TAG)" ]; then echo "usage: make release-tag TAG=v0.1.0" >&2; exit 2; fi
-	@python3 ./scripts/version.py check "$(TAG)"
-	git tag "$(TAG)"
-	git push origin "$(TAG)"
+	./scripts/release-tag.sh $(TAG)
 
 ## tag the current version, push it, then bump (KIND=patch) on a new branch
 release-current:
