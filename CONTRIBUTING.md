@@ -14,7 +14,7 @@ rules live in [`docs/`](docs/README.md).
 
 ## Getting started
 
-Requirements: Go 1.26+ and Node 20+. No CGO.
+Requirements: Go 1.26+ and Node 22+. No CGO.
 
 ```sh
 git clone https://github.com/jonaskahn/relo.git
@@ -35,6 +35,7 @@ Read what applies to your change:
 | Management API             | [API conventions](docs/api.md)                                                                                       |
 | User-facing text, artwork  | [Product rules](docs/conventions/product-rules.md)                                                                   |
 | Console                    | [Svelte conventions](docs/conventions/svelte.md), [Product](docs/design/PRODUCT.md), [Design](docs/design/DESIGN.md) |
+| Tray UI                    | [Product](docs/design/PRODUCT.md), [Design](docs/design/DESIGN.md)                                                   |
 
 ## Making a change
 

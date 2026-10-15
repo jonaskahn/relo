@@ -193,7 +193,7 @@ access. Mutable globals make state unpredictable and break test isolation.
 one task. The Go module lives in `daemon/`. In `daemon/internal/`,
 `adapters/sqlite/` owns the database, `adapters/secrets/` the keychain, and
 `adapters/wire/` wire translation; each feature package (`catalog/`,
-`account/`, `routing/`, `activity/`, `access/`) owns the rules of one part of
+`account/`, `routing/`, `inference/`, `activity/`, `access/`) owns the rules of one part of
 the product.
 
 **Open/Closed.** Extend behavior through new interface implementations, not

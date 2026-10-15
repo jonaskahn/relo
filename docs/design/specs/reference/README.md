@@ -25,4 +25,4 @@ Differences from the spec:
 | Hard-coded status colours                    | `--ok`, `--warn`, `--danger`                      |
 | Pane demo opens the model modal on load      | The modal opens from a row, reading first         |
 | Add demo pauses at Verify with fixed results | Production probes the provider and fills the rail |
-| Add demo copy is illustrative English        | Production resolves all 22 locales                |
+| Add demo copy is illustrative English        | Production resolves all 23 locales                |
