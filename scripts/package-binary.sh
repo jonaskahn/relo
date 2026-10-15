@@ -46,10 +46,9 @@ for os in $oses; do
   esac
   for arch in $arches; do
     out="$cache/relo-$os-$arch-$os_version$ext"
-    if [ -x "$out" ]; then
-      echo "reusing $os/$arch for $os_version"
-      continue
-    fi
+    # Always builds: this is the explicit build command, and the embedded
+    # console was just re-synced, so a cache hit could embed a stale one.
+    # package-*.sh is where reuse-if-present lives.
     echo "building $os/$arch"
     (cd "$root/daemon" && GOOS="$os" GOARCH="$arch" CGO_ENABLED=0 go build -trimpath \
       -ldflags "$ldflags -X github.com/jonaskahn/relo/internal/cli.version=$os_version" \
