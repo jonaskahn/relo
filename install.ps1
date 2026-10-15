@@ -30,7 +30,6 @@ $Repo = 'jonaskahn/relo'
 $Releases = if ($env:RELO_RELEASE_BASE) { $env:RELO_RELEASE_BASE } else { "https://github.com/$Repo/releases" }
 $Receipt = '.relo-install'
 $DefaultPort = 10101
-$DefaultPorts = @(10201, 10202, 10203)
 $BarWidth = 20
 $script:ConsoleReady = $false
 $script:Terminal = $false
@@ -297,13 +296,12 @@ function Read-Ports {
 				$key = $Matches[1]
 				$value = [int]$Matches[2]
 				if ($section -eq 'server' -and $key -eq 'port') { $script:CheckPorts += $value }
-				elseif ($section -eq 'server.data_plane' -and $key -in @('openai', 'anthropic', 'gemini')) { $script:CheckPorts += $value }
 			}
 		}
 	}
 	if ($CheckPorts.Count -eq 0) {
-		$script:CheckPorts = @($DefaultPort) + $DefaultPorts
-		Write-Note 'No config.toml yet; using the default ports'
+		$script:CheckPorts = @($DefaultPort)
+		Write-Note 'No config.toml yet; using the default port'
 	} else {
 		$script:CheckPorts = $CheckPorts | Select-Object -Unique
 		Write-Note "Ports read from $config"

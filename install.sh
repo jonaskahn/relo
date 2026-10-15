@@ -12,9 +12,6 @@ set -eu
 REPO="jonaskahn/relo"
 RELEASES="${RELO_RELEASE_BASE:-https://github.com/$REPO/releases}"
 DEFAULT_PORT=10101
-DEFAULT_OPENAI=10201
-DEFAULT_ANTHROPIC=10202
-DEFAULT_GEMINI=10203
 RECEIPT=".relo-install"
 BAR_WIDTH=20
 TERMINAL=0
@@ -396,7 +393,6 @@ read_ports() {
 				gsub(/[ \t"]/, "", k); gsub(/[ \t"]/, "", v)
 				if (k == "") next
 				if (s == "server" && k == "port") print v
-				else if (s == "server.data_plane" && (k == "openai" || k == "anthropic" || k == "gemini")) print v
 			}' "$cfg" | awk '!seen[$0]++')"
 		if [ -n "$found" ]; then
 			PORTS="$found"
@@ -404,11 +400,8 @@ read_ports() {
 			return 0
 		fi
 	fi
-	PORTS="$DEFAULT_PORT
-$DEFAULT_OPENAI
-$DEFAULT_ANTHROPIC
-$DEFAULT_GEMINI"
-	note "No config.toml yet; using the default ports"
+	PORTS="$DEFAULT_PORT"
+	note "No config.toml yet; using the default port"
 }
 
 port_holders() {
