@@ -219,31 +219,38 @@ func (s *Server) attemptHeaders(spec attemptSpec, template catalog.Template, tem
 		return extra, nil
 	}
 	lane := openCodeLane(outcome, r)
-	inbound := wire.InboundIdentity{}
-	if r != nil {
-		inbound.UserAgent = r.Header.Get("User-Agent")
-		inbound.Affinity = firstHeader(r.Header,
-			"x-session-affinity", "X-Session-Id", "x-opencode-session", "x-opencode-session-id")
-		inbound.Project = r.Header.Get("x-opencode-project")
-		inbound.ParentSessionID = firstHeader(r.Header,
-			"x-opencode-parent-session-id", "x-parent-session-id")
-	}
+	inbound := s.freeLaneIdentity(r, host)
 	// The genuine affinity travels as-is; only a conversation the client
 	// never named gets the forged session kept per lane.
 	if !wire.ValidSessionID(inbound.Affinity) {
 		inbound.Session = s.freeLaneSession(lane)
 	}
-	// An operator override fills the project only when the client sent
-	// none; otherwise the rotating forged id does. The allowlist above is
-	// the whole inbound surface: the client key never travels upstream.
+	return wire.OpenCodeFreeHeaders(lane, inbound), nil
+}
+
+// freeLaneIdentity reads what the inbound client said about itself, so the
+// free lane relays the client's own identity instead of inventing one. The
+// allowlist below is the whole inbound surface: the client key never travels
+// upstream. An operator override fills the project only when the client sent
+// none; otherwise the rotating forged id does.
+func (s *Server) freeLaneIdentity(r *http.Request, host catalog.Provider) wire.InboundIdentity {
+	inbound := wire.InboundIdentity{}
+	if r == nil {
+		return inbound
+	}
+	inbound.UserAgent = r.Header.Get("User-Agent")
+	inbound.Affinity = firstHeader(r.Header,
+		"x-session-affinity", "X-Session-Id", "x-opencode-session", "x-opencode-session-id")
+	inbound.Project = r.Header.Get("x-opencode-project")
+	inbound.ParentSessionID = firstHeader(r.Header,
+		"x-opencode-parent-session-id", "x-parent-session-id")
 	if inbound.Project == "" {
 		inbound.Project = host.Headers["x-opencode-project"]
 	}
 	if inbound.Project == "" {
 		inbound.Project = s.freeProject.Get()
 	}
-	free := wire.OpenCodeFreeHeaders(lane, inbound)
-	return free, nil
+	return inbound
 }
 
 // firstHeader returns the first non-blank value among the names, which all

@@ -2,7 +2,7 @@ package wire
 
 import (
 	"errors"
-	"strings"
+	"regexp"
 	"testing"
 	"time"
 )
@@ -25,6 +25,10 @@ func TestNativeIdentifierBodyMatchesTheClient(t *testing.T) {
 	}
 }
 
+// openCodeRequestShape is the message-identifier shape the gateway accepts,
+// the ascending twin of the session shape.
+var openCodeRequestShape = regexp.MustCompile(`^msg_[0-9a-f]{12}[0-9A-Za-z]{14}$`)
+
 // failingReader stands in for exhausted randomness, the only way the
 // fallback sources below are exercised.
 type failingReader struct{}
@@ -38,7 +42,7 @@ func TestIdentifierMintSurvivesRandomnessFailure(t *testing.T) {
 	randSource = failingReader{}
 	defer func() { randSource = previous }()
 	for _, id := range []string{NativeSessionID(), NativeRequestID()} {
-		if !ValidSessionID(id) && !(strings.HasPrefix(id, "msg_") && len(id) == 30) {
+		if !ValidSessionID(id) && !openCodeRequestShape.MatchString(id) {
 			t.Fatalf("id = %q, want a shape-correct fallback", id)
 		}
 	}

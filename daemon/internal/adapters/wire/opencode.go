@@ -333,28 +333,7 @@ func OpenCodeFreeRequest(req *inference.Request, format catalog.APIFormat) (*inf
 		return nil, nil
 	}
 	copied := *req
-	copied.Tools = append([]inference.Tool(nil), req.Tools...)
-	// A tool-free turn keeps no declarations: appending the lane tools here
-	// is what the gateway answers 403 to, so only a turn that already
-	// declares tools gains the missing lowercase names. With nothing
-	// appended, the tool_choice:none rule below cannot fire either, and the
-	// turn travels exactly as the client sent it.
-	if len(req.Tools) > 0 {
-		present := make(map[string]bool, len(req.Tools))
-		for _, tool := range req.Tools {
-			present[tool.Name] = true
-		}
-		for _, want := range freeLaneTools {
-			if present[want] {
-				continue
-			}
-			copied.Tools = append(copied.Tools, inference.Tool{
-				Name:        want,
-				Description: "This tool is currently unavailable and must not be used.",
-				Parameters:  json.RawMessage(`{"type":"object","properties":{}}`),
-			})
-		}
-	}
+	copied.Tools = withFreeLaneTools(req.Tools)
 	// The schemas are cleaned after the declarations are appended, so a lane tool
 	// added later is cleaned as well as one a client sent.
 	for index := range copied.Tools {
@@ -363,11 +342,35 @@ func OpenCodeFreeRequest(req *inference.Request, format catalog.APIFormat) (*inf
 	if copied.MaxTokens > 0 && copied.MaxTokens < freeMinMaxTokens {
 		copied.MaxTokens = freeMinMaxTokens
 	}
-	if len(req.Tools) == 0 && len(copied.Tools) > 0 && req.ToolChoice == nil &&
-		format == catalog.FormatOpenAIChat {
-		copied.ToolChoice = &inference.ToolChoice{Mode: inference.ToolChoiceNone}
-	}
 	return &copied, shortToolNames(&copied)
+}
+
+// withFreeLaneTools returns the declarations the lane inspects: the client's
+// own tools plus the missing lowercase names as unavailable placeholders. A
+// tool-free turn keeps no declarations: appending the lane tools there is
+// what the gateway answers 403 to, so the turn travels exactly as the client
+// sent it. With nothing appended, the tool_choice:none rule above cannot
+// fire either.
+func withFreeLaneTools(tools []inference.Tool) []inference.Tool {
+	if len(tools) == 0 {
+		return tools
+	}
+	out := append([]inference.Tool(nil), tools...)
+	present := make(map[string]bool, len(tools))
+	for _, tool := range tools {
+		present[tool.Name] = true
+	}
+	for _, want := range freeLaneTools {
+		if present[want] {
+			continue
+		}
+		out = append(out, inference.Tool{
+			Name:        want,
+			Description: "This tool is currently unavailable and must not be used.",
+			Parameters:  json.RawMessage(`{"type":"object","properties":{}}`),
+		})
+	}
+	return out
 }
 
 // OpenCodeGateway reports whether baseURL reaches an OpenCode gateway lane.
