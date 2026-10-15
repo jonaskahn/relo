@@ -1,21 +1,25 @@
-<?xml version="1.0" encoding="utf-8"?>
-<rss version="2.0" xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle">
+<?xml version='1.0' encoding='UTF-8'?>
+<rss xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle" version="2.0">
   <channel>
     <title>Relo Updates</title>
     <link>https://jonaskahn.github.io/relo/appcast.xml</link>
     <description>Relo release feed</description>
     <language>en</language>
     <item>
+      <title>Version 0.1.1</title>
+      <pubDate>Thu, 15 Oct 2026 19:25:02 +0000</pubDate>
+      <sparkle:version>0.1.1</sparkle:version>
+      <sparkle:shortVersionString>0.1.1</sparkle:shortVersionString>
+      <sparkle:minimumSystemVersion>12.0</sparkle:minimumSystemVersion>
+      <enclosure url="https://github.com/jonaskahn/relo/releases/download/v0.1.1/Relo-0.1.1-universal.zip" length="29487699" type="application/octet-stream" sparkle:edSignature="YL2nQg/AcdQlLjCruvToGEh+XcFO5ATfvGiWEJohfkDQkFvpfavJ4S+/Nd6S47RAK1+ZzsC+HY8U/qDsTfmqCA==" sparkle:shortVersionString="0.1.1" />
+    </item>
+    <item>
       <title>Version 0.1.0</title>
       <pubDate>Wed, 30 Sep 2026 00:00:00 +0000</pubDate>
       <sparkle:version>1</sparkle:version>
       <sparkle:shortVersionString>0.1.0</sparkle:shortVersionString>
       <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
-      <enclosure
-        url="https://github.com/jonaskahn/relo/releases/download/v0.1.0/Relo-0.1.0-universal.zip"
-        sparkle:version="1"
-        sparkle:shortVersionString="0.1.0"
-        type="application/octet-stream"/>
+      <enclosure url="https://github.com/jonaskahn/relo/releases/download/v0.1.0/Relo-0.1.0-universal.zip" sparkle:version="1" sparkle:shortVersionString="0.1.0" type="application/octet-stream" />
     </item>
   </channel>
 </rss>
