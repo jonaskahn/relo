@@ -202,7 +202,7 @@ package-windows: build-console sync-console
 package-all: package-clean build-all package-windows package-macos package-linux
 
 ## build the package binaries only, into dist/.pkgcache (OS=darwin ARCH=arm64 to narrow)
-package-binary:
+package-binary: build-console sync-console
 	./scripts/package-binary.sh
 
 ## the installer's own tests

@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 # Builds the binaries the installers ship, without building any installer.
+# Each binary embeds the console (go:embed of daemon/internal/dashboard/dist),
+# so run via `make package-binary`, which builds and syncs the console first.
 # Outputs land in dist/.pkgcache, where package-*.sh reuses them when the
 # version matches, so a later `make package-*` skips its Go builds.
 #
