@@ -137,7 +137,7 @@ def write(path, pattern, style, version):
         # Rewrite only the project version, never a dependency pin that
         # shares the key.
         head = lockfile_head(text)
-        tail = text[len(head) :]
+        tail = text[len(head):]
         head = re.sub(r'^\t\t\t"version": ".+",$', f'\t\t\t"version": "{version}",', head, flags=re.MULTILINE)
         # The root object copy is one tab deep.
         head = re.sub(r'^\t"version": ".+",$', f'\t"version": "{version}",', head, flags=re.MULTILINE)

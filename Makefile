@@ -28,7 +28,7 @@ DEV_URL  ?= http://127.0.0.1:$(DEV_PORT)
 	ci ci-backend ci-console ci-assets ci-coverage ci-cross-build ci-package-linux \
 	package-linux package-macos package-windows package-all package-clean \
 	test-npm npm-pack ci-npm \
-	release-tag release-check version-bump update-secrets \
+	release-tag release-check release-current version-bump update-secrets \
 	clean
 
 # === help: every target, what it does ===
@@ -222,12 +222,13 @@ version-bump:
 	@if [ -z "$(KIND)" ]; then echo "usage: make version-bump KIND=patch" >&2; exit 2; fi
 	@python3 ./scripts/version.py bump "$(KIND)"
 
-## tag the release (TAG=v0.1.0), failing first when versions disagree
+## tag the release from latest main (default TAG is the current version)
 release-tag:
-	@if [ -z "$(TAG)" ]; then echo "usage: make release-tag TAG=v0.1.0" >&2; exit 2; fi
-	@python3 ./scripts/version.py check "$(TAG)"
-	git tag "$(TAG)"
-	git push origin "$(TAG)"
+	./scripts/release-tag.sh $(TAG)
+
+## tag the current version, push it, then bump (KIND=patch) on a new branch
+release-current:
+	./scripts/release-current.sh $(KIND)
 
 ## prompt for missing release secrets and store them with gh (ALL=1 to re-ask all, ARGS="--list FOO" to override)
 update-secrets:

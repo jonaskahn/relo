@@ -26,8 +26,10 @@ jobs:
     needs: official
     # Apple silicon, like the beta lane: Go cross-compiles every platform with
     # CGO off, so one macOS host builds every daemon binary this release ships.
-    # The .deb, .rpm, and installer jobs still run on their own OS, where the
-    # packager they need is native.
+    # The .deb and .rpm jobs still run on their own OS, where the packager
+    # they need is native. The Windows installer builds on Linux instead:
+    # makensis cross-compiles there, which sidesteps the Git Bash path
+    # translation native makensis.exe chokes on.
     runs-on: macos-15
     steps:
       - name: Checkout tag
@@ -179,7 +181,7 @@ jobs:
 
   windows:
     name: Build Windows installer
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
     needs: [official, binaries]
     steps:
       - name: Checkout tag
@@ -199,10 +201,7 @@ jobs:
           cache-dependency-path: console/package-lock.json
 
       - name: Install NSIS
-        run: |
-          choco install nsis -y
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          "${env:ProgramFiles(x86)}\NSIS" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+        run: sudo apt-get update && sudo apt-get install -y nsis
 
       - name: Download binaries
         uses: actions/download-artifact@v5
@@ -211,7 +210,6 @@ jobs:
           path: dist
 
       - name: Build Windows installer
-        shell: bash
         run: make package-windows VERSION=${{ github.ref_name }}
 
       - name: Upload Windows installer
