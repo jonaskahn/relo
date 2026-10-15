@@ -21,14 +21,13 @@ if ! command -v makensis >/dev/null 2>&1; then
   exit 1
 fi
 
-# The binary is a build input, not a release artifact, so it lives outside
-# dist/ and never outlasts this run. One build ships: relo.exe is a
-# GUI-subsystem binary, so a shortcut or a login start never flashes a
-# console, and the relo.cmd shim beside it is what a terminal runs.
-# Git Bash and native tools can resolve /tmp differently; use the repository path.
-scratch="$(mktemp -d "$root/.relo-windows.XXXXXX")"
-trap 'rm -rf "$scratch"' EXIT
-mkdir -p "$root/dist"
+# One build ships: relo.exe is a GUI-subsystem binary, so a shortcut or a
+# login start never flashes a console, and the relo.cmd shim beside it is
+# what a terminal runs. A binary already built for this exact version is
+# reused from dist/.pkgcache; the version in the path means a version change
+# always misses. Wipe dist/ (make package-clean) to force a rebuild.
+cache="$root/dist/.pkgcache"
+mkdir -p "$cache"
 
 # makensis is a native Windows program and MSYS bash leaves -DKEY=value
 # alone, so a Unix-style /tmp or /d path never resolves there. Convert every
@@ -42,11 +41,15 @@ native_path() {
 }
 
 for arch in $arches; do
-  binary="$scratch/relo-windows-$arch.exe"
-  echo "building the $arch relo.exe"
-  (cd "$root/daemon" && GOOS=windows GOARCH="$arch" CGO_ENABLED=0 go build -trimpath \
-    -ldflags "-s -w -H windowsgui -X github.com/jonaskahn/relo/internal/cli.version=$version" \
-    -o "$binary" ./cmd/relo)
+  binary="$cache/relo-windows-$arch-$version.exe"
+  if [ -x "$binary" ]; then
+    echo "reusing the $arch relo.exe for $version"
+  else
+    echo "building the $arch relo.exe"
+    (cd "$root/daemon" && GOOS=windows GOARCH="$arch" CGO_ENABLED=0 go build -trimpath \
+      -ldflags "-s -w -H windowsgui -X github.com/jonaskahn/relo/internal/cli.version=$version" \
+      -o "$binary" ./cmd/relo)
+  fi
 
   ls -la "$binary"
   outfile="$root/dist/Relo-Setup-$version-$arch.exe"
