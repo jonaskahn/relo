@@ -2,11 +2,9 @@
 package wire
 
 import (
-	"crypto/rand"
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
-	"fmt"
 	"net/url"
 	"regexp"
 	"strings"
@@ -25,38 +23,61 @@ const freeIdentifierAlphabet = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijkl
 // so two clients that name the same conversation cannot land on one session.
 const freeSessionDomain = "relo/opencode-free/session/v1\x00"
 
-// freeClientUserAgent identifies the request as the OpenCode client the free
-// lane serves. The gateway refuses a turn whose User-Agent carries no
-// "opencode/" marker, and this is the only header it reads for the client's
-// identity; the project, session aliases, and accept below go out because the
-// client sends them, not because the lane asks for them.
+// freeClientUserAgent is the fallback identity for callers that are not an
+// opencode client. The gateway refuses a turn whose User-Agent carries no
+// "opencode/" marker, so a request that arrives without one cannot go out
+// without one either; a real client's own agent is always preferred.
 const freeClientUserAgent = "opencode/latest/2.0.27/cli"
 
-// freeClientProject is the project marker a current client sends. The lane
-// accepts any value once the User-Agent carries its marker, but the header is
-// part of the client's identity and goes out as the client sends it.
-const freeClientProject = "830e1c56fd90dc478c00038a574f71ce499ac237"
-
 // OpenCodeFreeHeaders returns the signed-out CLI headers, with one session
-// per conversation lane and a fresh message identifier for each attempt.
-func OpenCodeFreeHeaders(lane, inboundSession string) (map[string]string, error) {
-	request, err := freeRequestID()
-	if err != nil {
-		return nil, err
+// per conversation lane and a fresh message identifier for each attempt. The
+// inbound identity is relayed, never invented: the client's own agent,
+// affinity, project, and parent travel when present, and only the gaps are
+// filled — the agent from the fallback above, the project omitted, the
+// session from the caller's forged value or derived from the lane.
+func OpenCodeFreeHeaders(lane string, id InboundIdentity) (map[string]string, error) {
+	session := id.Session
+	if session == "" {
+		if ValidSessionID(id.Affinity) {
+			session = id.Affinity
+		} else {
+			session = freeSessionID(lane, "")
+		}
 	}
-	session := freeSessionID(lane, inboundSession)
-	return map[string]string{
+	request := NativeRequestID()
+	headers := map[string]string{
 		"Authorization":         "Bearer public",
-		"User-Agent":            freeClientUserAgent,
+		"User-Agent":            freeAgent(id.UserAgent),
 		"x-opencode-client":     "cli",
-		"x-opencode-project":    freeClientProject,
 		"x-opencode-session":    session,
 		"x-opencode-session-id": session,
 		"x-session-affinity":    session,
 		"x-session-id":          session,
 		"x-opencode-request":    request,
 		"Accept":                "*/*",
-	}, nil
+	}
+	// The project travels only when known: inbound, or operator-configured.
+	// A forged rotating id fills the gap upstream of this function; a
+	// hardcoded one would impersonate a stranger's repository.
+	if project := strings.TrimSpace(id.Project); project != "" {
+		headers["x-opencode-project"] = project
+	}
+	// Forks share the parent's affinity: both spellings travel when the
+	// client named its parent, the way the native client sends them.
+	if parent := strings.TrimSpace(id.ParentSessionID); parent != "" {
+		headers["x-opencode-parent-session-id"] = parent
+		headers["x-parent-session-id"] = parent
+	}
+	return headers, nil
+}
+
+// freeAgent prefers the inbound agent when it identifies as an opencode
+// client, and falls back to the pinned one otherwise.
+func freeAgent(inbound string) string {
+	if hasOpenCodeMarker(inbound) {
+		return inbound
+	}
+	return freeClientUserAgent
 }
 
 // freeSessionID is the session one conversation is sent on. It is derived from
@@ -78,16 +99,6 @@ func freeSessionID(lane, inboundSession string) string {
 	prefix[4] |= 0x0f
 	prefix[5] |= 0xf0
 	return "ses_" + hex.EncodeToString(prefix[:6]) + freeIdentifierTail(digest[6:20])
-}
-
-// freeRequestID names one attempt. Every attempt gets its own, so a retry is
-// never mistaken for the request it replaces.
-func freeRequestID() (string, error) {
-	var random [20]byte
-	if _, err := rand.Read(random[:]); err != nil {
-		return "", fmt.Errorf("create an OpenCode identifier: %w", err)
-	}
-	return "msg_" + hex.EncodeToString(random[:6]) + freeIdentifierTail(random[6:20]), nil
 }
 
 func freeIdentifierTail(digest []byte) string {

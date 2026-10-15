@@ -233,6 +233,9 @@ type Server struct {
 	dashboard   http.Handler
 
 	mu                sync.RWMutex
+	freeMu            sync.Mutex
+	freeSessions      map[string]string
+	freeProject       wire.ProjectForge
 	servers           []*http.Server
 	addr              string
 	onReady           func(addrs Addrs)

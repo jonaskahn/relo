@@ -65,19 +65,24 @@ func TestOpenCodeGoSession(t *testing.T) {
 }
 
 func TestOpenCodeFreeHeadersMatchTheSignedOutCLI(t *testing.T) {
-	first, err := wire.OpenCodeFreeHeaders("lane-free", "not-a-session")
+	first, err := wire.OpenCodeFreeHeaders("lane-free", wire.InboundIdentity{})
 	if err != nil {
 		t.Fatalf("OpenCodeFreeHeaders() error = %v", err)
 	}
-	again, err := wire.OpenCodeFreeHeaders("lane-free", "")
+	again, err := wire.OpenCodeFreeHeaders("lane-free", wire.InboundIdentity{})
 	if err != nil {
 		t.Fatalf("OpenCodeFreeHeaders() error = %v", err)
 	}
 	if !strings.Contains(first["User-Agent"], "opencode/") || first["x-opencode-client"] != "cli" {
 		t.Fatalf("headers = %#v", first)
 	}
-	if first["Authorization"] != "Bearer public" || first["x-opencode-project"] == "" {
+	if first["Authorization"] != "Bearer public" {
 		t.Fatalf("headers = %#v", first)
+	}
+	// The project travels only when known: nothing hardcoded, and nothing
+	// invented for a caller that named none.
+	if _, ok := first["x-opencode-project"]; ok {
+		t.Fatalf("headers = %#v, want no project for an unknown caller", first)
 	}
 	if !openCodeSession.MatchString(first["x-opencode-session"]) || !openCodeRequest.MatchString(first["x-opencode-request"]) {
 		t.Fatalf("headers = %#v", first)
@@ -95,14 +100,14 @@ func TestOpenCodeFreeHeadersMatchTheSignedOutCLI(t *testing.T) {
 	if first["x-opencode-request"] == again["x-opencode-request"] {
 		t.Fatal("message id was reused")
 	}
-	other, err := wire.OpenCodeFreeHeaders("lane-other", "")
+	other, err := wire.OpenCodeFreeHeaders("lane-other", wire.InboundIdentity{})
 	if err != nil {
 		t.Fatalf("OpenCodeFreeHeaders() error = %v", err)
 	}
 	if other["x-opencode-session"] == first["x-opencode-session"] {
 		t.Fatal("lanes share a session")
 	}
-	kept, err := wire.OpenCodeFreeHeaders("lane-free", first["x-opencode-session"])
+	kept, err := wire.OpenCodeFreeHeaders("lane-free", wire.InboundIdentity{Session: first["x-opencode-session"]})
 	if err != nil {
 		t.Fatalf("OpenCodeFreeHeaders() error = %v", err)
 	}
@@ -111,15 +116,45 @@ func TestOpenCodeFreeHeadersMatchTheSignedOutCLI(t *testing.T) {
 	}
 }
 
+func TestOpenCodeFreeHeadersRelayInboundIdentity(t *testing.T) {
+	inbound := wire.InboundIdentity{
+		UserAgent:       "opencode/latest/2.0.29/cli",
+		Affinity:        "ses_" + "abcdef123456" + "AbCdEfGhIjKlMn",
+		Project:         "3f786850e387550fdab836ed7e6dc881de23001b",
+		ParentSessionID: "ses_parent",
+	}
+	headers, err := wire.OpenCodeFreeHeaders("lane-free", inbound)
+	if err != nil {
+		t.Fatalf("OpenCodeFreeHeaders() error = %v", err)
+	}
+	if headers["User-Agent"] != inbound.UserAgent {
+		t.Fatalf("agent = %q, want the inbound %q", headers["User-Agent"], inbound.UserAgent)
+	}
+	for _, alias := range []string{"x-opencode-session", "x-opencode-session-id", "x-session-affinity", "x-session-id"} {
+		if headers[alias] != inbound.Affinity {
+			t.Fatalf("%s = %q, want the genuine affinity %q", alias, headers[alias], inbound.Affinity)
+		}
+	}
+	if headers["x-opencode-project"] != inbound.Project {
+		t.Fatalf("project = %q, want the inbound %q", headers["x-opencode-project"], inbound.Project)
+	}
+	if headers["x-opencode-parent-session-id"] != "ses_parent" || headers["x-parent-session-id"] != "ses_parent" {
+		t.Fatalf("headers = %#v, want both parent spellings", headers)
+	}
+	if headers["Authorization"] != "Bearer public" {
+		t.Fatalf("headers = %#v", headers)
+	}
+}
+
 // TestOpenCodeFreeSessionIsDerivedRatherThanRemembered covers a daemon that
 // outlives many conversations: a lane maps to its session without anything
 // keeping the mapping, so no conversation is retained once it ends.
 func TestOpenCodeFreeSessionIsDerivedRatherThanRemembered(t *testing.T) {
-	first, err := wire.OpenCodeFreeHeaders("lane-a", "")
+	first, err := wire.OpenCodeFreeHeaders("lane-a", wire.InboundIdentity{})
 	if err != nil {
 		t.Fatalf("OpenCodeFreeHeaders() error = %v", err)
 	}
-	other, err := wire.OpenCodeFreeHeaders("lane-a", "")
+	other, err := wire.OpenCodeFreeHeaders("lane-a", wire.InboundIdentity{})
 	if err != nil {
 		t.Fatalf("OpenCodeFreeHeaders() error = %v", err)
 	}
@@ -130,7 +165,7 @@ func TestOpenCodeFreeSessionIsDerivedRatherThanRemembered(t *testing.T) {
 
 	distinct := map[string]bool{}
 	for _, lane := range []string{"lane-a", "lane-b", "lane-c", "codex-thread:t\x00u"} {
-		headers, err := wire.OpenCodeFreeHeaders(lane, "")
+		headers, err := wire.OpenCodeFreeHeaders(lane, wire.InboundIdentity{})
 		if err != nil {
 			t.Fatalf("OpenCodeFreeHeaders() error = %v", err)
 		}
@@ -153,7 +188,7 @@ func TestOpenCodeFreeSessionIsDerivedRatherThanRemembered(t *testing.T) {
 func TestOpenCodeFreeSessionPrefixCarriesTheGatewaysClock(t *testing.T) {
 	clock := regexp.MustCompile(`^ses_[0-9a-f]{9}ff`)
 	for _, lane := range []string{"lane-a", "lane-b", "codex-thread:t\x00u", ""} {
-		headers, err := wire.OpenCodeFreeHeaders(lane, "")
+		headers, err := wire.OpenCodeFreeHeaders(lane, wire.InboundIdentity{})
 		if err != nil {
 			t.Fatalf("OpenCodeFreeHeaders() error = %v", err)
 		}
@@ -171,7 +206,7 @@ func TestOpenCodeFreeHeadersAreSafeUnderConcurrency(t *testing.T) {
 	requests := make(chan string, callers)
 	for range callers {
 		go func() {
-			headers, err := wire.OpenCodeFreeHeaders("lane-shared", "")
+			headers, err := wire.OpenCodeFreeHeaders("lane-shared", wire.InboundIdentity{})
 			if err != nil {
 				t.Errorf("OpenCodeFreeHeaders() error = %v", err)
 				return
