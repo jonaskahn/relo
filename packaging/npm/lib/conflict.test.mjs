@@ -4,7 +4,7 @@ import { tmpdir } from 'node:os';
 import { delimiter, join } from 'node:path';
 import { test } from 'node:test';
 
-import { candidates, findConflictingRelo } from './conflict.mjs';
+import { candidates, findConflictingRelo, findReloApp, findSetupInstall } from './conflict.mjs';
 
 // reloCommand writes a stub relo command into dir and returns its path.
 function reloCommand(dir, file = 'relo') {
@@ -108,4 +108,50 @@ test('findConflictingRelo is null with no foreign command', (t) => {
 	const empty = tempDir(t, 'empty');
 	assert.equal(findConflictingRelo({ env: { PATH: empty }, nodePlatform: 'linux' }), null);
 	assert.equal(findConflictingRelo({ env: {}, nodePlatform: 'linux' }), null);
+});
+
+test('findReloApp reports the bundle in Applications on macOS', (t) => {
+	const apps = tempDir(t, 'apps');
+	mkdirSync(join(apps, 'Relo.app'), { recursive: true });
+
+	assert.equal(
+		findReloApp({ nodePlatform: 'darwin', applications: apps, home: tempDir(t, 'home') }),
+		join(apps, 'Relo.app')
+	);
+});
+
+test('findReloApp reports the bundle in the user Applications on macOS', (t) => {
+	const home = tempDir(t, 'userhome');
+	mkdirSync(join(home, 'Applications', 'Relo.app'), { recursive: true });
+
+	assert.equal(
+		findReloApp({ nodePlatform: 'darwin', applications: tempDir(t, 'empty'), home }),
+		join(home, 'Applications', 'Relo.app')
+	);
+});
+
+test('findReloApp is null without a bundle, or off macOS', (t) => {
+	const apps = tempDir(t, 'bundled');
+	mkdirSync(join(apps, 'Relo.app'), { recursive: true });
+
+	assert.equal(
+		findReloApp({ nodePlatform: 'darwin', applications: tempDir(t, 'empty'), home: tempDir(t, 'home') }),
+		null
+	);
+	assert.equal(findReloApp({ nodePlatform: 'linux', applications: apps }), null);
+	assert.equal(findReloApp({ nodePlatform: 'win32', applications: apps }), null);
+});
+
+test('findSetupInstall reads the uninstall registry on Windows only', () => {
+	assert.equal(findSetupInstall({ nodePlatform: 'win32', query: () => true }), true);
+	assert.equal(findSetupInstall({ nodePlatform: 'win32', query: () => false }), false);
+	assert.equal(
+		findSetupInstall({
+			nodePlatform: 'linux',
+			query: () => {
+				throw new Error('must not query the registry off Windows');
+			}
+		}),
+		false
+	);
 });

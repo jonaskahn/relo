@@ -3,8 +3,10 @@
 // installers. Two installs would still fight over the name, the home
 // directory, and the ports, so the install refuses when a command this
 // package did not install answers PATH.
-import { accessSync, constants, realpathSync } from 'node:fs';
+import { accessSync, constants, existsSync, realpathSync } from 'node:fs';
 import { delimiter, join, resolve, sep } from 'node:path';
+import { homedir } from 'node:os';
+import { execFileSync } from 'node:child_process';
 
 // candidates lists the relo commands a PATH resolves, in order. Windows
 // installs the app's command as relo.cmd, a shim that starts the GUI
@@ -45,6 +47,53 @@ export function findConflictingRelo({
 		return candidate;
 	}
 	return null;
+}
+
+// appBundles lists where the macOS Relo.app may live. The bundle installs
+// no command on PATH, so the PATH search below never sees it, and a stacked
+// install would fight it over the home directory and the ports.
+export function appBundles({ home = homedir(), applications = '/Applications' } = {}) {
+	return [join(applications, 'Relo.app'), join(home, 'Applications', 'Relo.app')];
+}
+
+// findReloApp returns the first Relo.app bundle on this Mac, or null. The
+// locations and the existence check are parameters so the search can be
+// tested against fixture directories.
+export function findReloApp({
+	nodePlatform = process.platform,
+	home,
+	applications,
+	exists = existsSync
+} = {}) {
+	if (nodePlatform !== 'darwin') return null;
+	for (const app of appBundles({ home, applications })) {
+		if (exists(app)) return app;
+	}
+	return null;
+}
+
+const UNINSTALL_KEYS = [
+	'HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\Relo',
+	'HKLM\\Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\Relo',
+	'HKLM\\Software\\WOW6432Node\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\Relo'
+];
+
+// findSetupInstall reports whether Relo-Setup registered an install. The
+// installer normally adds its shim directory to PATH, which the search above
+// already sees; the registry covers the install that skipped the PATH edit.
+// A registry that cannot be read reads as no install.
+export function findSetupInstall({ nodePlatform = process.platform, query = queryUninstallKey } = {}) {
+	if (nodePlatform !== 'win32') return false;
+	return UNINSTALL_KEYS.some((key) => query(key));
+}
+
+function queryUninstallKey(key) {
+	try {
+		execFileSync('reg', ['query', key], { stdio: 'ignore' });
+		return true;
+	} catch {
+		return false;
+	}
 }
 
 // insideDir reports whether candidate resolves inside dir, following a link
