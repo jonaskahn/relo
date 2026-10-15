@@ -19,7 +19,7 @@ import { fileURLToPath } from 'node:url';
 
 import { expect, parse } from './checksums.mjs';
 import { askStart, quiesce, reloHome } from './daemon.mjs';
-import { findConflictingRelo } from './conflict.mjs';
+import { findConflictingRelo, findReloApp, findSetupInstall } from './conflict.mjs';
 import { fetchBytes } from './download.mjs';
 import { target } from './platform.mjs';
 import { assets, checksumsUrl, prereleaseTag, selectBundle, tagFromArgs, url } from './release.mjs';
@@ -74,6 +74,21 @@ try {
 	if (conflict) {
 		throw new Error(
 			`another Relo install provides the relo command at ${conflict}\n` +
+				'  remove that install first to install this package, or keep using that install instead'
+		);
+	}
+	// Relo.app installs no command on PATH, so the search above never sees
+	// it; Relo-Setup without its PATH entry is invisible the same way.
+	const app = findReloApp();
+	if (app) {
+		throw new Error(
+			`Relo.app is already installed at ${app}\n` +
+				'  remove that install first to install this package, or keep using that install instead'
+		);
+	}
+	if (findSetupInstall()) {
+		throw new Error(
+			'Relo is already installed by Relo-Setup.\n' +
 				'  remove that install first to install this package, or keep using that install instead'
 		);
 	}
