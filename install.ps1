@@ -263,7 +263,7 @@ function Test-Checksum([string] $File, [string] $Sums, [string] $Name) {
 	$want = $null
 	foreach ($line in Get-Content $Sums) {
 		$parts = $line -split '\s+', 2
-		if ($parts.Count -eq 2 -and $parts[1].Trim() -eq $Name) { $want = $parts[0].Trim() }
+		if ($parts.Count -eq 2 -and $parts[1].Trim().TrimStart('*') -eq $Name) { $want = $parts[0].Trim() }
 	}
 	if (-not $want) {
 		Write-Note "no checksum published for $Name; skipping verification"
@@ -598,15 +598,56 @@ Write-Note "Release $ResolvedVersion"
 
 $temp = Join-Path ([System.IO.Path]::GetTempPath()) ("relo-install." + [guid]::NewGuid().ToString('N').Substring(0, 8))
 New-Item -ItemType Directory -Path $temp -Force | Out-Null
-$asset = "relo-windows-$ArchName.exe"
+$rawAsset = "relo-windows-$ArchName.exe"
 
 try {
-	Save-Remote "$Base/$asset" (Join-Path $temp 'relo.exe') $asset
+	# One manifest lists every asset in the release. A release carrying the
+	# raw binary uses it; one carrying only the versioned tarballs falls
+	# back to this host's archive (same rule as the npm installer).
 	try {
 		Save-Remote "$Base/checksums.txt" (Join-Path $temp 'checksums.txt') 'checksums.txt'
-		Test-Checksum (Join-Path $temp 'relo.exe') (Join-Path $temp 'checksums.txt') $asset
 	} catch {
-		Write-Note 'This release publishes no checksums.txt'
+		Fail 'no checksums.txt in the release' @(
+			'No release may be published yet; rerun with -Version <tag> for a published tag.'
+		)
+	}
+	$entries = @{}
+	foreach ($line in Get-Content (Join-Path $temp 'checksums.txt')) {
+		if ($line -match '^[0-9a-fA-F]{64}\s+\*?(.+?)\s*$') { $entries[$Matches[1].Trim()] = $true }
+	}
+	if ($entries.ContainsKey($rawAsset)) {
+		$kind = 'raw'
+		$asset = $rawAsset
+	} else {
+		$kind = 'tarball'
+		$asset = $null
+		foreach ($key in $entries.Keys) {
+			if ($key -match ("^relo-(.+)-windows-" + [regex]::Escape($ArchName) + "\.tar\.gz$")) {
+				$asset = $key
+				$ResolvedVersion = $Matches[1]
+				break
+			}
+		}
+		if (-not $asset) {
+			Fail "no $rawAsset or versioned tarball in the release" @(
+				'No release may be published yet; rerun with -Version <tag> for a published tag.'
+			)
+		}
+	}
+
+	if ($kind -eq 'raw') {
+		Save-Remote "$Base/$asset" (Join-Path $temp 'relo.exe') $asset
+		Test-Checksum (Join-Path $temp 'relo.exe') (Join-Path $temp 'checksums.txt') $asset
+	} else {
+		if (-not (Get-Command tar -ErrorAction SilentlyContinue)) {
+			Fail 'tar is required to install Relo' @('Install tar, then run this installer again.')
+		}
+		Save-Remote "$Base/$asset" (Join-Path $temp 'bundle.tar.gz') $asset
+		Test-Checksum (Join-Path $temp 'bundle.tar.gz') (Join-Path $temp 'checksums.txt') $asset
+		Write-Step "Extracting $asset"
+		& tar -xzf (Join-Path $temp 'bundle.tar.gz') -C $temp
+		if ($LASTEXITCODE -ne 0) { Fail "could not unpack $asset" @() }
+		if (-not (Test-Path (Join-Path $temp 'relo.exe'))) { Fail 'the release archive holds no relo.exe' @() }
 	}
 
 	Write-Section '03' 'Install Relo'

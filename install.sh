@@ -334,7 +334,7 @@ fetch_with_progress() {
 verify_sha() {
 	# verify_sha <file> <checksums> <release name>
 	file="$1"; sums="$2"; name="$3"
-	want="$(awk -v n="$name" '$2 == n { print $1 }' "$sums" | head -n 1)"
+	want="$(awk -v n="$name" '{ f = $2; sub(/^\*/, "", f) } f == n { print $1 }' "$sums" | head -n 1)"
 	if [ -z "$want" ]; then
 		note "no checksum published for $name; skipping verification"
 		return 0
@@ -356,6 +356,22 @@ verify_sha() {
 			"The download was corrupted or tampered with. Nothing was installed."
 	fi
 	done_ "Checksum verified"
+}
+
+select_bundle() {
+	# select_bundle <checksums> <os> <arch>; prints "<kind> <name>"
+	sums="$1"; os="$2"; arch="$3"
+	raw="relo-$os-$arch"
+	if awk -v n="$raw" '{ f = $2; sub(/^\*/, "", f) } f == n { found = 1; exit 0 } END { exit !found }' "$sums"; then
+		printf 'raw %s' "$raw"
+		return 0
+	fi
+	name="$(awk -v os="$os" -v arch="$arch" '{ f = $2; sub(/^\*/, "", f) } f ~ ("^relo-.+-" os "-" arch "\\.tar\\.gz$") { print f; exit }' "$sums")"
+	if [ -n "$name" ]; then
+		printf 'tarball %s' "$name"
+		return 0
+	fi
+	return 1
 }
 
 # -------------------------------------------------------------- the ports ---
@@ -668,13 +684,37 @@ main() {
 	note "Release ${RESOLVED_VERSION}"
 
 	TMP_DIR="$(mktemp -d "${TMPDIR:-/tmp}/relo-install.XXXXXX")"
-	ASSET="relo-$OS-$ARCH"
+	RAW="relo-$OS-$ARCH"
 
-	fetch_with_progress "$BASE/$ASSET" "$TMP_DIR/relo" "$ASSET"
-	if fetch_file "$BASE/checksums.txt" "$TMP_DIR/checksums.txt" 2>/dev/null; then
+	# One manifest lists every asset in the release. A release carrying the
+	# raw binary uses it; one carrying only the versioned tarballs falls
+	# back to this host's archive, whose version is read out of the entry
+	# itself (same rule as the npm installer).
+	if ! fetch_file "$BASE/checksums.txt" "$TMP_DIR/checksums.txt"; then
+		die "no checksums.txt in the release" \
+			"No release may be published yet; rerun with --version <tag> for a published tag."
+	fi
+	if ! picked="$(select_bundle "$TMP_DIR/checksums.txt" "$OS" "$ARCH")"; then
+		die "no $RAW or versioned tarball in the release" \
+			"No release may be published yet; rerun with --version <tag> for a published tag."
+	fi
+	kind="${picked%% *}"; ASSET="${picked#* }"
+	if [ "$kind" = "tarball" ]; then
+		RESOLVED_VERSION="${ASSET#relo-}"
+		RESOLVED_VERSION="${RESOLVED_VERSION%-$OS-$ARCH.tar.gz}"
+	fi
+
+	if [ "$kind" = "raw" ]; then
+		fetch_with_progress "$BASE/$ASSET" "$TMP_DIR/relo" "$ASSET"
 		verify_sha "$TMP_DIR/relo" "$TMP_DIR/checksums.txt" "$ASSET"
 	else
-		note "This release publishes no checksums.txt"
+		have tar || die "tar is required to install Relo" \
+			"Install tar, then run this installer again."
+		fetch_with_progress "$BASE/$ASSET" "$TMP_DIR/bundle.tar.gz" "$ASSET"
+		verify_sha "$TMP_DIR/bundle.tar.gz" "$TMP_DIR/checksums.txt" "$ASSET"
+		step "Extracting $ASSET"
+		tar -xzf "$TMP_DIR/bundle.tar.gz" -C "$TMP_DIR" || die "could not unpack $ASSET"
+		[ -f "$TMP_DIR/relo" ] || die "the release archive holds no relo binary"
 	fi
 
 	section "03" "Install Relo"
