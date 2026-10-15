@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 
-import { REPO, assets, checksumsUrl, prereleaseTag, tagFromArgs, url, version } from './release.mjs';
+import { REPO, assets, checksumsUrl, prereleaseTag, selectBundle, tagFromArgs, tarballFor, url, version } from './release.mjs';
 
 test('an unset tag follows the latest release', () => {
 	assert.deepEqual(assets(), { base: `${REPO}/releases/latest/download`, version: null });
@@ -45,4 +45,38 @@ test('a stable package still follows the latest release', () => {
 	assert.equal(prereleaseTag('0.2.0'), null);
 	assert.equal(prereleaseTag(undefined), null);
 	assert.equal(prereleaseTag(''), null);
+});
+
+test('tarballFor finds this hosts versioned archive inside the manifest', () => {
+	const entries = new Map([
+		['relo-0.2.0-beta.417.4f3a9c21-linux-arm64.tar.gz', 'a'.repeat(64)],
+		['relo-0.2.0-beta.417.4f3a9c21-darwin-arm64.tar.gz', 'b'.repeat(64)],
+		['relo-windows-amd64.exe', 'c'.repeat(64)]
+	]);
+	assert.equal(
+		tarballFor(entries, { os: 'linux', arch: 'arm64' }),
+		'relo-0.2.0-beta.417.4f3a9c21-linux-arm64.tar.gz'
+	);
+	assert.equal(tarballFor(entries, { os: 'windows', arch: 'amd64' }), null);
+	assert.equal(tarballFor(new Map(), { os: 'linux', arch: 'arm64' }), null);
+});
+
+test('selectBundle prefers the raw binary and falls back to the tarball', () => {
+	const tarballs = new Map([['relo-0.2.0-linux-arm64.tar.gz', 'a'.repeat(64)]]);
+	assert.deepEqual(
+		selectBundle(new Map([['relo-linux-arm64', 'd'.repeat(64)]]), {
+			os: 'linux',
+			arch: 'arm64',
+			name: 'relo-linux-arm64'
+		}),
+		{ kind: 'raw', name: 'relo-linux-arm64' }
+	);
+	assert.deepEqual(selectBundle(tarballs, { os: 'linux', arch: 'arm64', name: 'relo-linux-arm64' }), {
+		kind: 'tarball',
+		name: 'relo-0.2.0-linux-arm64.tar.gz'
+	});
+	assert.throws(
+		() => selectBundle(new Map(), { os: 'linux', arch: 'arm64', name: 'relo-linux-arm64' }),
+		/no relo-linux-arm64 or versioned tarball/
+	);
 });

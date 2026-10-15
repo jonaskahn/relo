@@ -53,3 +53,30 @@ export function checksumsUrl(tag = null) {
 export function url(name, tag = null) {
 	return `${assets(tag).base}/${name}`;
 }
+
+// selectBundle names the asset one host downloads from a release manifest:
+// the raw binary when the release carries it, else this host's versioned
+// tarball. It throws naming both when neither is listed, so a failed
+// install says what is missing instead of what a 404 means.
+export function selectBundle(entries, { os, arch, name }) {
+	if (entries.has(name)) return { kind: 'raw', name };
+	const bundle = tarballFor(entries, { os, arch });
+	if (bundle) return { kind: 'tarball', name: bundle };
+	throw new Error(
+		`no ${name} or versioned tarball in the release. ` +
+			'No release may be published yet; rerun the installer with --relo-version <tag> for a published tag, or without it for the latest release.'
+	);
+}
+
+// tarballFor finds the versioned archive a release publishes for one host
+// inside its own checksums manifest. Releases ship one tarball per
+// platform, and the version is read out of the manifest entry itself, so
+// this resolves both a pinned tag and the unpinned latest release without
+// a second fetch.
+export function tarballFor(entries, { os, arch }) {
+	const match = [...entries.keys()].find((name) => {
+		const parts = new RegExp(`^relo-(.+)-${os}-${arch}\\.tar\\.gz$`).exec(name);
+		return parts && version(parts[1]);
+	});
+	return match ?? null;
+}

@@ -22,7 +22,8 @@ import { askStart, quiesce, reloHome } from './daemon.mjs';
 import { findConflictingRelo } from './conflict.mjs';
 import { fetchBytes } from './download.mjs';
 import { target } from './platform.mjs';
-import { assets, checksumsUrl, prereleaseTag, tagFromArgs, url } from './release.mjs';
+import { assets, checksumsUrl, prereleaseTag, selectBundle, tagFromArgs, url } from './release.mjs';
+import { extractBinary } from './archive.mjs';
 
 const packageRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const binaryDir = resolve(packageRoot, 'bin');
@@ -42,10 +43,16 @@ async function fromRelease(tag) {
 	const { version } = assets(tag);
 
 	// One manifest lists every asset in the release, so a single fetch
-	// verifies the binary before anything executable is written.
-	const manifest = await fetchBytes(checksumsUrl(tag), 'checksums.txt');
-	const body = await fetchBytes(url(asset.name, tag), asset.name);
-	expect(parse(manifest), asset.name, body);
+	// verifies the binary before anything executable is written. A release
+	// carrying the raw binary uses it; one carrying only the versioned
+	// tarballs falls back to this host's archive, and the binary inside is
+	// what the launcher beside it already expects.
+	const manifest = parse(await fetchBytes(checksumsUrl(tag), 'checksums.txt'));
+	const pick = selectBundle(manifest, asset);
+	const downloaded = await fetchBytes(url(pick.name, tag), pick.name);
+	expect(manifest, pick.name, downloaded);
+	const inner = asset.os === 'windows' ? 'relo.exe' : 'relo';
+	const body = pick.kind === 'raw' ? downloaded : extractBinary(downloaded, { names: [inner] });
 	const destination = resolve(binaryDir, asset.name);
 	// Quiesced first: on windows the rename below fails over a running exe, and
 	// the new daemon cannot bind a port the old one still serves.
