@@ -2,10 +2,11 @@ name: Beta
 
 # Every green merge to main becomes a beta: daemon binaries built on macOS,
 # published under a prerelease tag, on npm's `beta` dist-tag, and in the tap
-# as its own formula. Windows ships as a raw binary only, no desktop
-# installer. Nothing here writes a stable channel: no release.yml job, no
-# Formula/relo.rb, no npm `latest`, and no appcast entry, so an installed
-# Relo never sees a beta. No macOS app or Linux packages.
+# as its own formula. Every platform ships as a versioned tarball, with the
+# checksums beside it; no raw binaries and no desktop installer. Nothing here
+# writes a stable channel: no release.yml job, no Formula/relo.rb, no npm
+# `latest`, and no appcast entry, so an installed Relo never sees a beta.
+# No macOS app or Linux packages.
 #
 # The version is derived, never committed, so the README badge and the declared
 # versions stay on the release the repository is working towards. It descends
@@ -138,7 +139,6 @@ jobs:
           path: |
             dist/*.tar.gz
             dist/checksums.txt
-            dist/relo-windows-*.exe
           retention-days: 30
 
   release:

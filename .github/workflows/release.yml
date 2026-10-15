@@ -54,18 +54,22 @@ jobs:
           make build-all VERSION=${{ github.ref_name }}
           ver="${{ github.ref_name }}"
           ver="${ver#v}"
-          for os in darwin linux; do
+          for os in darwin linux windows; do
             for arch in arm64 amd64; do
+              ext=""
+              if [ "$os" = "windows" ]; then ext=".exe"; fi
               tmp="$(mktemp -d)"
-              cp "dist/relo-$os-$arch" "$tmp/relo"
-              tar -czf "dist/relo-$ver-$os-$arch.tar.gz" -C "$tmp" relo
+              cp "dist/relo-$os-$arch$ext" "$tmp/relo$ext"
+              tar -czf "dist/relo-$ver-$os-$arch.tar.gz" -C "$tmp" "relo$ext"
               rm -rf "$tmp"
             done
           done
           # shasum, not sha256sum: the latter does not exist on macOS. The
           # output format is the same, so the sha parsing in release-brew.yml
-          # still holds.
-          cd dist && shasum -a 256 relo-* > checksums.txt && cat checksums.txt
+          # still holds. Tarballs only: the release carries no raw binaries,
+          # so every consumer -- brew, npm, the script installers -- reads
+          # the same versioned archives the beta lane already publishes.
+          cd dist && shasum -a 256 relo-*.tar.gz > checksums.txt && cat checksums.txt
 
       - name: Upload binaries
         uses: actions/upload-artifact@v5
@@ -236,7 +240,11 @@ jobs:
           TAG_NAME: ${{ github.ref_name }}
         run: |
           ls release/
-          gh release create "$TAG_NAME" release/* \
+          # An explicit asset list: the merged artifacts still carry the raw
+          # build-all binaries the Linux and Windows packaging jobs consumed,
+          # but the release itself carries only the versioned tarballs, the
+          # checksums beside them, and the desktop installers.
+          gh release create "$TAG_NAME" release/relo-*.tar.gz release/checksums.txt release/Relo-*.zip "release/Relo-Setup-"* \
             --title "$TAG_NAME" \
             --generate-notes \
             --draft
