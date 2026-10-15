@@ -29,6 +29,7 @@ DEV_URL  ?= http://127.0.0.1:$(DEV_PORT)
 	package-linux package-macos package-windows package-all package-clean \
 	test-npm npm-pack ci-npm \
 	release-tag release-check release-current version-bump update-secrets \
+	package-binary \
 	clean
 
 # === help: every target, what it does ===
@@ -199,6 +200,10 @@ package-windows: build-console sync-console
 
 ## every platform package, plus the npm daemon binaries
 package-all: package-clean build-all package-windows package-macos package-linux
+
+## build the package binaries only, into dist/.pkgcache (OS=darwin ARCH=arm64 to narrow)
+package-binary:
+	./scripts/package-binary.sh
 
 ## the installer's own tests
 test-npm:
