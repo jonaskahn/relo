@@ -4,7 +4,7 @@ BINARY   := relo
 BACKEND  := daemon
 CONSOLE := console
 NPM      := $(CURDIR)/packaging/npm
-VERSION ?= 0.1.0
+VERSION ?= 0.1.1
 MACOS_MIN_VERSION ?= 12.0
 COMMIT  ?= $(shell git rev-parse --short HEAD 2>/dev/null || echo none)
 LDFLAGS := -s -w -X github.com/jonaskahn/relo/internal/cli.version=$(VERSION) -X github.com/jonaskahn/relo/internal/cli.commit=$(COMMIT)
@@ -29,6 +29,7 @@ DEV_URL  ?= http://127.0.0.1:$(DEV_PORT)
 	package-linux package-macos package-windows package-all package-clean \
 	test-npm npm-pack ci-npm \
 	release-tag release-check release-current version-bump update-secrets \
+	package-binary \
 	clean
 
 # === help: every target, what it does ===
@@ -199,6 +200,10 @@ package-windows: build-console sync-console
 
 ## every platform package, plus the npm daemon binaries
 package-all: package-clean build-all package-windows package-macos package-linux
+
+## build the package binaries only, into dist/.pkgcache (OS=darwin ARCH=arm64 to narrow)
+package-binary: build-console sync-console
+	./scripts/package-binary.sh
 
 ## the installer's own tests
 test-npm:

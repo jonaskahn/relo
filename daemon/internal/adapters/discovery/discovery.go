@@ -122,11 +122,7 @@ func listRequest(ctx context.Context, target Target, path string) (*http.Request
 		}
 	}
 	if target.OpenCodeFree {
-		free, err := wire.OpenCodeFreeHeaders("listing", "")
-		if err != nil {
-			return nil, err
-		}
-		applyHeaders(request, free)
+		applyHeaders(request, wire.OpenCodeFreeHeaders("listing", wire.InboundIdentity{}))
 	}
 	return request, nil
 }

@@ -34,19 +34,24 @@ fi
 
 mkdir -p "$root/dist"
 
-# The binary the package ships is a build input, not a release artifact, so
-# it lives outside dist/ and never outlasts this run.
-scratch="$(mktemp -d)"
-trap 'rm -rf "$scratch"' EXIT
+# A binary already built for this exact version is reused; the version in the
+# cache path means a version change always misses. Wipe dist/ (make
+# package-clean) or dist/.pkgcache to force a rebuild.
+cache="$root/dist/.pkgcache"
+mkdir -p "$cache"
 
 cd "$root"
 
 for arch in $arches; do
-  binary="$scratch/relo-linux-$arch"
-  echo "building the $arch binary"
-  (cd "$root/daemon" && GOOS=linux GOARCH="$arch" CGO_ENABLED=0 go build -trimpath \
-    -ldflags "-s -w -X github.com/jonaskahn/relo/internal/cli.version=$version" \
-    -o "$binary" ./cmd/relo)
+  binary="$cache/relo-linux-$arch-$version"
+  if [ -x "$binary" ]; then
+    echo "reusing the $arch binary for $version"
+  else
+    echo "building the $arch binary"
+    (cd "$root/daemon" && GOOS=linux GOARCH="$arch" CGO_ENABLED=0 go build -trimpath \
+      -ldflags "-s -w -X github.com/jonaskahn/relo/internal/cli.version=$version" \
+      -o "$binary" ./cmd/relo)
+  fi
 
   for format in deb rpm; do
     # The target is an exact path, so the artifact carries the product name

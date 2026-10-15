@@ -218,15 +218,75 @@ func (s *Server) attemptHeaders(spec attemptSpec, template catalog.Template, tem
 	if !templated || template.ID != catalog.OpenCodeFreeTemplate {
 		return extra, nil
 	}
-	inboundSession := ""
-	if r != nil {
-		inboundSession = r.Header.Get("x-opencode-session")
+	lane := openCodeLane(outcome, r)
+	inbound := s.freeLaneIdentity(r, host)
+	// The genuine affinity travels as-is; only a conversation the client
+	// never named gets the forged session kept per lane.
+	if !wire.ValidSessionID(inbound.Affinity) {
+		inbound.Session = s.freeLaneSession(lane)
 	}
-	free, headerErr := wire.OpenCodeFreeHeaders(openCodeLane(outcome, r), inboundSession)
-	if headerErr != nil {
-		return nil, headerErr
+	return wire.OpenCodeFreeHeaders(lane, inbound), nil
+}
+
+// freeLaneIdentity reads what the inbound client said about itself, so the
+// free lane relays the client's own identity instead of inventing one. The
+// allowlist below is the whole inbound surface: the client key never travels
+// upstream. An operator override fills the project only when the client sent
+// none; otherwise the rotating forged id does.
+func (s *Server) freeLaneIdentity(r *http.Request, host catalog.Provider) wire.InboundIdentity {
+	inbound := wire.InboundIdentity{}
+	if r == nil {
+		return inbound
 	}
-	return free, nil
+	inbound.UserAgent = r.Header.Get("User-Agent")
+	inbound.Affinity = firstHeader(r.Header,
+		"x-session-affinity", "X-Session-Id", "x-opencode-session", "x-opencode-session-id")
+	inbound.Project = r.Header.Get("x-opencode-project")
+	inbound.ParentSessionID = firstHeader(r.Header,
+		"x-opencode-parent-session-id", "x-parent-session-id")
+	if inbound.Project == "" {
+		inbound.Project = host.Headers["x-opencode-project"]
+	}
+	if inbound.Project == "" {
+		inbound.Project = s.freeProject.Get()
+	}
+	return inbound
+}
+
+// firstHeader returns the first non-blank value among the names, which all
+// name the same identity across client generations.
+func firstHeader(header http.Header, names ...string) string {
+	for _, name := range names {
+		if value := strings.TrimSpace(header.Get(name)); value != "" {
+			return value
+		}
+	}
+	return ""
+}
+
+// freeSessionCacheCap bounds the forged lane sessions one daemon keeps. A
+// conversation holds its session while it is recent; an evicted lane simply
+// forges a new one, losing stickiness but never correctness.
+const freeSessionCacheCap = 4096
+
+// freeLaneSession returns the forged session bound to one lane, minting and
+// remembering it on first sight the way a native conversation start mints
+// its session once and speaks on it until the conversation ends.
+func (s *Server) freeLaneSession(lane string) string {
+	s.freeMu.Lock()
+	defer s.freeMu.Unlock()
+	if session, ok := s.freeSessions[lane]; ok {
+		return session
+	}
+	if len(s.freeSessions) >= freeSessionCacheCap {
+		clear(s.freeSessions)
+	}
+	if s.freeSessions == nil {
+		s.freeSessions = make(map[string]string, freeSessionCacheCap)
+	}
+	session := wire.NativeSessionID()
+	s.freeSessions[lane] = session
+	return session
 }
 
 // nolint:funlen

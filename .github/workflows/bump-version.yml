@@ -4,7 +4,9 @@ name: Bump version
 # so the next cycle's betas have to descend from a version above it. This opens
 # the bump as a pull request: the maintainer sees the six declarations that
 # move, and merging it is what starts the next line. Nothing is committed to
-# main directly, because a merge is the event that publishes a beta.
+# main directly, because a merge is the event that publishes a beta. The branch
+# is never force-pushed: a re-run resumes the branch a previous run pushed and
+# only adds the missing commit, so review state survives.
 #
 # Betas are prereleases and a version bump belongs to a release, so a beta never
 # opens one.
@@ -37,11 +39,33 @@ jobs:
           echo "branch=$branch" >> "$GITHUB_OUTPUT"
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git checkout -b "$branch"
+          # The bump above only named the version; drop it so the branch
+          # handling below starts from a clean tree.
+          git checkout -- .
+          # Resume a branch a previous run already pushed instead of
+          # overwriting it: this job opens a PR, it never rewrites history.
+          if git ls-remote --exit-code --heads origin "$branch" >/dev/null 2>&1; then
+            echo "branch $branch already exists; resuming it"
+            git fetch origin "$branch"
+            git checkout "$branch"
+          else
+            git checkout -b "$branch"
+          fi
+          # Explicit version, so re-applying it onto the resumed branch is a
+          # no-op when the previous run already committed it there.
+          ./scripts/version.py bump "$next" >/dev/null
           git add Makefile daemon/internal/cli/root.go console/package.json \
             console/package-lock.json packaging/npm/package.json README.md
-          git commit -m "chore: bump to $next"
-          git push --force origin "$branch"
+          # A re-run whose bump is already committed has nothing to add.
+          if git diff --cached --quiet; then
+            echo "bump to $next already committed"
+          else
+            git commit -m "chore: bump to $next"
+          fi
+          git push origin "$branch" || {
+            echo "::error::branch $branch moved since this run started; refusing to overwrite it." >&2
+            exit 1
+          }
 
       - name: Open the pull request
         env:
@@ -64,4 +88,7 @@ jobs:
             sort above the release they descend from.
 
             \`./scripts/version.py check\` reads the six declarations; this PR is
-            its own diff."
+            its own diff." || {
+            echo "::error::gh pr create failed. Enable Settings > Actions > General > Workflow permissions > 'Allow GitHub Actions to create and approve pull requests', then re-run this job." >&2
+            exit 1
+          }

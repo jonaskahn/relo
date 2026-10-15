@@ -2,11 +2,9 @@
 package wire
 
 import (
-	"crypto/rand"
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
-	"fmt"
 	"net/url"
 	"regexp"
 	"strings"
@@ -25,38 +23,61 @@ const freeIdentifierAlphabet = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijkl
 // so two clients that name the same conversation cannot land on one session.
 const freeSessionDomain = "relo/opencode-free/session/v1\x00"
 
-// freeClientUserAgent identifies the request as the OpenCode client the free
-// lane serves. The gateway refuses a turn whose User-Agent carries no
-// "opencode/" marker, and this is the only header it reads for the client's
-// identity; the project, session aliases, and accept below go out because the
-// client sends them, not because the lane asks for them.
+// freeClientUserAgent is the fallback identity for callers that are not an
+// opencode client. The gateway refuses a turn whose User-Agent carries no
+// "opencode/" marker, so a request that arrives without one cannot go out
+// without one either; a real client's own agent is always preferred.
 const freeClientUserAgent = "opencode/latest/2.0.27/cli"
 
-// freeClientProject is the project marker a current client sends. The lane
-// accepts any value once the User-Agent carries its marker, but the header is
-// part of the client's identity and goes out as the client sends it.
-const freeClientProject = "830e1c56fd90dc478c00038a574f71ce499ac237"
-
 // OpenCodeFreeHeaders returns the signed-out CLI headers, with one session
-// per conversation lane and a fresh message identifier for each attempt.
-func OpenCodeFreeHeaders(lane, inboundSession string) (map[string]string, error) {
-	request, err := freeRequestID()
-	if err != nil {
-		return nil, err
+// per conversation lane and a fresh message identifier for each attempt. The
+// inbound identity is relayed, never invented: the client's own agent,
+// affinity, project, and parent travel when present, and only the gaps are
+// filled — the agent from the fallback above, the project omitted, the
+// session from the caller's forged value or derived from the lane.
+func OpenCodeFreeHeaders(lane string, id InboundIdentity) map[string]string {
+	session := id.Session
+	if session == "" {
+		if ValidSessionID(id.Affinity) {
+			session = id.Affinity
+		} else {
+			session = freeSessionID(lane, "")
+		}
 	}
-	session := freeSessionID(lane, inboundSession)
-	return map[string]string{
+	request := NativeRequestID()
+	headers := map[string]string{
 		"Authorization":         "Bearer public",
-		"User-Agent":            freeClientUserAgent,
+		"User-Agent":            freeAgent(id.UserAgent),
 		"x-opencode-client":     "cli",
-		"x-opencode-project":    freeClientProject,
 		"x-opencode-session":    session,
 		"x-opencode-session-id": session,
 		"x-session-affinity":    session,
 		"x-session-id":          session,
 		"x-opencode-request":    request,
 		"Accept":                "*/*",
-	}, nil
+	}
+	// The project travels only when known: inbound, or operator-configured.
+	// A forged rotating id fills the gap upstream of this function; a
+	// hardcoded one would impersonate a stranger's repository.
+	if project := strings.TrimSpace(id.Project); project != "" {
+		headers["x-opencode-project"] = project
+	}
+	// Forks share the parent's affinity: both spellings travel when the
+	// client named its parent, the way the native client sends them.
+	if parent := strings.TrimSpace(id.ParentSessionID); parent != "" {
+		headers["x-opencode-parent-session-id"] = parent
+		headers["x-parent-session-id"] = parent
+	}
+	return headers
+}
+
+// freeAgent prefers the inbound agent when it identifies as an opencode
+// client, and falls back to the pinned one otherwise.
+func freeAgent(inbound string) string {
+	if hasOpenCodeMarker(inbound) {
+		return inbound
+	}
+	return freeClientUserAgent
 }
 
 // freeSessionID is the session one conversation is sent on. It is derived from
@@ -80,16 +101,6 @@ func freeSessionID(lane, inboundSession string) string {
 	return "ses_" + hex.EncodeToString(prefix[:6]) + freeIdentifierTail(digest[6:20])
 }
 
-// freeRequestID names one attempt. Every attempt gets its own, so a retry is
-// never mistaken for the request it replaces.
-func freeRequestID() (string, error) {
-	var random [20]byte
-	if _, err := rand.Read(random[:]); err != nil {
-		return "", fmt.Errorf("create an OpenCode identifier: %w", err)
-	}
-	return "msg_" + hex.EncodeToString(random[:6]) + freeIdentifierTail(random[6:20]), nil
-}
-
 func freeIdentifierTail(digest []byte) string {
 	var out strings.Builder
 	out.Grow(len(digest))
@@ -99,9 +110,12 @@ func freeIdentifierTail(digest []byte) string {
 	return out.String()
 }
 
-// freeLaneTools are the declarations the signed-out gateway inspects on every
-// model except the one it answers without tools. A plain chat turn carries
-// none of them, so the adaptation below declares exactly these.
+// freeLaneTools are the declarations the signed-out gateway inspects when a
+// turn declares tools but misses one of these names. They are appended only
+// then: a turn that declares nothing travels as it came, because the appended
+// declarations plus tool_choice:none are fingerprinted as non-OpenCode
+// traffic and answered 403 FreeTierError (observed live on title-generation
+// turns, which the native client sends tool-free).
 var freeLaneTools = []string{"bash", "glob", "grep", "read"}
 
 // freeMinMaxTokens is the smallest output ceiling the gateway accepts. A client
@@ -302,36 +316,24 @@ func shortReplayedCalls(req *inference.Request, alias func(string) string) {
 }
 
 // OpenCodeFreeRequest returns the request the signed-out gateway accepts. A
-// turn without the declarations it inspects is refused, so missing names are
-// appended as unavailable tools on a copy; the caller's request is never
-// mutated because it is shared between route candidates. Only the exact
-// lowercase names satisfy the lane, so differently-cased client tools stay
-// and the missing lowercase declarations are still appended. Real tools and
-// an explicit tool choice are left alone, and a tool-free chat turn forbids
-// tool calls the way the working client does. A schema the gateway refuses, an
-// output ceiling below its floor, and a tool name past its limit are corrected
-// on the same copy. The returned map names each shortened tool again on the
-// answer, and is empty when the gateway accepts every name.
+// turn that declares tools but misses an inspected name gains it as an
+// unavailable tool on a copy; the caller's request is never
+// mutated because it is shared between route candidates. A turn that
+// declares nothing travels as it came: the appended declarations plus a
+// forbidding tool choice are what the gateway answers 403 FreeTierError to.
+// Only the exact lowercase names satisfy the lane, so differently-cased client
+// tools stay and the missing lowercase declarations are still appended. Real
+// tools and an explicit tool choice are left alone, and a tool-free turn
+// carries no declarations and no choice, the way the working client sends
+// it. A schema the gateway refuses, an output ceiling below its floor, and a tool name past its limit
+// are corrected on the same copy. The returned map names each shortened tool
+// again on the answer, and is empty when the gateway accepts every name.
 func OpenCodeFreeRequest(req *inference.Request, format catalog.APIFormat) (*inference.Request, map[string]string) {
 	if req == nil {
 		return nil, nil
 	}
 	copied := *req
-	copied.Tools = append([]inference.Tool(nil), req.Tools...)
-	present := make(map[string]bool, len(req.Tools))
-	for _, tool := range req.Tools {
-		present[tool.Name] = true
-	}
-	for _, want := range freeLaneTools {
-		if present[want] {
-			continue
-		}
-		copied.Tools = append(copied.Tools, inference.Tool{
-			Name:        want,
-			Description: "This tool is currently unavailable and must not be used.",
-			Parameters:  json.RawMessage(`{"type":"object","properties":{}}`),
-		})
-	}
+	copied.Tools = withFreeLaneTools(req.Tools)
 	// The schemas are cleaned after the declarations are appended, so a lane tool
 	// added later is cleaned as well as one a client sent.
 	for index := range copied.Tools {
@@ -340,11 +342,35 @@ func OpenCodeFreeRequest(req *inference.Request, format catalog.APIFormat) (*inf
 	if copied.MaxTokens > 0 && copied.MaxTokens < freeMinMaxTokens {
 		copied.MaxTokens = freeMinMaxTokens
 	}
-	if len(req.Tools) == 0 && len(copied.Tools) > 0 && req.ToolChoice == nil &&
-		format == catalog.FormatOpenAIChat {
-		copied.ToolChoice = &inference.ToolChoice{Mode: inference.ToolChoiceNone}
-	}
 	return &copied, shortToolNames(&copied)
+}
+
+// withFreeLaneTools returns the declarations the lane inspects: the client's
+// own tools plus the missing lowercase names as unavailable placeholders. A
+// tool-free turn keeps no declarations: appending the lane tools there is
+// what the gateway answers 403 to, so the turn travels exactly as the client
+// sent it. With nothing appended, the tool_choice:none rule above cannot
+// fire either.
+func withFreeLaneTools(tools []inference.Tool) []inference.Tool {
+	if len(tools) == 0 {
+		return tools
+	}
+	out := append([]inference.Tool(nil), tools...)
+	present := make(map[string]bool, len(tools))
+	for _, tool := range tools {
+		present[tool.Name] = true
+	}
+	for _, want := range freeLaneTools {
+		if present[want] {
+			continue
+		}
+		out = append(out, inference.Tool{
+			Name:        want,
+			Description: "This tool is currently unavailable and must not be used.",
+			Parameters:  json.RawMessage(`{"type":"object","properties":{}}`),
+		})
+	}
+	return out
 }
 
 // OpenCodeGateway reports whether baseURL reaches an OpenCode gateway lane.

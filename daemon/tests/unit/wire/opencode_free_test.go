@@ -43,37 +43,32 @@ func TestOpenCodeFreeIsNotOpenCodeGo(t *testing.T) {
 	}
 }
 
-// A plain chat turn carries no tools, which the free lane refuses, so the
-// adaptation declares the inspected names and forbids tool calls on a copy.
+// A tool-free turn travels as the client sent it: the gateway answers the
+// appended lane declarations plus a forbidding choice with 403 FreeTierError,
+// while the bare turn is served (observed live on title generation).
 func TestOpenCodeFreeRequestDeclaresToolsForAToolFreeChatTurn(t *testing.T) {
 	original := &inference.Request{Model: "mimo-v2.6-flash-free"}
 	got, _ := wire.OpenCodeFreeRequest(original, catalog.FormatOpenAIChat)
 	if len(original.Tools) != 0 {
 		t.Fatalf("original tools = %v, want the caller's request untouched", original.Tools)
 	}
-	names := map[string]bool{}
-	for _, tool := range got.Tools {
-		names[tool.Name] = true
+	if len(got.Tools) != 0 {
+		t.Fatalf("tools = %v, want nothing appended to a tool-free turn", got.Tools)
 	}
-	for _, want := range []string{"bash", "glob", "grep", "read"} {
-		if !names[want] {
-			t.Fatalf("tools = %v, want the declaration the lane inspects", got.Tools)
-		}
-	}
-	if got.ToolChoice == nil || got.ToolChoice.Mode != inference.ToolChoiceNone {
-		t.Fatalf("tool choice = %+v, want tool calls forbidden", got.ToolChoice)
+	if got.ToolChoice != nil {
+		t.Fatalf("tool choice = %+v, want no choice on a tool-free turn", got.ToolChoice)
 	}
 	if got.Model != original.Model {
 		t.Fatalf("model = %q, want the routed model kept", got.Model)
 	}
 }
 
-// The Responses wire answers the same declarations without a tool choice,
-// which is the shape the working client sends there.
+// The Responses wire answers a tool-free turn the same bare way, which is
+// the shape the working client sends there.
 func TestOpenCodeFreeRequestDeclaresToolsWithoutChoiceOnResponses(t *testing.T) {
 	got, _ := wire.OpenCodeFreeRequest(&inference.Request{}, catalog.FormatOpenAIResp)
-	if len(got.Tools) != 4 {
-		t.Fatalf("tools = %v, want the four declarations the lane inspects", got.Tools)
+	if len(got.Tools) != 0 {
+		t.Fatalf("tools = %v, want nothing appended to a tool-free turn", got.Tools)
 	}
 	if got.ToolChoice != nil {
 		t.Fatalf("tool choice = %+v, want the Responses shape untouched", got.ToolChoice)

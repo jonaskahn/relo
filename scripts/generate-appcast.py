@@ -59,14 +59,24 @@ def load_or_create_channel(appcast_path):
 
 
 def ensure_release_is_new(channel, build, archive_url):
+    """Raise on conflict; return True when this exact release is already present.
+
+    A re-run of publish-appcast.yml for an already-published tag passes the
+    same build and URL, so that exact duplicate is the success state, not an
+    error. Anything partial (same build under a new URL, or the URL reused by
+    a different build) is still a conflict.
+    """
     for item in channel.findall("item"):
         existing_build = item.findtext(sparkle_tag("version"))
         enclosure = item.find("enclosure")
         existing_url = enclosure.get("url") if enclosure is not None else None
+        if existing_build == build and existing_url == archive_url:
+            return True
         if existing_build == build:
             raise ValueError(f"Appcast already contains build {build}.")
         if existing_url == archive_url:
             raise ValueError(f"Appcast already contains enclosure URL {archive_url}.")
+    return False
 
 
 def build_item(arguments):
@@ -119,7 +129,9 @@ def write_atomically(tree, appcast_path):
 def main():
     arguments = parse_arguments()
     tree, channel = load_or_create_channel(arguments.appcast_path)
-    ensure_release_is_new(channel, arguments.build, arguments.archive_url)
+    if ensure_release_is_new(channel, arguments.build, arguments.archive_url):
+        print(f"Appcast already contains {arguments.archive_url}; nothing to do.")
+        return
     existing_items = channel.findall("item")
     insert_index = list(channel).index(existing_items[0]) if existing_items else len(channel)
     channel.insert(insert_index, build_item(arguments))

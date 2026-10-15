@@ -120,10 +120,13 @@ rm -rf "$app"
 mkdir -p "$app/Contents/MacOS" "$app/Contents/Resources" "$root/dist"
 
 # The per-architecture binaries are lipo inputs, not release artifacts: the
-# zips carry the finished app, so the loose binaries live outside dist/ and
-# never outlast this run.
+# zips carry the finished app. A binary already built for this exact version
+# is reused from dist/.pkgcache; the version in the path means a version
+# change always misses. Wipe dist/ (make package-clean) to force a rebuild.
 scratch="$(mktemp -d)"
 trap 'rm -rf "$scratch"' EXIT
+cache="$root/dist/.pkgcache"
+mkdir -p "$cache"
 
 # The internal linker's -macos flag exists only on newer Go (1.27+ writes
 # minos 13.0 by default); older linkers lack the flag and already target the
@@ -135,18 +138,23 @@ if go tool link -h 2>&1 | grep -q -- "-macos"; then
 fi
 
 for arch in arm64 amd64; do
-  echo "building the $arch binary"
-  (cd "$root/daemon" && GOOS=darwin GOARCH="$arch" CGO_ENABLED=0 go build -trimpath \
-    -ldflags "-s -w$macos_ldflag -X github.com/jonaskahn/relo/internal/cli.version=$version" \
-    -o "$scratch/relo-darwin-$arch" ./cmd/relo)
-  slice_minos="$(vtool -show-build "$scratch/relo-darwin-$arch" | awk '$1 == "minos" { print $2 }' | sort -Vu | tail -n 1)"
+  binary="$cache/relo-darwin-$arch-$version"
+  if [ -x "$binary" ]; then
+    echo "reusing the $arch binary for $version"
+  else
+    echo "building the $arch binary"
+    (cd "$root/daemon" && GOOS=darwin GOARCH="$arch" CGO_ENABLED=0 go build -trimpath \
+      -ldflags "-s -w$macos_ldflag -X github.com/jonaskahn/relo/internal/cli.version=$version" \
+      -o "$binary" ./cmd/relo)
+  fi
+  slice_minos="$(vtool -show-build "$binary" | awk '$1 == "minos" { print $2 }' | sort -Vu | tail -n 1)"
   if [ "$slice_minos" != "$macos_min" ]; then
     echo "relo-darwin-$arch targets macOS $slice_minos, want $macos_min" >&2
     exit 1
   fi
 done
 lipo -create -output "$app/Contents/MacOS/Relo" \
-  "$scratch/relo-darwin-arm64" "$scratch/relo-darwin-amd64"
+  "$cache/relo-darwin-arm64-$version" "$cache/relo-darwin-amd64-$version"
 chmod +x "$app/Contents/MacOS/Relo"
 
 # shellcheck source=sparkle-keys.sh
@@ -269,7 +277,7 @@ notarize_zip "$root/dist/Relo-$version-universal.zip" "$root/dist"
 # the first zip holds: only the two executables differ.
 mkdir -p "$scratch/arm64"
 cp -R "$app" "$scratch/arm64/Relo.app"
-  cp "$scratch/relo-darwin-arm64" "$scratch/arm64/Relo.app/Contents/MacOS/Relo"
+  cp "$cache/relo-darwin-arm64-$version" "$scratch/arm64/Relo.app/Contents/MacOS/Relo"
 cp "$scratch/ReloLauncher-arm64" "$scratch/arm64/Relo.app/Contents/MacOS/ReloLauncher"
 chmod +x "$scratch/arm64/Relo.app/Contents/MacOS/Relo" "$scratch/arm64/Relo.app/Contents/MacOS/ReloLauncher"
 sign_outer "$scratch/arm64/Relo.app"
