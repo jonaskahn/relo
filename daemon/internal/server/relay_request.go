@@ -242,10 +242,7 @@ func (s *Server) attemptHeaders(spec attemptSpec, template catalog.Template, tem
 	if inbound.Project == "" {
 		inbound.Project = s.freeProject.Get()
 	}
-	free, headerErr := wire.OpenCodeFreeHeaders(lane, inbound)
-	if headerErr != nil {
-		return nil, headerErr
-	}
+	free := wire.OpenCodeFreeHeaders(lane, inbound)
 	return free, nil
 }
 

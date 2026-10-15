@@ -1,6 +1,8 @@
 package wire
 
 import (
+	"errors"
+	"strings"
 	"testing"
 	"time"
 )
@@ -23,6 +25,49 @@ func TestNativeIdentifierBodyMatchesTheClient(t *testing.T) {
 	}
 }
 
+// failingReader stands in for exhausted randomness, the only way the
+// fallback sources below are exercised.
+type failingReader struct{}
+
+func (failingReader) Read([]byte) (int, error) { return 0, errors.New("no randomness") }
+
+// TestIdentifierMintSurvivesRandomnessFailure covers the fallback that keeps
+// minting a shape-correct identifier when crypto randomness fails.
+func TestIdentifierMintSurvivesRandomnessFailure(t *testing.T) {
+	previous := randSource
+	randSource = failingReader{}
+	defer func() { randSource = previous }()
+	for _, id := range []string{NativeSessionID(), NativeRequestID()} {
+		if !ValidSessionID(id) && !(strings.HasPrefix(id, "msg_") && len(id) == 30) {
+			t.Fatalf("id = %q, want a shape-correct fallback", id)
+		}
+	}
+	if got := randInt63(1021); got != 1021/2 {
+		t.Fatalf("randInt63 = %d, want the middle of the range", got)
+	}
+}
+
+// TestProjectForgeKeepsTheOldIDWithoutRandomness covers a rotation attempt
+// with no randomness to mint from: the current id stays instead of blanking.
+func TestProjectForgeKeepsTheOldIDWithoutRandomness(t *testing.T) {
+	previous := randSource
+	now := time.Now()
+	forge := &ProjectForge{}
+	forge.now = func() time.Time { return now }
+	first := forge.Get()
+	if first == "" {
+		t.Fatal("want an initial id from live randomness")
+	}
+	randSource = failingReader{}
+	defer func() { randSource = previous }()
+	now = forge.rotateAt.Add(time.Second)
+	if got := forge.Get(); got != first {
+		t.Fatalf("project = %q, want the previous %q kept", got, first)
+	}
+}
+
+// stable inside an epoch, fresh across one, every interval inside the bound,
+// and the schedule actually varying instead of fixed.
 // TestProjectForgeRotatesOnARandomSchedule covers the 3-20 minute rotation:
 // stable inside an epoch, fresh across one, every interval inside the bound,
 // and the schedule actually varying instead of fixed.

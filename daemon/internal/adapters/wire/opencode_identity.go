@@ -11,6 +11,7 @@ package wire
 import (
 	"crypto/rand"
 	"encoding/hex"
+	"io"
 	mathrand "math/rand"
 	"strings"
 	"sync"
@@ -58,6 +59,10 @@ var fallbackRand = struct {
 	source *mathrand.Rand
 }{source: mathrand.New(mathrand.NewSource(time.Now().UnixNano()))}
 
+// randSource is crypto randomness unless a test replaces it, which is the
+// only way the failure fallbacks below are exercised.
+var randSource io.Reader = rand.Reader
+
 // nativeMint mints one identifier body with the current clock. Crypto
 // randomness is effectively infallible; a failure still returns a
 // shape-correct body from the fallback source rather than no identifier.
@@ -73,7 +78,7 @@ func nativeMint(descending bool) string {
 	nativeClock.Unlock()
 
 	tail := make([]byte, nativeIdentifierTail)
-	if _, err := rand.Read(tail); err != nil {
+	if _, err := io.ReadFull(randSource, tail); err != nil {
 		fallbackRand.Lock()
 		for i := range tail {
 			tail[i] = byte(fallbackRand.source.Intn(256))
@@ -131,7 +136,7 @@ func (p *ProjectForge) Get() string {
 	defer p.mu.Unlock()
 	if p.current == "" || !now.Before(p.rotateAt) {
 		raw := make([]byte, projectForgeIDLength/2)
-		if _, err := rand.Read(raw); err != nil {
+		if _, err := io.ReadFull(randSource, raw); err != nil {
 			return p.current
 		}
 		p.current = hex.EncodeToString(raw)
@@ -144,7 +149,7 @@ func (p *ProjectForge) Get() string {
 // middle of the range when randomness is unavailable.
 func randInt63(max int64) int64 {
 	raw := make([]byte, 8)
-	if _, err := rand.Read(raw); err != nil {
+	if _, err := io.ReadFull(randSource, raw); err != nil {
 		return max / 2
 	}
 	var value int64

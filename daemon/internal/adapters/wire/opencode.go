@@ -35,7 +35,7 @@ const freeClientUserAgent = "opencode/latest/2.0.27/cli"
 // affinity, project, and parent travel when present, and only the gaps are
 // filled — the agent from the fallback above, the project omitted, the
 // session from the caller's forged value or derived from the lane.
-func OpenCodeFreeHeaders(lane string, id InboundIdentity) (map[string]string, error) {
+func OpenCodeFreeHeaders(lane string, id InboundIdentity) map[string]string {
 	session := id.Session
 	if session == "" {
 		if ValidSessionID(id.Affinity) {
@@ -68,7 +68,7 @@ func OpenCodeFreeHeaders(lane string, id InboundIdentity) (map[string]string, er
 		headers["x-opencode-parent-session-id"] = parent
 		headers["x-parent-session-id"] = parent
 	}
-	return headers, nil
+	return headers
 }
 
 // freeAgent prefers the inbound agent when it identifies as an opencode
