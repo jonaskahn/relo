@@ -418,7 +418,12 @@ func zenDeclares(declared []any, name string) bool {
 }
 
 func zenRefusal(r *http.Request, body map[string]any) string {
-	if !zenToolsSatisfyLane(body) {
+	// A turn that declares tools must name the lane's file tools; a turn
+	// that declares none travels bare, the way the working client sends
+	// title generation. The appended declarations plus a forbidding choice
+	// are what the live gateway answers 403 to, so the mock only inspects
+	// turns that declare something.
+	if _, present := body["tools"]; present && !zenToolsSatisfyLane(body) {
 		return "the free lane requires the client to declare its file tools"
 	}
 	if r.Header.Get("Authorization") != "Bearer public" {
@@ -659,8 +664,9 @@ func TestZenFreeServesACompleteAnswerFromAStreamOnlyGateway(t *testing.T) {
 }
 
 // TestZenFreeDeclaresToolsForAToolFreeTurn covers the plain-chat symptom:
-// the client sent no tools, so Relo declares the names the lane inspects
-// rather than forwarding the refusal the gateway would answer.
+// the client sent no tools, so the turn travels as it came. Appending the
+// lane declarations plus a forbidding choice is fingerprinted as non-OpenCode
+// traffic and answered 403 FreeTierError live, while the bare turn is served.
 func TestZenFreeDeclaresToolsForAToolFreeTurn(t *testing.T) {
 	t.Run("a chat model answers a tool-free turn", func(t *testing.T) {
 		gateway := newZenGateway(t, zenChatStream)
@@ -672,14 +678,11 @@ func TestZenFreeDeclaresToolsForAToolFreeTurn(t *testing.T) {
 			body, _ := io.ReadAll(response.Body)
 			t.Fatalf("status = %d, body = %s", response.StatusCode, body)
 		}
-		declared, _ := gateway.last.body["tools"].([]any)
-		for _, want := range zenLaneTools {
-			if !zenDeclares(declared, want) {
-				t.Fatalf("upstream tools = %v, want the declaration the lane inspects", gateway.last.body["tools"])
-			}
+		if tools, present := gateway.last.body["tools"]; present {
+			t.Fatalf("upstream tools = %v, want no declarations on a tool-free turn", tools)
 		}
-		if choice, _ := gateway.last.body["tool_choice"].(string); choice != "none" {
-			t.Fatalf("tool_choice = %v, want tool calls forbidden", gateway.last.body["tool_choice"])
+		if choice, present := gateway.last.body["tool_choice"]; present {
+			t.Fatalf("tool_choice = %v, want no choice on a tool-free turn", choice)
 		}
 		body, _ := io.ReadAll(response.Body)
 		if !strings.Contains(string(body), "OK") {
@@ -702,8 +705,8 @@ func TestZenFreeDeclaresToolsForAToolFreeTurn(t *testing.T) {
 		if gateway.last.path != responsesWire {
 			t.Fatalf("path = %q, want the responses wire this model serves", gateway.last.path)
 		}
-		if !zenToolsSatisfyLane(gateway.last.body) {
-			t.Fatalf("upstream tools = %v, want the declarations the lane inspects", gateway.last.body["tools"])
+		if tools, present := gateway.last.body["tools"]; present {
+			t.Fatalf("upstream tools = %v, want no declarations on a tool-free turn", tools)
 		}
 	})
 

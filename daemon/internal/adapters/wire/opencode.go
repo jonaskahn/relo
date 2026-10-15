@@ -110,9 +110,12 @@ func freeIdentifierTail(digest []byte) string {
 	return out.String()
 }
 
-// freeLaneTools are the declarations the signed-out gateway inspects on every
-// model except the one it answers without tools. A plain chat turn carries
-// none of them, so the adaptation below declares exactly these.
+// freeLaneTools are the declarations the signed-out gateway inspects when a
+// turn declares tools but misses one of these names. They are appended only
+// then: a turn that declares nothing travels as it came, because the appended
+// declarations plus tool_choice:none are fingerprinted as non-OpenCode
+// traffic and answered 403 FreeTierError (observed live on title-generation
+// turns, which the native client sends tool-free).
 var freeLaneTools = []string{"bash", "glob", "grep", "read"}
 
 // freeMinMaxTokens is the smallest output ceiling the gateway accepts. A client
@@ -313,35 +316,44 @@ func shortReplayedCalls(req *inference.Request, alias func(string) string) {
 }
 
 // OpenCodeFreeRequest returns the request the signed-out gateway accepts. A
-// turn without the declarations it inspects is refused, so missing names are
-// appended as unavailable tools on a copy; the caller's request is never
-// mutated because it is shared between route candidates. Only the exact
-// lowercase names satisfy the lane, so differently-cased client tools stay
-// and the missing lowercase declarations are still appended. Real tools and
-// an explicit tool choice are left alone, and a tool-free chat turn forbids
-// tool calls the way the working client does. A schema the gateway refuses, an
-// output ceiling below its floor, and a tool name past its limit are corrected
-// on the same copy. The returned map names each shortened tool again on the
-// answer, and is empty when the gateway accepts every name.
+// turn that declares tools but misses an inspected name gains it as an
+// unavailable tool on a copy; the caller's request is never
+// mutated because it is shared between route candidates. A turn that
+// declares nothing travels as it came: the appended declarations plus a
+// forbidding tool choice are what the gateway answers 403 FreeTierError to.
+// Only the exact lowercase names satisfy the lane, so differently-cased client
+// tools stay and the missing lowercase declarations are still appended. Real
+// tools and an explicit tool choice are left alone, and a tool-free turn
+// carries no declarations and no choice, the way the working client sends
+// it. A schema the gateway refuses, an output ceiling below its floor, and a tool name past its limit
+// are corrected on the same copy. The returned map names each shortened tool
+// again on the answer, and is empty when the gateway accepts every name.
 func OpenCodeFreeRequest(req *inference.Request, format catalog.APIFormat) (*inference.Request, map[string]string) {
 	if req == nil {
 		return nil, nil
 	}
 	copied := *req
 	copied.Tools = append([]inference.Tool(nil), req.Tools...)
-	present := make(map[string]bool, len(req.Tools))
-	for _, tool := range req.Tools {
-		present[tool.Name] = true
-	}
-	for _, want := range freeLaneTools {
-		if present[want] {
-			continue
+	// A tool-free turn keeps no declarations: appending the lane tools here
+	// is what the gateway answers 403 to, so only a turn that already
+	// declares tools gains the missing lowercase names. With nothing
+	// appended, the tool_choice:none rule below cannot fire either, and the
+	// turn travels exactly as the client sent it.
+	if len(req.Tools) > 0 {
+		present := make(map[string]bool, len(req.Tools))
+		for _, tool := range req.Tools {
+			present[tool.Name] = true
 		}
-		copied.Tools = append(copied.Tools, inference.Tool{
-			Name:        want,
-			Description: "This tool is currently unavailable and must not be used.",
-			Parameters:  json.RawMessage(`{"type":"object","properties":{}}`),
-		})
+		for _, want := range freeLaneTools {
+			if present[want] {
+				continue
+			}
+			copied.Tools = append(copied.Tools, inference.Tool{
+				Name:        want,
+				Description: "This tool is currently unavailable and must not be used.",
+				Parameters:  json.RawMessage(`{"type":"object","properties":{}}`),
+			})
+		}
 	}
 	// The schemas are cleaned after the declarations are appended, so a lane tool
 	// added later is cleaned as well as one a client sent.
