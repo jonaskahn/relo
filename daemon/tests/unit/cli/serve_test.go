@@ -106,7 +106,10 @@ func TestServe(t *testing.T) {
 			t.Fatalf("occupy the port: %v", err)
 		}
 		defer func() { _ = listener.Close() }()
-		err = platform.Serve(context.Background(), platform.Options{Home: home, Port: busy})
+		logger, _ := testkit.TestLogger(t)
+		err = platform.Serve(context.Background(), platform.Options{
+			Home: home, Port: busy, Logger: logger,
+		})
 		if err == nil {
 			t.Fatal("Serve() error = nil, want a bind failure")
 		}
