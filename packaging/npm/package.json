@@ -40,6 +40,7 @@
 	},
 	"files": [
 		"bin/relo.mjs",
+		"lib/archive.mjs",
 		"lib/checksums.mjs",
 		"lib/conflict.mjs",
 		"lib/daemon.mjs",
