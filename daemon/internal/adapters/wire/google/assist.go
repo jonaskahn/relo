@@ -14,7 +14,6 @@ import (
 	"time"
 
 	"github.com/jonaskahn/relo/internal/adapters/antigravity"
-	"github.com/jonaskahn/relo/internal/adapters/wire"
 	"github.com/jonaskahn/relo/internal/inference"
 )
 
@@ -505,7 +504,7 @@ type sessionIdentity struct {
 	step       int
 }
 
-func finishAssist(payload *requestPayload, req *inference.Request, turn assistTurn, opts wire.CodecOpts) sessionIdentity {
+func finishAssist(payload *requestPayload, req *inference.Request, turn assistTurn) sessionIdentity {
 	if payload.SystemInstruction != nil {
 		payload.SystemInstruction.Role = roleUser
 	}
@@ -517,7 +516,7 @@ func finishAssist(payload *requestPayload, req *inference.Request, turn assistTu
 	case payload.GenerationConfig.MaxOutputTokens == 0 || payload.GenerationConfig.MaxOutputTokens > capOutput:
 		payload.GenerationConfig.MaxOutputTokens = capOutput
 	}
-	applyAssistThinking(payload, req, opts)
+	applyAssistThinking(payload, req, turn)
 	preimage := sessionPreimage(turn.anchor, req)
 	identity := sessionIdentity{
 		agent:      sessionUUID(preimage, agentDomain),
@@ -531,21 +530,31 @@ func finishAssist(payload *requestPayload, req *inference.Request, turn assistTu
 
 // applyAssistThinking gives each model family the thinking shape it accepts.
 // Claude thinks through nothing on this transport, so a stated effort never
-// reaches the wire; a Gemini turn with no stated effort is left open-ended.
-func applyAssistThinking(payload *requestPayload, req *inference.Request, opts wire.CodecOpts) {
+// reaches the wire; a Gemini turn carries the budget its wire SKU publishes.
+func applyAssistThinking(payload *requestPayload, req *inference.Request, turn assistTurn) {
 	switch {
 	case claudeOnAntigravity(req.Model):
 		payload.GenerationConfig.ThinkingConfig = nil
 		payload.ToolConfig = assistToolConfig(req)
 	case geminiWire(req.Model):
-		if payload.GenerationConfig.ThinkingConfig == nil {
-			open := -1
-			payload.GenerationConfig.ThinkingConfig = &thinkingConfig{ThinkingBudget: &open, IncludeThoughts: true}
-		}
+		payload.GenerationConfig.ThinkingConfig = assistGeminiThinking(turn.variant)
 		if payload.ToolConfig == nil {
 			payload.ToolConfig = assistToolConfig(req)
 		}
 	}
+}
+
+// assistGeminiThinking gives a Gemini turn the thinking shape Cloud Code
+// Assist accepts. The endpoint takes a token budget on this transport and
+// refuses the named level the plain Gemini API speaks, so the budget is the
+// one the vendor publishes for the turn's wire SKU. A SKU whose budget Relo
+// has not read stays open-ended rather than guessed at.
+func assistGeminiThinking(variant antigravity.Variant) *thinkingConfig {
+	budget := antigravity.OpenThinkingBudget
+	if variant.ThinkingBudget != nil {
+		budget = *variant.ThinkingBudget
+	}
+	return &thinkingConfig{ThinkingBudget: &budget, IncludeThoughts: true}
 }
 
 // assistToolConfig reports the function-calling constraint a Cloud Code

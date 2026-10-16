@@ -914,12 +914,66 @@ func TestCloudCodeAssistEnvelopeCarriesTheClientIdentity(t *testing.T) {
 	}
 	keptInner := envelope["request"].(map[string]any)
 	keptThinking := keptInner["generationConfig"].(map[string]any)["thinkingConfig"].(map[string]any)
-	if keptThinking["thinkingLevel"] != "low" || keptThinking["thinkingBudget"] != nil {
-		t.Fatalf("thinkingConfig = %v, want the requested level kept", keptThinking)
+	if keptThinking["thinkingLevel"] != nil || keptThinking["thinkingBudget"] != float64(-1) {
+		t.Fatalf("thinkingConfig = %v, want a budget and no level", keptThinking)
 	}
 	if config["maxOutputTokens"] != float64(64) {
 		t.Fatalf("maxOutputTokens = %v, want the caller's limit", config["maxOutputTokens"])
 	}
+}
+
+// TestCloudCodeAssistCarriesTheSelectedSkuBudget pins the thinking budget to
+// the wire SKU an attempt selected. The vendor publishes the budget per SKU,
+// so the effort name the caller used does not decide it alone.
+func TestCloudCodeAssistCarriesTheSelectedSkuBudget(t *testing.T) {
+	cases := []struct {
+		effort string
+		budget int
+		enum   string
+	}{
+		{effort: "low", budget: 1000, enum: "MODEL_PLACEHOLDER_M320"},
+		{effort: "medium", budget: 4000, enum: "MODEL_PLACEHOLDER_M319"},
+		{effort: "high", budget: -1, enum: "MODEL_PLACEHOLDER_M318"},
+	}
+	for _, tc := range cases {
+		t.Run(tc.effort, func(t *testing.T) {
+			requested := canonicalRequest(false)
+			requested.Reasoning = &inference.ReasoningConfig{Effort: tc.effort}
+			budget := tc.budget
+			envelope := encodeEnvelope(t, cloudCodeAssistCodec(), requested, wire.CodecOpts{
+				CredentialRef: "token", Project: "project-1", RequestID: "req-1",
+				Antigravity: &wire.AntigravityRequest{
+					WireModel: "gemini-3.8-flash-" + tc.effort, ModelEnum: tc.enum,
+					MaxOutput: 65536, ThinkingBudget: &budget,
+				},
+			})
+			inner := envelope["request"].(map[string]any)
+			thinking := inner["generationConfig"].(map[string]any)["thinkingConfig"].(map[string]any)
+			if thinking["thinkingBudget"] != float64(tc.budget) {
+				t.Fatalf("thinkingBudget = %v, want %d", thinking["thinkingBudget"], tc.budget)
+			}
+			if thinking["thinkingLevel"] != nil {
+				t.Fatalf("thinkingLevel = %v, want none on this transport", thinking["thinkingLevel"])
+			}
+			labels := inner["labels"].(map[string]any)
+			if labels["model_enum"] != tc.enum {
+				t.Fatalf("model_enum = %v, want %q", labels["model_enum"], tc.enum)
+			}
+		})
+	}
+}
+
+func encodeEnvelope(t *testing.T, module wire.Codec, request *inference.Request, opts wire.CodecOpts) map[string]any {
+	t.Helper()
+	body, err := io.ReadAll(encode(t, module, request, opts).Body)
+	if err != nil {
+		t.Fatalf("read request body: %v", err)
+	}
+	var envelope map[string]any
+	if err := json.Unmarshal(body, &envelope); err != nil {
+		t.Fatalf("decode request body: %v", err)
+	}
+	return envelope
 }
 
 // TestCloudCodeAssistEmptyCompletion covers a stream the endpoint finished

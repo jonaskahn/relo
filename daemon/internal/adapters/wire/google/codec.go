@@ -272,7 +272,7 @@ func (s settings) body(req *inference.Request, mode Mode, opts wire.CodecOpts) (
 		anchor:  s.sessionAnchor,
 		session: sessionID(preimage),
 		variant: variant,
-	}, opts)
+	})
 	return json.Marshal(envelope{
 		Project: s.project, RequestID: assistRequestID(identity.agent, identity.trajectory, identity.step),
 		Request: *payload, Model: wireModel,
@@ -289,7 +289,10 @@ func assistVariant(req *inference.Request, opts wire.CodecOpts) (string, antigra
 	}
 	variant, _ := antigravity.Collapse(req.Model, effortOf(req))
 	if opts.Antigravity != nil && opts.Antigravity.WireModel != "" {
-		return opts.Antigravity.WireModel, antigravity.Variant{WireModel: opts.Antigravity.WireModel, ModelEnum: opts.Antigravity.ModelEnum, MaxOutput: opts.Antigravity.MaxOutput}
+		return opts.Antigravity.WireModel, antigravity.Variant{
+			WireModel: opts.Antigravity.WireModel, ModelEnum: opts.Antigravity.ModelEnum,
+			MaxOutput: opts.Antigravity.MaxOutput, ThinkingBudget: opts.Antigravity.ThinkingBudget,
+		}
 	}
 	if variant.WireModel != "" {
 		return variant.WireModel, variant

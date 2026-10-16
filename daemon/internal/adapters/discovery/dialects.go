@@ -247,6 +247,8 @@ type antigravityModels struct {
 		DisplayName     string `json:"displayName"`
 		MaxTokens       *int64 `json:"maxTokens"`
 		MaxOutputTokens *int64 `json:"maxOutputTokens"`
+		Model           string `json:"model"`
+		ThinkingBudget  *int   `json:"thinkingBudget"`
 	} `json:"models"`
 	AgentModelSorts []struct {
 		Groups []struct {
@@ -373,10 +375,12 @@ func (l *Lister) postAntigravityList(ctx context.Context, target Target) (*http.
 }
 
 type antigravityServed struct {
-	id   string
-	name string
-	ctx  *int64
-	max  *int64
+	id     string
+	name   string
+	ctx    *int64
+	max    *int64
+	enum   string
+	budget *int
 }
 
 func antigravityModelsOf(document antigravityModels) []Listed {
@@ -405,6 +409,11 @@ func collectAntigravityServed(document antigravityModels) map[string]antigravity
 		if entry.MaxOutputTokens != nil && *entry.MaxOutputTokens > 0 {
 			budget := *entry.MaxOutputTokens
 			item.max = &budget
+		}
+		item.enum = entry.Model
+		if entry.ThinkingBudget != nil {
+			budget := *entry.ThinkingBudget
+			item.budget = &budget
 		}
 		served[id] = item
 	}
@@ -495,11 +504,15 @@ func antigravityBandConfigs(logical string, members []antigravityServed) ([]cata
 		if present.ctx != nil {
 			ctx = *present.ctx
 		}
+		enum := variant.ModelEnum
+		if present.enum != "" {
+			enum = present.enum
+		}
 		efforts = append(efforts, band)
 		configs = append(configs, catalog.EncodeAntigravityConfig(catalog.AntigravityVariant{
 			LogicalID: logical, Selection: band, Effort: band, Default: band == catalog.AntigravityBandMedium,
-			WireModel: variant.WireModel, ModelEnum: variant.ModelEnum, MaxOutput: variant.MaxOutput,
-			Context: ctx, Reasoning: true,
+			WireModel: variant.WireModel, ModelEnum: enum, MaxOutput: variant.MaxOutput,
+			ThinkingBudget: present.budget, Context: ctx, Reasoning: true,
 		}))
 	}
 	return configs, efforts

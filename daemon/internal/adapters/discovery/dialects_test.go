@@ -475,6 +475,61 @@ func TestListAntigravityKeepsOnlyTheAgentSurface(t *testing.T) {
 	}
 }
 
+// TestListAntigravityCarriesTheBudgetEachSkuPublishes pins the thinking budget
+// to the SKU the vendor names it on: the endpoint takes a budget on this
+// transport, so the listing is where Relo reads the number from.
+func TestListAntigravityCarriesTheBudgetEachSkuPublishes(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"models":{
+			"gemini-3.8-flash-low":{"displayName":"Gemini 3.8 Flash (Low)","model":"MODEL_PLACEHOLDER_M320","thinkingBudget":1000},
+			"gemini-3.8-flash-medium":{"displayName":"Gemini 3.8 Flash (Medium)","model":"MODEL_PLACEHOLDER_M319","thinkingBudget":4000},
+			"gemini-3.8-flash-high":{"displayName":"Gemini 3.8 Flash (High)","model":"MODEL_PLACEHOLDER_M318","thinkingBudget":-1}
+		}}`))
+	}))
+	t.Cleanup(server.Close)
+
+	listed, err := New(server.Client()).List(context.Background(), Target{
+		Format: catalog.ModelsAntigravity, BaseURL: server.URL,
+		Auth: upstream.Authorization{Token: "tok", KeyHeader: catalog.KeyHeaderBearer},
+	})
+	if err != nil {
+		t.Fatalf("List(antigravity) error = %v", err)
+	}
+	if len(listed) != 1 {
+		t.Fatalf("listed = %+v, want the three bands collapsed onto one model", listed)
+	}
+	variants := map[string]catalog.AntigravityVariant{}
+	for _, config := range listed[0].RequestConfigs {
+		variant, ok := catalog.DecodeAntigravityConfig(config)
+		if !ok {
+			t.Fatalf("config = %+v, want an Antigravity tuple", config)
+		}
+		variants[variant.Effort] = variant
+	}
+	cases := []struct {
+		effort string
+		enum   string
+		budget int
+	}{
+		{effort: "low", enum: "MODEL_PLACEHOLDER_M320", budget: 1000},
+		{effort: "medium", enum: "MODEL_PLACEHOLDER_M319", budget: 4000},
+		{effort: "high", enum: "MODEL_PLACEHOLDER_M318", budget: -1},
+	}
+	for _, tc := range cases {
+		variant, found := variants[tc.effort]
+		if !found {
+			t.Fatalf("variants = %v, want the %s band", variants, tc.effort)
+		}
+		if variant.ModelEnum != tc.enum {
+			t.Fatalf("ModelEnum = %q, want %q", variant.ModelEnum, tc.enum)
+		}
+		if variant.ThinkingBudget == nil || *variant.ThinkingBudget != tc.budget {
+			t.Fatalf("ThinkingBudget = %v, want %d", variant.ThinkingBudget, tc.budget)
+		}
+	}
+}
+
 // TestListAntigravityWithoutBucketsKeepsWhatItLists covers an answer that
 // carries no surface buckets at all: an absent bucket is no evidence, so only
 // an id the vendor is known to have retired is left out.

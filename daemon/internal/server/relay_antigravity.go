@@ -41,7 +41,7 @@ func (s *Server) matchAntigravityAccount(ctx context.Context, spec *attemptSpec,
 		return nil, true, nil
 	}
 	if selected, ok := catalog.SelectAntigravityVariant(configs, candidate.ModelID, effort); ok {
-		return &wire.AntigravityRequest{WireModel: selected.WireModel, ModelEnum: selected.ModelEnum, MaxOutput: selected.MaxOutput}, true, nil
+		return antigravityRequestOf(selected), true, nil
 	}
 	if !s.excludeAntigravityAccount(spec, tried) {
 		return nil, false, antigravitySelectionError(candidate, effort)
@@ -63,6 +63,16 @@ func (s *Server) matchAntigravityAccount(ctx context.Context, spec *attemptSpec,
 }
 
 const maxAntigravityAccounts = 32
+
+// antigravityRequestOf carries one account's selected configuration onto the
+// wire: the SKU the attempt sends, the enum that labels it, the output ceiling
+// it serves, and the thinking budget it publishes.
+func antigravityRequestOf(selected catalog.AntigravityVariant) *wire.AntigravityRequest {
+	return &wire.AntigravityRequest{
+		WireModel: selected.WireModel, ModelEnum: selected.ModelEnum,
+		MaxOutput: selected.MaxOutput, ThinkingBudget: selected.ThinkingBudget,
+	}
+}
 
 func (s *Server) antigravityConfigs(ctx context.Context, providerID, credentialID string) ([]catalog.AntigravityVariant, error) {
 	if s.opts.RequestConfigs == nil || credentialID == "" {

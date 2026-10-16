@@ -16,10 +16,10 @@ import (
 )
 
 // antigravityFingerprint is the header Cloud Code Assist expects from the
-// Antigravity client before the manifest names a newer version. It is pinned
-// here as well as in the package, so a change that drifts away from the hub
-// client family fails the build.
-const antigravityFingerprint = "antigravity/hub/2.19.1 (aidev_client; os_type=darwin; arch=arm64; cl=963137146)"
+// Antigravity client. It is pinned here as well as in the package, so a change
+// that lets the version and the changelist drift apart fails the build: the
+// endpoint refuses a pair that no build ever shipped.
+const antigravityFingerprint = "antigravity/hub/2.23.0 (aidev_client; os_type=darwin; arch=arm64; cl=963137146)"
 
 func TestAntigravityFingerprint(t *testing.T) {
 	t.Run("the pinned user agent names the hub client family", func(t *testing.T) {

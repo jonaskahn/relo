@@ -130,9 +130,10 @@ type CodecOpts struct {
 // AntigravityRequest is the exact Cloud Code request tuple one attempt sends:
 // the wire SKU the account's discovery published for the requested band.
 type AntigravityRequest struct {
-	WireModel string
-	ModelEnum string
-	MaxOutput int
+	WireModel      string
+	ModelEnum      string
+	MaxOutput      int
+	ThinkingBudget *int
 }
 
 // CursorParam is one Cursor model parameter pair.
