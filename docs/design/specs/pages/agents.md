@@ -55,8 +55,10 @@ never reorders a card an operator is looking at.
   sentence**, never colour alone. An enabled agent with nothing to report shows no box, so the cards stay even.
 - **Status pill** under the head: Ready, Drifted, Error, Off, plus the refusal and restart words that outrank them.
 - **Action cluster**, `mt-auto`, under the body: not configured → **Set up** primary; configured → Manage, the Codex
-  1M toggle, Restart where the client keeps its environment, Repair where the wiring drifted. Remove is the separated
-  destructive icon action on the right.
+  1M toggle, Reload where the client can reread its configuration, Restart where the client keeps its environment,
+  Repair where the wiring drifted. Remove is the separated destructive icon action on the right. OpenCode reloads
+  without losing its sessions; its Restart stays available for a startup-environment or key change, and Codex restarts
+  after a repair that changed what its app-server would read.
 
 ## Detail modal (`wide`)
 
@@ -103,6 +105,14 @@ stack full-width with the safe-area inset on a sheet:
 
 One primary per view. A blocked Set up stays disabled with its refusal already visible above it. Verification reports
 inline in the test pane (`--ok` with an icon on pass, `--danger` with the reason on fail) rather than as a toast.
+
+OpenCode's modal also offers **Reload** and **Restart service**. Reload asks the running server to reread its
+configuration; Restart service replaces its startup environment and key, and is the right action when Relo just
+minted or rotated a key. A repair reports a completed write with a warning when the reload or restart it needed
+failed, so the operator keeps the repaired state and can retry the process action.
+
+OpenCode's setup modal keeps V1 visible but disabled, so an operator can see which legacy format Relo used without
+being able to select it. New setup writes V2 only.
 
 ### Step: result
 
@@ -157,6 +167,7 @@ Every action reports its result before the flow ends, and a failure stays next t
 | Remove     | AlertDialog, then the confirm spins                 | toast                        | inline on the card              | patched in place   |
 | Restore    | AlertDialog, then the confirm spins                 | toast                        | inline on the card              | patched in place   |
 | Restart    | the acting control spins, label reads "Restarting…" | toast                        | inline on the card              | patched in place   |
+| Reload     | the acting control spins, label reads "Reloading…"  | toast                        | inline on the card              | patched in place   |
 | 1M context | the acting toggle                                   | toast                        | inline on the card              | patched in place   |
 | Verify     | the acting control                                  | inline line in the test pane | inline in the pane with the fix | —                  |
 | Reveal key | the eye spins                                       | the field shows the secret   | inline beside the hint          | cached until close |
