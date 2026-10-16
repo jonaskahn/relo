@@ -714,3 +714,22 @@ func TestRepairReportsAFailedOpenCodeReload(t *testing.T) {
 		t.Fatalf("warnings = %+v, want the failed reload", result.Warnings)
 	}
 }
+
+// TestRepairReportsAFailedOpenCodeRestart keeps a finished repair when the
+// service does not hold Relo's key yet and refuses to start with it.
+func TestRepairReportsAFailedOpenCodeRestart(t *testing.T) {
+	_, built := integrationService(t)
+	configHome := t.TempDir()
+	if err := os.MkdirAll(filepath.Join(configHome, "opencode"), 0o755); err != nil {
+		t.Fatalf("create the opencode config directory: %v", err)
+	}
+	t.Setenv("XDG_CONFIG_HOME", configHome)
+	stubLauncher(t, "opencode", "exit 1\n")
+	result, err := built.RepairIntegration(context.Background(), "opencode")
+	if err != nil {
+		t.Fatalf("RepairIntegration(opencode) error = %v", err)
+	}
+	if len(result.Warnings) != 1 || result.Warnings[0].Code != "restart_failed" {
+		t.Fatalf("warnings = %+v, want the failed restart", result.Warnings)
+	}
+}

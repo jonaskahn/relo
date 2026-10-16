@@ -73,6 +73,15 @@ func TestReloadIntegrationRoute(t *testing.T) {
 		}
 	})
 
+	t.Run("a build without a service reports the API as unavailable", func(t *testing.T) {
+		h := newHarness(t)
+		served := serverWithoutService(h)
+		recorder := h.managementOn(served, http.MethodPost, "/api/v1/integrations/opencode/reload", adminToken, nil)
+		if recorder.Code != http.StatusServiceUnavailable {
+			t.Fatalf("reload = %d, want 503", recorder.Code)
+		}
+	})
+
 	t.Run("refuses a client with no service to reload", func(t *testing.T) {
 		h := newHarness(t)
 		if code := h.managementJSON(t, http.MethodPost, "/api/v1/integrations/codex/reload", "", nil); code != http.StatusBadRequest {
