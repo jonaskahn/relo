@@ -42,13 +42,23 @@
 		onopen: () => void;
 		onsetup: () => void;
 		onrestart: () => void;
+		onreload: () => void;
 		onrepair: () => void;
 		onremove: () => void;
 		ontogglecontext: () => void;
 	}
 
-	let { agent, running, onopen, onsetup, onrestart, onrepair, onremove, ontogglecontext }: Props =
-		$props();
+	let {
+		agent,
+		running,
+		onopen,
+		onsetup,
+		onrestart,
+		onreload,
+		onrepair,
+		onremove,
+		ontogglecontext
+	}: Props = $props();
 
 	// The sentences behind the warnings the card reports, so it renders one
 	// vocabulary of facts rather than a branch per condition.
@@ -191,7 +201,20 @@
 							onclick={ontogglecontext}
 						/>
 					{/if}
-					{#if restartsClient(agent)}
+					{#if agent.id === 'opencode'}
+						<IconAction
+							icon={runningOn(running, agent, 'reload') ? 'loader' : 'refresh'}
+							variant="outline"
+							label={$t(
+								runningOn(running, agent, 'reload')
+									? 'ui.pages.integrationsPage.reloading'
+									: 'ui.pages.integrationsPage.reload'
+							)}
+							disabled={blocked(running, agent)}
+							spin={runningOn(running, agent, 'reload')}
+							onclick={onreload}
+						/>
+					{:else if restartsClient(agent)}
 						<IconAction
 							icon={runningOn(running, agent, 'restart') ? 'loader' : 'refresh'}
 							variant="outline"

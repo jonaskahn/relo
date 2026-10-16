@@ -22,6 +22,7 @@
 		labelOf,
 		patchAgent,
 		refusalOf,
+		restartsClient,
 		splitAgents,
 		stateKey,
 		stateTone
@@ -75,7 +76,12 @@
 	let detailOpen = $state(false);
 	let detail = $state.raw<IntegrationView | null>(null);
 	let step = $state<AgentStep>('view');
-	let result = $state<{ state: 'success' | 'failed'; copy: string; token: string } | null>(null);
+	let result = $state<{
+		state: 'success' | 'failed';
+		copy: string;
+		token: string;
+		warnings: readonly { readonly code: string; readonly detail?: string }[];
+	} | null>(null);
 	let confirmFailure = $state('');
 
 	// The key section reads the stored secret on demand, so the eye control shows
@@ -214,7 +220,8 @@
 		result = {
 			state: 'success',
 			copy: $t('ui.pages.integrationsPage.' + resultCodeFor(action, answer.integration)),
-			token: answer.token ?? ''
+			token: answer.token ?? '',
+			warnings: answer.warnings ?? []
 		};
 		revealCopied = false;
 		step = stepAfter(answer, action);
@@ -246,7 +253,8 @@
 					copy: $t('ui.pages.integrationsPage.actionFailedWith', {
 						values: { action, detail: message(error) }
 					}),
-					token: ''
+					token: '',
+					warnings: []
 				};
 				step = 'result';
 			} else {
@@ -594,6 +602,7 @@
 						onopen={() => openDetail(agent)}
 						onsetup={() => startSetup(agent)}
 						onrestart={() => void run('restart', agent)}
+						onreload={() => void run('reload', agent)}
 						onrepair={() => void run('repair', agent)}
 						onremove={() => ask('remove', agent)}
 						ontogglecontext={() => void toggleContext(agent)}
@@ -682,6 +691,7 @@
 					state={result.state}
 					copy={result.copy}
 					token={result.token}
+					warnings={result.warnings}
 					{urls}
 					copied={revealCopied}
 					oncopy={() => void copyReveal()}
@@ -757,6 +767,42 @@
 						>
 							<Icon name="refresh" size={14} />
 							{$t('ui.pages.integrationsPage.rotate')}
+						</Button>
+					{/if}
+					{#if detail.enabled && detail.id === 'opencode'}
+						<Button
+							variant="outline"
+							disabled={blocked(running, detail)}
+							onclick={() => detail && run('reload', detail)}
+						>
+							{#if runningOn(running, detail, 'reload')}
+								<Icon name="loader" size={14} spin />
+							{:else}
+								<Icon name="refresh" size={14} />
+							{/if}
+							{$t(
+								runningOn(running, detail, 'reload')
+									? 'ui.pages.integrationsPage.reloading'
+									: 'ui.pages.integrationsPage.reload'
+							)}
+						</Button>
+					{/if}
+					{#if detail.enabled && restartsClient(detail)}
+						<Button
+							variant="outline"
+							disabled={blocked(running, detail)}
+							onclick={() => detail && run('restart', detail)}
+						>
+							{#if runningOn(running, detail, 'restart')}
+								<Icon name="loader" size={14} spin />
+							{:else}
+								<Icon name="refresh" size={14} />
+							{/if}
+							{$t(
+								runningOn(running, detail, 'restart')
+									? 'ui.pages.integrationsPage.restarting'
+									: 'ui.pages.integrationsPage.restartService'
+							)}
 						</Button>
 					{/if}
 					{#if detail.manages_files && detail.files.length > 0}
