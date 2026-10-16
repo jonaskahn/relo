@@ -741,6 +741,49 @@ func TestInspectReportsStaleModels(t *testing.T) {
 	}
 }
 
+// TestEnableReportsTheConfigurationItCannotWrite covers the write that has to
+// fail rather than report a setup that did not happen. The OpenCode
+// configuration is readable but not writable here, and it already holds
+// something else, so the write is one Relo owes the client and cannot make.
+func TestEnableReportsTheConfigurationItCannotWrite(t *testing.T) {
+	h := newHarness(t, dataPlane)
+	target, err := h.paths.ConfigTarget(integration.ClientOpenCode)
+	if err != nil {
+		t.Fatalf("ConfigTarget(opencode) error = %v", err)
+	}
+	if err := os.MkdirAll(target.Dir, 0o755); err != nil {
+		t.Fatalf("create the opencode directory: %v", err)
+	}
+	if err := os.WriteFile(target.Path, []byte("{}\n"), 0o444); err != nil {
+		t.Fatalf("seed the opencode config: %v", err)
+	}
+	// Neither the neighbouring temporary file nor the in-place fallback can be
+	// created once the directory refuses writes, which is the refusal being
+	// tested. Both are undone so the temporary directory can be removed.
+	t.Cleanup(func() {
+		_ = os.Chmod(target.Path, 0o600)
+		_ = os.Chmod(target.Dir, 0o700)
+	})
+	if err := os.Chmod(target.Dir, 0o555); err != nil {
+		t.Fatalf("lock the opencode directory: %v", err)
+	}
+
+	_, err = h.manager.Enable(context.Background(), integration.ClientOpenCode, "rlo_ak_test")
+	if err == nil {
+		t.Fatal("Enable() on a read-only configuration error = nil, want the refusal")
+	}
+	if !strings.Contains(err.Error(), target.Path) {
+		t.Fatalf("Enable() error = %v, want it to name %s", err, target.Path)
+	}
+	view, err := h.manager.Inspect(context.Background(), integration.ClientOpenCode)
+	if err != nil {
+		t.Fatalf("Inspect(opencode) error = %v", err)
+	}
+	if view.State != integration.StateError {
+		t.Fatalf("state = %q, want the recorded failure", view.State)
+	}
+}
+
 // TestInspectIgnoresAStoredDigestOlderThanTheFilesOnDisk keeps a Relo upgrade
 // quiet when the client already carries the models this build publishes. The
 // stored fingerprint changed shape once, which would otherwise report every

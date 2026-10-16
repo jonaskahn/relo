@@ -42,6 +42,14 @@ func integrationService(t *testing.T) (*harness, *appintegration.Service) {
 // configuration serves.
 func integrationUseCases(t *testing.T, h *harness, settings *config.Config, homeDirectory string) *appintegration.Service {
 	t.Helper()
+	return integrationUseCasesOver(t, h, settings, homeDirectory, nil, nil)
+}
+
+// integrationUseCasesOver wires the same use cases over the given file and
+// store ports, so a test can hand in one that refuses. A nil port keeps the
+// daemon's own.
+func integrationUseCasesOver(t *testing.T, h *harness, settings *config.Config, homeDirectory string, files appintegration.ClientFiles, store appintegration.Store) *appintegration.Service {
+	t.Helper()
 	logger, _ := testkit.TestLogger(t)
 	relo, err := os.Executable()
 	if err != nil {
@@ -51,13 +59,19 @@ func integrationUseCases(t *testing.T, h *harness, settings *config.Config, home
 		Home: homeDirectory, StateHome: h.home, Relo: relo,
 		DataPlane: func(protocol string) string { return dataPlaneURL(settings, protocol) },
 	}
+	if files == nil {
+		files = platform.NewClientFiles(clientPaths)
+	}
+	if store == nil {
+		store = platform.NewIntegrationStore(h.db)
+	}
 	return appintegration.NewService(appintegration.ServiceOptions{
 		Paths:     platform.NewPathResolver(clientPaths),
 		Agents:    platform.NewAgentRegistry(),
-		Files:     platform.NewClientFiles(clientPaths),
+		Files:     files,
 		Processes: platform.NewAgentProcesses(),
 		Wire:      platform.NewWireCodec(),
-		Store:     platform.NewIntegrationStore(h.db), Keys: h.keys, Catalog: h.catalog,
+		Store:     store, Keys: h.keys, Catalog: h.catalog,
 		Logger: logger, Now: h.clock.Now,
 	})
 }
