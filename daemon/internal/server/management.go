@@ -156,6 +156,7 @@ func (s *Server) registerIntegrationRoutes(mux *http.ServeMux) {
 	mux.HandleFunc("POST "+apiPrefix+"integrations/{id}/repair", s.handleRepairIntegration)
 	mux.HandleFunc("POST "+apiPrefix+"integrations/{id}/context", s.handleCodexContext)
 	mux.HandleFunc("POST "+apiPrefix+"integrations/{id}/restart", s.handleRestartIntegration)
+	mux.HandleFunc("POST "+apiPrefix+"integrations/{id}/reload", s.handleReloadIntegration)
 	mux.HandleFunc("POST "+apiPrefix+"integrations/{id}/restore", s.handleRestoreIntegration)
 	mux.HandleFunc("POST "+apiPrefix+"integrations/{id}/verify", s.handleVerifyIntegration)
 	// The two calls a console makes to test a key: the models that client
@@ -415,6 +416,7 @@ func isClientError(err error) bool {
 		apptemplates.ErrUnsupported, apptemplates.ErrInvalidPrefixes,
 		appcatalog.ErrUnknownModelsDevRef, ErrUnknownStatus,
 		appintegration.ErrRestartUnsupported,
+		appintegration.ErrReloadUnsupported,
 	}
 	for _, sentinel := range sentinels {
 		if errors.Is(err, sentinel) {

@@ -188,6 +188,19 @@ func (s *Server) handleRestartIntegration(w http.ResponseWriter, r *http.Request
 	writeJSON(w, http.StatusOK, toIntegrationResultResponse(appintegration.IntegrationResult{Integration: view}))
 }
 
+func (s *Server) handleReloadIntegration(w http.ResponseWriter, r *http.Request) {
+	manager, ok := s.integrationsOrUnavailable(w, r)
+	if !ok {
+		return
+	}
+	view, err := manager.ReloadIntegration(r.Context(), r.PathValue("id"))
+	if err != nil {
+		writeServiceError(w, err)
+		return
+	}
+	writeJSON(w, http.StatusOK, toIntegrationResultResponse(appintegration.IntegrationResult{Integration: view}))
+}
+
 type codexContextRequest struct {
 	Enabled bool `json:"enabled"`
 }

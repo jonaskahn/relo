@@ -139,13 +139,28 @@ func toIntegrationViewList(views []appintegration.IntegrationView) []integration
 type integrationResultResponse struct {
 	Integration integrationViewResponse `json:"integration"`
 	Token       string                  `json:"token,omitempty"`
+	Warnings    []integrationWarning    `json:"warnings,omitempty"`
+}
+
+type integrationWarning struct {
+	Code   string `json:"code"`
+	Detail string `json:"detail,omitempty"`
 }
 
 func toIntegrationResultResponse(result appintegration.IntegrationResult) integrationResultResponse {
 	return integrationResultResponse{
 		Integration: toIntegrationViewResponse(result.Integration),
 		Token:       result.Token,
+		Warnings:    toIntegrationWarnings(result.Warnings),
 	}
+}
+
+func toIntegrationWarnings(warnings []appintegration.IntegrationWarning) []integrationWarning {
+	converted := make([]integrationWarning, 0, len(warnings))
+	for _, warning := range warnings {
+		converted = append(converted, integrationWarning{Code: warning.Code, Detail: warning.Detail})
+	}
+	return converted
 }
 
 type verifyCheckResponse struct {
