@@ -571,27 +571,25 @@ func messageContent(t *testing.T, body map[string]any, index int) string {
 	return text
 }
 
-func TestChatDropsNullBytePatternsForDeepSeek(t *testing.T) {
-	request := &inference.Request{
-		Model: "deepseek-v4-pro",
-		Messages: []inference.Message{{
-			Role:    inference.RoleUser,
-			Content: []inference.ContentPart{{Type: inference.ContentTypeText, Text: "hi"}},
-		}},
-		Tools: []inference.Tool{{
-			Name: "Artifact",
-			Parameters: json.RawMessage(`{
-				"type": "object",
-				"properties": {
-					"content": {"type": "string", "pattern": "^[^\\0]*$"},
-					"slug": {"type": "string", "pattern": "^[a-z]+$"}
-				}
-			}`),
-		}},
-	}
+func TestChatDropsNullBytePatternsForDeepSeekModels(t *testing.T) {
+	tools := []inference.Tool{{
+		Name: "Artifact",
+		Parameters: json.RawMessage(`{
+			"type": "object",
+			"properties": {
+				"content": {"type": "string", "pattern": "^[^\\0]*$"},
+				"slug": {"type": "string", "pattern": "^[a-z]+$"}
+			}
+		}`),
+	}}
+	messages := []inference.Message{{
+		Role:    inference.RoleUser,
+		Content: []inference.ContentPart{{Type: inference.ContentTypeText, Text: "hi"}},
+	}}
 
-	t.Run("deepseek drops the null-byte pattern", func(t *testing.T) {
-		body := encodeChatBody(t, "https://api.deepseek.com/v1", request)
+	t.Run("teamorouter drops the pattern for a deepseek model", func(t *testing.T) {
+		request := &inference.Request{Model: "deepseek-flash-free", Messages: messages, Tools: tools}
+		body := encodeChatBody(t, "https://api.teamorouter.com/v1", request)
 		if pattern, ok := toolPropertyPattern(t, body, "content"); ok {
 			t.Fatalf("content pattern = %q, want it omitted", pattern)
 		}
@@ -600,13 +598,42 @@ func TestChatDropsNullBytePatternsForDeepSeek(t *testing.T) {
 		}
 	})
 
-	t.Run("other hosts keep the null-byte pattern", func(t *testing.T) {
-		body := encodeChatBody(t, "https://api.openai.com/v1", request)
+	t.Run("deepseek api keeps dropping the pattern", func(t *testing.T) {
+		request := &inference.Request{Model: "deepseek-chat", Messages: messages, Tools: tools}
+		body := encodeChatBody(t, "https://api.deepseek.com/v1", request)
+		if pattern, ok := toolPropertyPattern(t, body, "content"); ok {
+			t.Fatalf("content pattern = %q, want it omitted", pattern)
+		}
+	})
+
+	t.Run("other models keep the null-byte pattern", func(t *testing.T) {
+		request := &inference.Request{Model: "glm-5.3-flash", Messages: messages, Tools: tools}
+		body := encodeChatBody(t, "https://api.teamorouter.com/v1", request)
 		if pattern, ok := toolPropertyPattern(t, body, "content"); !ok || pattern != `^[^\0]*$` {
 			t.Fatalf("content pattern = %q, present = %v, want the null-byte guard", pattern, ok)
 		}
 		if pattern, ok := toolPropertyPattern(t, body, "slug"); !ok || pattern != "^[a-z]+$" {
 			t.Fatalf("slug pattern = %q, present = %v, want ^[a-z]+$", pattern, ok)
+		}
+	})
+
+	t.Run("every null-byte spelling is dropped", func(t *testing.T) {
+		request := &inference.Request{Model: "deepseek-flash", Messages: messages, Tools: []inference.Tool{{
+			Name: "Artifact",
+			Parameters: json.RawMessage(`{
+				"type": "object",
+				"properties": {
+					"a": {"type": "string", "pattern": "^\\u0000$"},
+					"b": {"type": "string", "pattern": "^\\x00$"},
+					"c": {"type": "string", "pattern": "^\u0000$"}
+				}
+			}`),
+		}}}
+		body := encodeChatBody(t, "https://api.teamorouter.com/v1", request)
+		for _, property := range []string{"a", "b", "c"} {
+			if pattern, ok := toolPropertyPattern(t, body, property); ok {
+				t.Fatalf("%s pattern = %q, want it omitted", property, pattern)
+			}
 		}
 	})
 }
