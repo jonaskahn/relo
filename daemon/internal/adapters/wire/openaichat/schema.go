@@ -1,5 +1,6 @@
-// DeepSeek's chat API refuses a function schema whose pattern bans a null
-// byte, so those patterns are removed on the way out.
+// Some engines refuse a function schema whose pattern bans a null byte.
+// The quirk follows the DeepSeek model wherever it is served, not the host,
+// so a DeepSeek-named model loses those patterns on every Chat-wire upstream.
 package openaichat
 
 import (
@@ -7,6 +8,13 @@ import (
 	"net/url"
 	"strings"
 )
+
+// deepSeekModel reports whether the request targets a DeepSeek model variant,
+// which is what decides the null-byte pattern workaround — the quirk follows
+// the model, not the host serving it.
+func deepSeekModel(model string) bool {
+	return strings.Contains(strings.ToLower(model), "deepseek")
+}
 
 func deepSeekAPI(baseURL string) bool {
 	parsed, err := url.Parse(strings.TrimSpace(baseURL))
