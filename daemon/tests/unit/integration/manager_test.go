@@ -741,6 +741,68 @@ func TestInspectReportsStaleModels(t *testing.T) {
 	}
 }
 
+// TestInspectIgnoresAStoredDigestOlderThanTheFilesOnDisk keeps a Relo upgrade
+// quiet when the client already carries the models this build publishes. The
+// stored fingerprint changed shape once, which would otherwise report every
+// configured client as stale with no file to repair.
+func TestInspectIgnoresAStoredDigestOlderThanTheFilesOnDisk(t *testing.T) {
+	h := newHarness(t, dataPlane)
+	models := []integration.ModelRef{{ID: "relo-a-one", Name: "One", Connection: "A"}}
+	withModels(h, &models)
+	ctx := context.Background()
+
+	config := filepath.Join(h.paths.Home, ".config", "opencode", "opencode.json")
+	if err := os.MkdirAll(filepath.Dir(config), 0o755); err != nil {
+		t.Fatalf("create the opencode directory: %v", err)
+	}
+	if err := os.WriteFile(config, []byte("{}\n"), 0o644); err != nil {
+		t.Fatalf("seed the opencode config: %v", err)
+	}
+	if _, err := h.manager.Enable(ctx, "opencode", "rlo_ak_test"); err != nil {
+		t.Fatalf("Enable(opencode) error = %v", err)
+	}
+	record := h.store.records["opencode"]
+	record.ModelsDigest = "a fingerprint an older Relo wrote"
+	h.store.records["opencode"] = record
+
+	view, err := h.manager.Inspect(ctx, "opencode")
+	if err != nil || view.ModelsStale {
+		t.Fatalf("Inspect(opencode) stale = %v error = %v, want the files to decide", view.ModelsStale, err)
+	}
+}
+
+// TestRefreshClaudeGatewayLeavesAnUnchangedCache keeps a catalog refresh from
+// asking Claude Code to read the same model list again.
+func TestRefreshClaudeGatewayLeavesAnUnchangedCache(t *testing.T) {
+	h := newHarness(t, dataPlane)
+	if err := os.MkdirAll(filepath.Dir(h.paths.ClaudeSettings()), 0o755); err != nil {
+		t.Fatalf("create the claude directory: %v", err)
+	}
+	if err := os.WriteFile(h.paths.ClaudeSettings(), []byte("{}\n"), 0o600); err != nil {
+		t.Fatalf("seed the claude settings: %v", err)
+	}
+	models := []integration.ModelRef{{ID: "relo-a-one", Name: "One", Connection: "A"}}
+	withModels(h, &models)
+	if _, err := h.manager.Enable(context.Background(), "claude-code", "rlo_ak_test"); err != nil {
+		t.Fatalf("Enable(claude-code) error = %v", err)
+	}
+	cache := codingclients.GatewayCachePath(h.paths.ClaudeConfigDir())
+	past := time.Now().Add(-time.Hour)
+	if err := os.Chtimes(cache, past, past); err != nil {
+		t.Fatalf("age the cache: %v", err)
+	}
+	if err := codingclients.WriteGatewayCache(h.paths.ClaudeConfigDir(), "http://127.0.0.1:10202", []codingclients.ModelRef{{ID: "relo-a-one", Name: "One", Connection: "A"}}); err != nil {
+		t.Fatalf("WriteGatewayCache() error = %v", err)
+	}
+	info, err := os.Stat(cache)
+	if err != nil {
+		t.Fatalf("stat the cache: %v", err)
+	}
+	if info.ModTime().After(past.Add(time.Second)) {
+		t.Fatal("an unchanged cache was rewritten")
+	}
+}
+
 // TestEnableCodexListsAProviderAddedAfterClaude is the flow that hid models:
 // Claude is set up, a provider is added, Claude is removed, then Codex is
 // set up, and the new provider's models have to be in the catalog Codex reads.

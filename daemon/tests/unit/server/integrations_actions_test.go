@@ -18,7 +18,7 @@ func TestIntegrationActionRoutes(t *testing.T) {
 	t.Setenv("CLAUDE_CONFIG_DIR", t.TempDir())
 	h := newHarness(t)
 
-	for _, action := range []string{"enable", "disable", "rotate", "repair", "restart", "restore", "verify"} {
+	for _, action := range []string{"enable", "disable", "rotate", "repair", "restart", "reload", "restore", "verify"} {
 		t.Run(action, func(t *testing.T) {
 			response := h.management(http.MethodPost, "/api/v1/integrations/codex/"+action, adminToken, nil)
 			if response.Code == http.StatusNotFound && strings.Contains(response.Body.String(), "no matching route") {

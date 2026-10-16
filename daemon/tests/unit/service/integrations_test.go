@@ -403,9 +403,78 @@ func TestEnableAndRepairPushTheKeyToTheOpenCodeService(t *testing.T) {
 	if err != nil {
 		t.Fatalf("read the stub marker: %v", err)
 	}
+	get := "service get env RELO_OPENCODE_API_KEY\n"
 	set := "service set env RELO_OPENCODE_API_KEY " + strings.TrimSpace(enabled.Token) + "\n"
-	if want := set + "service restart\n" + set + "service restart\n"; string(got) != want {
+	if want := set + "service restart\n" + get + set + "service restart\n"; string(got) != want {
 		t.Fatalf("launcher args = %q, want %q", got, want)
+	}
+}
+
+// TestRepairReloadsOpenCodeWhenItAlreadyRunsWithTheReloKey is the config-change
+// path: a repair that only rewrites Relo's provider block reloads the running
+// server instead of stopping the sessions it has open.
+func TestRepairReloadsOpenCodeWhenItAlreadyRunsWithTheReloKey(t *testing.T) {
+	_, built := integrationService(t)
+	configHome := t.TempDir()
+	if err := os.MkdirAll(filepath.Join(configHome, "opencode"), 0o755); err != nil {
+		t.Fatalf("create the opencode config directory: %v", err)
+	}
+	t.Setenv("XDG_CONFIG_HOME", configHome)
+	binDir := t.TempDir()
+	marker := filepath.Join(t.TempDir(), "ran")
+	script := "#!/bin/sh\nprintf '%s\\n' \"$*\" >> " + marker + "\nif [ \"$1 $2\" = \"service get\" ]; then printf '%s\\n' \"$SERVICE_KEY\"; fi\n"
+	if err := os.WriteFile(filepath.Join(binDir, "opencode"), []byte(script), 0o755); err != nil {
+		t.Fatalf("write the stub launcher: %v", err)
+	}
+	t.Setenv("PATH", binDir)
+	ctx := context.Background()
+	enabled, err := built.EnableIntegration(ctx, "opencode", "")
+	if err != nil {
+		t.Fatalf("EnableIntegration(opencode) error = %v", err)
+	}
+	t.Setenv("SERVICE_KEY", strings.TrimSpace(enabled.Token))
+	if err := os.WriteFile(filepath.Join(configHome, "opencode", "opencode.json"), []byte("{\"theme\":\"dark\"}\n"), 0o644); err != nil {
+		t.Fatalf("replace the opencode config: %v", err)
+	}
+	if _, err := built.RepairIntegration(ctx, "opencode"); err != nil {
+		t.Fatalf("RepairIntegration(opencode) error = %v", err)
+	}
+	got, err := os.ReadFile(marker)
+	if err != nil {
+		t.Fatalf("read the stub marker: %v", err)
+	}
+	get := "service get env RELO_OPENCODE_API_KEY\n"
+	set := "service set env RELO_OPENCODE_API_KEY " + strings.TrimSpace(enabled.Token) + "\n"
+	if want := set + "service restart\n" + get + "reload\n"; string(got) != want {
+		t.Fatalf("launcher args = %q, want %q", got, want)
+	}
+}
+
+// TestReloadIntegrationOnlyReloadsOpenCode keeps the reload route on the one
+// client whose service can reread its configuration without a restart.
+func TestReloadIntegrationOnlyReloadsOpenCode(t *testing.T) {
+	t.Setenv("CODEX_HOME", filepath.Join(t.TempDir(), ".codex"))
+	_, built := integrationService(t)
+	ctx := context.Background()
+	if _, err := built.ReloadIntegration(ctx, "codex"); !errors.Is(err, appintegration.ErrReloadUnsupported) {
+		t.Fatalf("ReloadIntegration(codex) error = %v, want %v", err, appintegration.ErrReloadUnsupported)
+	}
+	binDir := t.TempDir()
+	marker := filepath.Join(t.TempDir(), "ran")
+	script := "#!/bin/sh\nprintf '%s\\n' \"$*\" >> " + marker + "\n"
+	if err := os.WriteFile(filepath.Join(binDir, "opencode"), []byte(script), 0o755); err != nil {
+		t.Fatalf("write the stub launcher: %v", err)
+	}
+	t.Setenv("PATH", binDir)
+	if _, err := built.ReloadIntegration(ctx, "opencode"); err != nil {
+		t.Fatalf("ReloadIntegration(opencode) error = %v", err)
+	}
+	got, err := os.ReadFile(marker)
+	if err != nil {
+		t.Fatalf("read the stub marker: %v", err)
+	}
+	if string(got) != "reload\n" {
+		t.Fatalf("launcher args = %q, want a reload", got)
 	}
 }
 
