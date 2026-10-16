@@ -559,3 +559,158 @@ func writeCodexDaemonPid(t *testing.T, home string, pid int, startSeconds int64)
 		t.Fatalf("write the pid file: %v", err)
 	}
 }
+
+// stubLauncher puts a script named after a client on PATH, alone, and returns
+// the file recording the arguments it was run with.
+func stubLauncher(t *testing.T, name, script string) string {
+	t.Helper()
+	binDir := t.TempDir()
+	marker := filepath.Join(t.TempDir(), "ran")
+	body := "#!/bin/sh\nprintf '%s\\n' \"$*\" >> " + marker + "\n" + script
+	if err := os.WriteFile(filepath.Join(binDir, name), []byte(body), 0o755); err != nil {
+		t.Fatalf("write the %s launcher: %v", name, err)
+	}
+	t.Setenv("PATH", binDir)
+	return marker
+}
+
+// TestReloadIntegrationReportsWhatRefusesIt covers the reload route's refusals:
+// an agent nobody knows, a launcher that fails, and a second reload that starts
+// while the first still runs.
+func TestReloadIntegrationReportsWhatRefusesIt(t *testing.T) {
+	ctx := context.Background()
+
+	t.Run("an unknown integration", func(t *testing.T) {
+		_, built := integrationService(t)
+		if _, err := built.ReloadIntegration(ctx, "missing"); !errors.Is(err, appintegration.ErrUnknownIntegration) {
+			t.Fatalf("ReloadIntegration(missing) error = %v, want %v", err, appintegration.ErrUnknownIntegration)
+		}
+	})
+
+	t.Run("a launcher that fails", func(t *testing.T) {
+		_, built := integrationService(t)
+		stubLauncher(t, "opencode", "exit 1\n")
+		if _, err := built.ReloadIntegration(ctx, "opencode"); err == nil {
+			t.Fatal("ReloadIntegration(opencode) error = nil, want the launcher's failure")
+		}
+	})
+
+	t.Run("a reload already running", func(t *testing.T) {
+		_, built := integrationService(t)
+		gate := filepath.Join(t.TempDir(), "gate")
+		marker := stubLauncher(t, "opencode", "while [ ! -f "+gate+" ]; do /bin/sleep 0.02; done\n")
+		first := make(chan error, 1)
+		go func() {
+			_, err := built.ReloadIntegration(ctx, "opencode")
+			first <- err
+		}()
+		deadline := time.Now().Add(10 * time.Second)
+		for {
+			if _, err := os.Stat(marker); err == nil {
+				break
+			}
+			if time.Now().After(deadline) {
+				t.Fatal("the first reload never reached the launcher")
+			}
+			time.Sleep(10 * time.Millisecond)
+		}
+		_, err := built.ReloadIntegration(ctx, "opencode")
+		if !errors.Is(err, appintegration.ErrActionInProgress) {
+			t.Fatalf("second ReloadIntegration() error = %v, want %v", err, appintegration.ErrActionInProgress)
+		}
+		if err := os.WriteFile(gate, nil, 0o600); err != nil {
+			t.Fatalf("open the gate: %v", err)
+		}
+		if err := <-first; err != nil {
+			t.Fatalf("first ReloadIntegration() error = %v", err)
+		}
+	})
+}
+
+// TestRepairRestartsCodexOnlyWhenItsDaemonIsStale is the restart rule for a
+// client that reads its files once: a repair that left the files as they were
+// and found a current daemon restarts nothing, and a daemon older than the
+// catalog is restarted, with a refusal reported beside the finished repair.
+func TestRepairRestartsCodexOnlyWhenItsDaemonIsStale(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("a Windows Signal(0) cannot prove a pid is alive")
+	}
+	ctx := context.Background()
+	setup := func(t *testing.T, started time.Time, launcher string) (*appintegration.Service, string) {
+		t.Helper()
+		home := t.TempDir()
+		codexHome := filepath.Join(home, ".codex")
+		t.Setenv("CODEX_HOME", codexHome)
+		_, built := integrationService(t)
+		if _, err := built.EnableIntegration(ctx, "codex", ""); err != nil {
+			t.Fatalf("EnableIntegration() error = %v", err)
+		}
+		writeCodexDaemonPid(t, codexHome, os.Getpid(), started.Unix())
+		return built, stubLauncher(t, "codex", launcher)
+	}
+
+	t.Run("a current daemon is left running", func(t *testing.T) {
+		built, marker := setup(t, time.Now().Add(time.Hour), "exit 1\n")
+		result, err := built.RepairIntegration(ctx, "codex")
+		if err != nil {
+			t.Fatalf("RepairIntegration(codex) error = %v", err)
+		}
+		if len(result.Warnings) != 0 {
+			t.Fatalf("warnings = %+v, want none", result.Warnings)
+		}
+		if _, err := os.Stat(marker); err == nil {
+			t.Fatal("a repair that changed nothing restarted the daemon")
+		}
+	})
+
+	t.Run("a stale daemon is restarted", func(t *testing.T) {
+		built, marker := setup(t, time.Now().Add(-time.Hour), "exit 0\n")
+		result, err := built.RepairIntegration(ctx, "codex")
+		if err != nil {
+			t.Fatalf("RepairIntegration(codex) error = %v", err)
+		}
+		if len(result.Warnings) != 0 {
+			t.Fatalf("warnings = %+v, want none", result.Warnings)
+		}
+		got, err := os.ReadFile(marker)
+		if err != nil || !strings.Contains(string(got), "app-server daemon restart") {
+			t.Fatalf("launcher args = %q, %v, want the daemon restart", got, err)
+		}
+	})
+
+	t.Run("a refused restart is a warning", func(t *testing.T) {
+		built, _ := setup(t, time.Now().Add(-time.Hour), "exit 1\n")
+		result, err := built.RepairIntegration(ctx, "codex")
+		if err != nil {
+			t.Fatalf("RepairIntegration(codex) error = %v", err)
+		}
+		if len(result.Warnings) != 1 || result.Warnings[0].Code != "restart_failed" || result.Warnings[0].Detail == "" {
+			t.Fatalf("warnings = %+v, want the failed restart", result.Warnings)
+		}
+	})
+}
+
+// TestRepairReportsAFailedOpenCodeReload keeps a finished repair when the
+// running OpenCode service already holds the key but refuses to reload.
+func TestRepairReportsAFailedOpenCodeReload(t *testing.T) {
+	_, built := integrationService(t)
+	configHome := t.TempDir()
+	if err := os.MkdirAll(filepath.Join(configHome, "opencode"), 0o755); err != nil {
+		t.Fatalf("create the opencode config directory: %v", err)
+	}
+	t.Setenv("XDG_CONFIG_HOME", configHome)
+	stubLauncher(t, "opencode", "if [ \"$1 $2\" = \"service get\" ]; then printf '%s\\n' \"$SERVICE_KEY\"; fi\n[ \"$1\" = reload ] && exit 1\nexit 0\n")
+	ctx := context.Background()
+	enabled, err := built.EnableIntegration(ctx, "opencode", "")
+	if err != nil {
+		t.Fatalf("EnableIntegration(opencode) error = %v", err)
+	}
+	t.Setenv("SERVICE_KEY", strings.TrimSpace(enabled.Token))
+	result, err := built.RepairIntegration(ctx, "opencode")
+	if err != nil {
+		t.Fatalf("RepairIntegration(opencode) error = %v", err)
+	}
+	if len(result.Warnings) != 1 || result.Warnings[0].Code != "reload_failed" {
+		t.Fatalf("warnings = %+v, want the failed reload", result.Warnings)
+	}
+}
