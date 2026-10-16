@@ -1529,6 +1529,8 @@
         "verify": "Verificar",
         "repair": "Reparar",
         "restart": "Reiniciar",
+        "reload": "Recargar",
+        "restartService": "Reiniciar servicio",
         "restore": "Restaurar",
         "state": {
           "ready": "Configurado",
@@ -1589,6 +1591,7 @@
         "restartNeeded": "Codex sigue ejecutando el catálogo anterior. Reinícielo para mostrar los modelos de Relo.",
         "restarted": "Codex reiniciado. Vuelva a abrir el selector para cargar los modelos de Relo.",
         "restartedOpenCode": "OpenCode reiniciado. Leerá la clave de Relo.",
+        "reloaded": "OpenCode se recargó. Leerá la configuración más reciente de Relo.",
         "restored": "Archivos restaurados.",
         "stepsHint": "Este agente lee su propia configuración, así que Relo le entrega una clave y los pasos.",
         "notInstalledDetail": "Este agente no está instalado, así que Relo no creará su directorio de configuración.",
@@ -1600,6 +1603,11 @@
         "envKey": "Relo define {variable} desde el secreto en {path}. Reinicie el cliente para que tome la variable.",
         "envKeyNoPath": "Relo define {variable} en el entorno de inicio de sesión. Reinicie el cliente para que tome la variable.",
         "restarting": "Reiniciando",
+        "reloading": "Recargando",
+        "warning": {
+          "restart_failed": "Los archivos están reparados, pero el servicio no se pudo reiniciar: {detail}",
+          "reload_failed": "Los archivos están reparados, pero el cliente no se pudo recargar: {detail}"
+        },
         "repairing": "Reparando",
         "setupSuccessAuto": "La integración de {label} está conectada y su clave está en su sitio.",
         "noFilesYet": "Nada escrito todavía.",
@@ -1614,6 +1622,7 @@
         "openCodeVersionsTitle": "Versión de configuración",
         "openCodeV1": "V1",
         "openCodeV1Desc": "Bloque de proveedor singular heredado",
+        "openCodeV1Unsupported": "Formato heredado. La nueva configuración solo admite V2.",
         "openCodeV2": "V2",
         "openCodeV2Desc": "Bloque de proveedores plural actual",
         "addTitle": "Añadir agente",

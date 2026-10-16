@@ -21,6 +21,7 @@ const daemonRoutes = [
 	'rotate',
 	'repair',
 	'restart',
+	'reload',
 	'restore',
 	'verify',
 	'models',
@@ -35,6 +36,7 @@ const actions: IntegrationAction[] = [
 	'verify',
 	'repair',
 	'restart',
+	'reload',
 	'restore',
 	'rotate',
 	'models',
@@ -116,7 +118,7 @@ describe('the guard over a refusal the daemon named', () => {
 });
 
 describe('the OpenCode set-up generations', () => {
-	test('names both generations when both switches are on', () => {
+	test('writes V2 for new setup and still names the legacy generations', () => {
 		expect(openCodeSetupVersions(true, true)).toBe('v1+v2');
 		expect(openCodeSetupVersions(true, false)).toBe('v1');
 		expect(openCodeSetupVersions(false, true)).toBe('v2');

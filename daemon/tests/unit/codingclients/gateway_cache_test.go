@@ -5,6 +5,7 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/jonaskahn/relo/internal/adapters/codingclients"
 )
@@ -62,5 +63,71 @@ func TestGatewayCacheKeepsOnlyClaudeSpellings(t *testing.T) {
 	}
 	if _, err := os.Stat(codingclients.GatewayCachePath(dir)); !os.IsNotExist(err) {
 		t.Fatalf("Relo cache after remove: %v, want it gone", err)
+	}
+}
+
+func TestGatewayCacheListsOnlyWhatReloWouldWrite(t *testing.T) {
+	const base = "http://127.0.0.1:10202"
+	models := []codingclients.ModelRef{
+		{ID: "relo-openai-gpt-4o", Name: "OpenAI | GPT-4o"},
+		{ID: "  "},
+	}
+	dir := t.TempDir()
+	if codingclients.GatewayCacheLists(dir, base, models) {
+		t.Fatal("GatewayCacheLists() = true for a missing cache")
+	}
+	if err := codingclients.WriteGatewayCache(dir, base+"/", models); err != nil {
+		t.Fatalf("WriteGatewayCache() error = %v", err)
+	}
+	if !codingclients.GatewayCacheLists(dir, base, models) {
+		t.Fatal("GatewayCacheLists() = false for the cache just written")
+	}
+	for name, change := range map[string]struct {
+		base   string
+		models []codingclients.ModelRef
+	}{
+		"another gateway":    {"https://other.example", models},
+		"an extra model":     {base, append([]codingclients.ModelRef{{ID: "relo-openai-gpt-5", Name: "GPT-5"}}, models...)},
+		"a renamed model":    {base, []codingclients.ModelRef{{ID: "relo-openai-gpt-4o", Name: "Renamed"}}},
+		"a swapped model id": {base, []codingclients.ModelRef{{ID: "relo-openai-gpt-5", Name: "OpenAI | GPT-4o"}}},
+	} {
+		if codingclients.GatewayCacheLists(dir, change.base, change.models) {
+			t.Fatalf("GatewayCacheLists() = true for %s", name)
+		}
+	}
+	if err := os.WriteFile(codingclients.GatewayCachePath(dir), []byte("not json"), 0o600); err != nil {
+		t.Fatalf("corrupt the cache: %v", err)
+	}
+	if codingclients.GatewayCacheLists(dir, base, models) {
+		t.Fatal("GatewayCacheLists() = true for an unreadable cache")
+	}
+}
+
+func TestWriteGatewayCacheLeavesAnUpToDateCacheAlone(t *testing.T) {
+	const base = "http://127.0.0.1:10202"
+	models := []codingclients.ModelRef{{ID: "relo-openai-gpt-4o", Name: "GPT-4o"}}
+	dir := t.TempDir()
+	if err := codingclients.WriteGatewayCache(dir, base, models); err != nil {
+		t.Fatalf("WriteGatewayCache() error = %v", err)
+	}
+	path := codingclients.GatewayCachePath(dir)
+	first, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatalf("read the cache: %v", err)
+	}
+	// A second write would stamp a new fetch time, so equal bytes mean no write.
+	time.Sleep(5 * time.Millisecond)
+	if err := codingclients.WriteGatewayCache(dir, base, models); err != nil {
+		t.Fatalf("WriteGatewayCache() error = %v", err)
+	}
+	second, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatalf("read the cache again: %v", err)
+	}
+	if string(first) != string(second) {
+		t.Fatalf("cache rewritten: %s then %s", first, second)
+	}
+	if err := codingclients.WriteGatewayCache(t.TempDir(), "  ", models); err != nil {
+		t.Fatalf("WriteGatewayCache(blank base) error = %v", err)
 	}
 }

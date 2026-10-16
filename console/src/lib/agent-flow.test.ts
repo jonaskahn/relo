@@ -78,6 +78,7 @@ describe('the result a step reports', () => {
 			'restartedOpenCode'
 		);
 		expect(resultCodeFor('restart', view())).toBe('restarted');
+		expect(resultCodeFor('reload', view({ id: 'opencode', client: 'opencode' }))).toBe('reloaded');
 	});
 
 	it('separates the two repair words by the client that still needs a restart', () => {

@@ -26,6 +26,8 @@ var (
 	ErrUnknownIntegration = errors.New("unknown integration")
 	// ErrRestartUnsupported reports an agent Relo has no process to restart.
 	ErrRestartUnsupported = errors.New("this client has no process Relo can restart")
+	// ErrReloadUnsupported reports an agent Relo has no service to reload.
+	ErrReloadUnsupported = errors.New("this client has no service Relo can reload")
 	// ErrActionInProgress reports an action this service is already running
 	// for one agent. A second run would race the first over the same files
 	// and the same subprocess, so the caller waits for it to finish instead.
@@ -105,6 +107,16 @@ type IntegrationKey struct {
 type IntegrationResult struct {
 	Integration IntegrationView
 	Token       string
+	// Warnings name work the action finished beside work it could not finish, so
+	// a completed write is not lost when the client process refuses to follow.
+	// Code is a console-readable reason; Detail names this failure.
+	Warnings []IntegrationWarning
+}
+
+// IntegrationWarning is one thing an action finished beside one it could not.
+type IntegrationWarning struct {
+	Code   string
+	Detail string
 }
 
 // IntegrationVerify is the proof that one integration's key reaches the data
@@ -344,23 +356,94 @@ func (s *Service) RepairIntegration(ctx context.Context, id string) (Integration
 	if err != nil {
 		return IntegrationResult{}, err
 	}
+	result, serviceToken, change, err := s.repairFiles(ctx, manager, agent)
+	if err != nil {
+		return IntegrationResult{}, err
+	}
+	result.Warnings = s.applyClientConfig(ctx, agent, serviceToken, change)
+	return result, nil
+}
+
+func (s *Service) repairFiles(ctx context.Context, manager *Manager, agent Agent) (IntegrationResult, string, ConfigChange, error) {
 	token, minted, err := s.repairToken(ctx, agent)
 	if err != nil {
-		return IntegrationResult{}, err
+		return IntegrationResult{}, "", ConfigChange{}, err
+	}
+	before, err := manager.Inspect(ctx, agent.ID)
+	if err != nil {
+		return IntegrationResult{}, "", ConfigChange{}, err
 	}
 	if _, err := manager.Repair(ctx, agent.ID, token); err != nil {
-		return IntegrationResult{}, err
+		return IntegrationResult{}, "", ConfigChange{}, err
 	}
-	s.restartCodex(ctx, agent.ID)
-	s.restartOpenCode(ctx, agent.ID, token)
 	view, err := s.describeIntegration(ctx, manager, agent)
 	if err != nil {
-		return IntegrationResult{}, err
+		return IntegrationResult{}, "", ConfigChange{}, err
 	}
+	after, err := manager.Inspect(ctx, agent.ID)
+	if err != nil {
+		return IntegrationResult{}, "", ConfigChange{}, err
+	}
+	serviceToken := token
 	if !minted {
 		token = ""
 	}
-	return IntegrationResult{Integration: view, Token: token}, nil
+	return IntegrationResult{Integration: view, Token: token}, serviceToken, ConfigChange{Before: before, After: after}, nil
+}
+
+// ConfigChange is the state of one integration's files across a write, which is
+// what decides whether a client process has to read the new configuration.
+type ConfigChange struct {
+	Before View
+	After  View
+}
+
+// applyClientConfig makes a repaired client read what Relo wrote. A client that
+// reloads its configuration gets a reload; one that snapshots it at startup is
+// restarted only when the repair changed what it would read.
+func (s *Service) applyClientConfig(ctx context.Context, agent Agent, token string, change ConfigChange) []IntegrationWarning {
+	before, after := change.Before, change.After
+	switch agent.ID {
+	case "codex":
+		catalogPath := s.files.CodexCatalogPath(s.paths.CodexConfig())
+		if !configChanged(before, after) && !s.files.CodexNeedsRestart(filepath.Dir(s.paths.CodexConfig()), catalogPath) {
+			return nil
+		}
+		if err := s.processes.RestartCodexDaemon(ctx, filepath.Dir(s.paths.CodexConfig()), s.paths.Home()); err != nil {
+			return []IntegrationWarning{{Code: "restart_failed", Detail: err.Error()}}
+		}
+	case ClientOpenCode:
+		if s.openCodeServiceHasKey(ctx, agent, token) {
+			if err := s.processes.ReloadOpenCodeService(ctx, s.paths.Home()); err != nil {
+				return []IntegrationWarning{{Code: "reload_failed", Detail: err.Error()}}
+			}
+			return nil
+		}
+		if err := s.processes.RestartOpenCodeService(ctx, s.paths.Home(), token); err != nil {
+			return []IntegrationWarning{{Code: "restart_failed", Detail: err.Error()}}
+		}
+	}
+	return nil
+}
+
+func configChanged(before, after View) bool {
+	if before.State != after.State || before.ModelsStale != after.ModelsStale {
+		return true
+	}
+	for index := range after.Files {
+		if index >= len(before.Files) {
+			return true
+		}
+		if before.Files[index].Present != after.Files[index].Present || before.Files[index].Drifted != after.Files[index].Drifted {
+			return true
+		}
+	}
+	return len(before.Files) != len(after.Files)
+}
+
+func (s *Service) openCodeServiceHasKey(ctx context.Context, agent Agent, token string) bool {
+	key, err := s.processes.OpenCodeServiceKey(ctx, s.paths.Home(), agent.EnvKey)
+	return err == nil && strings.TrimSpace(token) != "" && key == strings.TrimSpace(token)
 }
 
 func (s *Service) repairToken(ctx context.Context, agent Agent) (string, bool, error) {
@@ -411,6 +494,28 @@ func (s *Service) RestartIntegration(ctx context.Context, id string) (Integratio
 		}
 	default:
 		return IntegrationView{}, fmt.Errorf("%s: %w", id, ErrRestartUnsupported)
+	}
+	return s.Integration(ctx, id)
+}
+
+// ReloadIntegration asks a running client to read its configuration again.
+// OpenCode reloads without losing its sessions; a client that keeps the file
+// for its whole life has nothing Relo can reload.
+func (s *Service) ReloadIntegration(ctx context.Context, id string) (IntegrationView, error) {
+	release, err := s.begin("reload", id)
+	if err != nil {
+		return IntegrationView{}, err
+	}
+	defer release()
+	agent, found := s.agents.AgentFor(id)
+	if !found {
+		return IntegrationView{}, fmt.Errorf("%s: %w", id, ErrUnknownIntegration)
+	}
+	if agent.ID != ClientOpenCode {
+		return IntegrationView{}, fmt.Errorf("%s: %w", id, ErrReloadUnsupported)
+	}
+	if err := s.processes.ReloadOpenCodeService(ctx, s.paths.Home()); err != nil {
+		return IntegrationView{}, err
 	}
 	return s.Integration(ctx, id)
 }

@@ -11,6 +11,11 @@ const (
 	maxOutputGemini = 65536
 	maxOutputPro    = 65535
 	maxOutputClaude = 64000
+
+	// OpenThinkingBudget is the budget the endpoint accepts for a model that
+	// chooses its own thinking length. Discovery publishes it per SKU, and it is
+	// the fallback for a SKU whose budget Relo has not read yet.
+	OpenThinkingBudget = -1
 )
 
 // A row the vendor has not given an enum leaves ModelEnum empty, so the label
@@ -51,6 +56,10 @@ type Variant struct {
 	WireModel string
 	ModelEnum string
 	MaxOutput int
+	// ThinkingBudget is the budget the vendor publishes for this SKU. Nil
+	// leaves the request open-ended rather than guessing at a budget the
+	// endpoint may not serve.
+	ThinkingBudget *int
 }
 
 // ClaudeVariant reports the wire identity one Claude model sends: its own id

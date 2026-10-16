@@ -2,6 +2,7 @@
 package codingclients
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -55,7 +56,11 @@ func WriteCodexCatalog(path string, models []ModelRef) error {
 	if err != nil {
 		return err
 	}
-	return WriteFileAtomic(path, append(encoded, '\n'), 0o600)
+	encoded = append(encoded, '\n')
+	if existing, err := os.ReadFile(path); err == nil && bytes.Equal(existing, encoded) {
+		return nil
+	}
+	return WriteFileAtomic(path, encoded, 0o600)
 }
 
 // BuildCodexRows is the catalog Codex's picker and the /v1/models catalog
@@ -123,8 +128,9 @@ func StripReloFromCodexCache(codexHome string) error {
 	return writeCodexCache(path, kept)
 }
 
-// CodexCatalogLists reports whether a catalog file names every published
-// model. A missing file, or one that omits a slug Relo publishes, does not.
+// CodexCatalogLists reports whether a catalog file carries exactly the
+// published models. A missing file, an omitted model, or a leftover one Relo
+// no longer publishes does not.
 func CodexCatalogLists(path string, models []ModelRef) bool {
 	rows := readCodexRows(path)
 	listed := map[string]string{}
@@ -135,12 +141,17 @@ func CodexCatalogLists(path string, models []ModelRef) bool {
 			listed[slug] = name
 		}
 	}
+	wanted := make(map[string]string, len(models))
 	for _, model := range models {
-		id := strings.TrimSpace(model.ID)
-		if id == "" {
-			continue
+		if id := strings.TrimSpace(model.ID); id != "" {
+			wanted[id] = ConfigDisplayName(model)
 		}
-		if listed[id] != ConfigDisplayName(model) {
+	}
+	if len(listed) != len(wanted) {
+		return false
+	}
+	for id, name := range wanted {
+		if listed[id] != name {
 			return false
 		}
 	}
@@ -234,7 +245,11 @@ func writeCodexCache(path string, models []codexRow) error {
 	if err != nil {
 		return err
 	}
-	return WriteFileAtomic(path, append(encoded, '\n'), 0o600)
+	encoded = append(encoded, '\n')
+	if existing, err := os.ReadFile(path); err == nil && bytes.Equal(existing, encoded) {
+		return nil
+	}
+	return WriteFileAtomic(path, encoded, 0o600)
 }
 
 func codexRowOf(model ModelRef, priority int, templates CodexTemplates) codexRow {

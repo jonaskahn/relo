@@ -1529,6 +1529,8 @@
         "verify": "Verificați",
         "repair": "Reparați",
         "restart": "Repornește",
+        "reload": "Reîncarcă",
+        "restartService": "Repornește serviciul",
         "restore": "Restaurați",
         "state": {
           "ready": "Configurat",
@@ -1589,6 +1591,7 @@
         "restartNeeded": "Codex încă rulează cu catalogul vechi. Reporniți-l pentru a afișa modelele Relo.",
         "restarted": "Codex a fost repornit. Redeschideți selectorul pentru a încărca modelele Relo.",
         "restartedOpenCode": "OpenCode a fost repornit. Va citi cheia Relo.",
+        "reloaded": "OpenCode a fost reîncărcat. Va citi cea mai recentă configurație Relo.",
         "restored": "Fișiere restaurate.",
         "stepsHint": "Acest agent își citește propria configurare, deci Relo îi dă o cheie și pașii.",
         "notInstalledDetail": "Acest agent nu este instalat, deci Relo nu îi va crea directorul de configurare.",
@@ -1600,6 +1603,11 @@
         "envKey": "Relo setează {variable} din secretul din {path}. Reporniți clientul pentru a prelua variabila.",
         "envKeyNoPath": "Relo setează {variable} în mediul de autentificare. Reporniți clientul pentru a prelua variabila.",
         "restarting": "Repornire",
+        "reloading": "Se reîncarcă",
+        "warning": {
+          "restart_failed": "Fișierele au fost reparate, dar serviciul nu a putut fi repornit: {detail}",
+          "reload_failed": "Fișierele au fost reparate, dar clientul nu a putut fi reîncărcat: {detail}"
+        },
         "repairing": "Reparare",
         "setupSuccessAuto": "Integrarea {label} este conectată și cheia ei este la loc.",
         "noFilesYet": "Încă nu s-a scris nimic.",
@@ -1614,6 +1622,7 @@
         "openCodeVersionsTitle": "Versiunea configurației",
         "openCodeV1": "V1",
         "openCodeV1Desc": "Bloc de furnizor singular vechi",
+        "openCodeV1Unsupported": "Format vechi. Configurarea nouă acceptă doar V2.",
         "openCodeV2": "V2",
         "openCodeV2Desc": "Blocul plural actual de furnizori",
         "addTitle": "Adaugă un agent",

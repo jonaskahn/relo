@@ -1529,6 +1529,8 @@
         "verify": "Verifikasi",
         "repair": "Perbaikan",
         "restart": "Mulai ulang",
+        "reload": "Muat ulang",
+        "restartService": "Mulai ulang layanan",
         "restore": "Pulihkan",
         "state": {
           "ready": "Dikonfigurasi",
@@ -1589,6 +1591,7 @@
         "restartNeeded": "Codex masih menjalankan katalog lama. Mulai ulang untuk menampilkan model Relo.",
         "restarted": "Kodeks dimulai ulang. Buka kembali pemilih untuk memuat model Relo.",
         "restartedOpenCode": "OpenCode dimulai ulang. Ini akan membaca kunci Relo.",
+        "reloaded": "OpenCode dimuat ulang. Ia akan membaca konfigurasi Relo terbaru.",
         "restored": "File dipulihkan.",
         "stepsHint": "Agen ini membaca konfigurasinya sendiri, jadi Relo memberikan kunci dan langkah-langkahnya.",
         "notInstalledDetail": "Agen ini belum diinstal, sehingga Relo tidak akan membuat direktori konfigurasinya.",
@@ -1600,6 +1603,11 @@
         "envKey": "Relo mengatur {variable} dari rahasia di {path}. Mulai ulang klien agar ia membaca variabel tersebut.",
         "envKeyNoPath": "Relo mengatur {variable} di lingkungan login. Mulai ulang klien agar ia membaca variabel tersebut.",
         "restarting": "Memulai ulang",
+        "reloading": "Memuat ulang",
+        "warning": {
+          "restart_failed": "Berkas sudah diperbaiki, tetapi layanan tidak dapat dimulai ulang: {detail}",
+          "reload_failed": "Berkas sudah diperbaiki, tetapi klien tidak dapat dimuat ulang: {detail}"
+        },
         "repairing": "Memperbaiki",
         "setupSuccessAuto": "Integrasi {label} tersambung dan kuncinya sudah di tempatnya.",
         "noFilesYet": "Belum ada yang ditulis.",
@@ -1614,6 +1622,7 @@
         "openCodeVersionsTitle": "Versi konfigurasi",
         "openCodeV1": "V1",
         "openCodeV1Desc": "Blok penyedia tunggal lawas",
+        "openCodeV1Unsupported": "Format lama. Penyiapan baru hanya mendukung V2.",
         "openCodeV2": "V2",
         "openCodeV2Desc": "Blok penyedia jamak saat ini",
         "addTitle": "Tambah agen",

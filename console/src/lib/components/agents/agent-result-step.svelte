@@ -17,12 +17,13 @@
 		state: 'success' | 'failed';
 		copy: string;
 		token: string;
+		warnings?: readonly { readonly code: string; readonly detail?: string }[];
 		urls: DataPlaneURLs;
 		copied: boolean;
 		oncopy: () => void;
 	}
 
-	let { agent, state, copy, token, urls, copied, oncopy }: Props = $props();
+	let { agent, state, copy, token, urls, copied, warnings = [], oncopy }: Props = $props();
 
 	// A failure stays here with its reason and the way out, so the operator reads
 	// it before leaving rather than after a toast has gone.
@@ -59,6 +60,20 @@
 			<pre
 				class="mono-data overflow-x-auto rounded-lg border border-border bg-sunken p-3 text-xs">{snippet}</pre>
 		{/if}
+		{#if warnings.length > 0}
+			<div class="space-y-1 text-xs text-warn" role="status">
+				{#each warnings as warning (warning.code)}
+					<p class="flex items-start gap-1.5">
+						<Icon name="alert-triangle" size={13} class="mt-px shrink-0" />
+						<span class="min-w-0">
+							{$t('ui.pages.integrationsPage.warning.' + warning.code, {
+								values: { detail: warning.detail ?? '' }
+							})}
+						</span>
+					</p>
+				{/each}
+			</div>
+		{/if}
 		<p class="text-xs text-muted-foreground">{$t('ui.pages.integrationsPage.revealOnce')}</p>
 	</div>
 {:else}
@@ -69,5 +84,19 @@
 			class={state === 'failed' ? 'text-danger' : 'text-ok'}
 		/>
 		<p class="text-sm text-muted-foreground">{copy}</p>
+		{#if warnings.length > 0}
+			<div class="w-full space-y-1 text-left text-xs text-warn" role="status">
+				{#each warnings as warning (warning.code)}
+					<p class="flex items-start gap-1.5">
+						<Icon name="alert-triangle" size={13} class="mt-px shrink-0" />
+						<span class="min-w-0">
+							{$t('ui.pages.integrationsPage.warning.' + warning.code, {
+								values: { detail: warning.detail ?? '' }
+							})}
+						</span>
+					</p>
+				{/each}
+			</div>
+		{/if}
 	</div>
 {/if}

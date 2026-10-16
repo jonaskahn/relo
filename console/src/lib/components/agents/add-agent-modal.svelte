@@ -45,9 +45,8 @@
 	let result = $state<{ state: 'success' | 'failed'; copy: string; token: string } | null>(null);
 	let revealCopied = $state(false);
 	let didWork = $state(false);
-	// The OpenCode generations setup writes. V2 is on by default; both on
-	// writes both blocks into one file.
-	let openCodeV1 = $state(false);
+	// V1 stays visible as the legacy generation Relo no longer writes, and V2 is
+	// the one new setup selects.
 	let openCodeV2 = $state(true);
 
 	const stepLabels: Record<AddStep, string> = {
@@ -63,18 +62,14 @@
 	const refusal = $derived(selected ? refusalOf(selected) : '');
 	const blockedSetup = $derived(selected ? setupBlocked(refusalOf(selected)) : true);
 	const refusalKey = $derived(selected && refusal ? refusalDetailKey(refusal) : '');
-	// OpenCode needs at least one generation checked before setup may write.
-	const noVersions = $derived(selected?.id === 'opencode' && !openCodeV1 && !openCodeV2);
+	const noVersions = $derived(selected?.id === 'opencode' && !openCodeV2);
 
 	// The set-up body: overwrite when replacing, plus the generations for
 	// OpenCode. Anything else sends what it always sent.
 	function setupBody(agent: IntegrationView, overwrite: boolean): string | undefined {
 		const payload: { overwrite?: boolean; versions?: string } = {};
 		if (overwrite) payload.overwrite = true;
-		if (agent.id === 'opencode') {
-			const versions = openCodeSetupVersions(openCodeV1, openCodeV2);
-			if (versions) payload.versions = versions;
-		}
+		if (agent.id === 'opencode') payload.versions = openCodeSetupVersions(false, openCodeV2);
 		return Object.keys(payload).length > 0 ? JSON.stringify(payload) : undefined;
 	}
 
@@ -89,7 +84,6 @@
 		result = null;
 		revealCopied = false;
 		didWork = false;
-		openCodeV1 = false;
 		openCodeV2 = true;
 	}
 
@@ -124,7 +118,6 @@
 	function pick(agent: IntegrationView) {
 		selected = agent;
 		failure = '';
-		openCodeV1 = false;
 		openCodeV2 = true;
 	}
 
@@ -160,7 +153,7 @@
 	// names what restore puts back.
 	async function runSetup(overwrite: boolean) {
 		if (!selected || working || selected.enabled) return;
-		if (selected.id === 'opencode' && !openCodeV1 && !openCodeV2) return;
+		if (selected.id === 'opencode' && !openCodeV2) return;
 		working = true;
 		failure = '';
 		try {
@@ -334,18 +327,18 @@
 				     the fragment and any refusal reason, before anything changes. -->
 				<AgentWiringSection agent={selected} />
 				{#if selected.id === 'opencode'}
-					<!-- The generations setup writes. Both on writes both
-					     blocks into the one file. -->
+					<!-- The generations this client understands. V2 is the one Relo
+				     writes; V1 stays visible so an older setup is still named. -->
 					<div class="flex flex-col gap-1 rounded-panel border border-line bg-surface px-3 py-2">
 						<p class="text-sm font-medium">
 							{$t('ui.pages.integrationsPage.openCodeVersionsTitle')}
 						</p>
 						<FieldSwitch
 							id="opencode-versions-v1"
-							bind:checked={openCodeV1}
+							checked={false}
 							label={$t('ui.pages.integrationsPage.openCodeV1')}
-							description={$t('ui.pages.integrationsPage.openCodeV1Desc')}
-							disabled={working}
+							description={$t('ui.pages.integrationsPage.openCodeV1Unsupported')}
+							disabled
 						/>
 						<FieldSwitch
 							id="opencode-versions-v2"

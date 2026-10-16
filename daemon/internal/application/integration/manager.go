@@ -357,13 +357,28 @@ func (m *Manager) modelsFor(agent Agent) []ModelRef {
 	}
 }
 
-func (m *Manager) modelsStale(agent Agent, record Record) bool {
+func (m *Manager) modelsStale(agent Agent, record Record, files []FileRecord) bool {
 	models := m.modelsFor(agent)
-	if record.ModelsDigest != m.files.ModelsDigest(models) {
-		return true
-	}
-	if agent.ID == "codex" {
+	switch agent.ID {
+	case "codex":
 		return !m.files.CodexCatalogLists(m.files.CodexCatalogPath(m.paths.CodexConfig()), models)
+	case "claude-code":
+		return !m.files.GatewayCacheLists(m.paths.ClaudeConfigDir(), m.paths.BaseURL(agent.Protocol), models)
+	}
+	// The stored digest is only a hint for the other clients: a fingerprint
+	// written by an older Relo can differ while the file on disk already
+	// carries the models this build publishes. The file decides.
+	if record.ModelsDigest == m.files.ModelsDigest(models) {
+		return false
+	}
+	for _, file := range files {
+		if file.Kind == KindKey || file.Kind == KindCodexLauncher {
+			continue
+		}
+		content, err := os.ReadFile(file.Path)
+		if err != nil || m.contributionDrifted(agent, file, string(content)) {
+			return true
+		}
 	}
 	return false
 }
@@ -417,7 +432,7 @@ func (m *Manager) Inspect(ctx context.Context, id string) (View, error) {
 	view := View{
 		Agent: agent, Enabled: record.Enabled, State: stateOrOff(record.State),
 		LastError: record.LastError, KeyID: record.KeyID, UpdatedAtMs: record.UpdatedAtMs,
-		ModelsStale: record.Enabled && m.modelsStale(agent, record),
+		ModelsStale: record.Enabled && m.modelsStale(agent, record, files),
 		Files:       []FileView{},
 		Context1M:   agent.ID == "codex" && (!found || record.Context1M),
 	}
@@ -1164,8 +1179,10 @@ func (m *Manager) writeContribution(ctx context.Context, agent Agent, contrib fi
 		}
 		snapshotPath = created
 	}
-	if err := m.files.WriteFileAtomic(contrib.path, []byte(contrib.content), contrib.mode); err != nil {
-		return err
+	if existing, err := os.ReadFile(contrib.path); err != nil || string(existing) != contrib.content {
+		if err := m.files.WriteFileAtomic(contrib.path, []byte(contrib.content), contrib.mode); err != nil {
+			return err
+		}
 	}
 	return m.store.SaveFile(ctx, FileRecord{
 		IntegrationID: agent.ID, Kind: contrib.kind, Path: contrib.path,

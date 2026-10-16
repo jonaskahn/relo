@@ -1,4 +1,4 @@
-// OpenCode service supervision: restart through its binary.
+// OpenCode service supervision: reload and restart through its binary.
 package codingclients
 
 import (
@@ -11,7 +11,7 @@ import (
 	"time"
 )
 
-const openCodeRestartTimeout = 45 * time.Second
+const openCodeActionTimeout = 45 * time.Second
 
 // OpenCode service errors name why its background server cannot be driven:
 // a missing key and a missing launcher.
@@ -39,7 +39,7 @@ func RestartOpenCodeService(ctx context.Context, home, apiKey string) error {
 	if err != nil {
 		return ErrOpenCodeLauncherMissing
 	}
-	ctx, cancel := context.WithTimeout(ctx, openCodeRestartTimeout)
+	ctx, cancel := context.WithTimeout(ctx, openCodeActionTimeout)
 	defer cancel()
 	envKey := EnvKeyName(ClientOpenCode)
 	// set stops the server and writes the variable. restart then starts a
@@ -51,6 +51,47 @@ func RestartOpenCodeService(ctx context.Context, home, apiKey string) error {
 		return fmt.Errorf("restart the OpenCode service: %w", err)
 	}
 	return nil
+}
+
+// ReloadOpenCodeService asks a running OpenCode server to re-read its
+// configuration. The server keeps its sessions and picks the new providers up
+// at the next step boundary.
+func ReloadOpenCodeService(ctx context.Context, home string) error {
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	binary, err := findClientBinary(ctx, home, "opencode")
+	if err != nil {
+		return ErrOpenCodeLauncherMissing
+	}
+	ctx, cancel := context.WithTimeout(ctx, openCodeActionTimeout)
+	defer cancel()
+	if err := runOpenCode(ctx, home, binary, "reload"); err != nil {
+		return fmt.Errorf("reload the OpenCode service: %w", err)
+	}
+	return nil
+}
+
+// OpenCodeServiceKey reads the key Relo stored in the OpenCode service's own
+// environment, so a repair can reload the server when it already runs with the
+// key Relo holds.
+func OpenCodeServiceKey(ctx context.Context, home, envKey string) (string, error) {
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	binary, err := findClientBinary(ctx, home, "opencode")
+	if err != nil {
+		return "", ErrOpenCodeLauncherMissing
+	}
+	ctx, cancel := context.WithTimeout(ctx, openCodeActionTimeout)
+	defer cancel()
+	command := exec.CommandContext(ctx, binary, "service", "get", "env", envKey)
+	command.Env = envWithLauncherNode(ctx, home, binary, os.Environ())
+	output, err := command.Output()
+	if err != nil {
+		return "", fmt.Errorf("read the OpenCode service key: %w", err)
+	}
+	return strings.TrimSpace(string(output)), nil
 }
 
 func runOpenCode(ctx context.Context, home, binary string, args ...string) error {

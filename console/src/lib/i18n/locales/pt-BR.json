@@ -1529,6 +1529,8 @@
         "verify": "Verificar",
         "repair": "Reparar",
         "restart": "Reiniciar",
+        "reload": "Recarregar",
+        "restartService": "Reiniciar serviço",
         "restore": "Restaurar",
         "state": {
           "ready": "Configurado",
@@ -1589,6 +1591,7 @@
         "restartNeeded": "O Codex continua com o catálogo antigo. Reinicie-o para mostrar os modelos do Relo.",
         "restarted": "Codex reiniciado. Reabra o seletor para carregar os modelos do Relo.",
         "restartedOpenCode": "OpenCode reiniciado. Ele lerá a chave do Relo.",
+        "reloaded": "OpenCode recarregado. Ele lerá a configuração mais recente do Relo.",
         "restored": "Arquivos restaurados.",
         "stepsHint": "Este agente lê a própria configuração, então o Relo entrega uma chave e as etapas.",
         "notInstalledDetail": "Este agente não está instalado, então o Relo não criará o diretório de configuração.",
@@ -1600,6 +1603,11 @@
         "envKey": "O Relo define {variable} a partir do segredo em {path}. Reinicie o cliente para captar a variável.",
         "envKeyNoPath": "O Relo define {variable} no ambiente de login. Reinicie o cliente para captar a variável.",
         "restarting": "Reiniciando",
+        "reloading": "Recarregando",
+        "warning": {
+          "restart_failed": "Os arquivos foram reparados, mas o serviço não pôde reiniciar: {detail}",
+          "reload_failed": "Os arquivos foram reparados, mas o cliente não pôde recarregar: {detail}"
+        },
         "repairing": "Reparando",
         "setupSuccessAuto": "A integração {label} está conectada e sua chave está no lugar.",
         "noFilesYet": "Nada gravado ainda.",
@@ -1614,6 +1622,7 @@
         "openCodeVersionsTitle": "Versão de configuração",
         "openCodeV1": "V1",
         "openCodeV1Desc": "Bloco de provedor singular legado",
+        "openCodeV1Unsupported": "Formato legado. A nova configuração oferece suporte apenas a V2.",
         "openCodeV2": "V2",
         "openCodeV2Desc": "Bloco de provedores plural atual",
         "addTitle": "Adicionar agente",

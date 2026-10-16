@@ -1529,6 +1529,8 @@
         "verify": "Vérifier",
         "repair": "Réparer",
         "restart": "Redémarrer",
+        "reload": "Recharger",
+        "restartService": "Redémarrer le service",
         "restore": "Restaurer",
         "state": {
           "ready": "Configuré",
@@ -1589,6 +1591,7 @@
         "restartNeeded": "Codex exécute encore l'ancien catalogue. Redémarrez-le pour afficher les modèles de Relo.",
         "restarted": "Codex redémarré. Rouvrez le sélecteur pour charger les modèles de Relo.",
         "restartedOpenCode": "OpenCode redémarré. Il lira la clé Relo.",
+        "reloaded": "OpenCode rechargé. Il lira la dernière configuration de Relo.",
         "restored": "Fichiers restaurés.",
         "stepsHint": "Cet agent lit sa propre configuration, Relo lui remet donc une clé et les étapes.",
         "notInstalledDetail": "Cet agent n'est pas installé, Relo ne créera donc pas son répertoire de configuration.",
@@ -1600,6 +1603,11 @@
         "envKey": "Relo définit {variable} depuis le secret dans {path}. Redémarrez le client pour qu'il prenne la variable en compte.",
         "envKeyNoPath": "Relo définit {variable} dans l'environnement de connexion. Redémarrez le client pour qu'il prenne la variable en compte.",
         "restarting": "Redémarrage",
+        "reloading": "Rechargement",
+        "warning": {
+          "restart_failed": "Les fichiers sont réparés, mais le service n'a pas pu redémarrer : {detail}",
+          "reload_failed": "Les fichiers sont réparés, mais l'application n'a pas pu recharger : {detail}"
+        },
         "repairing": "Réparation",
         "setupSuccessAuto": "L’intégration {label} est câblée et sa clé est en place.",
         "noFilesYet": "Rien d'écrit pour l'instant.",
@@ -1614,6 +1622,7 @@
         "openCodeVersionsTitle": "Version de configuration",
         "openCodeV1": "V1",
         "openCodeV1Desc": "Bloc de fournisseur singulier hérité",
+        "openCodeV1Unsupported": "Format hérité. La nouvelle installation prend uniquement en charge V2.",
         "openCodeV2": "V2",
         "openCodeV2Desc": "Bloc de fournisseurs pluriel actuel",
         "addTitle": "Ajouter un agent",

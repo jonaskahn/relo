@@ -1529,6 +1529,8 @@
         "verify": "検証",
         "repair": "修復",
         "restart": "再起動",
+        "reload": "再読み込み",
+        "restartService": "サービスを再起動",
         "restore": "復元",
         "state": {
           "ready": "セットアップ済み",
@@ -1589,6 +1591,7 @@
         "restartNeeded": "Codexは古いカタログで動作中です。Reloのモデルを表示するには再起動してください。",
         "restarted": "Codexを再起動しました。Reloのモデルを読み込むにはピッカーを開き直してください。",
         "restartedOpenCode": "OpenCodeを再起動しました。Reloキーを読み取ります。",
+        "reloaded": "OpenCode を再読み込みしました。Relo の最新設定を読み込みます。",
         "restored": "ファイルを復元しました。",
         "stepsHint": "このエージェントは自身の設定を読み取るため、Reloはキーと手順を渡します。",
         "notInstalledDetail": "このエージェントはインストールされていないため、Reloは設定ディレクトリを作成しません。",
@@ -1600,6 +1603,11 @@
         "envKey": "Reloは{path}内のシークレットから{variable}を設定します。クライアントを再起動して変数を読み込ませてください。",
         "envKeyNoPath": "Reloはログイン環境に{variable}を設定します。クライアントを再起動して変数を読み込ませてください。",
         "restarting": "再起動中",
+        "reloading": "再読み込み中",
+        "warning": {
+          "restart_failed": "ファイルは修復されましたが、サービスを再起動できませんでした: {detail}",
+          "reload_failed": "ファイルは修復されましたが、クライアントを再読み込みできませんでした: {detail}"
+        },
         "repairing": "修復中",
         "setupSuccessAuto": "{label} の統合が接続され、キーも配置されました。",
         "noFilesYet": "まだ書き込まれたものがありません。",
@@ -1614,6 +1622,7 @@
         "openCodeVersionsTitle": "設定バージョン",
         "openCodeV1": "V1",
         "openCodeV1Desc": "レガシーの単数プロバイダーブロック",
+        "openCodeV1Unsupported": "旧形式です。新しいセットアップは V2 のみ対応します。",
         "openCodeV2": "V2",
         "openCodeV2Desc": "現行の複数プロバイダーブロック",
         "addTitle": "エージェントを追加",

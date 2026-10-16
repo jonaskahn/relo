@@ -2,6 +2,7 @@
 package codingclients
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -143,7 +144,22 @@ func UpdateDesktopModels(library, baseURL string, models []ModelRef) ([]byte, er
 	}
 	profile["inferenceModels"] = modelsValue
 	profile["modelDiscoveryEnabled"] = false
+	if unchanged, readErr := desktopProfileUnchanged(profilePath, profile); readErr == nil && unchanged {
+		return os.ReadFile(profilePath)
+	}
 	return writeDesktopProfile(profilePath, profile)
+}
+
+func desktopProfileUnchanged(profilePath string, profile map[string]any) (bool, error) {
+	existing, err := os.ReadFile(profilePath)
+	if err != nil {
+		return false, err
+	}
+	encoded, err := json.MarshalIndent(profile, "", "  ")
+	if err != nil {
+		return false, err
+	}
+	return bytes.Equal(existing, append(encoded, '\n')), nil
 }
 
 func decodeDesktopProfile(profilePath string, existing []byte) (map[string]any, error) {

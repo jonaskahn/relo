@@ -1529,6 +1529,8 @@
         "verify": "Verifica",
         "repair": "Ripara",
         "restart": "Riavvia",
+        "reload": "Ricarica",
+        "restartService": "Riavvia servizio",
         "restore": "Ripristina",
         "state": {
           "ready": "Configurato",
@@ -1589,6 +1591,7 @@
         "restartNeeded": "Codex usa ancora il vecchio catalogo. Riavvialo per mostrare i modelli di Relo.",
         "restarted": "Codex riavviato. Riapri il selettore per caricare i modelli di Relo.",
         "restartedOpenCode": "OpenCode riavviato. Leggerà la chiave di Relo.",
+        "reloaded": "OpenCode ricaricato. Leggerà la configurazione più recente di Relo.",
         "restored": "File ripristinati.",
         "stepsHint": "Questo agente legge la propria configurazione, quindi Relo gli passa una chiave e i passaggi.",
         "notInstalledDetail": "Questo agente non è installato, quindi Relo non creerà la sua directory di configurazione.",
@@ -1600,6 +1603,11 @@
         "envKey": "Relo imposta {variable} dal segreto in {path}. Riavvia il client per fargli leggere la variabile.",
         "envKeyNoPath": "Relo imposta {variable} nell'ambiente di login. Riavvia il client per fargli leggere la variabile.",
         "restarting": "Riavvio",
+        "reloading": "Ricaricamento",
+        "warning": {
+          "restart_failed": "I file sono stati riparati, ma il servizio non si è riavviato: {detail}",
+          "reload_failed": "I file sono stati riparati, ma il client non si è ricaricato: {detail}"
+        },
         "repairing": "Riparazione",
         "setupSuccessAuto": "L’integrazione {label} è collegata e la sua chiave è a posto.",
         "noFilesYet": "Ancora nulla scritto.",
@@ -1614,6 +1622,7 @@
         "openCodeVersionsTitle": "Versione di configurazione",
         "openCodeV1": "V1",
         "openCodeV1Desc": "Blocco provider singolare legacy",
+        "openCodeV1Unsupported": "Formato legacy. La nuova configurazione supporta solo V2.",
         "openCodeV2": "V2",
         "openCodeV2Desc": "Blocco provider plurale attuale",
         "addTitle": "Aggiungi agente",

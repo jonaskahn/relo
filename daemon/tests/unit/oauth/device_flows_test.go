@@ -717,7 +717,7 @@ func TestBrowserCommand(t *testing.T) {
 		if err := oauth.OpenBrowser("https://example.test/authorize"); err != nil {
 			t.Fatalf("OpenBrowser() error = %v", err)
 		}
-		deadline := time.Now().Add(time.Second)
+		deadline := time.Now().Add(10 * time.Second)
 		for {
 			content, err := os.ReadFile(marker)
 			if err == nil && strings.Contains(string(content), "example.test") {

@@ -1529,6 +1529,8 @@
         "verify": "تحقق",
         "repair": "إصلاح",
         "restart": "إعادة التشغيل",
+        "reload": "إعادة تحميل",
+        "restartService": "تشغيل الخدمة من جديد",
         "restore": "استعادة",
         "state": {
           "ready": "اقامة",
@@ -1589,6 +1591,7 @@
         "restartNeeded": "لا يزال Codex يشغل الكتالوج القديم. أعد تشغيله لإظهار نماذج Relo.",
         "restarted": "تم إعادة تشغيل الدستور الغذائي. أعد فتح المنتقي لتحميل نماذج Relo.",
         "restartedOpenCode": "تمت إعادة تشغيل OpenCode. سوف يقرأ المفتاح Relo.",
+        "reloaded": "أُعيد تحميل OpenCode. سيقرأ أحدث إعدادات Relo.",
         "restored": "تمت استعادة الملفات.",
         "stepsHint": "يقرأ هذا الوكيل التكوين الخاص به، لذا يسلمه Relo المفتاح والخطوات.",
         "notInstalledDetail": "لم يتم تثبيت هذا الوكيل، لذا لن يقوم Relo بإنشاء دليل التكوين الخاص به.",
@@ -1600,6 +1603,11 @@
         "envKey": "Relo مجموعات {variable} من السر في {path}. أعد تشغيل العميل حتى يختار المتغير.",
         "envKeyNoPath": "Relo مجموعات {variable} في بيئة تسجيل الدخول. أعد تشغيل العميل حتى يختار المتغير.",
         "restarting": "جارٍ إعادة التشغيل",
+        "reloading": "جارٍ إعادة التحميل",
+        "warning": {
+          "restart_failed": "تم إصلاح الملفات لكن تعذر تشغيل الخدمة من جديد: {detail}",
+          "reload_failed": "تم إصلاح الملفات لكن تعذرت إعادة تحميل العميل: {detail}"
+        },
         "repairing": "جارٍ الإصلاح",
         "setupSuccessAuto": "تم توصيل تكامل {label} ومفتاحه في مكانه.",
         "noFilesYet": "لا شيء مكتوب بعد.",
@@ -1614,6 +1622,7 @@
         "openCodeVersionsTitle": "إصدار الإعدادات",
         "openCodeV1": "V1",
         "openCodeV1Desc": "كتلة الموفر المفردة القديمة",
+        "openCodeV1Unsupported": "تنسيق قديم. الإعداد الجديد يدعم V2 فقط.",
         "openCodeV2": "V2",
         "openCodeV2Desc": "كتلة الموفرين الجمع الحالية",
         "addTitle": "إضافة وكيل",

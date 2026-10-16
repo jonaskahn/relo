@@ -1529,6 +1529,8 @@
         "verify": "验证",
         "repair": "修复",
         "restart": "重启",
+        "reload": "重新加载",
+        "restartService": "重启服务",
         "restore": "还原",
         "state": {
           "ready": "已设置",
@@ -1589,6 +1591,7 @@
         "restartNeeded": "Codex 仍在使用旧目录。重启后才会显示 Relo 的模型。",
         "restarted": "Codex 已重启。重新打开选择器以加载 Relo 的模型。",
         "restartedOpenCode": "OpenCode 已重启，会读取 Relo 密钥。",
+        "reloaded": "OpenCode 已重新加载，将读取 Relo 的最新配置。",
         "restored": "文件已还原。",
         "stepsHint": "该代理自行读取配置，因此 Relo 只提供密钥与步骤。",
         "notInstalledDetail": "该代理未安装，因此 Relo 不会创建它的配置目录。",
@@ -1600,6 +1603,11 @@
         "envKey": "Relo 会把 {path} 中的密钥设为 {variable}。请重启该客户端以加载这个变量。",
         "envKeyNoPath": "Relo 会在登录环境中设置 {variable}。请重启该客户端以加载这个变量。",
         "restarting": "正在重启",
+        "reloading": "正在重新加载",
+        "warning": {
+          "restart_failed": "文件已修复，但无法重启客户端服务：{detail}",
+          "reload_failed": "文件已修复，但客户端无法重新加载：{detail}"
+        },
         "repairing": "正在修复",
         "setupSuccessAuto": "{label} 集成已接线，其密钥也已就位。",
         "noFilesYet": "尚未写入任何内容。",
@@ -1614,6 +1622,7 @@
         "openCodeVersionsTitle": "配置版本",
         "openCodeV1": "V1",
         "openCodeV1Desc": "旧版单数提供商块",
+        "openCodeV1Unsupported": "旧版格式。新设置仅支持 V2。",
         "openCodeV2": "V2",
         "openCodeV2Desc": "当前复数提供商块",
         "addTitle": "添加代理",

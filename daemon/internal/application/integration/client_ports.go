@@ -216,6 +216,8 @@ type ClientFiles interface {
 	StripOpenClaw(existing string) (string, error)
 	// WriteGatewayCache writes the model cache Claude Code's picker reads.
 	WriteGatewayCache(configDir, baseURL string, models []ModelRef) error
+	// GatewayCacheLists reports whether that cache carries these models.
+	GatewayCacheLists(configDir, baseURL string, models []ModelRef) bool
 	// RemoveGatewayCache removes the model cache Claude Code's picker reads.
 	RemoveGatewayCache(configDir, baseURL string) error
 	// GatewayCachePath answers the picker cache file in a configuration dir.
@@ -298,11 +300,15 @@ type WireCodec interface {
 	APIVersion() string
 }
 
-// AgentProcesses restarts the background processes one client keeps. The
+// AgentProcesses drives the background processes one client keeps. The
 // composition root backs it with the client daemons.
 type AgentProcesses interface {
 	// RestartCodexDaemon restarts the Codex app-server after Relo writes files.
 	RestartCodexDaemon(ctx context.Context, codexHome, home string) error
 	// RestartOpenCodeService restarts the OpenCode server with a fresh key.
 	RestartOpenCodeService(ctx context.Context, home, apiKey string) error
+	// ReloadOpenCodeService asks a running OpenCode server to re-read its configuration.
+	ReloadOpenCodeService(ctx context.Context, home string) error
+	// OpenCodeServiceKey reads the key the OpenCode service runs with.
+	OpenCodeServiceKey(ctx context.Context, home, envKey string) (string, error)
 }

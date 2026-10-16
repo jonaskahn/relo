@@ -96,18 +96,24 @@ type AntigravityVariant struct {
 	MaxOutput int
 	Context   int64
 	Reasoning bool
+	// ThinkingBudget is the budget the vendor publishes for this SKU. Nil
+	// leaves the request open-ended rather than guessing at a budget the
+	// endpoint may not serve.
+	ThinkingBudget *int
 }
 
 type antigravityWireConfig struct {
-	WireModel string `json:"wire_model"`
-	ModelEnum string `json:"model_enum,omitempty"`
-	MaxOutput int    `json:"max_output,omitempty"`
+	WireModel      string `json:"wire_model"`
+	ModelEnum      string `json:"model_enum,omitempty"`
+	MaxOutput      int    `json:"max_output,omitempty"`
+	ThinkingBudget *int   `json:"thinking_budget,omitempty"`
 }
 
 // EncodeAntigravityConfig stores one Antigravity tuple as a request configuration.
 func EncodeAntigravityConfig(variant AntigravityVariant) ModelRequestConfig {
 	raw, _ := json.Marshal(antigravityWireConfig{
 		WireModel: variant.WireModel, ModelEnum: variant.ModelEnum, MaxOutput: variant.MaxOutput,
+		ThinkingBudget: variant.ThinkingBudget,
 	})
 	return ModelRequestConfig{
 		ModelID: variant.LogicalID, Selection: variant.Selection, Effort: variant.Effort,
@@ -132,6 +138,7 @@ func DecodeAntigravityConfig(config ModelRequestConfig) (AntigravityVariant, boo
 		LogicalID: config.ModelID, Selection: config.Selection, Effort: config.Effort,
 		Default: config.Default, WireModel: wire.WireModel, ModelEnum: wire.ModelEnum,
 		MaxOutput: wire.MaxOutput, Context: config.Context, Reasoning: config.Reasoning,
+		ThinkingBudget: wire.ThinkingBudget,
 	}, true
 }
 

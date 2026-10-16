@@ -34,6 +34,46 @@ func GatewayCachePath(configDir string) string {
 	return filepath.Join(configDir, "cache", "gateway-models.json")
 }
 
+// GatewayCacheLists reports whether the picker cache carries exactly the models
+// Relo would publish, with the same base URL and picker names it writes.
+func GatewayCacheLists(configDir, baseURL string, models []ModelRef) bool {
+	content, err := os.ReadFile(GatewayCachePath(configDir))
+	if err != nil {
+		return false
+	}
+	var cached gatewayCache
+	if err := json.Unmarshal(content, &cached); err != nil {
+		return false
+	}
+	if strings.TrimSuffix(strings.TrimSpace(cached.BaseURL), "/") != strings.TrimSuffix(strings.TrimSpace(baseURL), "/") {
+		return false
+	}
+	return samePickerNames(cached.Models, models)
+}
+
+func samePickerNames(listed []gatewayModel, models []ModelRef) bool {
+	wanted := make(map[string]string, len(models))
+	for _, model := range models {
+		if strings.TrimSpace(model.ID) == "" {
+			continue
+		}
+		wanted[gatewayPickerID(model)] = ConfigDisplayName(model)
+	}
+	got := make(map[string]string, len(listed))
+	for _, model := range listed {
+		got[model.ID] = model.DisplayName
+	}
+	if len(got) != len(wanted) {
+		return false
+	}
+	for id, name := range wanted {
+		if got[id] != name {
+			return false
+		}
+	}
+	return true
+}
+
 func gatewayPickerID(model ModelRef) string {
 	id := strings.TrimSpace(model.ID)
 	if strings.HasPrefix(id, catalog.ClaudePrefix) {
@@ -47,6 +87,9 @@ func gatewayPickerID(model ModelRef) string {
 // ignores the file. The ids are the Anthropic spellings, which are the only
 // ones the picker keeps.
 func WriteGatewayCache(configDir, baseURL string, models []ModelRef) error {
+	if GatewayCacheLists(configDir, baseURL, models) {
+		return nil
+	}
 	baseURL = strings.TrimSuffix(strings.TrimSpace(baseURL), "/")
 	if baseURL == "" {
 		return nil
