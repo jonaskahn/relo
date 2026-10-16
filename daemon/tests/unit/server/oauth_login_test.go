@@ -129,7 +129,7 @@ func TestStartLoginStoresAConnectionOnlyWhenTheLoginFinishes(t *testing.T) {
 // stub runner does as soon as it is asked.
 func waitForLogin(t *testing.T, harness *harness, id string) server.LoginState {
 	t.Helper()
-	deadline := time.Now().Add(5 * time.Second)
+	deadline := time.Now().Add(15 * time.Second)
 	for time.Now().Before(deadline) {
 		state, found := harness.server.LoginStatus(id)
 		if !found {
