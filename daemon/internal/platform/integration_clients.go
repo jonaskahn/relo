@@ -398,6 +398,11 @@ func (ClientFiles) WriteGatewayCache(configDir, baseURL string, models []appinte
 	return fileError(codingclients.WriteGatewayCache(configDir, baseURL, clientModelRefs(models)))
 }
 
+// GatewayCacheLists reports whether the model cache Claude Code's picker reads carries these models.
+func (ClientFiles) GatewayCacheLists(configDir, baseURL string, models []appintegration.ModelRef) bool {
+	return codingclients.GatewayCacheLists(configDir, baseURL, clientModelRefs(models))
+}
+
 // RemoveGatewayCache removes the model cache Claude Code's picker reads.
 func (ClientFiles) RemoveGatewayCache(configDir, baseURL string) error {
 	return fileError(codingclients.RemoveGatewayCache(configDir, baseURL))
@@ -494,10 +499,10 @@ func (WireCodec) APIVersion() string {
 	return anthropiccodec.APIVersion
 }
 
-// AgentProcesses restarts the background processes one client keeps.
+// AgentProcesses drives the background processes one client keeps.
 type AgentProcesses struct{}
 
-// NewAgentProcesses returns the restarts over the client daemons.
+// NewAgentProcesses returns the commands over the client daemons.
 func NewAgentProcesses() AgentProcesses {
 	return AgentProcesses{}
 }
@@ -510,6 +515,17 @@ func (AgentProcesses) RestartCodexDaemon(ctx context.Context, codexHome, home st
 // RestartOpenCodeService restarts the OpenCode server with a fresh key.
 func (AgentProcesses) RestartOpenCodeService(ctx context.Context, home, apiKey string) error {
 	return fileError(codingclients.RestartOpenCodeService(ctx, home, apiKey))
+}
+
+// ReloadOpenCodeService reloads OpenCode's configuration without restarting it.
+func (AgentProcesses) ReloadOpenCodeService(ctx context.Context, home string) error {
+	return fileError(codingclients.ReloadOpenCodeService(ctx, home))
+}
+
+// OpenCodeServiceKey reads the key the OpenCode service runs with.
+func (AgentProcesses) OpenCodeServiceKey(ctx context.Context, home, envKey string) (string, error) {
+	key, err := codingclients.OpenCodeServiceKey(ctx, home, envKey)
+	return key, fileError(err)
 }
 
 // fileError carries a file-operation refusal across the port with its console
