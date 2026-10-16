@@ -195,7 +195,7 @@ func newPayload(req *inference.Request, opts wire.CodecOpts, baseURL string) cha
 	payload := chatRequestPayload{
 		Model:       req.Model,
 		Messages:    encodeMessages(req.Messages, replayDeepSeekReasoning(baseURL, req, opts)),
-		Tools:       encodeTools(req.Tools, baseURL),
+		Tools:       encodeTools(req.Tools, req.Model),
 		ToolChoice:  encodeToolChoice(req.ToolChoice),
 		Stream:      req.Stream,
 		MaxTokens:   req.MaxTokens,
@@ -393,14 +393,14 @@ func encodeToolChoice(choice *inference.ToolChoice) json.RawMessage {
 	return encoded
 }
 
-func encodeTools(tools []inference.Tool, baseURL string) []chatTool {
+func encodeTools(tools []inference.Tool, model string) []chatTool {
 	encoded := make([]chatTool, 0, len(tools))
 	for _, tool := range tools {
 		entry := chatTool{Type: functionType}
 		entry.Function.Name = tool.Name
 		entry.Function.Description = tool.Description
 		entry.Function.Parameters = tool.Parameters
-		if deepSeekAPI(baseURL) {
+		if deepSeekModel(model) {
 			entry.Function.Parameters = dropNullBytePatterns(tool.Parameters)
 		}
 		encoded = append(encoded, entry)
