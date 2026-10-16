@@ -1529,6 +1529,8 @@
         "verify": "검증",
         "repair": "복구",
         "restart": "재시작",
+        "reload": "새로 고침",
+        "restartService": "서비스 다시 시작",
         "restore": "복원",
         "state": {
           "ready": "설정됨",
@@ -1589,6 +1591,7 @@
         "restartNeeded": "Codex가 이전 카탈로그로 동작 중이에요. Relo 모델을 보려면 다시 시작하세요.",
         "restarted": "Codex를 다시 시작했어요. Relo 모델을 불러오려면 선택기를 다시 여세요.",
         "restartedOpenCode": "OpenCode를 다시 시작했어요. Relo 키를 읽을 거예요.",
+        "reloaded": "OpenCode를 새로 고쳤습니다. Relo의 최신 설정을 읽습니다.",
         "restored": "파일을 복원했어요.",
         "stepsHint": "이 에이전트는 자신의 설정을 읽기 때문에 Relo가 키와 단계를 넘겨줘요.",
         "notInstalledDetail": "이 에이전트가 설치되어 있지 않아서 Relo가 설정 디렉터리를 만들지 않아요.",
@@ -1600,6 +1603,11 @@
         "envKey": "Relo가 {path}의 시크릿에서 {variable}을(를) 설정해요. 클라이언트를 다시 시작해서 변수를 읽게 하세요.",
         "envKeyNoPath": "Relo가 로그인 환경에 {variable}을(를) 설정해요. 클라이언트를 다시 시작해서 변수를 읽게 하세요.",
         "restarting": "재시작 중",
+        "reloading": "새로 고치는 중",
+        "warning": {
+          "restart_failed": "파일은 복구되었지만 서비스를 다시 시작할 수 없습니다: {detail}",
+          "reload_failed": "파일은 복구되었지만 클라이언트를 새로 고칠 수 없습니다: {detail}"
+        },
         "repairing": "복구 중",
         "setupSuccessAuto": "{label} 통합이 연결되고 키도 준비되었습니다.",
         "noFilesYet": "아직 기록된 것이 없습니다.",
@@ -1614,6 +1622,7 @@
         "openCodeVersionsTitle": "구성 버전",
         "openCodeV1": "V1",
         "openCodeV1Desc": "레거시 단일 공급자 블록",
+        "openCodeV1Unsupported": "기존 형식입니다. 새 설정은 V2만 지원합니다.",
         "openCodeV2": "V2",
         "openCodeV2Desc": "현재 복수 공급자 블록",
         "addTitle": "에이전트 추가",

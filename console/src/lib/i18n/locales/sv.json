@@ -1529,6 +1529,8 @@
         "verify": "Verifiera",
         "repair": "Reparera",
         "restart": "Starta om",
+        "reload": "Ladda om",
+        "restartService": "Starta om tjänsten",
         "restore": "Återställ",
         "state": {
           "ready": "Konfigurerad",
@@ -1589,6 +1591,7 @@
         "restartNeeded": "Codex kör fortfarande den gamla katalogen. Starta om den för att visa Relos modeller.",
         "restarted": "Codex har startats om. Öppna väljaren igen för att läsa in Relos modeller.",
         "restartedOpenCode": "OpenCode har startats om. Den kommer att läsa Relo-nyckeln.",
+        "reloaded": "OpenCode laddades om. Den läser Relos senaste konfiguration.",
         "restored": "Filerna har återställts.",
         "stepsHint": "Denna agent läser sin egen konfiguration, så Relo ger den en nyckel och stegen.",
         "notInstalledDetail": "Denna agent är inte installerad, så Relo skapar inte dess konfigurationskatalog.",
@@ -1600,6 +1603,11 @@
         "envKey": "Relo ställer in {variable} från hemligheten i {path}. Starta om klienten så att den plockar upp variabeln.",
         "envKeyNoPath": "Relo ställer in {variable} i inloggningsmiljön. Starta om klienten så att den plockar upp variabeln.",
         "restarting": "Startar om",
+        "reloading": "Laddar om",
+        "warning": {
+          "restart_failed": "Filerna är reparerade, men tjänsten kunde inte startas om: {detail}",
+          "reload_failed": "Filerna är reparerade, men klienten kunde inte laddas om: {detail}"
+        },
         "repairing": "Reparerar",
         "setupSuccessAuto": "Integreringen av {label} är kopplad och dess nyckel är på plats.",
         "noFilesYet": "Inget skrivet ännu.",
@@ -1614,6 +1622,7 @@
         "openCodeVersionsTitle": "Konfigurationsversion",
         "openCodeV1": "V1",
         "openCodeV1Desc": "Äldre singular leverantörsblock",
+        "openCodeV1Unsupported": "Äldre format. Ny installation stöder endast V2.",
         "openCodeV2": "V2",
         "openCodeV2Desc": "Aktuellt plural leverantörsblock",
         "addTitle": "Lägg till agent",

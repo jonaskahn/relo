@@ -1529,6 +1529,8 @@
         "verify": "Xác minh",
         "repair": "sửa chữa",
         "restart": "Khởi động lại",
+        "reload": "Tải lại",
+        "restartService": "Khởi động lại dịch vụ",
         "restore": "Khôi phục",
         "state": {
           "ready": "Đã thiết lập",
@@ -1589,6 +1591,7 @@
         "restartNeeded": "Codex vẫn đang chạy danh mục cũ. Khởi động lại nó để hiển thị các mô hình của Relo.",
         "restarted": "Codex đã khởi động lại. Mở lại bộ chọn để tải các mô hình của Relo.",
         "restartedOpenCode": "OpenCode đã khởi động lại. Nó sẽ đọc khóa Relo.",
+        "reloaded": "OpenCode đã tải lại. Nó sẽ đọc cấu hình mới nhất của Relo.",
         "restored": "Các tập tin đã được khôi phục.",
         "stepsHint": "Tác nhân này đọc cấu hình của chính nó nên Relo đưa cho nó một khóa và các bước.",
         "notInstalledDetail": "Tác nhân này chưa được cài đặt nên Relo sẽ không tạo thư mục cấu hình của nó.",
@@ -1600,6 +1603,11 @@
         "envKey": "Relo bộ {variable} từ bí mật trong {path}. Khởi động lại máy khách để nó chọn biến.",
         "envKeyNoPath": "Relo bộ {variable} trong môi trường đăng nhập. Khởi động lại máy khách để nó chọn biến.",
         "restarting": "Đang khởi động lại",
+        "reloading": "Đang tải lại",
+        "warning": {
+          "restart_failed": "Các tệp đã được sửa, nhưng không thể khởi động lại dịch vụ: {detail}",
+          "reload_failed": "Các tệp đã được sửa, nhưng không thể tải lại ứng dụng: {detail}"
+        },
         "repairing": "Đang sửa",
         "setupSuccessAuto": "Tích hợp {label} đã được nối và khóa của nó đã có sẵn.",
         "noFilesYet": "Chưa ghi gì.",
@@ -1614,6 +1622,7 @@
         "openCodeVersionsTitle": "Phiên bản cấu hình",
         "openCodeV1": "V1",
         "openCodeV1Desc": "Khối nhà cung cấp số ít cũ",
+        "openCodeV1Unsupported": "Định dạng cũ. Thiết lập mới chỉ hỗ trợ V2.",
         "openCodeV2": "V2",
         "openCodeV2Desc": "Khối nhà cung cấp số nhiều hiện tại",
         "addTitle": "Thêm tác nhân",

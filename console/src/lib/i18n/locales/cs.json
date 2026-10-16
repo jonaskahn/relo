@@ -1529,6 +1529,8 @@
         "verify": "Ověřit",
         "repair": "Opravit",
         "restart": "Restartovat",
+        "reload": "Načíst znovu",
+        "restartService": "Restartovat službu",
         "restore": "Obnovit",
         "state": {
           "ready": "Nastaveno",
@@ -1589,6 +1591,7 @@
         "restartNeeded": "Codex stále běží se starým katalogem. Restartujte jej, aby zobrazil modely Relo.",
         "restarted": "Codex restartován. Znovu otevřete výběr, aby načetl modely Relo.",
         "restartedOpenCode": "OpenCode restartováno. Načte klíč Relo.",
+        "reloaded": "OpenCode byl znovu načten. Načte nejnovější konfiguraci Relo.",
         "restored": "Soubory obnoveny.",
         "stepsHint": "Tento agent čte vlastní konfiguraci, takže mu Relo předá klíč a kroky.",
         "notInstalledDetail": "Tento agent není nainstalován, takže Relo nevytvoří jeho konfigurační adresář.",
@@ -1600,6 +1603,11 @@
         "envKey": "Relo nastaví {variable} z tajemství v {path}. Restartujte klienta, aby proměnnou převzal.",
         "envKeyNoPath": "Relo nastaví {variable} v přihlašovacím prostředí. Restartujte klienta, aby proměnnou převzal.",
         "restarting": "Restartování",
+        "reloading": "Načítání",
+        "warning": {
+          "restart_failed": "Soubory byly opraveny, ale službu se nepodařilo restartovat: {detail}",
+          "reload_failed": "Soubory byly opraveny, ale klienta se nepodařilo znovu načíst: {detail}"
+        },
         "repairing": "Opravování",
         "setupSuccessAuto": "Integrace {label} je zapojena a její klíč je na místě.",
         "noFilesYet": "Zatím nic zapsáno.",
@@ -1614,6 +1622,7 @@
         "openCodeVersionsTitle": "Verze konfigurace",
         "openCodeV1": "V1",
         "openCodeV1Desc": "Starší singulární blok poskytovatele",
+        "openCodeV1Unsupported": "Starší formát. Nové nastavení podporuje pouze V2.",
         "openCodeV2": "V2",
         "openCodeV2Desc": "Aktuální plurální blok poskytovatelů",
         "addTitle": "Přidat agenta",

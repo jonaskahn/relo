@@ -1529,6 +1529,8 @@
         "verify": "Verifiëren",
         "repair": "Repareren",
         "restart": "Herstarten",
+        "reload": "Herladen",
+        "restartService": "Dienst herstarten",
         "restore": "Herstellen",
         "state": {
           "ready": "Ingesteld",
@@ -1589,6 +1591,7 @@
         "restartNeeded": "Codex draait nog met de oude catalogus. Herstart hem om de modellen van Relo te tonen.",
         "restarted": "Codex herstart. Heropen de kiezer om de modellen van Relo te laden.",
         "restartedOpenCode": "OpenCode herstart. Hij leest de Relo-sleutel.",
+        "reloaded": "OpenCode is herladen. Het leest de nieuwste configuratie van Relo.",
         "restored": "Bestanden hersteld.",
         "stepsHint": "Deze agent leest zijn eigen configuratie, dus Relo geeft hem een sleutel en de stappen.",
         "notInstalledDetail": "Deze agent is niet geïnstalleerd, dus Relo maakt zijn configuratiemap niet aan.",
@@ -1600,6 +1603,11 @@
         "envKey": "Relo stelt {variable} in uit het geheim in {path}. Herstart de client zodat hij de variabele oppikt.",
         "envKeyNoPath": "Relo stelt {variable} in in de loginomgeving. Herstart de client zodat hij de variabele oppikt.",
         "restarting": "Herstarten",
+        "reloading": "Herladen",
+        "warning": {
+          "restart_failed": "De bestanden zijn hersteld, maar de dienst kon niet opnieuw worden gestart: {detail}",
+          "reload_failed": "De bestanden zijn hersteld, maar de client kon niet opnieuw laden: {detail}"
+        },
         "repairing": "Repareren",
         "setupSuccessAuto": "De {label}-integratie is bedraad en zijn sleutel staat op zijn plek.",
         "noFilesYet": "Nog niets geschreven.",
@@ -1614,6 +1622,7 @@
         "openCodeVersionsTitle": "Configversie",
         "openCodeV1": "V1",
         "openCodeV1Desc": "Verouderd enkelvoudig providerblok",
+        "openCodeV1Unsupported": "Verouderd formaat. Nieuwe installatie ondersteunt alleen V2.",
         "openCodeV2": "V2",
         "openCodeV2Desc": "Huidig meervoudig providerblok",
         "addTitle": "Agent toevoegen",

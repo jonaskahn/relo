@@ -1545,6 +1545,8 @@
         "verify": "Verify",
         "repair": "Repair",
         "restart": "Restart",
+        "reload": "Reload",
+        "restartService": "Restart service",
         "restore": "Restore",
         "state": {
           "ready": "Ready",
@@ -1606,6 +1608,7 @@
         "restartNeeded": "Codex still runs the old catalog. Restart it to see Relo's models.",
         "restarted": "Codex restarted. Reopen the picker to load Relo's models.",
         "restartedOpenCode": "OpenCode restarted. It will read the Relo key.",
+        "reloaded": "OpenCode reloaded. It will read Relo's latest configuration.",
         "restored": "Files restored.",
         "stepsHint": "This agent reads its own configuration, so Relo hands it a key and the steps.",
         "notInstalledDetail": "This agent is not installed, so Relo will not create its config directory.",
@@ -1617,6 +1620,11 @@
         "envKey": "Relo sets {variable} from the secret in {path}. Restart the client so it picks it up.",
         "envKeyNoPath": "Relo sets {variable} in the login environment. Restart the client so it picks it up.",
         "restarting": "Restarting",
+        "reloading": "Reloading",
+        "warning": {
+          "restart_failed": "The files are repaired, but the client service could not restart: {detail}",
+          "reload_failed": "The files are repaired, but the client could not reload: {detail}"
+        },
         "repairing": "Repairing",
         "noFilesYet": "No files written yet.",
         "stepsUnknown": "This client publishes no setup steps. Point it at the base URL and key above.",
@@ -1630,6 +1638,7 @@
         "openCodeVersionsTitle": "Config version",
         "openCodeV1": "V1",
         "openCodeV1Desc": "Legacy singular provider block",
+        "openCodeV1Unsupported": "Legacy format. New setup supports V2 only.",
         "openCodeV2": "V2",
         "openCodeV2Desc": "Current plural providers block"
       },

@@ -1529,6 +1529,8 @@
         "verify": "Prüfen",
         "repair": "Reparieren",
         "restart": "Neu starten",
+        "reload": "Neu laden",
+        "restartService": "Dienst neu starten",
         "restore": "Wiederherstellen",
         "state": {
           "ready": "Eingerichtet",
@@ -1589,6 +1591,7 @@
         "restartNeeded": "Codex läuft noch mit dem alten Katalog. Neu starten, damit Relos Modelle erscheinen.",
         "restarted": "Codex neu gestartet. Den Picker erneut öffnen, damit Relos Modelle geladen werden.",
         "restartedOpenCode": "OpenCode neu gestartet. Es liest den Relo-Schlüssel.",
+        "reloaded": "OpenCode neu geladen. Die neueste Konfiguration von Relo wird gelesen.",
         "restored": "Dateien wiederhergestellt.",
         "stepsHint": "Dieser Agent liest seine eigene Konfiguration, deshalb übergibt Relo ihm einen Schlüssel und die Schritte.",
         "notInstalledDetail": "Dieser Agent ist nicht installiert, deshalb legt Relo sein Konfigurationsverzeichnis nicht an.",
@@ -1600,6 +1603,11 @@
         "envKey": "Relo setzt {variable} aus dem Geheimnis in {path}. Starte den Client neu, damit er die Variable übernimmt.",
         "envKeyNoPath": "Relo setzt {variable} in der Login-Umgebung. Starte den Client neu, damit er die Variable übernimmt.",
         "restarting": "Neustart läuft",
+        "reloading": "Wird neu geladen",
+        "warning": {
+          "restart_failed": "Die Dateien sind repariert, aber der Dienst konnte nicht neu gestartet werden: {detail}",
+          "reload_failed": "Die Dateien sind repariert, aber die Anwendung konnte nicht neu laden: {detail}"
+        },
         "repairing": "Reparatur läuft",
         "setupSuccessAuto": "Die {label}-Integration ist verdrahtet und ihr Schlüssel ist an seinem Platz.",
         "noFilesYet": "Noch nichts geschrieben.",
@@ -1614,6 +1622,7 @@
         "openCodeVersionsTitle": "Konfig-Version",
         "openCodeV1": "V1",
         "openCodeV1Desc": "Veralteter einzelner Anbieter-Block",
+        "openCodeV1Unsupported": "Legacy-Format. Neue Einrichtung unterstützt nur V2.",
         "openCodeV2": "V2",
         "openCodeV2Desc": "Aktueller pluraler Anbieter-Block",
         "addTitle": "Agent hinzufügen",

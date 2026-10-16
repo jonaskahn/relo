@@ -1529,6 +1529,8 @@
         "verify": "Doğrulayın",
         "repair": "Onarın",
         "restart": "Yeniden başlat",
+        "reload": "Yeniden yükle",
+        "restartService": "Servisi yeniden başlat",
         "restore": "Geri yükleyin",
         "state": {
           "ready": "Kuruldu",
@@ -1589,6 +1591,7 @@
         "restartNeeded": "Codex hâlâ eski katalogla çalışıyor. Relo’nun modellerini göstermek için yeniden başlatın.",
         "restarted": "Codex yeniden başlatıldı. Relo’nun modellerini yüklemek için seçiciyi yeniden açın.",
         "restartedOpenCode": "OpenCode yeniden başlatıldı. Relo anahtarını okuyacak.",
+        "reloaded": "OpenCode yeniden yüklendi. Relo'nun en son yapılandırmasını okuyacak.",
         "restored": "Dosyalar geri yüklendi.",
         "stepsHint": "Bu ajan kendi yapılandırmasını okur; bu yüzden Relo ona bir anahtar ve adımları verir.",
         "notInstalledDetail": "Bu ajan yüklü değil; bu yüzden Relo onun yapılandırma dizinini oluşturmaz.",
@@ -1600,6 +1603,11 @@
         "envKey": "Relo, {path} içindeki gizli anahtardan {variable} değişkenini ayarlar. Değişkeni alması için istemciyi yeniden başlatın.",
         "envKeyNoPath": "Relo, oturum açma ortamında {variable} değişkenini ayarlar. Değişkeni alması için istemciyi yeniden başlatın.",
         "restarting": "Yeniden başlatılıyor",
+        "reloading": "Yeniden yükleniyor",
+        "warning": {
+          "restart_failed": "Dosyalar onarıldı ancak servis yeniden başlatılamadı: {detail}",
+          "reload_failed": "Dosyalar onarıldı ancak istemci yeniden yüklenemedi: {detail}"
+        },
         "repairing": "Onarılıyor",
         "setupSuccessAuto": "{label} entegrasyonu bağlandı ve anahtarı yerinde.",
         "noFilesYet": "Henüz yazılan bir şey yok.",
@@ -1614,6 +1622,7 @@
         "openCodeVersionsTitle": "Yapılandırma sürümü",
         "openCodeV1": "V1",
         "openCodeV1Desc": "Eski tekil sağlayıcı bloğu",
+        "openCodeV1Unsupported": "Eski biçim. Yeni kurulum yalnızca V2 destekler.",
         "openCodeV2": "V2",
         "openCodeV2Desc": "Geçerli çoğul sağlayıcı bloğu",
         "addTitle": "Ajan ekle",

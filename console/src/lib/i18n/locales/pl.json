@@ -1529,6 +1529,8 @@
         "verify": "Zweryfikuj",
         "repair": "Napraw",
         "restart": "Uruchom ponownie",
+        "reload": "Przeładuj",
+        "restartService": "Uruchom usługę ponownie",
         "restore": "Przywróć",
         "state": {
           "ready": "Skonfigurowany",
@@ -1589,6 +1591,7 @@
         "restartNeeded": "Codex nadal działa na starym katalogu. Uruchom go ponownie, aby pokazać modele Relo.",
         "restarted": "Uruchomiono Codex ponownie. Otwórz ponownie selektor, aby wczytać modele Relo.",
         "restartedOpenCode": "Uruchomiono OpenCode ponownie. Odczyta klucz Relo.",
+        "reloaded": "OpenCode przeładowany. Odczyta najnowszą konfigurację Relo.",
         "restored": "Przywrócono pliki.",
         "stepsHint": "Ten agent czyta własną konfigurację, więc Relo przekazuje mu klucz i kroki.",
         "notInstalledDetail": "Ten agent nie jest zainstalowany, więc Relo nie utworzy jego katalogu konfiguracji.",
@@ -1600,6 +1603,11 @@
         "envKey": "Relo ustawia {variable} z sekretu w {path}. Uruchom klienta ponownie, aby pobrał zmienną.",
         "envKeyNoPath": "Relo ustawia {variable} w środowisku logowania. Uruchom klienta ponownie, aby pobrał zmienną.",
         "restarting": "Ponowne uruchamianie",
+        "reloading": "Przeładowywanie",
+        "warning": {
+          "restart_failed": "Pliki zostały naprawione, ale nie udało się ponownie uruchomić usługi: {detail}",
+          "reload_failed": "Pliki zostały naprawione, ale nie udało się przeładować klienta: {detail}"
+        },
         "repairing": "Naprawianie",
         "setupSuccessAuto": "Integracja {label} jest podłączona, a jej klucz jest na miejscu.",
         "noFilesYet": "Nic jeszcze nie zapisano.",
@@ -1614,6 +1622,7 @@
         "openCodeVersionsTitle": "Wersja konfiguracji",
         "openCodeV1": "V1",
         "openCodeV1Desc": "Starszy pojedynczy blok dostawcy",
+        "openCodeV1Unsupported": "Format starszy. Nowa konfiguracja obsługuje tylko V2.",
         "openCodeV2": "V2",
         "openCodeV2Desc": "Bieżący mnogi blok dostawców",
         "addTitle": "Dodaj agenta",
