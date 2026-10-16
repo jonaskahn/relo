@@ -359,3 +359,45 @@ func TestModelsDigestChangesWhenTheListChanges(t *testing.T) {
 		t.Fatalf("digest = %q, want a change when the think ladder changes", narrow)
 	}
 }
+
+func TestCodexCatalogListsExactlyThePublishedModels(t *testing.T) {
+	models := []codingclients.ModelRef{{ID: "alpha", Name: "Alpha"}, {ID: "beta", Name: "Beta"}}
+	path := codingclients.CodexCatalogPath(filepath.Join(t.TempDir(), "config.toml"))
+	if codingclients.CodexCatalogLists(path, models) {
+		t.Fatal("CodexCatalogLists() = true for a missing catalog")
+	}
+	if err := codingclients.WriteCodexCatalog(path, models); err != nil {
+		t.Fatalf("WriteCodexCatalog() error = %v", err)
+	}
+	if !codingclients.CodexCatalogLists(path, models) {
+		t.Fatal("CodexCatalogLists() = false for the catalog just written")
+	}
+	if codingclients.CodexCatalogLists(path, models[:1]) {
+		t.Fatal("CodexCatalogLists() = true while a model Relo no longer publishes is left over")
+	}
+	if codingclients.CodexCatalogLists(path, []codingclients.ModelRef{{ID: "alpha", Name: "Alpha"}, {ID: "beta", Name: "Renamed"}}) {
+		t.Fatal("CodexCatalogLists() = true for a renamed model")
+	}
+}
+
+func TestWriteCodexCatalogSkipsAnIdenticalFile(t *testing.T) {
+	models := []codingclients.ModelRef{{ID: "alpha", Name: "Alpha"}}
+	path := codingclients.CodexCatalogPath(filepath.Join(t.TempDir(), "config.toml"))
+	if err := codingclients.WriteCodexCatalog(path, models); err != nil {
+		t.Fatalf("WriteCodexCatalog() error = %v", err)
+	}
+	before, err := os.Stat(path)
+	if err != nil {
+		t.Fatalf("stat the catalog: %v", err)
+	}
+	if err := codingclients.WriteCodexCatalog(path, models); err != nil {
+		t.Fatalf("WriteCodexCatalog() again error = %v", err)
+	}
+	after, err := os.Stat(path)
+	if err != nil {
+		t.Fatalf("stat the catalog again: %v", err)
+	}
+	if !after.ModTime().Equal(before.ModTime()) {
+		t.Fatal("an identical catalog was rewritten")
+	}
+}

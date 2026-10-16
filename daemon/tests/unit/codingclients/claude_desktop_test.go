@@ -287,3 +287,47 @@ func TestDesktopModelNamesAvoidTheVendorWordsDesktopRefuses(t *testing.T) {
 		}
 	}
 }
+
+func TestUpdateDesktopModelsRewritesOnlyWhenTheProfileChanges(t *testing.T) {
+	const base = "http://127.0.0.1:10202"
+	library := t.TempDir()
+	models := []codingclients.ModelRef{{ID: "claude-opus", Name: "Opus"}}
+	if content, err := codingclients.UpdateDesktopModels(library, base, models); err != nil || content != nil {
+		t.Fatalf("UpdateDesktopModels(no profile) = %q, %v, want nothing", content, err)
+	}
+	if _, _, err := codingclients.WriteDesktopProfile(library, base, "rlo_ak_test", models); err != nil {
+		t.Fatalf("WriteDesktopProfile() error = %v", err)
+	}
+	// The first update settles the file into the updater's own key order, so
+	// the one after it is the unchanged case.
+	if _, err := codingclients.UpdateDesktopModels(library, base, models); err != nil {
+		t.Fatalf("UpdateDesktopModels(first) error = %v", err)
+	}
+	path := codingclients.DesktopProfilePath(library)
+	before, err := os.Stat(path)
+	if err != nil {
+		t.Fatalf("stat the profile: %v", err)
+	}
+	same, err := codingclients.UpdateDesktopModels(library, base, models)
+	if err != nil {
+		t.Fatalf("UpdateDesktopModels(same list) error = %v", err)
+	}
+	written, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatalf("read the profile: %v", err)
+	}
+	after, err := os.Stat(path)
+	if err != nil {
+		t.Fatalf("stat the profile again: %v", err)
+	}
+	if string(same) != string(written) || !after.ModTime().Equal(before.ModTime()) {
+		t.Fatalf("an unchanged list rewrote the profile: %s", written)
+	}
+	changed, err := codingclients.UpdateDesktopModels(library, base, []codingclients.ModelRef{{ID: "claude-sonnet", Name: "Sonnet"}})
+	if err != nil {
+		t.Fatalf("UpdateDesktopModels(new list) error = %v", err)
+	}
+	if !strings.Contains(string(changed), "Sonnet") || strings.Contains(string(changed), "Opus") {
+		t.Fatalf("profile = %s, want the new list only", changed)
+	}
+}
