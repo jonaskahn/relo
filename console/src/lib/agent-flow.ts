@@ -12,7 +12,8 @@ import type { IntegrationResult, IntegrationView } from './types';
 export type AgentStep = 'view' | 'result' | 'reveal';
 
 /** The work an operator asks of one agent from this page. */
-export type AgentAction = 'setup' | 'remove' | 'restore' | 'rotate' | 'repair' | 'restart';
+export type AgentAction =
+	'setup' | 'remove' | 'restore' | 'rotate' | 'repair' | 'restart' | 'reload';
 
 /** The irreversible work that asks before it happens.
  *  Each one closes the modal, opens its confirmation, and returns to a step. */
@@ -43,6 +44,7 @@ export type ResultCode =
 	| 'rotated'
 	| 'restarted'
 	| 'restartedOpenCode'
+	| 'reloaded'
 	| 'removed'
 	| 'restored'
 	| 'saved';
@@ -52,6 +54,7 @@ export function resultCodeFor(action: AgentAction, agent: IntegrationView): Resu
 	if (action === 'setup') return agent.manages_files ? 'setupSuccessAuto' : 'saved';
 	if (action === 'rotate') return 'rotated';
 	if (action === 'restart') return agent.id === 'opencode' ? 'restartedOpenCode' : 'restarted';
+	if (action === 'reload') return 'reloaded';
 	if (action === 'repair')
 		return agent.id === 'codex' && agent.restart_needed ? 'repairedCodex' : 'repaired';
 	return action === 'remove' ? 'removed' : 'restored';

@@ -580,6 +580,9 @@ export interface IntegrationPlan {
 export interface IntegrationResult {
 	readonly integration: IntegrationView;
 	readonly token?: string;
+	// warnings name work the action finished beside work it could not finish,
+	// so a completed write is never hidden by a client that refused to reload.
+	readonly warnings?: readonly { readonly code: string; readonly detail?: string }[];
 }
 
 /** One line of an agent's verification. */

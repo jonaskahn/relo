@@ -13,6 +13,7 @@ export type IntegrationAction =
 	| 'verify'
 	| 'repair'
 	| 'restart'
+	| 'reload'
 	| 'restore'
 	| 'rotate'
 	| 'models'
@@ -28,6 +29,7 @@ const integrationEndpoints: Record<IntegrationAction, string> = {
 	verify: 'verify',
 	repair: 'repair',
 	restart: 'restart',
+	reload: 'reload',
 	restore: 'restore',
 	rotate: 'rotate',
 	models: 'models',
@@ -75,8 +77,8 @@ export function refusalCode(
 	return '';
 }
 
-/** Names the OpenCode generations a set-up writes: v1, v2, or v1+v2. Empty means the
- *  caller sends no versions and the daemon writes its default. */
+/** Names the OpenCode generations a set-up writes. New setup writes v2 only; the
+ *  legacy v1 selection stays understood so an older caller is still readable. */
 export function openCodeSetupVersions(v1: boolean, v2: boolean): string {
 	if (v1 && v2) return 'v1+v2';
 	if (v1) return 'v1';
