@@ -734,6 +734,67 @@ func TestZenFreeDeclaresToolsForAToolFreeTurn(t *testing.T) {
 	})
 }
 
+func TestZenFreeReplaysCodexPatchHistory(t *testing.T) {
+	patch := "*** Begin Patch\n*** Delete File: notes.md\n*** End Patch"
+	wrapped, err := json.Marshal(map[string]string{"input": patch})
+	if err != nil {
+		t.Fatal(err)
+	}
+	cases := []struct {
+		name string
+		call map[string]any
+		want string
+	}{
+		{"legacy raw function call", map[string]any{"type": "function_call", "arguments": patch}, "{}"},
+		{"wrapped function call", map[string]any{"type": "function_call", "arguments": string(wrapped)}, string(wrapped)},
+		{"native custom call", map[string]any{"type": "custom_tool_call", "input": patch}, string(wrapped)},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			gateway := newZenGateway(t, zenChatStream)
+			daemon := startZenFreeDaemon(t, gateway.URL(), zenFreeModel{ID: "beam-free"})
+			tc.call["name"], tc.call["call_id"] = "apply_patch", "call_patch"
+			payload, err := json.Marshal(map[string]any{
+				"model": "beam-free", "stream": false,
+				"tools": []any{map[string]any{"type": "custom", "name": "exec"}},
+				"input": []any{
+					tc.call,
+					map[string]any{"type": "function_call_output", "call_id": "call_patch", "output": "Done"},
+					map[string]any{"role": "user", "content": []any{
+						map[string]any{"type": "input_text", "text": "Continue"},
+					}},
+				},
+			})
+			if err != nil {
+				t.Fatal(err)
+			}
+			response := send(t, daemon.dataPlane, "/v1/responses", dataPlaneToken, string(payload))
+			defer func() { _ = response.Body.Close() }()
+			body, err := io.ReadAll(response.Body)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if response.StatusCode != http.StatusOK {
+				t.Fatalf("status = %d, body = %s", response.StatusCode, body)
+			}
+			messages := zenItems(gateway.last.body["messages"])
+			if len(messages) != 3 {
+				t.Fatalf("messages = %v, want call, result, and user turn", messages)
+			}
+			calls := zenItems(zenField(messages[0], "tool_calls"))
+			if len(calls) != 1 {
+				t.Fatalf("tool calls = %v, want the replayed patch call", calls)
+			}
+			if got := zenField(zenField(calls[0], "function"), "arguments"); got != tc.want {
+				t.Fatalf("arguments = %v, want %s", got, tc.want)
+			}
+			if zenField(calls[0], "id") != "call_patch" || zenField(messages[1], "tool_call_id") != "call_patch" {
+				t.Fatalf("history = %v, want the patch result bound to its call", messages)
+			}
+		})
+	}
+}
+
 // TestZenFreeCorrectsWhatTheResponsesWireRefuses covers the two refusals the
 // Responses dialect adds over the chat one: it validates every tool schema
 // against a narrower set of keywords, and it names an output floor. A coding

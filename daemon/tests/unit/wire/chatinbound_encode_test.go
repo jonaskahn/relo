@@ -559,7 +559,7 @@ func messageMap(t *testing.T, body map[string]any, index int) map[string]any {
 	return message
 }
 
-func TestChatNormalizesNonJSONToolArguments(t *testing.T) {
+func TestChatNormalizesNonObjectToolArguments(t *testing.T) {
 	cases := []struct {
 		name string
 		in   string
@@ -570,7 +570,13 @@ func TestChatNormalizesNonJSONToolArguments(t *testing.T) {
 		{name: "empty", in: "", want: "{}"},
 		{name: "whitespace only", in: "  \n\t", want: "{}"},
 		{name: "json object passes through", in: `{"cmd":"ls -la"}`, want: `{"cmd":"ls -la"}`},
-		{name: "json string passes through", in: `"*** Begin Patch"`, want: `"*** Begin Patch"`},
+		{name: "empty object passes through", in: `{}`, want: `{}`},
+		{name: "object whitespace is preserved", in: " \n{\"input\":\"text(1)\"}\t", want: " \n{\"input\":\"text(1)\"}\t"},
+		{name: "json string", in: `"*** Begin Patch"`, want: "{}"},
+		{name: "json array", in: `[{"input":"patch"}]`, want: "{}"},
+		{name: "json null", in: `null`, want: "{}"},
+		{name: "json number", in: `42`, want: "{}"},
+		{name: "json boolean", in: `true`, want: "{}"},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
@@ -590,8 +596,9 @@ func TestChatNormalizesNonJSONToolArguments(t *testing.T) {
 			if function["arguments"] != tc.want {
 				t.Fatalf("arguments = %v, want %s", function["arguments"], tc.want)
 			}
-			if !json.Valid([]byte(function["arguments"].(string))) {
-				t.Fatalf("arguments = %q, want valid JSON on the wire", function["arguments"])
+			var arguments map[string]json.RawMessage
+			if err := json.Unmarshal([]byte(function["arguments"].(string)), &arguments); err != nil || arguments == nil {
+				t.Fatalf("arguments = %q, want a JSON object string on the wire", function["arguments"])
 			}
 		})
 	}
