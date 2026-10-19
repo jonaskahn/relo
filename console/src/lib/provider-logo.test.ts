@@ -23,6 +23,10 @@ describe('providerLogoSrc', () => {
 		expect(providerLogoSrc('teamorouter')).toBe('/provider-logos/teamorouter.svg');
 	});
 
+	it('resolves the project-supplied OpenDesign mark', () => {
+		expect(providerLogoSrc('open-design')).toBe('/provider-logos/open-design.svg');
+	});
+
 	// The keyless lane is the same vendor with no account, so it wears that
 	// vendor's mark rather than one of its own.
 	it('resolves the keyless Kilo lane through the gateway mark', () => {
@@ -200,6 +204,7 @@ describe('providerLogoPath', () => {
 			'hermes',
 			'pi',
 			'omp',
+			'open-design',
 			'orcarouter',
 			'other',
 			'shared',
