@@ -53,6 +53,9 @@ func TestTemplateSettingsCarryContextVariants(t *testing.T) {
 	if choice.LongContext || !choice.AutoRefresh {
 		t.Fatalf("choice = %+v, want long context off and refresh on", choice)
 	}
+	if !choice.ToolCutoff {
+		t.Fatal("choice.ToolCutoff = false, want the default on")
+	}
 }
 
 func TestTemplateSettingsSave(t *testing.T) {
@@ -85,5 +88,18 @@ func TestTemplateSettingsSave(t *testing.T) {
 	}
 	if !store.AutoRefresh(ctx, "claude") || store.AutoRefresh(ctx, "openai-codex") || store.AutoRefresh(ctx, "other") != true {
 		t.Fatal("AutoRefresh() did not read the stored rows, or leaked to a provider without one")
+	}
+	if err := store.SaveToolCutoff(ctx, "opencode-free", false, 24); err != nil {
+		t.Fatalf("SaveToolCutoff() error = %v", err)
+	}
+	choice, found, err = store.Get(ctx, "opencode-free")
+	if err != nil || !found || choice.ToolCutoff {
+		t.Fatalf("Get(opencode-free) = %+v, %v, %v, want tool cutoff off", choice, found, err)
+	}
+	if err := store.SaveToolCutoff(ctx, "opencode-free", true, 25); err != nil {
+		t.Fatalf("SaveToolCutoff() error = %v", err)
+	}
+	if choice, _, _ = store.Get(ctx, "opencode-free"); !choice.ToolCutoff {
+		t.Fatal("Get(opencode-free) tool cutoff = false, want the stored on switch")
 	}
 }

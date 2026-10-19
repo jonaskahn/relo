@@ -344,18 +344,23 @@ type templateChoiceStore struct {
 	settings *sqlite.TemplateSettings
 }
 
-// Get reads one template's stored context and refresh choices.
-func (s templateChoiceStore) Get(ctx context.Context, templateID string) (bool, bool, bool, error) {
+// Get reads one template's stored context, refresh, and tool cutoff choices.
+func (s templateChoiceStore) Get(ctx context.Context, templateID string) (bool, bool, bool, bool, error) {
 	choice, found, err := s.settings.Get(ctx, templateID)
 	if err != nil || !found {
-		return false, false, found, err
+		return false, false, false, found, err
 	}
-	return choice.LongContext, choice.AutoRefresh, true, nil
+	return choice.LongContext, choice.AutoRefresh, choice.ToolCutoff, true, nil
 }
 
 // Save stores one template's context and refresh choices.
 func (s templateChoiceStore) Save(ctx context.Context, templateID string, longContext, autoRefresh *bool, nowMs int64) error {
 	return s.settings.Save(ctx, templateID, longContext, autoRefresh, nowMs)
+}
+
+// SaveToolCutoff stores one template's tool cutoff choice.
+func (s templateChoiceStore) SaveToolCutoff(ctx context.Context, templateID string, toolCutoff bool, nowMs int64) error {
+	return s.settings.SaveToolCutoff(ctx, templateID, toolCutoff, nowMs)
 }
 
 // Prefixes reads one template's model families.

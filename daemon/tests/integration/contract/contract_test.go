@@ -368,16 +368,20 @@ type templateStore struct {
 	inner *sqlite.TemplateSettings
 }
 
-func (s templateStore) Get(ctx context.Context, templateID string) (bool, bool, bool, error) {
+func (s templateStore) Get(ctx context.Context, templateID string) (bool, bool, bool, bool, error) {
 	choice, found, err := s.inner.Get(ctx, templateID)
 	if err != nil || !found {
-		return false, false, found, err
+		return false, false, false, found, err
 	}
-	return choice.LongContext, choice.AutoRefresh, true, nil
+	return choice.LongContext, choice.AutoRefresh, choice.ToolCutoff, true, nil
 }
 
 func (s templateStore) Save(ctx context.Context, templateID string, longContext, autoRefresh *bool, nowMs int64) error {
 	return s.inner.Save(ctx, templateID, longContext, autoRefresh, nowMs)
+}
+
+func (s templateStore) SaveToolCutoff(ctx context.Context, templateID string, toolCutoff bool, nowMs int64) error {
+	return s.inner.SaveToolCutoff(ctx, templateID, toolCutoff, nowMs)
 }
 
 func (s templateStore) Prefixes(ctx context.Context, templateID string) ([]string, bool, error) {

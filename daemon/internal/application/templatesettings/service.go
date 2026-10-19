@@ -16,6 +16,7 @@ var supportedTemplates = map[string]Setting{
 	"openai-codex":       {AutoRefresh: true},
 	"google-antigravity": {AutoRefresh: true, ModelPrefixes: []string{"claude", "gemini"}},
 	"grok":               {AutoRefresh: true},
+	"opencode-free":      {ToolCutoff: true},
 }
 
 var (
@@ -32,12 +33,14 @@ var (
 // no stored choice governs it.
 type Setting struct {
 	AutoRefresh   bool
+	ToolCutoff    bool
 	ModelPrefixes []string
 }
 
 // Patch changes only the fields the caller sent.
 type Patch struct {
 	AutoRefresh   *bool
+	ToolCutoff    *bool
 	ModelPrefixes *[]string
 }
 
@@ -45,8 +48,9 @@ type Patch struct {
 // and written so a row written by an earlier build keeps its place, but no
 // decision is taken from it any more.
 type Store interface {
-	Get(ctx context.Context, templateID string) (longContext, autoRefresh bool, found bool, err error)
+	Get(ctx context.Context, templateID string) (longContext, autoRefresh, toolCutoff bool, found bool, err error)
 	Save(ctx context.Context, templateID string, longContext, autoRefresh *bool, nowMs int64) error
+	SaveToolCutoff(ctx context.Context, templateID string, toolCutoff bool, nowMs int64) error
 	Prefixes(ctx context.Context, templateID string) ([]string, bool, error)
 	SavePrefixes(ctx context.Context, templateID string, prefixes []string, nowMs int64) error
 }
@@ -89,7 +93,7 @@ func (s *Service) Read(ctx context.Context, providerID string) (Setting, error) 
 	if err != nil {
 		return Setting{}, err
 	}
-	_, autoRefresh, found, err := s.store.Get(ctx, templateID)
+	_, autoRefresh, toolCutoff, found, err := s.store.Get(ctx, templateID)
 	if err != nil {
 		return Setting{}, err
 	}
@@ -104,40 +108,50 @@ func (s *Service) Read(ctx context.Context, providerID string) (Setting, error) 
 	if prefixes == nil {
 		prefixes = defaults.ModelPrefixes
 	}
-	return Setting{AutoRefresh: autoRefresh, ModelPrefixes: prefixes}, nil
+	return Setting{AutoRefresh: autoRefresh, ToolCutoff: toolCutoff, ModelPrefixes: prefixes}, nil
 }
 
-// Update stores the fields the patch names. Both stored columns are written
-// explicitly, so a row keeps its place and only the choice the console owns
-// changes.
+// Update stores the fields the patch names and leaves the others as stored.
 func (s *Service) Update(ctx context.Context, providerID string, patch Patch) (Setting, error) {
 	templateID, err := s.template(providerID)
 	if err != nil {
 		return Setting{}, err
 	}
-	if patch.AutoRefresh == nil && patch.ModelPrefixes == nil {
+	if patch.AutoRefresh == nil && patch.ToolCutoff == nil && patch.ModelPrefixes == nil {
 		return s.Read(ctx, providerID)
 	}
-	longContext, autoRefresh, _, err := s.store.Get(ctx, templateID)
-	if err != nil {
+	if err := s.writePatch(ctx, templateID, patch); err != nil {
 		return Setting{}, err
+	}
+	return s.Read(ctx, providerID)
+}
+
+func (s *Service) writePatch(ctx context.Context, templateID string, patch Patch) error {
+	now := s.clock.Now().UnixMilli()
+	longContext, _, _, _, err := s.store.Get(ctx, templateID)
+	if err != nil {
+		return err
 	}
 	if patch.AutoRefresh != nil {
-		autoRefresh = *patch.AutoRefresh
+		if err := s.store.Save(ctx, templateID, &longContext, patch.AutoRefresh, now); err != nil {
+			return err
+		}
 	}
-	if err := s.store.Save(ctx, templateID, &longContext, &autoRefresh, s.clock.Now().UnixMilli()); err != nil {
-		return Setting{}, err
+	if patch.ToolCutoff != nil {
+		if err := s.store.SaveToolCutoff(ctx, templateID, *patch.ToolCutoff, now); err != nil {
+			return err
+		}
 	}
 	if patch.ModelPrefixes != nil {
 		normalized, err := normalizePrefixes(*patch.ModelPrefixes)
 		if err != nil {
-			return Setting{}, err
+			return err
 		}
-		if err := s.store.SavePrefixes(ctx, templateID, normalized, s.clock.Now().UnixMilli()); err != nil {
-			return Setting{}, err
+		if err := s.store.SavePrefixes(ctx, templateID, normalized, now); err != nil {
+			return err
 		}
 	}
-	return s.Read(ctx, providerID)
+	return nil
 }
 
 func normalizePrefixes(prefixes []string) ([]string, error) {
