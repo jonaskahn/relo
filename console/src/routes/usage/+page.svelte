@@ -574,7 +574,12 @@
 
 	function providerLabelOf(id: string): string {
 		if (id === '') return '';
-		return providers.find((provider) => provider.id === id)?.label?.trim() || '';
+		const provider = providers.find((entry) => entry.id === id);
+		return provider?.label?.trim() || provider?.template_id || id;
+	}
+
+	function providerLogoId(id: string): string {
+		return providers.find((provider) => provider.id === id)?.template_id || id;
 	}
 
 	// Account and provider rows prefer the stored label, and an account is
@@ -795,6 +800,7 @@
 								segments={donut}
 								totalText={formatCost(donutTotal)}
 								captionOf={(key) => namedCaption(key, providerLabelOf(key))}
+								logoOf={providerLogoId}
 								valueOf={formatCost}
 								centerKey="ui.pages.usagePage.summaryTotalTokens"
 							/>
@@ -803,6 +809,7 @@
 								segments={tokenDonut}
 								totalText={formatTokens(tokenDonutTotal)}
 								captionOf={(key) => namedCaption(key, providerLabelOf(key))}
+								logoOf={providerLogoId}
 								valueOf={formatTokens}
 								centerKey="ui.pages.usagePage.summaryTotalTokens"
 							/>
