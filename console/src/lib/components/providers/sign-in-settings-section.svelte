@@ -11,15 +11,32 @@
 		// read is either in flight, answered, or refused.
 		status: 'loading' | 'ready' | 'error';
 		autoRefresh: boolean;
+		toolCutoff: boolean;
 		modelPrefixes: string[];
+		showAutoRefresh: boolean;
 		showPrefixes: boolean;
+		showToolCutoff: boolean;
 		disabled: boolean;
 		onretry: () => void;
-		onchange: (next: { autoRefresh: boolean; modelPrefixes: string[] }) => void;
+		onchange: (next: {
+			autoRefresh: boolean;
+			toolCutoff: boolean;
+			modelPrefixes: string[];
+		}) => void;
 	}
 
-	let { status, autoRefresh, modelPrefixes, showPrefixes, disabled, onretry, onchange }: Props =
-		$props();
+	let {
+		status,
+		autoRefresh,
+		toolCutoff,
+		modelPrefixes,
+		showAutoRefresh,
+		showPrefixes,
+		showToolCutoff,
+		disabled,
+		onretry,
+		onchange
+	}: Props = $props();
 </script>
 
 <div class="flex flex-col gap-4" data-section="signin">
@@ -29,14 +46,26 @@
 		</p>
 	{/if}
 	<div class="signin-switches">
-		<FieldSwitch
-			id="settings-auto-refresh"
-			checked={autoRefresh}
-			disabled={disabled || status !== 'ready'}
-			label={$t('ui.pages.providersPage.settings.autoRefreshLabel')}
-			description={$t('ui.pages.providersPage.settings.autoRefreshHint')}
-			onCheckedChange={(value) => onchange({ autoRefresh: value, modelPrefixes })}
-		/>
+		{#if showAutoRefresh}
+			<FieldSwitch
+				id="settings-auto-refresh"
+				checked={autoRefresh}
+				disabled={disabled || status !== 'ready'}
+				label={$t('ui.pages.providersPage.settings.autoRefreshLabel')}
+				description={$t('ui.pages.providersPage.settings.autoRefreshHint')}
+				onCheckedChange={(value) => onchange({ autoRefresh: value, toolCutoff, modelPrefixes })}
+			/>
+		{/if}
+		{#if showToolCutoff}
+			<FieldSwitch
+				id="settings-tool-cutoff"
+				checked={toolCutoff}
+				disabled={disabled || status !== 'ready'}
+				label={$t('ui.pages.providersPage.settings.toolCutoffLabel')}
+				description={$t('ui.pages.providersPage.settings.toolCutoffHint')}
+				onCheckedChange={(value) => onchange({ autoRefresh, toolCutoff: value, modelPrefixes })}
+			/>
+		{/if}
 	</div>
 	{#if showPrefixes}
 		<Field
@@ -52,6 +81,7 @@
 				oninput={(event) =>
 					onchange({
 						autoRefresh,
+						toolCutoff,
 						modelPrefixes: parsePrefixes(event.currentTarget.value)
 					})}
 			/>

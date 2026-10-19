@@ -2,6 +2,8 @@ package codec
 
 import (
 	"encoding/json"
+	"fmt"
+	"slices"
 	"strings"
 	"testing"
 
@@ -97,6 +99,113 @@ func assertFreeLaneTools(t *testing.T, got []inference.Tool) {
 		}
 	}
 }
+
+func TestOpenCodeFreeRequestCutsToolsAtTheGatewayLimit(t *testing.T) {
+	original := &inference.Request{Tools: freeToolCrowd(36, 1, 114)}
+	got, _ := wire.OpenCodeFreeRequestWithToolCutoff(original, catalog.FormatOpenAIChat, "conversation-one")
+	if len(got.Tools) != 128 {
+		t.Fatalf("tools = %d, want the gateway limit", len(got.Tools))
+	}
+	if len(original.Tools) != 151 {
+		t.Fatalf("original tools = %d, want the caller's request untouched", len(original.Tools))
+	}
+	names := freeToolNames(got.Tools)
+	for _, name := range append(append([]string{}, freeLaneNames...), "mcp__codegraph__tool0") {
+		if !names[name] {
+			t.Fatalf("tools = %v, want %q kept", names, name)
+		}
+	}
+	for index := range 36 {
+		name := fmt.Sprintf("Native%02d", index)
+		if !names[name] {
+			t.Fatalf("tools = %v, want native tool %q kept", names, name)
+		}
+	}
+}
+
+func TestOpenCodeFreeRequestKeepsTheChosenTool(t *testing.T) {
+	tools := freeToolCrowd(0, 0, 140)
+	tools = append(tools, inference.Tool{Name: "mcp__other__chosen"})
+	original := &inference.Request{
+		Tools:      tools,
+		ToolChoice: &inference.ToolChoice{Mode: inference.ToolChoiceTool, Name: "mcp__other__chosen"},
+	}
+	got, _ := wire.OpenCodeFreeRequestWithToolCutoff(original, catalog.FormatOpenAIChat, "conversation-two")
+	if len(got.Tools) != 128 {
+		t.Fatalf("tools = %d, want the gateway limit", len(got.Tools))
+	}
+	if !freeToolNames(got.Tools)["mcp__other__chosen"] {
+		t.Fatal("the chosen tool was cut, want every tool choice kept")
+	}
+}
+
+func TestOpenCodeFreeRequestCutoffIsStableForAConversation(t *testing.T) {
+	original := &inference.Request{Tools: freeToolCrowd(10, 1, 130)}
+	first, _ := wire.OpenCodeFreeRequestWithToolCutoff(original, catalog.FormatOpenAIChat, "same-conversation")
+	second, _ := wire.OpenCodeFreeRequestWithToolCutoff(original, catalog.FormatOpenAIChat, "same-conversation")
+	firstNames := make([]string, 0, len(first.Tools))
+	for _, tool := range first.Tools {
+		firstNames = append(firstNames, tool.Name)
+	}
+	secondNames := make([]string, 0, len(second.Tools))
+	for _, tool := range second.Tools {
+		secondNames = append(secondNames, tool.Name)
+	}
+	if !slices.Equal(firstNames, secondNames) {
+		t.Fatalf("tool lists differ:\n%v\n%v", firstNames, secondNames)
+	}
+}
+
+func TestOpenCodeFreeRequestLeavesAtTheLimitAlone(t *testing.T) {
+	original := &inference.Request{Tools: freeToolCrowd(124, 0, 0)}
+	got, _ := wire.OpenCodeFreeRequestWithToolCutoff(original, catalog.FormatOpenAIChat, "at-the-limit")
+	if len(got.Tools) != 128 {
+		t.Fatalf("tools = %d, want the four lane declarations beside the client's own", len(got.Tools))
+	}
+	if !slices.Equal(freeToolNamesList(got.Tools), freeToolNamesList(append(original.Tools, freeLaneToolDeclarations()...))) {
+		t.Fatal("a request at the limit was reordered or trimmed")
+	}
+}
+
+func freeToolCrowd(native, code, other int) []inference.Tool {
+	tools := make([]inference.Tool, 0, native+code+other)
+	for index := range native {
+		tools = append(tools, inference.Tool{Name: fmt.Sprintf("Native%02d", index)})
+	}
+	for index := range code {
+		tools = append(tools, inference.Tool{Name: fmt.Sprintf("mcp__codegraph__tool%d", index)})
+	}
+	for index := range other {
+		tools = append(tools, inference.Tool{Name: fmt.Sprintf("mcp__other__tool%03d", index)})
+	}
+	return tools
+}
+
+func freeToolNames(tools []inference.Tool) map[string]bool {
+	names := make(map[string]bool, len(tools))
+	for _, tool := range tools {
+		names[tool.Name] = true
+	}
+	return names
+}
+
+func freeToolNamesList(tools []inference.Tool) []string {
+	names := make([]string, 0, len(tools))
+	for _, tool := range tools {
+		names = append(names, tool.Name)
+	}
+	return names
+}
+
+func freeLaneToolDeclarations() []inference.Tool {
+	tools := make([]inference.Tool, 0, len(freeLaneNames))
+	for _, name := range freeLaneNames {
+		tools = append(tools, inference.Tool{Name: name})
+	}
+	return tools
+}
+
+var freeLaneNames = []string{"bash", "glob", "grep", "read"}
 
 // A coding client that already declares the lane's tools keeps its own
 // schemas and choice, and a partial set only gains what is missing.

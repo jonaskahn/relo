@@ -192,18 +192,26 @@ func toSettingsResponse(settings appsettings.Settings) settingsResponse {
 
 type templateSettingResponse struct {
 	AutoRefresh   bool     `json:"auto_refresh"`
+	ToolCutoff    bool     `json:"tool_cutoff"`
 	ModelPrefixes []string `json:"model_prefixes,omitempty"`
 }
 
 func toTemplateSettingResponse(setting apptemplates.Setting) templateSettingResponse {
-	return templateSettingResponse{AutoRefresh: setting.AutoRefresh, ModelPrefixes: setting.ModelPrefixes}
+	return templateSettingResponse{
+		AutoRefresh: setting.AutoRefresh, ToolCutoff: setting.ToolCutoff,
+		ModelPrefixes: setting.ModelPrefixes,
+	}
 }
 
 type templateSettingPatchRequest struct {
 	AutoRefresh   *bool     `json:"auto_refresh,omitempty"`
+	ToolCutoff    *bool     `json:"tool_cutoff,omitempty"`
 	ModelPrefixes *[]string `json:"model_prefixes,omitempty"`
 }
 
 func toTemplateSettingPatch(request templateSettingPatchRequest) apptemplates.Patch {
-	return apptemplates.Patch{AutoRefresh: request.AutoRefresh, ModelPrefixes: request.ModelPrefixes}
+	return apptemplates.Patch{
+		AutoRefresh: request.AutoRefresh, ToolCutoff: request.ToolCutoff,
+		ModelPrefixes: request.ModelPrefixes,
+	}
 }

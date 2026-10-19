@@ -5,8 +5,10 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
+	"hash/fnv"
 	"net/url"
 	"regexp"
+	"sort"
 	"strings"
 
 	"github.com/jonaskahn/relo/internal/catalog"
@@ -112,6 +114,21 @@ func freeIdentifierTail(digest []byte) string {
 
 // The free gateway rejects title-generation turns without these declarations.
 var freeLaneTools = []string{"bash", "glob", "grep", "read"}
+
+// freeToolLimit is the most tool declarations the gateway accepts in one
+// request. The free lane's own declarations count toward it.
+const freeToolLimit = 128
+
+const (
+	toolPriorityRequired = iota
+	toolPriorityNative
+	toolPriorityCode
+	toolPriorityOther
+)
+
+// codeToolPrefixes name the code-intelligence servers a coding session keeps
+// ahead of unrelated MCP tools when a tool list has to be trimmed.
+var codeToolPrefixes = []string{"mcp__codegraph__", "mcp__gitnexus__"}
 
 // freeMinMaxTokens is the smallest output ceiling the gateway accepts. A client
 // that asks for less to keep a probe cheap is refused, so a stated ceiling is
@@ -322,11 +339,25 @@ func shortReplayedCalls(req *inference.Request, alias func(string) string) {
 // are corrected on the same copy. The returned map names each shortened tool
 // again on the answer, and is empty when the gateway accepts every name.
 func OpenCodeFreeRequest(req *inference.Request, format catalog.APIFormat) (*inference.Request, map[string]string) {
+	return openCodeFreeRequest(req, format, false, "")
+}
+
+// OpenCodeFreeRequestWithToolCutoff returns the request the signed-out gateway
+// accepts, trimming tool declarations the gateway would refuse. The seed keeps
+// the random fill stable for one conversation.
+func OpenCodeFreeRequestWithToolCutoff(req *inference.Request, format catalog.APIFormat, seed string) (*inference.Request, map[string]string) {
+	return openCodeFreeRequest(req, format, true, seed)
+}
+
+func openCodeFreeRequest(req *inference.Request, format catalog.APIFormat, cutTools bool, seed string) (*inference.Request, map[string]string) {
 	if req == nil {
 		return nil, nil
 	}
 	copied := *req
 	copied.Tools = withFreeLaneTools(req.Tools)
+	if cutTools {
+		copied.Tools = cutFreeTools(copied.Tools, copied.ToolChoice, seed)
+	}
 	// The schemas are cleaned after the declarations are appended, so a lane tool
 	// added later is cleaned as well as one a client sent.
 	for index := range copied.Tools {
@@ -336,6 +367,89 @@ func OpenCodeFreeRequest(req *inference.Request, format catalog.APIFormat) (*inf
 		copied.MaxTokens = freeMinMaxTokens
 	}
 	return &copied, shortToolNames(&copied)
+}
+
+type toolCandidate struct {
+	index    int
+	priority int
+	key      uint64
+}
+
+func cutFreeTools(tools []inference.Tool, choice *inference.ToolChoice, seed string) []inference.Tool {
+	if len(tools) <= freeToolLimit {
+		return tools
+	}
+	candidates := freeToolCandidates(tools, freeRequiredTools(choice), seed)
+	sort.Slice(candidates, func(i, j int) bool { return toolCandidateLess(candidates[i], candidates[j]) })
+	return keepFreeTools(tools, candidates[:freeToolLimit])
+}
+
+func freeRequiredTools(choice *inference.ToolChoice) map[string]bool {
+	required := make(map[string]bool, len(freeLaneTools)+1)
+	for _, name := range freeLaneTools {
+		required[name] = true
+	}
+	if choice != nil && choice.Name != "" {
+		required[choice.Name] = true
+	}
+	return required
+}
+
+func freeToolCandidates(tools []inference.Tool, required map[string]bool, seed string) []toolCandidate {
+	candidates := make([]toolCandidate, len(tools))
+	for index, tool := range tools {
+		candidates[index] = toolCandidate{
+			index: index, priority: toolPriority(tool.Name, required), key: toolCutoffKey(seed, tool.Name),
+		}
+	}
+	return candidates
+}
+
+func toolCandidateLess(left, right toolCandidate) bool {
+	if left.priority != right.priority {
+		return left.priority < right.priority
+	}
+	if left.key != right.key {
+		return left.key < right.key
+	}
+	return left.index < right.index
+}
+
+func keepFreeTools(tools []inference.Tool, candidates []toolCandidate) []inference.Tool {
+	kept := make([]bool, len(tools))
+	for _, candidate := range candidates {
+		kept[candidate.index] = true
+	}
+	out := make([]inference.Tool, 0, freeToolLimit)
+	for index, tool := range tools {
+		if kept[index] {
+			out = append(out, tool)
+		}
+	}
+	return out
+}
+
+func toolPriority(name string, required map[string]bool) int {
+	if required[name] {
+		return toolPriorityRequired
+	}
+	if !strings.HasPrefix(name, "mcp__") {
+		return toolPriorityNative
+	}
+	for _, prefix := range codeToolPrefixes {
+		if strings.HasPrefix(name, prefix) {
+			return toolPriorityCode
+		}
+	}
+	return toolPriorityOther
+}
+
+func toolCutoffKey(seed, name string) uint64 {
+	digest := fnv.New64a()
+	_, _ = digest.Write([]byte(seed))
+	_, _ = digest.Write([]byte{0})
+	_, _ = digest.Write([]byte(name))
+	return digest.Sum64()
 }
 
 func withFreeLaneTools(tools []inference.Tool) []inference.Tool {

@@ -28,6 +28,7 @@ export interface ConnectionDraft {
  *  governs it. */
 export interface SignInDraft {
 	autoRefresh: boolean;
+	toolCutoff: boolean;
 	modelPrefixes: string[];
 }
 
@@ -35,6 +36,9 @@ export interface SignInDraft {
 export interface SignInSection {
 	title: string;
 	description: string;
+	showAutoRefresh: boolean;
+	showPrefixes: boolean;
+	showToolCutoff: boolean;
 }
 
 /** Names the section a connection's settings tab shows for its sign-in template, or null for a
@@ -44,22 +48,42 @@ export function signInSection(templateID: string): SignInSection | null {
 		case 'claude':
 			return {
 				title: 'ui.pages.providersPage.settings.claudeTitle',
-				description: 'ui.pages.providersPage.settings.claudeDescription'
+				description: 'ui.pages.providersPage.settings.claudeDescription',
+				showAutoRefresh: true,
+				showPrefixes: false,
+				showToolCutoff: false
 			};
 		case 'openai-codex':
 			return {
 				title: 'ui.pages.providersPage.settings.chatgptTitle',
-				description: 'ui.pages.providersPage.settings.chatgptDescription'
+				description: 'ui.pages.providersPage.settings.chatgptDescription',
+				showAutoRefresh: true,
+				showPrefixes: false,
+				showToolCutoff: false
 			};
 		case 'google-antigravity':
 			return {
 				title: 'ui.pages.providersPage.settings.antigravityTitle',
-				description: 'ui.pages.providersPage.settings.antigravityDescription'
+				description: 'ui.pages.providersPage.settings.antigravityDescription',
+				showAutoRefresh: true,
+				showPrefixes: true,
+				showToolCutoff: false
 			};
 		case 'grok':
 			return {
 				title: 'ui.pages.providersPage.settings.grokTitle',
-				description: 'ui.pages.providersPage.settings.grokDescription'
+				description: 'ui.pages.providersPage.settings.grokDescription',
+				showAutoRefresh: true,
+				showPrefixes: false,
+				showToolCutoff: false
+			};
+		case 'opencode-free':
+			return {
+				title: 'ui.pages.providersPage.settings.opencodeFreeTitle',
+				description: 'ui.pages.providersPage.settings.opencodeFreeDescription',
+				showAutoRefresh: false,
+				showPrefixes: false,
+				showToolCutoff: true
 			};
 		default:
 			return null;
@@ -121,6 +145,7 @@ export function connectionDirty(draft: ConnectionDraft, provider: Provider): boo
 export function signInDirty(draft: SignInDraft, saved: SignInDraft): boolean {
 	return (
 		draft.autoRefresh !== saved.autoRefresh ||
+		draft.toolCutoff !== saved.toolCutoff ||
 		JSON.stringify(draft.modelPrefixes) !== JSON.stringify(saved.modelPrefixes)
 	);
 }
@@ -155,9 +180,10 @@ export function baseURLMissing(baseURL: string): boolean {
 export function templatePatch(
 	draft: SignInDraft,
 	saved: SignInDraft
-): { auto_refresh?: boolean; model_prefixes?: string[] } | null {
-	const patch: { auto_refresh?: boolean; model_prefixes?: string[] } = {};
+): { auto_refresh?: boolean; tool_cutoff?: boolean; model_prefixes?: string[] } | null {
+	const patch: { auto_refresh?: boolean; tool_cutoff?: boolean; model_prefixes?: string[] } = {};
 	if (draft.autoRefresh !== saved.autoRefresh) patch.auto_refresh = draft.autoRefresh;
+	if (draft.toolCutoff !== saved.toolCutoff) patch.tool_cutoff = draft.toolCutoff;
 	if (JSON.stringify(draft.modelPrefixes) !== JSON.stringify(saved.modelPrefixes)) {
 		patch.model_prefixes = [...draft.modelPrefixes];
 	}

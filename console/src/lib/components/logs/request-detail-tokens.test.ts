@@ -69,7 +69,7 @@ describe('the token table', () => {
 
 	it('totals the tokens the request carried and the cost it recorded', () => {
 		const html = markup(row(), modelOf());
-		expect(html).toContain('>1,500<');
+		expect(html).toContain('title="1,500 tokens">1.5k<');
 	});
 
 	it('says the rates are unavailable rather than implying a price', () => {

@@ -579,6 +579,11 @@ func factsForEntry(entry rosterEntry, pm ProbeModel, mdModel catalog.ModelsDevMo
 		MaxOutput:     entry.MaxOutput,
 		Prices:        pm.Prices.Provider.row(),
 	}
+	providerFact.SupportsTools = entry.SupportsTools
+	providerFact.SupportsReasoning = entry.SupportsReasoning
+	providerFact.SupportsVision = entry.SupportsVision
+	providerFact.ReasoningEfforts = append([]string(nil), entry.ReasoningEfforts...)
+	providerFact.ReasoningToggle = entry.ReasoningToggle
 	if !providerFact.Empty() {
 		facts = append(facts, providerFact)
 	}

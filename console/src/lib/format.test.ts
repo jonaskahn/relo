@@ -13,6 +13,7 @@ import {
 	formatMicroPrice,
 	formatTokens,
 	formatTokensExact,
+	tokenCount,
 	formatUnitPrice,
 	formatUptime,
 	parseDollars,
@@ -99,12 +100,12 @@ describe('formatTokens', () => {
 		expect(formatTokens(999)).toBe('999');
 	});
 
-	it('abbreviates thousands, keeping a decimal below ten thousand', () => {
+	it('abbreviates thousands, and leaves for millions when rounded up', () => {
 		expect(formatTokens(1000)).toBe('1.0k');
 		expect(formatTokens(9999)).toBe('10.0k');
 		expect(formatTokens(10_000)).toBe('10k');
 		expect(formatTokens(999_000)).toBe('999k');
-		expect(formatTokens(999_999)).toBe('1000k');
+		expect(formatTokens(999_999)).toBe('1.00M');
 	});
 
 	it('abbreviates millions with more decimals for the smaller ones', () => {
@@ -118,11 +119,16 @@ describe('formatTokens', () => {
 		expect(formatTokens(1_000_000_000)).toBe('1.0B');
 		expect(formatTokens(1_234_000_000)).toBe('1.2B');
 		expect(formatTokens(12_340_000_000)).toBe('12.3B');
-		expect(formatTokens(999_999_999)).toBe('1000.0M');
+		expect(formatTokens(999_999_999)).toBe('1.0B');
 		expect(formatTokens(1_000_000_000_000)).toBe('1.0T');
 		expect(formatTokens(1_234_000_000_000)).toBe('1.2T');
 		expect(formatTokens(1_234_000_000_000_000)).toBe('1.2Qa');
 		expect(formatTokens(1_234_000_000_000_000_000)).toBe('1.2Qi');
+	});
+
+	it('reads a stored token figure as a whole number', () => {
+		expect(tokenCount('1500000')).toBe(1_500_000);
+		expect(tokenCount(null)).toBe(0);
 	});
 });
 

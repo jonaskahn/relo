@@ -762,6 +762,10 @@
           "antigravityDescription": "Đăng nhập Google Antigravity này làm mới token thế nào.",
           "grokTitle": "Đăng nhập Grok",
           "grokDescription": "Đăng nhập Grok này làm mới token thế nào.",
+          "opencodeFreeTitle": "OpenCode Free",
+          "opencodeFreeDescription": "Cách kết nối này cắt bớt tool mà gateway từ chối.",
+          "toolCutoffLabel": "Tự cắt tool vượt 128",
+          "toolCutoffHint": "Giữ tool native của client trước, rồi tool code, sau đó chọn ngẫu nhiên ổn định cho các slot còn lại trong cuộc trò chuyện.",
           "modelPrefixesLabel": "Model families",
           "modelPrefixesHint": "Comma-separated prefixes the roster keeps, e.g. claude, gemini."
         },

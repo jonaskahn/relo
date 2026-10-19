@@ -3,6 +3,7 @@ package proxy_test
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -76,6 +77,14 @@ func newZenGateway(t *testing.T, answer func(w http.ResponseWriter, attempt zenA
 		body := decodeZenBody(t, r)
 		gateway.last = zenAttempt{path: r.URL.Path, headers: r.Header.Clone(), body: body}
 
+		if count := len(zenItems(body["tools"])); count > zenToolLimit {
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusBadRequest)
+			_, _ = io.WriteString(w, `{"error":{"type":"invalid_request_error",`+
+				`"param":"tools","message":"Upstream request failed: [invalid_value] `+
+				`Invalid value for 'tools': maximum number of items is 128."}}`)
+			return
+		}
 		if refuse := zenRefusal(r, body); refuse != "" {
 			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(http.StatusForbidden)
@@ -115,6 +124,9 @@ func newZenGateway(t *testing.T, answer func(w http.ResponseWriter, attempt zenA
 // session passes it as soon as it loads an MCP server, and the gateway refuses
 // the whole turn for one name.
 const zenToolNameLimit = 64
+
+// zenToolLimit is the most declarations the gateway accepts in one request.
+const zenToolLimit = 128
 
 // zenRefusedName returns the first tool name past the limit the request sends,
 // in a declaration, a replayed call, or a named choice, which is the name the
@@ -880,6 +892,67 @@ func TestZenFreeShortensAndNamesBackALongToolName(t *testing.T) {
 	if !strings.Contains(string(body), zenLongToolName) {
 		t.Fatalf("body = %s, want the call named as the client declared it", body)
 	}
+}
+
+// A coding session with many MCP servers sends more declarations than the
+// gateway accepts. Relo keeps the client's native tools and code tools, then
+// fills the remaining slots with a stable random choice.
+func TestZenFreeCutsToolListsAtTheGatewayLimit(t *testing.T) {
+	gateway := newZenGateway(t, zenResponsesStream)
+	daemon := startZenFreeDaemon(t, gateway.URL(),
+		zenFreeModel{ID: "muse-spark-1.3-contributor-free", Format: catalog.FormatOpenAIResp})
+	response := send(t, daemon.dataPlane, "/v1/chat/completions", dataPlaneToken,
+		`{"model":"muse-spark-1.3-contributor-free","stream":false,`+
+			`"messages":[{"role":"user","content":"list the files"}],`+
+			`"tools":`+zenCrowdTools()+`}`)
+	defer func() { _ = response.Body.Close() }()
+	if response.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(response.Body)
+		t.Fatalf("status = %d, body = %s", response.StatusCode, body)
+	}
+	sent := zenItems(gateway.last.body["tools"])
+	if len(sent) != zenToolLimit {
+		t.Fatalf("tools = %d, want the gateway limit", len(sent))
+	}
+	names := zenToolNames(gateway.last.body["tools"])
+	for _, want := range []string{
+		"bash", "glob", "grep", "read", "Native00", "Native35", "mcp__codegraph__explore",
+	} {
+		if !names[want] {
+			t.Fatalf("tools = %v, want %q kept", names, want)
+		}
+	}
+}
+
+func zenCrowdTools() string {
+	tools := make([]string, 0, 151)
+	for index := range 36 {
+		tools = append(tools, fmt.Sprintf(`{"type":"function","function":{"name":"Native%02d",`+
+			`"description":"native","parameters":{"type":"object","properties":{}}}}`, index))
+	}
+	tools = append(tools, `{"type":"function","function":{"name":"mcp__codegraph__explore",`+
+		`"description":"code","parameters":{"type":"object","properties":{}}}}`)
+	for index := range 114 {
+		tools = append(tools, fmt.Sprintf(`{"type":"function","function":{"name":"mcp__other__tool%03d",`+
+			`"description":"other","parameters":{"type":"object","properties":{}}}}`, index))
+	}
+	return "[" + strings.Join(tools, ",") + "]"
+}
+
+func zenToolNames(value any) map[string]bool {
+	names := map[string]bool{}
+	for _, entry := range zenItems(value) {
+		tool, _ := entry.(map[string]any)
+		if name, ok := tool["name"].(string); ok {
+			names[name] = true
+		}
+		if function, ok := tool["function"].(map[string]any); ok {
+			if name, ok := function["name"].(string); ok {
+				names[name] = true
+			}
+		}
+	}
+	return names
 }
 
 // zenResponsesCallsTheToolItWasOffered answers with a call to the first tool the

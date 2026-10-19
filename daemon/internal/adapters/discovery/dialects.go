@@ -10,6 +10,7 @@ import (
 	"math"
 	"net/http"
 	"net/url"
+	"slices"
 	"strconv"
 	"strings"
 
@@ -24,13 +25,24 @@ type openAIModels struct {
 	Data []openAIModelEntry `json:"data"`
 }
 
+type openAIArchitecture struct {
+	InputModalities *[]string `json:"input_modalities"`
+}
+
+type openAIMetadata struct {
+	ContextLimit *int64 `json:"context_limit"`
+	OutputBudget *int64 `json:"output_budget"`
+}
+
 type openAIModelEntry struct {
-	ID            string `json:"id"`
-	Name          string `json:"name"`
-	ContextLength *int64 `json:"context_length"`
-	ContextWindow *int64 `json:"context_window"`
-	MaxOutput     *int64 `json:"max_output_tokens"`
-	IsFree        *bool  `json:"isFree"`
+	ID            string              `json:"id"`
+	Name          string              `json:"name"`
+	ContextLength *int64              `json:"context_length"`
+	ContextWindow *int64              `json:"context_window"`
+	MaxOutput     *int64              `json:"max_output_tokens"`
+	IsFree        *bool               `json:"isFree"`
+	Architecture  *openAIArchitecture `json:"architecture"`
+	Metadata      *openAIMetadata     `json:"metadata"`
 	Pricing       *struct {
 		Prompt          string `json:"prompt"`
 		Completion      string `json:"completion"`
@@ -64,18 +76,54 @@ func openAIModel(entry openAIModelEntry) (Listed, bool) {
 	if strings.TrimSpace(entry.ID) == "" {
 		return Listed{}, false
 	}
-	maxOutput := entry.MaxOutput
-	if maxOutput == nil && entry.TopProvider != nil {
-		maxOutput = entry.TopProvider.MaxCompletionTokens
-	}
 	return Listed{
-		ID:            entry.ID,
-		Name:          entry.Name,
-		ContextWindow: firstOf(entry.ContextWindow, entry.ContextLength),
-		MaxOutput:     maxOutput,
-		Prices:        openAIModelPrices(entry),
-		IsFree:        entry.IsFree,
+		ID:             entry.ID,
+		Name:           entry.Name,
+		ContextWindow:  openAIContextWindow(entry),
+		MaxOutput:      openAIMaxOutput(entry),
+		Prices:         openAIModelPrices(entry),
+		IsFree:         entry.IsFree,
+		SupportsVision: openAIVision(entry.Architecture),
 	}, true
+}
+
+func openAIContextWindow(entry openAIModelEntry) *int64 {
+	if window := firstOf(entry.ContextWindow, entry.ContextLength); window != nil {
+		return window
+	}
+	if entry.Metadata == nil {
+		return nil
+	}
+	return positiveLimit(entry.Metadata.ContextLimit)
+}
+
+func openAIMaxOutput(entry openAIModelEntry) *int64 {
+	var topProvider *int64
+	if entry.TopProvider != nil {
+		topProvider = entry.TopProvider.MaxCompletionTokens
+	}
+	if output := firstOf(entry.MaxOutput, topProvider); output != nil {
+		return output
+	}
+	if entry.Metadata == nil {
+		return nil
+	}
+	return positiveLimit(entry.Metadata.OutputBudget)
+}
+
+func openAIVision(architecture *openAIArchitecture) *bool {
+	if architecture == nil || architecture.InputModalities == nil {
+		return nil
+	}
+	vision := slices.Contains(*architecture.InputModalities, "image")
+	return &vision
+}
+
+func positiveLimit(value *int64) *int64 {
+	if value == nil || *value <= 0 {
+		return nil
+	}
+	return value
 }
 
 func openAIModelPrices(entry openAIModelEntry) *catalog.Prices {

@@ -549,12 +549,49 @@ func (s *Server) modelRequest(spec attemptSpec, template catalog.Template, templ
 		copied.Reasoning = nil
 	}
 	if templated && template.ID == catalog.OpenCodeFreeTemplate {
+		if s.openCodeFreeToolCutoff(spec) {
+			seed := conversationOf(spec.request)
+			if seed == "" && spec.outcome != nil {
+				seed = spec.outcome.requestID
+			}
+			trimmed, originals := wire.OpenCodeFreeRequestWithToolCutoff(copied, spec.candidate.Model.APIFormat, seed)
+			s.logToolCutoff(spec, copied, trimmed)
+			return trimmed, originals
+		}
 		return wire.OpenCodeFreeRequest(copied, spec.candidate.Model.APIFormat)
 	}
 	if openCodeGatewayLane(spec.candidate, spec.authorized) {
 		return wire.OpenCodeGatewayRequest(copied)
 	}
 	return copied, nil
+}
+
+func (s *Server) openCodeFreeToolCutoff(spec attemptSpec) bool {
+	if s.opts.TemplateSettings == nil || spec.request == nil {
+		return true
+	}
+	setting, err := s.opts.TemplateSettings.Read(spec.request.Context(), spec.candidate.ProviderID)
+	if err != nil {
+		if s.opts.Logger != nil {
+			s.opts.Logger.Warn("read the OpenCode free tool cutoff setting",
+				"provider", spec.candidate.ProviderID, "error", err)
+		}
+		return true
+	}
+	return setting.ToolCutoff
+}
+
+func (s *Server) logToolCutoff(spec attemptSpec, before, after *inference.Request) {
+	if s.opts.Logger == nil || before == nil || after == nil || len(after.Tools) >= len(before.Tools) {
+		return
+	}
+	client := ""
+	if spec.request != nil {
+		client = wire.ClientKind(spec.request.Header)
+	}
+	s.opts.Logger.Info("trimmed tools for the OpenCode free gateway",
+		"provider", spec.candidate.ProviderID, "client", client,
+		"offered", len(before.Tools), "sent", len(after.Tools))
 }
 
 func openCodeGatewayLane(candidate routing.Candidate, authorized catalog.Authorization) bool {

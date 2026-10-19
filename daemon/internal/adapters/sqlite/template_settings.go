@@ -11,10 +11,12 @@ import (
 
 // TemplateChoice is what one provider template stores beside the connection:
 // whether it publishes a 1M context entry, whether Relo renews its tokens,
-// and the model families its roster keeps.
+// whether it trims tools the gateway refuses, and the model families its
+// roster keeps.
 type TemplateChoice struct {
 	LongContext   bool
 	AutoRefresh   bool
+	ToolCutoff    bool
 	ModelPrefixes []string
 }
 
@@ -34,13 +36,13 @@ func (s *TemplateSettings) Get(ctx context.Context, templateID string) (Template
 	var choice TemplateChoice
 	var prefixes string
 	err := s.db.sql.QueryRowContext(ctx,
-		"SELECT long_context, auto_refresh, model_prefixes FROM template_settings WHERE template_id = ?",
-		templateID).Scan(&choice.LongContext, &choice.AutoRefresh, &prefixes)
+		"SELECT long_context, auto_refresh, tool_cutoff, model_prefixes FROM template_settings WHERE template_id = ?",
+		templateID).Scan(&choice.LongContext, &choice.AutoRefresh, &choice.ToolCutoff, &prefixes)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return TemplateChoice{}, false, nil
 		}
-		var choiceWithoutPrefixes TemplateChoice
+		choiceWithoutPrefixes := TemplateChoice{ToolCutoff: true}
 		fallback := s.db.sql.QueryRowContext(ctx,
 			"SELECT long_context, auto_refresh FROM template_settings WHERE template_id = ?",
 			templateID).Scan(&choiceWithoutPrefixes.LongContext, &choiceWithoutPrefixes.AutoRefresh)
@@ -87,7 +89,7 @@ func (s *TemplateSettings) Save(ctx context.Context, templateID string, longCont
 		return err
 	}
 	if !found {
-		current = TemplateChoice{LongContext: true, AutoRefresh: true}
+		current = TemplateChoice{LongContext: true, AutoRefresh: true, ToolCutoff: true}
 	}
 	if longContext != nil {
 		current.LongContext = *longContext
@@ -105,9 +107,23 @@ func (s *TemplateSettings) SavePrefixes(ctx context.Context, templateID string, 
 		return err
 	}
 	if !found {
-		current = TemplateChoice{LongContext: true, AutoRefresh: true}
+		current = TemplateChoice{LongContext: true, AutoRefresh: true, ToolCutoff: true}
 	}
 	current.ModelPrefixes = prefixes
+	return s.saveChoice(ctx, templateID, current, nowMs)
+}
+
+// SaveToolCutoff stores whether one template trims a tool list the OpenCode
+// Free gateway would refuse.
+func (s *TemplateSettings) SaveToolCutoff(ctx context.Context, templateID string, toolCutoff bool, nowMs int64) error {
+	current, found, err := s.Get(ctx, templateID)
+	if err != nil {
+		return err
+	}
+	if !found {
+		current = TemplateChoice{LongContext: true, AutoRefresh: true, ToolCutoff: true}
+	}
+	current.ToolCutoff = toolCutoff
 	return s.saveChoice(ctx, templateID, current, nowMs)
 }
 
@@ -141,14 +157,15 @@ func joinPrefixes(prefixes []string) string {
 
 func (s *TemplateSettings) saveChoice(ctx context.Context, templateID string, choice TemplateChoice, nowMs int64) error {
 	_, err := s.db.sql.ExecContext(ctx,
-		`INSERT INTO template_settings (template_id, long_context, auto_refresh, model_prefixes, updated_at)
-		 VALUES (?, ?, ?, ?, ?)
+		`INSERT INTO template_settings (template_id, long_context, auto_refresh, tool_cutoff, model_prefixes, updated_at)
+		 VALUES (?, ?, ?, ?, ?, ?)
 		 ON CONFLICT(template_id) DO UPDATE SET
 		   long_context = excluded.long_context,
 		   auto_refresh = excluded.auto_refresh,
+		   tool_cutoff = excluded.tool_cutoff,
 		   model_prefixes = excluded.model_prefixes,
 		   updated_at = excluded.updated_at`,
-		templateID, choice.LongContext, choice.AutoRefresh, joinPrefixes(choice.ModelPrefixes), nowMs)
+		templateID, choice.LongContext, choice.AutoRefresh, choice.ToolCutoff, joinPrefixes(choice.ModelPrefixes), nowMs)
 	if err != nil {
 		if strings.Contains(err.Error(), "no such column: model_prefixes") {
 			_, fallback := s.db.sql.ExecContext(ctx,

@@ -18,6 +18,7 @@ func TestTemplateSettingsService(t *testing.T) {
 	service := apptemplates.New(apptemplates.Options{
 		Store: choiceStore{inner: store}, Connections: staticTemplates{
 			"claude": "claude", "codex": "openai-codex", "openai": "openai",
+			"opencode-free": "opencode-free",
 		},
 		Clock: testkit.NewFakeClock(time.Unix(1_700_000_000, 0)),
 	})
@@ -37,6 +38,13 @@ func TestTemplateSettingsService(t *testing.T) {
 	}
 	if _, err := service.Update(ctx, "openai", apptemplates.Patch{AutoRefresh: &off}); !errors.Is(err, apptemplates.ErrUnsupported) {
 		t.Fatalf("Update(openai) error = %v, want unsupported", err)
+	}
+	openCodeFree, err := service.Read(ctx, "opencode-free")
+	if err != nil || !openCodeFree.ToolCutoff {
+		t.Fatalf("Read(opencode-free) = %+v, %v, want tool cutoff on", openCodeFree, err)
+	}
+	if saved, err := service.Update(ctx, "opencode-free", apptemplates.Patch{ToolCutoff: &off}); err != nil || saved.ToolCutoff {
+		t.Fatalf("Update(opencode-free) = %+v, %v, want tool cutoff off", saved, err)
 	}
 }
 
@@ -153,16 +161,20 @@ type choiceStore struct {
 	inner *sqlite.TemplateSettings
 }
 
-func (s choiceStore) Get(ctx context.Context, templateID string) (bool, bool, bool, error) {
+func (s choiceStore) Get(ctx context.Context, templateID string) (bool, bool, bool, bool, error) {
 	choice, found, err := s.inner.Get(ctx, templateID)
 	if err != nil || !found {
-		return false, false, found, err
+		return false, false, false, found, err
 	}
-	return choice.LongContext, choice.AutoRefresh, true, nil
+	return choice.LongContext, choice.AutoRefresh, choice.ToolCutoff, true, nil
 }
 
 func (s choiceStore) Save(ctx context.Context, templateID string, longContext, autoRefresh *bool, nowMs int64) error {
 	return s.inner.Save(ctx, templateID, longContext, autoRefresh, nowMs)
+}
+
+func (s choiceStore) SaveToolCutoff(ctx context.Context, templateID string, toolCutoff bool, nowMs int64) error {
+	return s.inner.SaveToolCutoff(ctx, templateID, toolCutoff, nowMs)
 }
 
 func (s choiceStore) Prefixes(ctx context.Context, templateID string) ([]string, bool, error) {

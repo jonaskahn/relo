@@ -895,6 +895,7 @@ export interface SecretsSettings {
  *  itself, so no stored choice governs it. */
 export interface TemplateSettings {
 	readonly auto_refresh: boolean;
+	readonly tool_cutoff: boolean;
 	readonly model_prefixes?: string[];
 }
 
