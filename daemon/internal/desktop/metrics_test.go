@@ -68,6 +68,8 @@ func TestFormatMetric(t *testing.T) {
 		{25_000_000, metricTokens, "25.0M"},
 		{1_234_000_000, metricTokens, "1.2B"},
 		{12_340_000_000, metricTokens, "12.3B"},
+		{999_999, metricTokens, "1.00M"},
+		{999_999_999, metricTokens, "1.0B"},
 		{1_000_000_000_000, metricTokens, "1.0T"},
 		{1_234_000_000_000, metricTokens, "1.2T"},
 		{1_234_000_000_000_000, metricTokens, "1.2Qa"},

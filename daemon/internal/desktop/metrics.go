@@ -3,6 +3,7 @@ package desktop
 
 import (
 	"fmt"
+	"math"
 	"strconv"
 	"strings"
 )
@@ -111,15 +112,9 @@ func formatTokens(v float64) string {
 	case v < 1000:
 		return strconv.FormatInt(int64(v), 10)
 	case v < 1_000_000:
-		if v < 10_000 {
-			return fmt.Sprintf("%.1fk", v/1000)
-		}
-		return fmt.Sprintf("%.0fk", v/1000)
+		return compactTokenScale(v/1000, 1, "k")
 	case v < 1_000_000_000:
-		if v < 10_000_000 {
-			return fmt.Sprintf("%.2fM", v/1_000_000)
-		}
-		return fmt.Sprintf("%.1fM", v/1_000_000)
+		return compactTokenScale(v/1_000_000, 2, "M")
 	case v < 1e12:
 		return fmt.Sprintf("%.1fB", v/1e9)
 	case v < 1e15:
@@ -129,6 +124,20 @@ func formatTokens(v float64) string {
 	default:
 		return fmt.Sprintf("%.1fQi", v/1e18)
 	}
+}
+
+func compactTokenScale(value float64, decimals int, unit string) string {
+	if math.Round(value*10)/10 >= 999.5 {
+		if unit == "k" {
+			return "1.00M"
+		}
+		return "1.0B"
+	}
+	precision := decimals
+	if value >= 10 {
+		precision = max(decimals-1, 0)
+	}
+	return strconv.FormatFloat(value, 'f', precision, 64) + unit
 }
 
 func formatMicros(micros float64) string {
