@@ -163,6 +163,34 @@ var dualFormatTemplates = []Template{
 			},
 		},
 	},
+	{
+		ID:             "open-design",
+		Label:          "OpenDesign",
+		Kind:           KindKey,
+		Origin:         catalog.OriginTemplate,
+		Auth:           catalog.AuthAPIKey,
+		KeyHeader:      catalog.KeyHeaderBearer,
+		DefaultFormat:  catalog.FormatOpenAIChat,
+		DefaultBaseURL: "https://amr-link.open-design.ai/v1",
+		ModelsSource:   "listing",
+		ModelsFormat:   catalog.ModelsOpenAI,
+		AvailableFormats: []FormatOption{
+			{
+				Format:         catalog.FormatOpenAIChat,
+				DefaultBaseURL: "https://amr-link.open-design.ai/v1",
+				KeyHeader:      catalog.KeyHeaderBearer,
+				ModelsFormat:   catalog.ModelsOpenAI,
+				Label:          "OpenAI Chat Completions",
+			},
+			{
+				Format:         catalog.FormatOpenAIResp,
+				DefaultBaseURL: "https://amr-link.open-design.ai/v1",
+				KeyHeader:      catalog.KeyHeaderBearer,
+				ModelsFormat:   catalog.ModelsOpenAI,
+				Label:          "OpenAI Responses API",
+			},
+		},
+	},
 }
 
 var localPresets = []Template{
