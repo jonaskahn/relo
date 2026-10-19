@@ -362,10 +362,22 @@ func encodeToolCalls(calls []inference.ToolCall) []chatToolCall {
 	for _, call := range calls {
 		entry := chatToolCall{ID: call.ID, Type: functionType}
 		entry.Function.Name = call.Name
-		entry.Function.Arguments = call.Arguments
+		entry.Function.Arguments = toolArguments(call.Arguments)
 		encoded = append(encoded, entry)
 	}
 	return encoded
+}
+
+// toolArguments keeps the Chat wire's contract that a call's arguments are a
+// JSON-encoded string. A freeform tool call (Codex's apply_patch) carries raw
+// text, which a strict provider rejects as invalid parameters; it is sent as
+// an empty object instead. A provider that accepts raw text on this wire
+// should take it through a wire_config override rather than this guard.
+func toolArguments(arguments string) string {
+	if strings.TrimSpace(arguments) == "" || !json.Valid([]byte(arguments)) {
+		return "{}"
+	}
+	return arguments
 }
 
 // encodeToolChoice renders the canonical choice the way the Chat wire names it.
