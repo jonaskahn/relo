@@ -762,6 +762,10 @@
           "antigravityDescription": "Cum această autentificare Google Antigravity își reînnoiește tokenul.",
           "grokTitle": "Autentificare Grok",
           "grokDescription": "Cum această autentificare Grok își reînnoiește tokenul.",
+          "opencodeFreeTitle": "OpenCode Free",
+          "opencodeFreeDescription": "How this connection trims tools the gateway refuses.",
+          "toolCutoffLabel": "Trim tools above 128",
+          "toolCutoffHint": "Keeps the client's native tools first, then code tools, then fills the remaining slots with a stable random choice for this conversation.",
           "modelPrefixesLabel": "Model families",
           "modelPrefixesHint": "Comma-separated prefixes the roster keeps, e.g. claude, gemini."
         },

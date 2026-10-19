@@ -81,6 +81,16 @@ describe('connection settings', () => {
 		expect(html).toContain('Refresh the token automatically');
 	});
 
+	it('shows the OpenCode Free tool cutoff without token renewal', () => {
+		const html = markup(
+			providerOf({ id: 'opencode-free', template_id: 'opencode-free', label: 'OpenCode Free' })
+		);
+
+		expect(html).toContain('data-section="signin"');
+		expect(html).toContain('Trim tools above 128');
+		expect(html).not.toContain('Refresh the token automatically');
+	});
+
 	it('always shows the advanced settings with the key header for a custom connection', () => {
 		const html = markup(providerOf({ origin: 'custom' }), [chat, responses]);
 
@@ -113,8 +123,11 @@ describe('connection settings', () => {
 			props: {
 				status: 'error',
 				autoRefresh: true,
+				toolCutoff: true,
 				modelPrefixes: [],
+				showAutoRefresh: true,
 				showPrefixes: false,
+				showToolCutoff: false,
 				disabled: false,
 				onretry: () => {},
 				onchange: () => {}

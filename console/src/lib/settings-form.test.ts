@@ -48,16 +48,27 @@ describe('connection settings draft', () => {
 	});
 
 	it('patches only the sign-in choice that changed', () => {
-		const saved = { autoRefresh: true, modelPrefixes: ['claude', 'gemini'] };
+		const saved = { autoRefresh: true, toolCutoff: true, modelPrefixes: ['claude', 'gemini'] };
 
 		expect(signInDirty(saved, saved)).toBe(false);
 		expect(templatePatch(saved, saved)).toBeNull();
 		expect(
-			templatePatch({ autoRefresh: false, modelPrefixes: saved.modelPrefixes }, saved)
+			templatePatch(
+				{ autoRefresh: false, toolCutoff: true, modelPrefixes: saved.modelPrefixes },
+				saved
+			)
 		).toEqual({
 			auto_refresh: false
 		});
-		expect(templatePatch({ autoRefresh: true, modelPrefixes: ['claude'] }, saved)).toEqual({
+		expect(
+			templatePatch(
+				{ autoRefresh: true, toolCutoff: false, modelPrefixes: saved.modelPrefixes },
+				saved
+			)
+		).toEqual({ tool_cutoff: false });
+		expect(
+			templatePatch({ autoRefresh: true, toolCutoff: true, modelPrefixes: ['claude'] }, saved)
+		).toEqual({
 			model_prefixes: ['claude']
 		});
 	});
@@ -77,6 +88,11 @@ describe('connection settings draft', () => {
 			'ui.pages.providersPage.settings.antigravityTitle'
 		);
 		expect(signInSection('grok')?.title).toBe('ui.pages.providersPage.settings.grokTitle');
+		expect(signInSection('opencode-free')).toMatchObject({
+			title: 'ui.pages.providersPage.settings.opencodeFreeTitle',
+			showAutoRefresh: false,
+			showToolCutoff: true
+		});
 		expect(signInSection('openai')).toBeNull();
 	});
 

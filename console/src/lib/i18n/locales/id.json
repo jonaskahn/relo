@@ -762,6 +762,10 @@
           "antigravityDescription": "Bagaimana masuk Google Antigravity ini memperbarui tokennya.",
           "grokTitle": "Masuk Grok",
           "grokDescription": "Bagaimana masuk Grok ini memperbarui tokennya.",
+          "opencodeFreeTitle": "OpenCode Free",
+          "opencodeFreeDescription": "How this connection trims tools the gateway refuses.",
+          "toolCutoffLabel": "Trim tools above 128",
+          "toolCutoffHint": "Keeps the client's native tools first, then code tools, then fills the remaining slots with a stable random choice for this conversation.",
           "modelPrefixesLabel": "Model families",
           "modelPrefixesHint": "Comma-separated prefixes the roster keeps, e.g. claude, gemini."
         },

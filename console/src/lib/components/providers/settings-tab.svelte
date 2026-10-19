@@ -58,7 +58,7 @@
 	let rankTouched = $state(false);
 	let baseTouched = $state(false);
 	let signInSaved = $state<SignInDraft | null>(null);
-	let signInDraft = $state<SignInDraft>({ autoRefresh: true, modelPrefixes: [] });
+	let signInDraft = $state<SignInDraft>({ autoRefresh: true, toolCutoff: true, modelPrefixes: [] });
 	let signInState = $state<'loading' | 'ready' | 'error'>('loading');
 	let loadSeq = 0;
 
@@ -150,6 +150,7 @@
 			if (seq !== loadSeq) return;
 			signInSaved = {
 				autoRefresh: body.auto_refresh,
+				toolCutoff: body.tool_cutoff ?? true,
 				modelPrefixes: [...(body.model_prefixes ?? [])]
 			};
 			signInDraft = { ...signInSaved, modelPrefixes: [...signInSaved.modelPrefixes] };
@@ -184,6 +185,7 @@
 				);
 				signInSaved = {
 					autoRefresh: saved.auto_refresh,
+					toolCutoff: saved.tool_cutoff ?? signInDraft.toolCutoff,
 					modelPrefixes: [...(saved.model_prefixes ?? signInDraft.modelPrefixes)]
 				};
 				signInDraft = { ...signInSaved, modelPrefixes: [...signInSaved.modelPrefixes] };
@@ -454,8 +456,11 @@
 				<SignInSettingsSection
 					status={signInState}
 					autoRefresh={signInDraft.autoRefresh}
+					toolCutoff={signInDraft.toolCutoff}
 					modelPrefixes={signInDraft.modelPrefixes}
-					showPrefixes={provider.template_id === 'google-antigravity'}
+					showAutoRefresh={signIn.showAutoRefresh}
+					showPrefixes={signIn.showPrefixes}
+					showToolCutoff={signIn.showToolCutoff}
 					disabled={saving}
 					onretry={() => void loadSignIn(provider.id)}
 					onchange={(next) => (signInDraft = next)}
