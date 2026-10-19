@@ -110,12 +110,7 @@ func freeIdentifierTail(digest []byte) string {
 	return out.String()
 }
 
-// freeLaneTools are the declarations the signed-out gateway inspects when a
-// turn declares tools but misses one of these names. They are appended only
-// then: a turn that declares nothing travels as it came, because the appended
-// declarations plus tool_choice:none are fingerprinted as non-OpenCode
-// traffic and answered 403 FreeTierError (observed live on title-generation
-// turns, which the native client sends tool-free).
+// The free gateway rejects title-generation turns without these declarations.
 var freeLaneTools = []string{"bash", "glob", "grep", "read"}
 
 // freeMinMaxTokens is the smallest output ceiling the gateway accepts. A client
@@ -316,16 +311,14 @@ func shortReplayedCalls(req *inference.Request, alias func(string) string) {
 }
 
 // OpenCodeFreeRequest returns the request the signed-out gateway accepts. A
-// turn that declares tools but misses an inspected name gains it as an
-// unavailable tool on a copy; the caller's request is never
-// mutated because it is shared between route candidates. A turn that
-// declares nothing travels as it came: the appended declarations plus a
-// forbidding tool choice are what the gateway answers 403 FreeTierError to.
-// Only the exact lowercase names satisfy the lane, so differently-cased client
+// turn that misses an inspected name gains it as an unavailable tool on a
+// copy; the caller's request is never mutated because it is shared between
+// route candidates. A turn that declares nothing gains the lane tools too: it
+// is the missing declarations the gateway answers 403 FreeTierError to. Only
+// the exact lowercase names satisfy the lane, so differently-cased client
 // tools stay and the missing lowercase declarations are still appended. Real
-// tools and an explicit tool choice are left alone, and a tool-free turn
-// carries no declarations and no choice, the way the working client sends
-// it. A schema the gateway refuses, an output ceiling below its floor, and a tool name past its limit
+// tools and an explicit tool choice are left alone. A schema the gateway
+// refuses, an output ceiling below its floor, and a tool name past its limit
 // are corrected on the same copy. The returned map names each shortened tool
 // again on the answer, and is empty when the gateway accepts every name.
 func OpenCodeFreeRequest(req *inference.Request, format catalog.APIFormat) (*inference.Request, map[string]string) {
@@ -345,16 +338,7 @@ func OpenCodeFreeRequest(req *inference.Request, format catalog.APIFormat) (*inf
 	return &copied, shortToolNames(&copied)
 }
 
-// withFreeLaneTools returns the declarations the lane inspects: the client's
-// own tools plus the missing lowercase names as unavailable placeholders. A
-// tool-free turn keeps no declarations: appending the lane tools there is
-// what the gateway answers 403 to, so the turn travels exactly as the client
-// sent it. With nothing appended, the tool_choice:none rule above cannot
-// fire either.
 func withFreeLaneTools(tools []inference.Tool) []inference.Tool {
-	if len(tools) == 0 {
-		return tools
-	}
 	out := append([]inference.Tool(nil), tools...)
 	present := make(map[string]bool, len(tools))
 	for _, tool := range tools {
