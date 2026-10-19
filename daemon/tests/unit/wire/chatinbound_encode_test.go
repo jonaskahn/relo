@@ -559,6 +559,77 @@ func messageMap(t *testing.T, body map[string]any, index int) map[string]any {
 	return message
 }
 
+func TestChatNormalizesNonObjectToolArguments(t *testing.T) {
+	cases := []struct {
+		name string
+		in   string
+		want string
+	}{
+		{name: "raw patch text", in: "*** Begin Patch\n*** Update File: /tmp/x.swift\n*** End Patch", want: "{}"},
+		{name: "truncated json", in: `{"input":`, want: "{}"},
+		{name: "empty", in: "", want: "{}"},
+		{name: "whitespace only", in: "  \n\t", want: "{}"},
+		{name: "json object passes through", in: `{"cmd":"ls -la"}`, want: `{"cmd":"ls -la"}`},
+		{name: "empty object passes through", in: `{}`, want: `{}`},
+		{name: "object whitespace is preserved", in: " \n{\"input\":\"text(1)\"}\t", want: " \n{\"input\":\"text(1)\"}\t"},
+		{name: "json string", in: `"*** Begin Patch"`, want: "{}"},
+		{name: "json array", in: `[{"input":"patch"}]`, want: "{}"},
+		{name: "json null", in: `null`, want: "{}"},
+		{name: "json number", in: `42`, want: "{}"},
+		{name: "json boolean", in: `true`, want: "{}"},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			request := &inference.Request{
+				Model: "mimo-v2.6-flash",
+				Messages: []inference.Message{{
+					Role:      inference.RoleAssistant,
+					ToolCalls: []inference.ToolCall{{ID: "call_1", Name: "apply_patch", Arguments: tc.in}},
+				}},
+			}
+			message := messageMap(t, encodeChatBody(t, "https://api.xiaomimimo.com/v1", request), 0)
+			calls, _ := message["tool_calls"].([]any)
+			if len(calls) != 1 {
+				t.Fatalf("tool_calls = %v, want the call kept", message["tool_calls"])
+			}
+			function, _ := calls[0].(map[string]any)["function"].(map[string]any)
+			if function["arguments"] != tc.want {
+				t.Fatalf("arguments = %v, want %s", function["arguments"], tc.want)
+			}
+			var arguments map[string]json.RawMessage
+			if err := json.Unmarshal([]byte(function["arguments"].(string)), &arguments); err != nil || arguments == nil {
+				t.Fatalf("arguments = %q, want a JSON object string on the wire", function["arguments"])
+			}
+		})
+	}
+}
+
+func TestChatNormalizesOnlyTheMalformedCallInAMixedHistory(t *testing.T) {
+	request := &inference.Request{
+		Model: "mimo-v2.6-flash",
+		Messages: []inference.Message{{
+			Role: inference.RoleAssistant,
+			ToolCalls: []inference.ToolCall{
+				{ID: "call_1", Name: "exec", Arguments: `{"input":"ls"}`},
+				{ID: "call_2", Name: "apply_patch", Arguments: "*** Begin Patch"},
+			},
+		}},
+	}
+	message := messageMap(t, encodeChatBody(t, "https://api.xiaomimimo.com/v1", request), 0)
+	calls, _ := message["tool_calls"].([]any)
+	if len(calls) != 2 {
+		t.Fatalf("tool_calls = %v, want both calls kept", message["tool_calls"])
+	}
+	first, _ := calls[0].(map[string]any)["function"].(map[string]any)
+	second, _ := calls[1].(map[string]any)["function"].(map[string]any)
+	if first["arguments"] != `{"input":"ls"}` {
+		t.Fatalf("first arguments = %v, want the valid call untouched", first["arguments"])
+	}
+	if second["arguments"] != "{}" {
+		t.Fatalf("second arguments = %v, want the raw call normalized", second["arguments"])
+	}
+}
+
 func reasoningContent(t *testing.T, body map[string]any, index int) string {
 	t.Helper()
 	text, _ := messageMap(t, body, index)["reasoning_content"].(string)

@@ -362,10 +362,20 @@ func encodeToolCalls(calls []inference.ToolCall) []chatToolCall {
 	for _, call := range calls {
 		entry := chatToolCall{ID: call.ID, Type: functionType}
 		entry.Function.Name = call.Name
-		entry.Function.Arguments = call.Arguments
+		entry.Function.Arguments = toolArguments(call.Arguments)
 		encoded = append(encoded, entry)
 	}
 	return encoded
+}
+
+func toolArguments(arguments string) string {
+	// Legacy freeform history can carry raw text or JSON scalars; Chat
+	// requires an object. Keep the call/result link with an empty object
+	// until the client replays that input in its JSON wrapper.
+	if trimmed := strings.TrimSpace(arguments); !strings.HasPrefix(trimmed, "{") || !json.Valid([]byte(trimmed)) {
+		return "{}"
+	}
+	return arguments
 }
 
 // encodeToolChoice renders the canonical choice the way the Chat wire names it.

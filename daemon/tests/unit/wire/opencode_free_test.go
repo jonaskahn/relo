@@ -43,35 +43,58 @@ func TestOpenCodeFreeIsNotOpenCodeGo(t *testing.T) {
 	}
 }
 
-// A tool-free turn travels as the client sent it: the gateway answers the
-// appended lane declarations plus a forbidding choice with 403 FreeTierError,
-// while the bare turn is served (observed live on title generation).
+// A tool-free turn gains the lane declarations: the gateway answers a bare
+// turn with 403 FreeTierError (observed live on title generation, 24 of 24
+// refused). The appended placeholders carry no tool choice of their own.
 func TestOpenCodeFreeRequestDeclaresToolsForAToolFreeChatTurn(t *testing.T) {
 	original := &inference.Request{Model: "mimo-v2.6-flash-free"}
 	got, _ := wire.OpenCodeFreeRequest(original, catalog.FormatOpenAIChat)
 	if len(original.Tools) != 0 {
 		t.Fatalf("original tools = %v, want the caller's request untouched", original.Tools)
 	}
-	if len(got.Tools) != 0 {
-		t.Fatalf("tools = %v, want nothing appended to a tool-free turn", got.Tools)
-	}
+	assertFreeLaneTools(t, got.Tools)
 	if got.ToolChoice != nil {
-		t.Fatalf("tool choice = %+v, want no choice on a tool-free turn", got.ToolChoice)
+		t.Fatalf("tool choice = %+v, want no choice added to a tool-free turn", got.ToolChoice)
 	}
 	if got.Model != original.Model {
 		t.Fatalf("model = %q, want the routed model kept", got.Model)
 	}
 }
 
-// The Responses wire answers a tool-free turn the same bare way, which is
-// the shape the working client sends there.
+// The Responses wire answers a tool-free turn the same way: the lane
+// declarations travel, and no tool choice is invented for it.
 func TestOpenCodeFreeRequestDeclaresToolsWithoutChoiceOnResponses(t *testing.T) {
 	got, _ := wire.OpenCodeFreeRequest(&inference.Request{}, catalog.FormatOpenAIResp)
-	if len(got.Tools) != 0 {
-		t.Fatalf("tools = %v, want nothing appended to a tool-free turn", got.Tools)
-	}
+	assertFreeLaneTools(t, got.Tools)
 	if got.ToolChoice != nil {
 		t.Fatalf("tool choice = %+v, want the Responses shape untouched", got.ToolChoice)
+	}
+}
+
+// The turn shape that produced every observed 403: a title generation, two
+// messages, no tools, a full output ceiling and a stated effort. It must
+// reach the gateway carrying the lane declarations.
+func TestOpenCodeFreeRequestDeclaresToolsForATitleGenerationTurn(t *testing.T) {
+	got, _ := wire.OpenCodeFreeRequest(&inference.Request{
+		Messages:  []inference.Message{{Role: "system"}, {Role: "user"}},
+		MaxTokens: 32000,
+		Reasoning: &inference.ReasoningConfig{Effort: "high"},
+	}, catalog.FormatOpenAIChat)
+	assertFreeLaneTools(t, got.Tools)
+}
+
+// assertFreeLaneTools checks the declarations the gateway inspects, in the
+// order it reads them.
+func assertFreeLaneTools(t *testing.T, got []inference.Tool) {
+	t.Helper()
+	want := []string{"bash", "glob", "grep", "read"}
+	if len(got) != len(want) {
+		t.Fatalf("tools = %d declarations, want the %d lane tools", len(got), len(want))
+	}
+	for index, name := range want {
+		if got[index].Name != name {
+			t.Fatalf("tool %d = %q, want %q", index, got[index].Name, name)
+		}
 	}
 }
 
