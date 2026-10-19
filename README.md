@@ -26,27 +26,34 @@ https://github.com/user-attachments/assets/cbda11c8-b60c-413b-8a08-03144dd06e7a
 <sub>Demo: using Relo in Codex</sub>
 </div>
 
-|                                                                              |                                                                        |                                                                     |
-|------------------------------------------------------------------------------|------------------------------------------------------------------------|---------------------------------------------------------------------|
-| Dashboard                                                                    | Connections                                                            | Groups                                                              |
-| <img src="https://github.com/user-attachments/assets/ba44719e-f176-4d02-9e92-10cf7055a6e8" alt="Dashboard" width="320">        | <img src="https://github.com/user-attachments/assets/b27d9948-1f30-4aac-a0f5-d98109c5522e" alt="Connections" width="320"> | <img src="https://github.com/user-attachments/assets/29ce8e23-925f-4d22-b571-a49d8bc70841" alt="Groups" width="320">    |
-| Agent Harness                                                                | Add agent                                                              | Usage                                                               |
-| <img src="https://github.com/user-attachments/assets/3e5bfe37-ad48-4c12-a32a-f4901f8f982a" alt="Agent Harness" width="320"> | <img src="https://github.com/user-attachments/assets/f4730cb7-7177-40c0-8d48-905dfde29ba3" alt="Add agent" width="320">    | <img src="https://github.com/user-attachments/assets/42f329be-4d1b-408c-bc8e-87a1237eccf6" alt="Usage" width="320"> |
+|                                                                                                                             |                                                                                                                           |                                                                                                                      |
+|-----------------------------------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------|
+| Dashboard                                                                                                                   | Connections                                                                                                               | Groups                                                                                                               |
+| <img src="https://github.com/user-attachments/assets/ba44719e-f176-4d02-9e92-10cf7055a6e8" alt="Dashboard" width="320">     | <img src="https://github.com/user-attachments/assets/b27d9948-1f30-4aac-a0f5-d98109c5522e" alt="Connections" width="320"> | <img src="https://github.com/user-attachments/assets/29ce8e23-925f-4d22-b571-a49d8bc70841" alt="Groups" width="320"> |
+| Agent Harness                                                                                                               | Add agent                                                                                                                 | Usage                                                                                                                |
+| <img src="https://github.com/user-attachments/assets/3e5bfe37-ad48-4c12-a32a-f4901f8f982a" alt="Agent Harness" width="320"> | <img src="https://github.com/user-attachments/assets/f4730cb7-7177-40c0-8d48-905dfde29ba3" alt="Add agent" width="320">   | <img src="https://github.com/user-attachments/assets/42f329be-4d1b-408c-bc8e-87a1237eccf6" alt="Usage" width="320">  |
 
 ## ▓ INSTALL
 
 Pick one. Every installer refuses to stack a second Relo.
 
-```console
-$ curl -fsSL https://relo.ifelse.one/install.sh | sh   # macOS, Linux
-$ irm https://relo.ifelse.one/install.ps1 | iex       # Windows, PowerShell
+- Linux & MacOS
+
+```shell
+curl -fsSL https://relo.ifelse.one/install.sh | sh
+```
+
+- Windows
+
+```shell
+irm https://relo.ifelse.one/install.ps1 | iex
 ```
 
 | Channel   | Command                                                              |
 |-----------|----------------------------------------------------------------------|
 | Script    | the two lines above; `install.sh --help` lists the flags             |
-| Homebrew  | `brew install jonaskahn/apps/relo`                                   |
-| npm       | `npm i -g @jonaskahn/relo[@beta]` (Node 22+)                         |
+| Homebrew  | ```brew install jonaskahn/apps/relo```                               |
+| npm       | ```npm i -g @jonaskahn/relo[@beta]``` (Node 22+)                     |
 | macOS app | `Relo-<version>-universal.zip`                                       |
 | Linux     | `Relo-Setup-<version>-amd64.deb` or `Relo-Setup-<version>-amd64.rpm` |
 | Windows   | `Relo-Setup-<version>-amd64.exe`                                     |
@@ -57,8 +64,8 @@ ports Relo serves, and starts the daemon.
 
 ## ▓ START
 
-```console
-$ relo daemon start                 # console at http://127.0.0.1:10101
+```shell
+relo daemon start                 # console at http://127.0.0.1:10101
 ```
 
 `daemon start` runs the proxy in the background and shows the tray icon when a desktop session is available.
@@ -68,14 +75,14 @@ Loopback only. `[admin] login = true` puts a sign-in in front, using `$RELO_HOME
 
 ## ▓ SURFACES
 
-| Port    | Speaks                                              |
-|---------|-----------------------------------------------------|
-| `10101` | console + management API + data plane               |
+| Port    | Speaks                                |
+|---------|---------------------------------------|
+| `10101` | console + management API + data plane |
 
-| Prefix             | Speaks                      |
-|--------------------|-----------------------------|
-| `/inference`       | OpenAI-compatible (`/v1/*`) |
-| `/inference-claude`| Anthropic (`/v1/*`)         |
+| Prefix              | Speaks                      |
+|---------------------|-----------------------------|
+| `/inference`        | OpenAI-compatible (`/v1/*`) |
+| `/inference-claude` | Anthropic (`/v1/*`)         |
 
 Client keys hit the data plane. The admin token hits the console. Provider credentials go upstream only.
 
