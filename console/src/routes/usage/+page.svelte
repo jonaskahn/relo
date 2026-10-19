@@ -801,9 +801,7 @@
 							<DonutCard
 								titleKey="ui.pages.usagePage.tokenByProviderTitle"
 								segments={tokenDonut}
-								totalText={tokenDonutTotal.toLocaleString() +
-									' ' +
-									$t('ui.pages.usagePage.unitTokens')}
+								totalText={formatTokens(tokenDonutTotal)}
 								captionOf={(key) => namedCaption(key, providerLabelOf(key))}
 								valueOf={formatTokens}
 								centerKey="ui.pages.usagePage.summaryTotalTokens"

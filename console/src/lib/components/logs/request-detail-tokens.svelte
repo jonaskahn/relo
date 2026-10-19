@@ -2,7 +2,14 @@
 	import { t } from 'svelte-i18n';
 
 	import DetailDisclosure from '$lib/components/logs/detail-disclosure.svelte';
-	import { formatCost, formatDuration, formatUnitPrice } from '$lib/format';
+	import {
+		formatCost,
+		formatDuration,
+		formatTokens,
+		formatTokensExact,
+		formatUnitPrice,
+		tokenCount
+	} from '$lib/format';
 	import type { Model, UsageLogRow } from '$lib/types';
 
 	// RequestDetailTokens is what the request cost and what it was billed at.
@@ -24,7 +31,8 @@
 	}
 
 	const durationText = $derived(formatDuration(row.DurationMs));
-	const totalTokens = $derived((row.InputTokens + row.OutputTokens).toLocaleString());
+	const totalTokenCount = $derived(Number(row.InputTokens) + Number(row.OutputTokens));
+	const totalTokens = $derived(formatTokens(tokenCount(totalTokenCount)));
 	const totalCostText = $derived(formatCost(row.EstimatedCostMicros));
 
 	const breakdown = $derived.by(() => {
@@ -43,9 +51,11 @@
 			rate: number | null | undefined
 		) => {
 			const cost = computeMicros(tokens, rate);
+			const exact = tokenCount(tokens);
 			return {
 				label: label(name),
-				tokensText: tokens.toLocaleString(),
+				tokensText: formatTokens(exact),
+				tokensExact: formatTokensExact(exact),
 				rateText: rate != null ? formatUnitPrice(rate) : '—',
 				costText: cost != null ? formatCost(cost) : '—'
 			};
@@ -80,7 +90,7 @@
 				{#each breakdown as line (line.label)}
 					<tr>
 						<td class="py-1.5 text-muted-foreground">{line.label}</td>
-						<td class="mono-data py-1.5 text-right">{line.tokensText}</td>
+						<td class="mono-data py-1.5 text-right" title={line.tokensExact}>{line.tokensText}</td>
 						<td class="mono-data py-1.5 text-right">{line.rateText}</td>
 						<td class="mono-data py-1.5 text-right">{line.costText}</td>
 					</tr>
@@ -89,7 +99,9 @@
 			<tfoot>
 				<tr class="font-medium">
 					<td class="py-1.5">{$t('ui.pages.logsPage.columnTotal')}</td>
-					<td class="mono-data py-1.5 text-right">{totalTokens}</td>
+					<td class="mono-data py-1.5 text-right" title={formatTokensExact(totalTokenCount)}
+						>{totalTokens}</td
+					>
 					<td class="py-1.5"></td>
 					<td class="mono-data py-1.5 text-right">{totalCostText}</td>
 				</tr>

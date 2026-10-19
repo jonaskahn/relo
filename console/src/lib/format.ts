@@ -41,12 +41,21 @@ export function formatBytes(bytes: number): string {
 	return value.toFixed(value < 10 ? 1 : 0) + ' ' + units[unit];
 }
 
-/** Abbreviates a token count with the ladder k, M, B, T, Qa, Qi.
- *  Past the largest unit the figure keeps growing rather than inventing a unit nothing knows. */
+/** Abbreviates a token count with the ladder k, M, B, T, Qa, Qi, choosing the unit from the
+ *  number itself. Past the largest unit the figure keeps growing rather than inventing a unit
+ *  nothing knows. */
 export function formatTokens(count: number): string {
 	if (count < 1000) return String(count);
-	if (count < 1_000_000) return (count / 1000).toFixed(count < 10_000 ? 1 : 0) + 'k';
-	if (count < 1_000_000_000) return (count / 1_000_000).toFixed(count < 10_000_000 ? 2 : 1) + 'M';
+	if (count < 1_000_000) {
+		const value = count / 1000;
+		if (Number(value.toFixed(1)) >= 1000) return '1.00M';
+		return value.toFixed(count < 10_000 ? 1 : 0) + 'k';
+	}
+	if (count < 1_000_000_000) {
+		const value = count / 1_000_000;
+		if (Number(value.toFixed(1)) >= 1000) return '1.0B';
+		return value.toFixed(count < 10_000_000 ? 2 : 1) + 'M';
+	}
 	if (count < 1e12) return (count / 1e9).toFixed(1) + 'B';
 	if (count < 1e15) return (count / 1e12).toFixed(1) + 'T';
 	if (count < 1e18) return (count / 1e15).toFixed(1) + 'Qa';
@@ -57,6 +66,16 @@ export function formatTokens(count: number): string {
  *  abbreviated figure. */
 export function formatTokensExact(count: number): string {
 	return count.toLocaleString() + ' ' + get(t)('ui.pages.usagePage.unitTokens');
+}
+
+/** Renders a count in the compact ladder, for a surface whose figure can reach billions. */
+export function formatCount(count: number): string {
+	return formatTokens(count);
+}
+
+/** Reads a stored token figure as a whole number, so a JSON string cannot turn into a unit. */
+export function tokenCount(value: number | string | null | undefined): number {
+	return Number(value);
 }
 
 /** Renders integer micro-dollars with enough decimals that no non-zero cost reads as free: a

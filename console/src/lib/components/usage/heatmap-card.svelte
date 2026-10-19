@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { t } from 'svelte-i18n';
 
+	import { formatCount } from '$lib/format';
 	import { HEAT_FILLS, shortDay, type HeatCell } from '$lib/usage-charts';
 
 	// HeatmapCard folds the range into Monday-first weeks, so a rhythm that
@@ -23,13 +24,13 @@
 				return (
 					shortDay(hovered.key) +
 					' · ' +
-					hovered.value.toLocaleString() +
+					formatCount(hovered.value) +
 					' ' +
 					$t('ui.pages.usagePage.unitRequests')
 				);
 			}
 		}
-		return total.toLocaleString() + ' ' + $t('ui.pages.usagePage.unitRequests');
+		return formatCount(total) + ' ' + $t('ui.pages.usagePage.unitRequests');
 	});
 </script>
 
@@ -55,12 +56,12 @@
 							role="img"
 							aria-label={shortDay(cell.key) +
 								': ' +
-								cell.value.toLocaleString() +
+								formatCount(cell.value) +
 								' ' +
 								$t('ui.pages.usagePage.unitRequests')}
 							title={shortDay(cell.key) +
 								': ' +
-								cell.value.toLocaleString() +
+								formatCount(cell.value) +
 								' ' +
 								$t('ui.pages.usagePage.unitRequests')}
 							onmouseenter={() => (hoveredKey = cell.key)}
