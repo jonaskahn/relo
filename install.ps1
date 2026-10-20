@@ -2,6 +2,10 @@
 #
 #   irm https://relo.ifelse.one/install.ps1 | iex
 #
+# For the newest beta instead of the latest stable:
+#
+#   & ([scriptblock]::Create((irm https://relo.ifelse.one/install.ps1))) -Beta
+#
 # With arguments (PowerShell cannot pass them through a pipe):
 #
 #   & ([scriptblock]::Create((irm https://relo.ifelse.one/install.ps1))) -NoStart
@@ -18,6 +22,7 @@ param(
 	[switch] $NoStart,
 	[switch] $NoAutostart,
 	[switch] $ForcePorts,
+	[switch] $Beta,
 	[switch] $Yes,
 	[switch] $Help
 )
@@ -200,6 +205,7 @@ Usage: install.ps1 [options]
   -NoStart         do not start the daemon after installing
   -NoAutostart     do not register Relo to start at login
   -ForcePorts      take a Relo port from another program without asking
+  -Beta            install the newest beta instead of the latest stable
   -Yes             use the selected settings without prompting
   -Help            this text
 
@@ -686,14 +692,17 @@ function Invoke-Options {
 		if ($release -lt 0) { Write-Note 'Setup canceled. Nothing was changed.'; exit 0 }
 		if ($release -eq 1) { $script:Version = '' }
 	} else {
-		$release = Select-InstallOption 'Which release?' @('Latest', 'Version…') 0
+		$default = if ($Beta) { 1 } else { 0 }
+		$release = Select-InstallOption 'Which release?' @('Latest', 'Beta', 'Version…') $default
 		if ($release -lt 0) { Write-Note 'Setup canceled. Nothing was changed.'; exit 0 }
 		switch ($release) {
-			0 { $script:Version = '' }
-			1 {
+			0 { $script:Beta = $false; $script:Version = '' }
+			1 { $script:Beta = $true; $script:Version = '' }
+			2 {
 				Write-Note 'Enter a tag such as v0.1.0. Enter keeps the latest stable.'
 				$tag = Read-Setup 'Release tag'
 				if ($tag) { $script:Version = $tag }
+				if ($script:Version) { $script:Beta = $false }
 			}
 		}
 	}
@@ -725,6 +734,15 @@ function Invoke-Options {
 # ---------------------------------------------------------------- install ---
 
 function Resolve-Version {
+	if ($Beta -and -not $Version) {
+		$script:Version = Get-LatestBeta
+		if (-not $script:Version) {
+			Fail 'No beta release found' @(
+				'Every merge to main publishes one; the feed may be between builds.',
+				'Rerun with -Version <tag> to pin a build.'
+			)
+		}
+	}
 	if ($Version) {
 		$tag = if ($Version.StartsWith('v')) { $Version } else { "v$Version" }
 		$script:ResolvedVersion = $tag.Substring(1)
@@ -743,6 +761,21 @@ function Resolve-Version {
 		$tag = ($effective -replace '/+$', '') -replace '.*/', ''
 		if ($tag) { $script:ResolvedVersion = $tag.TrimStart('v') }
 	} catch { }
+}
+
+# Get-LatestBeta reads the newest prerelease tag from the releases feed, the
+# same feed the daemon follows for beta updates.
+function Get-LatestBeta {
+	$feed = ($Releases -replace '/+$', '') -replace '/releases$', '/releases.atom'
+	try {
+		$body = (Invoke-WebRequest -UseBasicParsing -Uri $feed -TimeoutSec 15).Content
+	} catch { return '' }
+	$best = ''
+	foreach ($match in [regex]::Matches([string]$body, '/releases/tag/([^"<>/]+)')) {
+		$tag = $match.Groups[1].Value.Trim()
+		if ($tag -match '-') { $best = $tag; break }
+	}
+	return $best
 }
 
 Get-Platform

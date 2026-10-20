@@ -2,6 +2,7 @@
 # Relo installer: the daemon, from the latest release, on macOS and Linux.
 #
 #   curl -fsSL https://relo.ifelse.one/install.sh | sh
+#   curl -fsSL https://relo.ifelse.one/install.sh | sh -s -- --beta
 #
 # The script installs exactly one binary. An installation that belongs to
 # another channel -- Homebrew, npm, the macOS app, a .deb or a .rpm -- is
@@ -183,6 +184,7 @@ have() { command -v "$1" >/dev/null 2>&1; }
 # --------------------------------------------------------------- options ----
 
 VERSION="${RELO_VERSION:-}"
+CHANNEL="stable"
 INSTALL_DIR="${RELO_INSTALL_DIR:-}"
 RELO_HOME_OPT="${RELO_HOME:-}"
 START_AFTER=1
@@ -200,6 +202,7 @@ Relo installer
 Usage: install.sh [options]
 
   --version <tag>   install a pinned release, for example --version v0.1.0
+  --beta            install the newest beta instead of the latest stable
   --dir <path>      where the binary goes (default ~/.local/bin)
   --home <path>     Relo state directory to read ports from (default ~/.relo)
   --no-start        do not start the daemon after installing
@@ -217,6 +220,7 @@ while [ $# -gt 0 ]; do
 	case "$1" in
 	--version) VERSION="${2:?--version needs a value}"; shift 2 ;;
 	--version=*) VERSION="${1#*=}"; shift ;;
+	--beta) CHANNEL="beta"; shift ;;
 	--dir) INSTALL_DIR="${2:?--dir needs a value}"; shift 2 ;;
 	--dir=*) INSTALL_DIR="${1#*=}"; shift ;;
 	--home) RELO_HOME_OPT="${2:?--home needs a value}"; shift 2 ;;
@@ -894,15 +898,18 @@ options_screen() {
 	say ""
 
 	_default=1
-	[ -n "$VERSION" ] && _default=2
-	menu_select "Which release?" "$_default" "Latest" "Version…" >/dev/null || {
+	[ "$CHANNEL" = "beta" ] && _default=2
+	[ -n "$VERSION" ] && _default=3
+	menu_select "Which release?" "$_default" "Latest" "Beta" "Version…" >/dev/null || {
 		note "Setup canceled. Nothing was changed."; exit 0
 	}
 	case "$MENU_PICK" in
-	1) VERSION="" ;;
-	2)
+	1) CHANNEL="stable"; VERSION="" ;;
+	2) CHANNEL="beta"; VERSION="" ;;
+	3)
 		note "Enter a tag such as v0.1.0. Enter keeps $([ -n "$VERSION" ] && printf '%s' "$VERSION" || printf 'the latest stable')."
 		VERSION="$(ask "Release tag" "$VERSION")"
+		[ -n "$VERSION" ] && CHANNEL="stable"
 		;;
 	esac
 
@@ -948,6 +955,12 @@ options_screen() {
 # ---------------------------------------------------------------- install ---
 
 resolve_version() {
+	if [ "$CHANNEL" = "beta" ] && [ -z "$VERSION" ]; then
+		VERSION="$(latest_beta)"
+		[ -n "$VERSION" ] || die "No beta release found" \
+			"Every merge to main publishes one; the feed may be between builds." \
+			"Rerun with --version <tag> to pin a build."
+	fi
 	if [ -n "$VERSION" ]; then
 		case "$VERSION" in
 		v*) tag="$VERSION" ;;
@@ -963,6 +976,21 @@ resolve_version() {
 		effective="$(curl -fsSIL -o /dev/null -w '%{url_effective}' "$RELEASES/latest" 2>/dev/null || true)"
 		tag_seen="$(printf '%s' "$effective" | sed 's#/*$##; s#.*/##; s/^v//')"
 		[ -n "$tag_seen" ] && RESOLVED_VERSION="$tag_seen"
+	fi
+}
+
+# latest_beta reads the newest prerelease tag from the releases feed, the
+# same feed the daemon follows for beta updates.
+latest_beta() {
+	feed="${RELEASES%/releases}/releases.atom"
+	if have curl; then
+		curl -fsSL --connect-timeout 10 "$feed" 2>/dev/null |
+			sed -n 's#.*/releases/tag/\([^"<>/]*\)["<>].*#\1#p' |
+			awk -F- 'NF > 1 { print; exit }'
+	elif have wget; then
+		wget -q -O - --timeout=10 "$feed" 2>/dev/null |
+			sed -n 's#.*/releases/tag/\([^"<>/]*\)["<>].*#\1#p' |
+			awk -F- 'NF > 1 { print; exit }'
 	fi
 }
 
