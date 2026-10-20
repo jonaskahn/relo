@@ -30,7 +30,6 @@ $Repo = 'jonaskahn/relo'
 $Releases = if ($env:RELO_RELEASE_BASE) { $env:RELO_RELEASE_BASE } else { "https://github.com/$Repo/releases" }
 $Receipt = '.relo-install'
 $DefaultPort = 10101
-$BarWidth = 20
 $script:ConsoleReady = $false
 $script:Terminal = $false
 try { $script:Terminal = -not [Console]::IsOutputRedirected } catch { }
@@ -44,51 +43,143 @@ try { $script:Color = [bool]$Host.UI.SupportsVirtualTerminal } catch { $script:C
 if ($env:NO_COLOR) { $script:Color = $false }
 if (-not $script:Terminal) { $script:Color = $false }
 
-function Write-Step([string] $Text) { Write-Host ("  " + (Paint '>' 'red') + " $Text") }
-function Write-OK([string] $Text) { Write-Host ("  " + (Paint '+' 'green') + " $Text") }
-function Write-Note([string] $Text) { Write-Host ("  " + (Paint 'i' 'slate') + " $Text") }
-function Write-Oops([string] $Text) { Write-Host ("  " + (Paint '!' 'red') + " $Text") }
-function Write-Rule { Write-Host (Paint '  ----------------------------------------' 'dim') }
-function Write-Section([string] $Number, [string] $Text) {
-	Write-Host ''
-	Write-Rule
-	Write-Host ("  " + (Paint "$Number / 04" 'red') + "  " + (Paint $Text 'bold'))
-	Write-Host ''
-}
+# One screen, like the npm package draws: a framed card with the logo, the
+# release, and the steps inside the same border.
+$script:Inner = 76
+$script:BarWidth = 16
+$script:Framed = $false
+$script:FirstSection = $true
+$script:Visual = $script:Terminal
+$script:Esc = [char]27
+$script:Logo = @(
+	'██████╗ ███████╗██╗      ██████╗ ',
+	'██╔══██╗██╔════╝██║     ██╔═══██╗',
+	'██████╔╝█████╗  ██║     ██║   ██║',
+	'██╔══██╗██╔══╝  ██║     ██║   ██║',
+	'██║  ██║███████╗███████╗╚██████╔╝',
+	'╚═╝  ╚═╝╚══════╝╚══════╝ ╚═════╝ '
+)
 
 function Paint([string] $Text, [string] $Tone) {
 	if (-not $script:Color) { return $Text }
+	# The four shades of a Game Boy screen.
 	switch ($Tone) {
-		'red' { return "$([char]27)[38;2;200;16;46m$Text$([char]27)[0m" }
-		'rose' { return "$([char]27)[38;2;240;90;110m$Text$([char]27)[0m" }
-		'green' { return "$([char]27)[38;2;80;200;140m$Text$([char]27)[0m" }
-		'amber' { return "$([char]27)[38;2;230;170;60m$Text$([char]27)[0m" }
-		'slate' { return "$([char]27)[38;2;140;140;155m$Text$([char]27)[0m" }
-		'dim' { return "$([char]27)[2m$Text$([char]27)[0m" }
-		'bold' { return "$([char]27)[1m$Text$([char]27)[0m" }
+		'red' { return "$($script:Esc)[38;2;155;188;15m$Text$($script:Esc)[0m" }
+		'green' { return "$($script:Esc)[38;2;155;188;15m$Text$($script:Esc)[0m" }
+		'rose' { return "$($script:Esc)[38;2;139;172;15m$Text$($script:Esc)[0m" }
+		'amber' { return "$($script:Esc)[38;2;139;172;15m$Text$($script:Esc)[0m" }
+		'slate' { return "$($script:Esc)[38;2;48;98;48m$Text$($script:Esc)[0m" }
+		'dim' { return "$($script:Esc)[38;2;48;98;48m$Text$($script:Esc)[0m" }
+		'bold' { return "$($script:Esc)[1m$Text$($script:Esc)[0m" }
 		default { return $Text }
 	}
 }
 
-function Write-Banner {
-	Write-Host ''
-	if ($script:Terminal) {
-		$block = [string][char]0x2588
-		Write-Host ((Paint ('  ######  '.Replace('#', $block)) 'red') + (Paint ('####### ##       ######'.Replace('#', $block)) 'bold'))
-		Write-Host ((Paint ('  ##   ## '.Replace('#', $block)) 'red') + (Paint ('##      ##      ##    ##'.Replace('#', $block)) 'bold'))
-		Write-Host ((Paint ('  ######  '.Replace('#', $block)) 'red') + (Paint ('#####   ##      ##    ##'.Replace('#', $block)) 'bold'))
-		Write-Host ((Paint ('  ##  ##  '.Replace('#', $block)) 'red') + (Paint ('##      ##      ##    ##'.Replace('#', $block)) 'bold'))
-		Write-Host ((Paint ('  ##   ## '.Replace('#', $block)) 'red') + (Paint ('####### #######  ######'.Replace('#', $block)) 'bold'))
-	} else {
-		Write-Host '  RELO'
+function Get-Visible([string] $Text) {
+	return ($Text -replace "$($script:Esc)\[[0-9;]*m", '')
+}
+
+function Clip-Text([string] $Text) {
+	$out = ''
+	$vis = 0
+	$i = 0
+	while ($i -lt $Text.Length -and $vis -lt ($script:Inner - 1)) {
+		if ($Text[$i] -eq $script:Esc) {
+			$j = $Text.IndexOf('m', $i)
+			if ($j -lt 0) { break }
+			$out += $Text.Substring($i, $j - $i + 1)
+			$i = $j + 1
+			continue
+		}
+		$out += $Text[$i]
+		$vis++
+		$i++
 	}
-	Write-Host ''
-	Write-Host (Paint '  One daemon. Your tools. Every provider.' 'bold')
-	Write-Host (Paint "  Let's get Relo ready on windows/$ArchName." 'dim')
-	Write-Host ''
+	return $out + [char]0x2026
+}
+
+function Format-Row([string] $Text) {
+	if (-not $script:Framed) { return $Text }
+	$visible = (Get-Visible $Text).Length
+	if ($visible -gt $script:Inner) {
+		$Text = Clip-Text $Text
+		$visible = (Get-Visible $Text).Length
+	}
+	$pad = [Math]::Max(0, $script:Inner - $visible)
+	return (Paint '│' 'bright') + $Text + (' ' * $pad) + (Paint '│' 'bright')
+}
+
+function Write-Row([string] $Text) { Write-Host (Format-Row $Text) }
+function Clear-Line { if ($script:Visual) { Write-Host ("`r" + $script:Esc + "[2K") -NoNewline } }
+
+function Write-Separator([string] $Left, [string] $Right) {
+	$dash = [string][char]0x2500
+	Write-Host (Paint ($Left + ($dash * $script:Inner) + $Right) 'bright')
+}
+
+function Write-Center([string] $Text, [string] $Tone) {
+	$visible = (Get-Visible $Text).Length
+	$left = [Math]::Max(0, [int](($script:Inner - $visible) / 2))
+	Write-Row ((' ' * $left) + (Paint $Text $Tone))
+}
+
+function Write-ScreenOpen([string] $VersionLabel) {
+	if (-not $script:Visual) {
+		Write-Host ''
+		Write-Host '  RELO INSTALLER'
+		Write-Host "  $VersionLabel  windows/$ArchName"
+		Write-Host ''
+		return
+	}
+	$script:Framed = $true
+	Write-Separator ([string][char]0x250C) ([string][char]0x2510)
+	Write-Row ''
+	foreach ($line in $script:Logo) { Write-Center $line 'bright' }
+	Write-Row ''
+	Write-Center 'I N S T A L L E R' 'bright'
+	Write-Row ''
+	Write-Center $VersionLabel 'rose'
+	$platform = ("windows · {0}" -f $ArchName).ToUpper()
+	Write-Center $platform 'rose'
+	Write-Row ''
+	Write-Separator ([string][char]0x251C) ([string][char]0x2524)
+}
+
+function Write-ScreenClose {
+	if (-not $script:Framed) { return }
+	$script:Framed = $false
+	Write-Separator ([string][char]0x2514) ([string][char]0x2518)
+}
+
+function Write-Step([string] $Text) {
+	if ($script:Visual) {
+		Write-Host (Format-Row ("  " + (Paint '▶' 'bright') + " $Text")) -NoNewline
+	} else {
+		Write-Host "  > $Text"
+	}
+}
+
+function Write-OK([string] $Text) { Clear-Line; Write-Row ("  " + (Paint '✓' 'bright') + " $Text") }
+function Write-Note([string] $Text) { Clear-Line; Write-Row ("  " + (Paint '·' 'slate') + " " + (Paint $Text 'slate')) }
+function Write-Oops([string] $Text) { Clear-Line; Write-Row ("  " + (Paint '!' 'bright') + " $Text") }
+function Write-Rule { Write-Separator ([string][char]0x251C) ([string][char]0x2524) }
+function Write-Lead([string] $Text) { Write-Row ("  " + (Paint '▶' 'bright') + " $Text") }
+
+function Write-Section([string] $Number, [string] $Text) {
+	if ($script:FirstSection) { $script:FirstSection = $false } else { Write-Rule }
+	Write-Row ''
+	Write-Row ("  " + (Paint $Number 'bright') + "  " + (Paint $Text 'bold'))
+	Write-Row ''
+}
+
+function Get-Chip([string] $Text) {
+	if (-not $script:Color) { return " ▶ $Text " }
+	return "$($script:Esc)[48;2;155;188;15m$($script:Esc)[38;2;15;56;15m ▶ $Text $($script:Esc)[0m"
 }
 
 function Fail([string] $Message, [string[]] $Detail) {
+	Clear-Line
+	Write-ScreenClose
 	Write-Host ''
 	Write-Oops $Message
 	foreach ($line in $Detail) { Write-Host "    $line" }
@@ -198,15 +289,14 @@ function Get-RemoteLength([string] $Url) {
 }
 
 function Get-Bar([int] $Percent) {
-	$filled = [int][Math]::Floor($Percent * $BarWidth / 100)
-	$full = '#' * $filled
-	$empty = '-' * ($BarWidth - $filled)
-	return "$full$empty"
+	$filled = [int][Math]::Floor($Percent * $script:BarWidth / 100)
+	$full = [string][char]0x2588
+	$empty = [string][char]0x2591
+	return (Paint ($full * $filled) 'bright') + (Paint ($empty * ($script:BarWidth - $filled)) 'slate')
 }
 
 function Save-Remote([string] $Url, [string] $Destination, [string] $Label) {
 	Write-Step "Downloading $Label"
-	$total = if ($script:Terminal) { Get-RemoteLength $Url } else { 0 }
 	$request = [System.Net.HttpWebRequest]::Create($Url)
 	$request.UserAgent = 'relo-installer'
 	$request.AllowAutoRedirect = $true
@@ -217,6 +307,10 @@ function Save-Remote([string] $Url, [string] $Destination, [string] $Label) {
 	$out = [System.IO.File]::Create($Destination)
 	$buffer = New-Object byte[] 65536
 	$written = 0
+	# The GET response carries the asset length where a HEAD may answer 0.
+	$total = [int64]$response.ContentLength
+	if ($total -le 0) { $total = Get-RemoteLength $Url }
+	if ($total -lt 0) { $total = 0 }
 	$watch = [System.Diagnostics.Stopwatch]::StartNew()
 	$lastDraw = [System.Diagnostics.Stopwatch]::StartNew()
 
@@ -224,19 +318,23 @@ function Save-Remote([string] $Url, [string] $Destination, [string] $Label) {
 		while (($read = $stream.Read($buffer, 0, $buffer.Length)) -gt 0) {
 			$out.Write($buffer, 0, $read)
 			$written += $read
-			if (-not $script:Terminal) { continue }
+			if (-not $script:Visual) { continue }
 			if ($lastDraw.ElapsedMilliseconds -lt 150) { continue }
 			$lastDraw.Restart()
+			$seconds = [Math]::Max($watch.Elapsed.TotalSeconds, 0.1)
+			$rate = [int]($written / 1024 / $seconds)
 			if ($total -gt 0) {
 				$percent = [int]($written * 100 / $total)
 				if ($percent -gt 100) { $percent = 100 }
-				$seconds = [Math]::Max($watch.Elapsed.TotalSeconds, 0.1)
-				$rate = [int]($written / 1024 / $seconds)
-				Write-Host ("`r    " + (Paint ("[" + (Get-Bar $percent) + "]") 'rose') +
-					(" {0,3}%  {1}/{2} MB  {3} KB/s   " -f $percent, [int]($written / 1MB), [int]($total / 1MB), $rate)) -NoNewline
+				$eta = ''
+				if ($rate -gt 0 -and $written -lt $total) {
+					$eta = "  ETA $([Math]::Max(1, [int](($total - $written) / ($rate * 1024))))s"
+				}
+				$line = "  " + (Get-Chip 'DOWNLOAD') + " [" + (Get-Bar $percent) + "] $percent%  $([int]($written / 1MB))/$([int]($total / 1MB)) MB  $rate KB/s$eta"
 			} else {
-				Write-Host ("`r    " + ("{0} MB downloaded   " -f [int]($written / 1MB))) -NoNewline
+				$line = "  " + (Get-Chip 'DOWNLOAD') + " $([int]($written / 1MB)) MB  $rate KB/s"
 			}
+			Write-Host ("`r" + $script:Esc + "[2K" + (Format-Row $line)) -NoNewline
 		}
 	} finally {
 		$out.Close()
@@ -244,14 +342,7 @@ function Save-Remote([string] $Url, [string] $Destination, [string] $Label) {
 		$response.Close()
 	}
 
-	if (-not $script:Terminal) {
-		Write-OK "Downloaded $Label"
-	} elseif ($total -gt 0) {
-		Write-Host ("`r    " + (Paint ("[" + (Get-Bar 100) + "]") 'green') +
-			(" 100%  {0}/{1} MB                " -f [int]($total / 1MB), [int]($total / 1MB)))
-	} else {
-		Write-Host ("`r    " + (Paint 'Download complete.' 'green') + '                    ')
-	}
+	Write-OK "Downloaded $Label ($([int]($written / 1MB)) MB)"
 }
 
 function Test-Checksum([string] $File, [string] $Sums, [string] $Name) {
@@ -346,21 +437,21 @@ function Stop-Daemon {
 }
 
 function Clear-Ports {
-	Write-Step 'Checking the ports Relo serves'
+	Write-Lead 'Checking the ports Relo serves'
 	$foreign = @()
 	foreach ($port in $CheckPorts) {
 		if ($port -le 0) { continue }
 		$holders = Get-PortHolders $port
 		if ($holders.Count -eq 0) {
-			Write-Host ("  " + (Paint 'i' 'slate') + (" {0,-6} available" -f $port))
+			Write-Row ("  " + (Paint '·' 'slate') + (" $port available"))
 			continue
 		}
 		foreach ($holder in $holders) {
 			if ($holder.Name -match '^(?i)relo(-desktop)?$') {
-				Write-Host ("  " + (Paint '+' 'green') + (" {0,-6} stopping {1} (pid {2})" -f $port, $holder.Name, $holder.Pid))
+				Write-Row ("  " + (Paint '✓' 'bright') + (" $port stopping $($holder.Name) (pid $($holder.Pid))"))
 				Stop-Holder $holder
 			} else {
-				Write-Host ("  " + (Paint '!' 'amber') + (" {0,-6} held by {1} (pid {2})" -f $port, $holder.Name, $holder.Pid))
+				Write-Row ("  " + (Paint '!' 'bright') + (" $port held by $($holder.Name) (pid $($holder.Pid))"))
 				$foreign += $port
 			}
 		}
@@ -375,7 +466,7 @@ function Clear-Ports {
 					'Rerun with -ForcePorts to take them, or free them yourself.'
 				)
 			}
-			Write-Host ''
+			Write-Row ''
 			Write-Note 'Stopping another program may interrupt its work.'
 			if (-not (Confirm-Setup "Stop the program using ports$list?")) {
 				Fail "Ports$list are held by another program" @('Nothing was installed.')
@@ -419,7 +510,7 @@ function Start-Daemon {
 
 	Write-Step 'Starting the daemon'
 	& $Bin daemon start 2>$null | Out-Null
-	if ($LASTEXITCODE -ne 0) { Write-Note 'The daemon did not start on its own' }
+	if ($LASTEXITCODE -eq 0) { Write-OK 'Daemon started' } else { Write-Note 'The daemon did not start on its own' }
 
 	if (-not $NoAutostart) {
 		& $Bin autostart enable 2>$null | Out-Null
@@ -444,37 +535,41 @@ function Start-Daemon {
 
 function Write-Summary {
 	$port = if ($CheckPorts.Count -gt 0) { $CheckPorts[0] } else { $DefaultPort }
-	Write-Host ''
 	Write-Rule
 	Write-OK (Paint "Relo $ResolvedVersion is installed." 'bold')
-	Write-Host ''
-	Write-Host ("  " + (Paint 'Binary' 'dim') + "   $Bin")
-	Write-Host ("  " + (Paint 'Data' 'dim') + "     $ReloHome")
-	Write-Host ''
+	Write-Row ''
+	Write-Row ("  " + (Paint 'Binary' 'slate') + "   $Bin")
+	Write-Row ("  " + (Paint 'Data' 'slate') + "     $ReloHome")
+	Write-Row ''
 	if ($script:ConsoleReady) {
-		Write-Host (Paint '  Your next step' 'bold')
-		Write-Host '  Open the console and add your first connection:'
+		Write-Row (Paint '  Your next step' 'bold')
+		Write-Row '  Open the console and add your first connection:'
 	} else {
-		Write-Host (Paint '  Ready when you are' 'bold')
-		Write-Host '  Start Relo, then open the console:'
-		Write-Host "    & `"$Bin`" daemon start"
+		Write-Row (Paint '  Ready when you are' 'bold')
+		Write-Row '  Start Relo, then open the console:'
+		Write-Row "    & `"$Bin`" daemon start"
 	}
-	Write-Host (Paint "  http://127.0.0.1:$port" 'red')
-	Write-Host ''
-	Write-Host (Paint '  Useful commands' 'dim')
-	Write-Host '    relo daemon status       Check how Relo is doing'
-	Write-Host '    relo daemon restart      Restart Relo'
-	Write-Host '    relo autostart disable   Turn off start at login'
-	Write-Host ''
+	Write-Row ("  " + (Paint "http://127.0.0.1:$port" 'bright'))
+	Write-Row ''
+	Write-Row (Paint '  Useful commands' 'slate')
+	Write-Row '    relo daemon status       Check how Relo is doing'
+	Write-Row '    relo daemon restart      Restart Relo'
+	Write-Row '    relo autostart disable   Turn off start at login'
+	Write-Row ''
 	Write-Note 'To update, run this installer again.'
-	Write-Rule
-	Write-Host ''
 }
 
 # -------------------------------------------------------------- the prompt --
 
 function Read-Setup([string] $Prompt) {
-	$value = Read-Host (Paint "  > $Prompt" 'red')
+	if ($script:Framed) {
+		Write-Host (Format-Row ("  " + (Paint '▶' 'bright') + " $Prompt ")) -NoNewline
+		$value = Read-Host
+		Write-Host ("`r" + $script:Esc + "[1A" + $script:Esc + "[2K") -NoNewline
+		Write-Row ("  " + (Paint '▶' 'bright') + " $Prompt " + $value)
+	} else {
+		$value = Read-Host (Paint "  > $Prompt" 'red')
+	}
 	if ($null -eq $value) { Fail 'Setup canceled: the terminal input closed.' @() }
 	return $value.Trim()
 }
@@ -491,41 +586,40 @@ function Confirm-Setup([string] $Prompt) {
 }
 
 function Invoke-Options {
-	Write-Banner
 	Write-Section '01' 'Make it yours'
-	Write-Host "  You're one Enter away. Want to make a change first?"
-	Write-Host ''
+	Write-Row "  You're one Enter away. Want to make a change first?"
+	Write-Row ''
 	while ($true) {
 		$startLabel = if ($NoStart) { Paint '[OFF]' 'slate' } else { Paint '[ON ]' 'green' }
 		$autoLabel = if ($NoAutostart) { Paint '[OFF]' 'slate' } else { Paint '[ON ]' 'green' }
 		if ($NoStart) { $autoLabel = Paint '[ --]' 'amber' }
 		$versionLabel = if ($Version) { $Version } else { 'Latest stable' }
 		$versionHint = if ($Version) { '(pinned release)' } else { '(recommended)' }
-		Write-Host (Paint '  INSTALLATION' 'dim')
+		Write-Row (Paint '  INSTALLATION' 'dim')
 		Write-Rule
-		Write-Host ("  " + (Paint '[1]' 'red') + ' ' + (Paint 'Release' 'bold'))
-		Write-Host ("      $versionLabel " + (Paint $versionHint 'dim'))
-		Write-Host ''
-		Write-Host ("  " + (Paint '[2]' 'red') + ' ' + (Paint 'Install folder' 'bold'))
-		Write-Host "      $Dir"
-		Write-Host ''
-		Write-Host (Paint '  ON YOUR SCHEDULE' 'dim')
+		Write-Row ("  " + (Paint '[1]' 'red') + ' ' + (Paint 'Release' 'bold'))
+		Write-Row ("      $versionLabel " + (Paint $versionHint 'dim'))
+		Write-Row ''
+		Write-Row ("  " + (Paint '[2]' 'red') + ' ' + (Paint 'Install folder' 'bold'))
+		Write-Row "      $Dir"
+		Write-Row ''
+		Write-Row (Paint '  ON YOUR SCHEDULE' 'dim')
 		Write-Rule
-		Write-Host ("  " + (Paint '[3]' 'red') + " $startLabel " + (Paint 'Start after install' 'bold'))
-		Write-Host (Paint "      Have the console ready as soon as we're done." 'dim')
-		Write-Host ''
-		Write-Host ("  " + (Paint '[4]' 'red') + " $autoLabel " + (Paint 'Start at login' 'bold'))
+		Write-Row ("  " + (Paint '[3]' 'red') + " $startLabel " + (Paint 'Start after install' 'bold'))
+		Write-Row (Paint "      Have the console ready as soon as we're done." 'dim')
+		Write-Row ''
+		Write-Row ("  " + (Paint '[4]' 'red') + " $autoLabel " + (Paint 'Start at login' 'bold'))
 		if ($NoStart) {
-			Write-Host (Paint '      Not changed (start after install is off)' 'amber')
+			Write-Row (Paint '      Not changed (start after install is off)' 'amber')
 		} else {
-			Write-Host (Paint '      Keep Relo ready whenever you sign in.' 'dim')
+			Write-Row (Paint '      Keep Relo ready whenever you sign in.' 'dim')
 		}
-		Write-Host ''
-		Write-Host (Paint (Paint '  >>>  Press Enter to continue installation' 'bold') 'red')
-		Write-Host (Paint '       1-4 to adjust a setting / q to cancel' 'dim')
-		Write-Host ''
+		Write-Row ''
+		Write-Row (Paint (Paint '  >>>  Press Enter to continue installation' 'bold') 'red')
+		Write-Row (Paint '       1-4 to adjust a setting / q to cancel' 'dim')
+		Write-Row ''
 		$choice = Read-Setup 'What would you like to do?'
-		Write-Host ''
+		Write-Row ''
 		switch ($choice) {
 			'' { }
 			'1' {
@@ -545,7 +639,7 @@ function Invoke-Options {
 			default { Write-Note 'Choose 1, 2, 3 or 4; Enter to install; q to cancel.' }
 		}
 		if ($choice -eq '') { break }
-		Write-Host ''
+		Write-Row ''
 	}
 	Resolve-Paths
 }
@@ -579,10 +673,11 @@ Resolve-Paths
 $interactive = $false
 try { $interactive = $script:Terminal -and -not $Yes -and -not [Console]::IsInputRedirected } catch { $interactive = $false }
 
+$versionLabel = if ($Version) { $Version } else { 'latest release' }
+Write-ScreenOpen $versionLabel
 if ($interactive) {
 	Invoke-Options
 } else {
-	Write-Banner
 	Write-Section '01' 'Use your selected settings'
 	Write-Note 'Running without prompts. Use -Help to see setup options.'
 }
@@ -642,9 +737,10 @@ try {
 		}
 		Save-Remote "$Base/$asset" (Join-Path $temp 'bundle.tar.gz') $asset
 		Test-Checksum (Join-Path $temp 'bundle.tar.gz') (Join-Path $temp 'checksums.txt') $asset
-		Write-Step "Extracting $asset"
+		Write-Lead "Extracting $asset"
 		& tar -xzf (Join-Path $temp 'bundle.tar.gz') -C $temp
 		if ($LASTEXITCODE -ne 0) { Fail "could not unpack $asset" @() }
+		Write-OK "Extracted $asset"
 		if (-not (Test-Path (Join-Path $temp 'relo.exe'))) { Fail 'the release archive holds no relo.exe' @() }
 	}
 
@@ -671,6 +767,7 @@ try {
 	Write-Section '04' 'Get you ready'
 	Start-Daemon
 	Write-Summary
+	Write-ScreenClose
 } finally {
 	Remove-Item -Recurse -Force $temp -ErrorAction SilentlyContinue
 }
