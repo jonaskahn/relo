@@ -5,7 +5,9 @@
 // package put it there: two installs would fight over the name, the home
 // directory, and the ports. A relo running from this home is quiesced before
 // its binary is replaced -- its daemon is stopped and the ports it served
-// are freed -- and the install asks whether to start the new one.
+// are freed -- and before the download the install asks whether to start the
+// new one; the answers carry the rest of the run, so once the work begins it
+// never waits on keys again.
 //
 // The binary always comes from a GitHub release: the one --relo-version names,
 // the one this package was published as when that is a prerelease, or the
@@ -151,6 +153,23 @@ try {
 		version ? `v${version}` : 'latest release',
 		`${asset.os} · ${asset.arch}`.toUpperCase()
 	]);
+	// The questions come first, install.sh's way: the preflight hears the
+	// choices while the screen is fresh, and the run the answers carry --
+	// conflict, download, install, start -- never waits on keys again. With
+	// no terminal to ask on nothing is asked or started: an automated
+	// install must not launch a daemon.
+	separator();
+	const labels = ['YES', 'NO'];
+	const startNow = interactive()
+		? await askStart({
+				labels,
+				onQuestion: (at) => choices('START RELO AFTER INSTALL?', labels, at),
+				onAnswer: (value) => chosen('START RELO AFTER INSTALL?', value)
+			})
+		: 'unattended';
+	if (startNow !== 'yes' && startNow !== 'no') {
+		note('Running without prompts. Start later: relo daemon start');
+	}
 	step(label('CONFLICT'));
 	// One binary answers the relo command now, whether it came from this
 	// package or an installer, so a command this package did not install
@@ -182,17 +201,7 @@ try {
 	done(`${label('CONFLICT')}  no other relo install`);
 
 	const destination = await fromRelease(tag, asset, startedAt);
-	separator();
-	const question = 'START RELO NOW?';
-	const labels = ['YES', 'NO'];
-	const answer = interactive()
-		? await askStart({
-				labels,
-				onQuestion: (at) => choices(question, labels, at),
-				onAnswer: (value) => chosen(question, value)
-			})
-		: await askStart();
-	if (answer === 'yes') {
+	if (startNow === 'yes') {
 		closeScreen();
 		// The daemon's error goes into the result block rather than through
 		// the screen: a start refused before it spawned anything names the
