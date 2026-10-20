@@ -63,3 +63,61 @@ test('a network error is retried, then reported with the url', async () => {
 	);
 	assert.equal(calls, 3);
 });
+
+test('a retry is reported to the caller before the next attempt', async () => {
+	let calls = 0;
+	const fetchImpl = async () => {
+		calls += 1;
+		if (calls === 1) throw new Error('boom');
+		return response(200, 'ok');
+	};
+	const retries = [];
+	const body = await fetchBytes('https://example.invalid/a', 'a', {
+		fetchImpl,
+		sleep: noSleep,
+		onRetry: (message) => retries.push(message)
+	});
+	assert.equal(body.toString(), 'ok');
+	assert.deepEqual(retries, ['a failed (boom), retrying']);
+});
+
+test('a streamed body reports the bytes as they arrive', async () => {
+	const chunks = [Buffer.from('abc'), Buffer.from('de')];
+	const fetchImpl = async () => ({
+		ok: true,
+		status: 200,
+		statusText: 'OK',
+		headers: { get: () => '5' },
+		body: {
+			getReader: () => {
+				let index = 0;
+				return {
+					read: async () =>
+						index < chunks.length
+							? { done: false, value: chunks[index++] }
+							: { done: true, value: undefined }
+				};
+			}
+		}
+	});
+	const seen = [];
+	const body = await fetchBytes('https://example.invalid/a', 'relo.tar.gz', {
+		fetchImpl,
+		sleep: noSleep,
+		onProgress: (received, total) => seen.push([received, total])
+	});
+	assert.equal(body.toString(), 'abcde');
+	assert.deepEqual(seen, [[3, 5], [5, 5]]);
+});
+
+test('a body without a stream is read whole and reports nothing', async () => {
+	const fetchImpl = async () => response(200, 'ok');
+	const seen = [];
+	const body = await fetchBytes('https://example.invalid/a', 'a', {
+		fetchImpl,
+		sleep: noSleep,
+		onProgress: (received) => seen.push(received)
+	});
+	assert.equal(body.toString(), 'ok');
+	assert.deepEqual(seen, []);
+});

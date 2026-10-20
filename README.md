@@ -53,14 +53,16 @@ irm https://relo.ifelse.one/install.ps1 | iex
 |-----------|----------------------------------------------------------------------|
 | Script    | the two lines above; `install.sh --help` lists the flags             |
 | Homebrew  | ```brew install jonaskahn/apps/relo```                               |
-| npm       | ```npm i -g @jonaskahn/relo[@beta]``` (Node 22+)                     |
+| npm       | ```npm i -g @jonaskahn/relo[@beta] --foreground-scripts``` (Node 22+)  |
 | macOS app | `Relo-<version>-universal.zip`                                       |
 | Linux     | `Relo-Setup-<version>-amd64.deb` or `Relo-Setup-<version>-amd64.rpm` |
 | Windows   | `Relo-Setup-<version>-amd64.exe`                                     |
 
 The setup files come from the [latest release](https://github.com/jonaskahn/relo/releases/latest); the app then
 updates itself. The script installs the daemon binary: it verifies the download against `checksums.txt`, frees the
-ports Relo serves, and starts the daemon.
+ports Relo serves, and starts the daemon. The npm install downloads the same 13 MB binary and prints each step, with a
+download bar showing the rate and the time left; `--foreground-scripts` keeps that output under the install instead of
+hiding it.
 
 ## ▓ START
 

@@ -7,6 +7,7 @@ import { after, test } from 'node:test';
 
 import {
 	isReloImage,
+	isReloProcess,
 	parseLsof,
 	parseNetstat,
 	parseSs,
@@ -63,6 +64,23 @@ test('the relo image matches by basename, with an exe on windows', () => {
 	assert.equal(isReloImage('C:\\Relo\\relo.exe'), true);
 	assert.equal(isReloImage('python3'), false);
 	assert.equal(isReloImage('relocation'), false);
+});
+
+test('the relo image also matches the platform-named release binaries', () => {
+	assert.equal(isReloImage('/opt/relo/bin/relo-darwin-arm64'), true);
+	assert.equal(isReloImage('/Volumes/WS/relo/dist/.pkgcache/relo-darwin-arm64-0.1.1'), true);
+	assert.equal(isReloImage('relo-linux-amd64'), true);
+	assert.equal(isReloImage('relo-windows-amd64.exe'), true);
+	assert.equal(isReloImage('relo-windows-amd64-0.1.1.exe'), true);
+	assert.equal(isReloImage('relo-helper'), false);
+	assert.equal(isReloImage('relo-darwin-arm64-notes.txt'), false);
+});
+
+test('a truncated command name falls back to the command line', () => {
+	// Linux truncates comm to fifteen characters.
+	assert.equal(isReloProcess({ comm: 'relo-linux-arm6', args: '/opt/relo/relo-linux-arm64 daemon run' }), true);
+	assert.equal(isReloProcess({ comm: 'python3', args: '/usr/bin/python3 /opt/relo/relo-linux-amd64' }), false);
+	assert.equal(isReloProcess({ comm: 'relo-linux-amd6', args: '' }), false);
 });
 
 test('a process serves its home by runtime pid or command line', () => {

@@ -7,7 +7,7 @@
 // scan cannot see keeps its default.
 import { execFileSync, spawnSync } from 'node:child_process';
 import { createInterface } from 'node:readline/promises';
-import { createReadStream, createWriteStream, existsSync, readFileSync, rmSync } from 'node:fs';
+import { closeSync, existsSync, openSync, readFileSync, readSync, rmSync, writeSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { join } from 'node:path';
 
@@ -70,11 +70,25 @@ export function parseNetstat(text, port) {
 	return pids;
 }
 
-// isReloImage reports whether an executable name is the relo binary, so a
-// signal never reaches a process that merely reused the port.
+// isReloImage reports whether an executable name is a relo binary, so a
+// signal never reaches a process that merely reused the port. The installers
+// name the daemon `relo`, but the release assets and this package keep the
+// platform in the name (`relo-darwin-arm64`, `relo-darwin-arm64-0.1.1`), so
+// both spellings count.
 export function isReloImage(comm) {
 	const base = comm.trim().split(/[\\/]/).pop().toLowerCase();
-	return base === 'relo' || base === 'relo.exe';
+	if (base === 'relo' || base === 'relo.exe') return true;
+	return /^relo-(?:darwin|linux|windows)-(?:amd64|arm64)(?:-[0-9][0-9a-z.+-]*)?(?:\.exe)?$/.test(base);
+}
+
+// isReloProcess reports whether a process is a relo binary. Linux truncates
+// the command name at fifteen characters, which can cut `relo-linux-amd64`
+// short, so the executable in the command line settles it when the name does
+// not.
+export function isReloProcess({ comm = '', args = '' } = {}) {
+	if (isReloImage(comm)) return true;
+	const executable = args.trim().split(/\s+/)[0] ?? '';
+	return executable !== '' && isReloImage(executable);
 }
 
 // servesHome reports whether a relo process belongs to this home. The pid
@@ -200,7 +214,7 @@ export function quiesce(home, { binary } = {}) {
 			owner = 0;
 		}
 		const info = owner ? processInfo(owner) : null;
-		if (!info || !isReloImage(info.comm)) owner = 0;
+		if (!info || !isReloProcess(info)) owner = 0;
 	}
 	const candidates = new Set();
 	if (owner) candidates.add(owner);
@@ -209,7 +223,7 @@ export function quiesce(home, { binary } = {}) {
 	}
 	const victims = [...candidates].filter((pid) => {
 		const info = processInfo(pid);
-		return info && isReloImage(info.comm) && servesHome({ pid, owner, args: info.args, home, defaultHome });
+		return info && isReloProcess(info) && servesHome({ pid, owner, args: info.args, home, defaultHome });
 	});
 	const stopped = victims.length > 0;
 
@@ -235,7 +249,7 @@ export function quiesce(home, { binary } = {}) {
 		const holders = listeningPids(port);
 		if (holders.length > 0) {
 			throw new Error(
-				`relo: install failed -- something else is listening on port ${port}\n` +
+				`something else is listening on port ${port}\n` +
 					'  free the port, or point relo at another one, and install again'
 			);
 		}
@@ -245,35 +259,54 @@ export function quiesce(home, { binary } = {}) {
 
 // askStart prompts on a terminal and reports 'yes', 'no', or 'unattended'
 // when no terminal can be asked on. The answer never comes from stdin: under
-// a piped install stdin is not the user.
-export async function askStart() {
+// a piped install stdin is not the user. onPrompt and onAnswer let the caller
+// draw the question inside its own screen; when they are absent the prompt is
+// written plainly.
+//
+// On POSIX the answer is read straight from the tty with a blocking read
+// instead of a readline stream: a stream leaves tty handles open, and those
+// keep the installer's process alive after the work is done, so npm waits on
+// a postinstall that has already finished.
+export async function askStart({ onPrompt, onAnswer } = {}) {
 	if (process.platform === 'win32') {
 		if (!process.stdin.isTTY) return 'unattended';
 		const terminal = createInterface({ input: process.stdin, output: process.stdout });
 		try {
-			const answer = await terminal.question('start relo now? [Y/n] ');
+			const answer = await terminal.question('START RELO NOW? [Y/n] ');
 			return /^[nN]/.test(answer.trim()) ? 'no' : 'yes';
 		} finally {
 			terminal.close();
 		}
 	}
-	let input;
+	let tty;
 	try {
-		input = createReadStream('/dev/tty');
-		await new Promise((resolve, reject) => {
-			input.once('open', resolve);
-			input.once('error', reject);
-		});
+		tty = openSync('/dev/tty', 'r+');
 	} catch {
 		return 'unattended';
 	}
-	const terminal = createInterface({ input, output: createWriteStream('/dev/tty') });
 	try {
-		const answer = await terminal.question('start relo now? [Y/n] ');
-		return /^[nN]/.test(answer.trim()) ? 'no' : 'yes';
+		if (onPrompt) onPrompt();
+		else writeSync(tty, 'START RELO NOW? [Y/n] ');
+		const bytes = [];
+		const one = Buffer.alloc(1);
+		for (;;) {
+			if (readSync(tty, one, 0, 1, null) === 0) return 'unattended';
+			const byte = one[0];
+			if (byte === 0x0a) break;
+			if (byte === 0x0d) continue;
+			if (byte === 0x7f || byte === 0x08) {
+				bytes.pop();
+				continue;
+			}
+			bytes.push(byte);
+			if (bytes.length > 64) break;
+		}
+		const answer = Buffer.from(bytes).toString('utf8').trim();
+		if (onAnswer) onAnswer(answer);
+		return /^[nN]/.test(answer) ? 'no' : 'yes';
 	} catch {
 		return 'unattended';
 	} finally {
-		terminal.close();
+		closeSync(tty);
 	}
 }

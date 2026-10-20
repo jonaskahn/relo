@@ -16,11 +16,20 @@ function failFast(status) {
 }
 
 // fetchBytes returns the body of a URL. fetchImpl and sleep take arguments
-// so tests can fake the network and skip the waits.
+// so tests can fake the network and skip the waits. onProgress is called with
+// the bytes received so far, the total when the server sends a length, and
+// the milliseconds since the body started arriving. onRetry is told about
+// each attempt that will be retried, so the caller can show it where the user
+// is watching.
 export async function fetchBytes(
 	target,
 	what,
-	{ fetchImpl = fetch, sleep = (ms) => new Promise((done) => setTimeout(done, ms)) } = {}
+	{
+		fetchImpl = fetch,
+		sleep = (ms) => new Promise((done) => setTimeout(done, ms)),
+		onProgress,
+		onRetry = (message) => console.warn(`relo: ${message}`)
+	} = {}
 ) {
 	let last;
 	for (let attempt = 1; attempt <= ATTEMPTS; attempt += 1) {
@@ -38,15 +47,37 @@ export async function fetchBytes(
 				}
 				throw new Error(`${response.status} ${response.statusText}`);
 			}
-			return Buffer.from(await response.arrayBuffer());
+			return await readBody(response, onProgress);
 		} catch (error) {
 			if (error?.permanent) throw error;
 			last = error;
 			if (attempt < ATTEMPTS) {
-				console.warn(`relo: ${what} failed (${error.message}), retrying`);
+				onRetry(`${what} failed (${error.message}), retrying`);
 				await sleep(attempt * 1000);
 			}
 		}
 	}
 	throw new Error(`could not download ${what} from ${target}: ${last.message}`);
+}
+
+// readBody reads the response body, reporting the bytes as they arrive when
+// the response is a stream. A response without a readable stream -- a test
+// double, or an older runtime -- is read whole.
+async function readBody(response, onProgress) {
+	if (!onProgress || !response.body?.getReader) {
+		return Buffer.from(await response.arrayBuffer());
+	}
+	const total = Number(response.headers?.get?.('content-length')) || 0;
+	const started = Date.now();
+	const reader = response.body.getReader();
+	const chunks = [];
+	let received = 0;
+	for (;;) {
+		const { done, value } = await reader.read();
+		if (done) break;
+		chunks.push(Buffer.from(value));
+		received += value.length;
+		onProgress(received, total, Date.now() - started);
+	}
+	return Buffer.concat(chunks);
 }
