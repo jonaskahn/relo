@@ -545,6 +545,7 @@
       chBrewNote: "The same binary, kept current by Homebrew. Do not also use brew services.",
       chNpmNote: "Runs on Node 22 or newer. It starts the daemon for you.",
       chSetupNote: "Download it from the release page, then open it.",
+      whatsNew: "What's new",
     },
     zh: {
       eyebrow: "本地 LLM 网关",
@@ -568,6 +569,7 @@
       chBrewBetaNote: "Beta 版的程序，由 Homebrew 保持更新。请勿同时使用 brew services。",
       chNpmBetaNote: "beta 标签下的预发布版本。需要 Node 22 或更高版本。",
       chSetupNote: "从发布页面下载后打开即可。",
+      whatsNew: "更新内容",
     },
     hi: {
       eyebrow: "स्थानीय LLM गेटवे",
@@ -591,6 +593,7 @@
       chBrewBetaNote: "Beta वही बाइनरी, Homebrew द्वारा अद्यतित। brew services भी न चलाएँ।",
       chNpmBetaNote: "beta टैग के प्रीरिलीज़ बिल्ड। Node 22 या नए पर चलते हैं।",
       chSetupNote: "रिलीज़ पेज से डाउनलोड करके खोलें।",
+      whatsNew: "नया क्या है",
     },
     es: {
       eyebrow: "Puerta de enlace LLM local",
@@ -614,6 +617,7 @@
       chBrewBetaNote: "El mismo binario beta, actualizado por Homebrew. No uses además brew services.",
       chNpmBetaNote: "Betas bajo la etiqueta beta. Funciona con Node 22 o superior.",
       chSetupNote: "Descárgalo de la página de versiones y ábrelo.",
+      whatsNew: "Novedades",
     },
     ar: {
       eyebrow: "بوابة LLM محلية",
@@ -637,6 +641,7 @@
       chBrewBetaNote: "الملف التجريبي نفسه، ويحدّثه Homebrew. لا تستخدم brew services أيضًا.",
       chNpmBetaNote: "إصدارات تجريبية تحت وسم beta. يعمل على Node 22 أو أحدث.",
       chSetupNote: "نزّله من صفحة الإصدارات ثم افتحه.",
+      whatsNew: "ما الجديد",
     },
     fr: {
       eyebrow: "Passerelle LLM locale",
@@ -660,6 +665,7 @@
       chBrewBetaNote: "Le binaire bêta, tenu à jour par Homebrew. N’utilisez pas aussi brew services.",
       chNpmBetaNote: "Des bêtas sous le tag beta. Fonctionne avec Node 22 ou plus récent.",
       chSetupNote: "Téléchargez-le depuis la page des versions, puis ouvrez-le.",
+      whatsNew: "Nouveautés",
     },
     bn: {
       eyebrow: "স্থানীয় LLM গেটওয়ে",
@@ -683,6 +689,7 @@
       chBrewBetaNote: "একই বেটা বাইনারি, Homebrew হালনাগাদ রাখে। brew services-ও চালাবেন না।",
       chNpmBetaNote: "beta ট্যাগে প্রিরিলিজ বিল্ড। Node 22 বা নতুনে চলে।",
       chSetupNote: "রিলিজ পেজ থেকে নামিয়ে খুলুন।",
+      whatsNew: "নতুন কী",
     },
     pt: {
       eyebrow: "Gateway LLM local",
@@ -706,6 +713,7 @@
       chBrewBetaNote: "O mesmo binário beta, mantido pelo Homebrew. Não use também brew services.",
       chNpmBetaNote: "Prereleases na tag beta. Funciona no Node 22 ou mais recente.",
       chSetupNote: "Baixe na página de versões e abra.",
+      whatsNew: "Novidades",
     },
     ru: {
       eyebrow: "Локальный LLM-шлюз",
@@ -729,6 +737,7 @@
       chBrewBetaNote: "Тот же бинарник беты, обновляется через Homebrew. Не используйте ещё и brew services.",
       chNpmBetaNote: "Пре-релизы под тегом beta. Работает на Node 22 или новее.",
       chSetupNote: "Скачайте со страницы релизов и откройте.",
+      whatsNew: "Что нового",
     },
     ur: {
       eyebrow: "مقامی LLM گیٹ وے",
@@ -752,6 +761,7 @@
       chBrewBetaNote: "وہی بیٹا بائنری، Homebrew اسے تازہ رکھتا ہے۔ brew services بھی نہ چلائیں۔",
       chNpmBetaNote: "beta ٹیگ کے پری ریلیز۔ Node 22 یا نئے پر چلتا ہے۔",
       chSetupNote: "ریلیز صفحے سے ڈاؤن لوڈ کر کے کھولیں۔",
+      whatsNew: "نیا کیا ہے",
     },
     id: {
       eyebrow: "Gerbang LLM lokal",
@@ -775,6 +785,7 @@
       chBrewBetaNote: "Biner beta yang sama, dijaga Homebrew. Jangan pakai brew services juga.",
       chNpmBetaNote: "Prarilis pada tag beta. Berjalan di Node 22 atau lebih baru.",
       chSetupNote: "Unduh dari halaman rilis lalu buka.",
+      whatsNew: "Yang baru",
     },
     de: {
       eyebrow: "Lokales LLM-Gateway",
@@ -798,6 +809,7 @@
       chBrewBetaNote: "Dieselbe Beta-Binärdatei, von Homebrew aktuell gehalten. Nutze nicht zusätzlich brew services.",
       chNpmBetaNote: "Vorab-Versionen unter dem Tag beta. Läuft auf Node 22 oder neuer.",
       chSetupNote: "Lade sie von der Release-Seite und öffne sie.",
+      whatsNew: "Neuigkeiten",
     },
     ja: {
       eyebrow: "ローカル LLM ゲートウェイ",
@@ -821,6 +833,7 @@
       chBrewBetaNote: "ベータ版のバイナリを Homebrew が更新します。brew services は併用しないでください。",
       chNpmBetaNote: "beta タグのプレリリース。Node 22 以降で動作します。",
       chSetupNote: "リリースページからダウンロードして開きます。",
+      whatsNew: "新着情報",
     },
     vi: {
       eyebrow: "Cổng LLM cục bộ",
@@ -844,6 +857,7 @@
       chBrewBetaNote: "Bản nhị phân beta, Homebrew cập nhật giúp bạn. Đừng dùng thêm brew services.",
       chNpmBetaNote: "Bản prerelease dưới thẻ beta. Chạy trên Node 22 trở lên.",
       chSetupNote: "Tải từ trang phát hành rồi mở.",
+      whatsNew: "Có gì mới",
     },
     tr: {
       eyebrow: "Yerel LLM geçidi",
@@ -867,6 +881,7 @@
       chBrewBetaNote: "Aynı beta ikili dosyası, Homebrew güncel tutar. brew services’i de kullanmayın.",
       chNpmBetaNote: "beta etiketiyle ön sürümler. Node 22 ve üzerinde çalışır.",
       chSetupNote: "Sürüm sayfasından indirip açın.",
+      whatsNew: "Yenilikler",
     },
     ko: {
       eyebrow: "로컬 LLM 게이트웨이",
@@ -890,6 +905,7 @@
       chBrewBetaNote: "같은 베타 바이너리를 Homebrew가 최신으로 유지합니다. brew services는 함께 쓰지 마세요.",
       chNpmBetaNote: "beta 태그의 프리릴리스. Node 22 이상에서 동작합니다.",
       chSetupNote: "릴리스 페이지에서 받아 실행하세요.",
+      whatsNew: "새로운 기능",
     },
     it: {
       eyebrow: "Gateway LLM locale",
@@ -913,6 +929,7 @@
       chBrewBetaNote: "Lo stesso binario beta, aggiornato da Homebrew. Non usare anche brew services.",
       chNpmBetaNote: "Prerelease sotto il tag beta. Funziona con Node 22 o successivo.",
       chSetupNote: "Scaricalo dalla pagina delle release e aprilo.",
+      whatsNew: "Novità",
     },
     th: {
       eyebrow: "เกตเวย์ LLM ในเครื่อง",
@@ -936,6 +953,7 @@
       chBrewBetaNote: "ไบนารีเบต้าตัวเดียวกัน Homebrew อัปเดตให้ อย่าใช้ brew services ซ้ำ",
       chNpmBetaNote: "เบต้าในแท็ก beta ทำงานบน Node 22 ขึ้นไป",
       chSetupNote: "ดาวน์โหลดจากหน้ารีลีสแล้วเปิด",
+      whatsNew: "มีอะไรใหม่",
     },
     pl: {
       eyebrow: "Lokalna brama LLM",
@@ -959,6 +977,7 @@
       chBrewBetaNote: "Ten sam plik beta, aktualizowany przez Homebrew. Nie używaj też brew services.",
       chNpmBetaNote: "Prerelease w tagu beta. Działa na Node 22 lub nowszym.",
       chSetupNote: "Pobierz ze strony wydań i otwórz.",
+      whatsNew: "Nowości",
     },
     nl: {
       eyebrow: "Lokale LLM-gateway",
@@ -977,6 +996,7 @@
       chBrewNote: "Dezelfde binary, bijgehouden door Homebrew. Gebruik niet ook brew services.",
       chNpmNote: "Draait op Node 22 of nieuwer en start de daemon voor je.",
       chSetupNote: "Download van de releasepagina en open het.",
+      whatsNew: "Nieuw",
     }
   };
 

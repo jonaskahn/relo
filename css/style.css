@@ -1571,7 +1571,10 @@ main,
 }
 
 .setup-files a {
-  display: block;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
   padding: 9px 11px;
   border: 1px solid var(--line);
   border-radius: var(--radius);
@@ -1584,6 +1587,54 @@ main,
 .setup-files a:hover {
   border-color: var(--accent-border);
   background: var(--accent-50);
+}
+
+.setup-files code {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.file-size {
+  flex: 0 0 auto;
+  color: var(--muted);
+  font-size: 11.5px;
+  font-variant-numeric: tabular-nums;
+}
+
+.release-notes {
+  margin-top: 9px;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--sunken);
+}
+
+.release-notes summary {
+  cursor: pointer;
+  color: var(--ink);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.release-notes[open] summary {
+  margin-bottom: 8px;
+}
+
+.notes-version {
+  margin-inline-start: 8px;
+  color: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  font-weight: 500;
+}
+
+.notes-body {
+  margin: 0;
+  color: var(--muted);
+  font-size: 12.5px;
+  line-height: 1.6;
+  white-space: pre-line;
+  overflow-wrap: anywhere;
 }
 
 .pick-one {

@@ -330,7 +330,7 @@
             <h3 class="ch-name" data-i18n="chSetup"></h3>
           </header>
           <p class="ch-body"><ul class="setup-files">
-              <li><a href="https://github.com/jonaskahn/relo/releases/latest"><code>Relo-&lt;version&gt;-universal.zip</code></a></li>
+              <li data-os="macos" data-arch="universal" data-format="zip"><a href="https://github.com/jonaskahn/relo/releases/latest"><code>Relo-&lt;version&gt;-universal.zip</code></a></li>
             </ul></p>
           <p class="ch-note" data-i18n="chSetupNote"></p>
         </article>
@@ -388,8 +388,10 @@
             <h3 class="ch-name" data-i18n="chSetup"></h3>
           </header>
           <p class="ch-body"><ul class="setup-files">
-              <li><a href="https://github.com/jonaskahn/relo/releases/latest"><code>Relo-Setup-&lt;version&gt;-amd64.deb</code></a></li>
-              <li><a href="https://github.com/jonaskahn/relo/releases/latest"><code>Relo-Setup-&lt;version&gt;-amd64.rpm</code></a></li>
+              <li data-os="linux" data-arch="amd64" data-format="deb"><a href="https://github.com/jonaskahn/relo/releases/latest"><code>Relo-Setup-&lt;version&gt;-amd64.deb</code></a></li>
+              <li data-os="linux" data-arch="arm64" data-format="deb"><a href="https://github.com/jonaskahn/relo/releases/latest"><code>Relo-Setup-&lt;version&gt;-arm64.deb</code></a></li>
+              <li data-os="linux" data-arch="amd64" data-format="rpm"><a href="https://github.com/jonaskahn/relo/releases/latest"><code>Relo-Setup-&lt;version&gt;-amd64.rpm</code></a></li>
+              <li data-os="linux" data-arch="arm64" data-format="rpm"><a href="https://github.com/jonaskahn/relo/releases/latest"><code>Relo-Setup-&lt;version&gt;-arm64.rpm</code></a></li>
             </ul></p>
           <p class="ch-note" data-i18n="chSetupNote"></p>
         </article>
@@ -432,12 +434,17 @@
             <h3 class="ch-name" data-i18n="chSetup"></h3>
           </header>
           <p class="ch-body"><ul class="setup-files">
-              <li><a href="https://github.com/jonaskahn/relo/releases/latest"><code>Relo-Setup-&lt;version&gt;-amd64.exe</code></a></li>
+              <li data-os="windows" data-arch="amd64" data-format="exe"><a href="https://github.com/jonaskahn/relo/releases/latest"><code>Relo-Setup-&lt;version&gt;-amd64.exe</code></a></li>
+              <li data-os="windows" data-arch="arm64" data-format="exe"><a href="https://github.com/jonaskahn/relo/releases/latest"><code>Relo-Setup-&lt;version&gt;-arm64.exe</code></a></li>
             </ul></p>
           <p class="ch-note" data-i18n="chSetupNote"></p>
         </article>
         </div>
           <p class="pick-one"><span class="pick-line" aria-hidden="true"></span><span data-i18n="pickOne">Pick one. Every installer refuses to stack a second Relo.</span></p>
+          <details class="release-notes" data-notes="latest" hidden>
+            <summary><span data-i18n="whatsNew">What's new</span><span class="notes-version" data-notes-version></span></summary>
+            <p class="notes-body" data-notes-body></p>
+          </details>
         </div>
 
         <aside class="terminal" id="terminal" aria-label="Installation preview" data-i18n-attr="aria-label:termLabel">
@@ -550,6 +557,10 @@
       </article>
       </div>
         <p class="pick-one"><span class="pick-line" aria-hidden="true"></span><span data-i18n="betaNote">Beta never replaces your stable install.</span></p>
+        <details class="release-notes" data-notes="beta" hidden>
+          <summary><span data-i18n="whatsNew">What's new</span><span class="notes-version" data-notes-version></span></summary>
+          <p class="notes-body" data-notes-body></p>
+        </details>
       </div>
     </section>
   </main>
@@ -562,6 +573,7 @@
 
   <script src="js/i18n.js" defer></script>
   <script src="js/field.js" defer></script>
+  <script src="js/releases.js" defer></script>
   <script src="vendor/motion/motion.js" defer></script>
   <script src="js/script.js" defer></script>
   <script src="js/scenes.js" defer></script>
