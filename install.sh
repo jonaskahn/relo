@@ -187,6 +187,8 @@ INSTALL_DIR="${RELO_INSTALL_DIR:-}"
 RELO_HOME_OPT="${RELO_HOME:-}"
 START_AFTER=1
 AUTOSTART=1
+START_SET=0
+AUTOSTART_SET=0
 ASSUME_YES="${RELO_INSTALL_YES:-0}"
 FORCE_PORTS=0
 INTERACTIVE=0
@@ -219,8 +221,8 @@ while [ $# -gt 0 ]; do
 	--dir=*) INSTALL_DIR="${1#*=}"; shift ;;
 	--home) RELO_HOME_OPT="${2:?--home needs a value}"; shift 2 ;;
 	--home=*) RELO_HOME_OPT="${1#*=}"; shift ;;
-	--no-start) START_AFTER=0; shift ;;
-	--no-autostart) AUTOSTART=0; shift ;;
+	--no-start) START_AFTER=0; START_SET=1; shift ;;
+	--no-autostart) AUTOSTART=0; AUTOSTART_SET=1; shift ;;
 	--force-ports) FORCE_PORTS=1; shift ;;
 	-y | --yes) ASSUME_YES=1; shift ;;
 	-h | --help) usage; exit 0 ;;
@@ -250,17 +252,192 @@ ask() {
 	printf '%s' "$answer"
 }
 
+# ------------------------------------------------------------- selections --
+#
+# A selection menu reads single keys from /dev/tty, so the installer can be
+# piped in on stdin and still ask questions on the terminal. Without a
+# terminal it falls back to a typed number.
+
+MENU_TTY_STATE=""
+MENU_PICK=1
+
+menu_enter() {
+	[ "$INTERACTIVE" = 1 ] && [ "$UTF8" = 1 ] || return 1
+	MENU_TTY_STATE="$(stty -g </dev/tty 2>/dev/null || true)"
+	[ -n "$MENU_TTY_STATE" ] || return 1
+	stty -echo -icanon min 1 time 0 </dev/tty 2>/dev/null || return 1
+	trap 'stty "$MENU_TTY_STATE" </dev/tty 2>/dev/null || true; exit 130' INT TERM HUP
+}
+
+menu_leave() {
+	if [ -n "$MENU_TTY_STATE" ]; then
+		stty "$MENU_TTY_STATE" </dev/tty 2>/dev/null || true
+		MENU_TTY_STATE=""
+	fi
+	trap - INT TERM HUP
+}
+
+# Keys are read as byte values: a character captured through $(...) loses a
+# trailing newline, and Enter is exactly that byte.
+read_key() {
+	_code="$(dd if=/dev/tty bs=1 count=1 2>/dev/null | od -An -tu1 | tr -d ' ')"
+	[ -n "$_code" ] || return 1
+	printf '%s' "$_code"
+}
+
+# read_key_timed prints nothing when no key follows: it tells a lone Escape
+# from the bracket that opens an arrow key sequence.
+read_key_timed() {
+	stty min 0 time 1 </dev/tty 2>/dev/null || true
+	_code="$(dd if=/dev/tty bs=1 count=1 2>/dev/null | od -An -tu1 | tr -d ' ')"
+	stty min 1 time 0 </dev/tty 2>/dev/null || true
+	printf '%s' "$_code"
+}
+
+MENU_HEIGHT=3
+
+menu_rewind() {
+	[ "$1" -gt 0 ] && printf '%s[%dA' "$ESC" "$1" >/dev/tty
+}
+
+# menu_row paints the button line: the chosen button reversed, the rest plain.
+menu_row() {
+	_line="  "
+	_i=1
+	for _item in "$@"; do
+		if [ "$_i" = "$MENU_PICK" ]; then
+			_line="$_line ${MENU_REV}[ $_item ]${MENU_OFF}"
+		else
+			_line="$_line ${DIM}[$_item]${OFF}"
+		fi
+		_i=$((_i + 1))
+	done
+	row_tty "$_line"
+}
+
+menu_draw() {
+	_prompt="$1"
+	shift
+	row_tty "  ${BRIGHT}▶${OFF} $_prompt"
+	menu_row "$@"
+	row_tty "  ${DIM}←/→ to move · Enter to pick · q to cancel${OFF}"
+}
+
+# menu_settle replaces the drawn menu with one answer row. The rows under it
+# are deleted, not blanked, so the frame closes up instead of leaving gaps.
+menu_settle() {
+	menu_rewind "$MENU_HEIGHT"
+	printf '\r%s[2K%s\n' "$ESC" "$(framed "$1")" >/dev/tty
+	_i=1
+	while [ "$_i" -lt "$MENU_HEIGHT" ]; do
+		printf '\r%s[M' "$ESC" >/dev/tty
+		_i=$((_i + 1))
+	done
+}
+
+menu_done() {
+	menu_settle "  ${BRIGHT}▶${OFF} $MENU_PROMPT ${BOLD}${MENU_ANSWER}${OFF}"
+}
+
+menu_stop() {
+	menu_settle "  ${DIM}▶ $MENU_PROMPT (canceled)${OFF}"
+	menu_leave
+}
+
+# menu_select <prompt> <default> <option>...; prints the chosen option and
+# returns 0. Returns 1 when the user cancels.
+menu_select() {
+	MENU_PROMPT="$1"
+	MENU_PICK="$2"
+	shift 2
+	_count=$#
+	[ "$MENU_PICK" -ge 1 ] || MENU_PICK=1
+	[ "$MENU_PICK" -le "$_count" ] || MENU_PICK="$_count"
+	if [ "$COLOR" = 1 ]; then
+		MENU_REV="$(printf '\033[7m')"
+		MENU_OFF="$(printf '\033[0m')"
+	else
+		MENU_REV=""
+		MENU_OFF=""
+	fi
+
+	if ! menu_enter; then
+		printf '  %s>%s %s\n' "$BRIGHT" "$OFF" "$MENU_PROMPT" >/dev/tty
+		_i=1
+		for _item in "$@"; do
+			printf '    [%s] %s\n' "$_i" "$_item" >/dev/tty
+			_i=$((_i + 1))
+		done
+		printf '  %s>%s Choose 1-%s: ' "$BRIGHT" "$OFF" "$_count" >/dev/tty
+		IFS= read -r _answer </dev/tty || return 1
+		case "$_answer" in
+		'') ;;
+		*[!0-9]*) return 1 ;;
+		*)
+			[ "$_answer" -ge 1 ] && [ "$_answer" -le "$_count" ] || return 1
+			MENU_PICK="$_answer"
+			;;
+		esac
+	else
+		while :; do
+			menu_draw "$MENU_PROMPT" "$@"
+			_key="$(read_key)" || {
+				menu_stop
+				return 1
+			}
+			case "$_key" in
+			10 | 13 | 32) break ;;
+			113 | 81) menu_stop; return 1 ;;
+			104 | 107) [ "$MENU_PICK" -gt 1 ] && MENU_PICK=$((MENU_PICK - 1)) ;;
+			106 | 108) [ "$MENU_PICK" -lt "$_count" ] && MENU_PICK=$((MENU_PICK + 1)) ;;
+			27)
+				_code="$(read_key_timed)"
+				if [ "$_code" = 91 ] || [ "$_code" = 79 ]; then
+					_code="$(read_key_timed)"
+					case "$_code" in
+					65 | 68) [ "$MENU_PICK" -gt 1 ] && MENU_PICK=$((MENU_PICK - 1)) ;;
+					66 | 67) [ "$MENU_PICK" -lt "$_count" ] && MENU_PICK=$((MENU_PICK + 1)) ;;
+					esac
+				else
+					menu_stop
+					return 1
+				fi
+				;;
+			esac
+			if [ "$_key" -ge 49 ] && [ "$_key" -le 57 ]; then
+				_digit=$((_key - 48))
+				[ "$_digit" -le "$_count" ] && MENU_PICK="$_digit"
+			fi
+			menu_rewind "$MENU_HEIGHT"
+		done
+		_i=1
+		for _item in "$@"; do
+			[ "$_i" = "$MENU_PICK" ] && MENU_ANSWER="$_item"
+			_i=$((_i + 1))
+		done
+		menu_done
+		menu_leave
+	fi
+
+	_i=1
+	for _item in "$@"; do
+		[ "$_i" = "$MENU_PICK" ] && printf '%s' "$_item"
+		_i=$((_i + 1))
+	done
+}
+
+# choose_yes <prompt> <yes|no> prints yes or no, with that option preselected.
+choose_yes() {
+	_default=2
+	[ "$2" = "yes" ] && _default=1
+	menu_select "$1" "$_default" "Yes" "No" >/dev/null || { printf 'no'; return 0; }
+	[ "$MENU_PICK" = 1 ] && printf 'yes' || printf 'no'
+}
+
 confirm() {
 	# confirm <prompt>; true when the answer is yes
 	[ "$INTERACTIVE" = 1 ] || return 1
-	while :; do
-		answer="$(ask "$1 [y/N]" "n")" || return 1
-		case "$answer" in
-		y | Y | yes | YES | Yes) return 0 ;;
-		n | N | no | NO | No) return 1 ;;
-		*) note "Please type y for yes or n for no. Enter means no." >/dev/tty ;;
-		esac
-	done
+	[ "$(choose_yes "$1" no)" = "yes" ]
 }
 
 # ------------------------------------------------------------- detection ----
@@ -712,56 +889,59 @@ summary() {
 
 options_screen() {
 	section "01" "Make it yours"
-	say "  You're one Enter away. Want to make a change first?"
+	say "  A few choices, then the installer runs."
+	say "  ${DIM}Relo home: $RELO_HOME_DIR${OFF}"
 	say ""
-	while :; do
-		if [ "$START_AFTER" = 1 ]; then start_label="${GREEN}[ON ]${OFF}"; else start_label="${SLATE}[OFF]${OFF}"; fi
-		if [ "$AUTOSTART" = 1 ]; then auto_label="${GREEN}[ON ]${OFF}"; else auto_label="${SLATE}[OFF]${OFF}"; fi
-		[ "$START_AFTER" = 1 ] || auto_label="${AMBER}[ --]${OFF}"
-		if [ -n "$VERSION" ]; then version_hint="(pinned release)"; else version_hint="(recommended)"; fi
-		say "  ${DIM}INSTALLATION${OFF}"
-		say "  ${DIM}----------------------------------------${OFF}"
-		say "  ${RED}[1]${OFF} ${BOLD}Release${OFF}"
-		say "      ${VERSION:-Latest stable} ${DIM}${version_hint}${OFF}"
-		say ""
-		say "  ${RED}[2]${OFF} ${BOLD}Install folder${OFF}"
-		say "      $INSTALL_DIR"
-		say ""
-		say "  ${DIM}ON YOUR SCHEDULE${OFF}"
-		say "  ${DIM}----------------------------------------${OFF}"
-		say "  ${RED}[3]${OFF} ${start_label} ${BOLD}Start after install${OFF}"
-		say "      ${DIM}Have the console ready as soon as we're done.${OFF}"
-		say ""
-		say "  ${RED}[4]${OFF} ${auto_label} ${BOLD}Start at login${OFF}"
-		if [ "$START_AFTER" = 1 ]; then
-			say "      ${DIM}Keep Relo ready whenever you sign in.${OFF}"
-		else
-			say "      ${AMBER}Not changed (start after install is off)${OFF}"
-		fi
-		say ""
-		say "  ${RED}${BOLD}>>>  Press Enter to continue installation${OFF}"
-		say "  ${DIM}     1-4 to adjust a setting / q to cancel${OFF}"
-		say ""
-		choice="$(ask "What would you like to do?" "")"
-		say ""
-		case "$choice" in
-		"") break ;;
-		1)
-			note "Enter a release such as v0.1.0. Leave blank for latest stable."
-			VERSION="$(ask "Which release?" "")"
-			;;
-		2)
-			note "Press Enter to keep $INSTALL_DIR."
-			INSTALL_DIR="$(ask "Where should Relo be installed?" "$INSTALL_DIR")"
-			resolve_paths
-			;;
-		3) [ "$START_AFTER" = 1 ] && START_AFTER=0 || START_AFTER=1 ;;
-		4) [ "$AUTOSTART" = 1 ] && AUTOSTART=0 || AUTOSTART=1 ;;
-		q | Q) note "Setup canceled. Nothing was changed."; exit 0 ;;
-		*) note "Choose 1, 2, 3 or 4; Enter to install; q to cancel." ;;
-		esac
-		say ""
-	done
+
+	_default=1
+	[ -n "$VERSION" ] && _default=2
+	menu_select "Which release?" "$_default" "Latest" "Version…" >/dev/null || {
+		note "Setup canceled. Nothing was changed."; exit 0
+	}
+	case "$MENU_PICK" in
+	1) VERSION="" ;;
+	2)
+		note "Enter a tag such as v0.1.0. Enter keeps $([ -n "$VERSION" ] && printf '%s' "$VERSION" || printf 'the latest stable')."
+		VERSION="$(ask "Release tag" "$VERSION")"
+		;;
+	esac
+
+	_folder_label="$INSTALL_DIR (default)"
+	[ -n "${RELO_INSTALL_DIR:-}" ] && _folder_label="$INSTALL_DIR"
+	menu_select "Where should the relo binary go?" 1 "$_folder_label" "Custom folder…" >/dev/null || {
+		note "Setup canceled. Nothing was changed."; exit 0
+	}
+	if [ "$MENU_PICK" = 2 ]; then
+		note "Enter a folder path. Enter keeps $INSTALL_DIR."
+		_new_dir="$(ask "Install folder" "$INSTALL_DIR")"
+		[ "$_new_dir" = "$INSTALL_DIR" ] || INSTALL_DIR="$_new_dir"
+		resolve_paths
+	fi
+
+	if [ "$START_SET" = 1 ]; then
+		note "Start after install: $([ "$START_AFTER" = 1 ] && printf 'yes' || printf 'no')"
+	elif [ "$(choose_yes "Start Relo after installing?" yes)" = "yes" ]; then
+		START_AFTER=1
+	else
+		START_AFTER=0
+	fi
+	if [ "$AUTOSTART_SET" = 1 ]; then
+		note "Start at login: $([ "$AUTOSTART" = 1 ] && printf 'yes' || printf 'no')"
+	elif [ "$START_AFTER" = 0 ]; then
+		AUTOSTART=0
+	elif [ "$(choose_yes "Start Relo at login?" yes)" = "yes" ]; then
+		AUTOSTART=1
+	else
+		AUTOSTART=0
+	fi
+
+	menu_select "Ready to install?" 1 "Install" "Cancel" >/dev/null || {
+		note "Setup canceled. Nothing was changed."; exit 0
+	}
+	if [ "$MENU_PICK" = 2 ]; then
+		note "Setup canceled. Nothing was changed."
+		exit 0
+	fi
 	resolve_paths
 }
 

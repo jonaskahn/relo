@@ -577,72 +577,148 @@ function Read-Setup([string] $Prompt) {
 }
 
 function Confirm-Setup([string] $Prompt) {
-	while ($true) {
-		$answer = Read-Setup "$Prompt [y/N]"
-		switch -Regex ($answer) {
-			'^(y|yes)$' { return $true }
-			'^(n|no)?$' { return $false }
-			default { Write-Note 'Please type y for yes or n for no. Enter means no.' }
+	return (Select-InstallOption $Prompt @('Yes', 'No') 1) -eq 0
+}
+
+# ------------------------------------------------------------ selections ---
+#
+# A selection menu reads single keys from the console, so the installer can
+# arrive on a pipeline and still ask questions. Without a key-capable
+# console it falls back to a typed number.
+
+function Clear-Choice([int] $Height) {
+	Write-Host ("{0}[{1}A" -f $script:Esc, $Height) -NoNewline
+	for ($i = 0; $i -lt $Height; $i++) { Write-Host ("`r{0}[2K" -f $script:Esc) }
+	# Back to the first row, so the next draw replaces the block in place.
+	Write-Host ("{0}[{1}A" -f $script:Esc, $Height) -NoNewline
+}
+
+# Settle-Choice replaces the drawn menu with one answer row and deletes the
+# rows under it, so the frame closes up instead of leaving gaps.
+function Settle-Choice([int] $Height, [string] $Text) {
+	Write-Host ("{0}[{1}A" -f $script:Esc, $Height) -NoNewline
+	Write-Host ("`r{0}[2K{1}" -f $script:Esc, (Format-Row $Text))
+	for ($i = 1; $i -lt $Height; $i++) { Write-Host ("`r{0}[1M" -f $script:Esc) -NoNewline }
+}
+
+function Write-Choice([string] $Prompt, [string[]] $Options, [int] $Pick) {
+	Write-Row ("  " + (Paint '▶' 'bright') + " $Prompt")
+	$line = '  '
+	for ($i = 0; $i -lt $Options.Count; $i++) {
+		if ($i -eq $Pick) {
+			$line += " " + $(if ($script:Color) { "$($script:Esc)[7m[ $($Options[$i]) ]$($script:Esc)[0m" } else { "[ $($Options[$i]) ]" })
+		} else {
+			$line += " " + (Paint "[$($Options[$i])]" 'dim')
 		}
+	}
+	Write-Row $line
+	Write-Row ('  ' + (Paint '←/→ to move · Enter to pick · q to cancel' 'dim'))
+}
+
+# Select-InstallOption asks a question and returns the 0-based index, or -1
+# when the user cancels.
+function Select-InstallOption([string] $Prompt, [string[]] $Options, [int] $Default = 0) {
+	$pick = $Default
+	if ($pick -lt 0) { $pick = 0 }
+	if ($pick -ge $Options.Count) { $pick = $Options.Count - 1 }
+	$height = $Options.Count + 2
+
+	if (-not $script:Visual) {
+		Write-Row ("  " + (Paint '>' 'bright') + " $Prompt")
+		for ($i = 0; $i -lt $Options.Count; $i++) { Write-Row "    [$($i + 1)] $($Options[$i])" }
+		$answer = Read-Setup "Choose 1-$($Options.Count)"
+		if ($answer -eq '') { return $pick }
+		if ($answer -match '^[0-9]+$' -and [int]$answer -ge 1 -and [int]$answer -le $Options.Count) {
+			return ([int]$answer - 1)
+		}
+		return -1
+	}
+
+	try {
+		while ($true) {
+			Write-Choice $Prompt $Options $pick
+			$key = [Console]::ReadKey($true)
+			switch ([string]$key.Key) {
+				'LeftArrow' { if ($pick -gt 0) { $pick-- } }
+				'RightArrow' { if ($pick -lt $Options.Count - 1) { $pick++ } }
+				'UpArrow' { if ($pick -gt 0) { $pick-- } }
+				'DownArrow' { if ($pick -lt $Options.Count - 1) { $pick++ } }
+				'K' { if ($pick -gt 0) { $pick-- } }
+				'J' { if ($pick -lt $Options.Count - 1) { $pick++ } }
+				'Enter' {
+					Settle-Choice $height ("  " + (Paint '▶' 'bright') + " $Prompt " + (Paint $Options[$pick] 'bold'))
+					return $pick
+				}
+				'Spacebar' {
+					Settle-Choice $height ("  " + (Paint '▶' 'bright') + " $Prompt " + (Paint $Options[$pick] 'bold'))
+					return $pick
+				}
+				'Escape' { Settle-Choice $height ('  ' + (Paint '▶ ' + $Prompt + ' (canceled)' 'dim')); return -1 }
+				'Q' { Settle-Choice $height ('  ' + (Paint '▶ ' + $Prompt + ' (canceled)' 'dim')); return -1 }
+				default {
+					$digit = [string]$key.KeyChar
+					if ($digit -match '^[1-9]$' -and [int]$digit -le $Options.Count) { $pick = [int]$digit - 1 }
+				}
+			}
+			Clear-Choice $height
+		}
+	} catch {
+		# No console to read keys from: ask for a number instead.
+		Clear-Choice $height
+		Write-Row ("  " + (Paint '>' 'bright') + " $Prompt")
+		for ($i = 0; $i -lt $Options.Count; $i++) { Write-Row "    [$($i + 1)] $($Options[$i])" }
+		$answer = Read-Setup "Choose 1-$($Options.Count)"
+		if ($answer -eq '') { return $pick }
+		if ($answer -match '^[0-9]+$' -and [int]$answer -ge 1 -and [int]$answer -le $Options.Count) {
+			return ([int]$answer - 1)
+		}
+		return -1
 	}
 }
 
 function Invoke-Options {
-	Write-Section '01' 'Make it yours'
-	Write-Row "  You're one Enter away. Want to make a change first?"
+	Write-Section 'Make it yours'
+	Write-Row '  A few choices, then the installer runs.'
 	Write-Row ''
-	while ($true) {
-		$startLabel = if ($NoStart) { Paint '[OFF]' 'slate' } else { Paint '[ON ]' 'green' }
-		$autoLabel = if ($NoAutostart) { Paint '[OFF]' 'slate' } else { Paint '[ON ]' 'green' }
-		if ($NoStart) { $autoLabel = Paint '[ --]' 'amber' }
-		$versionLabel = if ($Version) { $Version } else { 'Latest stable' }
-		$versionHint = if ($Version) { '(pinned release)' } else { '(recommended)' }
-		Write-Row (Paint '  INSTALLATION' 'dim')
-		Write-Rule
-		Write-Row ("  " + (Paint '[1]' 'red') + ' ' + (Paint 'Release' 'bold'))
-		Write-Row ("      $versionLabel " + (Paint $versionHint 'dim'))
-		Write-Row ''
-		Write-Row ("  " + (Paint '[2]' 'red') + ' ' + (Paint 'Install folder' 'bold'))
-		Write-Row "      $Dir"
-		Write-Row ''
-		Write-Row (Paint '  ON YOUR SCHEDULE' 'dim')
-		Write-Rule
-		Write-Row ("  " + (Paint '[3]' 'red') + " $startLabel " + (Paint 'Start after install' 'bold'))
-		Write-Row (Paint "      Have the console ready as soon as we're done." 'dim')
-		Write-Row ''
-		Write-Row ("  " + (Paint '[4]' 'red') + " $autoLabel " + (Paint 'Start at login' 'bold'))
-		if ($NoStart) {
-			Write-Row (Paint '      Not changed (start after install is off)' 'amber')
-		} else {
-			Write-Row (Paint '      Keep Relo ready whenever you sign in.' 'dim')
-		}
-		Write-Row ''
-		Write-Row (Paint (Paint '  >>>  Press Enter to continue installation' 'bold') 'red')
-		Write-Row (Paint '       1-4 to adjust a setting / q to cancel' 'dim')
-		Write-Row ''
-		$choice = Read-Setup 'What would you like to do?'
-		Write-Row ''
-		switch ($choice) {
-			'' { }
-			'1' {
-				Write-Note 'Enter a release such as v0.1.0. Leave blank for latest stable.'
-				$value = Read-Setup 'Which release?'
-				$script:Version = $value
+
+	if ($Version) {
+		$release = Select-InstallOption 'Which release?' @("Keep $Version (pinned)", 'Latest stable') 0
+		if ($release -lt 0) { Write-Note 'Setup canceled. Nothing was changed.'; exit 0 }
+		if ($release -eq 1) { $script:Version = '' }
+	} else {
+		$release = Select-InstallOption 'Which release?' @('Latest', 'Version…') 0
+		if ($release -lt 0) { Write-Note 'Setup canceled. Nothing was changed.'; exit 0 }
+		switch ($release) {
+			0 { $script:Version = '' }
+			1 {
+				Write-Note 'Enter a tag such as v0.1.0. Enter keeps the latest stable.'
+				$tag = Read-Setup 'Release tag'
+				if ($tag) { $script:Version = $tag }
 			}
-			'2' {
-				Write-Note "Press Enter to keep $Dir."
-				$value = Read-Setup 'Where should Relo be installed?'
-				if ($value) { $script:Dir = $value }
-				Resolve-Paths
-			}
-			'3' { $script:NoStart = [switch](-not [bool]$NoStart) }
-			'4' { $script:NoAutostart = [switch](-not [bool]$NoAutostart) }
-			'q' { Write-Note 'Setup canceled. Nothing was changed.'; exit 0 }
-			default { Write-Note 'Choose 1, 2, 3 or 4; Enter to install; q to cancel.' }
 		}
-		if ($choice -eq '') { break }
-		Write-Row ''
 	}
+
+	$folder = Select-InstallOption 'Where should the relo binary go?' @("$Dir (default)", 'Custom folder…') 0
+	if ($folder -lt 0) { Write-Note 'Setup canceled. Nothing was changed.'; exit 0 }
+	if ($folder -eq 1) {
+		Write-Note "Enter a folder path. Enter keeps $Dir."
+		$value = Read-Setup 'Install folder'
+		if ($value) { $script:Dir = $value }
+		Resolve-Paths
+	}
+
+	$startNow = Select-InstallOption 'Start Relo after installing?' @('Yes', 'No') 0
+	if ($startNow -eq 0) {
+		$script:NoStart = $false
+		$login = Select-InstallOption 'Start Relo at login?' @('Yes', 'No') 0
+		$script:NoAutostart = ($login -ne 0)
+	} else {
+		$script:NoStart = $true
+		$script:NoAutostart = $true
+	}
+
+	$ready = Select-InstallOption 'Ready to install?' @('Install', 'Cancel') 0
+	if ($ready -ne 0) { Write-Note 'Setup canceled. Nothing was changed.'; exit 0 }
 	Resolve-Paths
 }
 
