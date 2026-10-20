@@ -170,6 +170,16 @@ try {
 	if (startNow !== 'yes' && startNow !== 'no') {
 		note('Running without prompts. Start later: relo daemon start');
 	}
+	// install.sh pairs the two: the login question only follows a yes on
+	// starting, so an install that starts nothing registers nothing.
+	let loginNow = 'no';
+	if (startNow === 'yes' && interactive()) {
+		loginNow = await askStart({
+			labels,
+			onQuestion: (at) => choices('START RELO AT LOGIN?', labels, at),
+			onAnswer: (value) => chosen('START RELO AT LOGIN?', value)
+		});
+	}
 	step(label('CONFLICT'));
 	// One binary answers the relo command now, whether it came from this
 	// package or an installer, so a command this package did not install
@@ -218,6 +228,19 @@ try {
 					? `${detail}\n  start it later: relo daemon start`
 					: 'start it later: relo daemon start'
 			);
+		}
+		// The login item belongs to the binary, not to a running daemon, so
+		// the toggle runs after a refused start too. A disable goes after
+		// the start because the headless start reconciles the item from the
+		// config default on the way up; disabling first would be undone.
+		if (loginNow === 'yes') {
+			const enabled = spawnSync(destination, ['autostart', 'enable'], { stdio: 'ignore' });
+			if (enabled.status === 0) done('autostart enabled');
+			else note('register it later: relo autostart enable');
+		} else if (loginNow === 'no') {
+			const disabled = spawnSync(destination, ['autostart', 'disable'], { stdio: 'ignore' });
+			if (disabled.status === 0) done('autostart stays off');
+			else note('remove it later: relo autostart disable');
 		}
 	} else {
 		note('start it later: relo daemon start');
