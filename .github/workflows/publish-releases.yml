@@ -1,0 +1,56 @@
+name: Publish Releases
+
+# The site and the console read one catalog of every published release, so a
+# beta publish and an edited changelog both refresh it. The catalog is rebuilt
+# from the API rather than from the event payload because it carries every
+# release, not only the one that fired this run.
+on:
+  release:
+    types:
+      - published
+      - edited
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+# One writer: two runs pushing the same file would race on the branch.
+concurrency:
+  group: publish-releases
+  cancel-in-progress: false
+
+jobs:
+  publish-releases:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Read every release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPOSITORY: ${{ github.repository }}
+        run: gh api --paginate --slurp "repos/$REPOSITORY/releases?per_page=100" > "$RUNNER_TEMP/releases.json"
+
+      - name: Checkout gh-pages
+        uses: actions/checkout@v5
+        with:
+          ref: gh-pages
+          path: gh-pages
+
+      - name: Write the catalog
+        run: |
+          python3 scripts/generate-releases.py \
+            "$RUNNER_TEMP/releases.json" gh-pages/releases.json
+
+      - name: Commit and push
+        working-directory: gh-pages
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add releases.json
+          # A re-run of this release leaves the catalog it wrote, and that is
+          # success. The generated is the only line that can still differ.
+          git diff --cached --quiet && { echo "the catalog already matches"; exit 0; }
+          git commit -m "chore: publish the release catalog"
+          git push
