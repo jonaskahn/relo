@@ -27,14 +27,15 @@
       var dark = window.matchMedia('(prefers-color-scheme: dark)').matches;
       root.dataset.theme = stored === 'light' || stored === 'dark' ? stored : (dark ? 'dark' : 'light');
       var langs = ['en', 'zh', 'hi', 'es', 'ar', 'fr', 'bn', 'pt', 'ru', 'ur', 'id', 'de', 'ja', 'vi', 'tr', 'ko', 'it', 'th', 'pl', 'nl'];
-      var lang = localStorage.getItem('relo-lang');
-      if (langs.indexOf(lang) < 0) {
-        lang = 'en';
-        var prefs = navigator.languages || [navigator.language || 'en'];
-        for (var i = 0; i < prefs.length; i++) {
-          var code = String(prefs[i]).toLowerCase().split('-')[0];
-          if (langs.indexOf(code) >= 0) { lang = code; break; }
-        }
+      var lang = '';
+      var prefs = navigator.languages || [navigator.language || 'en'];
+      for (var i = 0; i < prefs.length; i++) {
+        var code = String(prefs[i]).toLowerCase().split('-')[0];
+        if (langs.indexOf(code) >= 0) { lang = code; break; }
+      }
+      if (!lang) {
+        var stored = localStorage.getItem('relo-lang');
+        lang = langs.indexOf(stored) >= 0 ? stored : 'en';
       }
       root.lang = lang === 'zh' ? 'zh-Hans' : lang;
       root.dir = lang === 'ar' || lang === 'ur' ? 'rtl' : 'ltr';
