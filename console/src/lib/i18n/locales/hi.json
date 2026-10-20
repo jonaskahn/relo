@@ -1831,6 +1831,8 @@
       "title": "Relo अपडेट करें",
       "body": "Relo {current} चल रहा है। संस्करण {latest} तैयार है।",
       "detected": "{method} से इंस्टॉल किया गया।",
+      "whatsNew": "नया क्या है",
+      "download": "डाउनलोड",
       "releasePage": "रिलीज़ पेज खोलें",
       "sparkle": "Relo.app अपने अपडेट स्वयं इंस्टॉल करता है।",
       "installer": "इस रिलीज़ के लिए इंस्टॉलर डाउनलोड करें।",

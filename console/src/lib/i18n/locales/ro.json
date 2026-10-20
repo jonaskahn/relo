@@ -1831,6 +1831,8 @@
       "title": "Actualizează Relo",
       "body": "Relo {current} rulează. Versiunea {latest} este pregătită.",
       "detected": "Instalat cu {method}.",
+      "whatsNew": "Ce e nou",
+      "download": "Descarcă",
       "releasePage": "Deschide pagina versiunii",
       "sparkle": "Relo.app își instalează singur actualizările.",
       "installer": "Descarcă programul de instalare pentru această versiune.",

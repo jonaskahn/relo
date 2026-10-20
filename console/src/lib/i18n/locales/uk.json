@@ -1831,6 +1831,8 @@
       "title": "Оновити Relo",
       "body": "Relo {current} працює. Версія {latest} готова.",
       "detected": "Встановлено через {method}.",
+      "whatsNew": "Що нового",
+      "download": "Завантажити",
       "releasePage": "Відкрити сторінку випуску",
       "sparkle": "Relo.app сам встановлює оновлення.",
       "installer": "Завантажте інсталятор цього випуску.",

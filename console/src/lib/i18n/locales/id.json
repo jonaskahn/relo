@@ -1831,6 +1831,8 @@
       "title": "Perbarui Relo",
       "body": "Relo {current} sedang berjalan. Versi {latest} sudah siap.",
       "detected": "Dipasang dengan {method}.",
+      "whatsNew": "Yang baru",
+      "download": "Unduh",
       "releasePage": "Buka halaman rilis",
       "sparkle": "Relo.app memasang pembaruannya sendiri.",
       "installer": "Unduh penginstal untuk rilis ini.",

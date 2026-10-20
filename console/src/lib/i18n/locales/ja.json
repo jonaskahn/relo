@@ -1831,6 +1831,8 @@
       "title": "Relo を更新",
       "body": "Relo {current} が実行中です。バージョン {latest} を利用できます。",
       "detected": "{method} でインストール済みです。",
+      "whatsNew": "新着情報",
+      "download": "ダウンロード",
       "releasePage": "リリースページを開く",
       "sparkle": "Relo.app は自分でアップデートをインストールします。",
       "installer": "このリリースのインストーラーをダウンロードしてください。",

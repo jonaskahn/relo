@@ -1831,6 +1831,8 @@
       "title": "Relo bijwerken",
       "body": "Relo {current} draait. Versie {latest} staat klaar.",
       "detected": "Geïnstalleerd met {method}.",
+      "whatsNew": "Nieuw",
+      "download": "Downloaden",
       "releasePage": "Releasepagina openen",
       "sparkle": "Relo.app installeert zijn eigen updates.",
       "installer": "Download het installatieprogramma voor deze release.",

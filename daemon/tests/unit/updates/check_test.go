@@ -208,7 +208,10 @@ func TestChecker(t *testing.T) {
 			Current: "0.1.0",
 			Now:     func() time.Time { return now },
 			TTL:     time.Hour,
-			Fetch: func(context.Context, string) ([]byte, error) {
+			Fetch: func(_ context.Context, url string) ([]byte, error) {
+				if url == updates.DefaultManifestURL {
+					return nil, errors.New("no catalog")
+				}
 				calls++
 				return []byte(sampleAppcast), nil
 			},

@@ -7,7 +7,7 @@
 
 <a href="https://github.com/jonaskahn/relo/actions/workflows/ci.yml"><img src="https://github.com/jonaskahn/relo/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
 <a href="https://codecov.io/gh/jonaskahn/relo"><img src="https://codecov.io/gh/jonaskahn/relo/branch/main/graph/badge.svg" alt="Coverage"></a>
-<a href="https://github.com/jonaskahn/relo/releases"><img src="https://img.shields.io/badge/version-0.1.4-blue" alt="Version"></a>
+<a href="https://github.com/jonaskahn/relo/releases"><img src="https://img.shields.io/badge/version-0.1.5-blue" alt="Version"></a>
 <a href="https://www.npmjs.com/package/@jonaskahn/relo"><img src="https://img.shields.io/npm/v/@jonaskahn/relo?label=npm%40latest" alt="npm latest"></a>
 <a href="https://www.npmjs.com/package/@jonaskahn/relo?activeTab=versions"><img src="https://img.shields.io/npm/v/@jonaskahn/relo/beta" alt="npm beta"></a>
 
@@ -23,10 +23,10 @@
 
 https://github.com/user-attachments/assets/cbda11c8-b60c-413b-8a08-03144dd06e7a
 
-<sub>Demo: using Relo in Codex</sub>
+<sub>Demo using Relo</sub>
 </div>
 
-|                                                                                                                             |                                                                                                                           |                                                                                                                      |
+| ➤                                                                                                                          | ➤➤                                                                                                                      | ➤➤➤                                                                                                               |
 |-----------------------------------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------|
 | Dashboard                                                                                                                   | Connections                                                                                                               | Groups                                                                                                               |
 | <img src="https://github.com/user-attachments/assets/ba44719e-f176-4d02-9e92-10cf7055a6e8" alt="Dashboard" width="320">     | <img src="https://github.com/user-attachments/assets/b27d9948-1f30-4aac-a0f5-d98109c5522e" alt="Connections" width="320"> | <img src="https://github.com/user-attachments/assets/29ce8e23-925f-4d22-b571-a49d8bc70841" alt="Groups" width="320"> |
@@ -49,14 +49,14 @@ curl -fsSL https://relo.ifelse.one/install.sh | sh
 irm https://relo.ifelse.one/install.ps1 | iex
 ```
 
-| Channel   | Command                                                              |
-|-----------|----------------------------------------------------------------------|
-| Script    | the two lines above; `install.sh --help` lists the flags             |
-| Homebrew  | ```brew install jonaskahn/apps/relo```                               |
-| npm       | ```npm i -g @jonaskahn/relo[@beta] --foreground-scripts``` (Node 22+)  |
-| macOS app | `Relo-<version>-universal.zip`                                       |
-| Linux     | `Relo-Setup-<version>-amd64.deb` or `Relo-Setup-<version>-amd64.rpm` |
-| Windows   | `Relo-Setup-<version>-amd64.exe`                                     |
+| Channel   | Command                                                               |
+|-----------|-----------------------------------------------------------------------|
+| Script    | the two lines above; `install.sh --help` lists the flags              |
+| Homebrew  | ```brew install jonaskahn/apps/relo```                                |
+| npm       | ```npm i -g @jonaskahn/relo[@beta] --foreground-scripts``` (Node 22+) |
+| macOS app | `Relo-<version>-universal.zip`                                        |
+| Linux     | `Relo-Setup-<version>-amd64.deb` or `Relo-Setup-<version>-amd64.rpm`  |
+| Windows   | `Relo-Setup-<version>-amd64.exe`                                      |
 
 The setup files come from the [latest release](https://github.com/jonaskahn/relo/releases/latest); the app then
 updates itself. The script installs the daemon binary: it verifies the download against `checksums.txt`, frees the

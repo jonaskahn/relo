@@ -1831,6 +1831,8 @@
       "title": "更新 Relo",
       "body": "Relo {current} 正在執行。版本 {latest} 已就緒。",
       "detected": "透過 {method} 安裝。",
+      "whatsNew": "更新內容",
+      "download": "下載",
       "releasePage": "開啟發佈頁面",
       "sparkle": "Relo.app 會自行安裝更新。",
       "installer": "下載此版本的安裝程式。",

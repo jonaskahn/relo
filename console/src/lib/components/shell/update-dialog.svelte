@@ -3,6 +3,7 @@
 	import { toast } from 'svelte-sonner';
 
 	import { installGuides, type InstallGuide, type InstallMethod } from '$lib/update-install';
+	import { fileSize, notesText } from '$lib/update-notes';
 	import type { UpdateInstaller, UpdateNotice } from '$lib/updates';
 	import Button from '$lib/components/ui/button.svelte';
 	import CenteredModal from '$lib/components/ui/centered-modal.svelte';
@@ -25,6 +26,9 @@
 
 	const guides = $derived(notice ? installGuides(notice.installer, notice.latest) : []);
 	const methodKey = $derived(notice?.installer ? (methodKeys[notice.installer] ?? '') : '');
+	const notes = $derived(notice?.notes ? notesText(notice.notes) : '');
+	const downloads = $derived(notice?.downloads ?? []);
+	const releasePage = $derived(notice?.page || notice?.url || '');
 
 	let copied = $state<InstallMethod | null>(null);
 	let timer: ReturnType<typeof setTimeout> | undefined;
@@ -83,8 +87,35 @@
 					</div>
 				{/each}
 			{/if}
+			{#if notes}
+				<div class="flex flex-col gap-1.5">
+					<p class="text-sm font-medium text-ink">{$t('ui.updateDialog.whatsNew')}</p>
+					<p class="whitespace-pre-line text-sm leading-6 text-muted-foreground">{notes}</p>
+				</div>
+			{/if}
+			{#if downloads.length > 0}
+				<div class="flex flex-col gap-1.5">
+					<p class="text-sm font-medium text-ink">{$t('ui.updateDialog.download')}</p>
+					{#each downloads as download (download.url)}
+						<a
+							href={download.url}
+							target="_blank"
+							rel="external noreferrer"
+							class="flex items-center gap-2 rounded-panel bg-sunken px-3 py-2 text-sm text-ink underline-offset-2 hover:underline"
+						>
+							<Icon name="cloud-download" size={14} />
+							<span class="min-w-0 flex-1 truncate">{download.name}</span>
+							{#if fileSize(download.size)}
+								<span class="mono-data shrink-0 text-muted-foreground">
+									{fileSize(download.size)}
+								</span>
+							{/if}
+						</a>
+					{/each}
+				</div>
+			{/if}
 			<a
-				href={notice.url}
+				href={releasePage}
 				target="_blank"
 				rel="external noreferrer"
 				class="inline-flex items-center gap-1.5 text-sm text-accent-deep underline-offset-2 hover:underline"

@@ -1831,6 +1831,8 @@
       "title": "Uppdatera Relo",
       "body": "Relo {current} körs. Version {latest} är redo.",
       "detected": "Installerat med {method}.",
+      "whatsNew": "Nyheter",
+      "download": "Ladda ner",
       "releasePage": "Öppna versionssidan",
       "sparkle": "Relo.app installerar sina egna uppdateringar.",
       "installer": "Ladda ner installationsprogrammet för den här versionen.",

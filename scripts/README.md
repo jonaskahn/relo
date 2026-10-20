@@ -169,6 +169,17 @@ $ python3 scripts/generate-appcast.py site/appcast.xml 0.1.0 0.1.0 \
 Inserts one release into the Sparkle appcast; used by
 `.github/workflows/publish-appcast.yml`.
 
+### generate-releases.py
+
+```console
+$ gh api --paginate --slurp "repos/jonaskahn/relo/releases?per_page=100" > /tmp/releases.json
+$ python3 scripts/generate-releases.py /tmp/releases.json site/releases.json
+```
+
+Writes the catalog of every published release — stable and beta, drafts
+excluded — that the site and the console read. Used by
+`.github/workflows/publish-releases.yml`.
+
 ### publish-site.sh
 
 ```console

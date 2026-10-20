@@ -46,12 +46,15 @@ var (
 
 // Status is what the console and the tray show after a check.
 type Status struct {
-	Current   string `json:"current"`
-	Latest    string `json:"latest"`
-	Available bool   `json:"available"`
-	URL       string `json:"url"`
-	Method    string `json:"method"`
-	Installer string `json:"installer"`
+	Current   string     `json:"current"`
+	Latest    string     `json:"latest"`
+	Available bool       `json:"available"`
+	URL       string     `json:"url"`
+	Method    string     `json:"method"`
+	Installer string     `json:"installer"`
+	Notes     string     `json:"notes,omitempty"`
+	Page      string     `json:"page,omitempty"`
+	Downloads []Download `json:"downloads,omitempty"`
 }
 
 // Fetch reads one feed URL.
@@ -64,6 +67,7 @@ type Checker struct {
 	Current     string
 	Method      string
 	ReleasesURL string
+	ManifestURL string
 	Installer   string
 	InBundle    func() bool
 	Fetch       Fetch
@@ -77,6 +81,10 @@ type Checker struct {
 
 // HTTPFetch reads a feed over HTTP.
 func HTTPFetch(client *http.Client) Fetch {
+	return httpFetch(client, maxFeedBytes)
+}
+
+func httpFetch(client *http.Client, limit int64) Fetch {
 	if client == nil {
 		client = &http.Client{Timeout: fetchTimeout}
 	}
@@ -93,7 +101,7 @@ func HTTPFetch(client *http.Client) Fetch {
 		if response.StatusCode != http.StatusOK {
 			return nil, fmt.Errorf("%w %s", ErrFeedStatus, response.Status)
 		}
-		return io.ReadAll(io.LimitReader(response.Body, maxFeedBytes))
+		return io.ReadAll(io.LimitReader(response.Body, limit))
 	}
 }
 
@@ -107,10 +115,7 @@ func (c *Checker) Status(ctx context.Context) Status {
 	if c.Now != nil {
 		now = c.Now()
 	}
-	ttl := c.TTL
-	if ttl <= 0 {
-		ttl = DefaultTTL
-	}
+	ttl := c.ttl()
 	if cached, found := c.cachedStatus(now, ttl); found {
 		return cached
 	}
@@ -122,8 +127,43 @@ func (c *Checker) Status(ctx context.Context) Status {
 	if err == nil {
 		c.applyFeed(&status, body)
 	}
+	c.attachManifest(ctx, &status)
 	c.storeStatus(status, now)
 	return status
+}
+
+func (c *Checker) ttl() time.Duration {
+	if c == nil || c.TTL <= 0 {
+		return DefaultTTL
+	}
+	return c.TTL
+}
+
+func (c *Checker) attachManifest(ctx context.Context, status *Status) {
+	if !status.Available || status.Latest == "" {
+		return
+	}
+	catalog, err := c.catalog(ctx)
+	if err != nil {
+		return
+	}
+	release, found := catalog.find(status.Latest)
+	if !found {
+		return
+	}
+	status.Notes = release.Notes
+	status.Page = release.Page
+	status.Downloads = downloadsFor(release.Files, runtime.GOOS, runtime.GOARCH)
+}
+
+func (c *Checker) catalog(ctx context.Context) (manifest, error) {
+	// The status cache bounds this read to once per TTL, so the catalog needs
+	// no cache of its own.
+	body, err := c.manifestFetch()(ctx, c.manifestURL())
+	if err != nil {
+		return manifest{}, err
+	}
+	return parseManifest(body)
 }
 
 func statusBase(c *Checker) Status {

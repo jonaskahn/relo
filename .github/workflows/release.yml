@@ -176,7 +176,11 @@ jobs:
         uses: actions/upload-artifact@v5
         with:
           name: linux
-          path: dist/Relo-Setup-*.{deb,rpm}
+          # A glob list, not a brace: upload-artifact never expands a brace
+          # pattern, so each format needs its own line.
+          path: |
+            dist/Relo-Setup-*.deb
+            dist/Relo-Setup-*.rpm
           retention-days: 30
 
   windows:
