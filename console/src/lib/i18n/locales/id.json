@@ -1826,6 +1826,19 @@
       "failoverHint": "How long a refused account or route member stays out of rotation after a rate limit or server fault, and how the wait grows with each further failure. A success resets it. None starts with no wait: the first refusal is immediately reusable.",
       "retryHint": "Jeda acak sebelum setiap percobaan ulang, dalam detik. Retry-After penyedia yang lebih lama menang.",
       "jumpLabel": "Lompat ke bagian"
+    },
+    "updateDialog": {
+      "title": "Perbarui Relo",
+      "body": "Relo {current} sedang berjalan. Versi {latest} sudah siap.",
+      "detected": "Dipasang dengan {method}.",
+      "releasePage": "Buka halaman rilis",
+      "sparkle": "Relo.app memasang pembaruannya sendiri.",
+      "installer": "Unduh penginstal untuk rilis ini.",
+      "unknown": "Kami tidak dapat mendeteksi cara Relo dipasang. Gunakan metode yang Anda pakai saat memasangnya.",
+      "methodShell": "Skrip shell",
+      "methodPowerShell": "PowerShell",
+      "methodNpm": "npm",
+      "methodBrew": "Homebrew"
     }
   }
 }

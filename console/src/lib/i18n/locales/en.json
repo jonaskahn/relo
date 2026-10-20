@@ -1826,6 +1826,19 @@
       "failoverHint": "How long a refused account or route member stays out of rotation after a rate limit or server fault, and how the wait grows with each further failure. A success resets it. None starts with no wait: the first refusal is immediately reusable.",
       "retryHint": "How many times one account is retried before the request moves to the next account. A random 1–3s wait separates the retries.",
       "jumpLabel": "Jump to section"
+    },
+    "updateDialog": {
+      "title": "Update Relo",
+      "body": "Relo {current} is running. Version {latest} is ready.",
+      "detected": "Installed with {method}.",
+      "releasePage": "Open the release page",
+      "sparkle": "Relo.app installs its own updates.",
+      "installer": "Download the installer for this release.",
+      "unknown": "We couldn't detect how Relo was installed. Use the method you installed it with.",
+      "methodShell": "Shell script",
+      "methodPowerShell": "PowerShell",
+      "methodNpm": "npm",
+      "methodBrew": "Homebrew"
     }
   }
 }

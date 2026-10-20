@@ -1826,6 +1826,19 @@
       "failoverHint": "How long a refused account or route member stays out of rotation after a rate limit or server fault, and how the wait grows with each further failure. A success resets it. None starts with no wait: the first refusal is immediately reusable.",
       "retryHint": "Espera aleatória antes de cada tentativa, em segundos. Um Retry-After mais longo do provedor vence.",
       "jumpLabel": "Ir para a seção"
+    },
+    "updateDialog": {
+      "title": "Atualizar o Relo",
+      "body": "O Relo {current} está em execução. A versão {latest} está pronta.",
+      "detected": "Instalado com {method}.",
+      "releasePage": "Abrir a página da versão",
+      "sparkle": "O Relo.app instala as próprias atualizações.",
+      "installer": "Baixe o instalador desta versão.",
+      "unknown": "Não foi possível detectar como o Relo foi instalado. Use o método com que você o instalou.",
+      "methodShell": "Script de shell",
+      "methodPowerShell": "PowerShell",
+      "methodNpm": "npm",
+      "methodBrew": "Homebrew"
     }
   }
 }
