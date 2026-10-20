@@ -1831,6 +1831,8 @@
       "title": "Aktualizovat Relo",
       "body": "Relo {current} běží. Verze {latest} je připravena.",
       "detected": "Nainstalováno přes {method}.",
+      "whatsNew": "Co je nového",
+      "download": "Stáhnout",
       "releasePage": "Otevřít stránku vydání",
       "sparkle": "Relo.app si aktualizace instaluje sám.",
       "installer": "Stáhněte instalátor pro toto vydání.",

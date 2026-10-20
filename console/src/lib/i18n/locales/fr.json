@@ -1831,6 +1831,8 @@
       "title": "Mettre à jour Relo",
       "body": "Relo {current} est en cours d’exécution. La version {latest} est prête.",
       "detected": "Installé avec {method}.",
+      "whatsNew": "Nouveautés",
+      "download": "Télécharger",
       "releasePage": "Ouvrir la page de la version",
       "sparkle": "Relo.app installe ses propres mises à jour.",
       "installer": "Téléchargez l’installateur de cette version.",

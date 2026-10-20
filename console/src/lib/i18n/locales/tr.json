@@ -1831,6 +1831,8 @@
       "title": "Relo'yu güncelle",
       "body": "Relo {current} çalışıyor. {latest} sürümü hazır.",
       "detected": "{method} ile yüklendi.",
+      "whatsNew": "Yenilikler",
+      "download": "İndir",
       "releasePage": "Sürüm sayfasını aç",
       "sparkle": "Relo.app güncellemelerini kendisi yükler.",
       "installer": "Bu sürümün yükleyicisini indirin.",

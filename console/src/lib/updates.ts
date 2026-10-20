@@ -2,6 +2,15 @@
 export type UpdateInstaller =
 	'sparkle' | 'brew' | 'npm' | 'shell' | 'powershell' | 'installer' | 'unknown';
 
+/** One file the newer release carries for this machine. */
+export type UpdateDownload = {
+	readonly name: string;
+	readonly url: string;
+	readonly size?: number;
+	readonly arch?: string;
+	readonly format?: string;
+};
+
 /** A newer release the daemon reports. */
 export type UpdateNotice = {
 	current: string;
@@ -10,6 +19,9 @@ export type UpdateNotice = {
 	url: string;
 	method?: 'sparkle' | 'download';
 	installer?: UpdateInstaller;
+	notes?: string;
+	page?: string;
+	downloads?: readonly UpdateDownload[];
 };
 
 /** Reports whether a notice is one to act on. */

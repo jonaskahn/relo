@@ -1831,6 +1831,8 @@
       "title": "อัปเดต Relo",
       "body": "Relo {current} กำลังทำงาน เวอร์ชัน {latest} พร้อมแล้ว",
       "detected": "ติดตั้งด้วย {method}",
+      "whatsNew": "มีอะไรใหม่",
+      "download": "ดาวน์โหลด",
       "releasePage": "เปิดหน้ารุ่นเผยแพร่",
       "sparkle": "Relo.app ติดตั้งการอัปเดตด้วยตัวเอง",
       "installer": "ดาวน์โหลดตัวติดตั้งสำหรับรุ่นนี้",

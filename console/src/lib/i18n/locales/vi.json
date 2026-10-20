@@ -1831,6 +1831,8 @@
       "title": "Cập nhật Relo",
       "body": "Relo {current} đang chạy. Phiên bản {latest} đã sẵn sàng.",
       "detected": "Đã cài đặt bằng {method}.",
+      "whatsNew": "Có gì mới",
+      "download": "Tải xuống",
       "releasePage": "Mở trang phát hành",
       "sparkle": "Relo.app tự cài đặt bản cập nhật.",
       "installer": "Tải xuống trình cài đặt cho bản phát hành này.",

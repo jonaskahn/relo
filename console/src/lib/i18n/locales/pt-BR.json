@@ -1831,6 +1831,8 @@
       "title": "Atualizar o Relo",
       "body": "O Relo {current} está em execução. A versão {latest} está pronta.",
       "detected": "Instalado com {method}.",
+      "whatsNew": "Novidades",
+      "download": "Baixar",
       "releasePage": "Abrir a página da versão",
       "sparkle": "O Relo.app instala as próprias atualizações.",
       "installer": "Baixe o instalador desta versão.",

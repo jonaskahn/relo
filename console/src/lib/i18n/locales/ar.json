@@ -1831,6 +1831,8 @@
       "title": "تحديث Relo",
       "body": "يعمل Relo {current}. الإصدار {latest} جاهز.",
       "detected": "مثبّت باستخدام {method}.",
+      "whatsNew": "ما الجديد",
+      "download": "تنزيل",
       "releasePage": "فتح صفحة الإصدار",
       "sparkle": "يثبّت Relo.app تحديثاته بنفسه.",
       "installer": "نزّل برنامج التثبيت لهذا الإصدار.",
