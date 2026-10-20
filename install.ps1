@@ -56,15 +56,39 @@ $script:Framed = $false
 $script:FirstSection = $true
 $script:Visual = $script:Terminal
 $script:Esc = [char]27
-$script:Logo = @(
-	'██████╗ ███████╗██╗      ██████╗ ',
-	'██╔══██╗██╔════╝██║     ██╔═══██╗',
-	'██████╔╝█████╗  ██║     ██║   ██║',
-	'██╔══██╗██╔══╝  ██║     ██║   ██║',
-	'██║  ██║███████╗███████╗╚██████╔╝',
-	'╚═╝  ╚═╝╚══════╝╚══════╝ ╚═════╝ '
-)
+# Glyphs as code points, not literals: the script travels through
+# `irm | iex`, whose decoder may not be UTF-8, and raw glyphs would arrive
+# as mojibake. The source stays ASCII; the art below draws with stand-ins
+# that the loop translates back.
+$script:Block = [string][char]0x2588
+$script:Rule = [string][char]0x2550
+$script:Bar = [string][char]0x2551
+$script:CornerTL = [string][char]0x2554
+$script:CornerTR = [string][char]0x2557
+$script:CornerBL = [string][char]0x255A
+$script:CornerBR = [string][char]0x255D
+$script:Side = [string][char]0x2502
+$script:Bullet = [string][char]0x25B6
+$script:Check = [string][char]0x2713
+$script:Dot = [string][char]0x00B7
+$script:Ell = [string][char]0x2026
+$script:Left = [string][char]0x2190
+$script:Right = [string][char]0x2192
 
+$script:Logo = @(
+	'######] #######]##]      ######] ',
+	'##[==##]##[====}##|     ##[===##]',
+	'######[}#####]  ##|     ##|   ##|',
+	'##[==##]##[==}  ##|     ##|   ##|',
+	'##|  ##|#######]#######]{######[}',
+	'{=}  {=}{======}{======} {=====} '
+)
+foreach ($pair in @(
+		@('#', $script:Block), @('=', $script:Rule), @('|', $script:Bar), @('[', $script:CornerTL),
+		@(']', $script:CornerTR), @('{', $script:CornerBL), @('}', $script:CornerBR)
+	)) {
+	$script:Logo = $script:Logo | ForEach-Object { $_.Replace($pair[0], $pair[1]) }
+}
 function Paint([string] $Text, [string] $Tone) {
 	if (-not $script:Color) { return $Text }
 	# The four shades of a Game Boy screen.
@@ -111,7 +135,7 @@ function Format-Row([string] $Text) {
 		$visible = (Get-Visible $Text).Length
 	}
 	$pad = [Math]::Max(0, $script:Inner - $visible)
-	return (Paint '│' 'bright') + $Text + (' ' * $pad) + (Paint '│' 'bright')
+	return (Paint $script:Side 'bright') + $Text + (' ' * $pad) + (Paint $script:Side 'bright')
 }
 
 function Write-Row([string] $Text) { Write-Host (Format-Row $Text) }
@@ -152,7 +176,7 @@ function Write-ScreenOpen([string] $VersionLabel) {
 	Write-Center 'I N S T A L L E R' 'bright'
 	Write-Row ''
 	Write-Center $VersionLabel 'rose'
-	$platform = ("windows · {0}" -f $ArchName).ToUpper()
+	$platform = ("windows $($script:Dot) {0}" -f $ArchName).ToUpper()
 	Write-Center $platform 'rose'
 	Write-Row ''
 	Write-Separator ([string][char]0x251C) ([string][char]0x2524)
@@ -166,17 +190,17 @@ function Write-ScreenClose {
 
 function Write-Step([string] $Text) {
 	if ($script:Visual) {
-		Write-Host (Format-Row ("  " + (Paint '▶' 'bright') + " $Text")) -NoNewline
+		Write-Host (Format-Row ("  " + (Paint $script:Bullet 'bright') + " $Text")) -NoNewline
 	} else {
 		Write-Host "  > $Text"
 	}
 }
 
-function Write-OK([string] $Text) { Clear-Line; Write-Row ("  " + (Paint '✓' 'bright') + " $Text") }
-function Write-Note([string] $Text) { Clear-Line; Write-Row ("  " + (Paint '·' 'slate') + " " + (Paint $Text 'slate')) }
+function Write-OK([string] $Text) { Clear-Line; Write-Row ("  " + (Paint $script:Check 'bright') + " $Text") }
+function Write-Note([string] $Text) { Clear-Line; Write-Row ("  " + (Paint $script:Dot 'slate') + " " + (Paint $Text 'slate')) }
 function Write-Oops([string] $Text) { Clear-Line; Write-Row ("  " + (Paint '!' 'bright') + " $Text") }
 function Write-Rule { Write-Separator ([string][char]0x251C) ([string][char]0x2524) }
-function Write-Lead([string] $Text) { Write-Row ("  " + (Paint '▶' 'bright') + " $Text") }
+function Write-Lead([string] $Text) { Write-Row ("  " + (Paint $script:Bullet 'bright') + " $Text") }
 
 function Write-Section([string] $Text) {
 	if ($script:FirstSection) { $script:FirstSection = $false } else { Write-Rule }
@@ -186,8 +210,8 @@ function Write-Section([string] $Text) {
 }
 
 function Get-Chip([string] $Text) {
-	if (-not $script:Color) { return " ▶ $Text " }
-	return "$($script:Esc)[48;2;155;188;15m$($script:Esc)[38;2;15;56;15m ▶ $Text $($script:Esc)[0m"
+	if (-not $script:Color) { return " $($script:Bullet) $Text " }
+	return "$($script:Esc)[48;2;155;188;15m$($script:Esc)[38;2;15;56;15m $($script:Bullet) $Text $($script:Esc)[0m"
 }
 
 function Fail([string] $Message, [string[]] $Detail) {
@@ -480,12 +504,12 @@ function Clear-Ports {
 		if ($port -le 0) { continue }
 		$holders = Get-PortHolders $port
 		if ($holders.Count -eq 0) {
-			Write-Row ("  " + (Paint '·' 'slate') + (" $port available"))
+			Write-Row ("  " + (Paint $script:Dot 'slate') + (" $port available"))
 			continue
 		}
 		foreach ($holder in $holders) {
 			if ($holder.Name -match '^(?i)relo(-desktop)?$') {
-				Write-Row ("  " + (Paint '✓' 'bright') + (" $port stopping $($holder.Name) (pid $($holder.Pid))"))
+				Write-Row ("  " + (Paint $script:Check 'bright') + (" $port stopping $($holder.Name) (pid $($holder.Pid))"))
 				Stop-Holder $holder
 			} else {
 				Write-Row ("  " + (Paint '!' 'bright') + (" $port held by $($holder.Name) (pid $($holder.Pid))"))
@@ -602,10 +626,10 @@ function Read-Setup([string] $Prompt) {
 	if ($script:Framed) {
 		# Leave the row open while reading: the terminal's caret then sits
 		# right after the question, inside the frame.
-		Write-Host ((Paint '│' 'bright') + "  " + (Paint '▶' 'bright') + " $Prompt ") -NoNewline
+		Write-Host ((Paint $script:Side 'bright') + "  " + (Paint $script:Bullet 'bright') + " $Prompt ") -NoNewline
 		$value = Read-Host
 		Write-Host ("`r" + $script:Esc + "[1A" + $script:Esc + "[2K") -NoNewline
-		Write-Row ("  " + (Paint '▶' 'bright') + " $Prompt " + $value)
+		Write-Row ("  " + (Paint $script:Bullet 'bright') + " $Prompt " + $value)
 	} else {
 		$value = Read-Host (Paint "  > $Prompt" 'red')
 	}
@@ -639,7 +663,7 @@ function Settle-Choice([int] $Height, [string] $Text) {
 }
 
 function Write-Choice([string] $Prompt, [string[]] $Options, [int] $Pick) {
-	Write-Row ("  " + (Paint '▶' 'bright') + " $Prompt")
+	Write-Row ("  " + (Paint $script:Bullet 'bright') + " $Prompt")
 	$line = '  '
 	for ($i = 0; $i -lt $Options.Count; $i++) {
 		if ($i -eq $Pick) {
@@ -649,7 +673,7 @@ function Write-Choice([string] $Prompt, [string[]] $Options, [int] $Pick) {
 		}
 	}
 	Write-Row $line
-	Write-Row ('  ' + (Paint '←/→ to move · Enter to pick · q to cancel' 'dim'))
+	Write-Row ('  ' + (Paint ($script:Left + '/' + $script:Right + ' to move ' + $script:Dot + ' Enter to pick ' + $script:Dot + ' q to cancel') 'dim'))
 }
 
 # Select-InstallOption asks a question and returns the 0-based index, or -1
@@ -683,15 +707,15 @@ function Select-InstallOption([string] $Prompt, [string[]] $Options, [int] $Defa
 				'K' { if ($pick -gt 0) { $pick-- } }
 				'J' { if ($pick -lt $Options.Count - 1) { $pick++ } }
 				'Enter' {
-					Settle-Choice $height ("  " + (Paint '▶' 'bright') + " $Prompt " + (Paint $Options[$pick] 'bold'))
+					Settle-Choice $height ("  " + (Paint $script:Bullet 'bright') + " $Prompt " + (Paint $Options[$pick] 'bold'))
 					return $pick
 				}
 				'Spacebar' {
-					Settle-Choice $height ("  " + (Paint '▶' 'bright') + " $Prompt " + (Paint $Options[$pick] 'bold'))
+					Settle-Choice $height ("  " + (Paint $script:Bullet 'bright') + " $Prompt " + (Paint $Options[$pick] 'bold'))
 					return $pick
 				}
-				'Escape' { Settle-Choice $height ('  ' + (Paint '▶ ' + $Prompt + ' (canceled)' 'dim')); return -1 }
-				'Q' { Settle-Choice $height ('  ' + (Paint '▶ ' + $Prompt + ' (canceled)' 'dim')); return -1 }
+				'Escape' { Settle-Choice $height ('  ' + (Paint ($script:Bullet + ' ' + $Prompt + ' (canceled)') 'dim')); return -1 }
+				'Q' { Settle-Choice $height ('  ' + (Paint ($script:Bullet + ' ' + $Prompt + ' (canceled)') 'dim')); return -1 }
 				default {
 					$digit = [string]$key.KeyChar
 					if ($digit -match '^[1-9]$' -and [int]$digit -le $Options.Count) { $pick = [int]$digit - 1 }
@@ -724,7 +748,7 @@ function Invoke-Options {
 		if ($release -eq 1) { $script:Version = '' }
 	} else {
 		$default = if ($Beta) { 1 } else { 0 }
-		$release = Select-InstallOption 'Which release?' @('Latest', 'Beta', 'Version…') $default
+		$release = Select-InstallOption 'Which release?' @('Latest', 'Beta', ('Version' + $script:Ell)) $default
 		if ($release -lt 0) { Write-Note 'Setup canceled. Nothing was changed.'; exit 0 }
 		switch ($release) {
 			0 { $script:Beta = $false; $script:Version = '' }
@@ -738,7 +762,7 @@ function Invoke-Options {
 		}
 	}
 
-	$folder = Select-InstallOption 'Where should the relo binary go?' @("$Dir (default)", 'Custom folder…') 0
+	$folder = Select-InstallOption 'Where should the relo binary go?' @("$Dir (default)", ('Custom folder' + $script:Ell)) 0
 	if ($folder -lt 0) { Write-Note 'Setup canceled. Nothing was changed.'; exit 0 }
 	if ($folder -eq 1) {
 		Write-Note "Enter a folder path. Enter keeps $Dir."
