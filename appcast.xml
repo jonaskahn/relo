@@ -6,6 +6,14 @@
     <description>Relo release feed</description>
     <language>en</language>
     <item>
+      <title>Version 0.1.5</title>
+      <pubDate>Tue, 20 Oct 2026 14:27:29 +0000</pubDate>
+      <sparkle:version>0.1.5</sparkle:version>
+      <sparkle:shortVersionString>0.1.5</sparkle:shortVersionString>
+      <sparkle:minimumSystemVersion>12.0</sparkle:minimumSystemVersion>
+      <enclosure url="https://github.com/jonaskahn/relo/releases/download/v0.1.5/Relo-0.1.5-universal.zip" length="29553437" type="application/octet-stream" sparkle:edSignature="oy3+PPLiXAfhs63GZnAh/RsqySK8rl7VtpCbuVFjGAc1YGW6fxheHUZNFH76nuIBTO+oR3CNm8lq8L+LSellCQ==" sparkle:shortVersionString="0.1.5" />
+    </item>
+    <item>
       <title>Version 0.1.4</title>
       <pubDate>Tue, 20 Oct 2026 10:00:50 +0000</pubDate>
       <sparkle:version>0.1.4</sparkle:version>
