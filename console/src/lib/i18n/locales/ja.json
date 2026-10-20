@@ -1826,6 +1826,19 @@
       "failoverHint": "How long a refused account or route member stays out of rotation after a rate limit or server fault, and how the wait grows with each further failure. A success resets it. None starts with no wait: the first refusal is immediately reusable.",
       "retryHint": "各再試行前のランダムな待機時間（秒）。プロバイダーの Retry-After が長い場合はそちらが優先されます。",
       "jumpLabel": "セクションへ移動"
+    },
+    "updateDialog": {
+      "title": "Relo を更新",
+      "body": "Relo {current} が実行中です。バージョン {latest} を利用できます。",
+      "detected": "{method} でインストール済みです。",
+      "releasePage": "リリースページを開く",
+      "sparkle": "Relo.app は自分でアップデートをインストールします。",
+      "installer": "このリリースのインストーラーをダウンロードしてください。",
+      "unknown": "Relo のインストール方法を検出できませんでした。インストール時に使った方法を使用してください。",
+      "methodShell": "シェルスクリプト",
+      "methodPowerShell": "PowerShell",
+      "methodNpm": "npm",
+      "methodBrew": "Homebrew"
     }
   }
 }

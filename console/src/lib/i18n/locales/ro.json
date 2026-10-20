@@ -1826,6 +1826,19 @@
       "failoverHint": "How long a refused account or route member stays out of rotation after a rate limit or server fault, and how the wait grows with each further failure. A success resets it. None starts with no wait: the first refusal is immediately reusable.",
       "retryHint": "Pauză aleatorie înainte de fiecare încercare, în secunde. Un Retry-After mai lung al furnizorului câștigă.",
       "jumpLabel": "Mergi la secțiune"
+    },
+    "updateDialog": {
+      "title": "Actualizează Relo",
+      "body": "Relo {current} rulează. Versiunea {latest} este pregătită.",
+      "detected": "Instalat cu {method}.",
+      "releasePage": "Deschide pagina versiunii",
+      "sparkle": "Relo.app își instalează singur actualizările.",
+      "installer": "Descarcă programul de instalare pentru această versiune.",
+      "unknown": "Nu am putut detecta cum a fost instalat Relo. Folosește metoda cu care l-ai instalat.",
+      "methodShell": "Script shell",
+      "methodPowerShell": "PowerShell",
+      "methodNpm": "npm",
+      "methodBrew": "Homebrew"
     }
   }
 }

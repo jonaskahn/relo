@@ -166,8 +166,10 @@ func (s *Supervisor) watchStart(runCtx context.Context, done chan error, ready c
 		<-done
 		s.finish(runCtx, nil)
 	case err := <-done:
-		started <- startResult{err: err}
+		// Record the failure before reporting it, so a caller that reads
+		// State right after Start sees the run it was just told about.
 		s.finish(runCtx, err)
+		started <- startResult{err: err}
 	case <-timer.C:
 		started <- startResult{err: ErrListenerNotReady}
 		cancel()

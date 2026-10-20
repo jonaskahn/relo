@@ -3,6 +3,7 @@ package updates_test
 import (
 	"context"
 	"errors"
+	"fmt"
 	"runtime"
 	"testing"
 	"time"
@@ -28,6 +29,24 @@ const sampleAppcast = `<?xml version="1.0" encoding="utf-8"?>
     </item>
   </channel>
 </rss>
+`
+
+const sampleReleases = `<?xml version="1.0" encoding="UTF-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en-US">
+  <title>Release notes from relo</title>
+  <entry>
+    <title>v0.1.3 - Hot Noodle 🍜</title>
+    <link rel="alternate" type="text/html" href="https://github.com/jonaskahn/relo/releases/tag/v0.1.3"/>
+  </entry>
+  <entry>
+    <title>v0.1.4-beta.28.1a2b3c4d</title>
+    <link rel="alternate" type="text/html" href="https://github.com/jonaskahn/relo/releases/tag/v0.1.4-beta.28.1a2b3c4d"/>
+  </entry>
+  <entry>
+    <title>v0.1.4-beta.27.8d9c8af7</title>
+    <link rel="alternate" type="text/html" href="https://github.com/jonaskahn/relo/releases/tag/v0.1.4-beta.27.8d9c8af7"/>
+  </entry>
+</feed>
 `
 
 func TestInAppBundle(t *testing.T) {
@@ -267,6 +286,171 @@ func TestChecker(t *testing.T) {
 		status := checker.Status(context.Background())
 		if status.URL != "https://relo.ifelse.one/#download" {
 			t.Fatalf("url = %q, want the configured download page", status.URL)
+		}
+	})
+}
+
+func TestParseReleases(t *testing.T) {
+	t.Run("the highest prerelease wins", func(t *testing.T) {
+		version, url, err := updates.ParseReleases([]byte(sampleReleases))
+		if err != nil {
+			t.Fatalf("ParseReleases() error = %v", err)
+		}
+		if version != "0.1.4-beta.28.1a2b3c4d" {
+			t.Fatalf("version = %q, want the newer beta", version)
+		}
+		if url != "https://github.com/jonaskahn/relo/releases/tag/v0.1.4-beta.28.1a2b3c4d" {
+			t.Fatalf("url = %q, want the beta tag page", url)
+		}
+	})
+
+	t.Run("an empty feed is reported", func(t *testing.T) {
+		body := []byte(`<feed xmlns="http://www.w3.org/2005/Atom"></feed>`)
+		if _, _, err := updates.ParseReleases(body); !errors.Is(err, updates.ErrFeedEmpty) {
+			t.Fatalf("ParseReleases() error = %v, want ErrFeedEmpty", err)
+		}
+	})
+
+	t.Run("a feed with no prerelease is reported", func(t *testing.T) {
+		body := []byte(`<feed xmlns="http://www.w3.org/2005/Atom">
+		  <entry><link href="https://github.com/jonaskahn/relo/releases/tag/v0.1.3"/></entry>
+		</feed>`)
+		if _, _, err := updates.ParseReleases(body); !errors.Is(err, updates.ErrFeedPrerelease) {
+			t.Fatalf("ParseReleases() error = %v, want ErrFeedPrerelease", err)
+		}
+	})
+
+	t.Run("a malformed feed is reported", func(t *testing.T) {
+		if _, _, err := updates.ParseReleases([]byte("<not>xml")); err == nil {
+			t.Fatal("ParseReleases() error = nil, want a parse failure")
+		}
+	})
+
+	t.Run("an entry without a tag link is skipped", func(t *testing.T) {
+		body := []byte(`<feed xmlns="http://www.w3.org/2005/Atom">
+		  <entry><link href="https://github.com/jonaskahn/relo/releases"/></entry>
+		  <entry><link href="https://github.com/jonaskahn/relo/releases/tag/v0.1.4-beta.2.aaaaaaaa"/></entry>
+		</feed>`)
+		version, _, err := updates.ParseReleases(body)
+		if err != nil {
+			t.Fatalf("ParseReleases() error = %v", err)
+		}
+		if version != "0.1.4-beta.2.aaaaaaaa" {
+			t.Fatalf("version = %q, want the tag entry", version)
+		}
+	})
+}
+
+func TestCheckerBeta(t *testing.T) {
+	const betaFeed = "https://example.com/releases.atom"
+
+	t.Run("a beta build reads the releases feed", func(t *testing.T) {
+		checker := &updates.Checker{
+			URL:         "https://example.com/appcast.xml",
+			ReleasesURL: betaFeed,
+			Current:     "0.1.4-beta.27.8d9c8af7",
+			Installer:   updates.InstallerShell,
+			Fetch: func(_ context.Context, url string) ([]byte, error) {
+				if url != betaFeed {
+					return nil, fmt.Errorf("unexpected feed %s", url)
+				}
+				return []byte(sampleReleases), nil
+			},
+		}
+		status := checker.Status(context.Background())
+		if !status.Available || status.Latest != "0.1.4-beta.28.1a2b3c4d" {
+			t.Fatalf("status = %+v, want an update to the next beta", status)
+		}
+		if status.URL != "https://github.com/jonaskahn/relo/releases/tag/v0.1.4-beta.28.1a2b3c4d" {
+			t.Fatalf("url = %q, want the beta tag page", status.URL)
+		}
+		if status.Installer != updates.InstallerShell {
+			t.Fatalf("installer = %q, want %q", status.Installer, updates.InstallerShell)
+		}
+	})
+
+	t.Run("a v-prefixed beta is still a prerelease", func(t *testing.T) {
+		checker := &updates.Checker{
+			URL:         "https://example.com/appcast.xml",
+			ReleasesURL: betaFeed,
+			Current:     "v0.1.4-beta.27.8d9c8af7",
+			Fetch: func(_ context.Context, url string) ([]byte, error) {
+				if url != betaFeed {
+					return nil, fmt.Errorf("unexpected feed %s", url)
+				}
+				return []byte(sampleReleases), nil
+			},
+		}
+		if status := checker.Status(context.Background()); !status.Available {
+			t.Fatalf("status = %+v, want an update", status)
+		}
+	})
+
+	t.Run("the current beta is not an update", func(t *testing.T) {
+		checker := &updates.Checker{
+			URL:         "https://example.com/appcast.xml",
+			ReleasesURL: betaFeed,
+			Current:     "0.1.4-beta.28.1a2b3c4d",
+			Fetch: func(context.Context, string) ([]byte, error) {
+				return []byte(sampleReleases), nil
+			},
+		}
+		if status := checker.Status(context.Background()); status.Available {
+			t.Fatalf("status = %+v, want no update", status)
+		}
+	})
+
+	t.Run("a stable build never reads the releases feed", func(t *testing.T) {
+		checker := &updates.Checker{
+			URL:         "https://example.com/appcast.xml",
+			ReleasesURL: betaFeed,
+			Current:     "0.1.0",
+			Fetch: func(_ context.Context, url string) ([]byte, error) {
+				if url == betaFeed {
+					return nil, errors.New("the beta feed must not be read")
+				}
+				return []byte(sampleAppcast), nil
+			},
+		}
+		status := checker.Status(context.Background())
+		if !status.Available || status.Latest != "0.2.0" {
+			t.Fatalf("status = %+v, want the appcast update", status)
+		}
+	})
+
+	t.Run("an empty URL turns the beta check off", func(t *testing.T) {
+		checker := &updates.Checker{
+			ReleasesURL: betaFeed,
+			Current:     "0.1.4-beta.27.8d9c8af7",
+			Fetch: func(context.Context, string) ([]byte, error) {
+				return nil, errors.New("a disabled check must not read a feed")
+			},
+		}
+		status := checker.Status(context.Background())
+		if status.Available {
+			t.Fatalf("status = %+v, want no update", status)
+		}
+		if status.Installer != updates.InstallerUnknown {
+			t.Fatalf("installer = %q, want %q", status.Installer, updates.InstallerUnknown)
+		}
+	})
+
+	t.Run("a failed beta fetch reports no update and keeps the installer", func(t *testing.T) {
+		checker := &updates.Checker{
+			URL:         "https://example.com/appcast.xml",
+			ReleasesURL: betaFeed,
+			Current:     "0.1.4-beta.27.8d9c8af7",
+			Installer:   updates.InstallerBrew,
+			Fetch: func(context.Context, string) ([]byte, error) {
+				return nil, errors.New("offline")
+			},
+		}
+		status := checker.Status(context.Background())
+		if status.Available {
+			t.Fatalf("status = %+v, want no update after a failed fetch", status)
+		}
+		if status.Installer != updates.InstallerBrew {
+			t.Fatalf("installer = %q, want %q", status.Installer, updates.InstallerBrew)
 		}
 	})
 }

@@ -1826,6 +1826,19 @@
       "failoverHint": "How long a refused account or route member stays out of rotation after a rate limit or server fault, and how the wait grows with each further failure. A success resets it. None starts with no wait: the first refusal is immediately reusable.",
       "retryHint": "각 재시도 전의 무작위 대기 시간(초)입니다. 공급자의 Retry-After가 더 길면 우선합니다.",
       "jumpLabel": "섹션으로 이동"
+    },
+    "updateDialog": {
+      "title": "Relo 업데이트",
+      "body": "Relo {current}이(가) 실행 중입니다. 버전 {latest}을(를) 사용할 수 있습니다.",
+      "detected": "{method}(으)로 설치되었습니다.",
+      "releasePage": "릴리스 페이지 열기",
+      "sparkle": "Relo.app은 자체적으로 업데이트를 설치합니다.",
+      "installer": "이 릴리스의 설치 프로그램을 다운로드하세요.",
+      "unknown": "Relo가 어떻게 설치되었는지 감지할 수 없습니다. 설치할 때 사용한 방법을 사용하세요.",
+      "methodShell": "셸 스크립트",
+      "methodPowerShell": "PowerShell",
+      "methodNpm": "npm",
+      "methodBrew": "Homebrew"
     }
   }
 }

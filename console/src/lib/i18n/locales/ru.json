@@ -1826,6 +1826,19 @@
       "failoverHint": "How long a refused account or route member stays out of rotation after a rate limit or server fault, and how the wait grows with each further failure. A success resets it. None starts with no wait: the first refusal is immediately reusable.",
       "retryHint": "Случайная пауза перед каждой попыткой, в секундах. Более длинный Retry-After провайдера имеет приоритет.",
       "jumpLabel": "Перейти к разделу"
+    },
+    "updateDialog": {
+      "title": "Обновить Relo",
+      "body": "Relo {current} работает. Версия {latest} готова.",
+      "detected": "Установлено через {method}.",
+      "releasePage": "Открыть страницу релиза",
+      "sparkle": "Relo.app сам устанавливает обновления.",
+      "installer": "Скачайте установщик этого выпуска.",
+      "unknown": "Не удалось определить, как установлен Relo. Используйте способ, которым вы его устанавливали.",
+      "methodShell": "Скрипт оболочки",
+      "methodPowerShell": "PowerShell",
+      "methodNpm": "npm",
+      "methodBrew": "Homebrew"
     }
   }
 }

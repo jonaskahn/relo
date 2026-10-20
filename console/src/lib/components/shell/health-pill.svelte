@@ -7,6 +7,7 @@
 	import { subscribe } from '$lib/sse';
 	import { updateAvailable, type UpdateNotice } from '$lib/updates';
 	import { cn } from '$lib/utils';
+	import UpdateDialog from '$lib/components/shell/update-dialog.svelte';
 
 	interface Props {
 		class?: string;
@@ -17,6 +18,7 @@
 	let up = $state<boolean | null>(null);
 	let version = $state('');
 	let notice = $state<UpdateNotice | null>(null);
+	let updateOpen = $state(false);
 
 	// A poll still waiting for its answers is the same question the timer
 	// would ask again, so the tick that finds one running skips it. That also
@@ -89,20 +91,23 @@
 			<span class="mono-data text-muted-foreground">{version}</span>
 		{/if}
 		{#if updateAvailable(notice)}
-			<a
-				href={notice?.url}
-				target="_blank"
-				rel="external noreferrer"
+			<button
+				type="button"
+				data-plain
 				class="text-accent-deep underline-offset-2 hover:underline"
+				aria-haspopup="dialog"
+				onclick={() => (updateOpen = true)}
 			>
 				{$t('ui.topbar.updateAvailable')}
 				{#if notice?.latest}
 					<span class="mono-data opacity-80">{notice.latest}</span>
 				{/if}
-			</a>
+			</button>
 		{/if}
 	</span>
 {/if}
+
+<UpdateDialog bind:open={updateOpen} {notice} />
 
 <style>
 	.daemon-dot {

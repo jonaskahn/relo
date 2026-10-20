@@ -1,3 +1,7 @@
+/** One channel that installed the running build. */
+export type UpdateInstaller =
+	'sparkle' | 'brew' | 'npm' | 'shell' | 'powershell' | 'installer' | 'unknown';
+
 /** A newer release the daemon reports. */
 export type UpdateNotice = {
 	current: string;
@@ -5,6 +9,7 @@ export type UpdateNotice = {
 	available: boolean;
 	url: string;
 	method?: 'sparkle' | 'download';
+	installer?: UpdateInstaller;
 };
 
 /** Reports whether a notice is one to act on. */

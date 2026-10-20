@@ -35,18 +35,23 @@ https://github.com/user-attachments/assets/cbda11c8-b60c-413b-8a08-03144dd06e7a
 - Latest, Stable
 
 ```bash
-npm i -g @jonaskahn/relo
+npm i -g @jonaskahn/relo --foreground-scripts
 ```
 
 - Beta, Risk
 ```bash
-npm i -g @jonaskahn/relo@beta
+npm i -g @jonaskahn/relo@beta --foreground-scripts
 ```
 
-Installs the `relo` binary, verified against the release checksums. State
-lives in `~/.relo` (`$RELO_HOME`), shared with every other installer. Never
-installed twice: if another Relo is on your PATH, this one refuses and tells
-you where it found it.
+Installs the `relo` binary, verified against the release checksums. The
+install downloads the ~13 MB daemon binary and prints each step, with a
+download bar showing the rate and the time left. `--foreground-scripts` keeps
+that output under the install: npm otherwise runs it in the background and
+shows nothing until the command ends, which makes a slow download look stuck.
+
+State lives in `~/.relo` (`$RELO_HOME`), shared with every other installer.
+Never installed twice: if another Relo is on your PATH, this one refuses and
+tells you where it found it.
 
 ## Start
 
@@ -64,7 +69,9 @@ is free. Your data is never touched. If another program holds the port, the
 install fails instead of killing it:
 
 ```
-relo: install failed -- something else is listening on port 10101
+✗ INSTALL FAILED
+something else is listening on port 10101
+  free the port, or point relo at another one, and install again
 ```
 
 ## Uninstall

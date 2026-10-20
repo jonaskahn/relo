@@ -6,7 +6,10 @@ import { join } from 'node:path';
 import { after, test } from 'node:test';
 
 import {
+	decodeKeys,
 	isReloImage,
+	isReloProcess,
+	move,
 	parseLsof,
 	parseNetstat,
 	parseSs,
@@ -65,6 +68,23 @@ test('the relo image matches by basename, with an exe on windows', () => {
 	assert.equal(isReloImage('relocation'), false);
 });
 
+test('the relo image also matches the platform-named release binaries', () => {
+	assert.equal(isReloImage('/opt/relo/bin/relo-darwin-arm64'), true);
+	assert.equal(isReloImage('/Volumes/WS/relo/dist/.pkgcache/relo-darwin-arm64-0.1.1'), true);
+	assert.equal(isReloImage('relo-linux-amd64'), true);
+	assert.equal(isReloImage('relo-windows-amd64.exe'), true);
+	assert.equal(isReloImage('relo-windows-amd64-0.1.1.exe'), true);
+	assert.equal(isReloImage('relo-helper'), false);
+	assert.equal(isReloImage('relo-darwin-arm64-notes.txt'), false);
+});
+
+test('a truncated command name falls back to the command line', () => {
+	// Linux truncates comm to fifteen characters.
+	assert.equal(isReloProcess({ comm: 'relo-linux-arm6', args: '/opt/relo/relo-linux-arm64 daemon run' }), true);
+	assert.equal(isReloProcess({ comm: 'python3', args: '/usr/bin/python3 /opt/relo/relo-linux-amd64' }), false);
+	assert.equal(isReloProcess({ comm: 'relo-linux-amd6', args: '' }), false);
+});
+
 test('a process serves its home by runtime pid or command line', () => {
 	const home = '/Users/jonas/.relo';
 	const args = `/Applications/Relo.app/Contents/MacOS/relo daemon run --home ${home} --port 10101`;
@@ -100,4 +120,55 @@ test('a quiesce fails when another program still listens on a configured port', 
 	await new Promise((resolve) => holder.listen(49111, '127.0.0.1', resolve));
 	after(() => holder.close());
 	assert.throws(() => quiesce(home), /something else is listening on port 49111/);
+});
+
+test('arrow keys decode in both forms a terminal sends them', () => {
+	assert.deepEqual(decodeKeys('', '\x1b[C\x1b[D'), { keys: ['right', 'left'], pending: '' });
+	assert.deepEqual(decodeKeys('', '\x1bOC\x1bOD'), { keys: ['right', 'left'], pending: '' });
+});
+
+test('a split escape sequence is carried to the next chunk', () => {
+	assert.deepEqual(decodeKeys('', '\x1b'), { keys: [], pending: '\x1b' });
+	assert.deepEqual(decodeKeys('\x1b', '['), { keys: [], pending: '\x1b[' });
+	assert.deepEqual(decodeKeys('\x1b[', 'C'), { keys: ['right'], pending: '' });
+	assert.deepEqual(decodeKeys('\x1b', 'OD'), { keys: ['left'], pending: '' });
+	assert.deepEqual(decodeKeys('', '\x1b[C\x1b['), { keys: ['right'], pending: '\x1b[' });
+});
+
+test('enter and interrupt are the keys that answer', () => {
+	assert.deepEqual(decodeKeys('', '\r').keys, ['enter']);
+	assert.deepEqual(decodeKeys('', '\n').keys, ['enter']);
+	assert.deepEqual(decodeKeys('', '\x03').keys, ['interrupt']);
+});
+
+test('unrelated keys and modified arrows are ignored', () => {
+	for (const chunk of [
+		'\x1b[A',
+		'\x1b[B',
+		'\x1b[H',
+		'\x1b[F',
+		'\x1b[3~',
+		'\x1b[1;2D',
+		'\x1b[1;5C',
+		'\x1bx',
+		'x',
+		' '
+	]) {
+		assert.deepEqual(decodeKeys('', chunk), { keys: [], pending: '' }, chunk);
+	}
+});
+
+test('an escape prefix never swallows the control after it', () => {
+	assert.deepEqual(decodeKeys('\x1b', '\x1b[C'), { keys: ['right'], pending: '' });
+	assert.deepEqual(decodeKeys('\x1b', '\r'), { keys: ['enter'], pending: '' });
+	assert.deepEqual(decodeKeys('', '\x1b[\r'), { keys: ['enter'], pending: '' });
+	assert.deepEqual(decodeKeys('', '\x1bO\r'), { keys: ['enter'], pending: '' });
+});
+
+test('a menu selection wraps at both ends', () => {
+	assert.equal(move(0, 2, -1), 1);
+	assert.equal(move(1, 2, 1), 0);
+	assert.equal(move(0, 3, -1), 2);
+	assert.equal(move(2, 3, 1), 0);
+	assert.equal(move(0, 0, 1), 0);
 });

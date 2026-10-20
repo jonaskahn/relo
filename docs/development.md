@@ -24,8 +24,12 @@ then `go run ./cmd/relo daemon run` in `daemon/` and `npm run dev` in
 `console/`. `make ci`, the `scripts/*.sh` builds, and `make package-windows`
 still need Git Bash or WSL.
 
-`Relo.app` updates through Sparkle. Every other install opens
-`system.updates.download` (GitHub latest by default). Point GitHub Pages at the
+`Relo.app` updates through Sparkle. Every other install opens the update
+dialog with the command for the channel that installed it (shell, PowerShell,
+npm, or Homebrew), or with every command when the channel cannot be detected;
+the dialog always offers the GitHub release page. A stable build follows the
+appcast, and a prerelease build follows the public releases feed so it sees
+the next beta. Point GitHub Pages at the
 `gh-pages` branch once in the repository
 settings.
 

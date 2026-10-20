@@ -1826,6 +1826,19 @@
       "failoverHint": "How long a refused account or route member stays out of rotation after a rate limit or server fault, and how the wait grows with each further failure. A success resets it. None starts with no wait: the first refusal is immediately reusable.",
       "retryHint": "每次重試前的隨機等待秒數。供應商較長的 Retry-After 優先。",
       "jumpLabel": "跳至區段"
+    },
+    "updateDialog": {
+      "title": "更新 Relo",
+      "body": "Relo {current} 正在執行。版本 {latest} 已就緒。",
+      "detected": "透過 {method} 安裝。",
+      "releasePage": "開啟發佈頁面",
+      "sparkle": "Relo.app 會自行安裝更新。",
+      "installer": "下載此版本的安裝程式。",
+      "unknown": "無法辨識 Relo 的安裝方式。請使用你安裝時所用的方式。",
+      "methodShell": "Shell 指令碼",
+      "methodPowerShell": "PowerShell",
+      "methodNpm": "npm",
+      "methodBrew": "Homebrew"
     }
   }
 }

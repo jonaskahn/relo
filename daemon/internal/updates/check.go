@@ -1,5 +1,6 @@
-// Package updates reads a Sparkle appcast and reports whether a newer
-// Relo build is published.
+// Package updates reports whether a newer Relo build is published: a stable
+// build follows the Sparkle appcast, and a prerelease build follows the
+// releases feed so it can see the next beta.
 package updates
 
 import (
@@ -25,17 +26,22 @@ const (
 	MethodSparkle = "sparkle"
 	// DefaultTTL is how long one check is reused before Relo reads the
 	// feed again.
-	DefaultTTL   = 6 * time.Hour
-	maxFeedBytes = 1 << 20
-	fetchTimeout = 10 * time.Second
+	DefaultTTL = 6 * time.Hour
+	// DefaultReleasesURL is the public releases feed a prerelease build
+	// follows, because the appcast carries only stable releases.
+	DefaultReleasesURL = "https://github.com/jonaskahn/relo/releases.atom"
+	maxFeedBytes       = 1 << 20
+	fetchTimeout       = 10 * time.Second
 )
 
 // Feed errors name why an update check has nothing to report: a feed that
-// answered with failure, one with no releases, and one with no version.
+// answered with failure, one with no releases, one with no version, and one
+// with no prerelease for a beta build to move to.
 var (
-	ErrFeedStatus  = errors.New("the update feed answered")
-	ErrFeedEmpty   = errors.New("the update feed has no items")
-	ErrFeedVersion = errors.New("the update feed has no version")
+	ErrFeedStatus     = errors.New("the update feed answered")
+	ErrFeedEmpty      = errors.New("the update feed has no items")
+	ErrFeedVersion    = errors.New("the update feed has no version")
+	ErrFeedPrerelease = errors.New("the update feed has no prerelease")
 )
 
 // Status is what the console and the tray show after a check.
@@ -45,6 +51,7 @@ type Status struct {
 	Available bool   `json:"available"`
 	URL       string `json:"url"`
 	Method    string `json:"method"`
+	Installer string `json:"installer"`
 }
 
 // Fetch reads one feed URL.
@@ -52,14 +59,16 @@ type Fetch func(ctx context.Context, url string) ([]byte, error)
 
 // Checker caches one feed read.
 type Checker struct {
-	URL      string
-	Download string
-	Current  string
-	Method   string
-	InBundle func() bool
-	Fetch    Fetch
-	Now      func() time.Time
-	TTL      time.Duration
+	URL         string
+	Download    string
+	Current     string
+	Method      string
+	ReleasesURL string
+	Installer   string
+	InBundle    func() bool
+	Fetch       Fetch
+	Now         func() time.Time
+	TTL         time.Duration
 
 	mu        sync.Mutex
 	cached    Status
@@ -92,11 +101,7 @@ func HTTPFetch(client *http.Client) Fetch {
 // empty or stale. A missing URL or a failed read reports no update.
 func (c *Checker) Status(ctx context.Context) Status {
 	if c == nil || strings.TrimSpace(c.URL) == "" {
-		current := ""
-		if c != nil {
-			current = c.Current
-		}
-		return Status{Current: current, Method: methodOf(c), URL: downloadOf(c)}
+		return statusBase(c)
 	}
 	now := time.Now()
 	if c.Now != nil {
@@ -112,13 +117,51 @@ func (c *Checker) Status(ctx context.Context) Status {
 
 	// The feed is read without the lock, so one slow fetch never stacks
 	// every caller of the console behind it.
-	status := Status{Current: c.Current, Method: methodOf(c), URL: downloadOf(c)}
-	body, err := c.fetch()(ctx, c.URL)
+	status := statusBase(c)
+	body, err := c.fetch()(ctx, c.feedURL())
 	if err == nil {
-		c.applyAppcast(&status, body)
+		c.applyFeed(&status, body)
 	}
 	c.storeStatus(status, now)
 	return status
+}
+
+func statusBase(c *Checker) Status {
+	status := Status{Method: methodOf(c), Installer: installerOf(c), URL: downloadOf(c)}
+	if c != nil {
+		status.Current = c.Current
+	}
+	return status
+}
+
+func (c *Checker) feedURL() string {
+	if !isPrerelease(c.Current) {
+		return c.URL
+	}
+	if strings.TrimSpace(c.ReleasesURL) != "" {
+		return c.ReleasesURL
+	}
+	return DefaultReleasesURL
+}
+
+func (c *Checker) applyFeed(status *Status, body []byte) {
+	if isPrerelease(c.Current) {
+		c.applyReleases(status, body)
+		return
+	}
+	c.applyAppcast(status, body)
+}
+
+func (c *Checker) applyReleases(status *Status, body []byte) {
+	latest, url, err := ParseReleases(body)
+	if err != nil {
+		return
+	}
+	status.Latest = latest
+	status.Available = Newer(latest, c.Current)
+	if status.Available {
+		status.URL = url
+	}
 }
 
 func (c *Checker) storeStatus(status Status, now time.Time) {
@@ -175,10 +218,11 @@ func downloadOf(c *Checker) string {
 // InAppBundle reports whether this process is the Relo.app Mac binary.
 func InAppBundle() bool {
 	exe, err := os.Executable()
-	if err != nil {
-		return false
-	}
-	return strings.Contains(filepath.ToSlash(exe), ".app/Contents/MacOS/")
+	return err == nil && inAppBundle(filepath.ToSlash(exe))
+}
+
+func inAppBundle(slashPath string) bool {
+	return strings.Contains(slashPath, ".app/Contents/MacOS/")
 }
 
 type appcast struct {
@@ -223,6 +267,65 @@ func ParseAppcast(body []byte) (version, url string, err error) {
 // the same version where current carries a prerelease and latest does not.
 func Newer(latest, current string) bool {
 	return compare(parseVersion(latest), parseVersion(current)) > 0
+}
+
+// ParseReleases reads the newest prerelease tag and its release page from a
+// GitHub releases Atom feed. The tag comes from the entry link, because a
+// stable entry's title may carry a release name beside the version.
+func ParseReleases(body []byte) (version, url string, err error) {
+	var feed releasesFeed
+	if err := xml.Unmarshal(body, &feed); err != nil {
+		return "", "", fmt.Errorf("parse the releases feed: %w", err)
+	}
+	if len(feed.Entries) == 0 {
+		return "", "", ErrFeedEmpty
+	}
+	best, bestURL := "", ""
+	for _, entry := range feed.Entries {
+		tag := releaseTag(entry.Link.Href)
+		if !isPrerelease(tag) {
+			continue
+		}
+		candidate := strings.TrimPrefix(tag, "v")
+		if best == "" || compare(parseVersion(candidate), parseVersion(best)) > 0 {
+			best, bestURL = candidate, entry.Link.Href
+		}
+	}
+	if best == "" {
+		return "", "", ErrFeedPrerelease
+	}
+	return best, bestURL, nil
+}
+
+type releasesFeed struct {
+	Entries []releaseEntry `xml:"entry"`
+}
+
+type releaseEntry struct {
+	Link releaseLink `xml:"link"`
+}
+
+type releaseLink struct {
+	Href string `xml:"href,attr"`
+}
+
+func releaseTag(href string) string {
+	const marker = "/releases/tag/"
+	index := strings.LastIndex(href, marker)
+	if index < 0 {
+		return ""
+	}
+	return strings.Trim(strings.TrimSpace(href[index+len(marker):]), "/")
+}
+
+func isPrerelease(version string) bool {
+	trimmed := strings.TrimPrefix(strings.TrimSpace(version), "v")
+	// Build metadata states no order and may carry a hyphen, so it is
+	// dropped before the prerelease tail is read.
+	if index := strings.IndexByte(trimmed, '+'); index >= 0 {
+		trimmed = trimmed[:index]
+	}
+	return strings.Contains(trimmed, "-")
 }
 
 // parsedVersion is one version as the feed and the running build state it: the

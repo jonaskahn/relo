@@ -47,6 +47,7 @@
 		"lib/download.mjs",
 		"lib/install.mjs",
 		"lib/platform.mjs",
+		"lib/progress.mjs",
 		"lib/release.mjs",
 		"lib/uninstall.mjs",
 		"README.md"
