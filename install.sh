@@ -13,70 +13,172 @@ REPO="jonaskahn/relo"
 RELEASES="${RELO_RELEASE_BASE:-https://github.com/$REPO/releases}"
 DEFAULT_PORT=10101
 RECEIPT=".relo-install"
-BAR_WIDTH=20
+INNER=76
+BAR_WIDTH=16
 TERMINAL=0
 [ ! -t 1 ] || TERMINAL=1
 CONSOLE_READY=0
 
 # ---------------------------------------------------------------- output ----
+#
+# One screen, like the npm package draws: a framed card with the logo, the
+# release, and the steps inside the same border. Rows pad by character count,
+# so the frame needs a UTF-8 locale and a terminal; without either, the same
+# lines print plainly.
 
-if [ -n "${NO_COLOR:-}" ] || [ ! -t 1 ]; then
+ESC="$(printf '\033')"
+if [ -n "${NO_COLOR:-}" ] || [ "$TERMINAL" = 0 ]; then
 	COLOR=0
 else
 	COLOR=1
 fi
 
 if [ "$COLOR" = 1 ]; then
-	BOLD="$(printf '\033[1m')"
-	DIM="$(printf '\033[2m')"
 	OFF="$(printf '\033[0m')"
-	RED="$(printf '\033[38;2;200;16;46m')"
-	ROSE="$(printf '\033[38;2;240;90;110m')"
-	GREEN="$(printf '\033[38;2;80;200;140m')"
-	AMBER="$(printf '\033[38;2;230;170;60m')"
-	SLATE="$(printf '\033[38;2;140;140;155m')"
+	BRIGHT="$(printf '\033[38;2;155;188;15m')"
+	LIGHT="$(printf '\033[38;2;139;172;15m')"
+	MID="$(printf '\033[38;2;48;98;48m')"
+	DARK="$(printf '\033[38;2;15;56;15m')"
+	BOLD="$(printf '\033[1m')"
 else
-	BOLD=""; DIM=""; OFF=""; RED=""; ROSE=""; GREEN=""; AMBER=""; SLATE=""
+	OFF=""; BRIGHT=""; LIGHT=""; MID=""; DARK=""; BOLD=""
 fi
+# The older names keep painting the same screen.
+RED="$BRIGHT"; GREEN="$BRIGHT"; AMBER="$LIGHT"; SLATE="$MID"; DIM="$MID"
 
-say() { printf '%s\n' "$*"; }
-rule() { say "  ${DIM}----------------------------------------${OFF}"; }
-step() { printf '  %s>%s %s\n' "$RED" "$OFF" "$*"; }
-done_() { printf '  %s+%s %s\n' "$GREEN" "$OFF" "$*"; }
-note() { printf '  %si%s %s\n' "$SLATE" "$OFF" "$*"; }
-oops() { printf '  %s!%s %s\n' "$RED" "$OFF" "$*"; }
+UTF8=0
+_probe="█"
+if [ "$TERMINAL" = 1 ] && [ "${#_probe}" -eq 1 ]; then UTF8=1; fi
+
+DASHES=""
+_i=0
+while [ "$_i" -lt "$INNER" ]; do DASHES="${DASHES}─"; _i=$((_i + 1)); done
+
+FRAME=0
+FIRST_SECTION=1
+
+vislen() {
+	_s="$(printf '%s' "$1" | sed "s/${ESC}\\[[0-9;]*m//g")"
+	printf '%s' "${#_s}"
+}
+
+clip() {
+	_rest="$1"
+	_out=""
+	_vis=0
+	while [ -n "$_rest" ] && [ "$_vis" -lt $((INNER - 1)) ]; do
+		case "$_rest" in
+		"${ESC}"*)
+			_out="$_out${_rest%%m*}m"
+			_rest="${_rest#*m}"
+			;;
+		*)
+			_head="${_rest#?}"
+			_out="$_out${_rest%"$_head"}"
+			_rest="$_head"
+			_vis=$((_vis + 1))
+			;;
+		esac
+	done
+	printf '%s…' "$_out"
+}
+
+framed() {
+	[ "$FRAME" = 1 ] || { printf '%s' "$1"; return 0; }
+	_len="$(vislen "$1")"
+	if [ "$_len" -gt "$INNER" ]; then _text="$(clip "$1")"; else _text="$1"; fi
+	_len="$(vislen "$_text")"
+	_pad=$((INNER - _len))
+	[ "$_pad" -ge 0 ] || _pad=0
+	printf '%s%s%*s%s' "${BRIGHT}│${OFF}" "$_text" "$_pad" '' "${BRIGHT}│${OFF}"
+}
+
+row() { printf '%s\n' "$(framed "$1")"; }
+row_tty() { framed "$1" >/dev/tty; printf '\n' >/dev/tty; }
+hline() { printf '%s%s%s\n' "${BRIGHT}$1${OFF}" "${BRIGHT}${DASHES}${OFF}" "${BRIGHT}$2${OFF}"; }
+
+center_row() {
+	_len="$(vislen "$1")"
+	_left=$(((INNER - _len) / 2))
+	[ "$_left" -ge 0 ] || _left=0
+	row "$(printf '%*s%s' "$_left" '' "$1")"
+}
+
+chip() {
+	if [ "$COLOR" = 1 ]; then
+		printf '\033[48;2;155;188;15m%s ▶ %s \033[0m' "$DARK" "$1"
+	else
+		printf ' ▶ %s ' "$1"
+	fi
+}
+
+say() { row "$*"; }
+say_plain() { printf '%s\n' "$*"; }
+rule() { hline '├' '┤'; }
+clear_line() { [ "$UTF8" = 1 ] && printf '\r%s' "${ESC}[2K"; }
+
+step() {
+	if [ "$UTF8" = 1 ]; then
+		printf '%s' "$(framed "  ${BRIGHT}▶${OFF} $*")"
+	else
+		printf '  %s>%s %s\n' "$BRIGHT" "$OFF" "$*"
+	fi
+}
+
+lead() { row "  ${BRIGHT}▶${OFF} $*"; }
+done_() { clear_line; row "  ${BRIGHT}✓${OFF} $*"; }
+note() { clear_line; row "  ${MID}·${OFF} ${MID}$*${OFF}"; }
+oops() { clear_line; row "  ${BRIGHT}!${OFF} $*"; }
+
 section() {
-	say ""
-	rule
-	say "  ${RED}$1 / 04${OFF}  ${BOLD}$2${OFF}"
-	say ""
+	if [ "$FIRST_SECTION" = 1 ]; then FIRST_SECTION=0; else hline '├' '┤'; fi
+	row ""
+	row "  ${BRIGHT}$1${OFF}  ${BOLD}$2${OFF}"
+	row ""
+}
+
+screen_open() {
+	if [ "$UTF8" = 0 ]; then
+		say_plain ""
+		say_plain "  RELO INSTALLER"
+		say_plain "  $VERSION_LINE  $OS/$ARCH"
+		say_plain ""
+		return 0
+	fi
+	FRAME=1
+	hline '┌' '┐'
+	row ''
+	center_row "${BRIGHT}██████╗ ███████╗██╗      ██████╗ ${OFF}"
+	center_row "${BRIGHT}██╔══██╗██╔════╝██║     ██╔═══██╗${OFF}"
+	center_row "${BRIGHT}██████╔╝█████╗  ██║     ██║   ██║${OFF}"
+	center_row "${BRIGHT}██╔══██╗██╔══╝  ██║     ██║   ██║${OFF}"
+	center_row "${BRIGHT}██║  ██║███████╗███████╗╚██████╔╝${OFF}"
+	center_row "${BRIGHT}╚═╝  ╚═╝╚══════╝╚══════╝ ╚═════╝ ${OFF}"
+	row ''
+	center_row "${BRIGHT}I N S T A L L E R${OFF}"
+	row ''
+	center_row "${LIGHT}$VERSION_LINE${OFF}"
+	center_row "${LIGHT}$(printf '%s · %s' "$OS" "$ARCH" | tr '[:lower:]' '[:upper:]')${OFF}"
+	row ''
+	hline '├' '┤'
+}
+
+screen_close() {
+	[ "$FRAME" = 1 ] || return 0
+	FRAME=0
+	hline '└' '┘'
 }
 
 die() {
-	oops "$1" >&2
+	clear_line
+	screen_close
+	printf '  %s!%s %s\n' "$BRIGHT" "$OFF" "$1" >&2
 	shift
 	for line in "$@"; do printf '    %s\n' "$line" >&2; done
 	exit 1
 }
 
 have() { command -v "$1" >/dev/null 2>&1; }
-
-banner() {
-	say ""
-	if [ "$TERMINAL" = 1 ]; then
-		say "  ${RED}██████  ${OFF}${BOLD}███████ ██       ██████${OFF}"
-		say "  ${RED}██   ██ ${OFF}${BOLD}██      ██      ██    ██${OFF}"
-		say "  ${RED}██████  ${OFF}${BOLD}█████   ██      ██    ██${OFF}"
-		say "  ${RED}██  ██  ${OFF}${BOLD}██      ██      ██    ██${OFF}"
-		say "  ${RED}██   ██ ${OFF}${BOLD}███████ ███████  ██████${OFF}"
-	else
-		say "  RELO"
-	fi
-	say ""
-	say "  ${BOLD}One daemon. Your tools. Every provider.${OFF}"
-	say "  ${DIM}Let's get Relo ready on ${OS}/${ARCH}.${OFF}"
-	say ""
-}
 
 # --------------------------------------------------------------- options ----
 
@@ -133,8 +235,15 @@ fi
 
 ask() {
 	# ask <prompt> <fallback>
-	printf '  %s> %s%s ' "$RED" "$1" "$OFF" >/dev/tty
-	IFS= read -r answer </dev/tty || die "Setup canceled: the terminal input closed."
+	if [ "$UTF8" = 1 ] && [ "$FRAME" = 1 ]; then
+		framed "  ${BRIGHT}▶${OFF} $1 " >/dev/tty
+		IFS= read -r answer </dev/tty || die "Setup canceled: the terminal input closed."
+		printf '%s' "${ESC}[1A${ESC}[2K" >/dev/tty
+		row_tty "  ${BRIGHT}▶${OFF} $1 ${answer:-$2}"
+	else
+		printf '  %s> %s%s ' "$BRIGHT" "$1" "$OFF" >/dev/tty
+		IFS= read -r answer </dev/tty || die "Setup canceled: the terminal input closed."
+	fi
 	[ -n "$answer" ] || answer="$2"
 	printf '%s' "$answer"
 }
@@ -255,33 +364,44 @@ fetch_file() {
 	fi
 }
 
+fetch_file_headers() {
+	# fetch_file_headers <url> <dest> <headers>; the GET response carries the
+	# length the HEAD request may omit.
+	if have curl; then
+		curl -fsSL --retry 2 --connect-timeout 15 -D "$3" -o "$2" "$1"
+	else
+		wget -q --server-response -O "$2" "$1" 2>"$3"
+	fi
+}
+
 content_length() {
 	# The last Content-Length wins: a redirect chain carries one per hop.
 	if have curl; then
 		curl -fsIL --connect-timeout 10 "$1" 2>/dev/null |
-			awk 'tolower($1) == "content-length:" { n = $2 } END { if (n ~ /^[0-9]+$/) print n }'
+			awk 'tolower($1) == "content-length:" { n = $2 } END { sub(/\r$/, "", n); if (n ~ /^[0-9]+$/) print n }'
 	else
 		wget --server-response --spider "$1" 2>&1 |
-			awk 'tolower($1) == "content-length:" { n = $2 } END { if (n ~ /^[0-9]+$/) print n }'
+			awk 'tolower($1) == "content-length:" { n = $2 } END { sub(/\r$/, "", n); if (n ~ /^[0-9]+$/) print n }'
 	fi
 }
 
 bar() {
-	# bar <percent>; a filled/empty meter of BAR_WIDTH cells
+	# bar <percent>; a meter of BAR_WIDTH full blocks
 	filled=$(( $1 * BAR_WIDTH / 100 ))
-	out=""
+	full=""
+	empty=""
 	i=0
 	while [ "$i" -lt "$BAR_WIDTH" ]; do
-		if [ "$i" -lt "$filled" ]; then out="$out#"; else out="$out-"; fi
+		if [ "$i" -lt "$filled" ]; then full="${full}█"; else empty="${empty}░"; fi
 		i=$((i + 1))
 	done
-	printf '%s' "$out"
+	printf '%s%s%s%s' "$BRIGHT" "$full" "$MID" "$empty"
 }
 
 fetch_with_progress() {
 	# fetch_with_progress <url> <dest> <label>
 	url="$1"; dest="$2"; label="$3"
-	if [ "$TERMINAL" = 0 ]; then
+	if [ "$UTF8" = 0 ]; then
 		step "Downloading $label"
 		fetch_file "$url" "$dest"
 		done_ "Downloaded $label"
@@ -289,17 +409,12 @@ fetch_with_progress() {
 	fi
 	total="$(content_length "$url" || true)"
 	case "$total" in
-	'' | *[!0-9]*) total="";; # unknown or non-numeric: fall back to the plain download
+	'' | *[!0-9]*) total=0;; # unknown length: still show bytes and rate
 	esac
-	if [ -z "$total" ] || [ "$total" -le 0 ]; then
-		step "Downloading $label"
-		fetch_file "$url" "$dest"
-		done_ "Downloaded $label"
-		return 0
-	fi
 
 	step "Downloading $label"
-	( fetch_file "$url" "$dest" ) &
+	hdr="$TMP_DIR/.headers.$$"
+	( fetch_file_headers "$url" "$dest" "$hdr" ) &
 	pid=$!
 	started="$(date +%s)"
 	while kill -0 "$pid" 2>/dev/null; do
@@ -308,20 +423,31 @@ fetch_with_progress() {
 			now="$(wc -c <"$dest" | tr -d ' ')"
 			case "$now" in '' | *[!0-9]*) now=0;; esac
 		fi
+		if [ "$total" -lt 1 ] && [ -f "$hdr" ]; then
+			total="$(awk 'tolower($1) == "content-length:" { n = $2 } END { sub(/\r$/, "", n); if (n ~ /^[0-9]+$/) print n }' "$hdr")"
+			case "$total" in '' | *[!0-9]*) total=0;; esac
+		fi
 		elapsed=$(( $(date +%s) - started ))
 		[ "$elapsed" -gt 0 ] || elapsed=1
-		percent=$((now * 100 / total))
-		[ "$percent" -gt 100 ] && percent=100
-		printf '\r    %s[%s]%s %3d%%  %s/%s MB  %s KB/s   ' \
-			"$ROSE" "$(bar "$percent")" "$OFF" \
-			"$percent" "$((now / 1048576))" "$((total / 1048576))" "$(((now / 1024) / elapsed))"
+		rate=$((now / 1024 / elapsed))
+		if [ "$total" -gt 0 ]; then
+			percent=$((now * 100 / total))
+			[ "$percent" -gt 100 ] && percent=100
+			eta=""
+			if [ "$rate" -gt 0 ] && [ "$now" -lt "$total" ]; then
+				eta="  ETA $(((total - now) / (rate * 1024)))s"
+			fi
+			line="  $(chip DOWNLOAD) [$(bar "$percent")] ${percent}%  $((now / 1048576))/$((total / 1048576)) MB  ${rate} KB/s${eta}"
+		else
+			line="  $(chip DOWNLOAD) $((now / 1048576)) MB  ${rate} KB/s"
+		fi
+		printf '\r%s%s' "${ESC}[2K" "$(framed "$line")"
 		sleep 0.2 2>/dev/null || sleep 1
 	done
 
 	if wait "$pid"; then
-		printf '\r    %s[%s]%s 100%%  %s/%s MB                \n' \
-			"$GREEN" "$(bar 100)" "$OFF" \
-			"$((total / 1048576))" "$((total / 1048576))"
+		size="$(wc -c <"$dest" | tr -d ' ')"
+		done_ "Downloaded $label ($((size / 1048576)) MB)"
 	else
 		printf '\n'
 		die "download failed: $url"
@@ -430,25 +556,25 @@ kill_port() {
 }
 
 free_ports() {
-	step "Checking the ports Relo serves"
+	lead "Checking the ports Relo serves"
 	FOREIGN_PORTS=""
 
 	for port in $PORTS; do
 		[ "$port" != "0" ] || continue
 		holders="$(port_holders "$port")"
 		if [ -z "$holders" ]; then
-			printf '  %si%s %-6s available\n' "$SLATE" "$OFF" "$port"
+			row "  ${MID}·${OFF} $port available"
 			continue
 		fi
 		while IFS=' ' read -r pid name; do
 			[ -n "$pid" ] || continue
 			case "$(printf '%s' "$name" | tr '[:upper:]' '[:lower:]')" in
 			relo | relo.exe | relo-desktop | relo-desktop.exe | relolauncher)
-				printf '  %s+%s %-6s stopping %s (pid %s)\n' "$GREEN" "$OFF" "$port" "$name" "$pid"
+				row "  ${BRIGHT}✓${OFF} $port stopping $name (pid $pid)"
 				kill_port "$pid"
 				;;
 			*)
-				printf '  %s!%s %-6s held by %s (pid %s)\n' "$AMBER" "$OFF" "$port" "$name" "$pid"
+				row "  ${BRIGHT}!${OFF} $port held by $name (pid $pid)"
 				FOREIGN_PORTS="$FOREIGN_PORTS $port"
 				;;
 			esac
@@ -520,7 +646,11 @@ start_daemon() {
 	fi
 
 	step "Starting the daemon"
-	"$BIN" daemon start >/dev/null 2>&1 || note "The daemon did not start on its own"
+	if "$BIN" daemon start >/dev/null 2>&1; then
+		done_ "Daemon started"
+	else
+		note "The daemon did not start on its own"
+	fi
 
 	if [ "$AUTOSTART" = 1 ]; then
 		if "$BIN" autostart enable >/dev/null 2>&1; then
@@ -539,8 +669,7 @@ start_daemon() {
 		if [ -n "$body" ]; then
 			version="$(printf '%s' "$body" | sed -n 's/.*"version"[ ]*:[ ]*"\([^"]*\)".*/\1/p')"
 			CONSOLE_READY=1
-			printf '  %s+%s Console is ready at %shttp://127.0.0.1:%s%s\n' \
-				"$GREEN" "$OFF" "$BOLD" "$server_port" "$OFF"
+			done_ "Console is ready at http://127.0.0.1:$server_port"
 			[ -n "$version" ] && note "Reported version: $version"
 			return 0
 		fi
@@ -552,37 +681,34 @@ start_daemon() {
 
 summary() {
 	server_port="$(printf '%s\n' "$PORTS" | head -n 1)"
-	say ""
-	rule
-	say "  ${GREEN}+${OFF} ${BOLD}Relo ${RESOLVED_VERSION} is installed.${OFF}"
-	say ""
-	say "  ${DIM}Binary${OFF}   $BIN"
-	say "  ${DIM}Data${OFF}     $RELO_HOME_DIR"
-	say ""
+	hline '├' '┤'
+	row ""
+	row "  ${BRIGHT}✓${OFF} ${BOLD}Relo ${RESOLVED_VERSION} is installed.${OFF}"
+	row ""
+	row "  ${MID}Binary${OFF}   $BIN"
+	row "  ${MID}Data${OFF}     $RELO_HOME_DIR"
+	row ""
 	if [ "$CONSOLE_READY" = 1 ]; then
-		say "  ${BOLD}Your next step${OFF}"
-		say "  Open the console and add your first connection:"
+		row "  ${BOLD}Your next step${OFF}"
+		row "  Open the console and add your first connection:"
 	else
-		say "  ${BOLD}Ready when you are${OFF}"
-		say "  Start Relo, then open the console:"
-		say "    \"$BIN\" daemon start"
+		row "  ${BOLD}Ready when you are${OFF}"
+		row "  Start Relo, then open the console:"
+		row "    \"$BIN\" daemon start"
 	fi
-	say "  ${RED}http://127.0.0.1:${server_port:-$DEFAULT_PORT}${OFF}"
-	say ""
-	say "  ${DIM}Useful commands${OFF}"
-	say "    relo daemon status       Check how Relo is doing"
-	say "    relo daemon restart      Restart Relo"
-	say "    relo autostart disable   Turn off start at login"
-	say ""
+	row "  ${BRIGHT}http://127.0.0.1:${server_port:-$DEFAULT_PORT}${OFF}"
+	row ""
+	row "  ${MID}Useful commands${OFF}"
+	row "    relo daemon status       Check how Relo is doing"
+	row "    relo daemon restart      Restart Relo"
+	row "    relo autostart disable   Turn off start at login"
+	row ""
 	note "To update, run this installer again."
-	rule
-	say ""
 }
 
 # -------------------------------------------------------------- the prompt --
 
 options_screen() {
-	banner
 	section "01" "Make it yours"
 	say "  You're one Enter away. Want to make a change first?"
 	say ""
@@ -661,10 +787,11 @@ resolve_version() {
 main() {
 	detect_platform
 	resolve_paths
+	VERSION_LINE="${VERSION:-latest release}"
+	screen_open
 	if [ "$INTERACTIVE" = 1 ]; then
 		options_screen
 	else
-		banner
 		section "01" "Use your selected settings"
 		note "Running without prompts. Use --help to see setup options."
 	fi
@@ -705,8 +832,9 @@ main() {
 			"Install tar, then run this installer again."
 		fetch_with_progress "$BASE/$ASSET" "$TMP_DIR/bundle.tar.gz" "$ASSET"
 		verify_sha "$TMP_DIR/bundle.tar.gz" "$TMP_DIR/checksums.txt" "$ASSET"
-		step "Extracting $ASSET"
+		lead "Extracting $ASSET"
 		tar -xzf "$TMP_DIR/bundle.tar.gz" -C "$TMP_DIR" || die "could not unpack $ASSET"
+		done_ "Extracted $ASSET"
 		[ -f "$TMP_DIR/relo" ] || die "the release archive holds no relo binary"
 	fi
 
@@ -745,6 +873,7 @@ main() {
 	section "04" "Get you ready"
 	start_daemon
 	summary
+	screen_close
 }
 
 main "$@"
