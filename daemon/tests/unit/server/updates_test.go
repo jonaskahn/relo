@@ -30,8 +30,9 @@ func TestUpdatesRoute(t *testing.T) {
 		harness.server = harness.newServerWithOptions(harness.cfg, []account.PoolEntry{defaultEntry()},
 			func(options *server.Options) {
 				options.Updates = &updates.Checker{
-					URL:     "https://example.com/appcast.xml",
-					Current: "0.1.0",
+					URL:       "https://example.com/appcast.xml",
+					Current:   "0.1.0",
+					Installer: updates.InstallerBrew,
 					Fetch: func(context.Context, string) ([]byte, error) {
 						return []byte(sampleAppcast), nil
 					},
@@ -47,6 +48,9 @@ func TestUpdatesRoute(t *testing.T) {
 		}
 		if !notice.Available || notice.Latest != "0.2.0" {
 			t.Fatalf("notice = %+v, want an update to 0.2.0", notice)
+		}
+		if notice.Installer != updates.InstallerBrew {
+			t.Fatalf("installer = %q, want %q", notice.Installer, updates.InstallerBrew)
 		}
 	})
 }

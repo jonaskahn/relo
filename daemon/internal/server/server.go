@@ -326,9 +326,10 @@ func setServerUpdates(opts *Options) {
 		return
 	}
 	opts.Updates = &updates.Checker{
-		URL:      opts.Config.System.Updates.URL,
-		Download: opts.Config.System.Updates.Download,
-		Current:  opts.Version,
+		URL:       opts.Config.System.Updates.URL,
+		Download:  opts.Config.System.Updates.Download,
+		Current:   opts.Version,
+		Installer: updates.DetectInstaller(),
 	}
 }
 
