@@ -236,7 +236,9 @@ fi
 ask() {
 	# ask <prompt> <fallback>
 	if [ "$UTF8" = 1 ] && [ "$FRAME" = 1 ]; then
-		framed "  ${BRIGHT}▶${OFF} $1 " >/dev/tty
+		# Leave the row open while reading: the terminal's caret then sits
+		# right after the question, inside the frame.
+		printf '%s  %s▶%s %s ' "${BRIGHT}│${OFF}" "$BRIGHT" "$OFF" "$1" >/dev/tty
 		IFS= read -r answer </dev/tty || die "Setup canceled: the terminal input closed."
 		printf '%s' "${ESC}[1A${ESC}[2K" >/dev/tty
 		row_tty "  ${BRIGHT}▶${OFF} $1 ${answer:-$2}"

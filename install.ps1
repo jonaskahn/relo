@@ -563,7 +563,9 @@ function Write-Summary {
 
 function Read-Setup([string] $Prompt) {
 	if ($script:Framed) {
-		Write-Host (Format-Row ("  " + (Paint '▶' 'bright') + " $Prompt ")) -NoNewline
+		# Leave the row open while reading: the terminal's caret then sits
+		# right after the question, inside the frame.
+		Write-Host ((Paint '│' 'bright') + "  " + (Paint '▶' 'bright') + " $Prompt ") -NoNewline
 		$value = Read-Host
 		Write-Host ("`r" + $script:Esc + "[1A" + $script:Esc + "[2K") -NoNewline
 		Write-Row ("  " + (Paint '▶' 'bright') + " $Prompt " + $value)
