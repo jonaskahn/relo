@@ -6,8 +6,10 @@ import { join } from 'node:path';
 import { after, test } from 'node:test';
 
 import {
+	decodeKeys,
 	isReloImage,
 	isReloProcess,
+	move,
 	parseLsof,
 	parseNetstat,
 	parseSs,
@@ -118,4 +120,55 @@ test('a quiesce fails when another program still listens on a configured port', 
 	await new Promise((resolve) => holder.listen(49111, '127.0.0.1', resolve));
 	after(() => holder.close());
 	assert.throws(() => quiesce(home), /something else is listening on port 49111/);
+});
+
+test('arrow keys decode in both forms a terminal sends them', () => {
+	assert.deepEqual(decodeKeys('', '\x1b[C\x1b[D'), { keys: ['right', 'left'], pending: '' });
+	assert.deepEqual(decodeKeys('', '\x1bOC\x1bOD'), { keys: ['right', 'left'], pending: '' });
+});
+
+test('a split escape sequence is carried to the next chunk', () => {
+	assert.deepEqual(decodeKeys('', '\x1b'), { keys: [], pending: '\x1b' });
+	assert.deepEqual(decodeKeys('\x1b', '['), { keys: [], pending: '\x1b[' });
+	assert.deepEqual(decodeKeys('\x1b[', 'C'), { keys: ['right'], pending: '' });
+	assert.deepEqual(decodeKeys('\x1b', 'OD'), { keys: ['left'], pending: '' });
+	assert.deepEqual(decodeKeys('', '\x1b[C\x1b['), { keys: ['right'], pending: '\x1b[' });
+});
+
+test('enter and interrupt are the keys that answer', () => {
+	assert.deepEqual(decodeKeys('', '\r').keys, ['enter']);
+	assert.deepEqual(decodeKeys('', '\n').keys, ['enter']);
+	assert.deepEqual(decodeKeys('', '\x03').keys, ['interrupt']);
+});
+
+test('unrelated keys and modified arrows are ignored', () => {
+	for (const chunk of [
+		'\x1b[A',
+		'\x1b[B',
+		'\x1b[H',
+		'\x1b[F',
+		'\x1b[3~',
+		'\x1b[1;2D',
+		'\x1b[1;5C',
+		'\x1bx',
+		'x',
+		' '
+	]) {
+		assert.deepEqual(decodeKeys('', chunk), { keys: [], pending: '' }, chunk);
+	}
+});
+
+test('an escape prefix never swallows the control after it', () => {
+	assert.deepEqual(decodeKeys('\x1b', '\x1b[C'), { keys: ['right'], pending: '' });
+	assert.deepEqual(decodeKeys('\x1b', '\r'), { keys: ['enter'], pending: '' });
+	assert.deepEqual(decodeKeys('', '\x1b[\r'), { keys: ['enter'], pending: '' });
+	assert.deepEqual(decodeKeys('', '\x1bO\r'), { keys: ['enter'], pending: '' });
+});
+
+test('a menu selection wraps at both ends', () => {
+	assert.equal(move(0, 2, -1), 1);
+	assert.equal(move(1, 2, 1), 0);
+	assert.equal(move(0, 3, -1), 2);
+	assert.equal(move(2, 3, 1), 0);
+	assert.equal(move(0, 0, 1), 0);
 });

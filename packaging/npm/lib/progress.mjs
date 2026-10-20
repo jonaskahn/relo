@@ -58,6 +58,13 @@ function emit(text) {
 	}
 }
 
+// paint writes a line that will be rewritten in place. Windows has no
+// /dev/tty here, so its console gets the line instead when it is a terminal.
+function paint(text) {
+	if (emit(text)) return;
+	if (process.stdout?.isTTY) process.stdout.write(text);
+}
+
 // colorEnabled reports whether the output can carry color. NO_COLOR and a
 // dumb terminal turn it off; FORCE_COLOR turns it on.
 function colorEnabled() {
@@ -114,7 +121,7 @@ function stopActivity() {
 // step, or an error -- starts on a clean line.
 export function clear() {
 	stopActivity();
-	emit('\r\x1b[2K');
+	paint('\r\x1b[2K');
 }
 
 // rawLine clears the running line and prints one line exactly as given.
@@ -188,42 +195,50 @@ export function closeScreen() {
 	rawLine(bright(`└${'─'.repeat(INNER)}┘`));
 }
 
-// interactive reports whether there is a terminal to draw the screen on.
+// interactive reports whether there is a screen to draw and keys to read.
 export function interactive() {
-	return terminal() !== null;
+	return terminal() !== null || Boolean(process.stdin?.isTTY && process.stdout?.isTTY);
 }
 
-// prompt opens a row inside the screen for a question, leaving the cursor
-// after it. The closing wall is drawn by answered, once the typed answer has
-// echoed and the cursor is still inside the frame.
-export function prompt(text) {
-	clear();
+// choices draws a question and its option buttons on the running line. The
+// cursor stays there, so the next key redraws the same row.
+export function choices(question, labels, at) {
 	active = null;
 	lastText = null;
-	emit(framed ? `${bright('│')} ${text}` : text);
+	clear();
+	paint(row(`${light(question)}  ${buttons(labels, at)}`));
 }
 
-// answered redraws the question row with the answer on it, closed, after the
-// terminal echoed the typed line and moved to the next one.
-export function answered(text, value) {
-	if (terminal() === null) return;
-	emit('\x1b[1A\r\x1b[2K');
-	line(`${light('▶')} ${text} ${value}`);
+// chosen replaces the question row with the option that was picked.
+export function chosen(question, value) {
+	line(`${light('▶')} ${question} ${value}`);
 }
 
-// selected paints the running step the way a Game Boy highlights the chosen
-// menu item: bright background, dark text. The cursor blinks and the dots
-// cycle so the chip reads as busy. Terminals without 24-bit color fall back
-// to inverse video.
-function selected(label, tick = 0) {
-	const dots = '.'.repeat(tick % 4).padEnd(3);
-	const cursor = tick % 4 < 2 ? '▶' : '▷';
-	const text = ` ${`${cursor} ${label}${dots}`} `;
+// buttons renders the options as one row of keycaps. Every form of a label is
+// the same width, so moving the selection never shifts the row.
+export function buttons(labels, at) {
+	return labels
+		.map((label, index) => (index === at ? highlight(`▶ ${label} ◀`) : mid(`[ ${label} ]`)))
+		.join('  ');
+}
+
+// highlight paints text as the chosen menu item: bright background, dark text.
+// A terminal without 24-bit color falls back to inverse video.
+function highlight(text) {
 	if (!colorEnabled()) return text;
 	if (truecolor()) {
 		return `\x1b[48;2;${BRIGHT[0]};${BRIGHT[1]};${BRIGHT[2]}m\x1b[38;2;${DARK[0]};${DARK[1]};${DARK[2]}m${text}\x1b[0m`;
 	}
 	return `\x1b[7m${text}\x1b[0m`;
+}
+
+// selected paints the running step the way a Game Boy highlights the chosen
+// menu item: bright background, dark text. The cursor blinks and the dots
+// cycle so the chip reads as busy.
+function selected(label, tick = 0) {
+	const dots = '.'.repeat(tick % 4).padEnd(3);
+	const cursor = tick % 4 < 2 ? '▶' : '▷';
+	return highlight(` ${`${cursor} ${label}${dots}`} `);
 }
 
 // draw paints one running line, throttled so a fast download neither floods
@@ -270,6 +285,78 @@ export function warn(text) {
 // later.
 export function note(text) {
 	line(`${mid('·')} ${mid(text)}`);
+}
+
+// failed prints a failed result as the fourth block, below the closed screen.
+// It goes to stderr, where npm shows it even when a postinstall's stdout was
+// captured.
+export function failed(title, message) {
+	console.error(errorBox(title, message));
+}
+
+// errorBox renders a failure result: a red-walled block the same width as the
+// screen, the headline, and the message wrapped to fit. Exported so its shape
+// can be tested without a terminal.
+export function errorBox(title, message) {
+	const wall = red('│');
+	const rows = [red(`┌${'─'.repeat(INNER)}┐`)];
+	const add = (text, paint) => {
+		const pad = Math.max(0, INNER - width(text) - 2);
+		rows.push(`${wall} ${paint(text)}${' '.repeat(pad)} ${wall}`);
+	};
+	add(`✗ ${title}`, redBright);
+	add('', red);
+	for (const line of wrapText(message, INNER - 2)) add(line, red);
+	rows.push(red(`└${'─'.repeat(INNER)}┘`));
+	return rows.join('\n');
+}
+
+// errorColor follows the same switches as the screen but looks at stderr,
+// the stream the failure block is printed on, so a captured log stays clean
+// when stderr is not a terminal.
+function errorColor() {
+	if (process.env.NO_COLOR || process.env.FORCE_COLOR === '0') return false;
+	if (process.env.FORCE_COLOR) return true;
+	if (process.env.TERM === 'dumb') return false;
+	return Boolean(process.stderr?.isTTY);
+}
+
+const red = (text) => (errorColor() ? `\x1b[31m${text}\x1b[0m` : text);
+const redBright = (text) => (errorColor() ? `\x1b[1;31m${text}\x1b[0m` : text);
+
+// wrapText breaks a message into lines no wider than width, keeping the
+// two-space indent a hint line starts with. A word longer than a line -- a
+// path in a daemon error, say -- is split so the box walls stay aligned.
+function wrapText(text, width) {
+	const lines = [];
+	for (const paragraph of text.split('\n')) {
+		const indent = paragraph.match(/^\s*/)[0];
+		const room = Math.max(1, width - indent.length);
+		const words = paragraph.trim().split(/\s+/).filter(Boolean);
+		if (words.length === 0) {
+			lines.push('');
+			continue;
+		}
+		let line = '';
+		for (const word of words) {
+			let rest = word;
+			while (rest.length > room) {
+				if (line !== '') {
+					lines.push(indent + line);
+					line = '';
+				}
+				lines.push(indent + rest.slice(0, room));
+				rest = rest.slice(room);
+			}
+			if (rest === '') continue;
+			if (line !== '' && line.length + 1 + rest.length > room) {
+				lines.push(indent + line);
+				line = rest;
+			} else line = line === '' ? rest : `${line} ${rest}`;
+		}
+		if (line !== '') lines.push(indent + line);
+	}
+	return lines;
 }
 
 // progress starts a running line. render is called with a frame number and

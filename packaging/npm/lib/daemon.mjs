@@ -7,9 +7,10 @@
 // scan cannot see keeps its default.
 import { execFileSync, spawnSync } from 'node:child_process';
 import { createInterface } from 'node:readline/promises';
-import { closeSync, existsSync, openSync, readFileSync, readSync, rmSync, writeSync } from 'node:fs';
+import { closeSync, existsSync, openSync, readFileSync, rmSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { join } from 'node:path';
+import { ReadStream } from 'node:tty';
 
 // reloHome is the state directory the daemon serves: $RELO_HOME, else ~/.relo.
 export function reloHome(env = process.env) {
@@ -257,18 +258,194 @@ export function quiesce(home, { binary } = {}) {
 	return { stopped };
 }
 
-// askStart prompts on a terminal and reports 'yes', 'no', or 'unattended'
-// when no terminal can be asked on. The answer never comes from stdin: under
-// a piped install stdin is not the user. onPrompt and onAnswer let the caller
-// draw the question inside its own screen; when they are absent the prompt is
-// written plainly.
+// move steps a menu selection like a game menu: it wraps at both ends, so
+// left from the first option lands on the last.
+export function move(index, count, delta) {
+	if (count <= 0) return 0;
+	return (index + delta + count) % count;
+}
+
+// decodeKeys reads the keys a terminal chunk carries: 'left', 'right',
+// 'enter', or 'interrupt'. pending holds an escape sequence the previous
+// chunk ended in the middle of; the returned pending is carried into the
+// next call.
 //
-// On POSIX the answer is read straight from the tty with a blocking read
-// instead of a readline stream: a stream leaves tty handles open, and those
-// keep the installer's process alive after the work is done, so npm waits on
-// a postinstall that has already finished.
-export async function askStart({ onPrompt, onAnswer } = {}) {
+// Arrows arrive in either form a terminal sends them, CSI (`ESC [ D`) and
+// application-cursor SS3 (`ESC O D`). A modified arrow -- parameters before
+// the final byte -- and every other sequence is consumed and ignored.
+export function decodeKeys(pending = '', chunk = '') {
+	const text = pending + chunk;
+	const keys = [];
+	let at = 0;
+	while (at < text.length) {
+		if (text[at] === '\x1b') {
+			const end = escapeEnd(text, at);
+			if (end === 0) return { keys, pending: text.slice(at) };
+			// A lone Esc, or the Esc of an Alt chord, leaves nothing to act
+			// on. Dropping only the Esc lets the next byte read as its own
+			// key, so an Esc press never swallows a following Enter.
+			if (end === at + 1) {
+				at += 1;
+				continue;
+			}
+			const sequence = text.slice(at, end);
+			if (sequence === '\x1b[C' || sequence === '\x1bOC') keys.push('right');
+			else if (sequence === '\x1b[D' || sequence === '\x1bOD') keys.push('left');
+			at = end;
+			continue;
+		}
+		const key = text[at];
+		if (key === '\r' || key === '\n') keys.push('enter');
+		else if (key === '\x03') keys.push('interrupt');
+		at += 1;
+	}
+	return { keys, pending: '' };
+}
+
+// escapeEnd finds the byte after the escape sequence starting at `at`. Zero
+// means the text ended before the sequence did, so the rest is a pending
+// prefix for the next chunk.
+function escapeEnd(text, at) {
+	const next = text[at + 1];
+	if (next === undefined) return 0;
+	if (next === '[') {
+		for (let cursor = at + 2; cursor < text.length; cursor += 1) {
+			const code = text.charCodeAt(cursor);
+			if (code >= 0x40 && code <= 0x7e) return cursor + 1;
+			// A control byte cannot sit inside a CSI: drop the Esc so the
+			// control byte still reads as itself.
+			if (code < 0x20) return at + 1;
+		}
+		return 0;
+	}
+	if (next === 'O') {
+		const third = text[at + 2];
+		if (third === undefined) return 0;
+		return third.charCodeAt(0) < 0x20 ? at + 1 : at + 3;
+	}
+	// A bare Esc, or the Esc of an Alt chord.
+	if (next === '\x1b' || next.charCodeAt(0) < 0x20) return at + 1;
+	return at + 2;
+}
+
+// terminalInput opens the terminal for raw keys. POSIX reads the controlling
+// tty, not stdin: under a piped install stdin is not the user. Windows has no
+// /dev/tty, so a console stdin is the only source there.
+function terminalInput() {
 	if (process.platform === 'win32') {
+		if (!process.stdin?.isTTY) return null;
+		return {
+			input: process.stdin,
+			close() {
+				// stdin stays open for the daemon spawn that follows.
+				process.stdin.pause();
+				process.stdin.unref();
+			}
+		};
+	}
+	let fd;
+	try {
+		fd = openSync('/dev/tty', 'r+');
+	} catch {
+		return null;
+	}
+	let input;
+	try {
+		input = new ReadStream(fd);
+	} catch {
+		// The stream owns the fd once it is built, but not when it is not.
+		closeSync(fd);
+		return null;
+	}
+	return {
+		input,
+		close() {
+			input.destroy();
+		}
+	};
+}
+
+// select shows labels as a left/right menu and resolves the chosen index, -1
+// when the user interrupts, or null when there is no terminal to ask on.
+// onDraw hears every move, so the caller can repaint its own screen.
+export async function select(labels, { onDraw } = {}) {
+	const source = terminalInput();
+	if (!source) return null;
+	const { input } = source;
+	let at = 0;
+	let pending = '';
+	let settled = false;
+	let resolve;
+	const settle = (value) => {
+		if (settled) return;
+		settled = true;
+		resolve(value);
+	};
+	const onStop = () => settle(null);
+	const onData = (chunk) => {
+		if (settled) return;
+		const decoded = decodeKeys(pending, chunk.toString('utf8'));
+		pending = decoded.pending;
+		for (const key of decoded.keys) {
+			if (key === 'left' || key === 'right') {
+				at = move(at, labels.length, key === 'right' ? 1 : -1);
+				onDraw?.(at);
+			} else if (key === 'enter') {
+				settle(at);
+				return;
+			} else if (key === 'interrupt') {
+				settle(-1);
+				return;
+			}
+		}
+	};
+	try {
+		return await new Promise((done) => {
+			resolve = done;
+			// The error listener goes on before raw mode: a failed setRawMode
+			// emits rather than throws, and an unhandled emit would crash.
+			input.once('error', onStop);
+			input.once('end', onStop);
+			input.once('close', onStop);
+			try {
+				input.setRawMode(true);
+			} catch {
+				settle(null);
+				return;
+			}
+			if (settled) return;
+			onDraw?.(at);
+			input.on('data', onData);
+		});
+	} finally {
+		// Restore cooked mode before the error listener is removed, so a
+		// failed restore cannot surface as an unhandled error.
+		try {
+			input.setRawMode(false);
+		} catch {
+			// The terminal is gone; there is nothing left to restore.
+		}
+		input.removeListener('data', onData);
+		input.removeListener('error', onStop);
+		input.removeListener('end', onStop);
+		input.removeListener('close', onStop);
+		source.close();
+	}
+}
+
+// askStart asks the start question on a terminal and reports 'yes', 'no', or
+// 'unattended' when no terminal can be asked on. The answer never comes from
+// stdin: under a piped install stdin is not the user. onQuestion and onAnswer
+// let the caller draw the question inside its own screen; onQuestion hears
+// every move of the left/right menu, and the first label is Yes.
+//
+// A raw key stream is used rather than readline: a readline stream leaves tty
+// handles open, and those keep the installer's process alive after the work
+// is done, so npm waits on a postinstall that has already finished. select()
+// tears its stream down instead. Ctrl-C means "not now", never a failed
+// install: the binary is already in place.
+export async function askStart({ labels = ['YES', 'NO'], onQuestion, onAnswer } = {}) {
+	if (process.platform === 'win32' && !onQuestion) {
 		if (!process.stdin.isTTY) return 'unattended';
 		const terminal = createInterface({ input: process.stdin, output: process.stdout });
 		try {
@@ -278,35 +455,9 @@ export async function askStart({ onPrompt, onAnswer } = {}) {
 			terminal.close();
 		}
 	}
-	let tty;
-	try {
-		tty = openSync('/dev/tty', 'r+');
-	} catch {
-		return 'unattended';
-	}
-	try {
-		if (onPrompt) onPrompt();
-		else writeSync(tty, 'START RELO NOW? [Y/n] ');
-		const bytes = [];
-		const one = Buffer.alloc(1);
-		for (;;) {
-			if (readSync(tty, one, 0, 1, null) === 0) return 'unattended';
-			const byte = one[0];
-			if (byte === 0x0a) break;
-			if (byte === 0x0d) continue;
-			if (byte === 0x7f || byte === 0x08) {
-				bytes.pop();
-				continue;
-			}
-			bytes.push(byte);
-			if (bytes.length > 64) break;
-		}
-		const answer = Buffer.from(bytes).toString('utf8').trim();
-		if (onAnswer) onAnswer(answer);
-		return /^[nN]/.test(answer) ? 'no' : 'yes';
-	} catch {
-		return 'unattended';
-	} finally {
-		closeSync(tty);
-	}
+	const at = await select(labels, { onDraw: onQuestion });
+	if (at === null) return 'unattended';
+	if (at < 0) return 'no';
+	onAnswer?.(labels[at]);
+	return at === 0 ? 'yes' : 'no';
 }

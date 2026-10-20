@@ -22,18 +22,19 @@ import { askStart, quiesce, reloHome } from './daemon.mjs';
 import { findConflictingRelo, findReloApp, findSetupInstall } from './conflict.mjs';
 import { fetchBytes } from './download.mjs';
 import {
-	answered,
 	bar,
 	bytes,
+	choices,
+	chosen,
 	clear,
 	closeScreen,
 	done,
 	duration,
+	failed,
 	interactive,
 	note,
 	openScreen,
 	progress,
-	prompt,
 	separator,
 	step,
 	warn
@@ -182,18 +183,32 @@ try {
 
 	const destination = await fromRelease(tag, asset, startedAt);
 	separator();
-	const question = 'START RELO NOW? [Y/n]';
+	const question = 'START RELO NOW?';
+	const labels = ['YES', 'NO'];
 	const answer = interactive()
 		? await askStart({
-				onPrompt: () => prompt(question),
-				onAnswer: (value) => answered(question, value)
+				labels,
+				onQuestion: (at) => choices(question, labels, at),
+				onAnswer: (value) => chosen(question, value)
 			})
 		: await askStart();
 	if (answer === 'yes') {
 		closeScreen();
-		const started = spawnSync(destination, ['daemon', 'start'], { stdio: 'inherit' });
+		// The daemon's error goes into the result block rather than through
+		// the screen: a start refused before it spawned anything names the
+		// cause on stderr, and that is the whole answer.
+		const started = spawnSync(destination, ['daemon', 'start'], {
+			stdio: ['inherit', 'inherit', 'pipe'],
+			encoding: 'utf8'
+		});
 		if (started.status !== 0) {
-			warn('COULD NOT START THE DAEMON; RUN: relo daemon start');
+			const detail = (started.stderr ?? '').trim() || started.error?.message || '';
+			failed(
+				'DAEMON DID NOT START',
+				detail
+					? `${detail}\n  start it later: relo daemon start`
+					: 'start it later: relo daemon start'
+			);
 		}
 	} else {
 		note('start it later: relo daemon start');
@@ -206,6 +221,6 @@ try {
 	await rm(resolve(binaryDir, `${target().name}.download`), { force: true }).catch(() => {});
 	clear();
 	closeScreen();
-	console.error(`✗ INSTALL FAILED\n${error.message}`);
+	failed('INSTALL FAILED', error.message);
 	process.exitCode = 1;
 }
