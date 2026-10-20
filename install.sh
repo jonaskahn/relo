@@ -133,7 +133,7 @@ oops() { clear_line; row "  ${BRIGHT}!${OFF} $*"; }
 section() {
 	if [ "$FIRST_SECTION" = 1 ]; then FIRST_SECTION=0; else hline '├' '┤'; fi
 	row ""
-	row "  ${BRIGHT}$1${OFF}  ${BOLD}$2${OFF}"
+	row "  ${BOLD}$1${OFF}"
 	row ""
 }
 
@@ -888,7 +888,7 @@ summary() {
 # -------------------------------------------------------------- the prompt --
 
 options_screen() {
-	section "01" "Make it yours"
+	section "Make it yours"
 	say "  A few choices, then the installer runs."
 	say "  ${DIM}Relo home: $RELO_HOME_DIR${OFF}"
 	say ""
@@ -974,14 +974,14 @@ main() {
 	if [ "$INTERACTIVE" = 1 ]; then
 		options_screen
 	else
-		section "01" "Use your selected settings"
+		section "Use your selected settings"
 		note "Running without prompts. Use --help to see setup options."
 	fi
 
 	reject_foreign
 	done_ "No other Relo installation is in the way"
 
-	section "02" "Download Relo"
+	section "Download Relo"
 	resolve_version
 	note "Release ${RESOLVED_VERSION}"
 
@@ -1020,7 +1020,7 @@ main() {
 		[ -f "$TMP_DIR/relo" ] || die "the release archive holds no relo binary"
 	fi
 
-	section "03" "Install Relo"
+	section "Install Relo"
 	stop_daemon
 	read_ports
 	free_ports
@@ -1052,7 +1052,7 @@ main() {
 		;;
 	esac
 
-	section "04" "Get you ready"
+	section "Get you ready"
 	start_daemon
 	summary
 	screen_close

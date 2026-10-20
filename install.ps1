@@ -165,10 +165,10 @@ function Write-Oops([string] $Text) { Clear-Line; Write-Row ("  " + (Paint '!' '
 function Write-Rule { Write-Separator ([string][char]0x251C) ([string][char]0x2524) }
 function Write-Lead([string] $Text) { Write-Row ("  " + (Paint '▶' 'bright') + " $Text") }
 
-function Write-Section([string] $Number, [string] $Text) {
+function Write-Section([string] $Text) {
 	if ($script:FirstSection) { $script:FirstSection = $false } else { Write-Rule }
 	Write-Row ''
-	Write-Row ("  " + (Paint $Number 'bright') + "  " + (Paint $Text 'bold'))
+	Write-Row ("  " + (Paint $Text 'bold'))
 	Write-Row ''
 }
 
@@ -756,14 +756,14 @@ Write-ScreenOpen $versionLabel
 if ($interactive) {
 	Invoke-Options
 } else {
-	Write-Section '01' 'Use your selected settings'
+	Write-Section 'Use your selected settings'
 	Write-Note 'Running without prompts. Use -Help to see setup options.'
 }
 
 Test-Foreign
 Write-OK 'No other Relo installation is in the way'
 
-Write-Section '02' 'Download Relo'
+Write-Section 'Download Relo'
 Resolve-Version
 Write-Note "Release $ResolvedVersion"
 
@@ -822,7 +822,7 @@ try {
 		if (-not (Test-Path (Join-Path $temp 'relo.exe'))) { Fail 'the release archive holds no relo.exe' @() }
 	}
 
-	Write-Section '03' 'Install Relo'
+	Write-Section 'Install Relo'
 	Stop-Daemon
 	Read-Ports
 	Clear-Ports
@@ -842,7 +842,7 @@ try {
 
 	Add-ToPath $Dir
 
-	Write-Section '04' 'Get you ready'
+	Write-Section 'Get you ready'
 	Start-Daemon
 	Write-Summary
 	Write-ScreenClose
