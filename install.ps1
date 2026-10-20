@@ -115,6 +115,14 @@ function Format-Row([string] $Text) {
 }
 
 function Write-Row([string] $Text) { Write-Host (Format-Row $Text) }
+function Write-DangerRow([string] $Text) {
+	$visible = (Get-Visible $Text).Length
+	if ($visible -gt $script:Inner) { $Text = Clip-Text $Text; $visible = (Get-Visible $Text).Length }
+	$pad = [Math]::Max(0, $script:Inner - $visible)
+	$bar = [string][char]0x2502
+	$wall = if ($script:Color) { "$($script:Esc)[38;2;214;60;60m$bar$($script:Esc)[0m" } else { $bar }
+	Write-Host ($wall + $Text + (' ' * $pad) + $wall)
+}
 function Clear-Line { if ($script:Visual) { Write-Host ("`r" + $script:Esc + "[2K") -NoNewline } }
 
 function Write-Separator([string] $Left, [string] $Right) {
@@ -186,8 +194,31 @@ function Fail([string] $Message, [string[]] $Detail) {
 	Clear-Line
 	Write-ScreenClose
 	Write-Host ''
-	Write-Oops $Message
-	foreach ($line in $Detail) { Write-Host "    $line" }
+	if (-not $script:Visual) {
+		Write-Oops $Message
+		foreach ($line in $Detail) { Write-Host "    $line" }
+		exit 1
+	}
+	# The failure gets its own card below the screen, so it never lands on
+	# the closed border or over a row of the screen.
+	$dash = [string][char]0x2500
+	$danger = "$($script:Esc)[38;2;214;60;60m"
+	$reset = "$($script:Esc)[0m"
+	if ($script:Color) {
+		Write-Host ($danger + [string][char]0x250C + ($dash * $script:Inner) + [string][char]0x2510 + $reset)
+	} else {
+		Write-Host ([string][char]0x250C + ($dash * $script:Inner) + [string][char]0x2510)
+	}
+	Write-DangerRow ''
+	Write-DangerRow ("  " + $(if ($script:Color) { "$danger!$reset" } else { '!' }) + " " + (Paint $Message 'bold'))
+	Write-DangerRow ''
+	foreach ($line in $Detail) { Write-DangerRow "    $line" }
+	Write-DangerRow ''
+	if ($script:Color) {
+		Write-Host ($danger + [string][char]0x2514 + ($dash * $script:Inner) + [string][char]0x2518 + $reset)
+	} else {
+		Write-Host ([string][char]0x2514 + ($dash * $script:Inner) + [string][char]0x2518)
+	}
 	exit 1
 }
 

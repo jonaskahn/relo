@@ -40,12 +40,12 @@ if [ "$COLOR" = 1 ]; then
 	LIGHT="$(printf '\033[38;2;139;172;15m')"
 	MID="$(printf '\033[38;2;48;98;48m')"
 	DARK="$(printf '\033[38;2;15;56;15m')"
+	DANGER="$(printf '\033[38;2;214;60;60m')"
 	BOLD="$(printf '\033[1m')"
 else
-	OFF=""; BRIGHT=""; LIGHT=""; MID=""; DARK=""; BOLD=""
+	OFF=""; BRIGHT=""; LIGHT=""; MID=""; DARK=""; DANGER=""; BOLD=""
 fi
-# The older names keep painting the same screen.
-RED="$BRIGHT"; GREEN="$BRIGHT"; AMBER="$LIGHT"; SLATE="$MID"; DIM="$MID"
+DIM="$MID"
 
 UTF8=0
 _probe="█"
@@ -170,12 +170,38 @@ screen_close() {
 	hline '└' '┘'
 }
 
+# error_box draws a failure in its own card below the installer screen, so
+# it never overwrites a row of the screen or its border.
+error_box() {
+	_title="$1"
+	shift
+	if [ "$UTF8" = 0 ]; then
+		printf '  %s!%s %s\n' "$BRIGHT" "$OFF" "$_title" >&2
+		for line in "$@"; do printf '    %s\n' "$line" >&2; done
+		return 0
+	fi
+	FRAME=0
+	printf '\n' >&2
+	printf '%s%s%s\n' "${DANGER}┌${OFF}" "${DANGER}${DASHES}${OFF}" "${DANGER}┐${OFF}" >&2
+	box_row ""
+	box_row "  ${DANGER}!${OFF} ${BOLD}$_title${OFF}"
+	box_row ""
+	for line in "$@"; do box_row "    $line"; done
+	box_row ""
+	printf '%s%s%s\n' "${DANGER}└${OFF}" "${DANGER}${DASHES}${OFF}" "${DANGER}┘${OFF}" >&2
+}
+
+box_row() {
+	_len="$(vislen "$1")"
+	_pad=$((INNER - _len))
+	[ "$_pad" -ge 0 ] || _pad=0
+	printf '%s%s%*s%s\n' "${DANGER}│${OFF}" "$1" "$_pad" '' "${DANGER}│${OFF}" >&2
+}
+
 die() {
 	clear_line
 	screen_close
-	printf '  %s!%s %s\n' "$BRIGHT" "$OFF" "$1" >&2
-	shift
-	for line in "$@"; do printf '    %s\n' "$line" >&2; done
+	error_box "$@"
 	exit 1
 }
 
