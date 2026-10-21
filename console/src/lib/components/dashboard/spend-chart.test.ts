@@ -1,0 +1,66 @@
+import { render } from 'svelte/server';
+import { addMessages, init } from 'svelte-i18n';
+import { beforeAll, describe, expect, it } from 'vitest';
+
+import en from '$lib/i18n/locales/en.json';
+import type { SpendRow } from '$lib/dashboard';
+import { providerOf } from '$lib/provider-fixtures';
+
+import SpendChart from './spend-chart.svelte';
+
+beforeAll(() => {
+	addMessages('en', en);
+	init({ fallbackLocale: 'en', initialLocale: 'en' });
+});
+
+function row(id: string, label: string, costMicros: number, unpriced = 0): SpendRow {
+	return {
+		provider: providerOf({ id, template_id: id, label, kind: 'key' }),
+		requests: 12,
+		errors: 0,
+		costMicros,
+		unpriced,
+		tokens: 0
+	};
+}
+
+function markup(rows: SpendRow[]): string {
+	return render(SpendChart, {
+		props: {
+			rows,
+			titleKey: 'ui.pages.dashboard.spendApi',
+			descriptionKey: 'ui.pages.dashboard.spendApiDesc',
+			emptyKey: 'ui.pages.dashboard.spendEmpty',
+			loading: false,
+			pending: undefined as never
+		}
+	}).body;
+}
+
+describe('the spend chart', () => {
+	it('names the connection and what it cost', () => {
+		const html = markup([row('openai', 'OpenAI', 1_200_000)]);
+
+		expect(html).toContain('API spend');
+		expect(html).toContain('OpenAI');
+		expect(html).toContain('$1.20');
+	});
+
+	it('names how the connection is priced', () => {
+		const html = markup([row('openai', 'OpenAI', 1_200_000)]);
+
+		expect(html).toContain('Pay-as-you-go');
+	});
+
+	it('names the connections that could not be priced', () => {
+		const html = markup([row('openai', 'OpenAI', 1_200_000, 2)]);
+
+		expect(html).toContain('2 unpriced');
+	});
+
+	it('says so when the window held no spend', () => {
+		const html = markup([]);
+
+		expect(html).toContain('No spend on paid connections');
+	});
+});

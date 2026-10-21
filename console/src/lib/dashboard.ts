@@ -124,6 +124,19 @@ export function rowTokens(row: UsageRollupRow): number {
 	);
 }
 
+/** How one connection is priced. */
+export type PricingKind = 'payg' | 'plan' | 'free' | 'local';
+
+/** Names how one connection is priced: by the token it carries, by a plan that covers
+ *  it, by nothing at all, or by a local engine that never bills. */
+export function pricingOf(provider: Provider): PricingKind {
+	if (isKiloFree(provider)) return 'free';
+	const kind = spendKindOf(provider);
+	if (kind === 'plan') return 'plan';
+	if (kind === 'local') return 'local';
+	return 'payg';
+}
+
 /** Reports the change between two totals as a percentage, or null when there is no previous
  *  period to compare with.
  *  A half rounds away from zero, the same rule the daemon's own delta follows. */
@@ -308,9 +321,9 @@ export function formatCountdown(remainingMs: number): string {
  *  the section description. */
 export const boardLimit = 6;
 
-/** The paid-spend board is the one board that can grow past the standard cap: an operator with
+/** The spend cards are the one board that can grow past the standard cap: an operator with
  *  many API connections still needs to see them all. */
-export const spendBoardLimit = 10;
+export const spendChartLimit = 10;
 
 /** The rows a board paints. Anything past the limit stays in the totals and is named by
  *  boardOverflowLabel. */

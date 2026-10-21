@@ -14,7 +14,7 @@ import {
 	readDashboardLive,
 	rowTokens,
 	boardOverflowLabel,
-	spendBoardLimit,
+	pricingOf,
 	spendKindOf,
 	spendRows,
 	summaryWindow,
@@ -214,6 +214,29 @@ describe('spendRows', () => {
 	});
 });
 
+describe('pricingOf', () => {
+	it('names an API key and a cloud credential as pay-as-you-go', () => {
+		expect(pricingOf(provider('openai', 'key'))).toBe('payg');
+		expect(pricingOf(provider('bedrock', 'cloud'))).toBe('payg');
+	});
+
+	it('names a sign-in account and a token plan as a plan', () => {
+		expect(pricingOf(provider('claude', 'signin'))).toBe('plan');
+		expect(pricingOf({ ...provider('x', 'key'), id: 'xiaomi-token-plan-sgp' })).toBe('plan');
+	});
+
+	it('names the keyless free lane and the local engine for what they are', () => {
+		expect(
+			pricingOf({
+				...provider('kilo', 'key'),
+				template_id: 'kilo-free',
+				modelsdev_provider_id: 'kilo'
+			})
+		).toBe('free');
+		expect(pricingOf(provider('ollama', 'local'))).toBe('local');
+	});
+});
+
 describe('rowTokens', () => {
 	it('adds cache traffic to input and output', () => {
 		expect(rowTokens(rollup('x'))).toBe(130);
@@ -404,14 +427,6 @@ describe('board cap', () => {
 		expect(visibleBoard(items)).toEqual([1, 2, 3, 4, 5, 6]);
 		expect(boardOverflowLabel(items.length)).toBe('6+');
 		expect(boardOverflowLabel(6)).toBe('');
-	});
-
-	it('shows ten spend rows and marks an eleventh as 10+', () => {
-		const items = Array.from({ length: 12 }, (_, index) => index);
-		expect(visibleBoard(items, spendBoardLimit)).toHaveLength(10);
-		expect(visibleBoard(items, spendBoardLimit).at(-1)).toBe(9);
-		expect(boardOverflowLabel(items.length, spendBoardLimit)).toBe('10+');
-		expect(boardOverflowLabel(10, spendBoardLimit)).toBe('');
 	});
 });
 

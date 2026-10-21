@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { onDestroy, onMount, untrack } from 'svelte';
+	import { onDestroy, onMount } from 'svelte';
 	import { t } from 'svelte-i18n';
 	import { goto } from '$app/navigation';
 	import { api } from '$lib/api';
@@ -11,7 +11,7 @@
 	import DoctorChecks from '$lib/components/dashboard/doctor-checks.svelte';
 	import RecentRequests from '$lib/components/dashboard/recent-requests.svelte';
 	import HealthBoard from '$lib/components/dashboard/health-board.svelte';
-	import SpendBoard from '$lib/components/dashboard/spend-board.svelte';
+	import SpendChart from '$lib/components/dashboard/spend-chart.svelte';
 	import TrendChart from '$lib/components/dashboard/trend-chart.svelte';
 	import TokenMixDonut from '$lib/components/dashboard/token-mix-donut.svelte';
 	import KpiTile from '$lib/components/dashboard/kpi-tile.svelte';
@@ -100,32 +100,16 @@
 		since: windowStart(summaryPeriod, Date.now())
 	});
 
-	// spendSet chooses which figure the board reads: the connections that pay
-	// per token, or the ones a plan covers.
-	type SpendSet = 'api' | 'plan';
-	// Reports whether a choice the control handed back is one the board reads.
-	function isSpendSet(value: string): value is SpendSet {
-		return value === 'api' || value === 'plan';
-	}
-	let spendSet = $state<SpendSet>('api');
-	let spendRowsState = $state<UsageRollupRow[]>([]);
-	let spendLoading = $state(false);
-	// The board fades in only when a window or set swap lands its new rows:
-	// boardShownKey names the choice the rendered rows belong to, so a plain
-	// refresh keeps the board quiet.
-	let boardShownKey = $state(untrack(() => summaryPeriod + '|' + spendSet));
-	let boardSwapped = $state(false);
 	let trendMode = $state<ChartMetric>('requests');
 	let dailyPaid = $state<UsageRollupRow[]>([]);
-	let expandedSpend = $state('');
-	let spendKeys = $state<UsageRollupRow[]>([]);
-	let spendKeysLoading = $state(false);
 
 	const configuredProviders = $derived(providers.filter((provider) => provider.configured));
 	const paid = $derived(paidProviders(providers).filter((provider) => provider.configured));
 	const plan = $derived(planProviders(providers).filter((provider) => provider.configured));
-	const boardSet = $derived(spendSet === 'api' ? paid : plan);
-	const paidSpendBoard = $derived(spendRows(boardSet, spendRowsState));
+	// The spend charts read the window's own rollup: what the paid connections
+	// cost, and what the plan-covered ones were worth.
+	const apiSpendRows = $derived(spendRows(paid, summaryRows));
+	const planUsageRows = $derived(spendRows(plan, summaryRows));
 
 	const total = (rows: UsageRollupRow[], pick: (row: UsageRollupRow) => number) =>
 		rows.reduce((sum, row) => sum + pick(row), 0);
@@ -182,25 +166,12 @@
 		{ value: 'tokens', label: $t('ui.pages.dashboard.trendTokens'), icon: 'sparkles' },
 		{ value: 'spend', label: $t('ui.pages.dashboard.trendSpend'), icon: 'currency-dollar' }
 	]);
-	// openedSpend is the board row behind the operator's last click, with what
-	// its access-key read answered.
-	const openedSpend = $derived(
-		expandedSpend === ''
-			? null
-			: { providerId: expandedSpend, keys: spendKeys, loading: spendKeysLoading }
-	);
-
-	// The chosen connections are named only when they fit the daemon's filter
-	// cap; a wider roster reads every connection and the join keeps the ones
-	// asked for.
-	function spendUrl(
-		chosen: readonly Provider[],
-		start: number,
-		until = 0,
-		groupBy: 'provider' | 'day' = 'provider'
-	): string {
-		let url = '/activity/usage?group_by=' + groupBy + '&since_ms=' + start;
-		if (until > 0) url += '&until_ms=' + until;
+	// The trend's spend series reads the paid connections at day grain, so it
+	// asks for the same days the window covers. The connections are named only
+	// when they fit the daemon's filter cap; a wider roster reads every
+	// connection and the join keeps the ones asked for.
+	function paidDaysUrl(chosen: readonly Provider[], start: number): string {
+		let url = '/activity/usage?group_by=day&since_ms=' + start;
 		if (chosen.length > 0 && chosen.length <= 32) {
 			for (const provider of chosen) url += '&provider=' + encodeURIComponent(provider.id);
 		}
@@ -250,33 +221,14 @@
 		}
 	}
 
-	async function loadSpend() {
-		spendLoading = true;
-		boardSwapped = false;
-		try {
-			const start = windowStart(summaryPeriod, Date.now());
-			spendRowsState =
-				(await api<{ items: UsageRollupRow[] }>(spendUrl(boardSet, start))).items ?? [];
-			const key = summaryPeriod + '|' + spendSet;
-			if (key !== boardShownKey) {
-				boardShownKey = key;
-				boardSwapped = true;
-			}
-		} catch {
-			spendRowsState = [];
-		} finally {
-			spendLoading = false;
-		}
-	}
-
 	async function loadTrendPaid() {
 		try {
 			// The trend's spend series stays API spend, so it reads the paid
-			// connections whatever the board is showing.
+			// connections.
 			dailyPaid =
 				(
 					await api<{ items: UsageRollupRow[] }>(
-						spendUrl(paid, windowStart(summaryPeriod, Date.now()), 0, 'day')
+						paidDaysUrl(paid, windowStart(summaryPeriod, Date.now()))
 					)
 				).items ?? [];
 		} catch {
@@ -360,9 +312,9 @@
 				loadKeys(),
 				loadSummary(),
 				loadTrend(),
+				loadTrendPaid(),
 				includeRecent ? loadRecent() : Promise.resolve()
 			]);
-			await Promise.all([loadSpend(), loadTrendPaid()]);
 		} finally {
 			contentLoading = false;
 		}
@@ -408,45 +360,11 @@
 		reloadHealth.cancel();
 	});
 
-	// The KPI tiles, the spend board and both trend reads follow the page window,
-	// while the doctor and the request tail keep their own scopes.
+	// The KPI tiles, the spend charts and both trend reads follow the page
+	// window, while the doctor and the request tail keep their own scopes.
 	function onSummaryPeriod(period: string) {
 		if (isWindowPeriod(period)) summaryPeriod = period;
-		void Promise.all([loadSummary(), loadSpend(), loadTrend(), loadTrendPaid()]);
-	}
-
-	// The expanded key row belongs to the set that was open, so it closes with
-	// the swap.
-	function onSpendSet(next: string) {
-		if (isSpendSet(next)) spendSet = next;
-		expandedSpend = '';
-		void loadSpend();
-	}
-
-	async function onExpandSpend(providerId: string) {
-		if (expandedSpend === providerId) {
-			expandedSpend = '';
-			return;
-		}
-		expandedSpend = providerId;
-		spendKeys = [];
-		spendKeysLoading = true;
-		try {
-			const start = windowStart(summaryPeriod, Date.now());
-			spendKeys =
-				(
-					await api<{ items: UsageRollupRow[] }>(
-						'/activity/usage?group_by=credential&since_ms=' +
-							start +
-							'&provider=' +
-							encodeURIComponent(providerId)
-					)
-				).items ?? [];
-		} catch {
-			spendKeys = [];
-		} finally {
-			spendKeysLoading = false;
-		}
+		void Promise.all([loadSummary(), loadTrend(), loadTrendPaid()]);
 	}
 </script>
 
@@ -664,28 +582,34 @@
 		</div>
 	</div>
 
-	<!-- Account health and spending. -->
-	<div
-		class="grid min-w-0 grid-cols-1 gap-[var(--grid-gap)] lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]"
-	>
-		<HealthBoard
-			cards={healthBoard}
-			loading={contentLoading || (accountsLoading && accounts.length === 0)}
-			failed={healthFailed}
-			windowsOf={accountWindows}
-			onretry={() => void loadHealth()}
-			onadd={() => goto('/connections?add=1')}
+	<!-- The accounts the operator has to look after. -->
+	<HealthBoard
+		cards={healthBoard}
+		loading={contentLoading || (accountsLoading && accounts.length === 0)}
+		failed={healthFailed}
+		windowsOf={accountWindows}
+		onretry={() => void loadHealth()}
+		onadd={() => goto('/connections?add=1')}
+		pending={processing}
+	/>
+
+	<!-- What the window cost, and what the plans covered. -->
+	<div class="grid min-w-0 grid-cols-1 gap-[var(--grid-gap)] lg:grid-cols-2">
+		<SpendChart
+			rows={apiSpendRows}
+			titleKey="ui.pages.dashboard.spendApi"
+			descriptionKey="ui.pages.dashboard.spendApiDesc"
+			emptyKey="ui.pages.dashboard.spendEmpty"
+			loading={contentLoading}
 			pending={processing}
 		/>
 
-		<SpendBoard
-			rows={paidSpendBoard}
-			loading={contentLoading || spendLoading}
-			swapped={boardSwapped}
-			set={spendSet}
-			opened={openedSpend}
-			onsetset={onSpendSet}
-			onexpand={(providerId) => void onExpandSpend(providerId)}
+		<SpendChart
+			rows={planUsageRows}
+			titleKey="ui.pages.dashboard.spendPlan"
+			descriptionKey="ui.pages.dashboard.spendPlanDesc"
+			emptyKey="ui.pages.dashboard.spendPlanEmpty"
+			loading={contentLoading}
 			pending={processing}
 		/>
 	</div>
