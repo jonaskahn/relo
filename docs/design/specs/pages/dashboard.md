@@ -14,7 +14,7 @@ requires: [data-rows, status-and-banners, motion]
    charts take the room the map leaves them, so the map's height is the trend's plus the mix's. Below the wide
    breakpoint each takes the full width.
 4. **One row, one card**: the **subscription accounts**, the accounts that need an operator, across the whole page.
-5. **One row, two columns**: the **API spend** card and the **plan usage** card.
+5. **One row, three columns**: the **API spend**, **plan usage** and **free usage** cards.
 6. **One row, two columns**: **recent requests** on the wider half, the **doctor checks** on the other. Both stop at half
    the height their rows would take, and scroll inside.
 
@@ -54,12 +54,11 @@ empty.
 
 ## Spend cards
 
-Two cards answer what the window cost: the **API spend** card for the connections that pay per token, the **plan
-usage** card for the ones a plan covers. Each states the total of its set and then names its three costliest
-connections, the costliest first, with a `3+` mark when the set holds more. A connection reads as its mark, its name,
-a chip that names how that connection is priced — pay-as-you-go, plan, free or local — and what it cost. A keyless lane
-reads as **Free** wherever it comes from. A connection that served requests the daemon could not price carries a
-warning beside its figure.
+Three cards answer what the window cost: the **API spend** card for the connections that pay per token, the **plan
+usage** card for the ones a plan covers, and the **free usage** card for the keyless free lanes. All three state money:
+the free lanes' traffic is priced like any other, it is only never charged. Each names its three costliest
+connections, the costliest first, with a `3+` mark when the set holds more. A connection reads as its mark, its name and
+what it cost.
 
 ## Rules
 

@@ -125,17 +125,31 @@ export function rowTokens(row: UsageRollupRow): number {
 	);
 }
 
-/** How one connection is priced. */
-export type PricingKind = 'payg' | 'plan' | 'free' | 'local';
+/** The connections of the three spend cards: what the pay-as-you-go connections cost,
+ *  what the plans covered, and what the keyless free lanes carried. */
+export interface SpendSets {
+	/** The connections that pay per token. */
+	paid: Provider[];
+	/** The connections a plan covers. */
+	plan: Provider[];
+	/** The keyless free lanes, which bill nothing. */
+	free: Provider[];
+}
 
-/** Names how one connection is priced: by the token it carries, by a plan that covers
- *  it, by nothing at all, or by a local engine that never bills. */
-export function pricingOf(provider: Provider): PricingKind {
-	if (isFreeConnection(provider)) return 'free';
-	const kind = spendKindOf(provider);
-	if (kind === 'plan') return 'plan';
-	if (kind === 'local') return 'local';
-	return 'payg';
+/** Splits the connections into the three sets the spend cards read. A keyless lane is
+ *  free wherever it comes from, so it leaves the paid and the plan sets. */
+export function spendSets(providers: Provider[]): SpendSets {
+	const free = providers.filter((provider) => isFreeConnection(provider));
+	const freeIds = new Set(free.map((provider) => provider.id));
+	return {
+		paid: providers.filter(
+			(provider) => spendKindOf(provider) === 'paid' && !freeIds.has(provider.id)
+		),
+		plan: providers.filter(
+			(provider) => spendKindOf(provider) === 'plan' && !freeIds.has(provider.id)
+		),
+		free
+	};
 }
 
 /** Reports the change between two totals as a percentage, or null when there is no previous

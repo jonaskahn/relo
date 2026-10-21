@@ -24,11 +24,10 @@
 		accountAttention,
 		deltaPercent,
 		healthCards,
-		paidProviders,
-		planProviders,
 		readDashboardLive,
 		rowTokens,
 		spendRows,
+		spendSets,
 		showsDayLabels,
 		summaryWindow,
 		windowStart,
@@ -105,12 +104,13 @@
 	let dailyPaid = $state<UsageRollupRow[]>([]);
 
 	const configuredProviders = $derived(providers.filter((provider) => provider.configured));
-	const paid = $derived(paidProviders(providers).filter((provider) => provider.configured));
-	const plan = $derived(planProviders(providers).filter((provider) => provider.configured));
-	// The spend charts read the window's own rollup: what the paid connections
-	// cost, and what the plan-covered ones were worth.
-	const apiSpendRows = $derived(spendRows(paid, summaryRows));
-	const planUsageRows = $derived(spendRows(plan, summaryRows));
+	// The spend cards read the window's own rollup: what the pay-as-you-go
+	// connections cost, what the plans covered, and what the keyless free
+	// lanes carried.
+	const sets = $derived(spendSets(configuredProviders));
+	const apiSpendRows = $derived(spendRows(sets.paid, summaryRows));
+	const planUsageRows = $derived(spendRows(sets.plan, summaryRows));
+	const freeUsageRows = $derived(spendRows(sets.free, summaryRows));
 
 	const total = (rows: UsageRollupRow[], pick: (row: UsageRollupRow) => number) =>
 		rows.reduce((sum, row) => sum + pick(row), 0);
@@ -121,7 +121,7 @@
 
 	const requestsWindow = $derived(sumRequests(summaryRows));
 	const errorsWindow = $derived(sumErrors(summaryRows));
-	const paidIds = $derived(new Set(paid.map((provider) => provider.id)));
+	const paidIds = $derived(new Set(sets.paid.map((provider) => provider.id)));
 	const paidSpendWindow = $derived(sumCost(summaryRows.filter((row) => paidIds.has(row.Key))));
 	const tokensWindow = $derived(sumTokens(summaryRows));
 	const tokensInWindow = $derived(total(summaryRows, (row) => Number(row.InputTokens)));
@@ -229,7 +229,7 @@
 			dailyPaid =
 				(
 					await api<{ items: UsageRollupRow[] }>(
-						paidDaysUrl(paid, windowStart(summaryPeriod, Date.now()))
+						paidDaysUrl(sets.paid, windowStart(summaryPeriod, Date.now()))
 					)
 				).items ?? [];
 		} catch {
@@ -482,7 +482,7 @@
 				<AnimatedNumber value={paidSpendWindow} format={(value) => formatCost(Math.round(value))} />
 			</span>
 			<p class="min-h-4 text-xs text-muted-foreground">
-				{$t('ui.pages.dashboard.paidSpendHint', { values: { count: paid.length } })}
+				{$t('ui.pages.dashboard.paidSpendHint', { values: { count: sets.paid.length } })}
 			</p>
 		</KpiTile>
 
@@ -595,11 +595,12 @@
 		pending={processing}
 	/>
 
-	<!-- What the window cost, and what the plans covered. -->
-	<div class="grid min-w-0 grid-cols-1 gap-[var(--grid-gap)] lg:grid-cols-2">
+	<!-- What the window cost, what the plans covered, and what the free lanes carried. -->
+	<div class="grid min-w-0 grid-cols-1 gap-[var(--grid-gap)] lg:grid-cols-3">
 		<SpendChart
 			rows={apiSpendRows}
 			titleKey="ui.pages.dashboard.spendApi"
+			icon="currency-dollar"
 			descriptionKey="ui.pages.dashboard.spendApiDesc"
 			emptyKey="ui.pages.dashboard.spendEmpty"
 			loading={contentLoading}
@@ -609,8 +610,19 @@
 		<SpendChart
 			rows={planUsageRows}
 			titleKey="ui.pages.dashboard.spendPlan"
+			icon="tag"
 			descriptionKey="ui.pages.dashboard.spendPlanDesc"
 			emptyKey="ui.pages.dashboard.spendPlanEmpty"
+			loading={contentLoading}
+			pending={processing}
+		/>
+
+		<SpendChart
+			rows={freeUsageRows}
+			titleKey="ui.pages.dashboard.spendFree"
+			icon="bolt"
+			descriptionKey="ui.pages.dashboard.spendFreeDesc"
+			emptyKey="ui.pages.dashboard.spendFreeEmpty"
 			loading={contentLoading}
 			pending={processing}
 		/>

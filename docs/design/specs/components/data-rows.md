@@ -50,8 +50,8 @@ it carries data.
   losing the overall total. Baseline is an SVG stroke. Axis labels `.mono-data` 11.5px.
 - Column chart: one column per group on the same 640×84 baseline, the longest in `--accent` and the rest in
   `--accent-200`; the heading and the readouts state the unit.
-- Spend list: the costliest connections first — the connection's mark, its name, a chip that names how that
-  connection is priced, and what it cost. A keyless lane wears the same `Free` badge the connections page gives it.
+- Spend list: the costliest connections first — the connection's mark, its name, and what it cost. Every set is
+  priced, the free lanes included; they are never charged.
 
 ## Donut and heatmap
 

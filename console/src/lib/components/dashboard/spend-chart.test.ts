@@ -18,15 +18,15 @@ function row(
 	id: string,
 	label: string,
 	costMicros: number,
-	unpriced = 0,
+	requests = 12,
 	provider: Partial<Provider> = {}
 ): SpendRow {
 	return {
 		provider: providerOf({ id, template_id: id, label, kind: 'key', ...provider }),
-		requests: 12,
+		requests,
 		errors: 0,
 		costMicros,
-		unpriced,
+		unpriced: 0,
 		tokens: 0
 	};
 }
@@ -36,6 +36,7 @@ function markup(rows: SpendRow[]): string {
 		props: {
 			rows,
 			titleKey: 'ui.pages.dashboard.spendApi',
+			icon: 'currency-dollar',
 			descriptionKey: 'ui.pages.dashboard.spendApiDesc',
 			emptyKey: 'ui.pages.dashboard.spendEmpty',
 			loading: false,
@@ -68,27 +69,10 @@ describe('the spend chart', () => {
 		expect(html).toContain('3+');
 	});
 
-	it('names how the connection is priced', () => {
-		const html = markup([row('openai', 'OpenAI', 1_200_000)]);
+	it('states what a free lane was worth', () => {
+		const html = markup([row('kilo', 'Kilo', 900_000)]);
 
-		expect(html).toContain('Pay-as-you-go');
-	});
-
-	it('names a free lane as free', () => {
-		const html = markup([
-			row('opencode', 'OpenCode', 0, 0, {
-				template_id: 'opencode-free',
-				auth: 'none'
-			})
-		]);
-
-		expect(html).toContain('Free');
-	});
-
-	it('names the connections that could not be priced', () => {
-		const html = markup([row('openai', 'OpenAI', 1_200_000, 2)]);
-
-		expect(html).toContain('2 unpriced');
+		expect(html).toContain('$0.90');
 	});
 
 	it('says so when the window held no spend', () => {

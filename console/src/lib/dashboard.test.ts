@@ -14,9 +14,9 @@ import {
 	readDashboardLive,
 	rowTokens,
 	boardOverflowLabel,
-	pricingOf,
 	spendKindOf,
 	spendRows,
+	spendSets,
 	showsDayLabels,
 	summaryWindow,
 	topSpendRows,
@@ -248,35 +248,33 @@ describe('topSpendRows', () => {
 	});
 });
 
-describe('pricingOf', () => {
-	it('names an API key and a cloud credential as pay-as-you-go', () => {
-		expect(pricingOf(provider('openai', 'key'))).toBe('payg');
-		expect(pricingOf(provider('bedrock', 'cloud'))).toBe('payg');
+describe('spendSets', () => {
+	it('splits the connections into the three cards', () => {
+		const sets = spendSets([
+			provider('openai', 'key'),
+			provider('claude', 'signin'),
+			{ ...provider('ollama', 'local') }
+		]);
+
+		expect(sets.paid.map((entry) => entry.id)).toEqual(['openai']);
+		expect(sets.plan.map((entry) => entry.id)).toEqual(['claude']);
+		expect(sets.free).toHaveLength(0);
 	});
 
-	it('names a sign-in account and a token plan as a plan', () => {
-		expect(pricingOf(provider('claude', 'signin'))).toBe('plan');
-		expect(pricingOf({ ...provider('x', 'key'), id: 'xiaomi-token-plan-sgp' })).toBe('plan');
-	});
-
-	it('names the keyless free lanes and the local engine for what they are', () => {
-		expect(
-			pricingOf({
-				...provider('kilo', 'key'),
-				template_id: 'kilo-free',
-				modelsdev_provider_id: 'kilo',
-				auth: 'none'
-			})
-		).toBe('free');
-		expect(
-			pricingOf({
+	it('keeps a keyless lane out of the paid and the plan cards', () => {
+		const sets = spendSets([
+			provider('openai', 'key'),
+			{
 				...provider('opencode', 'key'),
 				template_id: 'opencode-free',
 				modelsdev_provider_id: 'opencode',
 				auth: 'none'
-			})
-		).toBe('free');
-		expect(pricingOf(provider('ollama', 'local'))).toBe('local');
+			}
+		]);
+
+		expect(sets.paid.map((entry) => entry.id)).toEqual(['openai']);
+		expect(sets.plan).toHaveLength(0);
+		expect(sets.free.map((entry) => entry.id)).toEqual(['opencode']);
 	});
 });
 
