@@ -261,6 +261,36 @@ func TestUsageQueryLogsAccessClientFilter(t *testing.T) {
 	}
 }
 
+// TestUsageQueryLogsCarryClientApp covers the field a reader needs to know
+// which coding client made a request: the event stores the client the key was
+// issued for, so a log row reports it even after the key is gone.
+func TestUsageQueryLogsCarryClientApp(t *testing.T) {
+	db := testkit.OpenTestDB(t)
+	query, recorder := newQuery(t, db)
+	ctx := context.Background()
+	appendEvent(t, recorder, sqlite.UsageEvent{
+		RequestID: "a", Timestamp: 1_000, Provider: "openai", Model: "gpt-4o", Status: 200,
+		ClientKeyID: "key-codex", ClientKeyName: "codex-integration", ClientApp: "codex",
+	})
+	appendEvent(t, recorder, sqlite.UsageEvent{
+		RequestID: "b", Timestamp: 2_000, Provider: "openai", Model: "gpt-4o", Status: 200,
+	})
+
+	page, err := query.Logs(ctx, activity.LogQuery{})
+	if err != nil {
+		t.Fatalf("Logs() error = %v", err)
+	}
+	if len(page.Rows) != 2 {
+		t.Fatalf("rows = %d, want the two requests", len(page.Rows))
+	}
+	if page.Rows[0].RequestID != "b" || page.Rows[0].ClientApp != "" {
+		t.Fatalf("row = %+v, want the request made without a client", page.Rows[0])
+	}
+	if page.Rows[1].RequestID != "a" || page.Rows[1].ClientApp != "codex" {
+		t.Fatalf("row = %+v, want the coding client the key was issued for", page.Rows[1])
+	}
+}
+
 func TestExpiredKeyDeleteLeavesUsage(t *testing.T) {
 	db := testkit.OpenTestDB(t)
 	query, recorder := newQuery(t, db)

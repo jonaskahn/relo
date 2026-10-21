@@ -481,20 +481,21 @@ func scanLogRow(rows *sql.Rows) (activity.UsageLogRow, error) {
 		reason     sql.NullString
 		client     sql.NullString
 		clientName sql.NullString
+		clientApp  sql.NullString
 		origin     sql.NullString
 		extra      sql.NullString
 	)
 	err := rows.Scan(&event.ID, &request, &event.TimestampMs, &event.Provider, &event.Model,
 		&label, &credential, &surface, &event.Status, &event.DurationMs, &event.InputTokens,
 		&event.OutputTokens, &event.CacheReadTokens, &event.CacheWriteTokens,
-		&cost, &route, &reason, &client, &clientName, &origin, &extra)
+		&cost, &route, &reason, &client, &clientName, &clientApp, &origin, &extra)
 	if err != nil {
 		return activity.UsageLogRow{}, fmt.Errorf("scan usage event: %w", err)
 	}
-	return finishLogRow(event, request, label, credential, surface, route, reason, client, clientName, origin, extra, cost), nil
+	return finishLogRow(event, request, label, credential, surface, route, reason, client, clientName, clientApp, origin, extra, cost), nil
 }
 
-func finishLogRow(event activity.UsageLogRow, request, label, credential, surface, route, reason, client, clientName, origin, extra sql.NullString, cost sql.NullInt64) activity.UsageLogRow {
+func finishLogRow(event activity.UsageLogRow, request, label, credential, surface, route, reason, client, clientName, clientApp, origin, extra sql.NullString, cost sql.NullInt64) activity.UsageLogRow {
 	event.RequestID = request.String
 	event.CredentialLabel = label.String
 	event.CredentialID = credential.String
@@ -503,6 +504,7 @@ func finishLogRow(event activity.UsageLogRow, request, label, credential, surfac
 	event.RouteReason = reason.String
 	event.ClientKeyID = client.String
 	event.ClientKeyName = clientName.String
+	event.ClientApp = clientApp.String
 	event.Origin = origin.String
 	event.Warnings = warningsOf(extra.String)
 	return setCost(event, cost)
@@ -589,7 +591,7 @@ func scanPlan(rows *sql.Rows) ([]string, error) {
 
 const logSelect = `SELECT id, request_id, timestamp, provider, model, credential_label, credential_id, surface, status,
 	duration_ms, input_tokens, output_tokens, cache_read_tokens, cache_write_tokens,
-	estimated_cost_micros, route_provider, route_reason, client_key_id, client_key_name, origin, extra
+	estimated_cost_micros, route_provider, route_reason, client_key_id, client_key_name, client_app, origin, extra
 FROM usage_events`
 
 const logOrder = `
