@@ -15,7 +15,7 @@ GOLANGCI_LINT_VERSION := v2.13.2
 # The dev targets below share one state directory, so the daemon and the
 # desktop tray read the same database and neither collides with ~/.relo.
 DEV_HOME ?= $(CURDIR)/.dev/relo
-DEV_PORT ?= 10201
+DEV_PORT ?= 10101
 DEV_URL  ?= http://127.0.0.1:$(DEV_PORT)
 
 .PHONY: help \
