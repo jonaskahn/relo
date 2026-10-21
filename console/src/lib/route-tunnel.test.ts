@@ -2,11 +2,13 @@ import { describe, expect, it } from 'vitest';
 
 import { providerOf } from './provider-fixtures';
 import {
-	PHONE_RAIL_LIMIT,
+	MIN_TUNNEL_WIDTH,
 	RAIL_LIMIT,
 	routeTunnel,
+	railShares,
 	tunnelBend,
 	tunnelGeometry,
+	tunnelHeight,
 	type RouteTunnel,
 	type TunnelContext,
 	type TunnelRoom,
@@ -99,7 +101,7 @@ function traffic(overrides: Partial<TunnelTraffic> = {}): TunnelTraffic {
 
 /** The tunnel as the card draws it, in a room of the test's choosing. */
 function drawn(tunnel: RouteTunnel, room: Partial<TunnelRoom> = {}) {
-	return tunnelGeometry(tunnel, { width: 900, height: 0, vertical: false, ...room });
+	return tunnelGeometry(tunnel, { width: 900, height: 0, ...room });
 }
 
 describe('routeTunnel', () => {
@@ -188,15 +190,6 @@ describe('routeTunnel', () => {
 		expect(agents).not.toContain('key:client-0');
 	});
 
-	it('keeps five nodes a rail on a phone', () => {
-		const clients = Array.from({ length: RAIL_LIMIT }, (_, index) =>
-			rollup('client-' + index, index + 1)
-		);
-		const tunnel = routeTunnel(traffic({ clients }), context({ limit: PHONE_RAIL_LIMIT }));
-
-		expect(tunnel.agents).toHaveLength(PHONE_RAIL_LIMIT);
-	});
-
 	it('follows the newest request of the window', () => {
 		const tunnel = routeTunnel(
 			traffic({ newest: row({ ClientApp: 'claude-code', Provider: 'anthropic' }) }),
@@ -251,6 +244,15 @@ describe('routeTunnel', () => {
 		expect(tunnel.connections).toEqual([]);
 		expect(tunnel.active).toBeNull();
 	});
+
+	it('states the requests the window held, rail limit or not', () => {
+		const clients = Array.from({ length: RAIL_LIMIT + 4 }, (_, index) =>
+			rollup('client-' + index, index + 1)
+		);
+		const tunnel = routeTunnel(traffic({ clients }), context());
+
+		expect(tunnel.total).toBe(105);
+	});
 });
 
 describe('tunnelGeometry', () => {
@@ -267,10 +269,32 @@ describe('tunnelGeometry', () => {
 		const geometry = drawn(tunnel);
 		const hub = geometry.hub;
 
-		expect(geometry.agents[0].tile.x).toBeLessThan(hub.x);
-		expect(geometry.connections[0].tile.x).toBeGreaterThan(hub.x + hub.width);
-		expect(geometry.agents[0].label.anchor).toBe('start');
-		expect(geometry.connections[0].label.anchor).toBe('end');
+		expect(geometry.agents[0].pill.x + geometry.agents[0].pill.width).toBeLessThan(hub.x);
+		expect(geometry.connections[0].pill.x).toBeGreaterThan(hub.x + hub.width);
+	});
+
+	it('draws every node as a pill that holds its name and its count', () => {
+		const geometry = drawn(tunnel);
+		const pill = geometry.agents.find((placement) => placement.node.id === 'client:codex')?.pill;
+
+		expect(pill?.width).toBeGreaterThan(0);
+		expect(pill?.height).toBe(36);
+		expect(pill?.textX).toBeGreaterThan(pill?.x ?? 0);
+		expect(pill?.countX).toBeGreaterThan(pill?.textX ?? 0);
+		expect(geometry.agents.find((placement) => placement.node.id === 'client:codex')?.text).toBe(
+			'Codex'
+		);
+	});
+
+	it('keeps both rails clear of the hub', () => {
+		const geometry = drawn(tunnel);
+
+		for (const placement of geometry.agents) {
+			expect(placement.pill.x + placement.pill.width).toBeLessThan(geometry.hub.x);
+		}
+		for (const placement of geometry.connections) {
+			expect(placement.pill.x).toBeGreaterThan(geometry.hub.x + geometry.hub.width);
+		}
 	});
 
 	it('lands every line on the hub', () => {
@@ -282,7 +306,7 @@ describe('tunnelGeometry', () => {
 		expect(connection.hub.x).toBe(geometry.hub.x + geometry.hub.width);
 	});
 
-	it('runs a line flat beside its name before it curves', () => {
+	it('runs a line flat beside its pill before it curves', () => {
 		const geometry = drawn(tunnel);
 		const agent = geometry.agents[0].stroke;
 
@@ -291,33 +315,16 @@ describe('tunnelGeometry', () => {
 		expect(geometry.legs[0].path).toContain('C ');
 	});
 
-	it('stacks the rails on a phone and names them the same way', () => {
-		const geometry = drawn(tunnel, { width: 360, vertical: true });
-
-		expect(geometry.agents[0].tile.y).toBeLessThan(geometry.hub.y);
-		expect(geometry.connections[0].tile.y).toBeGreaterThan(geometry.hub.y);
-		expect(geometry.agents[0].label.anchor).toBe('start');
-		expect(geometry.connections[0].label.anchor).toBe('start');
-	});
-
-	it('runs a phone its lines into one spine instead of folding them back', () => {
-		const geometry = drawn(tunnel, { width: 360, vertical: true });
-		const spine = geometry.hub.x + geometry.hub.width / 2;
-
-		for (const rail of [geometry.agents, geometry.connections]) {
-			for (const placement of rail) {
-				expect(placement.stroke.flat.x).toBeLessThan(spine);
-				expect(placement.stroke.flat.x).toBeGreaterThan(placement.stroke.from.x);
-			}
-		}
-	});
-
 	it('draws one line per node and one for the newest route', () => {
 		const geometry = drawn(tunnel);
 
 		expect(geometry.legs).toHaveLength(4);
 		expect(geometry.legs.every((leg) => leg.path.startsWith('M '))).toBe(true);
 		expect(geometry.active.path).not.toBe('');
+	});
+
+	it('states the requests the window held', () => {
+		expect(drawn(tunnel).total).toBe(16);
 	});
 
 	it('thicker lines carry more requests', () => {
@@ -343,13 +350,13 @@ describe('tunnelGeometry', () => {
 		const many = routeTunnel(
 			traffic({
 				clients,
-				connections: providers.map((id) => rollup(id, 1))
+				connections: providers.map((id, index) => rollup(id, 1))
 			}),
 			context({ providers: connections(...providers) })
 		);
 		const geometry = drawn(many);
 
-		const span = (geometry.agents.at(-1)?.tile.y ?? 0) - (geometry.agents[0]?.tile.y ?? 0);
+		const span = (geometry.agents.at(-1)?.pill.y ?? 0) - (geometry.agents[0]?.pill.y ?? 0);
 		const pitch = span / (RAIL_LIMIT - 1);
 		expect(pitch).toBeGreaterThanOrEqual(26);
 		expect(pitch).toBeLessThan(64);
@@ -364,14 +371,14 @@ describe('tunnelGeometry', () => {
 		const many = routeTunnel(
 			traffic({
 				clients,
-				connections: providers.map((id) => rollup(id, 1))
+				connections: providers.map((id, index) => rollup(id, 1))
 			}),
 			context({ providers: connections(...providers) })
 		);
 		const geometry = drawn(many);
 
 		for (const rail of [geometry.agents, geometry.connections]) {
-			const heights = rail.map((placement) => placement.tile.y);
+			const heights = rail.map((placement) => placement.pill.y);
 			const gaps = heights.slice(1).map((height, index) => height - heights[index]);
 			expect(Math.min(...gaps)).toBeGreaterThanOrEqual(10);
 		}
@@ -385,14 +392,14 @@ describe('tunnelGeometry', () => {
 		const many = routeTunnel(
 			traffic({
 				clients,
-				connections: providers.map((id) => rollup(id, 1))
+				connections: providers.map((id, index) => rollup(id, 1))
 			}),
 			context({ providers: connections(...providers) })
 		);
 		const geometry = drawn(many);
 
-		const agentHeights = geometry.agents.map((placement) => placement.tile.y);
-		const connectionHeights = geometry.connections.map((placement) => placement.tile.y);
+		const agentHeights = geometry.agents.map((placement) => placement.pill.y);
+		const connectionHeights = geometry.connections.map((placement) => placement.pill.y);
 		expect(connectionHeights).toEqual(agentHeights);
 	});
 
@@ -413,6 +420,7 @@ describe('tunnelGeometry', () => {
 		);
 
 		expect(drawn(few).height).toBeLessThan(drawn(many).height);
+		expect(tunnelHeight(few)).toBeLessThan(tunnelHeight(many));
 	});
 
 	it('fills the height the card gives it', () => {
@@ -440,16 +448,46 @@ describe('tunnelGeometry', () => {
 	it('spreads a short rail across the card', () => {
 		const geometry = drawn(tunnel);
 
-		const span = (geometry.agents.at(-1)?.tile.y ?? 0) - (geometry.agents[0]?.tile.y ?? 0);
+		const span = (geometry.agents.at(-1)?.pill.y ?? 0) - (geometry.agents[0]?.pill.y ?? 0);
 		expect(span).toBeGreaterThan(100);
 	});
 
-	it('cuts a name that does not fit its rail and keeps it whole in the node', () => {
-		const long = routeTunnel(traffic({ clients: [rollup('Codex', 10)] }), context());
-		const geometry = drawn(long, { width: 300, vertical: true });
+	it('keeps a narrow canvas wide enough for two rails of pills', () => {
+		const geometry = drawn(tunnel, { width: 300 });
 
-		expect(geometry.agents[0].text.length).toBeLessThan(geometry.agents[0].node.label.length + 1);
-		expect(geometry.agents[0].node.label).toBe('Codex');
+		expect(geometry.width).toBe(MIN_TUNNEL_WIDTH);
+	});
+
+	it('cuts a name that does not fit its rail and keeps it whole in the node', () => {
+		const long = routeTunnel(
+			traffic({ clients: [rollup('A very long coding client name', 10)] }),
+			context({ keys: [key('A very long coding client name')] })
+		);
+		const geometry = drawn(long, { width: MIN_TUNNEL_WIDTH });
+		const placement = geometry.agents.find((entry) => entry.node.id.startsWith('key:'));
+
+		expect(placement?.text.length).toBeLessThan(placement?.node.label.length ?? 0);
+		expect(placement?.text.endsWith('…')).toBe(true);
+		expect(placement?.node.label).toBe('A very long coding client name');
+	});
+});
+
+describe('railShares', () => {
+	it('reads each node against the busiest node on its rail', () => {
+		const shares = railShares([
+			{ id: 'a', label: 'A', markId: 'a', count: 100 },
+			{ id: 'b', label: 'B', markId: 'b', count: 25 },
+			{ id: 'c', label: 'C', markId: 'c', count: 0 }
+		]);
+
+		expect(shares.map((share) => share.node.id)).toEqual(['a', 'b', 'c']);
+		expect(shares[0].share).toBe(1);
+		expect(shares[1].share).toBe(0.25);
+		expect(shares[2].share).toBe(0);
+	});
+
+	it('shares nothing when the rail carried no traffic', () => {
+		expect(railShares([])).toEqual([]);
 	});
 });
 

@@ -94,10 +94,10 @@ function traffic(overrides: Partial<TunnelTraffic> = {}): TunnelTraffic {
 	};
 }
 
-function markup(vertical = false, live = true): string {
+function markup(live = true): string {
 	const tunnel = routeTunnel(traffic(), context());
 	return render(RouteTunnel, {
-		props: { tunnel, width: 900, height: 360, vertical, live }
+		props: { tunnel, width: 900, height: 360, live }
 	}).body;
 }
 
@@ -109,6 +109,23 @@ describe('the routing tunnel', () => {
 		expect(html).toContain('OpenAI');
 	});
 
+	it('draws every line twice, once quiet and once moving', () => {
+		const html = markup();
+
+		expect(html).toContain('leg');
+		expect(html).toContain('leg-flow');
+		expect(html).toContain('leg-moving');
+	});
+
+	it('holds the flow still when the tail is not live', () => {
+		const html = markup(false);
+
+		expect(html).toContain('leg-flow');
+		expect(html).not.toContain('leg-moving');
+		expect(html).toContain('route-flow');
+		expect(html).not.toContain('route-moving');
+	});
+
 	it('draws the newest route in the accent', () => {
 		const html = markup();
 
@@ -116,18 +133,11 @@ describe('the routing tunnel', () => {
 		expect(html).toContain('route-moving');
 	});
 
-	it('holds the flow still when the tail is not live', () => {
-		const html = markup(false, false);
+	it('states the requests the window held in the hub', () => {
+		const html = markup();
 
-		expect(html).toContain('route-flow');
-		expect(html).not.toContain('route-moving');
-	});
-
-	it('draws the rails upright on a phone', () => {
-		const html = markup(true);
-
-		expect(html).toContain('Codex');
-		expect(html).toContain('OpenAI');
+		expect(html).toContain('10');
+		expect(html).toContain('Relo');
 	});
 
 	it('names no rail of its own', () => {

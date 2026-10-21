@@ -1,5 +1,5 @@
 // The routing tunnel: the routes one window's requests took through Relo. The agents
-// stand on one side, Relo in the middle, and the connections on the other, and every
+// stand on one rail, Relo in the middle, and the connections on the other, and every
 // request is a line from an agent through Relo to the connection that served it.
 //
 // The model is pure, so the geometry can be tested without a canvas: the component draws
@@ -8,48 +8,48 @@
 import { CLIENT_OPTIONS, type ClientOption } from './client-setup';
 import type { AccessKey, Provider, UsageLogRow, UsageRollupRow } from './types';
 
-/** How many nodes one rail holds on a wide card. */
+/** How many nodes one rail holds. */
 export const RAIL_LIMIT = 10;
 
-/** How many nodes one rail holds on a phone, where ten would make the card a long
- *  column. */
-export const PHONE_RAIL_LIMIT = 5;
+/** The narrowest canvas that still holds two rails of pills and the hub between them.
+ *  Below it the card draws the rails as lists instead. */
+export const MIN_TUNNEL_WIDTH = 680;
 
 /** The id the daemon gives a client the operator named by hand. The console lists that
  *  choice as "other". */
 const CUSTOM_CLIENT = 'custom';
 
+/** The tile a node's mark wears, and the mark inside it. */
 const TILE = 26;
 const TILE_RADIUS = 7;
 const MARK = 16;
-const PHONE_TILE = 24;
-const PHONE_TILE_RADIUS = 6;
-const PHONE_MARK = 14;
-const NAME_GAP = 8;
-const LINE_GAP = 14;
-const COUNT_GAP = 8;
-const HUB_MIN = 56;
-const HUB_MAX = 84;
-const HUB_HEIGHT = 34;
-/** The room a curve needs between the hub's edge and a name, so it sweeps rather than
+/** The pill a node stands as: its height, its corners and the air inside it. */
+const PILL_HEIGHT = 36;
+const PILL_RADIUS = 12;
+const PILL_PAD = 7;
+const PILL_GAP = 8;
+/** The room between a pill and the line that leaves it. */
+const LINE_GAP = 12;
+/** The room a curve needs between the hub's edge and a pill, so it sweeps rather than
  *  hooks. */
-const CURVE_ROOM = 56;
-/** The room a phone's curve needs between the spine and a name. */
-const PHONE_CURVE_ROOM = 32;
+const CURVE_ROOM = 104;
 /** The air two rows on a rail always keep, so a scattered row never lands on its
  *  neighbour. */
 const MIN_GAP = 10;
-const PHONE_PITCH = 32;
-/** The space the rows keep from the card's edges. */
+/** The space the rows keep from the canvas's edges. */
 const EDGE = 12;
-/** The space one row takes on a wide card. */
+/** The space one row takes on a wide canvas. */
 const ROW_PITCH = 50;
-/** The height a wide card takes for one row, and the cap a full one reaches. */
+/** The height a canvas takes for one row, and the cap a full one reaches. */
 const MIN_HEIGHT = 180;
 const MAX_HEIGHT = 420;
-/** The width of a letter of the 12px system font, and of the mono count beside it. */
-const LETTER = 6.5;
-const COUNT_LETTER = 7;
+/** The width of a letter of the 13px system font, and of the mono count beside it. */
+const LETTER = 7;
+const COUNT_LETTER = 7.2;
+/** The hub: the box every route passes through. */
+const HUB_MIN = 104;
+const HUB_MAX = 132;
+const HUB_HEIGHT = 116;
 
 /** One end of the tunnel: the name it carries, the mark it wears, and how many of the
  *  window's requests passed through it. */
@@ -92,6 +92,8 @@ export interface RouteTunnel {
 	connections: TunnelNode[];
 	/** The newest request in the window: the route the tunnel follows. */
 	active: { agent: string; connection: string } | null;
+	/** The requests the window held, the number the hub states. */
+	total: number;
 }
 
 /** A point on the tunnel's canvas. */
@@ -100,10 +102,10 @@ export interface TunnelPoint {
 	y: number;
 }
 
-/** The line that carries one node into Relo: the flat run beside its name, and the curve
+/** The line that carries one node into Relo: the flat run beside its pill, and the curve
  *  that leaves that run. */
 export interface TunnelStroke {
-	/** Where the line starts, beside the name. */
+	/** Where the line starts, beside the pill. */
 	from: TunnelPoint;
 	/** Where the flat run ends and the curve begins. */
 	flat: TunnelPoint;
@@ -118,32 +120,41 @@ export interface TunnelTile {
 	size: number;
 	/** The corner the tile's radius gives it. */
 	radius: number;
-	/** The size of the mark inside the tile. */
-	mark: number;
 }
 
-/** Where one node stands: its tile, its name, and the line it rides. */
-export interface TunnelPlacement {
-	node: TunnelNode;
+/** The pill a node stands as: its box, its mark, its name and its count. */
+export interface TunnelPill {
+	x: number;
+	y: number;
+	width: number;
+	height: number;
 	/** The tile the node's mark sits in. */
 	tile: TunnelTile;
-	/** The name as it is drawn, cut to the room the rail has. */
-	text: string;
-	/** Where the name stands. */
-	label: TunnelText;
-	stroke: TunnelStroke;
+	/** Where the mark sits. */
+	mark: TunnelPoint;
+	/** Where the name starts. */
+	textX: number;
+	/** Where the count starts. */
+	countX: number;
+	/** The baseline the name and the count share. */
+	baseline: number;
 }
 
-/** A piece of text the tunnel draws, and the way it reads. */
-export interface TunnelText extends TunnelPoint {
-	anchor: 'start' | 'end';
+/** Where one node stands: its pill, its name, and the line it rides. */
+export interface TunnelPlacement {
+	node: TunnelNode;
+	/** The pill the node stands as. */
+	pill: TunnelPill;
+	/** The name as it is drawn, cut to the room the rail has. */
+	text: string;
+	/** The line the node rides. */
+	stroke: TunnelStroke;
 }
 
 /** The tunnel as it is drawn: the rails, the hub, and every line. */
 export interface TunnelGeometry {
 	width: number;
 	height: number;
-	vertical: boolean;
 	agents: TunnelPlacement[];
 	connections: TunnelPlacement[];
 	/** The line each rail takes, one per node. */
@@ -152,6 +163,8 @@ export interface TunnelGeometry {
 	active: { path: string; agent: string; connection: string };
 	/** Relo, the hub every route passes through. */
 	hub: { x: number; y: number; width: number; height: number };
+	/** The requests the window held. */
+	total: number;
 }
 
 /** The client the console knows, or the one the operator named by hand. */
@@ -264,11 +277,12 @@ export function routeTunnel(traffic: TunnelTraffic, context: TunnelContext): Rou
 	return {
 		agents: rail(agents, context.limit, active?.agent ?? ''),
 		connections: rail(connections, context.limit, active?.connection ?? ''),
-		active
+		active,
+		total: traffic.clients.reduce((sum, row) => sum + row.Requests, 0)
 	};
 }
 
-/** Cuts a name to the room its rail has. A letter of the 12px system font is about 6.5px
+/** Cuts a name to the room its rail has. A letter of the 13px system font is about 7px
  *  wide, so the room is counted in letters; the full name stays in the tooltip. */
 function cut(text: string, width: number): string {
 	const max = Math.floor(width / LETTER);
@@ -332,15 +346,10 @@ function legWidth(count: number): number {
 	return Math.min(3.5, 1.5 + (count - 1) / 10);
 }
 
-/** How far a line runs flat beside a name before it curves into the hub. The run keeps
+/** How far a line runs flat beside a pill before it curves into the hub. The run keeps
  *  room for the curve, so the curve sweeps rather than hooks. */
 function flatRun(span: number): number {
-	return Math.max(0, Math.min(60, Math.max(12, span * 0.35), span - 12));
-}
-
-/** How many letters the count beside a name takes. */
-function countLetters(node: TunnelNode): number {
-	return String(node.count).length;
+	return Math.max(0, Math.min(76, Math.max(12, span * 0.62), span - 12));
 }
 
 /** How far a row may drift from its place, so a scattered row never lands on its
@@ -354,102 +363,107 @@ function scatterRoom(pitch: number): number {
 interface RailOptions {
 	/** How many rows the rail holds. */
 	count: number;
-	/** The band's top edge, where the first row's tile starts. */
+	/** The band's top edge, where the first row's pill starts. */
 	top: number;
-	/** The band's bottom edge, where the last row's tile ends. */
+	/** The band's bottom edge, where the last row's pill ends. */
 	bottom: number;
-	/** The height of a row's tile. */
-	tile: number;
+	/** The height of a row's pill. */
+	pill: number;
 }
 
 /** The row heights of one rail. The same slot moves the same amount on both rails, so the
  *  two sides stay mirrored, and the movement is bounded so two rows always keep their
  *  gap. */
 function railHeights(options: RailOptions): number[] {
-	const span = options.bottom - options.top - options.tile;
+	const span = options.bottom - options.top - options.pill;
 	const pitch = options.count > 1 ? span / (options.count - 1) : 0;
 	const room = scatterRoom(pitch);
-	const first = options.count > 1 ? options.top + options.tile / 2 : options.top + span / 2;
+	const first = options.count > 1 ? options.top + options.pill / 2 : options.top + span / 2;
 	return Array.from({ length: options.count }, (_, index) => {
 		const base = first + index * pitch;
 		const moved = base + (scatter('slot-' + index) / 0x100000000 - 0.5) * 2 * room;
 		return Math.min(
-			options.bottom - options.tile / 2,
-			Math.max(options.top + options.tile / 2, moved)
+			options.bottom - options.pill / 2,
+			Math.max(options.top + options.pill / 2, moved)
 		);
 	});
 }
 
-/** One row of a rail: the tile, the name, the count, and the line that leaves them. */
+/** One row of a rail: the pill, the name, the count, and the line that leaves them. */
 interface RowOptions {
 	node: TunnelNode;
 	/** The row's centre line. */
 	y: number;
-	/** Where the tile sits. */
-	tileX: number;
-	/** The tile the node's mark sits in. */
-	tile: { size: number; radius: number; mark: number };
-	/** Where the name stands. */
-	nameX: number;
-	anchor: 'start' | 'end';
+	/** Which rail the row stands on: the agents' rail hugs the hub from the left, the
+	 *  connections' rail from the right. */
+	side: 'left' | 'right';
+	/** The edge the pill's inner side stands on. */
+	edge: number;
 	/** The room the name may take. */
 	room: number;
 	/** The point on the hub the line lands on. */
 	hub: TunnelPoint;
-	/** Which way the line runs flat: towards the hub, or away from it. */
-	direction: 1 | -1;
-	/** Where the flat run ends, when the card does not run it beside the name. */
-	flatX?: number;
 }
 
 function row(options: RowOptions): TunnelPlacement {
 	const count = String(options.node.count);
 	const text = cut(options.node.label, options.room);
-	const width = text.length * LETTER + COUNT_GAP + count.length * COUNT_LETTER;
+	const nameWidth = text.length * LETTER;
+	const countWidth = count.length * COUNT_LETTER;
+	const width = 2 * PILL_PAD + TILE + PILL_GAP + nameWidth + PILL_GAP + countWidth;
+	const x = options.side === 'left' ? options.edge - width : options.edge;
+	const baseline = options.y + 4;
+	const pill: TunnelPill = {
+		x,
+		y: options.y - PILL_HEIGHT / 2,
+		width,
+		height: PILL_HEIGHT,
+		tile: { x: x + PILL_PAD, y: options.y - TILE / 2, size: TILE, radius: TILE_RADIUS },
+		mark: { x: x + PILL_PAD + TILE / 2, y: options.y },
+		textX: x + PILL_PAD + TILE + PILL_GAP,
+		countX: x + PILL_PAD + TILE + PILL_GAP + nameWidth + PILL_GAP,
+		baseline
+	};
 	const from = {
-		x:
-			options.anchor === 'start'
-				? options.nameX + width + LINE_GAP
-				: options.nameX - width - LINE_GAP,
+		x: options.side === 'left' ? options.edge + LINE_GAP : options.edge - LINE_GAP,
 		y: options.y
 	};
 	const run = flatRun(Math.abs(options.hub.x - from.x));
 	const flat = {
-		x: options.flatX ?? from.x + options.direction * run,
+		x: options.side === 'left' ? from.x + run : from.x - run,
 		y: options.y
 	};
 	return {
 		node: options.node,
-		tile: {
-			x: options.tileX,
-			y: options.y - options.tile.size / 2,
-			size: options.tile.size,
-			radius: options.tile.radius,
-			mark: options.tile.mark
-		},
+		pill,
 		text,
-		label: { x: options.nameX, y: options.y + 4, anchor: options.anchor },
 		stroke: { from, flat, hub: options.hub }
 	};
 }
 
-/** The height a wide card takes for this many rows: the rows spread over the card, so a
+/** The height a wide canvas takes for this many rows: the rows spread over the card, so a
  *  quiet window is a short card and a busy one fills the cap. */
 function wideHeight(rows: number): number {
-	const band = Math.max(0, rows - 1) * ROW_PITCH + TILE + 2 * scatterRoom(ROW_PITCH);
+	const band = Math.max(0, rows - 1) * ROW_PITCH + PILL_HEIGHT + 2 * scatterRoom(ROW_PITCH);
 	return Math.min(MAX_HEIGHT, Math.max(MIN_HEIGHT, EDGE + band + EDGE));
 }
 
-/** The tunnel on a wide card: the agents on the left, Relo in the middle, the connections
- *  on the right. The rows spread over the card's height, so the map reads the same
- *  whether two clients are talking or ten. */
+/** The height the rows of a tunnel need, which is the height its canvas takes when
+ *  nothing else gives it more. */
+export function tunnelHeight(tunnel: RouteTunnel): number {
+	return wideHeight(Math.max(tunnel.agents.length, tunnel.connections.length));
+}
+
+/** The tunnel on a wide canvas: the agents on the left, Relo in the middle, the
+ *  connections on the right. The rows spread over the card's height, so the map reads
+ *  the same whether two clients are talking or ten. */
 function wideGeometry(tunnel: RouteTunnel, width: number, height: number): TunnelGeometry {
 	const rows = Math.max(tunnel.agents.length, tunnel.connections.length);
 	const cardHeight = Math.max(height, wideHeight(rows));
 	const top = EDGE;
 	const bottom = cardHeight - EDGE;
 	const centre = (top + bottom) / 2;
-	const hubWidth = Math.min(HUB_MAX, Math.max(HUB_MIN, width * 0.14));
+	const hubWidth = Math.min(HUB_MAX, Math.max(HUB_MIN, width * 0.13));
 	const hub = {
 		x: width / 2 - hubWidth / 2,
 		y: centre - HUB_HEIGHT / 2,
@@ -458,55 +472,58 @@ function wideGeometry(tunnel: RouteTunnel, width: number, height: number): Tunne
 	};
 	const hubLeft = { x: hub.x, y: centre };
 	const hubRight = { x: hub.x + hub.width, y: centre };
-	const tile = { size: TILE, radius: TILE_RADIUS, mark: MARK };
-	const nameX = TILE + NAME_GAP;
-	const rightNameX = width - nameX;
+	// The rails hug the hub: a pill stands on the edge the curve leaves from, so the
+	// lines run the space between the rail and the hub.
+	const clientEdge = hub.x - CURVE_ROOM;
+	const providerEdge = hub.x + hub.width + CURVE_ROOM;
 	const agentHeights = railHeights({
 		count: tunnel.agents.length,
 		top,
 		bottom,
-		tile: TILE
+		pill: PILL_HEIGHT
 	});
 	const connectionHeights = railHeights({
 		count: tunnel.connections.length,
 		top,
 		bottom,
-		tile: TILE
+		pill: PILL_HEIGHT
 	});
 	const agents = tunnel.agents.map((node, index) => {
-		const room = hub.x - CURVE_ROOM - nameX - LINE_GAP - COUNT_GAP - countLetters(node);
+		const count = String(node.count);
+		const room =
+			clientEdge - EDGE - 2 * PILL_PAD - TILE - 2 * PILL_GAP - count.length * COUNT_LETTER;
 		return row({
 			node,
 			y: agentHeights[index],
-			tileX: 0,
-			tile,
-			nameX,
-			anchor: 'start',
+			side: 'left',
+			edge: clientEdge,
 			room,
-			hub: hubLeft,
-			direction: 1
+			hub: hubLeft
 		});
 	});
 	const connections = tunnel.connections.map((node, index) => {
+		const count = String(node.count);
 		const room =
-			rightNameX - (hub.x + hub.width + CURVE_ROOM) - LINE_GAP - COUNT_GAP - countLetters(node);
+			width -
+			EDGE -
+			providerEdge -
+			2 * PILL_PAD -
+			TILE -
+			2 * PILL_GAP -
+			count.length * COUNT_LETTER;
 		return row({
 			node,
 			y: connectionHeights[index],
-			tileX: width - TILE,
-			tile,
-			nameX: rightNameX,
-			anchor: 'end',
+			side: 'right',
+			edge: providerEdge,
 			room,
-			hub: hubRight,
-			direction: -1
+			hub: hubRight
 		});
 	});
 
 	return {
 		width,
 		height: cardHeight,
-		vertical: false,
 		agents,
 		connections,
 		legs: [
@@ -523,101 +540,9 @@ function wideGeometry(tunnel: RouteTunnel, width: number, height: number): Tunne
 				width: legWidth(placement.node.count)
 			}))
 		],
-		active: activePath(tunnel, agents, connections, 'x', 'x'),
-		hub
-	};
-}
-
-/** The tunnel on a phone: the agents above Relo, the connections below it, and Relo the
- *  spine both rails run into. */
-function phoneGeometry(tunnel: RouteTunnel, width: number): TunnelGeometry {
-	const tile = { size: PHONE_TILE, radius: PHONE_TILE_RADIUS, mark: PHONE_MARK };
-	const nameX = PHONE_TILE + NAME_GAP;
-	const hubWidth = Math.min(HUB_MAX, Math.max(HUB_MIN, width * 0.14));
-	const hubX = width - hubWidth - EDGE;
-	const spine = hubX + hubWidth / 2;
-	const flatX = spine - PHONE_CURVE_ROOM;
-	const agentTop = EDGE;
-	const agentBand = Math.max(0, tunnel.agents.length - 1) * PHONE_PITCH + PHONE_TILE;
-	const agentsBottom = agentTop + agentBand;
-	const hubTop = agentsBottom + 18;
-	const hub = {
-		x: hubX,
-		y: hubTop,
-		width: hubWidth,
-		height: HUB_HEIGHT
-	};
-	const hubTopPoint = { x: spine, y: hubTop };
-	const hubBottomPoint = { x: spine, y: hubTop + HUB_HEIGHT };
-	const connectionTop = hubTop + HUB_HEIGHT + 18;
-	const connectionBand = Math.max(0, tunnel.connections.length - 1) * PHONE_PITCH + PHONE_TILE;
-	const height = connectionTop + connectionBand + EDGE;
-
-	const agentHeights = railHeights({
-		count: tunnel.agents.length,
-		top: agentTop,
-		bottom: agentsBottom,
-		tile: PHONE_TILE
-	});
-	const connectionHeights = railHeights({
-		count: tunnel.connections.length,
-		top: connectionTop,
-		bottom: connectionTop + connectionBand,
-		tile: PHONE_TILE
-	});
-	const agents = tunnel.agents.map((node, index) => {
-		const room = flatX - nameX - LINE_GAP - COUNT_GAP - countLetters(node);
-		return row({
-			node,
-			y: agentHeights[index],
-			tileX: 0,
-			tile,
-			nameX,
-			anchor: 'start',
-			room,
-			hub: hubTopPoint,
-			direction: 1,
-			flatX
-		});
-	});
-	const connections = tunnel.connections.map((node, index) => {
-		const room = flatX - nameX - LINE_GAP - COUNT_GAP - countLetters(node);
-		return row({
-			node,
-			y: connectionHeights[index],
-			tileX: 0,
-			tile,
-			nameX,
-			anchor: 'start',
-			room,
-			hub: hubBottomPoint,
-			direction: 1,
-			flatX
-		});
-	});
-
-	return {
-		width,
-		height,
-		vertical: true,
-		agents,
-		connections,
-		legs: [
-			...agents.map((placement) => ({
-				id: 'agent:' + placement.node.id,
-				path: legPath(placement.stroke, 'y'),
-				count: placement.node.count,
-				width: legWidth(placement.node.count)
-			})),
-			...connections.map((placement) => ({
-				id: 'connection:' + placement.node.id,
-				path: legFromHub(placement.stroke, 'y'),
-				count: placement.node.count,
-				width: legWidth(placement.node.count)
-			}))
-		],
-		active: activePath(tunnel, agents, connections, 'y', 'y'),
-		hub
+		active: activePath(tunnel, agents, connections),
+		hub,
+		total: tunnel.total
 	};
 }
 
@@ -625,9 +550,7 @@ function phoneGeometry(tunnel: RouteTunnel, width: number): TunnelGeometry {
 function activePath(
 	tunnel: RouteTunnel,
 	agents: TunnelPlacement[],
-	connections: TunnelPlacement[],
-	arrive: 'x' | 'y',
-	depart: 'x' | 'y'
+	connections: TunnelPlacement[]
 ): { path: string; agent: string; connection: string } {
 	const active = tunnel.active;
 	const agent = active ? agents.find((placement) => placement.node.id === active.agent) : undefined;
@@ -638,27 +561,37 @@ function activePath(
 		return { path: '', agent: '', connection: '' };
 	}
 	return {
-		path: routePath(agent.stroke, connection.stroke, arrive, depart),
+		path: routePath(agent.stroke, connection.stroke, 'x', 'x'),
 		agent: active.agent,
 		connection: active.connection
 	};
 }
 
-/** The room the tunnel is drawn in: the width the card gives it and the height it may
- *  fill. */
+/** The tunnel as it is drawn for the room it has. */
 export interface TunnelRoom {
-	/** The width of the card's tunnel box. */
+	/** The width of the card's canvas. */
 	width: number;
-	/** The height of the card's tunnel box. */
+	/** The height the card may fill. */
 	height: number;
-	/** Whether the card is too narrow for two rails. */
-	vertical: boolean;
 }
 
-/** The tunnel as it is drawn for the room it has. A phone draws it upright, where the
- *  rails have room to name their nodes. */
 export function tunnelGeometry(tunnel: RouteTunnel, room: TunnelRoom): TunnelGeometry {
-	const width = Math.max(room.width, 240);
-	if (room.vertical) return phoneGeometry(tunnel, width);
-	return wideGeometry(tunnel, width, room.height);
+	return wideGeometry(tunnel, Math.max(room.width, MIN_TUNNEL_WIDTH), room.height);
+}
+
+/** One rail as a list reads it: the node, its share of the busiest node beside it, and
+ *  the width its bar takes. */
+export interface RailShare {
+	node: TunnelNode;
+	/** The node's share of the rail's busiest node, from 0 to 1. */
+	share: number;
+}
+
+/** The shares one rail's list draws, busiest first. */
+export function railShares(nodes: readonly TunnelNode[]): RailShare[] {
+	const busiest = nodes.reduce((max, node) => Math.max(max, node.count), 0);
+	return nodes
+		.slice()
+		.sort((left, right) => right.count - left.count || left.id.localeCompare(right.id))
+		.map((node) => ({ node, share: busiest > 0 ? node.count / busiest : 0 }));
 }

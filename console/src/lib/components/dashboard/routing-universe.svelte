@@ -5,7 +5,14 @@
 	import Button from '$lib/components/ui/button.svelte';
 	import Icon from '$lib/components/ui/icon.svelte';
 	import RouteTunnel from './route-tunnel.svelte';
-	import { PHONE_RAIL_LIMIT, RAIL_LIMIT, routeTunnel, type TunnelTraffic } from '$lib/route-tunnel';
+	import RoutingUniverseList from './routing-universe-list.svelte';
+	import {
+		MIN_TUNNEL_WIDTH,
+		RAIL_LIMIT,
+		routeTunnel,
+		tunnelHeight,
+		type TunnelTraffic
+	} from '$lib/route-tunnel';
 	import type { AccessKey, Provider } from '$lib/types';
 	import { cn } from '$lib/utils';
 
@@ -39,57 +46,104 @@
 	// the card's type is. The card's own width is read once the browser has laid it out.
 	let width = $state(0);
 	// The card gives the tunnel the height it has left, so the map fills the space
-	// beside the metrics.
+	// beside the figures.
 	let height = $state(0);
-
-	// A card too narrow for two rails draws the tunnel upright instead: the agents
-	// above Relo and the connections below it.
-	const wide = $derived(width >= 620);
 
 	const tunnel = $derived(
 		routeTunnel(traffic, {
 			keys,
 			providers,
 			console: $t('ui.pages.dashboard.universeConsole'),
-			limit: wide ? RAIL_LIMIT : PHONE_RAIL_LIMIT
+			limit: RAIL_LIMIT
 		})
 	);
+
+	// A card too narrow for two rails draws the rails as lists instead of a map.
+	const narrow = $derived(width > 0 && width < MIN_TUNNEL_WIDTH);
 </script>
 
 <div class={cn('section-surface flex flex-col p-4 sm:p-5', className)}>
-	<div class="mb-4 flex items-center justify-between gap-3">
-		<div>
-			<h2 class="section-heading">{$t('ui.pages.dashboard.universeTitle')}</h2>
+	<div class="mb-4 flex items-start justify-between gap-3">
+		<div class="min-w-0">
+			<h2 class="section-heading flex items-center gap-2">
+				<Icon name="route" size={15} class="shrink-0 text-faint" />
+				{$t('ui.pages.dashboard.universeTitle')}
+			</h2>
 			<p class="text-xs text-muted-foreground">{$t('ui.pages.dashboard.universeDesc')}</p>
 		</div>
-		{#if !loading && providers.length === 0}
-			<Button size="sm" onclick={onadd}>
-				<Icon name="plus" size={14} />
-				{$t('ui.pages.providersPage.header.addProvider')}
-			</Button>
+		{#if !loading && tunnel.total > 0}
+			<span class="mono-data shrink-0 text-[0.8125rem] text-muted-foreground">
+				{$t('ui.pages.dashboard.universeTotal', { values: { count: tunnel.total } })}
+			</span>
 		{/if}
 	</div>
-	{#if loading}
-		{@render pending?.()}
-	{:else if providers.length === 0}
-		<div
-			class="flex w-full flex-1 flex-col items-center justify-center gap-3 rounded-panel border-[1.5px] border-dashed border-accent-border bg-accent-soft px-4 py-10 text-center"
-		>
-			<p class="max-w-xs text-sm text-muted-foreground">
-				{$t('ui.pages.dashboard.universeEmpty')}
+	<div bind:clientWidth={width} class="flex min-w-0 flex-1 flex-col">
+		{#if loading}
+			{@render pending?.()}
+		{:else if providers.length === 0}
+			<div
+				class="flex w-full flex-1 flex-col items-center justify-center gap-3 rounded-panel border-[1.5px] border-dashed border-accent-border bg-accent-soft px-4 py-10 text-center"
+			>
+				<p class="max-w-xs text-sm text-muted-foreground">
+					{$t('ui.pages.dashboard.universeEmpty')}
+				</p>
+				<Button size="sm" onclick={onadd}>
+					<Icon name="plus" size={14} />
+					{$t('ui.pages.providersPage.header.addProvider')}
+				</Button>
+			</div>
+		{:else if tunnel.agents.length === 0 && tunnel.connections.length === 0}
+			<p
+				class="flex flex-1 items-center justify-center py-8 text-center text-sm text-muted-foreground"
+			>
+				{$t('ui.pages.dashboard.universeNoTraffic')}
 			</p>
-		</div>
-	{:else if tunnel.agents.length === 0 && tunnel.connections.length === 0}
-		<p
-			class="flex flex-1 items-center justify-center py-8 text-center text-sm text-muted-foreground"
-		>
-			{$t('ui.pages.dashboard.universeNoTraffic')}
-		</p>
-	{:else}
-		<div bind:clientWidth={width} bind:clientHeight={height} class="min-w-0 flex-1 overflow-hidden">
-			{#if width > 0}
-				<RouteTunnel {tunnel} {width} {height} vertical={!wide} {live} />
-			{/if}
-		</div>
-	{/if}
+		{:else if narrow}
+			<RoutingUniverseList {tunnel} />
+		{:else}
+			<div class="mb-2 flex items-center justify-between gap-3">
+				<span class="rail-label">
+					<Icon name="device-desktop" size={14} />
+					{$t('ui.pages.dashboard.universeClients')}
+				</span>
+				<span class="rail-label">
+					<Icon name="plug-connected" size={14} />
+					{$t('ui.pages.dashboard.universeProviders')}
+				</span>
+			</div>
+			<div
+				bind:clientHeight={height}
+				class="canvas min-w-0 flex-1"
+				style="min-height: {tunnelHeight(tunnel)}px"
+			>
+				{#if width > 0}
+					<RouteTunnel {tunnel} {width} {height} {live} />
+				{/if}
+			</div>
+			<p class="mt-2.5 text-xs text-muted-foreground">
+				{$t('ui.pages.dashboard.universeLegend')}
+			</p>
+		{/if}
+	</div>
 </div>
+
+<style>
+	/* The map stands on a recessed panel, so the dots of its grid read as depth
+	   rather than as a texture laid over the card. */
+	.canvas {
+		background-color: var(--sunken);
+		background-image: radial-gradient(var(--line) 1px, transparent 1px);
+		background-size: 20px 20px;
+		border-radius: var(--radius-panel);
+		overflow: hidden;
+	}
+
+	.rail-label {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.375rem;
+		font-size: 0.75rem;
+		font-weight: 500;
+		color: var(--muted);
+	}
+</style>

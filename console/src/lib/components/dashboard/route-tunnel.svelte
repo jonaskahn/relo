@@ -4,22 +4,21 @@
 	import TunnelMark from './tunnel-mark.svelte';
 	import { tunnelGeometry, type RouteTunnel, type TunnelPlacement } from '$lib/route-tunnel';
 
-	// RouteTunnel is the map of the last routes: the agents on one side, Relo in the
+	// RouteTunnel is the map of the last routes: the agents on one rail, Relo in the
 	// middle, the connections on the other. Every route is one line: it runs flat
-	// beside the name and then curves into Relo, where the newest request's route
-	// carries a line of travelling dots.
+	// beside the pill that names it and then curves into Relo, where the lines gather
+	// into one bundle. The newest request's route is drawn over the lines it shares.
 
 	interface Props {
 		tunnel: RouteTunnel;
 		width: number;
 		height: number;
-		vertical: boolean;
 		live?: boolean;
 	}
 
-	let { tunnel, width, height, vertical, live = false }: Props = $props();
+	let { tunnel, width, height, live = false }: Props = $props();
 
-	const geometry = $derived(tunnelGeometry(tunnel, { width, height, vertical }));
+	const geometry = $derived(tunnelGeometry(tunnel, { width, height }));
 
 	// The destination of a new route pulses once, the way a live event lights the line it
 	// took. The first route the card draws is not an event, so it does not pulse.
@@ -49,12 +48,23 @@
 	role="img"
 	aria-label={$t('ui.pages.dashboard.universeTitle')}
 >
+	<!-- Every line is drawn twice: a quiet base that carries the traffic, and the accent
+	     layer that moves while the tail runs. -->
 	{#each geometry.legs as leg (leg.id)}
 		<path
 			class="leg"
 			d={leg.path}
 			fill="none"
-			stroke="var(--line-strong)"
+			stroke="var(--accent-200)"
+			stroke-width={leg.width}
+			stroke-linecap="round"
+		/>
+		<path
+			class="leg-flow"
+			class:leg-moving={live}
+			d={leg.path}
+			fill="none"
+			stroke="var(--accent)"
 			stroke-width={leg.width}
 			stroke-linecap="round"
 		/>
@@ -62,6 +72,14 @@
 
 	<!-- The newest request's route, drawn over the lines it shares. -->
 	{#if geometry.active.path}
+		<path
+			class="route-line"
+			d={geometry.active.path}
+			fill="none"
+			stroke="var(--accent)"
+			stroke-width="3"
+			stroke-linecap="round"
+		/>
 		<path
 			class="route-flow"
 			class:route-moving={live}
@@ -81,23 +99,48 @@
 	{/each}
 
 	<!-- Relo: the hub every route passes through. -->
-	<rect
-		x={geometry.hub.x}
-		y={geometry.hub.y}
-		width={geometry.hub.width}
-		height={geometry.hub.height}
-		rx={geometry.hub.height / 2}
-		fill="var(--ink)"
-	/>
-	<text
-		x={geometry.hub.x + geometry.hub.width / 2}
-		y={geometry.hub.y + geometry.hub.height / 2 + 1}
-		text-anchor="middle"
-		dominant-baseline="middle"
-		font-size="13"
-		font-weight="600"
-		fill="var(--canvas)">Relo</text
-	>
+	<g>
+		<rect
+			x={geometry.hub.x}
+			y={geometry.hub.y}
+			width={geometry.hub.width}
+			height={geometry.hub.height}
+			rx="18"
+			fill="var(--ink)"
+		/>
+		<text
+			x={geometry.hub.x + geometry.hub.width / 2}
+			y={geometry.hub.y + 34}
+			text-anchor="middle"
+			font-size="13"
+			font-weight="700"
+			fill="var(--canvas)">Relo</text
+		>
+		<line
+			x1={geometry.hub.x + geometry.hub.width / 2 - 14}
+			y1={geometry.hub.y + 48}
+			x2={geometry.hub.x + geometry.hub.width / 2 + 14}
+			y2={geometry.hub.y + 48}
+			stroke="var(--canvas)"
+			stroke-opacity="0.35"
+			stroke-width="1"
+		/>
+		<text
+			class="hub-total mono-data"
+			x={geometry.hub.x + geometry.hub.width / 2}
+			y={geometry.hub.y + 78}
+			text-anchor="middle"
+			fill="var(--canvas)">{geometry.total.toLocaleString()}</text
+		>
+		<text
+			x={geometry.hub.x + geometry.hub.width / 2}
+			y={geometry.hub.y + 96}
+			text-anchor="middle"
+			font-size="11"
+			fill="var(--canvas)"
+			fill-opacity="0.7">{$t('ui.pages.dashboard.universeRequests')}</text
+		>
+	</g>
 </svg>
 
 {#snippet node(placement: TunnelPlacement)}
@@ -107,52 +150,70 @@
 			{#key pulseKey}
 				<rect
 					class="node-halo"
-					x={placement.tile.x}
-					y={placement.tile.y}
-					width={placement.tile.size}
-					height={placement.tile.size}
-					rx={placement.tile.radius}
+					x={placement.pill.tile.x}
+					y={placement.pill.tile.y}
+					width={placement.pill.tile.size}
+					height={placement.pill.tile.size}
+					rx={placement.pill.tile.radius}
 				/>
 			{/key}
 		{/if}
 		<rect
-			x={placement.tile.x}
-			y={placement.tile.y}
-			width={placement.tile.size}
-			height={placement.tile.size}
-			rx={placement.tile.radius}
+			class="pill"
+			x={placement.pill.x}
+			y={placement.pill.y}
+			width={placement.pill.width}
+			height={placement.pill.height}
+			rx="12"
+			fill="var(--surface)"
+			stroke="var(--line)"
+		/>
+		<rect
+			x={placement.pill.tile.x}
+			y={placement.pill.tile.y}
+			width={placement.pill.tile.size}
+			height={placement.pill.tile.size}
+			rx={placement.pill.tile.radius}
 			fill="var(--surface)"
 			stroke="var(--line)"
 		/>
 		<TunnelMark
 			markId={placement.node.markId}
 			label={placement.node.label}
-			x={placement.tile.x + placement.tile.size / 2}
-			y={placement.tile.y + placement.tile.size / 2}
-			size={placement.tile.mark}
+			x={placement.pill.mark.x}
+			y={placement.pill.mark.y}
+			size={16}
 		/>
-		<text
-			class="tunnel-label"
-			x={placement.label.x}
-			y={placement.label.y}
-			text-anchor={placement.label.anchor}
-			font-size="12"
-			fill="var(--ink)"
-			>{placement.text}<tspan class="mono-data" dx="6" fill="var(--faint)"
-				>{placement.node.count}</tspan
-			></text
+		<text class="pill-name" x={placement.pill.textX} y={placement.pill.baseline}
+			>{placement.text}</text
+		>
+		<text class="pill-count mono-data" x={placement.pill.countX} y={placement.pill.baseline}
+			>{placement.node.count}</text
 		>
 	</g>
 {/snippet}
 
 <style>
-	/* A name stands over the line that runs to Relo, so it carries the surface behind
-	   its letters: the line passes behind the name instead of through it. */
-	.tunnel-label {
-		paint-order: stroke fill;
-		stroke: var(--surface);
-		stroke-width: 5px;
-		stroke-linejoin: round;
+	/* A pill carries the surface behind its letters, so the line that runs past it never
+	   reads through the name. */
+	.pill-name {
+		font-size: 13px;
+		font-weight: 500;
+		fill: var(--ink);
+	}
+
+	.pill-count {
+		font-size: 12px;
+		fill: var(--muted);
+	}
+
+	.hub-total {
+		font-size: 14px;
+	}
+
+	/* The pill sits on the recessed canvas, so it needs the lift a card has. */
+	.pill {
+		filter: drop-shadow(0 1px 2px var(--shadow));
 	}
 
 	/* A line that takes more traffic thickens instead of jumping, and a line that joins
@@ -160,6 +221,39 @@
 	.leg {
 		transition: stroke-width 200ms ease-out;
 		animation: tunnel-in 240ms ease-out;
+	}
+
+	/* The accent layer of a line is a line of dashes that travels along it, so the
+	   direction of the traffic reads while the tail runs. */
+	.leg-flow {
+		stroke-dasharray: 6 18;
+	}
+
+	.leg-moving {
+		animation: leg-flow 2.4s linear infinite;
+	}
+
+	@keyframes leg-flow {
+		to {
+			stroke-dashoffset: -24;
+		}
+	}
+
+	/* The live route is a line of dots that travels along the path the newest request
+	   took. It runs while the tail runs, and stops where the tail stops. */
+	.route-flow {
+		stroke: var(--surface);
+		stroke-dasharray: 0.1 12;
+	}
+
+	.route-moving {
+		animation: route-flow 1.4s linear infinite;
+	}
+
+	@keyframes route-flow {
+		to {
+			stroke-dashoffset: -12.1;
+		}
 	}
 
 	.node {
@@ -172,23 +266,6 @@
 		}
 		to {
 			opacity: 1;
-		}
-	}
-
-	/* The live route is a line of dots that travels along the path the newest request
-	   took. It runs while the tail runs, and stops where the tail stops. */
-	.route-flow {
-		stroke: var(--accent);
-		stroke-dasharray: 0.1 12;
-	}
-
-	.route-moving {
-		animation: route-flow 1.4s linear infinite;
-	}
-
-	@keyframes route-flow {
-		to {
-			stroke-dashoffset: -12.1;
 		}
 	}
 
@@ -217,6 +294,7 @@
 	}
 
 	@media (prefers-reduced-motion: reduce) {
+		.leg-moving,
 		.route-moving {
 			animation: none;
 		}
