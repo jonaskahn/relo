@@ -516,9 +516,7 @@
 			pending={processing}
 			delta={requestsDelta}
 		>
-			<span
-				class="mt-auto font-mono text-[1.625rem] leading-none font-medium tabular-nums text-ink"
-			>
+			<span class="font-mono text-[1.625rem] leading-none font-medium tabular-nums text-ink">
 				<AnimatedNumber
 					value={requestsWindow}
 					format={(value) => Math.round(value).toLocaleString()}
@@ -539,9 +537,7 @@
 			loading={contentLoading}
 			pending={processing}
 		>
-			<span
-				class="mt-auto font-mono text-[1.625rem] leading-none font-medium tabular-nums text-ink"
-			>
+			<span class="font-mono text-[1.625rem] leading-none font-medium tabular-nums text-ink">
 				<AnimatedNumber
 					value={successRate ?? 0}
 					format={(value) => (successRate === null ? '—' : value.toFixed(0) + '%')}
@@ -563,9 +559,7 @@
 			loading={contentLoading}
 			pending={processing}
 		>
-			<span
-				class="mt-auto font-mono text-[1.625rem] leading-none font-medium tabular-nums text-ink"
-			>
+			<span class="font-mono text-[1.625rem] leading-none font-medium tabular-nums text-ink">
 				<AnimatedNumber value={paidSpendWindow} format={(value) => formatCost(Math.round(value))} />
 			</span>
 			<p class="min-h-4 text-xs text-muted-foreground">
@@ -581,7 +575,7 @@
 			delta={tokensDelta}
 		>
 			<span
-				class="mt-auto font-mono text-[1.625rem] leading-none font-medium tabular-nums text-ink"
+				class="font-mono text-[1.625rem] leading-none font-medium tabular-nums text-ink"
 				title={formatTokensExact(tokensWindow)}
 				><AnimatedNumber
 					value={tokensWindow}
@@ -604,9 +598,7 @@
 			loading={contentLoading}
 			pending={processing}
 		>
-			<span
-				class="mt-auto font-mono text-[1.625rem] leading-none font-medium tabular-nums text-ink"
-			>
+			<span class="font-mono text-[1.625rem] leading-none font-medium tabular-nums text-ink">
 				<AnimatedNumber
 					value={avgDuration}
 					format={(value) => (value > 0 ? (value / 1000).toFixed(1) + 's' : '—')}
@@ -623,9 +615,7 @@
 			loading={contentLoading}
 			pending={processing}
 		>
-			<span
-				class="mt-auto font-mono text-[1.625rem] leading-none font-medium tabular-nums text-ink"
-			>
+			<span class="font-mono text-[1.625rem] leading-none font-medium tabular-nums text-ink">
 				<AnimatedNumber value={healthReady} format={(value) => String(Math.round(value))} /><span
 					class="text-sm font-normal text-muted-foreground"
 				>
