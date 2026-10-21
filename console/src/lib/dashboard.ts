@@ -1,5 +1,6 @@
 import type { Account, Provider, QuotaWindow, UsageRollupRow } from './types';
 import { ATTENTION_PERCENT } from './provider-attention';
+import { isFreeConnection } from './provider-free';
 import { isMoneyReading } from './provider-quota';
 
 // The dashboard reads several daemon answers and combines them into the
@@ -130,7 +131,7 @@ export type PricingKind = 'payg' | 'plan' | 'free' | 'local';
 /** Names how one connection is priced: by the token it carries, by a plan that covers
  *  it, by nothing at all, or by a local engine that never bills. */
 export function pricingOf(provider: Provider): PricingKind {
-	if (isKiloFree(provider)) return 'free';
+	if (isFreeConnection(provider)) return 'free';
 	const kind = spendKindOf(provider);
 	if (kind === 'plan') return 'plan';
 	if (kind === 'local') return 'local';

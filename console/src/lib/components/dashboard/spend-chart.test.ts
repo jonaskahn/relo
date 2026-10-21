@@ -5,6 +5,7 @@ import { beforeAll, describe, expect, it } from 'vitest';
 import en from '$lib/i18n/locales/en.json';
 import type { SpendRow } from '$lib/dashboard';
 import { providerOf } from '$lib/provider-fixtures';
+import type { Provider } from '$lib/types';
 
 import SpendChart from './spend-chart.svelte';
 
@@ -13,9 +14,15 @@ beforeAll(() => {
 	init({ fallbackLocale: 'en', initialLocale: 'en' });
 });
 
-function row(id: string, label: string, costMicros: number, unpriced = 0): SpendRow {
+function row(
+	id: string,
+	label: string,
+	costMicros: number,
+	unpriced = 0,
+	provider: Partial<Provider> = {}
+): SpendRow {
 	return {
-		provider: providerOf({ id, template_id: id, label, kind: 'key' }),
+		provider: providerOf({ id, template_id: id, label, kind: 'key', ...provider }),
 		requests: 12,
 		errors: 0,
 		costMicros,
@@ -50,6 +57,17 @@ describe('the spend chart', () => {
 		const html = markup([row('openai', 'OpenAI', 1_200_000)]);
 
 		expect(html).toContain('Pay-as-you-go');
+	});
+
+	it('names a free lane as free', () => {
+		const html = markup([
+			row('opencode', 'OpenCode', 0, 0, {
+				template_id: 'opencode-free',
+				auth: 'none'
+			})
+		]);
+
+		expect(html).toContain('Free');
 	});
 
 	it('names the connections that could not be priced', () => {

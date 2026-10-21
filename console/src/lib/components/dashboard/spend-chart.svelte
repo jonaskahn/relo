@@ -42,6 +42,15 @@
 		local: 'ui.pages.dashboard.priceLocal'
 	};
 
+	// A free lane wears the same chip the connections page gives it; the other
+	// prices are quiet, so only the plan claims the accent.
+	const pricingTones: Record<PricingKind, string> = {
+		payg: 'border border-border text-muted-foreground',
+		plan: 'border border-accent/40 text-accent-ink',
+		free: 'border border-ok/40 bg-ok/10 text-ok',
+		local: 'border border-border text-muted-foreground'
+	};
+
 	const priced = $derived(rows.map((row) => ({ row, pricing: pricingOf(row.provider) })));
 	const shown = $derived(visibleBoard(priced, spendChartLimit));
 	const overflow = $derived(boardOverflowLabel(priced.length, spendChartLimit));
@@ -77,16 +86,14 @@
 							>{entry.row.provider.label}</span
 						>
 						{#if entry.row.unpriced > 0}
-							<span
-								class="inline-flex shrink-0 items-center gap-1 rounded-full bg-warn/10 px-2 py-0.5 text-[0.7rem] font-medium text-warn"
-							>
+							<span class="badge shrink-0 border border-warn/40 bg-warn/10 text-warn">
 								<Icon name="alert-triangle" size={11} />
 								{$t('ui.pages.dashboard.spendUnpriced', {
 									values: { count: entry.row.unpriced }
 								})}
 							</span>
 						{/if}
-						<span class="pricing-chip shrink-0">
+						<span class="badge shrink-0 {pricingTones[entry.pricing]}">
 							{$t(pricingKeys[entry.pricing])}
 						</span>
 						<span class="mono-data shrink-0">{formatCost(entry.row.costMicros)}</span>
@@ -96,17 +103,3 @@
 		{/if}
 	</div>
 </div>
-
-<style>
-	/* The pricing chip is the neutral pill: the muted name on a sunken plate, so
-	   a row carries its way of being priced without the accent claiming it. */
-	.pricing-chip {
-		border-radius: 999px;
-		background: var(--sunken);
-		padding: 2px 8px;
-		font-size: 0.7rem;
-		font-weight: 500;
-		color: var(--muted);
-		white-space: nowrap;
-	}
-</style>

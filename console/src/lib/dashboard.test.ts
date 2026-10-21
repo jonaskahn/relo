@@ -226,12 +226,21 @@ describe('pricingOf', () => {
 		expect(pricingOf({ ...provider('x', 'key'), id: 'xiaomi-token-plan-sgp' })).toBe('plan');
 	});
 
-	it('names the keyless free lane and the local engine for what they are', () => {
+	it('names the keyless free lanes and the local engine for what they are', () => {
 		expect(
 			pricingOf({
 				...provider('kilo', 'key'),
 				template_id: 'kilo-free',
-				modelsdev_provider_id: 'kilo'
+				modelsdev_provider_id: 'kilo',
+				auth: 'none'
+			})
+		).toBe('free');
+		expect(
+			pricingOf({
+				...provider('opencode', 'key'),
+				template_id: 'opencode-free',
+				modelsdev_provider_id: 'opencode',
+				auth: 'none'
 			})
 		).toBe('free');
 		expect(pricingOf(provider('ollama', 'local'))).toBe('local');
