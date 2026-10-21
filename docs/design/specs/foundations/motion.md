@@ -6,8 +6,8 @@ requires: []
 
 # Motion
 
-Motion answers an action or shows what changed. Two ambient moments are allowed: the daemon dot and the live-tail
-equalizer, each only while its own state runs.
+Motion answers an action or shows what changed. Three ambient moments are allowed: the daemon dot, the live-tail
+equalizer, and the dashboard's route flow, each only while its own state runs.
 
 | Moment                                        | Spec                                                                                       | Reduced motion          |
 |-----------------------------------------------|--------------------------------------------------------------------------------------------|-------------------------|
@@ -26,6 +26,9 @@ equalizer, each only while its own state runs.
 | Card grid re-solve (layout control)           | one transform-only morph, 200ms `cubic-bezier(.2,.8,.2,1)`, every card at once, no stagger | no transition (instant) |
 | Filter and search pair re-width (More / Less) | width 200ms ease, once per press                                                           | no transition           |
 | Routing pulse (live event)                    | about 600ms                                                                                | removed                 |
+| Tunnel line thickens (more traffic)           | stroke width 200ms ease-out, once per change                                               | no transition           |
+| Tunnel node joins a rail                      | fade in 240ms, no travel                                                                   | no transition           |
+| Route flow (dashboard, newest route)          | a line of dots travels the newest route, only while the live tail runs             | a plain accent line    |
 | Daemon running dot                            | 2.4s soft ring, only while running                                                         | removed                 |
 | Live-tail equalizer (logs, dashboard)         | four rounded bars pump on a staggered seamless loop, only while the tail runs              | removed                 |
 

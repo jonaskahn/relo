@@ -26,9 +26,9 @@ stretched list. Every element earns its place; complexity lives one level deeper
 8. **One primary action per view.** Actions pair icon and label; icon-only controls carry `aria-label` and a tooltip.
 9. **Never stack modals.** Steps swap the content of one modal; destructive actions use AlertDialog.
 10. **Real data.** Missing is a dash; empty lists say what is missing.
-11. **Restrained motion.** Two ambient moments: the daemon dot and the live-tail equalizer, each only while its own
-    state runs. Hover feedback is never travel (connection card head zooms to 1.02 in place). Everything honours
-    `prefers-reduced-motion`.
+11. **Restrained motion.** Three ambient moments: the daemon dot, the live-tail equalizer, and the dashboard's route
+    flow, each only while its own state runs. Hover feedback is never travel (connection card head zooms to 1.02 in
+    place). Everything honours `prefers-reduced-motion`.
 12. **Local assets.** System font for UI, JetBrains Mono for data, Tabler paths in `Icon.svelte`, mirrored provider
     logos, no new dependencies without a concrete need.
 
