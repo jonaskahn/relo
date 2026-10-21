@@ -64,7 +64,7 @@
 	});
 </script>
 
-<div class="section-surface p-4 sm:p-5">
+<div class="section-surface flex flex-col p-4 sm:p-5">
 	<h2 class="section-heading">{$t('ui.pages.usagePage.tokenMixTitle')}</h2>
 	{#if loading}
 		{@render pending()}
@@ -81,10 +81,10 @@
 				{readout}
 			</p>
 		{/key}
-		<div class="flex flex-wrap items-center gap-4">
+		<div class="flex flex-1 flex-wrap items-center gap-4">
 			<svg
 				viewBox="0 0 140 140"
-				class="h-36 w-36 shrink-0"
+				class="h-40 w-40 shrink-0"
 				role="img"
 				aria-label={$t('ui.pages.usagePage.tokenMixTitle') + ' · ' + readout}
 			>

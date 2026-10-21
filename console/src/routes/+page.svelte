@@ -679,20 +679,18 @@
 	</div>
 
 	<div class="grid min-w-0 grid-cols-1 gap-[var(--grid-gap)] lg:grid-cols-2">
-		<TrendChart
-			days={trendDays}
-			metric={trendMode}
-			options={trendOptions}
-			loading={contentLoading}
-			pending={processing}
-			onmetric={(next) => (trendMode = next)}
-		/>
+		<div class="grid min-w-0 grid-cols-1 grid-rows-[auto_auto_1fr] gap-[var(--grid-gap)]">
+			<TrendChart
+				days={trendDays}
+				metric={trendMode}
+				options={trendOptions}
+				loading={contentLoading}
+				pending={processing}
+				onmetric={(next) => (trendMode = next)}
+			/>
 
-		<TokenMixDonut rows={dailyAll} loading={contentLoading} pending={processing} />
-	</div>
+			<TokenMixDonut rows={dailyAll} loading={contentLoading} pending={processing} />
 
-	<div class="grid min-w-0 grid-cols-1 gap-[var(--grid-gap)] lg:grid-cols-2">
-		<div class="flex min-w-0 flex-col gap-[var(--grid-gap)]">
 			<DoctorChecks
 				checks={doctor}
 				loading={doctorLoading}
@@ -703,7 +701,7 @@
 		</div>
 
 		<RecentRequests
-			rows={recent}
+			rows={recentList}
 			loading={contentLoading}
 			{live}
 			pending={processing}

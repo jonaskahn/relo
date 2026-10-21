@@ -35,7 +35,7 @@
 	};
 </script>
 
-<div class="section-surface">
+<div class="section-surface flex min-h-0 flex-col">
 	<div class="flex items-center justify-between gap-3 px-4 pt-4 pb-3 sm:px-5">
 		<div>
 			<h2 class="section-heading flex items-center gap-2">
@@ -54,7 +54,7 @@
 			</p>
 		</div>
 	</div>
-	<div class="flex flex-col gap-1 px-4 pb-4 sm:px-5">
+	<div class="flex min-h-0 flex-1 flex-col gap-1 overflow-auto px-4 pb-4 sm:px-5">
 		{#if loading}
 			{@render pending?.()}
 		{:else if failed}

@@ -60,7 +60,7 @@
 	});
 </script>
 
-<div class="section-surface p-4 sm:p-5">
+<div class="section-surface flex flex-col p-4 sm:p-5">
 	<div class="mb-3 flex flex-wrap items-center justify-between gap-3">
 		<h2 class="section-heading">{$t('ui.pages.dashboard.trendsTitle')}</h2>
 		<Segmented
@@ -80,59 +80,61 @@
 			{$t('ui.pages.dashboard.noData')}
 		</div>
 	{:else}
-		{#key seriesKey}
-			<p
-				class="mb-2 flex min-h-5 items-center gap-2 text-sm font-medium tabular-nums text-ink"
-				in:fade={{ duration: reducedMotion() || !drawn ? 0 : 120 }}
-			>
-				{readout}
-			</p>
-		{/key}
-		<svg
-			viewBox="0 0 640 84"
-			class="h-24 w-full"
-			preserveAspectRatio="none"
-			role="img"
-			aria-label={$t('ui.pages.dashboard.trendsTitle')}
-		>
-			<line
-				x1="0"
-				y1="83"
-				x2="640"
-				y2="83"
-				stroke="var(--line-strong)"
-				stroke-width="1"
-				vector-effect="non-scaling-stroke"
-			/>
-			{#each values as entry, index (entry.key)}
-				{@const bar = barGeom(index, values.length, entry.value, max)}
-				<rect
-					class="trend-bar"
-					class:trend-ready={drawn}
-					in:fade={{ duration: reducedMotion() || !drawn ? 0 : 200 }}
-					out:fade={{ duration: reducedMotion() ? 0 : 160 }}
-					x={bar.x}
-					y={bar.y}
-					width={bar.w}
-					height={bar.h}
-					rx="2"
-					fill={hoveredKey === entry.key
-						? 'var(--accent-400)'
-						: index === values.length - 1
-							? 'var(--accent)'
-							: 'var(--accent-200)'}
-					role="img"
-					aria-label={shortDay(entry.key) + ': ' + formatChartValue(entry.value, metric)}
-					onmouseenter={() => (hoveredKey = entry.key)}
-					onmouseleave={() => (hoveredKey = '')}
-					><title>{shortDay(entry.key)}: {formatChartValue(entry.value, metric)}</title></rect
+		<div class="flex flex-1 flex-col justify-center">
+			{#key seriesKey}
+				<p
+					class="mb-2 flex min-h-5 items-center gap-2 text-sm font-medium tabular-nums text-ink"
+					in:fade={{ duration: reducedMotion() || !drawn ? 0 : 120 }}
 				>
-			{/each}
-		</svg>
-		<div class="mt-1.5 flex justify-between gap-1.5 text-[0.6875rem] text-muted-foreground">
-			{#each values as entry (entry.key)}
-				<span class="mono-data min-w-0 flex-1 truncate text-center">{shortDay(entry.key)}</span>
-			{/each}
+					{readout}
+				</p>
+			{/key}
+			<svg
+				viewBox="0 0 640 84"
+				class="min-h-24 w-full"
+				preserveAspectRatio="none"
+				role="img"
+				aria-label={$t('ui.pages.dashboard.trendsTitle')}
+			>
+				<line
+					x1="0"
+					y1="83"
+					x2="640"
+					y2="83"
+					stroke="var(--line-strong)"
+					stroke-width="1"
+					vector-effect="non-scaling-stroke"
+				/>
+				{#each values as entry, index (entry.key)}
+					{@const bar = barGeom(index, values.length, entry.value, max)}
+					<rect
+						class="trend-bar"
+						class:trend-ready={drawn}
+						in:fade={{ duration: reducedMotion() || !drawn ? 0 : 200 }}
+						out:fade={{ duration: reducedMotion() ? 0 : 160 }}
+						x={bar.x}
+						y={bar.y}
+						width={bar.w}
+						height={bar.h}
+						rx="2"
+						fill={hoveredKey === entry.key
+							? 'var(--accent-400)'
+							: index === values.length - 1
+								? 'var(--accent)'
+								: 'var(--accent-200)'}
+						role="img"
+						aria-label={shortDay(entry.key) + ': ' + formatChartValue(entry.value, metric)}
+						onmouseenter={() => (hoveredKey = entry.key)}
+						onmouseleave={() => (hoveredKey = '')}
+						><title>{shortDay(entry.key)}: {formatChartValue(entry.value, metric)}</title></rect
+					>
+				{/each}
+			</svg>
+			<div class="mt-1.5 flex justify-between gap-1.5 text-[0.6875rem] text-muted-foreground">
+				{#each values as entry (entry.key)}
+					<span class="mono-data min-w-0 flex-1 truncate text-center">{shortDay(entry.key)}</span>
+				{/each}
+			</div>
 		</div>
 	{/if}
 </div>
