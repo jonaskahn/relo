@@ -105,7 +105,7 @@
 			y={geometry.hub.y}
 			width={geometry.hub.width}
 			height={geometry.hub.height}
-			rx="18"
+			rx={geometry.hub.radius}
 			fill="var(--ink)"
 		/>
 		<text
@@ -164,7 +164,7 @@
 			y={placement.pill.y}
 			width={placement.pill.width}
 			height={placement.pill.height}
-			rx="12"
+			rx={placement.pill.radius}
 			fill="var(--surface)"
 			stroke="var(--line)"
 		/>
@@ -182,7 +182,7 @@
 			label={placement.node.label}
 			x={placement.pill.mark.x}
 			y={placement.pill.mark.y}
-			size={16}
+			size={placement.pill.mark.size}
 		/>
 		<text class="pill-name" x={placement.pill.textX} y={placement.pill.baseline}
 			>{placement.text}</text

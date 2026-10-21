@@ -350,7 +350,7 @@ describe('tunnelGeometry', () => {
 		const many = routeTunnel(
 			traffic({
 				clients,
-				connections: providers.map((id, index) => rollup(id, 1))
+				connections: providers.map((id) => rollup(id, 1))
 			}),
 			context({ providers: connections(...providers) })
 		);
@@ -371,7 +371,7 @@ describe('tunnelGeometry', () => {
 		const many = routeTunnel(
 			traffic({
 				clients,
-				connections: providers.map((id, index) => rollup(id, 1))
+				connections: providers.map((id) => rollup(id, 1))
 			}),
 			context({ providers: connections(...providers) })
 		);
@@ -392,7 +392,7 @@ describe('tunnelGeometry', () => {
 		const many = routeTunnel(
 			traffic({
 				clients,
-				connections: providers.map((id, index) => rollup(id, 1))
+				connections: providers.map((id) => rollup(id, 1))
 			}),
 			context({ providers: connections(...providers) })
 		);

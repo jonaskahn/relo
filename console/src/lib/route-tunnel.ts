@@ -50,6 +50,7 @@ const COUNT_LETTER = 7.2;
 const HUB_MIN = 104;
 const HUB_MAX = 132;
 const HUB_HEIGHT = 116;
+const HUB_RADIUS = 18;
 
 /** One end of the tunnel: the name it carries, the mark it wears, and how many of the
  *  window's requests passed through it. */
@@ -128,10 +129,12 @@ export interface TunnelPill {
 	y: number;
 	width: number;
 	height: number;
+	/** The corner the pill's radius gives it. */
+	radius: number;
 	/** The tile the node's mark sits in. */
 	tile: TunnelTile;
-	/** Where the mark sits. */
-	mark: TunnelPoint;
+	/** The mark the node wears, and where it sits. */
+	mark: TunnelPoint & { size: number };
 	/** Where the name starts. */
 	textX: number;
 	/** Where the count starts. */
@@ -162,7 +165,7 @@ export interface TunnelGeometry {
 	/** The line the newest request took, empty when there is none. */
 	active: { path: string; agent: string; connection: string };
 	/** Relo, the hub every route passes through. */
-	hub: { x: number; y: number; width: number; height: number };
+	hub: { x: number; y: number; width: number; height: number; radius: number };
 	/** The requests the window held. */
 	total: number;
 }
@@ -418,8 +421,9 @@ function row(options: RowOptions): TunnelPlacement {
 		y: options.y - PILL_HEIGHT / 2,
 		width,
 		height: PILL_HEIGHT,
+		radius: PILL_RADIUS,
 		tile: { x: x + PILL_PAD, y: options.y - TILE / 2, size: TILE, radius: TILE_RADIUS },
-		mark: { x: x + PILL_PAD + TILE / 2, y: options.y },
+		mark: { x: x + PILL_PAD + TILE / 2, y: options.y, size: MARK },
 		textX: x + PILL_PAD + TILE + PILL_GAP,
 		countX: x + PILL_PAD + TILE + PILL_GAP + nameWidth + PILL_GAP,
 		baseline
@@ -468,7 +472,8 @@ function wideGeometry(tunnel: RouteTunnel, width: number, height: number): Tunne
 		x: width / 2 - hubWidth / 2,
 		y: centre - HUB_HEIGHT / 2,
 		width: hubWidth,
-		height: HUB_HEIGHT
+		height: HUB_HEIGHT,
+		radius: HUB_RADIUS
 	};
 	const hubLeft = { x: hub.x, y: centre };
 	const hubRight = { x: hub.x + hub.width, y: centre };
