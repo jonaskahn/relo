@@ -191,7 +191,7 @@ export function healthCards(
 
 /** The window an account reports that fills the most of its limit. A money reading is a
  *  balance, not a limit, so it never fills one. */
-export function worstWindow(windows: readonly QuotaWindow[]): QuotaWindow | null {
+function worstWindow(windows: readonly QuotaWindow[]): QuotaWindow | null {
 	let worst: QuotaWindow | null = null;
 	for (const window of windows) {
 		if (isMoneyReading(window)) continue;
@@ -216,15 +216,16 @@ export function accountHealth(
 	const used = windows.filter(
 		(window) => window.credential_id === account.id && !isMoneyReading(window)
 	);
-	let worst = 0;
+	const worst = worstWindow(used);
 	let nextResetMs = 0;
 	for (const window of used) {
-		if (window.used_percent > worst) worst = window.used_percent;
 		if (window.reset_at_ms > now && (nextResetMs === 0 || window.reset_at_ms < nextResetMs)) {
 			nextResetMs = window.reset_at_ms;
 		}
 	}
-	const state: AccountHealthState = worst >= 100 ? 'exhausted' : worst >= 80 ? 'near' : 'ready';
+	const usedPercent = worst?.used_percent ?? 0;
+	const state: AccountHealthState =
+		usedPercent >= 100 ? 'exhausted' : usedPercent >= 80 ? 'near' : 'ready';
 	return { state, nextResetMs, limitedUntilMs: 0 };
 }
 
