@@ -55,10 +55,11 @@ empty.
 ## Spend cards
 
 Two cards answer what the window cost: the **API spend** card for the connections that pay per token, the **plan
-usage** card for the ones a plan covers. Each states the total of its set and then one row per connection: the
-connection's mark, its name, a chip that names how that connection is priced — pay-as-you-go, plan, free or local — and
-what the connection cost. A keyless lane reads as **Free** wherever it comes from. A connection that served requests
-the daemon could not price carries a warning beside its chip.
+usage** card for the ones a plan covers. Each states the total of its set and then names its three costliest
+connections, the costliest first, with a `3+` mark when the set holds more. A connection reads as its mark, its name,
+a chip that names how that connection is priced — pay-as-you-go, plan, free or local — and what it cost. A keyless lane
+reads as **Free** wherever it comes from. A connection that served requests the daemon could not price carries a
+warning beside its figure.
 
 ## Rules
 

@@ -19,9 +19,11 @@ import {
 	spendRows,
 	showsDayLabels,
 	summaryWindow,
+	topSpendRows,
 	visibleBoard,
 	writeDashboardLive,
-	type LiveStorage
+	type LiveStorage,
+	type SpendRow
 } from './dashboard';
 import type { Account, Provider, QuotaWindow, UsageRollupRow } from './types';
 
@@ -212,6 +214,37 @@ describe('spendRows', () => {
 		const rowsOut = spendRows(planProviders(providers), []);
 		expect(rowsOut).toHaveLength(1);
 		expect(rowsOut[0].costMicros).toBe(0);
+	});
+});
+
+describe('topSpendRows', () => {
+	function row(id: string, costMicros: number): SpendRow {
+		return {
+			provider: { ...provider(id, 'key'), label: id },
+			requests: 10,
+			errors: 0,
+			costMicros,
+			unpriced: 0,
+			tokens: 0
+		};
+	}
+
+	it('names the costliest connections first', () => {
+		const rows = topSpendRows([row('openai', 100), row('anthropic', 5000), row('google', 900)]);
+
+		expect(rows.map((entry) => entry.provider.id)).toEqual(['anthropic', 'google', 'openai']);
+	});
+
+	it('keeps the top few of them', () => {
+		const rows = topSpendRows([
+			row('openai', 100),
+			row('anthropic', 5000),
+			row('google', 900),
+			row('mistral', 700)
+		]);
+
+		expect(rows).toHaveLength(3);
+		expect(rows.map((entry) => entry.provider.id)).toEqual(['anthropic', 'google', 'mistral']);
 	});
 });
 

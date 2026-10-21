@@ -53,6 +53,21 @@ describe('the spend chart', () => {
 		expect(html).toContain('$1.20');
 	});
 
+	it('names the costliest connections and marks the rest as more', () => {
+		const html = markup([
+			row('openai', 'OpenAI', 100),
+			row('anthropic', 'Anthropic', 5_000_000),
+			row('google', 'Google', 900_000),
+			row('mistral', 'Mistral', 700_000)
+		]);
+
+		expect(html).toContain('Anthropic');
+		expect(html).toContain('Google');
+		expect(html).toContain('Mistral');
+		expect(html).not.toContain('OpenAI');
+		expect(html).toContain('3+');
+	});
+
 	it('names how the connection is priced', () => {
 		const html = markup([row('openai', 'OpenAI', 1_200_000)]);
 

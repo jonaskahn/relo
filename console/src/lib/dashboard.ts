@@ -322,9 +322,24 @@ export function formatCountdown(remainingMs: number): string {
  *  the section description. */
 export const boardLimit = 6;
 
-/** The spend cards are the one board that can grow past the standard cap: an operator with
- *  many API connections still needs to see them all. */
-export const spendChartLimit = 10;
+/** The spend cards name the costliest connections, not every one of them: the top few
+ *  say where the money went, and the total covers the rest. */
+export const spendChartLimit = 3;
+
+/** The connections one spend card names: the costliest first, the top few of them. */
+export function topSpendRows(
+	rows: readonly SpendRow[],
+	limit: number = spendChartLimit
+): SpendRow[] {
+	return rows
+		.slice()
+		.sort(
+			(left, right) =>
+				right.costMicros - left.costMicros ||
+				left.provider.label.localeCompare(right.provider.label)
+		)
+		.slice(0, Math.max(0, limit));
+}
 
 /** The rows a board paints. Anything past the limit stays in the totals and is named by
  *  boardOverflowLabel. */

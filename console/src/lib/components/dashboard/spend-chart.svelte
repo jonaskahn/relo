@@ -9,7 +9,7 @@
 		boardOverflowLabel,
 		pricingOf,
 		spendChartLimit,
-		visibleBoard,
+		topSpendRows,
 		type PricingKind,
 		type SpendRow
 	} from '$lib/dashboard';
@@ -51,9 +51,11 @@
 		local: 'border border-border text-muted-foreground'
 	};
 
-	const priced = $derived(rows.map((row) => ({ row, pricing: pricingOf(row.provider) })));
-	const shown = $derived(visibleBoard(priced, spendChartLimit));
-	const overflow = $derived(boardOverflowLabel(priced.length, spendChartLimit));
+	// The card names the costliest connections of the set; the total covers all of them.
+	const priced = $derived(
+		topSpendRows(rows).map((row) => ({ row, pricing: pricingOf(row.provider) }))
+	);
+	const overflow = $derived(boardOverflowLabel(rows.length, spendChartLimit));
 	const total = $derived(rows.reduce((sum, row) => sum + row.costMicros, 0));
 </script>
 
@@ -79,7 +81,7 @@
 				>
 			</p>
 			<ul class="flex min-w-0 flex-col gap-2">
-				{#each shown as entry (entry.row.provider.id)}
+				{#each priced as entry (entry.row.provider.id)}
 					<li class="flex min-w-0 items-center gap-2">
 						<ProviderLogo id={entry.row.provider.id} label={entry.row.provider.label} size="sm" />
 						<span
