@@ -61,6 +61,30 @@ func TestChatCompletionsDecodeRequest(t *testing.T) {
 		}
 	})
 
+	t.Run("one call answered twice becomes one result", func(t *testing.T) {
+		body := `{"model":"gpt-4o","messages":[{"role":"assistant","content":"","tool_calls":[{"id":"call_1","type":"function","function":{"name":"lookup","arguments":"{}"}}]},{"role":"tool","content":"first","tool_call_id":"call_1"},{"role":"tool","content":"second","tool_call_id":"call_1"}]}`
+		request, err := openaichat.NewChatCompletionsCodec().DecodeRequest(newRequest(t, body))
+		if err != nil {
+			t.Fatalf("DecodeRequest() error = %v", err)
+		}
+		results := 0
+		for _, message := range request.Messages {
+			if message.Role != inference.RoleTool {
+				continue
+			}
+			results++
+			if message.ToolCallID != "call_1" {
+				t.Fatalf("tool message = %+v, want the result bound to its call", message)
+			}
+			if len(message.Content) != 2 || message.Content[0].Text != "first" || message.Content[1].Text != "second" {
+				t.Fatalf("result = %+v, want both outputs in arrival order", message.Content)
+			}
+		}
+		if results != 1 {
+			t.Fatalf("results = %d, want one result for the call", results)
+		}
+	})
+
 	t.Run("reasoning_effort is accepted alongside the nested object", func(t *testing.T) {
 		body := `{"model":"gpt-4o","messages":[],"reasoning_effort":"high"}`
 		request, err := openaichat.NewChatCompletionsCodec().DecodeRequest(newRequest(t, body))

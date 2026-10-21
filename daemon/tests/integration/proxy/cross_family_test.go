@@ -98,6 +98,18 @@ func TestCrossFamilyTranslation(t *testing.T) {
 		}
 	})
 
+	t.Run("a call answered twice reaches every family as one result", func(t *testing.T) {
+		for _, outbound := range families() {
+			t.Run(outbound.name, func(t *testing.T) {
+				request := requestFrom(t, surface{name: "responses", body: doubledResultRequest()})
+				body := bodyOf(t, outbound.codec, request)
+				if results := toolResults(outbound.name, body); len(results) != 1 {
+					t.Fatalf("results = %v, want one result for the call", results)
+				}
+			})
+		}
+	})
+
 	t.Run("tool schemas translate correctly", func(t *testing.T) {
 		for _, outbound := range families() {
 			t.Run(outbound.name, func(t *testing.T) {
@@ -191,6 +203,80 @@ func TestCrossFamilyTranslation(t *testing.T) {
 			}
 		}
 	})
+}
+
+// doubledResultRequest is a client Responses request holding one call answered
+// twice, the shape Codex sends for its exec tool: a status line, then the
+// output. Every upstream takes one result per call, so this must reach a
+// provider as one.
+func doubledResultRequest() string {
+	return `{
+  "model": "gpt-5",
+  "stream": true,
+  "max_output_tokens": 128,
+  "input": [
+    {"role": "user", "content": [{"type": "input_text", "text": "hello"}]},
+    {"type": "custom_tool_call", "call_id": "call_1", "name": "get_weather", "input": "{\"city\":\"Hanoi\"}"},
+    {"type": "custom_tool_call_output", "call_id": "call_1", "output": "Script completed"},
+    {"type": "custom_tool_call_output", "call_id": "call_1", "name": "get_weather", "output": "sunny"}
+  ],
+  "tools": [{"type": "function", "name": "get_weather", "description": "look it up", "parameters": {"type": "object", "properties": {"city": {"type": "string"}}}}]
+}`
+}
+
+// toolResults counts the results a family encoded for a tool call. Each family
+// names a result its own way, so each is read as its own shape.
+func toolResults(family string, body map[string]any) []string {
+	var found []string
+	switch family {
+	case "openai-chat":
+		for _, message := range messagesOf(body) {
+			if message["role"] == "tool" {
+				found = append(found, toString(message["tool_call_id"]))
+			}
+		}
+	case "openai-responses":
+		items, _ := body["input"].([]any)
+		for _, item := range items {
+			entry, _ := item.(map[string]any)
+			if entry["type"] == "function_call_output" {
+				found = append(found, toString(entry["call_id"]))
+			}
+		}
+	case "anthropic-messages":
+		for _, message := range messagesOf(body) {
+			blocks, _ := message["content"].([]any)
+			for _, block := range blocks {
+				entry, _ := block.(map[string]any)
+				if entry["type"] == "tool_result" {
+					found = append(found, toString(entry["tool_use_id"]))
+				}
+			}
+		}
+	case "google-gemini":
+		contents, _ := body["contents"].([]any)
+		for _, content := range contents {
+			entry, _ := content.(map[string]any)
+			parts, _ := entry["parts"].([]any)
+			for _, part := range parts {
+				block, _ := part.(map[string]any)
+				if _, ok := block["functionResponse"]; ok {
+					found = append(found, "functionResponse")
+				}
+			}
+		}
+	}
+	return found
+}
+
+func messagesOf(body map[string]any) []map[string]any {
+	entries, _ := body["messages"].([]any)
+	messages := make([]map[string]any, 0, len(entries))
+	for _, entry := range entries {
+		message, _ := entry.(map[string]any)
+		messages = append(messages, message)
+	}
+	return messages
 }
 
 // translate decodes a client request the way its surface does and encodes
