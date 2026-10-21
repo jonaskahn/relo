@@ -4,7 +4,7 @@
 	import { t } from 'svelte-i18n';
 
 	import Segmented from '$lib/components/ui/segmented.svelte';
-	import type { IconName } from '$lib/components/ui/icon.svelte';
+	import Icon, { type IconName } from '$lib/components/ui/icon.svelte';
 	import { reducedMotion } from '$lib/card-layout-motion';
 	import {
 		barGeom,
@@ -62,7 +62,10 @@
 
 <div class="section-surface flex flex-col p-4 sm:p-5">
 	<div class="mb-3 flex flex-wrap items-center justify-between gap-3">
-		<h2 class="section-heading">{$t('ui.pages.dashboard.trendsTitle')}</h2>
+		<h2 class="section-heading flex items-center gap-2">
+			<Icon name="chart-bar" size={15} class="shrink-0 text-faint" />
+			{$t('ui.pages.dashboard.trendsTitle')}
+		</h2>
 		<Segmented
 			value={metric}
 			{options}

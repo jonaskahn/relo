@@ -139,6 +139,8 @@
 	const paidIds = $derived(new Set(paid.map((provider) => provider.id)));
 	const paidSpendWindow = $derived(sumCost(summaryRows.filter((row) => paidIds.has(row.Key))));
 	const tokensWindow = $derived(sumTokens(summaryRows));
+	const tokensInWindow = $derived(total(summaryRows, (row) => Number(row.InputTokens)));
+	const tokensOutWindow = $derived(total(summaryRows, (row) => Number(row.OutputTokens)));
 	const durationSum = $derived(total(summaryRows, (row) => Number(row.DurationMs)));
 	const avgDuration = $derived(requestsWindow > 0 ? durationSum / requestsWindow : 0);
 	// A rate with no requests behind it has nothing to claim, so it reports
@@ -505,10 +507,148 @@
 			goto('/connections?provider=' + encodeURIComponent(providerId) + '&tab=accounts')}
 	/>
 
-	<!-- The routing universe and the metrics share one row: the map takes the wider
-	     half, the six figures read as two by three beside it. Below the wide
-	     breakpoint each takes the full width, the figures first. -->
-	<div class="grid min-w-0 grid-cols-1 gap-[var(--grid-gap)] xl:grid-cols-[1.25fr_1fr]">
+	<!-- The six figures of the window lead the page. -->
+	<div class="grid min-w-0 grid-cols-2 gap-[var(--grid-gap)] md:grid-cols-3 xl:grid-cols-6">
+		<KpiTile
+			icon="list"
+			labelKey="ui.pages.dashboard.requests24h"
+			loading={contentLoading}
+			pending={processing}
+			delta={requestsDelta}
+		>
+			<span
+				class="mt-auto font-mono text-[1.625rem] leading-none font-medium tabular-nums text-ink"
+			>
+				<AnimatedNumber
+					value={requestsWindow}
+					format={(value) => Math.round(value).toLocaleString()}
+				/>
+			</span>
+			<p class="min-h-4 text-xs text-muted-foreground">
+				{#if errorsWindow > 0}{errorsWindow} {$t('ui.pages.dashboard.errors')}
+				{:else if successRate !== null}{$t('ui.pages.dashboard.percentOk', {
+						values: { value: successRate.toFixed(0) }
+					})}
+				{/if}
+			</p>
+		</KpiTile>
+
+		<KpiTile
+			icon="circle-check"
+			labelKey="ui.pages.dashboard.successTile"
+			loading={contentLoading}
+			pending={processing}
+		>
+			<span
+				class="mt-auto font-mono text-[1.625rem] leading-none font-medium tabular-nums text-ink"
+			>
+				<AnimatedNumber
+					value={successRate ?? 0}
+					format={(value) => (successRate === null ? '—' : value.toFixed(0) + '%')}
+				/>
+			</span>
+			<p class="min-h-4 text-xs">
+				{#if errorsWindow > 0}
+					<span class="inline-flex items-center gap-1 text-danger">
+						<Icon name="circle-alert" size={12} />{errorsWindow}
+						{$t('ui.pages.dashboard.errors')}
+					</span>
+				{/if}
+			</p>
+		</KpiTile>
+
+		<KpiTile
+			icon="currency-dollar"
+			labelKey="ui.pages.dashboard.paidSpend"
+			loading={contentLoading}
+			pending={processing}
+		>
+			<span
+				class="mt-auto font-mono text-[1.625rem] leading-none font-medium tabular-nums text-ink"
+			>
+				<AnimatedNumber value={paidSpendWindow} format={(value) => formatCost(Math.round(value))} />
+			</span>
+			<p class="min-h-4 text-xs text-muted-foreground">
+				{$t('ui.pages.dashboard.paidSpendHint', { values: { count: paid.length } })}
+			</p>
+		</KpiTile>
+
+		<KpiTile
+			icon="sparkles"
+			labelKey="ui.pages.dashboard.tokens"
+			loading={contentLoading}
+			pending={processing}
+			delta={tokensDelta}
+		>
+			<span
+				class="mt-auto font-mono text-[1.625rem] leading-none font-medium tabular-nums text-ink"
+				title={formatTokensExact(tokensWindow)}
+				><AnimatedNumber
+					value={tokensWindow}
+					format={(value) => formatTokens(Math.round(value))}
+				/></span
+			>
+			<p class="min-h-4 text-xs text-muted-foreground">
+				{$t('ui.pages.usagePage.noteTokenMix', {
+					values: {
+						input: formatTokens(tokensInWindow),
+						output: formatTokens(tokensOutWindow)
+					}
+				})}
+			</p>
+		</KpiTile>
+
+		<KpiTile
+			icon="clock"
+			labelKey="ui.pages.dashboard.latency"
+			loading={contentLoading}
+			pending={processing}
+		>
+			<span
+				class="mt-auto font-mono text-[1.625rem] leading-none font-medium tabular-nums text-ink"
+			>
+				<AnimatedNumber
+					value={avgDuration}
+					format={(value) => (value > 0 ? (value / 1000).toFixed(1) + 's' : '—')}
+				/>
+			</span>
+			<p class="min-h-4 text-xs text-muted-foreground">
+				{status ? formatUptime(status.uptime_seconds) : ''}
+			</p>
+		</KpiTile>
+
+		<KpiTile
+			icon="user"
+			labelKey="ui.pages.dashboard.accountsKpi"
+			loading={contentLoading}
+			pending={processing}
+		>
+			<span
+				class="mt-auto font-mono text-[1.625rem] leading-none font-medium tabular-nums text-ink"
+			>
+				<AnimatedNumber value={healthReady} format={(value) => String(Math.round(value))} /><span
+					class="text-sm font-normal text-muted-foreground"
+				>
+					/ {accounts.length}</span
+				>
+			</span>
+			<p class="min-h-4 text-xs">
+				{#if healthLimited + healthNeedsSignin > 0}
+					<span class="inline-flex items-center gap-1 text-warn">
+						<Icon name="alert-triangle" size={12} />
+						{healthLimited}
+						{$t('ui.pages.dashboard.stateLimited')} · {healthNeedsSignin}
+						{$t('ui.pages.dashboard.stateNeedsSignin')}
+					</span>
+				{/if}
+			</p>
+		</KpiTile>
+	</div>
+
+	<!-- The map takes the wider half; the trend and the token mix stack beside it. -->
+	<div
+		class="grid min-w-0 grid-cols-1 gap-[var(--grid-gap)] xl:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]"
+	>
 		<RoutingUniverse
 			traffic={tunnelTraffic}
 			{keys}
@@ -517,157 +657,27 @@
 			loading={contentLoading}
 			pending={processing}
 			onadd={() => goto('/connections?add=1')}
-			class="order-2 min-w-0 xl:order-1"
+			class="min-w-0"
 		/>
 
-		<div
-			class="order-1 grid min-w-0 grid-cols-2 gap-[var(--grid-gap)] md:grid-cols-3 xl:order-2 xl:grid-cols-2"
-		>
-			<KpiTile
-				icon="list"
-				labelKey="ui.pages.dashboard.requests24h"
+		<div class="flex min-w-0 flex-col gap-[var(--grid-gap)]">
+			<TrendChart
+				days={trendDays}
+				metric={trendMode}
+				options={trendOptions}
 				loading={contentLoading}
 				pending={processing}
-			>
-				<div class="mt-auto flex flex-wrap items-baseline gap-x-3 gap-y-1">
-					<span class="font-mono text-[1.625rem] leading-none font-medium tabular-nums text-ink">
-						<AnimatedNumber
-							value={requestsWindow}
-							format={(value) => Math.round(value).toLocaleString()}
-						/>
-					</span>
-					{#if requestsDelta !== null}
-						<span class="inline-flex items-center gap-1 text-xs font-medium text-muted-foreground">
-							<Icon name={requestsDelta >= 0 ? 'arrow-up' : 'arrow-down'} size={13} />
-							{(requestsDelta >= 0 ? '+' : '') + requestsDelta}%
-						</span>
-					{/if}
-				</div>
-				<p class="min-h-4 text-xs text-muted-foreground">
-					{#if errorsWindow > 0}{errorsWindow} {$t('ui.pages.dashboard.errors')}
-					{:else if successRate !== null}{$t('ui.pages.dashboard.percentOk', {
-							values: { value: successRate.toFixed(0) }
-						})}
-					{/if}
-				</p>
-			</KpiTile>
+				onmetric={(next) => (trendMode = next)}
+			/>
 
-			<KpiTile
-				icon="circle-check"
-				labelKey="ui.pages.dashboard.successTile"
-				loading={contentLoading}
-				pending={processing}
-			>
-				<span
-					class="mt-auto font-mono text-[1.625rem] leading-none font-medium tabular-nums text-ink"
-				>
-					<AnimatedNumber
-						value={successRate ?? 0}
-						format={(value) => (successRate === null ? '—' : value.toFixed(0) + '%')}
-					/>
-				</span>
-				<p class="min-h-4 text-xs">
-					{#if errorsWindow > 0}
-						<span class="inline-flex items-center gap-1 text-danger">
-							<Icon name="circle-alert" size={12} />{errorsWindow}
-							{$t('ui.pages.dashboard.errors')}
-						</span>
-					{/if}
-				</p>
-			</KpiTile>
-
-			<KpiTile
-				icon="currency-dollar"
-				labelKey="ui.pages.dashboard.paidSpend"
-				loading={contentLoading}
-				pending={processing}
-			>
-				<span
-					class="mt-auto font-mono text-[1.625rem] leading-none font-medium tabular-nums text-ink"
-				>
-					<AnimatedNumber
-						value={paidSpendWindow}
-						format={(value) => formatCost(Math.round(value))}
-					/>
-				</span>
-				<p class="min-h-4 text-xs text-muted-foreground">
-					{$t('ui.pages.dashboard.paidSpendHint', { values: { count: paid.length } })}
-				</p>
-			</KpiTile>
-
-			<KpiTile
-				icon="sparkles"
-				labelKey="ui.pages.dashboard.tokens"
-				loading={contentLoading}
-				pending={processing}
-			>
-				<span
-					class="mt-auto font-mono text-[1.625rem] leading-none font-medium tabular-nums text-ink"
-					title={formatTokensExact(tokensWindow)}
-					><AnimatedNumber
-						value={tokensWindow}
-						format={(value) => formatTokens(Math.round(value))}
-					/></span
-				>
-				<p class="min-h-4 text-xs font-medium text-muted-foreground">
-					{#if tokensDelta !== null}
-						<span class="inline-flex items-center gap-1">
-							<Icon name={tokensDelta >= 0 ? 'arrow-up' : 'arrow-down'} size={13} />
-							{(tokensDelta >= 0 ? '+' : '') + tokensDelta}%
-						</span>
-					{/if}
-				</p>
-			</KpiTile>
-
-			<KpiTile
-				icon="clock"
-				labelKey="ui.pages.dashboard.latency"
-				loading={contentLoading}
-				pending={processing}
-			>
-				<span
-					class="mt-auto font-mono text-[1.625rem] leading-none font-medium tabular-nums text-ink"
-				>
-					<AnimatedNumber
-						value={avgDuration}
-						format={(value) => (value > 0 ? (value / 1000).toFixed(1) + 's' : '—')}
-					/>
-				</span>
-				<p class="min-h-4 text-xs text-muted-foreground">
-					{status ? formatUptime(status.uptime_seconds) : ''}
-				</p>
-			</KpiTile>
-
-			<KpiTile
-				icon="user"
-				labelKey="ui.pages.dashboard.accountsKpi"
-				loading={contentLoading}
-				pending={processing}
-			>
-				<span
-					class="mt-auto font-mono text-[1.625rem] leading-none font-medium tabular-nums text-ink"
-				>
-					<AnimatedNumber value={healthReady} format={(value) => String(Math.round(value))} /><span
-						class="text-sm font-normal text-muted-foreground"
-					>
-						/ {accounts.length}</span
-					>
-				</span>
-				<p class="min-h-4 text-xs">
-					{#if healthLimited + healthNeedsSignin > 0}
-						<span class="inline-flex items-center gap-1 text-warn">
-							<Icon name="alert-triangle" size={12} />
-							{healthLimited}
-							{$t('ui.pages.dashboard.stateLimited')} · {healthNeedsSignin}
-							{$t('ui.pages.dashboard.stateNeedsSignin')}
-						</span>
-					{/if}
-				</p>
-			</KpiTile>
+			<TokenMixDonut rows={dailyAll} loading={contentLoading} pending={processing} />
 		</div>
 	</div>
 
-	<div class="grid min-w-0 grid-cols-1 gap-[var(--grid-gap)] lg:grid-cols-2">
+	<!-- Account health and spending. -->
+	<div
+		class="grid min-w-0 grid-cols-1 gap-[var(--grid-gap)] lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]"
+	>
 		<HealthBoard
 			cards={healthBoard}
 			loading={contentLoading || (accountsLoading && accounts.length === 0)}
@@ -690,28 +700,10 @@
 		/>
 	</div>
 
-	<div class="grid min-w-0 grid-cols-1 gap-[var(--grid-gap)] lg:grid-cols-2">
-		<div class="grid min-w-0 grid-cols-1 grid-rows-[auto_auto_1fr] gap-[var(--grid-gap)]">
-			<TrendChart
-				days={trendDays}
-				metric={trendMode}
-				options={trendOptions}
-				loading={contentLoading}
-				pending={processing}
-				onmetric={(next) => (trendMode = next)}
-			/>
-
-			<TokenMixDonut rows={dailyAll} loading={contentLoading} pending={processing} />
-
-			<DoctorChecks
-				checks={doctor}
-				loading={doctorLoading}
-				failed={doctorFailed}
-				pending={processing}
-				onretry={() => void loadDoctor()}
-			/>
-		</div>
-
+	<!-- Recent requests and the daemon's own checks. -->
+	<div
+		class="grid min-w-0 grid-cols-1 gap-[var(--grid-gap)] lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]"
+	>
 		<RecentRequests
 			rows={recentList}
 			loading={contentLoading}
@@ -719,6 +711,14 @@
 			pending={processing}
 			ontoggle={setLive}
 			onviewall={() => goto('/logs')}
+		/>
+
+		<DoctorChecks
+			checks={doctor}
+			loading={doctorLoading}
+			failed={doctorFailed}
+			pending={processing}
+			onretry={() => void loadDoctor()}
 		/>
 	</div>
 </div>

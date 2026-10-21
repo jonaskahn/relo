@@ -48,7 +48,10 @@
 
 <div class="section-surface accounts-board flex min-w-0 flex-col">
 	<div class="px-4 pt-4 pb-3 sm:px-5">
-		<h2 class="section-heading">{$t('ui.pages.dashboard.accountsBoardTitle')}</h2>
+		<h2 class="section-heading flex items-center gap-2">
+			<Icon name="user" size={15} class="shrink-0 text-faint" />
+			{$t('ui.pages.dashboard.accountsBoardTitle')}
+		</h2>
 		<p class="text-xs text-muted-foreground">
 			{$t('ui.pages.dashboard.accountsBoardDesc')}{#if !loading && overflow}{' '}{overflow}{/if}
 		</p>

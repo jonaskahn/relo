@@ -5,6 +5,7 @@
 	import { t } from 'svelte-i18n';
 
 	import { reducedMotion } from '$lib/card-layout-motion';
+	import Icon from '$lib/components/ui/icon.svelte';
 	import { formatTokens } from '$lib/format';
 	import { donutFill, donutSegments, rankedShares, tokenMixSeries } from '$lib/usage-charts';
 	import type { UsageRollupRow } from '$lib/types';
@@ -65,7 +66,10 @@
 </script>
 
 <div class="section-surface flex flex-col p-4 sm:p-5">
-	<h2 class="section-heading">{$t('ui.pages.usagePage.tokenMixTitle')}</h2>
+	<h2 class="section-heading flex items-center gap-2">
+		<Icon name="layers" size={15} class="shrink-0 text-faint" />
+		{$t('ui.pages.usagePage.tokenMixTitle')}
+	</h2>
 	{#if loading}
 		{@render pending()}
 	{:else if segments.length === 0}

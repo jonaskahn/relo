@@ -27,7 +27,10 @@
 <div class="section-surface flex min-h-0 flex-col">
 	<div class="flex items-center justify-between gap-3 px-4 pt-4 pb-3 sm:px-5">
 		<div>
-			<h2 class="section-heading">{$t('ui.pages.dashboard.recentTitle')}</h2>
+			<h2 class="section-heading flex items-center gap-2">
+				<Icon name="list" size={15} class="shrink-0 text-faint" />
+				{$t('ui.pages.dashboard.recentTitle')}
+			</h2>
 			<p class="text-xs text-muted-foreground">{$t('ui.pages.dashboard.recentDescription')}</p>
 		</div>
 		<div class="flex shrink-0 items-center gap-2">

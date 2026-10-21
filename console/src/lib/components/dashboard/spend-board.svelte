@@ -49,7 +49,10 @@
 <div class="section-surface flex min-w-0 flex-col">
 	<div class="flex flex-wrap items-center justify-between gap-3 px-4 pt-4 pb-3 sm:px-5">
 		<div class="min-w-0">
-			<h2 class="section-heading">{$t('ui.pages.dashboard.spendTitle')}</h2>
+			<h2 class="section-heading flex items-center gap-2">
+				<Icon name="currency-dollar" size={15} class="shrink-0 text-faint" />
+				{$t('ui.pages.dashboard.spendTitle')}
+			</h2>
 			<p class="text-xs text-muted-foreground">
 				{#if !loading && overflow}{overflow}{/if}
 			</p>

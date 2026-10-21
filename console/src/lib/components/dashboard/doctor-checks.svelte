@@ -39,6 +39,7 @@
 	<div class="flex items-center justify-between gap-3 px-4 pt-4 pb-3 sm:px-5">
 		<div>
 			<h2 class="section-heading flex items-center gap-2">
+				<Icon name="wrench" size={15} class="shrink-0 text-faint" />
 				{$t('ui.pages.dashboard.doctorTitle')}
 				{#if !loading && issues > 0}
 					<span
