@@ -9,7 +9,7 @@ require (
 	github.com/andybalholm/brotli v1.2.0
 	github.com/go-webgpu/goffi v0.6.4
 	github.com/gogpu/systray v0.3.0
-	github.com/klauspost/compress v1.18.0
+	github.com/klauspost/compress v1.18.7
 	github.com/nicksnyder/go-i18n/v2 v2.6.1
 	github.com/sirupsen/logrus v1.9.3
 	github.com/spf13/cobra v1.10.2
