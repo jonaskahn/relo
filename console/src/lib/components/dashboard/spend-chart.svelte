@@ -82,9 +82,16 @@
 				{#each shown as entry (entry.row.provider.id)}
 					<li class="flex min-w-0 items-center gap-2">
 						<ProviderLogo id={entry.row.provider.id} label={entry.row.provider.label} size="sm" />
-						<span class="min-w-0 flex-1 truncate text-sm text-ink" title={entry.row.provider.label}
-							>{entry.row.provider.label}</span
+						<span
+							class="min-w-0 truncate text-sm font-medium text-ink"
+							title={entry.row.provider.label}>{entry.row.provider.label}</span
 						>
+						<!-- The chip that says how the connection is priced stands
+						     right beside the name; the amount keeps the far end. -->
+						<span class="badge shrink-0 {pricingTones[entry.pricing]}">
+							{$t(pricingKeys[entry.pricing])}
+						</span>
+						<span class="mono-data ml-auto shrink-0">{formatCost(entry.row.costMicros)}</span>
 						{#if entry.row.unpriced > 0}
 							<span class="badge shrink-0 border border-warn/40 bg-warn/10 text-warn">
 								<Icon name="alert-triangle" size={11} />
@@ -93,10 +100,6 @@
 								})}
 							</span>
 						{/if}
-						<span class="badge shrink-0 {pricingTones[entry.pricing]}">
-							{$t(pricingKeys[entry.pricing])}
-						</span>
-						<span class="mono-data shrink-0">{formatCost(entry.row.costMicros)}</span>
 					</li>
 				{/each}
 			</ul>
