@@ -302,6 +302,13 @@
         "spendNote": "API खर्च वह है जो उपयोग के अनुसार भुगतान करने वाले कनेक्शनों की लागत है। प्लान उपयोग साइन-इन खातों, टोकन प्लान और OpenCode के कैटलॉग मूल्य का अनुमान है; यह कोई चालान नहीं है, और स्थानीय इंजन दोनों से बाहर रहते हैं।",
         "trendTokens": "टोकन",
         "doctorIssues": "{count, plural, one {1 समस्या} other {# समस्याएं}}",
+        "attentionCount": "{count, plural, one {# को ध्यान देना है} other {# को ध्यान देना है}}",
+        "attentionReached": "{window} की सीमा तक पहुँच गया और {time} में रीसेट होगा",
+        "attentionReachedNoReset": "{window} की सीमा तक पहुँच गया",
+        "attentionNear": "अपनी {window} सीमा के करीब है ({percent}%)",
+        "attentionNeedsSignin": "नए साइन-इन की ज़रूरत है",
+        "attentionPaused": "रुका हुआ है",
+        "attentionLimited": "दर-सीमित है",
         "trendsTitle": "रुझान"
       },
       "doctor": {

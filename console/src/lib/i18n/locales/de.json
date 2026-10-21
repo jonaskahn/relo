@@ -302,6 +302,13 @@
         "spendNote": "API-Ausgaben sind, was die Pay-as-you-go-Verbindungen kosten. Die Abo-Nutzung schätzt den Katalogwert von Anmeldekonten, Token-Tarifen und OpenCode; das ist keine Rechnung, und lokale Engines bleiben in beiden außen vor.",
         "trendTokens": "Tokens",
         "doctorIssues": "{count, plural, one {1 Problem} other {# Probleme}}",
+        "attentionCount": "{count, plural, one {# braucht Aufmerksamkeit} other {# brauchen Aufmerksamkeit}}",
+        "attentionReached": "hat das Limit von {window} erreicht und setzt in {time} zurück",
+        "attentionReachedNoReset": "hat das Limit von {window} erreicht",
+        "attentionNear": "liegt nahe an seinem Limit von {window} ({percent} %)",
+        "attentionNeedsSignin": "braucht eine neue Anmeldung",
+        "attentionPaused": "ist pausiert",
+        "attentionLimited": "ist ratenbegrenzt",
         "trendsTitle": "Verläufe"
       },
       "doctor": {

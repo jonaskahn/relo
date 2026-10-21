@@ -302,6 +302,13 @@
         "spendNote": "Wydatki API to koszt połączeń rozliczanych za użycie. Użycie planu szacuje wartość katalogową kont logowania, planów tokenowych i OpenCode; to nie jest faktura, a silniki lokalne są pomijane w obu.",
         "trendTokens": "Tokeny",
         "doctorIssues": "{count, plural, one {1 problem} few {# problemy} many {# problemów} other {# problemów}}",
+        "attentionCount": "{count, plural, one {# wymaga uwagi} few {# wymagają uwagi} many {# wymaga uwagi} other {# wymagają uwagi}}",
+        "attentionReached": "osiągnęło limit {window} i resetuje się za {time}",
+        "attentionReachedNoReset": "osiągnęło limit {window}",
+        "attentionNear": "zbliża się do limitu {window} ({percent}%)",
+        "attentionNeedsSignin": "wymaga ponownego logowania",
+        "attentionPaused": "jest wstrzymane",
+        "attentionLimited": "jest ograniczany limitem żądań",
         "trendsTitle": "Trendy"
       },
       "doctor": {

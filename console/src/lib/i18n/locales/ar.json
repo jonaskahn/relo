@@ -302,6 +302,13 @@
         "spendNote": "إنفاق API هو ما تكلّفته الاتصالات المدفوعة حسب الاستخدام. استخدام الخطة تقدير لقيمة الكتالوج لحسابات تسجيل الدخول وخطط الرموز وOpenCode؛ وهو ليس فاتورة، والمحركات المحلية مستبعدة من الاثنين.",
         "trendTokens": "الرموز",
         "doctorIssues": "{count, plural, one {1 مشكلة} other {# مشكلات}}",
+        "attentionCount": "{count, plural, one {# يحتاج إلى انتباه} other {# تحتاج إلى انتباه}}",
+        "attentionReached": "بلغ الحد {window} ويُعاد الضبط خلال {time}",
+        "attentionReachedNoReset": "بلغ الحد {window}",
+        "attentionNear": "يقترب من حد {window} ({percent}%)",
+        "attentionNeedsSignin": "يحتاج إلى تسجيل دخول جديد",
+        "attentionPaused": "متوقف مؤقتًا",
+        "attentionLimited": "مقيّد بمعدل الطلبات",
         "trendsTitle": "الاتجاهات"
       },
       "doctor": {

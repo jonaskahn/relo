@@ -302,6 +302,13 @@
         "spendNote": "Útrata API je to, co stojí připojení platící za využití. Čerpání plánu odhaduje katalogovou hodnotu přihlašovacích účtů, tokenových plánů a OpenCode; není to faktura a místní enginy nejsou zahrnuty ani v jednom.",
         "trendTokens": "Tokeny",
         "doctorIssues": "{count, plural, one {1 problém} few {# problémy} many {# problémů} other {# problémů}}",
+        "attentionCount": "{count, plural, one {# vyžaduje pozornost} few {# vyžadují pozornost} many {# vyžadují pozornost} other {# vyžadují pozornost}}",
+        "attentionReached": "dosáhlo limitu {window} a resetuje se za {time}",
+        "attentionReachedNoReset": "dosáhlo limitu {window}",
+        "attentionNear": "je blízko limitu {window} ({percent} %)",
+        "attentionNeedsSignin": "vyžaduje nové přihlášení",
+        "attentionPaused": "je pozastavený",
+        "attentionLimited": "je omezeno rychlostí",
         "trendsTitle": "Trendy"
       },
       "doctor": {

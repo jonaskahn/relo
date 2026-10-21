@@ -302,6 +302,13 @@
         "spendNote": "API 支出は従量課金接続の費用です。プラン利用はサインインアカウント、トークンプラン、OpenCode のカタログ価値を見積もったもので、請求書ではなく、ローカルエンジンはどちらにも含まれません。",
         "trendTokens": "トークン",
         "doctorIssues": "{count, plural, one {1件の問題} other {#件の問題}}",
+        "attentionCount": "{count, plural, other {#件が要確認}}",
+        "attentionReached": "{window} の上限に達し、{time} 後にリセットされます",
+        "attentionReachedNoReset": "{window} の上限に達しました",
+        "attentionNear": "{window} の上限に近づいています（{percent}%）",
+        "attentionNeedsSignin": "再ログインが必要です",
+        "attentionPaused": "一時停止中です",
+        "attentionLimited": "レート制限中です",
         "trendsTitle": "推移"
       },
       "doctor": {

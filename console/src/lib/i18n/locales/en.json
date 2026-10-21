@@ -302,7 +302,14 @@
         "spendUnknownKey": "Unlabelled key",
         "spendNote": "API spend is what pay-as-you-go connections cost. Plan usage estimates the catalog value of sign-in accounts, token plans, and OpenCode; it is not an invoice, and local engines stay out of both.",
         "trendTokens": "Tokens",
-        "doctorIssues": "{count, plural, one {1 issue} other {# issues}}"
+        "doctorIssues": "{count, plural, one {1 issue} other {# issues}}",
+        "attentionCount": "{count, plural, one {# needs attention} other {# need attention}}",
+        "attentionReached": "has reached its {window} limit and resets in {time}",
+        "attentionReachedNoReset": "has reached its {window} limit",
+        "attentionNear": "is near its {window} limit ({percent}%)",
+        "attentionNeedsSignin": "needs a new sign-in",
+        "attentionPaused": "is paused",
+        "attentionLimited": "is rate limited"
       },
       "doctor": {
         "title": "Doctor",

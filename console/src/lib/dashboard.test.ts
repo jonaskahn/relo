@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
 	DASHBOARD_LIVE_KEY,
+	accountAttention,
 	accountHealth,
 	deltaPercent,
 	formatCountdown,
@@ -264,6 +265,78 @@ describe('accountHealth', () => {
 			now
 		);
 		expect(health.nextResetMs).toBe(now + 60_000);
+	});
+});
+
+describe('accountAttention', () => {
+	it('raises the accounts whose window is full or nearly full', () => {
+		const items = accountAttention(
+			[
+				account({ id: 'full', label: 'hi@claude.ai' }),
+				account({ id: 'near', label: 'Gecko Brisk' }),
+				account({ id: 'calm', label: 'calm' })
+			],
+			[
+				window({ credential_id: 'full', used_percent: 100 }),
+				window({ credential_id: 'near', used_percent: 96 }),
+				window({ credential_id: 'calm', used_percent: 40 })
+			],
+			now
+		);
+
+		expect(items.map((item) => item.account.id)).toEqual(['full', 'near']);
+		expect(items[0].reason).toBe('reached');
+		expect(items[0].tone).toBe('danger');
+		expect(items[1].reason).toBe('near');
+		expect(items[1].tone).toBe('warn');
+	});
+
+	it('raises a sign-in that expired before a window that is nearly full', () => {
+		const items = accountAttention(
+			[
+				account({ id: 'near', label: 'near' }),
+				account({ id: 'gated', label: 'gated', status: 'needs_reauth' })
+			],
+			[window({ credential_id: 'near', used_percent: 95 })],
+			now
+		);
+
+		expect(items.map((item) => item.account.id)).toEqual(['gated', 'near']);
+		expect(items[0].reason).toBe('needs_signin');
+		expect(items[0].tone).toBe('danger');
+	});
+
+	it('raises a paused and a rate limited account', () => {
+		const items = accountAttention(
+			[
+				account({ id: 'paused', status: 'paused' }),
+				account({ id: 'backoff', limit_state: 'limited', limited_until_ms: now })
+			],
+			[],
+			now
+		);
+
+		expect(items.map((item) => item.reason)).toEqual(['paused', 'limited']);
+	});
+
+	it('reads a balance as a fact and not as a limit', () => {
+		const items = accountAttention(
+			[account()],
+			[window({ used_percent: 100, amount: 7.48, currency: 'USD' })],
+			now
+		);
+
+		expect(items).toEqual([]);
+	});
+
+	it('opens the connection the account belongs to', () => {
+		const items = accountAttention(
+			[account({ provider_id: 'anthropic' })],
+			[window({ used_percent: 100 })],
+			now
+		);
+
+		expect(items[0].providerId).toBe('anthropic');
 	});
 });
 

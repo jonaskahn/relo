@@ -302,6 +302,13 @@
         "spendNote": "La spesa API è ciò che costano le connessioni a consumo. L’utilizzo del piano stima il valore di catalogo di account con accesso, piani a token e OpenCode; non è una fattura, e i motori locali restano esclusi da entrambi.",
         "trendTokens": "Token",
         "doctorIssues": "{count, plural, one {1 problema} other {# problemi}}",
+        "attentionCount": "{count, plural, one {# richiede attenzione} other {# richiedono attenzione}}",
+        "attentionReached": "ha raggiunto il limite di {window} e si reimposta tra {time}",
+        "attentionReachedNoReset": "ha raggiunto il limite di {window}",
+        "attentionNear": "è vicino al limite di {window} ({percent}%)",
+        "attentionNeedsSignin": "richiede un nuovo accesso",
+        "attentionPaused": "è in pausa",
+        "attentionLimited": "è limitato dalla frequenza",
         "trendsTitle": "Andamenti"
       },
       "doctor": {

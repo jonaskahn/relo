@@ -302,6 +302,13 @@
         "spendNote": "API harcaması, kullandıkça öde bağlantılarının maliyetidir. Plan kullanımı oturum açma hesaplarının, jeton planlarının ve OpenCode’un katalog değerini tahmin eder; fatura değildir ve yerel motorlar ikisine de dâhil edilmez.",
         "trendTokens": "Jetonlar",
         "doctorIssues": "{count, plural, one {1 sorun} other {# sorun}}",
+        "attentionCount": "{count, plural, one {# dikkat gerekiyor} other {# dikkat gerekiyor}}",
+        "attentionReached": "{window} sınırına ulaştı ve {time} içinde sıfırlanacak",
+        "attentionReachedNoReset": "{window} sınırına ulaştı",
+        "attentionNear": "{window} sınırına yakın ({percent}%)",
+        "attentionNeedsSignin": "yeniden oturum açmalı",
+        "attentionPaused": "duraklatıldı",
+        "attentionLimited": "hız sınırına takıldı",
         "trendsTitle": "Eğilimler"
       },
       "doctor": {

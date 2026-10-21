@@ -302,6 +302,13 @@
         "spendNote": "Les dépenses API sont ce que coûtent les connexions payantes à l'usage. L'utilisation de l'abonnement estime la valeur catalogue des comptes connectés, des forfaits à jetons et d'OpenCode ; ce n'est pas une facture, et les moteurs locaux restent exclus des deux.",
         "trendTokens": "Jetons",
         "doctorIssues": "{count, plural, one {1 problème} many {# problèmes} other {# problèmes}}",
+        "attentionCount": "{count, plural, one {# à surveiller} many {# à surveiller} other {# à surveiller}}",
+        "attentionReached": "a atteint sa limite de {window} et se réinitialise dans {time}",
+        "attentionReachedNoReset": "a atteint sa limite de {window}",
+        "attentionNear": "approche de sa limite de {window} ({percent} %)",
+        "attentionNeedsSignin": "doit se reconnecter",
+        "attentionPaused": "est en pause",
+        "attentionLimited": "est limité par le débit",
         "trendsTitle": "Tendances"
       },
       "doctor": {

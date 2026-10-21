@@ -302,6 +302,13 @@
         "spendNote": "O gasto de API é o que as conexões pagas por uso custam. O uso do plano estima o valor de catálogo de contas com login, planos por token e OpenCode; não é uma fatura, e mecanismos locais ficam de fora dos dois.",
         "trendTokens": "Tokens",
         "doctorIssues": "{count, plural, one {1 problema} other {# problemas}}",
+        "attentionCount": "{count, plural, one {# precisa de atenção} other {# precisam de atenção}}",
+        "attentionReached": "atingiu o limite de {window} e é redefinido em {time}",
+        "attentionReachedNoReset": "atingiu o limite de {window}",
+        "attentionNear": "está perto do limite de {window} ({percent}%)",
+        "attentionNeedsSignin": "precisa de novo login",
+        "attentionPaused": "está pausada",
+        "attentionLimited": "está limitado pela taxa",
         "trendsTitle": "Tendências"
       },
       "doctor": {

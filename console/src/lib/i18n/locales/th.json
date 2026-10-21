@@ -302,6 +302,13 @@
         "spendNote": "ค่าใช้จ่าย API คือต้นทุนของการเชื่อมต่อแบบจ่ายตามการใช้งาน การใช้งานแพ็กเกจเป็นการประเมินมูลค่าตามแค็ตตาล็อกของบัญชีลงชื่อเข้าใช้ แพ็กเกจโทเค็น และ OpenCode ไม่ใช่ใบแจ้งหนี้ และเอนจินภายในเครื่องไม่นับรวมทั้งสองอย่าง",
         "trendTokens": "โทเค็น",
         "doctorIssues": "{count, plural, one {1 ปัญหา} other {# ปัญหา}}",
+        "attentionCount": "{count, plural, other {# รายการต้องตรวจสอบ}}",
+        "attentionReached": "ถึงขีดจำกัดของ{window}แล้ว และจะรีเซ็ตใน{time}",
+        "attentionReachedNoReset": "ถึงขีดจำกัดของ{window}แล้ว",
+        "attentionNear": "ใกล้ถึงขีดจำกัด{window}แล้ว ({percent}%)",
+        "attentionNeedsSignin": "ต้องเข้าสู่ระบบใหม่",
+        "attentionPaused": "ถูกพักไว้",
+        "attentionLimited": "ถูกจำกัดอัตรา",
         "trendsTitle": "แนวโน้ม"
       },
       "doctor": {

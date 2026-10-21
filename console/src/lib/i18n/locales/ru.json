@@ -302,6 +302,13 @@
         "spendNote": "Расходы API — это стоимость подключений с оплатой за использование. Использование тарифа оценивает каталожную стоимость аккаунтов входа, тарифов на токены и OpenCode; это не счёт, а локальные движки не входят ни в одну из цифр.",
         "trendTokens": "Токены",
         "doctorIssues": "{count, plural, one {1 проблема} few {# проблемы} many {# проблем} other {# проблемы}}",
+        "attentionCount": "{count, plural, one {# требует внимания} few {# требуют внимания} many {# требуют внимания} other {# требуют внимания}}",
+        "attentionReached": "достигло лимита {window} и сбросится через {time}",
+        "attentionReachedNoReset": "достигло лимита {window}",
+        "attentionNear": "близко к лимиту {window} ({percent}%)",
+        "attentionNeedsSignin": "требует повторного входа",
+        "attentionPaused": "приостановлен",
+        "attentionLimited": "ограничено частотой запросов",
         "trendsTitle": "Тренды"
       },
       "doctor": {

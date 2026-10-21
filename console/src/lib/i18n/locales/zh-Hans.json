@@ -302,6 +302,13 @@
         "spendNote": "API 支出是按量付费连接的费用。套餐用量估算登录账户、Token 套餐和 OpenCode 的目录价值；它不是账单，本地引擎两项都不计入。",
         "trendTokens": "Token 数",
         "doctorIssues": "{count, plural, other {# 个问题}}",
+        "attentionCount": "{count, plural, other {#项需要关注}}",
+        "attentionReached": "已达到 {window} 上限，将在 {time} 后重置",
+        "attentionReachedNoReset": "已达到 {window} 上限",
+        "attentionNear": "接近 {window} 上限（{percent}%）",
+        "attentionNeedsSignin": "需要重新登录",
+        "attentionPaused": "已暂停",
+        "attentionLimited": "已被限流",
         "trendsTitle": "趋势"
       },
       "doctor": {

@@ -264,7 +264,7 @@
         "universeProviders": "Penyedia",
         "universeLegend": "Ketebalan garis menunjukkan volume permintaan. Tanda hubung yang bergerak menunjukkan arah lalu lintas.",
         "universeRequests": "permintaan",
-        "universeTotal": "{count, plural, other {# permintaan}}",
+        "universeTotal": "{count, plural, one {# permintaan} other {# permintaan}}",
         "noTraffic": "Tidak ada kemacetan dalam 24 jam terakhir.",
         "noData": "Belum ada datanya.",
         "trendRequests": "Permintaan",
@@ -302,6 +302,13 @@
         "spendNote": "Pembelanjaan API adalah biaya koneksi yang dibayar sesuai pemakaian. Penggunaan paket memperkirakan nilai katalog akun masuk, paket token, dan OpenCode; ini bukan faktur, dan mesin lokal tidak masuk ke keduanya.",
         "trendTokens": "Token",
         "doctorIssues": "{count, plural, one {1 masalah} other {# masalah}}",
+        "attentionCount": "{count, plural, one {# perlu perhatian} other {# perlu perhatian}}",
+        "attentionReached": "telah mencapai batas {window} dan akan disetel ulang dalam {time}",
+        "attentionReachedNoReset": "telah mencapai batas {window}",
+        "attentionNear": "mendekati batas {window} ({percent}%)",
+        "attentionNeedsSignin": "perlu masuk lagi",
+        "attentionPaused": "dijeda",
+        "attentionLimited": "dibatasi laju",
         "trendsTitle": "Tren"
       },
       "doctor": {

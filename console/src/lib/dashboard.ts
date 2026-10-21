@@ -1,4 +1,5 @@
 import type { Account, Provider, QuotaWindow, UsageRollupRow } from './types';
+import { ATTENTION_PERCENT } from './provider-attention';
 import { isMoneyReading } from './provider-quota';
 
 // The dashboard reads several daemon answers and combines them into the
@@ -188,6 +189,17 @@ export function healthCards(
 		.sort((a, b) => HEALTH_SEVERITY[a.health.state] - HEALTH_SEVERITY[b.health.state]);
 }
 
+/** The window an account reports that fills the most of its limit. A money reading is a
+ *  balance, not a limit, so it never fills one. */
+export function worstWindow(windows: readonly QuotaWindow[]): QuotaWindow | null {
+	let worst: QuotaWindow | null = null;
+	for (const window of windows) {
+		if (isMoneyReading(window)) continue;
+		if (worst === null || window.used_percent > worst.used_percent) worst = window;
+	}
+	return worst;
+}
+
 /** Names the one state a dashboard card shows. A sign-in that expired or a paused account
  *  outranks a quota window, and the live rate-limit backoff outranks how full the windows are. */
 export function accountHealth(
@@ -214,6 +226,68 @@ export function accountHealth(
 	}
 	const state: AccountHealthState = worst >= 100 ? 'exhausted' : worst >= 80 ? 'near' : 'ready';
 	return { state, nextResetMs, limitedUntilMs: 0 };
+}
+
+/** Why an account needs an operator, as the band reads it. */
+export type AccountAttentionReason = 'reached' | 'near' | 'needs_signin' | 'paused' | 'limited';
+
+/** One account that needs an operator, and why. */
+export interface AccountAttention {
+	/** The account that needs attention. */
+	account: Account;
+	/** The connection the account belongs to, which is what the item opens. */
+	providerId: string;
+	/** Why the account needs attention. */
+	reason: AccountAttentionReason;
+	/** The window the reason is about, when the reason is a window. */
+	window?: QuotaWindow;
+	/** The tone the band reads the reason in. */
+	tone: 'danger' | 'warn';
+}
+
+/** The accounts that need an operator, the worst first: a sign-in that expired and a
+ *  window that is full outrank a window that is nearly full. */
+export function accountAttention(
+	accounts: readonly Account[],
+	windows: readonly QuotaWindow[],
+	now: number = Date.now()
+): AccountAttention[] {
+	const items: AccountAttention[] = [];
+	for (const account of accounts) {
+		const health = accountHealth(account, windows, now);
+		if (health.state === 'needs_signin') {
+			items.push({
+				account,
+				providerId: account.provider_id,
+				reason: 'needs_signin',
+				tone: 'danger'
+			});
+			continue;
+		}
+		if (health.state === 'paused' || health.state === 'limited') {
+			items.push({
+				account,
+				providerId: account.provider_id,
+				reason: health.state,
+				tone: 'warn'
+			});
+			continue;
+		}
+		const worst = worstWindow(windows.filter((window) => window.credential_id === account.id));
+		if (!worst || worst.used_percent < ATTENTION_PERCENT) continue;
+		items.push({
+			account,
+			providerId: account.provider_id,
+			reason: worst.used_percent >= 100 ? 'reached' : 'near',
+			window: worst,
+			tone: worst.used_percent >= 100 ? 'danger' : 'warn'
+		});
+	}
+	const rank = { danger: 0, warn: 1 };
+	return items.sort(
+		(left, right) =>
+			rank[left.tone] - rank[right.tone] || left.account.label.localeCompare(right.account.label)
+	);
 }
 
 /** Renders a remaining time the way a dashboard reads it: coarse, with the smallest unit first

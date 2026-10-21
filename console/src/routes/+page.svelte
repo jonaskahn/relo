@@ -7,6 +7,7 @@
 	import { subscribe } from '$lib/sse';
 	import PageHeader from '$lib/components/ui/page-header.svelte';
 	import RoutingUniverse from '$lib/components/dashboard/routing-universe.svelte';
+	import AttentionBand from '$lib/components/dashboard/attention-band.svelte';
 	import DoctorChecks from '$lib/components/dashboard/doctor-checks.svelte';
 	import RecentRequests from '$lib/components/dashboard/recent-requests.svelte';
 	import HealthBoard from '$lib/components/dashboard/health-board.svelte';
@@ -20,6 +21,7 @@
 	import Icon, { type IconName } from '$lib/components/ui/icon.svelte';
 	import { formatCost, formatTokens, formatTokensExact, formatUptime } from '$lib/format';
 	import {
+		accountAttention,
 		deltaPercent,
 		healthCards,
 		paidProviders,
@@ -158,6 +160,9 @@
 	const healthReady = $derived(
 		healthBoard.filter((card) => ['ready', 'near', 'probing'].includes(card.health.state)).length
 	);
+	// The accounts that need an operator, read before the figures: a sign-in that
+	// expired, a window that is full, a window that is nearly full.
+	const attentionItems = $derived(accountAttention(accounts, quotaWindows));
 
 	function accountWindows(accountId: string): QuotaWindow[] {
 		return quotaWindows.filter((window) => window.credential_id === accountId);
@@ -492,6 +497,13 @@
 			</Button>
 		</div>
 	{/if}
+
+	<!-- The accounts that need an operator, read before the figures below. -->
+	<AttentionBand
+		items={attentionItems}
+		onopen={(providerId) =>
+			goto('/connections?provider=' + encodeURIComponent(providerId) + '&tab=accounts')}
+	/>
 
 	<!-- The routing universe and the metrics share one row: the map takes the wider
 	     half, the six figures read as two by three beside it. Below the wide

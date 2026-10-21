@@ -302,6 +302,13 @@
         "spendNote": "API 支出是隨用量付費連線的費用。方案用量估算登入帳戶、權杖方案與 OpenCode 的目錄價值；它不是帳單，本機引擎兩項都不計入。",
         "trendTokens": "Token 數",
         "doctorIssues": "{count, plural, one {1 個問題} other {# 個問題}}",
+        "attentionCount": "{count, plural, other {#項需要關注}}",
+        "attentionReached": "已達到 {window} 上限，將在 {time} 後重設",
+        "attentionReachedNoReset": "已達到 {window} 上限",
+        "attentionNear": "接近 {window} 上限（{percent}%）",
+        "attentionNeedsSignin": "需要重新登入",
+        "attentionPaused": "已暫停",
+        "attentionLimited": "已被限流",
         "trendsTitle": "趨勢"
       },
       "doctor": {

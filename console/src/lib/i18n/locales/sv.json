@@ -302,6 +302,13 @@
         "spendNote": "API-utgifter är vad anslutningar med betalning per användning kostar. Plananvändning uppskattar katalogvärdet av inloggningskonton, tokenabonnemang och OpenCode; det är ingen faktura, och lokala motorer ingår inte i någon av siffrorna.",
         "trendTokens": "Token",
         "doctorIssues": "{count, plural, one {1 problem} other {# problem}}",
+        "attentionCount": "{count, plural, one {# behöver uppmärksamhet} other {# behöver uppmärksamhet}}",
+        "attentionReached": "har nått gränsen för {window} och återställs om {time}",
+        "attentionReachedNoReset": "har nått gränsen för {window}",
+        "attentionNear": "är nära gränsen för {window} ({percent} %)",
+        "attentionNeedsSignin": "behöver logga in igen",
+        "attentionPaused": "är pausad",
+        "attentionLimited": "är hastighetsbegränsad",
         "trendsTitle": "Trender"
       },
       "doctor": {

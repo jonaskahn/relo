@@ -302,6 +302,13 @@
         "spendNote": "Cheltuielile API reprezintă costul conexiunilor plătite în funcție de utilizare. Utilizarea planului estimează valoarea de catalog a conturilor de autentificare, a planurilor cu jetoane și a OpenCode; nu este o factură, iar motoarele locale rămân excluse din ambele.",
         "trendTokens": "Jetoane",
         "doctorIssues": "{count, plural, one {1 problemă} few {# probleme} other {# de probleme}}",
+        "attentionCount": "{count, plural, one {# necesită atenție} few {# necesită atenție} other {# necesită atenție}}",
+        "attentionReached": "a atins limita de {window} și se resetează în {time}",
+        "attentionReachedNoReset": "a atins limita de {window}",
+        "attentionNear": "este aproape de limita de {window} ({percent}%)",
+        "attentionNeedsSignin": "necesită o nouă autentificare",
+        "attentionPaused": "este în pauză",
+        "attentionLimited": "este limitat de rată",
         "trendsTitle": "Tendințe"
       },
       "doctor": {

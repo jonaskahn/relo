@@ -302,6 +302,13 @@
         "spendNote": "API-uitgaven zijn wat de verbindingen op basis van verbruik kosten. Abonnementsgebruik schat de cataloguswaarde van inlogaccounts, tokenabonnementen en OpenCode; dat is geen factuur, en lokale engines blijven in beide buiten beschouwing.",
         "trendTokens": "Tokens",
         "doctorIssues": "{count, plural, one {1 probleem} other {# problemen}}",
+        "attentionCount": "{count, plural, one {# heeft aandacht nodig} other {# hebben aandacht nodig}}",
+        "attentionReached": "heeft de limiet van {window} bereikt en wordt over {time} hersteld",
+        "attentionReachedNoReset": "heeft de limiet van {window} bereikt",
+        "attentionNear": "zit dicht bij de limiet van {window} ({percent}%)",
+        "attentionNeedsSignin": "heeft een nieuwe aanmelding nodig",
+        "attentionPaused": "is gepauzeerd",
+        "attentionLimited": "is snelheidsbeperkt",
         "trendsTitle": "Trends"
       },
       "doctor": {
