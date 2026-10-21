@@ -34,8 +34,10 @@
 		type WindowPeriod
 	} from '$lib/dashboard';
 	import { browserStorage } from '$lib/filter-panel';
+	import type { TunnelTraffic } from '$lib/route-tunnel';
 	import { bucketDays, type ChartMetric } from '$lib/usage-charts';
 	import type {
+		AccessKey,
 		Account,
 		DoctorCheck,
 		Provider,
@@ -64,25 +66,38 @@
 	// range. The trend keeps its own seven UTC days.
 	let summaryRows = $state.raw<UsageRollupRow[]>([]);
 	let previousRows = $state.raw<UsageRollupRow[]>([]);
+	// clientRows holds the same window's traffic by the key that sent it, which is
+	// what the routing tunnel names its agents from.
+	let clientRows = $state.raw<UsageRollupRow[]>([]);
+	// keys names the coding client each key belongs to, so the tunnel can name the
+	// agent behind a key's traffic.
+	let keys = $state.raw<AccessKey[]>([]);
 	let dailyAll = $state.raw<UsageRollupRow[]>([]);
-	// traffic24 is the routing universe's own rolling day: the map is defined
-	// as 24-hour traffic, whatever window the summary above it shows.
-	let traffic24 = $state.raw<UsageRollupRow[]>([]);
 	let recent = $state.raw<UsageLogRow[]>([]);
 	let activityFailed = $state('');
 	// live tails the request log the same way the logs page does. The choice
-	// lives in this browser so a reload keeps the last on or off. Fifteen rows
-	// fill the card without scrolling past the blocks beside it.
+	// lives in this browser so a reload keeps the last on or off.
 	let live = $state(true);
-	const RECENT_LIMIT = 15;
-	let pulsingProviders = $state<Set<string>>(new Set());
-	let pulseTimers = new Map<string, ReturnType<typeof setTimeout>>();
+	// The recent-request list shows the newest rows of the request log, filling the
+	// column beside the three cards.
+	const RECENT_LIMIT = 19;
+	const recentList = $derived(recent.slice(0, RECENT_LIMIT));
 
 	// One window drives the whole windowed page: the KPI tiles, the paid-spend
-	// board and the trends. The routing map, doctor and request tail keep their
-	// own scopes below. The rolling 24 hours is the default the desktop window
-	// mirrors.
+	// board, the trends and the routing tunnel. The doctor and the request tail
+	// keep their own scopes below. The rolling 24 hours is the default the
+	// desktop window mirrors.
 	let summaryPeriod = $state<WindowPeriod>('24h');
+
+	// The routing tunnel reads the same window as the tiles above it: the keys that
+	// spoke, the connections that served them, and the newest request inside it.
+	const tunnelTraffic = $derived<TunnelTraffic>({
+		clients: clientRows,
+		connections: summaryRows,
+		newest: recent[0] ?? null,
+		since: windowStart(summaryPeriod, Date.now())
+	});
+
 	// spendSet chooses which figure the board reads: the connections that pay
 	// per token, or the ones a plan covers.
 	type SpendSet = 'api' | 'plan';
@@ -103,8 +118,6 @@
 	let expandedSpend = $state('');
 	let spendKeys = $state<UsageRollupRow[]>([]);
 	let spendKeysLoading = $state(false);
-
-	const DAY = 86_400_000;
 
 	const configuredProviders = $derived(providers.filter((provider) => provider.configured));
 	const paid = $derived(paidProviders(providers).filter((provider) => provider.configured));
@@ -275,6 +288,14 @@
 		}
 	}
 
+	async function loadKeys() {
+		try {
+			keys = (await api<{ items: AccessKey[] }>('/clients/keys')).items ?? [];
+		} catch {
+			keys = [];
+		}
+	}
+
 	// The equal window before the selected one is what a KPI delta compares
 	// against, so switching the period re-asks only this read.
 	async function loadSummary() {
@@ -283,6 +304,9 @@
 			const window = summaryWindow(summaryPeriod, Date.now());
 			const currentRead = api<{ items: UsageRollupRow[] }>(
 				'/activity/usage?group_by=provider&since_ms=' + window.start
+			);
+			const clientRead = api<{ items: UsageRollupRow[] }>(
+				'/activity/usage?group_by=client&since_ms=' + window.start
 			);
 			const previousRead =
 				window.prevUntil > 0
@@ -293,8 +317,13 @@
 								window.prevUntil
 						)
 					: null;
-			const [current, previous] = await Promise.all([currentRead, previousRead]);
+			const [current, clients, previous] = await Promise.all([
+				currentRead,
+				clientRead,
+				previousRead
+			]);
 			summaryRows = current.items ?? [];
+			clientRows = clients.items ?? [];
 			previousRows = previous?.items ?? [];
 		} catch (error) {
 			activityFailed = error instanceof Error ? error.message : String(error);
@@ -316,29 +345,14 @@
 		}
 	}
 
-	// The routing map reads the rolling day independently, so switching the
-	// summary window never redraws it.
-	async function loadTraffic() {
-		try {
-			traffic24 =
-				(
-					await api<{ items: UsageRollupRow[] }>(
-						'/activity/usage?group_by=provider&since_ms=' + (Date.now() - DAY)
-					)
-				).items ?? [];
-		} catch (error) {
-			activityFailed = error instanceof Error ? error.message : String(error);
-		}
-	}
-
 	async function loadEverything(includeRecent = live) {
 		try {
 			await Promise.all([
 				loadStatus(),
 				loadHealth(),
+				loadKeys(),
 				loadSummary(),
 				loadTrend(),
-				loadTraffic(),
 				includeRecent ? loadRecent() : Promise.resolve()
 			]);
 			await Promise.all([loadSpend(), loadTrendPaid()]);
@@ -350,18 +364,6 @@
 	function setLive(next: boolean) {
 		live = next;
 		writeDashboardLive(browserStorage(), next);
-	}
-
-	function pulseProvider(id: string) {
-		if (pulseTimers.has(id)) clearTimeout(pulseTimers.get(id));
-		pulsingProviders = new Set([...pulsingProviders, id]);
-		pulseTimers.set(
-			id,
-			setTimeout(() => {
-				pulsingProviders = new Set([...pulsingProviders].filter((entry) => entry !== id));
-				pulseTimers.delete(id);
-			}, 600)
-		);
 	}
 
 	let refreshTimer: ReturnType<typeof setInterval>;
@@ -386,9 +388,7 @@
 			refreshing = true;
 			void loadEverything().finally(() => (refreshing = false));
 		}, 30_000);
-		unsubLogs = subscribe('logs', (payload: unknown) => {
-			const event = payload as { provider?: string } | null;
-			if (event?.provider) pulseProvider(event.provider);
+		unsubLogs = subscribe('logs', () => {
 			if (live) reloadRecent.schedule();
 		});
 		unsubQuota = subscribe('quota', () => reloadHealth.schedule());
@@ -399,11 +399,10 @@
 		unsubQuota?.();
 		reloadRecent.cancel();
 		reloadHealth.cancel();
-		pulseTimers.forEach((timer) => clearTimeout(timer));
 	});
 
 	// The KPI tiles, the spend board and both trend reads follow the page window,
-	// while the routing map, doctor and request tail keep their own scopes.
+	// while the doctor and the request tail keep their own scopes.
 	function onSummaryPeriod(period: string) {
 		if (isWindowPeriod(period)) summaryPeriod = period;
 		void Promise.all([loadSummary(), loadSpend(), loadTrend(), loadTrendPaid()]);
@@ -494,145 +493,166 @@
 		</div>
 	{/if}
 
-	<div class="grid grid-cols-2 gap-[var(--grid-gap)] md:grid-cols-3 xl:grid-cols-6">
-		<KpiTile
-			icon="list"
-			labelKey="ui.pages.dashboard.requests24h"
+	<!-- The routing universe and the metrics share one row: the map takes the wider
+	     half, the six figures read as two by three beside it. Below the wide
+	     breakpoint each takes the full width, the figures first. -->
+	<div class="grid min-w-0 grid-cols-1 gap-[var(--grid-gap)] xl:grid-cols-[1.25fr_1fr]">
+		<RoutingUniverse
+			traffic={tunnelTraffic}
+			{keys}
+			providers={configuredProviders}
+			{live}
 			loading={contentLoading}
 			pending={processing}
+			onadd={() => goto('/connections?add=1')}
+			class="order-2 min-w-0 xl:order-1"
+		/>
+
+		<div
+			class="order-1 grid min-w-0 grid-cols-2 gap-[var(--grid-gap)] md:grid-cols-3 xl:order-2 xl:grid-cols-2"
 		>
-			<div class="mt-auto flex flex-wrap items-baseline gap-x-3 gap-y-1">
-				<span class="font-mono text-[1.625rem] leading-none font-medium tabular-nums text-ink">
+			<KpiTile
+				icon="list"
+				labelKey="ui.pages.dashboard.requests24h"
+				loading={contentLoading}
+				pending={processing}
+			>
+				<div class="mt-auto flex flex-wrap items-baseline gap-x-3 gap-y-1">
+					<span class="font-mono text-[1.625rem] leading-none font-medium tabular-nums text-ink">
+						<AnimatedNumber
+							value={requestsWindow}
+							format={(value) => Math.round(value).toLocaleString()}
+						/>
+					</span>
+					{#if requestsDelta !== null}
+						<span class="inline-flex items-center gap-1 text-xs font-medium text-muted-foreground">
+							<Icon name={requestsDelta >= 0 ? 'arrow-up' : 'arrow-down'} size={13} />
+							{(requestsDelta >= 0 ? '+' : '') + requestsDelta}%
+						</span>
+					{/if}
+				</div>
+				<p class="min-h-4 text-xs text-muted-foreground">
+					{#if errorsWindow > 0}{errorsWindow} {$t('ui.pages.dashboard.errors')}
+					{:else if successRate !== null}{$t('ui.pages.dashboard.percentOk', {
+							values: { value: successRate.toFixed(0) }
+						})}
+					{/if}
+				</p>
+			</KpiTile>
+
+			<KpiTile
+				icon="circle-check"
+				labelKey="ui.pages.dashboard.successTile"
+				loading={contentLoading}
+				pending={processing}
+			>
+				<span
+					class="mt-auto font-mono text-[1.625rem] leading-none font-medium tabular-nums text-ink"
+				>
 					<AnimatedNumber
-						value={requestsWindow}
-						format={(value) => Math.round(value).toLocaleString()}
+						value={successRate ?? 0}
+						format={(value) => (successRate === null ? '—' : value.toFixed(0) + '%')}
 					/>
 				</span>
-				{#if requestsDelta !== null}
-					<span class="inline-flex items-center gap-1 text-xs font-medium text-muted-foreground">
-						<Icon name={requestsDelta >= 0 ? 'arrow-up' : 'arrow-down'} size={13} />
-						{(requestsDelta >= 0 ? '+' : '') + requestsDelta}%
-					</span>
-				{/if}
-			</div>
-			<p class="min-h-4 text-xs text-muted-foreground">
-				{#if errorsWindow > 0}{errorsWindow} {$t('ui.pages.dashboard.errors')}
-				{:else if successRate !== null}{$t('ui.pages.dashboard.percentOk', {
-						values: { value: successRate.toFixed(0) }
-					})}
-				{/if}
-			</p>
-		</KpiTile>
+				<p class="min-h-4 text-xs">
+					{#if errorsWindow > 0}
+						<span class="inline-flex items-center gap-1 text-danger">
+							<Icon name="circle-alert" size={12} />{errorsWindow}
+							{$t('ui.pages.dashboard.errors')}
+						</span>
+					{/if}
+				</p>
+			</KpiTile>
 
-		<KpiTile
-			icon="circle-check"
-			labelKey="ui.pages.dashboard.successTile"
-			loading={contentLoading}
-			pending={processing}
-		>
-			<span
-				class="mt-auto font-mono text-[1.625rem] leading-none font-medium tabular-nums text-ink"
+			<KpiTile
+				icon="currency-dollar"
+				labelKey="ui.pages.dashboard.paidSpend"
+				loading={contentLoading}
+				pending={processing}
 			>
-				<AnimatedNumber
-					value={successRate ?? 0}
-					format={(value) => (successRate === null ? '—' : value.toFixed(0) + '%')}
-				/>
-			</span>
-			<p class="min-h-4 text-xs">
-				{#if errorsWindow > 0}
-					<span class="inline-flex items-center gap-1 text-danger">
-						<Icon name="circle-alert" size={12} />{errorsWindow}
-						{$t('ui.pages.dashboard.errors')}
-					</span>
-				{/if}
-			</p>
-		</KpiTile>
-
-		<KpiTile
-			icon="currency-dollar"
-			labelKey="ui.pages.dashboard.paidSpend"
-			loading={contentLoading}
-			pending={processing}
-		>
-			<span
-				class="mt-auto font-mono text-[1.625rem] leading-none font-medium tabular-nums text-ink"
-			>
-				<AnimatedNumber value={paidSpendWindow} format={(value) => formatCost(Math.round(value))} />
-			</span>
-			<p class="min-h-4 text-xs text-muted-foreground">
-				{$t('ui.pages.dashboard.paidSpendHint', { values: { count: paid.length } })}
-			</p>
-		</KpiTile>
-
-		<KpiTile
-			icon="sparkles"
-			labelKey="ui.pages.dashboard.tokens"
-			loading={contentLoading}
-			pending={processing}
-		>
-			<span
-				class="mt-auto font-mono text-[1.625rem] leading-none font-medium tabular-nums text-ink"
-				title={formatTokensExact(tokensWindow)}
-				><AnimatedNumber
-					value={tokensWindow}
-					format={(value) => formatTokens(Math.round(value))}
-				/></span
-			>
-			<p class="min-h-4 text-xs font-medium text-muted-foreground">
-				{#if tokensDelta !== null}
-					<span class="inline-flex items-center gap-1">
-						<Icon name={tokensDelta >= 0 ? 'arrow-up' : 'arrow-down'} size={13} />
-						{(tokensDelta >= 0 ? '+' : '') + tokensDelta}%
-					</span>
-				{/if}
-			</p>
-		</KpiTile>
-
-		<KpiTile
-			icon="clock"
-			labelKey="ui.pages.dashboard.latency"
-			loading={contentLoading}
-			pending={processing}
-		>
-			<span
-				class="mt-auto font-mono text-[1.625rem] leading-none font-medium tabular-nums text-ink"
-			>
-				<AnimatedNumber
-					value={avgDuration}
-					format={(value) => (value > 0 ? (value / 1000).toFixed(1) + 's' : '—')}
-				/>
-			</span>
-			<p class="min-h-4 text-xs text-muted-foreground">
-				{status ? formatUptime(status.uptime_seconds) : ''}
-			</p>
-		</KpiTile>
-
-		<KpiTile
-			icon="user"
-			labelKey="ui.pages.dashboard.accountsKpi"
-			loading={contentLoading}
-			pending={processing}
-		>
-			<span
-				class="mt-auto font-mono text-[1.625rem] leading-none font-medium tabular-nums text-ink"
-			>
-				<AnimatedNumber value={healthReady} format={(value) => String(Math.round(value))} /><span
-					class="text-sm font-normal text-muted-foreground"
+				<span
+					class="mt-auto font-mono text-[1.625rem] leading-none font-medium tabular-nums text-ink"
 				>
-					/ {accounts.length}</span
+					<AnimatedNumber
+						value={paidSpendWindow}
+						format={(value) => formatCost(Math.round(value))}
+					/>
+				</span>
+				<p class="min-h-4 text-xs text-muted-foreground">
+					{$t('ui.pages.dashboard.paidSpendHint', { values: { count: paid.length } })}
+				</p>
+			</KpiTile>
+
+			<KpiTile
+				icon="sparkles"
+				labelKey="ui.pages.dashboard.tokens"
+				loading={contentLoading}
+				pending={processing}
+			>
+				<span
+					class="mt-auto font-mono text-[1.625rem] leading-none font-medium tabular-nums text-ink"
+					title={formatTokensExact(tokensWindow)}
+					><AnimatedNumber
+						value={tokensWindow}
+						format={(value) => formatTokens(Math.round(value))}
+					/></span
 				>
-			</span>
-			<p class="min-h-4 text-xs">
-				{#if healthLimited + healthNeedsSignin > 0}
-					<span class="inline-flex items-center gap-1 text-warn">
-						<Icon name="alert-triangle" size={12} />
-						{healthLimited}
-						{$t('ui.pages.dashboard.stateLimited')} · {healthNeedsSignin}
-						{$t('ui.pages.dashboard.stateNeedsSignin')}
-					</span>
-				{/if}
-			</p>
-		</KpiTile>
+				<p class="min-h-4 text-xs font-medium text-muted-foreground">
+					{#if tokensDelta !== null}
+						<span class="inline-flex items-center gap-1">
+							<Icon name={tokensDelta >= 0 ? 'arrow-up' : 'arrow-down'} size={13} />
+							{(tokensDelta >= 0 ? '+' : '') + tokensDelta}%
+						</span>
+					{/if}
+				</p>
+			</KpiTile>
+
+			<KpiTile
+				icon="clock"
+				labelKey="ui.pages.dashboard.latency"
+				loading={contentLoading}
+				pending={processing}
+			>
+				<span
+					class="mt-auto font-mono text-[1.625rem] leading-none font-medium tabular-nums text-ink"
+				>
+					<AnimatedNumber
+						value={avgDuration}
+						format={(value) => (value > 0 ? (value / 1000).toFixed(1) + 's' : '—')}
+					/>
+				</span>
+				<p class="min-h-4 text-xs text-muted-foreground">
+					{status ? formatUptime(status.uptime_seconds) : ''}
+				</p>
+			</KpiTile>
+
+			<KpiTile
+				icon="user"
+				labelKey="ui.pages.dashboard.accountsKpi"
+				loading={contentLoading}
+				pending={processing}
+			>
+				<span
+					class="mt-auto font-mono text-[1.625rem] leading-none font-medium tabular-nums text-ink"
+				>
+					<AnimatedNumber value={healthReady} format={(value) => String(Math.round(value))} /><span
+						class="text-sm font-normal text-muted-foreground"
+					>
+						/ {accounts.length}</span
+					>
+				</span>
+				<p class="min-h-4 text-xs">
+					{#if healthLimited + healthNeedsSignin > 0}
+						<span class="inline-flex items-center gap-1 text-warn">
+							<Icon name="alert-triangle" size={12} />
+							{healthLimited}
+							{$t('ui.pages.dashboard.stateLimited')} · {healthNeedsSignin}
+							{$t('ui.pages.dashboard.stateNeedsSignin')}
+						</span>
+					{/if}
+				</p>
+			</KpiTile>
+		</div>
 	</div>
 
 	<div class="grid min-w-0 grid-cols-1 gap-[var(--grid-gap)] lg:grid-cols-2">
@@ -673,15 +693,6 @@
 
 	<div class="grid min-w-0 grid-cols-1 gap-[var(--grid-gap)] lg:grid-cols-2">
 		<div class="flex min-w-0 flex-col gap-[var(--grid-gap)]">
-			<RoutingUniverse
-				providers={configuredProviders}
-				traffic={traffic24}
-				pulsing={pulsingProviders}
-				loading={contentLoading}
-				pending={processing}
-				onadd={() => goto('/connections?add=1')}
-			/>
-
 			<DoctorChecks
 				checks={doctor}
 				loading={doctorLoading}

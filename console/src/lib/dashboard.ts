@@ -1,18 +1,6 @@
 import type { Account, Provider, QuotaWindow, UsageRollupRow } from './types';
 import { isMoneyReading } from './provider-quota';
 
-/** Orders connections the way the dashboard's routing universe reads them: the busiest 24 hours
- *  first, then the connection with more accounts to serve a request. */
-export function providersByTraffic(providers: Provider[], rows: UsageRollupRow[]): Provider[] {
-	const byTraffic = new Map(rows.map((row) => [row.Key, Number(row.Requests)]));
-	return [...providers].sort((a, b) => {
-		const ta = byTraffic.get(a.id) ?? 0;
-		const tb = byTraffic.get(b.id) ?? 0;
-		if (tb !== ta) return tb - ta;
-		return b.counts.accounts - a.counts.accounts;
-	});
-}
-
 // The dashboard reads several daemon answers and combines them into the
 // health-first board. These helpers hold the pure decisions: how a
 // connection's cost counts, how healthy an account is, and what a number

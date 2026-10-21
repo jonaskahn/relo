@@ -10,7 +10,6 @@ import {
 	isWindowPeriod,
 	paidProviders,
 	planProviders,
-	providersByTraffic,
 	readDashboardLive,
 	rowTokens,
 	boardOverflowLabel,
@@ -73,11 +72,6 @@ function provider(id: string, kind: string): Provider {
 		created_at_ms: 0,
 		updated_at_ms: 0
 	};
-}
-
-/** The same connection, stating a different number of accounts. */
-function withAccounts(entry: Provider, accounts: number): Provider {
-	return { ...entry, counts: { ...entry.counts, accounts } };
 }
 
 function account(overrides: Partial<Account> = {}): Account {
@@ -311,43 +305,6 @@ describe('formatCountdown', () => {
 		expect(formatCountdown(4 * 60_000)).toBe('4m');
 		expect(formatCountdown((2 * 3600 + 14 * 60) * 1000)).toBe('2h 14m');
 		expect(formatCountdown(3 * 1440 * 60_000)).toBe('3d 0h');
-	});
-});
-
-describe('providersByTraffic', () => {
-	it('puts the busiest connection first and breaks ties by accounts', () => {
-		const openai = withAccounts(provider('openai', 'key'), 3);
-		const providers = [openai, provider('anthropic', 'key'), provider('ollama', 'local')];
-
-		const ordered = providersByTraffic(providers, [
-			rollup('openai', { Requests: 5 }),
-			rollup('ollama', { Requests: 40 })
-		]);
-
-		expect(ordered.map((entry) => entry.id)).toEqual(['ollama', 'openai', 'anthropic']);
-	});
-
-	it('orders connections that never served a request as quiet', () => {
-		// A connection with no row in the usage read is counted as zero rather
-		// than left out, so a fresh install still ranks every connection.
-		const providers = [provider('openai', 'key'), provider('ollama', 'local')];
-		const ordered = providersByTraffic(providers, []);
-
-		expect(ordered.map((entry) => entry.id)).toEqual(['openai', 'ollama']);
-	});
-
-	it('breaks a tie on accounts rather than on the order they arrived', () => {
-		const busy = withAccounts(provider('busy', 'key'), 9);
-		const quiet = withAccounts(provider('quiet', 'key'), 1);
-
-		// Both served the same number of requests, so the one with more
-		// accounts is the busier of the two whichever order they were given.
-		const ordered = providersByTraffic(
-			[busy, quiet],
-			[rollup('busy', { Requests: 5 }), rollup('quiet', { Requests: 5 })]
-		);
-
-		expect(ordered.map((entry) => entry.id)).toEqual(['busy', 'quiet']);
 	});
 });
 

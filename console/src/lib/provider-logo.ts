@@ -56,3 +56,15 @@ export function providerMonogram(label: string): string {
 	if (words.length >= 2) return (words[0][0] + words[1][0]).toUpperCase();
 	return label.slice(0, 2).toUpperCase();
 }
+
+/** The transform that draws one mark centred on a point.
+ *  The geometry is drawn in its own viewBox, so it is scaled into the box the caller wants
+ *  and shifted by half its own size: a mark that is not square keeps its shape and sits on
+ *  the point either way. */
+export function logoPathTransform(path: LogoPath, cx: number, cy: number, size: number): string {
+	const scale = size / Math.max(path.width, path.height);
+	const [vx, vy] = path.viewBox.split(' ').map(Number);
+	return `translate(${cx} ${cy}) scale(${scale}) translate(${-vx - path.width / 2} ${
+		-vy - path.height / 2
+	})`;
+}

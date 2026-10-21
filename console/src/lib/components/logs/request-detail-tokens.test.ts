@@ -40,6 +40,7 @@ function row(overrides: Partial<UsageLogRow> = {}): UsageLogRow {
 		RouteReason: '',
 		ClientKeyID: '',
 		ClientKeyName: '',
+		ClientApp: '',
 		Origin: 'external',
 		...overrides
 	};
