@@ -60,7 +60,7 @@
 	});
 </script>
 
-<div class="section-surface flex flex-col p-4 sm:p-5">
+<div class="section-surface flex flex-1 flex-col p-4 sm:p-5">
 	<div class="mb-3 flex flex-wrap items-center justify-between gap-3">
 		<h2 class="section-heading flex items-center gap-2">
 			<Icon name="chart-bar" size={15} class="shrink-0 text-faint" />
@@ -94,7 +94,7 @@
 			{/key}
 			<svg
 				viewBox="0 0 640 84"
-				class="min-h-24 w-full"
+				class="max-h-60 min-h-24 w-full flex-1"
 				preserveAspectRatio="none"
 				role="img"
 				aria-label={$t('ui.pages.dashboard.trendsTitle')}
