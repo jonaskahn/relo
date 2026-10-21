@@ -73,14 +73,16 @@
 		{@render pending?.()}
 	{:else if providers.length === 0}
 		<div
-			class="flex flex-col items-center justify-center gap-3 rounded-panel border-[1.5px] border-dashed border-accent-border bg-accent-soft px-4 py-10 text-center"
+			class="flex w-full flex-1 flex-col items-center justify-center gap-3 rounded-panel border-[1.5px] border-dashed border-accent-border bg-accent-soft px-4 py-10 text-center"
 		>
 			<p class="max-w-xs text-sm text-muted-foreground">
 				{$t('ui.pages.dashboard.universeEmpty')}
 			</p>
 		</div>
 	{:else if tunnel.agents.length === 0 && tunnel.connections.length === 0}
-		<p class="py-8 text-center text-sm text-muted-foreground">
+		<p
+			class="flex flex-1 items-center justify-center py-8 text-center text-sm text-muted-foreground"
+		>
 			{$t('ui.pages.dashboard.universeNoTraffic')}
 		</p>
 	{:else}
