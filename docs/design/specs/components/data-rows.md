@@ -36,11 +36,12 @@ with `.mono-data`. A quiet day has no average latency or error rate to claim.
 
 ## KPI tile
 
-Level-1 card, `--radius-xl`, padding 16, the shared card hover and no click target. Label 12.5px `--muted` on top, value
-`.mono-data` 26px 500 below, then one line of delta or context (12px; `--ok` or `--danger` only when the change is a
-real signal, with an arrow icon). Six tiles lead the Dashboard in a responsive grid:
-`repeat(auto-fit,minmax(170px,1fr))`. Values are plain numbers: no gradient, no decorative sparkline unless it carries
-data.
+Level-1 card, `--radius-xl`, padding 16, the shared card hover and no click target. The label row carries the tile's
+icon and its label (12.5px `--muted`) on the left and, when the window brought a change, a pill on the right holding
+the signed percentage with an arrow icon. The value `.mono-data` 26px 500 sits below, and one line of context (12px;
+`--ok` or `--danger` only when the change is a real signal) under it. Six tiles lead the Dashboard: two a row on a
+phone, three on a tablet, six on a wide screen. Values are plain numbers: no gradient, no decorative sparkline unless
+it carries data.
 
 ## Meter and bar chart
 
