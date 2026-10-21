@@ -29,6 +29,7 @@
 		readDashboardLive,
 		rowTokens,
 		spendRows,
+		showsDayLabels,
 		summaryWindow,
 		windowStart,
 		writeDashboardLive,
@@ -573,6 +574,7 @@
 				days={trendDays}
 				metric={trendMode}
 				options={trendOptions}
+				showLabels={showsDayLabels(summaryPeriod)}
 				loading={contentLoading}
 				pending={processing}
 				onmetric={(next) => (trendMode = next)}

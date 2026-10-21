@@ -17,6 +17,7 @@ import {
 	pricingOf,
 	spendKindOf,
 	spendRows,
+	showsDayLabels,
 	summaryWindow,
 	visibleBoard,
 	writeDashboardLive,
@@ -475,6 +476,21 @@ describe('summaryWindow', () => {
 		expect(window.start).toBe(0);
 		expect(window.until).toBe(0);
 		expect(window.prevUntil).toBe(0);
+	});
+});
+
+describe('showsDayLabels', () => {
+	it('names the days of a window of a week or less', () => {
+		expect(showsDayLabels('24h')).toBe(true);
+		expect(showsDayLabels('today')).toBe(true);
+		expect(showsDayLabels('7d')).toBe(true);
+	});
+
+	it('leaves the days unnamed once the window runs past a week', () => {
+		expect(showsDayLabels('30d')).toBe(false);
+		expect(showsDayLabels('60d')).toBe(false);
+		expect(showsDayLabels('90d')).toBe(false);
+		expect(showsDayLabels('all')).toBe(false);
 	});
 });
 

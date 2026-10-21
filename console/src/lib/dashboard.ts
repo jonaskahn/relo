@@ -379,6 +379,14 @@ const WINDOW_DAYS: Record<'7d' | '30d' | '60d' | '90d', number> = {
 	'90d': 90
 };
 
+/** Whether the trend names its days under the bars. A window of more than a week
+ *  draws too many labels to read, so it leaves them out. */
+export function showsDayLabels(period: WindowPeriod): boolean {
+	if (period === '24h' || period === 'today') return true;
+	if (period === 'all') return false;
+	return WINDOW_DAYS[period] <= 7;
+}
+
 /** One window of the summary series: its label, its rollups and its totals. */
 export interface SummaryWindow {
 	// A zero until means "now": the read runs to the moment it is asked.

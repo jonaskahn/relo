@@ -25,12 +25,14 @@
 		days: UsageRollupRow[];
 		metric: ChartMetric;
 		options: Array<{ value: ChartMetric; label: string; icon: IconName }>;
+		/** Whether the days are named under the bars. A long window leaves them out. */
+		showLabels?: boolean;
 		loading: boolean;
 		pending: Snippet;
 		onmetric: (metric: ChartMetric) => void;
 	}
 
-	let { days, metric, options, loading, pending, onmetric }: Props = $props();
+	let { days, metric, options, showLabels = true, loading, pending, onmetric }: Props = $props();
 
 	let hoveredKey = $state('');
 	let drawn = $state(false);
@@ -133,11 +135,13 @@
 					>
 				{/each}
 			</svg>
-			<div class="mt-1.5 flex justify-between gap-1.5 text-[0.6875rem] text-muted-foreground">
-				{#each values as entry (entry.key)}
-					<span class="mono-data min-w-0 flex-1 truncate text-center">{shortDay(entry.key)}</span>
-				{/each}
-			</div>
+			{#if showLabels}
+				<div class="mt-1.5 flex justify-between gap-1.5 text-[0.6875rem] text-muted-foreground">
+					{#each values as entry (entry.key)}
+						<span class="mono-data min-w-0 flex-1 truncate text-center">{shortDay(entry.key)}</span>
+					{/each}
+				</div>
+			{/if}
 		</div>
 	{/if}
 </div>
