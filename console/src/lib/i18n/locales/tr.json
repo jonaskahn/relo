@@ -294,6 +294,8 @@
         "stateNeedsSignin": "Oturum açın",
         "spendEmpty": "Bu aralıkta ücretli bağlantılarda harcama yok.",
         "spendApi": "API harcaması",
+        "spendTitle": "Harcama",
+        "spendTitleDesc": "Dönemin maliyeti, planların karşıladığı ve ücretsiz hatların taşıdığı.",
         "spendApiDesc": "Kullandıkça ödenen bağlantıların maliyeti.",
         "spendPlan": "Plan kullanımı",
         "spendPlanDesc": "Planla kapsanan trafiğin tahmini değeri, fatura değil.",

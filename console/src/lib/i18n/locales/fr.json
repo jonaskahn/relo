@@ -294,6 +294,8 @@
         "stateNeedsSignin": "Se connecter",
         "spendEmpty": "Aucune dépense sur les connexions payantes dans cette période.",
         "spendApi": "Dépenses API",
+        "spendTitle": "Dépenses",
+        "spendTitleDesc": "Ce que la période a coûté, ce que les forfaits ont couvert et ce que les voies gratuites ont transporté.",
         "spendApiDesc": "Ce que coûtent les connexions à l'usage.",
         "spendPlan": "Utilisation de l'abonnement",
         "spendPlanDesc": "La valeur estimée du trafic couvert par un forfait, pas une facture.",

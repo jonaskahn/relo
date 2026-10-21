@@ -294,6 +294,8 @@
         "stateNeedsSignin": "Entrar",
         "spendEmpty": "Sem gasto em conexões pagas neste período.",
         "spendApi": "Gasto de API",
+        "spendTitle": "Gastos",
+        "spendTitleDesc": "O que a janela custou, o que os planos cobriram e o que as faixas gratuitas transportaram.",
         "spendApiDesc": "O que as conexões de pagamento por uso custam.",
         "spendPlan": "Uso do plano",
         "spendPlanDesc": "O valor estimado do tráfego coberto pelo plano, não uma fatura.",

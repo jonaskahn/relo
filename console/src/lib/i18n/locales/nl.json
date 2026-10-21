@@ -294,6 +294,8 @@
         "stateNeedsSignin": "Inloggen",
         "spendEmpty": "Geen uitgaven aan betaalde verbindingen in dit venster.",
         "spendApi": "API-uitgaven",
+        "spendTitle": "Kosten",
+        "spendTitleDesc": "Wat het venster kostte, wat de abonnementen dekten en wat de gratis banen vervoerden.",
         "spendApiDesc": "Wat de pay-as-you-go-verbindingen kosten.",
         "spendPlan": "Abonnementsgebruik",
         "spendPlanDesc": "De geschatte waarde van het door het abonnement gedekte verkeer, geen factuur.",

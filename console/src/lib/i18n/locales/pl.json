@@ -294,6 +294,8 @@
         "stateNeedsSignin": "Zaloguj się",
         "spendEmpty": "Brak wydatków na płatne połączenia w tym okresie.",
         "spendApi": "Wydatki API",
+        "spendTitle": "Wydatki",
+        "spendTitleDesc": "Ile kosztował okres, co pokryły plany i co przewiozły bezpłatne pasy.",
         "spendApiDesc": "Ile kosztują połączenia rozliczane za zużycie.",
         "spendPlan": "Użycie planu",
         "spendPlanDesc": "Szacowana wartość ruchu objętego planem, nie faktura.",

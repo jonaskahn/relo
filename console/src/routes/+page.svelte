@@ -11,7 +11,7 @@
 	import DoctorChecks from '$lib/components/dashboard/doctor-checks.svelte';
 	import RecentRequests from '$lib/components/dashboard/recent-requests.svelte';
 	import HealthBoard from '$lib/components/dashboard/health-board.svelte';
-	import SpendChart from '$lib/components/dashboard/spend-chart.svelte';
+	import SpendBlock from '$lib/components/dashboard/spend-block.svelte';
 	import TrendChart from '$lib/components/dashboard/trend-chart.svelte';
 	import TokenMixDonut from '$lib/components/dashboard/token-mix-donut.svelte';
 	import KpiTile from '$lib/components/dashboard/kpi-tile.svelte';
@@ -596,36 +596,45 @@
 	/>
 
 	<!-- What the window cost, what the plans covered, and what the free lanes carried. -->
-	<div class="grid min-w-0 grid-cols-1 gap-[var(--grid-gap)] lg:grid-cols-3">
-		<SpendChart
-			rows={apiSpendRows}
-			titleKey="ui.pages.dashboard.spendApi"
-			icon="currency-dollar"
-			descriptionKey="ui.pages.dashboard.spendApiDesc"
-			emptyKey="ui.pages.dashboard.spendEmpty"
-			loading={contentLoading}
-			pending={processing}
-		/>
+	<div class="section-surface flex min-w-0 flex-col p-4 sm:p-5">
+		<div class="mb-4">
+			<h2 class="section-heading flex items-center gap-2">
+				<Icon name="currency-dollar" size={15} class="shrink-0 text-faint" />
+				{$t('ui.pages.dashboard.spendTitle')}
+			</h2>
+			<p class="text-xs text-muted-foreground">{$t('ui.pages.dashboard.spendTitleDesc')}</p>
+		</div>
+		<div class="grid min-w-0 grid-cols-1 gap-3 lg:grid-cols-3">
+			<SpendBlock
+				rows={apiSpendRows}
+				titleKey="ui.pages.dashboard.spendApi"
+				icon="key"
+				descriptionKey="ui.pages.dashboard.spendApiDesc"
+				emptyKey="ui.pages.dashboard.spendEmpty"
+				loading={contentLoading}
+				pending={processing}
+			/>
 
-		<SpendChart
-			rows={planUsageRows}
-			titleKey="ui.pages.dashboard.spendPlan"
-			icon="tag"
-			descriptionKey="ui.pages.dashboard.spendPlanDesc"
-			emptyKey="ui.pages.dashboard.spendPlanEmpty"
-			loading={contentLoading}
-			pending={processing}
-		/>
+			<SpendBlock
+				rows={planUsageRows}
+				titleKey="ui.pages.dashboard.spendPlan"
+				icon="tag"
+				descriptionKey="ui.pages.dashboard.spendPlanDesc"
+				emptyKey="ui.pages.dashboard.spendPlanEmpty"
+				loading={contentLoading}
+				pending={processing}
+			/>
 
-		<SpendChart
-			rows={freeUsageRows}
-			titleKey="ui.pages.dashboard.spendFree"
-			icon="bolt"
-			descriptionKey="ui.pages.dashboard.spendFreeDesc"
-			emptyKey="ui.pages.dashboard.spendFreeEmpty"
-			loading={contentLoading}
-			pending={processing}
-		/>
+			<SpendBlock
+				rows={freeUsageRows}
+				titleKey="ui.pages.dashboard.spendFree"
+				icon="bolt"
+				descriptionKey="ui.pages.dashboard.spendFreeDesc"
+				emptyKey="ui.pages.dashboard.spendFreeEmpty"
+				loading={contentLoading}
+				pending={processing}
+			/>
+		</div>
 	</div>
 
 	<!-- Recent requests and the daemon's own checks. -->

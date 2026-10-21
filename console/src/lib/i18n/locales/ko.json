@@ -294,6 +294,8 @@
         "stateNeedsSignin": "로그인",
         "spendEmpty": "이 기간에 유료 연결 지출이 없어요.",
         "spendApi": "API 지출",
+        "spendTitle": "비용",
+        "spendTitleDesc": "기간의 비용, 요금제가 보장한 비용, 무료 레인이 옮긴 양입니다.",
         "spendApiDesc": "사용량 기반 연결의 비용입니다.",
         "spendPlan": "플랜 사용량",
         "spendPlanDesc": "계획으로 보장된 트래픽의 추정 가치이며, 청구서가 아닙니다.",

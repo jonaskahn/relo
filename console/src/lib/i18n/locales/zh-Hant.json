@@ -294,6 +294,8 @@
         "stateNeedsSignin": "需登入",
         "spendEmpty": "該時段內付費連線沒有支出。",
         "spendApi": "API 支出",
+        "spendTitle": "費用",
+        "spendTitleDesc": "這段期間花了多少，方案涵蓋了多少，免費通道承載了多少。",
         "spendApiDesc": "按量付費連線的成本。",
         "spendPlan": "方案用量",
         "spendPlanDesc": "方案涵蓋流量的估算價值，不是帳單。",

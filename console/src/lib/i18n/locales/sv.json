@@ -294,6 +294,8 @@
         "stateNeedsSignin": "Logga in",
         "spendEmpty": "Inga utgifter för betalda anslutningar i det här fönstret.",
         "spendApi": "API-utgifter",
+        "spendTitle": "Kostnader",
+        "spendTitleDesc": "Vad perioden kostade, vad planen täckte och vad de gratis banorna bar.",
         "spendApiDesc": "Kostnaden för de betalningsper-användning-anslutningarna.",
         "spendPlan": "Plananvändning",
         "spendPlanDesc": "Det uppskattade värdet av den trafik planen täcker, inte en faktura.",

@@ -7,7 +7,7 @@ import type { SpendRow } from '$lib/dashboard';
 import { providerOf } from '$lib/provider-fixtures';
 import type { Provider } from '$lib/types';
 
-import SpendChart from './spend-chart.svelte';
+import SpendBlock from './spend-block.svelte';
 
 beforeAll(() => {
 	addMessages('en', en);
@@ -32,7 +32,7 @@ function row(
 }
 
 function markup(rows: SpendRow[]): string {
-	return render(SpendChart, {
+	return render(SpendBlock, {
 		props: {
 			rows,
 			titleKey: 'ui.pages.dashboard.spendApi',
@@ -45,7 +45,7 @@ function markup(rows: SpendRow[]): string {
 	}).body;
 }
 
-describe('the spend chart', () => {
+describe('the spend block', () => {
 	it('names the connection and what it cost', () => {
 		const html = markup([row('openai', 'OpenAI', 1_200_000)]);
 

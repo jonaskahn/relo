@@ -294,6 +294,8 @@
         "stateNeedsSignin": "Accedi",
         "spendEmpty": "Nessuna spesa su connessioni a pagamento in questo periodo.",
         "spendApi": "Spesa API",
+        "spendTitle": "Spesa",
+        "spendTitleDesc": "Quanto è costato il periodo, quanto hanno coperto i piani e che cosa hanno portato le corsie gratuite.",
         "spendApiDesc": "Quanto costano le connessioni a consumo.",
         "spendPlan": "Utilizzo del piano",
         "spendPlanDesc": "Il valore stimato del traffico coperto dal piano, non una fattura.",

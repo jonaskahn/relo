@@ -14,7 +14,8 @@ requires: [data-rows, status-and-banners, motion]
    charts take the room the map leaves them, so the map's height is the trend's plus the mix's. Below the wide
    breakpoint each takes the full width.
 4. **One row, one card**: the **subscription accounts**, the accounts that need an operator, across the whole page.
-5. **One row, three columns**: the **API spend**, **plan usage** and **free usage** cards.
+5. **One card, three blocks**: a **Spend** card that names the window's money, holding the **API spend**, **plan usage**
+   and **free usage** blocks as recessed panels of its own.
 6. **One row, two columns**: **recent requests** on the wider half, the **doctor checks** on the other. Both stop at half
    the height their rows would take, and scroll inside.
 
@@ -54,11 +55,11 @@ empty.
 
 ## Spend cards
 
-Three cards answer what the window cost: the **API spend** card for the connections that pay per token, the **plan
-usage** card for the ones a plan covers, and the **free usage** card for the keyless free lanes. All three state money:
-the free lanes' traffic is priced like any other, it is only never charged. Each names its three costliest
-connections, the costliest first, with a `3+` mark when the set holds more. A connection reads as its mark, its name and
-what it cost.
+Three blocks answer what the window cost, each a recessed panel inside one card: the **API spend** block for the
+connections that pay per token, the **plan usage** block for the ones a plan covers, and the **free usage** block for
+the keyless free lanes. All three state money: the free lanes' traffic is priced like any other, it is only never
+charged. Each names its three costliest connections, the costliest first, with a `3+` mark when the set holds more. A
+connection reads as its mark, its name and what it cost.
 
 ## Rules
 

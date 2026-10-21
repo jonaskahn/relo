@@ -294,6 +294,8 @@
         "stateNeedsSignin": "Iniciar sesión",
         "spendEmpty": "Sin gasto en conexiones de pago en este período.",
         "spendApi": "Gasto de API",
+        "spendTitle": "Gastos",
+        "spendTitleDesc": "Lo que costó el periodo, lo que cubrieron los planes y lo que llevaron los carriles gratuitos.",
         "spendApiDesc": "Lo que cuestan las conexiones de pago por uso.",
         "spendPlan": "Uso del plan",
         "spendPlanDesc": "El valor estimado del tráfico cubierto por un plan, no una factura.",

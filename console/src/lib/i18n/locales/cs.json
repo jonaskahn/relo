@@ -294,6 +294,8 @@
         "stateNeedsSignin": "Přihlásit se",
         "spendEmpty": "V tomto období žádná útrata za placená připojení.",
         "spendApi": "Útrata API",
+        "spendTitle": "Náklady",
+        "spendTitleDesc": "Kolik stálo období, co pokryly plány a co převzaly bezplatné pasy.",
         "spendApiDesc": "Kolik stojí připojení účtovaná podle spotřeby.",
         "spendPlan": "Čerpání plánu",
         "spendPlanDesc": "Odhad hodnoty provozu hrazeného plánem, ne faktura.",

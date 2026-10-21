@@ -295,6 +295,8 @@
         "stateNeedsSignin": "Sign in",
         "spendEmpty": "No spend on paid connections in this window.",
         "spendApi": "API spend",
+        "spendTitle": "Spend",
+        "spendTitleDesc": "What the window cost, what the plans covered, and what the free lanes carried.",
         "spendApiDesc": "What the pay-as-you-go connections cost.",
         "spendPlan": "Plan usage",
         "spendPlanDesc": "The estimated value of plan-covered traffic, not an invoice.",

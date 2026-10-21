@@ -8,14 +8,14 @@
 	import { boardOverflowLabel, spendChartLimit, topSpendRows, type SpendRow } from '$lib/dashboard';
 	import { formatCost } from '$lib/format';
 
-	// SpendChart is one set of connections read as a list: the ones that cost the
-	// most, and what each of them carried. The rows arrive already joined with
-	// their connections, so the card draws what the window held.
+	// SpendBlock is one set of connections read as a list: the ones that cost
+	// the most, and what each of them cost. The rows arrive already joined with
+	// their connections, so the block draws what the window held.
 
 	interface Props {
 		/** The connections of the set, each with what it cost. */
 		rows: SpendRow[];
-		/** The message the card's title reads. */
+		/** The message the block's title reads. */
 		titleKey: string;
 		/** The mark the title wears. */
 		icon: IconName;
@@ -29,14 +29,15 @@
 
 	let { rows, titleKey, icon, descriptionKey, emptyKey, loading, pending }: Props = $props();
 
-	// The card names the costliest connections of the set; the total covers all of them.
+	// The block names the costliest connections of the set; the total covers all of them.
 	const shown = $derived(topSpendRows(rows));
 	const overflow = $derived(boardOverflowLabel(rows.length, spendChartLimit));
 	const total = $derived(rows.reduce((sum, row) => sum + row.costMicros, 0));
 </script>
 
-<div class="section-surface flex min-w-0 flex-col">
-	<div class="px-4 pt-4 pb-3 sm:px-5">
+<!-- One block of the spend card: a recessed panel holding a set of connections. -->
+<div class="flex min-w-0 flex-col rounded-panel bg-sunken p-3">
+	<div class="mb-3">
 		<h2 class="section-heading flex items-center gap-2">
 			<Icon name={icon} size={15} class="shrink-0 text-faint" />
 			{$t(titleKey)}
@@ -45,7 +46,7 @@
 			{$t(descriptionKey)}{#if !loading && overflow}{' '}{overflow}{/if}
 		</p>
 	</div>
-	<div class="flex min-w-0 flex-1 flex-col gap-3 px-4 pb-4 sm:px-5">
+	<div class="flex min-w-0 flex-1 flex-col gap-3">
 		{#if loading}
 			{@render pending()}
 		{:else if rows.length === 0}

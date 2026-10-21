@@ -294,6 +294,8 @@
         "stateNeedsSignin": "Masuk",
         "spendEmpty": "Tidak ada pengeluaran untuk koneksi berbayar di jendela ini.",
         "spendApi": "Pembelanjaan API",
+        "spendTitle": "Biaya",
+        "spendTitleDesc": "Biaya periode ini, yang ditutup paket, dan yang dibawa jalur gratis.",
         "spendApiDesc": "Biaya koneksi pay-as-you-go.",
         "spendPlan": "Penggunaan paket",
         "spendPlanDesc": "Nilai perkiraan lalu lintas yang dicakup paket, bukan tagihan.",

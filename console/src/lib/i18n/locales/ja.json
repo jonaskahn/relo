@@ -294,6 +294,8 @@
         "stateNeedsSignin": "サインイン",
         "spendEmpty": "この期間の有料接続に支出はありません。",
         "spendApi": "API支出",
+        "spendTitle": "費用",
+        "spendTitleDesc": "この期間にかかった費用、プランが賄ったもの、無料レーンが運んだものです。",
         "spendApiDesc": "従量制の接続の費用。",
         "spendPlan": "プラン利用",
         "spendPlanDesc": "プランでカバーされた通信量の推定価値です。請求書ではありません。",

@@ -294,6 +294,8 @@
         "stateNeedsSignin": "Đăng nhập",
         "spendEmpty": "Không chi tiêu cho các kết nối trả phí trong cửa sổ này.",
         "spendApi": "Chi tiêu API",
+        "spendTitle": "Chi phí",
+        "spendTitleDesc": "Chi phí của khoảng thời gian này, phần gói phủ và phần các làn miễn phí mang.",
         "spendApiDesc": "Chi phí của các kết nối tính theo mức dùng.",
         "spendPlan": "Mức dùng gói",
         "spendPlanDesc": "Giá trị ước tính của lưu lượng được gói phủ, không phải hóa đơn.",

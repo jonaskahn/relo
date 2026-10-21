@@ -294,6 +294,8 @@
         "stateNeedsSignin": "Autentificați-vă",
         "spendEmpty": "Nicio cheltuială pe conexiuni plătite în acest interval.",
         "spendApi": "Cheltuieli API",
+        "spendTitle": "Cheltuieli",
+        "spendTitleDesc": "Cât a costat perioada, ce au acoperit planurile și ce au transportat traseele gratuite.",
         "spendApiDesc": "Cât costă conexiunile cu plată pe consum.",
         "spendPlan": "Utilizarea planului",
         "spendPlanDesc": "Valoarea estimată a traficului acoperit de plan, nu o factură.",

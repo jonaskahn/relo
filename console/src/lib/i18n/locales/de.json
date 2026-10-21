@@ -294,6 +294,8 @@
         "stateNeedsSignin": "Anmelden",
         "spendEmpty": "Kein Verbrauch auf bezahlten Verbindungen in diesem Zeitraum.",
         "spendApi": "API-Ausgaben",
+        "spendTitle": "Kosten",
+        "spendTitleDesc": "Was das Fenster gekostet hat, was die Tarife abgedeckt haben und was die Gratis-Lanes getragen haben.",
         "spendApiDesc": "Was die Pay-as-you-go-Verbindungen kosten.",
         "spendPlan": "Abo-Nutzung",
         "spendPlanDesc": "Der geschätzte Wert des planabgedeckten Verkehrs, keine Rechnung.",
