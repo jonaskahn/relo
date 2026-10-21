@@ -421,7 +421,7 @@ func (r inboundRequest) toCanonical() (*inference.Request, error) {
 	}
 	return &inference.Request{
 		Model:       r.Model,
-		Messages:    messages,
+		Messages:    inference.MergeToolResults(messages),
 		Tools:       decodeTools(r.Tools),
 		ToolChoice:  decodeToolChoice(r.ToolChoice),
 		Stream:      r.Stream,

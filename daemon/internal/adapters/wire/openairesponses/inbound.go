@@ -553,7 +553,7 @@ func (r inboundRequest) toCanonical() (*inference.Request, map[string]bool, erro
 	tools, custom := decodeTools(r.Tools)
 	return &inference.Request{
 		Model:       r.Model,
-		Messages:    collector.messages,
+		Messages:    inference.MergeToolResults(collector.messages),
 		Tools:       tools,
 		ToolChoice:  decodeToolChoice(r.ToolChoice),
 		Stream:      r.Stream,
