@@ -262,7 +262,7 @@
         "universeNoTraffic": "Nessuna richiesta registrata in questo periodo.",
         "universeClients": "Client",
         "universeProviders": "Provider",
-        "universeLegend": "Lo spessore delle linee indica il volume delle richieste. I trattini in movimento indicano la direzione del traffico.",
+        "universeLegend": "Lo spessore delle linee indica il volume delle richieste. La linea tratteggiata è il percorso della richiesta più recente.",
         "universeRequests": "richieste",
         "universeTotal": "{count, plural, one {# richiesta} other {# richieste}}",
         "noTraffic": "Nessun traffico nelle ultime 24 ore.",

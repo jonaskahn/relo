@@ -262,7 +262,7 @@
         "universeNoTraffic": "Inga förfrågningar loggade i den här perioden.",
         "universeClients": "Klienter",
         "universeProviders": "Leverantörer",
-        "universeLegend": "Linjens tjocklek visar antalet förfrågningar. De rörda strecken visar trafikens riktning.",
+        "universeLegend": "Linjens tjocklek visar antalet förfrågningar. Den prickade linjen är vägen för den senaste frågan.",
         "universeRequests": "förfrågningar",
         "universeTotal": "{count, plural, one {# förfrågning} other {# förfrågningar}}",
         "noTraffic": "Ingen trafik de senaste 24 timmarna.",

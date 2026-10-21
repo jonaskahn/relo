@@ -262,7 +262,7 @@
         "universeNoTraffic": "Belum ada permintaan yang dicatat pada periode ini.",
         "universeClients": "Klien",
         "universeProviders": "Penyedia",
-        "universeLegend": "Ketebalan garis menunjukkan volume permintaan. Tanda hubung yang bergerak menunjukkan arah lalu lintas.",
+        "universeLegend": "Ketebalan garis menunjukkan volume permintaan. Garis putus-putus adalah rute permintaan terbaru.",
         "universeRequests": "permintaan",
         "universeTotal": "{count, plural, one {# permintaan} other {# permintaan}}",
         "noTraffic": "Tidak ada kemacetan dalam 24 jam terakhir.",

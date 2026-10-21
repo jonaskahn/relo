@@ -262,7 +262,7 @@
         "universeNoTraffic": "Geen aanvragen gelogd in deze periode.",
         "universeClients": "Clients",
         "universeProviders": "Providers",
-        "universeLegend": "De dikte van de lijn toont het aantal verzoeken. De bewegende stippellijnen tonen de richting van het verkeer.",
+        "universeLegend": "De dikte van de lijn toont het aantal verzoeken. De stippellijn is de route van het nieuwste verzoek.",
         "universeRequests": "verzoeken",
         "universeTotal": "{count, plural, one {# verzoek} other {# verzoeken}}",
         "noTraffic": "Geen verkeer in de afgelopen 24 uur.",

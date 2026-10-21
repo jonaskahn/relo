@@ -262,7 +262,7 @@
         "universeNoTraffic": "Aucune requête journalisée sur cette période.",
         "universeClients": "Clients",
         "universeProviders": "Fournisseurs",
-        "universeLegend": "L'épaisseur des lignes indique le volume des requêtes. Les pointillés en mouvement indiquent le sens du trafic.",
+        "universeLegend": "L'épaisseur des lignes indique le volume des requêtes. La ligne pointillée est la route de la requête la plus récente.",
         "universeRequests": "requêtes",
         "universeTotal": "{count, plural, one {# requête} many {# requêtes} other {# requêtes}}",
         "noTraffic": "Aucun trafic au cours des dernières 24 heures.",

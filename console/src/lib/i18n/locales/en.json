@@ -262,7 +262,7 @@
         "universeNoTraffic": "No requests in this period.",
         "universeClients": "Clients",
         "universeProviders": "Providers",
-        "universeLegend": "Line weight shows request volume. Moving dashes show the direction of traffic.",
+        "universeLegend": "Line weight shows request volume. The dotted line is the newest request's route.",
         "universeRequests": "requests",
         "universeTotal": "{count, plural, one {# request} other {# requests}}",
         "noTraffic": "No traffic in the last 24 hours.",

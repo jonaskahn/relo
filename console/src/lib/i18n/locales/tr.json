@@ -262,7 +262,7 @@
         "universeNoTraffic": "Bu dönemde istek günlüğe düşmedi.",
         "universeClients": "İstemciler",
         "universeProviders": "Sağlayıcılar",
-        "universeLegend": "Çizgi kalınlığı istek hacmini gösterir. Hareketli kesikli çizgiler trafik yönünü gösterir.",
+        "universeLegend": "Çizgi kalınlığı istek hacmini gösterir. Noktalı çizgi en son isteğin rotasıdır.",
         "universeRequests": "istek",
         "universeTotal": "{count, plural, one {# istek} other {# istek}}",
         "noTraffic": "Son 24 saatte trafik yok.",

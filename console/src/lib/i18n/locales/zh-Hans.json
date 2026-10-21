@@ -262,7 +262,7 @@
         "universeNoTraffic": "该时间段内尚无请求记录。",
         "universeClients": "客户端",
         "universeProviders": "提供商",
-        "universeLegend": "线条的粗细表示请求量。流动的虚线表示流量方向。",
+        "universeLegend": "线条的粗细表示请求量。点线表示最新请求的路径。",
         "universeRequests": "次请求",
         "universeTotal": "{count, plural, other {# 次请求}}",
         "noTraffic": "过去 24 小时内无流量。",

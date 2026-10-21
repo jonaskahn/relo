@@ -262,7 +262,7 @@
         "universeNoTraffic": "V tomto období nebyly zaznamenány žádné požadavky.",
         "universeClients": "Klienti",
         "universeProviders": "Poskytovatelé",
-        "universeLegend": "Tloušťka čáry ukazuje objem požadavků. Pohybující se čárkování ukazuje směr provozu.",
+        "universeLegend": "Tloušťka čáry ukazuje objem požadavků. Tečkovaná čára je cesta posledního požadavku.",
         "universeRequests": "požadavků",
         "universeTotal": "{count, plural, one {# požadavek} few {# požadavky} many {# požadavků} other {# požadavků}}",
         "noTraffic": "Za posledních 24 hodin žádný provoz.",

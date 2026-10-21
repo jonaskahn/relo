@@ -262,7 +262,7 @@
         "universeNoTraffic": "In diesem Zeitraum wurden keine Anfragen protokolliert.",
         "universeClients": "Clients",
         "universeProviders": "Anbieter",
-        "universeLegend": "Die Stärke der Linie zeigt das Anfragevolumen. Wandernde Striche zeigen die Richtung des Verkehrs.",
+        "universeLegend": "Die Stärke der Linie zeigt das Anfragevolumen. Die gepunktete Linie ist die Route der neuesten Anfrage.",
         "universeRequests": "Anfragen",
         "universeTotal": "{count, plural, one {# Anfrage} other {# Anfragen}}",
         "noTraffic": "Kein Traffic in den letzten 24 Stunden.",

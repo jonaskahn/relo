@@ -109,19 +109,17 @@ describe('the routing tunnel', () => {
 		expect(html).toContain('OpenAI');
 	});
 
-	it('draws every line twice, once quiet and once moving', () => {
+	it('draws every line once, and it stands still', () => {
 		const html = markup();
 
-		expect(html).toContain('leg');
-		expect(html).toContain('leg-flow');
-		expect(html).toContain('leg-moving');
+		expect(html.match(/class="leg /g)).toHaveLength(2);
+		expect(html).not.toContain('leg-flow');
+		expect(html).not.toContain('leg-moving');
 	});
 
 	it('holds the flow still when the tail is not live', () => {
 		const html = markup(false);
 
-		expect(html).toContain('leg-flow');
-		expect(html).not.toContain('leg-moving');
 		expect(html).toContain('route-flow');
 		expect(html).not.toContain('route-moving');
 	});

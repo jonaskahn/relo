@@ -262,7 +262,7 @@
         "universeNoTraffic": "Nicio cerere înregistrată în această perioadă.",
         "universeClients": "Clienți",
         "universeProviders": "Furnizori",
-        "universeLegend": "Grosimea liniilor arată volumul cererilor. Liniile punctate în mișcare arată direcția traficului.",
+        "universeLegend": "Grosimea liniilor arată volumul cererilor. Linia punctată este traseul celei mai recente cereri.",
         "universeRequests": "cereri",
         "universeTotal": "{count, plural, one {# cerere} few {# cereri} other {# cereri}}",
         "noTraffic": "Niciun trafic în ultimele 24 de ore.",

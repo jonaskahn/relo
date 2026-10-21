@@ -262,7 +262,7 @@
         "universeNoTraffic": "Nenhuma solicitação registrada neste período.",
         "universeClients": "Clientes",
         "universeProviders": "Provedores",
-        "universeLegend": "A espessura das linhas mostra o volume de requisições. Os traços em movimento mostram a direção do tráfego.",
+        "universeLegend": "A espessura das linhas mostra o volume de requisições. A linha pontilhada é a rota da requisição mais recente.",
         "universeRequests": "requisições",
         "universeTotal": "{count, plural, one {# requisição} other {# requisições}}",
         "noTraffic": "Sem tráfego nas últimas 24 horas.",

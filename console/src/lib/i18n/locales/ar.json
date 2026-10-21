@@ -262,7 +262,7 @@
         "universeNoTraffic": "لا توجد طلبات في هذه الفترة.",
         "universeClients": "العملاء",
         "universeProviders": "المزوّدون",
-        "universeLegend": "يوضح سُمك الخط حجم الطلبات. وتوضح الشرطات المتحركة اتجاه المرور.",
+        "universeLegend": "يوضح سُمك الخط حجم الطلبات. ويوضح الخط المنقط مسار آخر طلب.",
         "universeRequests": "الطلبات",
         "universeTotal": "{count, plural, zero {# طلب} one {# طلب} two {# طلبان} few {# طلبات} many {# طلبًا} other {# طلب}}",
         "noTraffic": "لا توجد حركة مرور خلال الـ 24 ساعة الماضية.",

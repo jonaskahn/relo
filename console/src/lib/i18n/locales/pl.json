@@ -262,7 +262,7 @@
         "universeNoTraffic": "W tym okresie nie zarejestrowano żadnych żądań.",
         "universeClients": "Klienci",
         "universeProviders": "Dostawcy",
-        "universeLegend": "Grubość linii pokazuje wolumen żądań. Ruchome kreski pokazują kierunek ruchu.",
+        "universeLegend": "Grubość linii pokazuje wolumen żądań. Kropkowana linia to ścieżka ostatniego żądania.",
         "universeRequests": "żądań",
         "universeTotal": "{count, plural, one {# żądanie} few {# żądania} many {# żądań} other {# żądania}}",
         "noTraffic": "Brak ruchu w ostatnich 24 godzinach.",

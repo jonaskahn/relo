@@ -262,7 +262,7 @@
         "universeNoTraffic": "Chưa có yêu cầu nào được ghi lại trong khoảng thời gian này.",
         "universeClients": "Ứng dụng khách",
         "universeProviders": "Nhà cung cấp",
-        "universeLegend": "Độ dày đường thể hiện khối lượng yêu cầu. Nét đứt chuyển động cho biết hướng lưu lượng.",
+        "universeLegend": "Độ dày đường thể hiện khối lượng yêu cầu. Đường nét đứt là tuyến của yêu cầu mới nhất.",
         "universeRequests": "yêu cầu",
         "universeTotal": "{count, plural, one {# yêu cầu} other {# yêu cầu}}",
         "noTraffic": "Không có giao thông trong 24 giờ qua.",

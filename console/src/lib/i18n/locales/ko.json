@@ -262,7 +262,7 @@
         "universeNoTraffic": "이 기간에 기록된 요청이 없어요.",
         "universeClients": "클라이언트",
         "universeProviders": "제공자",
-        "universeLegend": "선의 굵기는 요청량을 나타냅니다. 흐르는 점선은 트래픽 방향을 나타냅니다.",
+        "universeLegend": "선의 굵기는 요청량을 나타냅니다. 점선은 최신 요청의 경로입니다.",
         "universeRequests": "요청",
         "universeTotal": "{count, plural, other {#건의 요청}}",
         "noTraffic": "지난 24시간 동안 트래픽이 없어요.",

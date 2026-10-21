@@ -48,23 +48,13 @@
 	role="img"
 	aria-label={$t('ui.pages.dashboard.universeTitle')}
 >
-	<!-- Every line is drawn twice: a quiet base that carries the traffic, and the accent
-	     layer that moves while the tail runs. -->
+	<!-- Every line stands still: it carries the traffic, and its weight states how much. -->
 	{#each geometry.legs as leg (leg.id)}
 		<path
 			class="leg"
 			d={leg.path}
 			fill="none"
 			stroke="var(--accent-200)"
-			stroke-width={leg.width}
-			stroke-linecap="round"
-		/>
-		<path
-			class="leg-flow"
-			class:leg-moving={live}
-			d={leg.path}
-			fill="none"
-			stroke="var(--accent)"
 			stroke-width={leg.width}
 			stroke-linecap="round"
 		/>
@@ -223,22 +213,6 @@
 		animation: tunnel-in 240ms ease-out;
 	}
 
-	/* The accent layer of a line is a line of dashes that travels along it, so the
-	   direction of the traffic reads while the tail runs. */
-	.leg-flow {
-		stroke-dasharray: 6 18;
-	}
-
-	.leg-moving {
-		animation: leg-flow 2.4s linear infinite;
-	}
-
-	@keyframes leg-flow {
-		to {
-			stroke-dashoffset: -24;
-		}
-	}
-
 	/* The live route is a line of dots that travels along the path the newest request
 	   took. It runs while the tail runs, and stops where the tail stops. */
 	.route-flow {
@@ -294,7 +268,6 @@
 	}
 
 	@media (prefers-reduced-motion: reduce) {
-		.leg-moving,
 		.route-moving {
 			animation: none;
 		}
