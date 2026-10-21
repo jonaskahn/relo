@@ -138,6 +138,12 @@ describe('the routing tunnel', () => {
 		expect(html).toContain('Relo');
 	});
 
+	it('wears the request count as a chip of its own', () => {
+		const html = markup();
+
+		expect(html).toContain('count-chip');
+	});
+
 	it('names no rail of its own', () => {
 		const html = markup();
 

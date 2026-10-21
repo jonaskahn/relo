@@ -28,6 +28,11 @@ const PILL_HEIGHT = 36;
 const PILL_RADIUS = 12;
 const PILL_PAD = 7;
 const PILL_GAP = 8;
+/** The chip the request count wears: its height, the air inside it, and the margin that
+ *  keeps it off the name. */
+const CHIP_HEIGHT = 18;
+const CHIP_PAD = 6;
+const CHIP_GAP = 8;
 /** The room between a pill and the line that leaves it. */
 const LINE_GAP = 12;
 /** The room a curve needs between the hub's edge and a pill, so it sweeps rather than
@@ -137,8 +142,10 @@ export interface TunnelPill {
 	mark: TunnelPoint & { size: number };
 	/** Where the name starts. */
 	textX: number;
-	/** Where the count starts. */
+	/** Where the count starts, inside its chip. */
 	countX: number;
+	/** The chip the count wears. */
+	countChip: { x: number; y: number; width: number; height: number; radius: number };
 	/** The baseline the name and the count share. */
 	baseline: number;
 }
@@ -413,9 +420,11 @@ function row(options: RowOptions): TunnelPlacement {
 	const text = cut(options.node.label, options.room);
 	const nameWidth = text.length * LETTER;
 	const countWidth = count.length * COUNT_LETTER;
-	const width = 2 * PILL_PAD + TILE + PILL_GAP + nameWidth + PILL_GAP + countWidth;
+	const chipWidth = 2 * CHIP_PAD + countWidth;
+	const width = 2 * PILL_PAD + TILE + PILL_GAP + nameWidth + CHIP_GAP + chipWidth;
 	const x = options.side === 'left' ? options.edge - width : options.edge;
 	const baseline = options.y + 4;
+	const chipX = x + PILL_PAD + TILE + PILL_GAP + nameWidth + CHIP_GAP;
 	const pill: TunnelPill = {
 		x,
 		y: options.y - PILL_HEIGHT / 2,
@@ -425,7 +434,14 @@ function row(options: RowOptions): TunnelPlacement {
 		tile: { x: x + PILL_PAD, y: options.y - TILE / 2, size: TILE, radius: TILE_RADIUS },
 		mark: { x: x + PILL_PAD + TILE / 2, y: options.y, size: MARK },
 		textX: x + PILL_PAD + TILE + PILL_GAP,
-		countX: x + PILL_PAD + TILE + PILL_GAP + nameWidth + PILL_GAP,
+		countX: chipX + CHIP_PAD,
+		countChip: {
+			x: chipX,
+			y: options.y - CHIP_HEIGHT / 2,
+			width: chipWidth,
+			height: CHIP_HEIGHT,
+			radius: CHIP_HEIGHT / 2
+		},
 		baseline
 	};
 	const from = {
@@ -496,7 +512,14 @@ function wideGeometry(tunnel: RouteTunnel, width: number, height: number): Tunne
 	const agents = tunnel.agents.map((node, index) => {
 		const count = String(node.count);
 		const room =
-			clientEdge - EDGE - 2 * PILL_PAD - TILE - 2 * PILL_GAP - count.length * COUNT_LETTER;
+			clientEdge -
+			EDGE -
+			2 * PILL_PAD -
+			TILE -
+			PILL_GAP -
+			CHIP_GAP -
+			2 * CHIP_PAD -
+			count.length * COUNT_LETTER;
 		return row({
 			node,
 			y: agentHeights[index],
@@ -514,7 +537,9 @@ function wideGeometry(tunnel: RouteTunnel, width: number, height: number): Tunne
 			providerEdge -
 			2 * PILL_PAD -
 			TILE -
-			2 * PILL_GAP -
+			PILL_GAP -
+			CHIP_GAP -
+			2 * CHIP_PAD -
 			count.length * COUNT_LETTER;
 		return row({
 			node,

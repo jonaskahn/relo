@@ -177,6 +177,16 @@
 		<text class="pill-name" x={placement.pill.textX} y={placement.pill.baseline}
 			>{placement.text}</text
 		>
+		<!-- The count wears a chip of its own, a margin off the name. -->
+		<rect
+			class="count-chip"
+			x={placement.pill.countChip.x}
+			y={placement.pill.countChip.y}
+			width={placement.pill.countChip.width}
+			height={placement.pill.countChip.height}
+			rx={placement.pill.countChip.radius}
+			fill="var(--sunken)"
+		/>
 		<text class="pill-count mono-data" x={placement.pill.countX} y={placement.pill.baseline}
 			>{placement.node.count}</text
 		>
@@ -195,6 +205,12 @@
 	.pill-count {
 		font-size: 12px;
 		fill: var(--muted);
+	}
+
+	/* The chip the count wears is the sunken plate inside the pill, so the
+	   number reads apart from the name beside it. */
+	.count-chip {
+		pointer-events: none;
 	}
 
 	.hub-total {
