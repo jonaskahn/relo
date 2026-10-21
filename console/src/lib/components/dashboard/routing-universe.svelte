@@ -4,6 +4,7 @@
 
 	import Button from '$lib/components/ui/button.svelte';
 	import Icon from '$lib/components/ui/icon.svelte';
+	import RailLabel from './rail-label.svelte';
 	import RouteTunnel from './route-tunnel.svelte';
 	import RoutingUniverseList from './routing-universe-list.svelte';
 	import {
@@ -102,14 +103,8 @@
 			<RoutingUniverseList {tunnel} />
 		{:else}
 			<div class="mb-2 flex items-center justify-between gap-3">
-				<span class="rail-label">
-					<Icon name="device-desktop" size={14} />
-					{$t('ui.pages.dashboard.universeClients')}
-				</span>
-				<span class="rail-label">
-					<Icon name="plug-connected" size={14} />
-					{$t('ui.pages.dashboard.universeProviders')}
-				</span>
+				<RailLabel icon="device-desktop" label={$t('ui.pages.dashboard.universeClients')} />
+				<RailLabel icon="plug-connected" label={$t('ui.pages.dashboard.universeProviders')} />
 			</div>
 			<div
 				bind:clientHeight={height}
@@ -136,14 +131,5 @@
 		background-size: 20px 20px;
 		border-radius: var(--radius-panel);
 		overflow: hidden;
-	}
-
-	.rail-label {
-		display: inline-flex;
-		align-items: center;
-		gap: 0.375rem;
-		font-size: 0.75rem;
-		font-weight: 500;
-		color: var(--muted);
 	}
 </style>

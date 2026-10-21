@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { t } from 'svelte-i18n';
 
-	import Icon from '$lib/components/ui/icon.svelte';
+	import RailLabel from './rail-label.svelte';
 	import TunnelMark from './tunnel-mark.svelte';
 	import { railShares, type RouteTunnel } from '$lib/route-tunnel';
 
@@ -20,9 +20,8 @@
 
 <div class="flex flex-col gap-5">
 	<section>
-		<h3 class="rail-label">
-			<Icon name="device-desktop" size={14} />
-			{$t('ui.pages.dashboard.universeClients')}
+		<h3>
+			<RailLabel icon="device-desktop" label={$t('ui.pages.dashboard.universeClients')} />
 		</h3>
 		<ul class="mt-2 flex flex-col">
 			{#each clients as share (share.node.id)}
@@ -57,9 +56,8 @@
 	</section>
 
 	<section>
-		<h3 class="rail-label">
-			<Icon name="plug-connected" size={14} />
-			{$t('ui.pages.dashboard.universeProviders')}
+		<h3>
+			<RailLabel icon="plug-connected" label={$t('ui.pages.dashboard.universeProviders')} />
 		</h3>
 		<ul class="mt-2 flex flex-col">
 			{#each providers as share (share.node.id)}
@@ -98,15 +96,6 @@
 </div>
 
 <style>
-	.rail-label {
-		display: inline-flex;
-		align-items: center;
-		gap: 0.375rem;
-		font-size: 0.75rem;
-		font-weight: 500;
-		color: var(--muted);
-	}
-
 	.mark {
 		display: flex;
 		width: 1.625rem;
