@@ -9,7 +9,8 @@
 
 	// DoctorChecks is the daemon's own report on this machine: one status row
 	// per check, the ones that need attention first, with the fix named when
-	// a check is failing.
+	// a check is failing. The card stops at half the height of the request
+	// list beside it, and the checks scroll inside it.
 
 	interface Props {
 		checks: DoctorCheck[];
@@ -35,7 +36,7 @@
 	};
 </script>
 
-<div class="section-surface flex min-h-0 flex-col">
+<div class="section-surface flex min-h-0 max-h-[30rem] flex-col">
 	<div class="flex items-center justify-between gap-3 px-4 pt-4 pb-3 sm:px-5">
 		<div>
 			<h2 class="section-heading flex items-center gap-2">
