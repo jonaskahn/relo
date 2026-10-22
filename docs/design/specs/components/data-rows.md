@@ -63,3 +63,6 @@ it carries data.
   top, the month named where a week opens it, and the day number in each cell, intensity on `--sunken` to
   `--accent` in four steps with a Less-to-More legend. Hovering a cell names the day and its figure; a quiet day
   stays quiet.
+- Dashboard activity: the trailing year in the same Monday-first grid and accent ladder, without day numbers — 53
+  week columns stretched across the card as 10px-tall rectangles, month abbreviations spanning the weeks they cover,
+  and a hover readout. It is hidden below 640px.

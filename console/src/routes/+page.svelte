@@ -7,6 +7,7 @@
 	import { subscribe } from '$lib/sse';
 	import PageHeader from '$lib/components/ui/page-header.svelte';
 	import RoutingUniverse from '$lib/components/dashboard/routing-universe.svelte';
+	import ActivityCalendar from '$lib/components/dashboard/activity-calendar.svelte';
 	import AttentionBand from '$lib/components/dashboard/attention-band.svelte';
 	import DoctorChecks from '$lib/components/dashboard/doctor-checks.svelte';
 	import RecentRequests from '$lib/components/dashboard/recent-requests.svelte';
@@ -22,6 +23,8 @@
 	import { formatCost, formatTokens, formatTokensExact, formatUptime } from '$lib/format';
 	import {
 		accountAttention,
+		activityYearDays,
+		activityYearStart,
 		deltaPercent,
 		healthCards,
 		readDashboardLive,
@@ -37,7 +40,7 @@
 	} from '$lib/dashboard';
 	import { browserStorage } from '$lib/filter-panel';
 	import type { TunnelTraffic } from '$lib/route-tunnel';
-	import { bucketDays, type ChartMetric } from '$lib/usage-charts';
+	import { bucketDays, heatmapCells, type ChartMetric } from '$lib/usage-charts';
 	import type {
 		AccessKey,
 		Account,
@@ -75,6 +78,9 @@
 	// agent behind a key's traffic.
 	let keys = $state.raw<AccessKey[]>([]);
 	let dailyAll = $state.raw<UsageRollupRow[]>([]);
+	// activityDays is the trailing year the dashboard calendar draws. It keeps
+	// its own read: the year must not shrink when the page window changes.
+	let activityDays = $state.raw<UsageRollupRow[]>([]);
 	let recent = $state.raw<UsageLogRow[]>([]);
 	let activityFailed = $state('');
 	// refreshedAt is when the window's rollups were last read, so the routing
@@ -163,6 +169,13 @@
 	// its columns, so every total stays exact.
 	const trendRows = $derived(trendMode === 'spend' ? dailyPaid : dailyAll);
 	const trendDays = $derived(bucketDays(trendRows));
+	// The calendar is a year even on a quiet install, so every day of the span
+	// is named and a day the read omitted stays a quiet cell.
+	const activityDayKeys = $derived(activityYearDays(Date.now()));
+	const activityWeeks = $derived.by(() => {
+		const byDay = new Map(activityDays.map((row) => [row.Key, Number(row.Requests)]));
+		return heatmapCells(activityDayKeys.map((key) => ({ key, value: byDay.get(key) ?? 0 })));
+	});
 	// The three series the trend switch offers. Spend reads the paid
 	// connections whatever the spend board below is showing.
 	const trendOptions: { value: ChartMetric; label: string; icon: IconName }[] = $derived([
@@ -331,6 +344,19 @@
 		}
 	}
 
+	async function loadActivity() {
+		try {
+			activityDays =
+				(
+					await api<{ items: UsageRollupRow[] }>(
+						'/activity/usage?group_by=day&since_ms=' + activityYearStart(Date.now())
+					)
+				).items ?? [];
+		} catch (error) {
+			activityFailed = error instanceof Error ? error.message : String(error);
+		}
+	}
+
 	async function loadEverything(includeRecent = live) {
 		try {
 			await Promise.all([
@@ -339,6 +365,7 @@
 				loadKeys(),
 				loadSummary(),
 				loadTrend(),
+				loadActivity(),
 				loadTrendPaid(),
 				includeRecent ? loadRecent() : Promise.resolve()
 			]);
@@ -582,6 +609,13 @@
 
 	<!-- The map takes the wider half; the trend and the token mix stack beside it.
 	     The map needs room for its two rails, so a phone reads the figures alone. -->
+	<ActivityCalendar
+		weeks={activityWeeks}
+		loading={contentLoading}
+		pending={processing}
+		today={activityDayKeys[activityDayKeys.length - 1] ?? ''}
+	/>
+
 	<div
 		class="grid min-w-0 grid-cols-1 gap-[var(--grid-gap)] xl:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]"
 	>

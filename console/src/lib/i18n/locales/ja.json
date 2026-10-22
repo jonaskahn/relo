@@ -314,6 +314,8 @@
         "attentionNeedsSignin": "再ログインが必要です",
         "attentionPaused": "一時停止中です",
         "attentionLimited": "レート制限中です",
+        "activityTitle": "Activity",
+        "activityDesc": "Requests per day over the last year.",
         "trendsTitle": "推移"
       },
       "doctor": {

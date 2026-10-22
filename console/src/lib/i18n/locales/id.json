@@ -314,6 +314,8 @@
         "attentionNeedsSignin": "perlu masuk lagi",
         "attentionPaused": "dijeda",
         "attentionLimited": "dibatasi laju",
+        "activityTitle": "Activity",
+        "activityDesc": "Requests per day over the last year.",
         "trendsTitle": "Tren"
       },
       "doctor": {

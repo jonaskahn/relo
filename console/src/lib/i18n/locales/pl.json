@@ -314,6 +314,8 @@
         "attentionNeedsSignin": "wymaga ponownego logowania",
         "attentionPaused": "jest wstrzymane",
         "attentionLimited": "jest ograniczany limitem żądań",
+        "activityTitle": "Activity",
+        "activityDesc": "Requests per day over the last year.",
         "trendsTitle": "Trendy"
       },
       "doctor": {

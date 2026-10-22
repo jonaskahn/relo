@@ -314,6 +314,8 @@
         "attentionNeedsSignin": "necesită o nouă autentificare",
         "attentionPaused": "este în pauză",
         "attentionLimited": "este limitat de rată",
+        "activityTitle": "Activity",
+        "activityDesc": "Requests per day over the last year.",
         "trendsTitle": "Tendințe"
       },
       "doctor": {

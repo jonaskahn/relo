@@ -9,16 +9,28 @@ requires: [data-rows, status-and-banners, motion]
 1. **The attention band**: the accounts that need an operator on one scrolling row, read before the figures.
 2. **One row of six KPI tiles** (see `data-rows`): requests, success rate, paid spend, tokens, latency, ready accounts.
    Two a row on a phone, three on a tablet, six on a wide screen.
-3. **One row, two columns**: the **Routing Universe** on the wider two thirds, a narrow third beside it holding the
+3. **One row, full width**: the **Activity** card, a compact GitHub-style year of daily request cells — 53 Monday-first
+   week columns stretched across the card, each day a 10px-tall rectangle, the month named under the weeks it covers,
+   and the accent ladder from quiet to busy. It reads the trailing year whatever window the page control selects, and
+   it is hidden below 640px, where a phone reads the figures alone.
+4. **One row, two columns**: the **Routing Universe** on the wider two thirds, a narrow third beside it holding the
    **seven-day trend** (bar chart, `--accent-200` history, `--accent` today) on top and the **token mix** below. The two
    charts take the room the map leaves them, so the map's height is the trend's plus the mix's. Below the wide
    breakpoint each takes the full width. The **Routing Universe** is hidden below 640px, so a phone reads the figures
    alone.
-4. **One row, one card**: the **subscription accounts**, the accounts that need an operator, across the whole page.
-5. **One card, three blocks**: a **Spend** card that names the window's money, holding the **API spend**, **plan usage**
+5. **One row, one card**: the **subscription accounts**, the accounts that need an operator, across the whole page.
+6. **One card, three blocks**: a **Spend** card that names the window's money, holding the **API spend**, **plan usage**
    and **free usage** blocks as recessed panels of its own.
-6. **One row, two columns**: **recent requests** on the wider half, the **doctor checks** on the other. Both stop at half
+7. **One row, two columns**: **recent requests** on the wider half, the **doctor checks** on the other. Both stop at half
    the height their rows would take, and scroll inside.
+
+## Activity
+
+One year of traffic at a glance: 53 Monday-first week columns stretched across the card, a narrow weekday gutter, and a
+month abbreviation spanning the weeks it covers. Each day is a 10px-tall rounded rectangle on the shared four-step accent ladder;
+hovering a cell names the day and its request count, and the card's readout states the year's total at rest. The year
+is trailing, not the page window, so the card keeps its shape while the controls above it change. Today is the last
+filled cell and the rest of its week stays quiet. The card is hidden below 640px.
 
 ## Routing Universe
 

@@ -314,6 +314,8 @@
         "attentionNeedsSignin": "नए साइन-इन की ज़रूरत है",
         "attentionPaused": "रुका हुआ है",
         "attentionLimited": "दर-सीमित है",
+        "activityTitle": "Activity",
+        "activityDesc": "Requests per day over the last year.",
         "trendsTitle": "रुझान"
       },
       "doctor": {

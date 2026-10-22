@@ -314,6 +314,8 @@
         "attentionNeedsSignin": "потребує повторного входу",
         "attentionPaused": "призупинено",
         "attentionLimited": "обмежено частотою запитів",
+        "activityTitle": "Activity",
+        "activityDesc": "Requests per day over the last year.",
         "trendsTitle": "Тренди"
       },
       "doctor": {

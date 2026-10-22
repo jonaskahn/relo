@@ -314,7 +314,9 @@
         "attentionNear": "is near its {window} limit ({percent}%)",
         "attentionNeedsSignin": "needs a new sign-in",
         "attentionPaused": "is paused",
-        "attentionLimited": "is rate limited"
+        "attentionLimited": "is rate limited",
+        "activityTitle": "Activity",
+        "activityDesc": "Requests per day over the last year."
       },
       "doctor": {
         "title": "Doctor",

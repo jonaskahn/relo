@@ -314,6 +314,8 @@
         "attentionNeedsSignin": "다시 로그인해야 합니다",
         "attentionPaused": "일시 중지되었습니다",
         "attentionLimited": "속도 제한 상태입니다",
+        "activityTitle": "Activity",
+        "activityDesc": "Requests per day over the last year.",
         "trendsTitle": "추이"
       },
       "doctor": {

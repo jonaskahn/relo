@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
 	DASHBOARD_LIVE_KEY,
 	accountAttention,
+	activityYearDays,
 	accountHealth,
 	deltaPercent,
 	formatCountdown,
@@ -19,6 +20,7 @@ import {
 	spendSets,
 	showsDayLabels,
 	summaryWindow,
+	activityYearStart,
 	topSpendRows,
 	visibleBoard,
 	writeDashboardLive,
@@ -531,6 +533,22 @@ describe('showsDayLabels', () => {
 		expect(showsDayLabels('60d')).toBe(false);
 		expect(showsDayLabels('90d')).toBe(false);
 		expect(showsDayLabels('all')).toBe(false);
+	});
+});
+
+describe('activityYearStart', () => {
+	it('starts 52 weeks before the Monday of the current week', () => {
+		// 2026-09-27 is a Sunday, so its week opens on Monday 2026-09-21.
+		const start = activityYearStart(now);
+		expect(new Date(start).toISOString()).toBe('2025-09-22T00:00:00.000Z');
+		expect((Date.parse('2026-09-21T00:00:00Z') - start) / 86_400_000).toBe(364);
+	});
+
+	it('names every day of that year, oldest first', () => {
+		const days = activityYearDays(now);
+		expect(days[0]).toBe('2025-09-22');
+		expect(days[days.length - 1]).toBe('2026-09-27');
+		expect(days).toHaveLength(371);
 	});
 });
 

@@ -314,6 +314,8 @@
         "attentionNeedsSignin": "ต้องเข้าสู่ระบบใหม่",
         "attentionPaused": "ถูกพักไว้",
         "attentionLimited": "ถูกจำกัดอัตรา",
+        "activityTitle": "Activity",
+        "activityDesc": "Requests per day over the last year.",
         "trendsTitle": "แนวโน้ม"
       },
       "doctor": {

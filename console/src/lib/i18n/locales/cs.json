@@ -314,6 +314,8 @@
         "attentionNeedsSignin": "vyžaduje nové přihlášení",
         "attentionPaused": "je pozastavený",
         "attentionLimited": "je omezeno rychlostí",
+        "activityTitle": "Activity",
+        "activityDesc": "Requests per day over the last year.",
         "trendsTitle": "Trendy"
       },
       "doctor": {

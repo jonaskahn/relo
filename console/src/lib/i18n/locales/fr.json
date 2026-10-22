@@ -314,6 +314,8 @@
         "attentionNeedsSignin": "doit se reconnecter",
         "attentionPaused": "est en pause",
         "attentionLimited": "est limité par le débit",
+        "activityTitle": "Activity",
+        "activityDesc": "Requests per day over the last year.",
         "trendsTitle": "Tendances"
       },
       "doctor": {

@@ -314,6 +314,8 @@
         "attentionNeedsSignin": "cần đăng nhập lại",
         "attentionPaused": "đang tạm dừng",
         "attentionLimited": "bị giới hạn tần suất",
+        "activityTitle": "Activity",
+        "activityDesc": "Requests per day over the last year.",
         "trendsTitle": "Xu hướng"
       },
       "doctor": {

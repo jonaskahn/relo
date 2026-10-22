@@ -314,6 +314,8 @@
         "attentionNeedsSignin": "需要重新登入",
         "attentionPaused": "已暫停",
         "attentionLimited": "已被限流",
+        "activityTitle": "Activity",
+        "activityDesc": "Requests per day over the last year.",
         "trendsTitle": "趨勢"
       },
       "doctor": {
