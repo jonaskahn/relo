@@ -935,6 +935,12 @@ html[data-theme-dir='sunset']::view-transition-new(root) {
 		.attention-track {
 			animation: none;
 		}
+		/* A still attention row would hide the accounts past its edge, so it
+		   reads as a row the operator scrolls by hand instead. */
+		.attention-viewport {
+			overflow-x: auto;
+			mask-image: none;
+		}
 	}
 	@media (max-width: 639.98px) {
 		.toolbar-row {
