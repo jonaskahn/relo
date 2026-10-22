@@ -62,7 +62,7 @@ it carries data.
 - Activity calendar: the trend's days folded into a full-width Monday-first month grid, weekday labels across the
   top, the month named where a week opens it, and the day number in each cell, intensity on `--sunken` to
   `--accent` in four steps with a Less-to-More legend. Hovering a cell names the day and its figure; a quiet day
-  stays quiet.
+  stays quiet. Cells are bare tone blocks: a quiet day is `--sunken`, never an outlined box.
 - Dashboard activity: the trailing year in the same Monday-first grid and accent ladder, without day numbers — 53
   week columns stretched across the card as 10px-tall rectangles, month abbreviations spanning the weeks they cover,
   and a hover readout. It is hidden below 640px.

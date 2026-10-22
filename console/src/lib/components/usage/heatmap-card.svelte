@@ -101,10 +101,7 @@
 					>
 					{#each week as cell (cell.key)}
 						<span
-							class="flex h-6 w-full min-w-0 items-center justify-center rounded-[5px] text-[0.6875rem] font-medium tabular-nums transition-[filter] hover:brightness-95 {cell.level ===
-							0
-								? 'border border-line'
-								: ''}"
+							class="flex h-6 w-full min-w-0 items-center justify-center rounded-[5px] text-[0.6875rem] font-medium tabular-nums transition-[filter] hover:brightness-95"
 							style="background:{HEAT_FILLS[cell.level]};color:{cellInk(cell.level)}"
 							role="img"
 							aria-label={shortDay(cell.key) +
@@ -127,11 +124,7 @@
 		<div class="mt-3 flex items-center justify-end gap-1.5 text-xs text-muted-foreground">
 			<span>{$t('ui.pages.usagePage.heatmapLess')}</span>
 			{#each HEAT_FILLS as fill (fill)}
-				<span
-					class="size-3 rounded-[4px] border border-line"
-					style="background:{fill}"
-					aria-hidden="true"
-				></span>
+				<span class="size-3 rounded-[4px]" style="background:{fill}" aria-hidden="true"></span>
 			{/each}
 			<span>{$t('ui.pages.usagePage.heatmapMore')}</span>
 		</div>
