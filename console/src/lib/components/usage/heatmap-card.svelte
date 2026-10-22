@@ -39,7 +39,7 @@
 	const weekdays = $derived(
 		Array.from({ length: 7 }, (_, day) =>
 			new Date(Date.UTC(2026, 8, 28 + day)).toLocaleDateString(undefined, {
-				weekday: 'narrow',
+				weekday: 'short',
 				timeZone: 'UTC'
 			})
 		)
@@ -72,7 +72,7 @@
 				role="group"
 				aria-label={$t('ui.pages.usagePage.heatmapTitle') + ' · ' + readout}
 			>
-				{#each weekdays as weekday (weekday)}
+				{#each weekdays as weekday, day (day)}
 					<span class="text-center text-xs text-muted-foreground" aria-hidden="true">{weekday}</span
 					>
 				{/each}

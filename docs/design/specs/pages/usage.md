@@ -34,7 +34,7 @@ read the trend's own days, so no extra read draws them:
 - **Spend share**: a donut of the largest connections by cost with their share of what the list shows. A plan-covered
   connection shows plan usage, a local engine nothing at all — never a dollar figure either of them did not charge.
 - **Tokens by connection**: the same donut over the tokens each connection carried, ranked the same way.
-- **Activity calendar**: the trend's days as a compact Monday-first month grid — weekday initials across the top and
+- **Activity calendar**: the trend's days as a compact Monday-first month grid — weekday labels across the top and
   each day's number printed in its cell on the accent ladder; a quiet day stays quiet.
 
 Hovering a bar or column updates the readout without losing the overall total. Tiles and panels wear the shared card

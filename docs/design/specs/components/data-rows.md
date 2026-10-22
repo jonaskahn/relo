@@ -59,6 +59,6 @@ it carries data.
   `--accent-200`, `--line-strong` for the tail), drawn on its own square viewBox so no stretched baseline distorts it.
   Hovering a slice or its legend row updates the centre readout without losing the overall total. The legend pairs
   each slice with its share and its figure in the unit the donut counts (money, tokens, or the chosen series).
-- Activity calendar: the trend's days folded into a compact Monday-first month grid, weekday initials across the top
+- Activity calendar: the trend's days folded into a compact Monday-first month grid, weekday labels across the top
   and the day number in each cell, intensity on `--sunken` to `--accent` in four steps with a Less-to-More legend.
   Hovering a cell names the day and its figure; a quiet day stays quiet.
