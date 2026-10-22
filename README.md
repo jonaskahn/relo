@@ -16,6 +16,8 @@ Static page for [Relo](https://github.com/jonaskahn/relo), published at
 | `media/`              | Logo, provider marks, JetBrains Mono                 |
 | `install.sh`          | Installer for macOS and Linux                        |
 | `install.ps1`         | Installer for Windows                                |
+| `uninstall.sh`        | Uninstaller for macOS and Linux                      |
+| `uninstall.ps1`       | Uninstaller for Windows                              |
 | `appcast.xml`         | Sparkle update feed for `Relo.app`                   |
 | `releases.json`       | Every published release, with files and notes        |
 | `CNAME`               | The custom domain                                    |
@@ -35,6 +37,20 @@ irm https://relo.ifelse.one/install.ps1 | iex
 They install the daemon from the latest release. An installation that belongs
 to another channel is refused rather than stacked; `install.sh --help` lists
 the flags.
+
+The uninstallers detect the installation channel and remove it the same way:
+
+```sh
+curl -fsSL https://relo.ifelse.one/uninstall.sh | sh
+```
+
+```powershell
+irm https://relo.ifelse.one/uninstall.ps1 | iex
+```
+
+Both ask whether to keep the Relo data unless `--keep-data` / `--wipe` (or
+`-KeepData` / `-Wipe`) is given. They verify the removal and print the exact
+command when a privileged package manager still has to finish the job.
 
 `releases.json` is written by `.github/workflows/publish-releases.yml` in the
 main repository, which runs the catalog generator on every release and on
