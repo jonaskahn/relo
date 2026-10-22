@@ -135,7 +135,10 @@
 		}))
 	);
 
-	let tab = $state<UsageTab>('overview');
+	const initialTab = page.url.searchParams.get('tab');
+	const startingTab: UsageTab =
+		initialTab !== null && isUsageTab(initialTab) ? initialTab : 'overview';
+	let tab = $state<UsageTab>(startingTab);
 	let filters = $state<UsageFilters>({ ...DEFAULT_USAGE_FILTERS });
 	let groups = $state.raw<UsageRollupRow[]>([]);
 	// daily holds the trend the overview and the day tab draw. In all-time mode
@@ -179,8 +182,13 @@
 
 	// The grouped list narrows and orders the rows already read. The address
 	// carries the query and sort, while expansion and Show all stay transient.
-	let listQuery = $state('');
-	let listSort = $state<UsageSort>(defaultSort('day'));
+	let listQuery = $state(page.url.searchParams.get('q') ?? '');
+	let listSort = $state<UsageSort>(
+		parseSort(
+			page.url.searchParams.get('sort'),
+			defaultSort(startingTab === 'overview' ? 'day' : startingTab)
+		)
+	);
 	let listShowAll = $state(false);
 	let expandedKeys = $state<Set<string>>(new Set());
 	let shareMetric = $state<'requests' | 'tokens' | 'spend' | 'errors'>('spend');
@@ -200,7 +208,12 @@
 			row,
 			label: groupCaption(row.Key),
 			id: groupTitle(row.Key) ?? row.Key,
-			searchText: tab === 'account' ? providerLabelOf(accountProvider(row.Key)) : undefined,
+			searchText:
+				tab === 'account'
+					? providerLabelOf(accountProvider(row.Key))
+					: tab === 'client'
+						? clients.find((key) => key.id === row.Key)?.name
+						: undefined,
 			spend: spendReadout(row, tab === 'provider')
 		}));
 	});
@@ -213,6 +226,7 @@
 	const shares = $derived(shareSegments(listRows, shareMetric));
 	// The share caption states the figure for the metric not being shared.
 	const shareTotal = $derived(shares.reduce((sum, segment) => sum + segment.value, 0));
+	const listSpendTotal = $derived(listRows.reduce((sum, entry) => sum + entry.spend.weight, 0));
 	const shareOptions = $derived(
 		(
 			[
@@ -251,6 +265,8 @@
 	// Expansion and the row limit are not address state.
 	function writeListAddress() {
 		const url = new URL(window.location.href);
+		if (tab === 'overview') url.searchParams.delete('tab');
+		else url.searchParams.set('tab', tab);
 		if (listQuery.trim()) url.searchParams.set('q', listQuery);
 		else url.searchParams.delete('q');
 		url.searchParams.set('sort', sortParam(listSort));
@@ -263,6 +279,7 @@
 		listShowAll = false;
 		expandedKeys = new Set();
 		if (tab !== 'overview') shareMetric = 'spend';
+		writeListAddress();
 	}
 
 	function chooseListSort(key: UsageSortKey) {
@@ -270,6 +287,11 @@
 			listSort.key === key
 				? { key, descending: !listSort.descending }
 				: { key, descending: key !== 'name' };
+		writeListAddress();
+	}
+
+	function chooseListSortValue(next: UsageSort) {
+		listSort = next;
 		writeListAddress();
 	}
 
@@ -684,16 +706,6 @@
 	const groupTab = $derived(tabGroup(tab) !== null);
 	const draftValid = $derived(draft.length >= metricsMin && draft.length <= metricsMax);
 
-	$effect(() => {
-		if (groupTab) {
-			listSort = parseSort(
-				page.url.searchParams.get('sort'),
-				defaultSort(tab as Exclude<UsageTab, 'overview'>)
-			);
-			listQuery = page.url.searchParams.get('q') ?? '';
-		}
-	});
-
 	function providerLabelOf(id: string): string {
 		if (id === '') return '';
 		const provider = providers.find((entry) => entry.id === id);
@@ -712,6 +724,10 @@
 			return namedCaption(key, account?.label, providerLabelOf(account?.provider_id ?? ''));
 		}
 		if (tab === 'provider') return namedCaption(key, providerLabelOf(key) || key);
+		if (tab === 'client') {
+			const client = clients.find((entry) => entry.id === key);
+			return client?.name?.trim() || key || '—';
+		}
 		return key || '—';
 	}
 
@@ -905,7 +921,13 @@
 			<Tabs.Content value="overview" class="flex flex-col gap-5 outline-none">
 				{#if tab === 'overview'}
 					<div in:paneIntro out:paneOutro class="flex flex-col gap-5">
-						<MetricCards {cards} days={trendDays} />
+						<MetricCards
+							{cards}
+							days={trendDays}
+							sparklineNote={filters.range === 'all'
+								? $t('ui.pages.usagePage.sparklineWindow')
+								: ''}
+						/>
 
 						<TrendCard
 							days={trendDays}
@@ -1013,9 +1035,11 @@
 										segments={shares}
 										total={formatShareValue(shareTotal, shareMetric)}
 										metricLabel={$t(
-											shareMetric === 'spend'
-												? 'ui.pages.usagePage.metric.spend'
-												: 'ui.pages.usagePage.chart.' + shareMetric
+											shareMetric === 'spend' && tab === 'provider'
+												? 'ui.pages.usagePage.estimatedValue'
+												: shareMetric === 'spend'
+													? 'ui.pages.usagePage.metric.spend'
+													: 'ui.pages.usagePage.chart.' + shareMetric
 										)}
 										metricValue={shareMetric}
 										options={shareOptions}
@@ -1037,7 +1061,7 @@
 
 								<GroupTable
 									rows={visibleListRows}
-									total={donutTotal}
+									total={listSpendTotal}
 									spendLabel={spendLabel()}
 									sort={listSort}
 									query={listQuery}
@@ -1046,6 +1070,7 @@
 									showAll={listShowAll}
 									isDay={tab === 'day'}
 									onsort={chooseListSort}
+									onchoosesort={chooseListSortValue}
 									onquery={chooseListQuery}
 									ontoggleall={() => (listShowAll = !listShowAll)}
 									onexpand={toggleRow}

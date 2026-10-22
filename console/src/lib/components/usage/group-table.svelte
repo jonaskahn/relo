@@ -10,6 +10,7 @@
 		errorRateText,
 		slowestText,
 		tokenTexts,
+		totalTokensOf,
 		type UsageListRow,
 		type UsageSort,
 		type UsageSortKey
@@ -28,6 +29,7 @@
 		showAll: boolean;
 		isDay: boolean;
 		onsort: (key: UsageSortKey) => void;
+		onchoosesort: (sort: UsageSort) => void;
 		onquery: (query: string) => void;
 		ontoggleall: () => void;
 		onexpand: (key: string) => void;
@@ -45,6 +47,7 @@
 		showAll,
 		isDay,
 		onsort,
+		onchoosesort,
 		onquery,
 		ontoggleall,
 		onexpand,
@@ -72,7 +75,7 @@
 				: sort.key === 'errors'
 					? (entry.row.Errors / Math.max(1, entry.row.Requests)) * 100
 					: sort.key === 'tokens'
-						? tokenTexts(entry.row).exact.replaceAll(',', '')
+						? totalTokensOf(entry.row)
 						: sort.key === 'latency'
 							? entry.row.Requests > 0
 								? entry.row.DurationMs / entry.row.Requests
@@ -85,10 +88,7 @@
 				: sort.key === 'errors'
 					? 100
 					: sort.key === 'tokens'
-						? Math.max(
-								1,
-								...rows.map((item) => Number(tokenTexts(item.row).exact.replaceAll(',', '')))
-							)
+						? Math.max(1, ...rows.map((item) => totalTokensOf(item.row)))
 						: sort.key === 'latency'
 							? Math.max(
 									1,
@@ -100,28 +100,28 @@
 		return numeric > 0 ? Math.max(2, (numeric / max) * 100) : 0;
 	}
 
-	function sortChoice(value: string): UsageSortKey {
+	function sortChoice(value: string): UsageSort {
 		const key = value.split(':')[0];
-		if (
+		const sortKey: UsageSortKey =
 			key === 'name' ||
 			key === 'requests' ||
 			key === 'errors' ||
 			key === 'tokens' ||
 			key === 'latency' ||
 			key === 'spend'
-		) {
-			return key;
-		}
-		return 'spend';
+				? key
+				: 'spend';
+		return { key: sortKey, descending: value.endsWith(':desc') };
 	}
 
 	const limit = 8;
 	const canToggle = $derived(!query && totalRows > limit);
+	const sortValue = $derived(sort.key + ':' + (sort.descending ? 'desc' : 'asc'));
 </script>
 
 <div class="flex flex-wrap items-end justify-between gap-3">
 	<h2 class="section-heading">
-		{$t('ui.pages.usagePage.groupsTitle')}
+		{$t(isDay ? 'ui.pages.usagePage.tabDay' : 'ui.pages.usagePage.groupsTitle')}
 		<span class="font-normal text-muted-foreground">· {totalRows}</span>
 	</h2>
 	<p class="text-xs text-muted-foreground">
@@ -151,15 +151,21 @@
 		<label class="sr-only" for="usage-sort">{$t('ui.pages.usagePage.sortBy')}</label>
 		<NativeSelect
 			id="usage-sort"
-			value={sort.key + ':' + (sort.descending ? 'desc' : 'asc')}
-			onchange={(event) => onsort(sortChoice(event.currentTarget.value))}
+			value={sortValue}
+			onchange={(event) => onchoosesort(sortChoice(event.currentTarget.value))}
 		>
 			<option value="name:asc">{$t('ui.pages.usagePage.sortName')}</option>
+			<option value="name:desc">{$t('ui.pages.usagePage.sortNameDesc')}</option>
 			<option value="requests:desc">{$t('ui.pages.usagePage.sortRequests')}</option>
+			<option value="requests:asc">{$t('ui.pages.usagePage.sortRequestsAsc')}</option>
 			<option value="errors:desc">{$t('ui.pages.usagePage.sortErrors')}</option>
+			<option value="errors:asc">{$t('ui.pages.usagePage.sortErrorsAsc')}</option>
 			<option value="tokens:desc">{$t('ui.pages.usagePage.sortTokens')}</option>
+			<option value="tokens:asc">{$t('ui.pages.usagePage.sortTokensAsc')}</option>
 			<option value="latency:desc">{$t('ui.pages.usagePage.sortLatency')}</option>
+			<option value="latency:asc">{$t('ui.pages.usagePage.sortLatencyAsc')}</option>
 			<option value="spend:desc">{$t('ui.pages.usagePage.sortSpend')}</option>
+			<option value="spend:asc">{$t('ui.pages.usagePage.sortSpendAsc')}</option>
 		</NativeSelect>
 	</div>
 </div>
@@ -174,27 +180,43 @@
 	</div>
 {:else}
 	<div
-		class="hidden grid-cols-[2.5rem_minmax(12rem,2.4fr)_repeat(5,minmax(5.5rem,1fr))] gap-4 border-b border-line px-4 pb-2 text-xs font-medium text-muted-foreground lg:grid"
+		class="hidden grid-cols-[2.5rem_minmax(12rem,2.4fr)_repeat(5,minmax(5.5rem,1fr))] gap-4 px-4 pb-2 text-xs font-medium text-muted-foreground lg:grid"
 		role="row"
 	>
 		<span aria-hidden="true"></span>
-		<button
-			type="button"
-			class="flex min-w-0 items-center gap-1 text-start hover:text-ink"
-			onclick={() => onsort('name')}
+		<div
+			role="columnheader"
+			aria-sort={sort.key === 'name' ? (sort.descending ? 'descending' : 'ascending') : 'none'}
 		>
-			{$t(isDay ? 'ui.pages.usagePage.columnDate' : 'ui.pages.usagePage.columnGroup')}
-			{#if sort.key === 'name'}<Icon name={sortIcon('name')} size={12} />{/if}
-		</button>
-		{#each columns as column (column.key)}
 			<button
 				type="button"
-				class="flex items-center justify-end gap-1 text-end hover:text-ink"
-				onclick={() => onsort(column.key)}
+				class="flex min-w-0 items-center gap-1 text-start hover:text-ink"
+				data-plain
+				onclick={() => onsort('name')}
 			>
-				{$t('ui.pages.usagePage.' + column.label)}
-				{#if sort.key === column.key}<Icon name={sortIcon(column.key)} size={12} />{/if}
+				{$t(isDay ? 'ui.pages.usagePage.columnDate' : 'ui.pages.usagePage.columnGroup')}
+				{#if sort.key === 'name'}<Icon name={sortIcon('name')} size={12} />{/if}
 			</button>
+		</div>
+		{#each columns as column (column.key)}
+			<div
+				role="columnheader"
+				aria-sort={sort.key === column.key
+					? sort.descending
+						? 'descending'
+						: 'ascending'
+					: 'none'}
+			>
+				<button
+					type="button"
+					class="flex w-full items-center justify-end gap-1 text-end hover:text-ink"
+					data-plain
+					onclick={() => onsort(column.key)}
+				>
+					{$t('ui.pages.usagePage.' + column.label)}
+					{#if sort.key === column.key}<Icon name={sortIcon(column.key)} size={12} />{/if}
+				</button>
+			</div>
 		{/each}
 	</div>
 
@@ -315,7 +337,7 @@
 				{#if open}
 					<dl
 						id={'usage-detail-' + entry.key}
-						class="grid grid-cols-2 gap-x-6 gap-y-3 border-t border-line bg-sunken p-4 text-sm lg:grid-cols-4"
+						class="grid grid-cols-2 gap-x-6 gap-y-3 border border-line bg-sunken p-4 text-sm lg:grid-cols-4"
 					>
 						<div>
 							<dt class="text-xs text-muted-foreground">
@@ -372,13 +394,14 @@
 	</ul>
 
 	{#if canToggle}
-		<div class="flex flex-wrap items-center justify-between gap-3 border-t border-line pt-3">
+		<div class="flex flex-wrap items-center justify-between gap-3 pt-1">
 			<p class="text-xs text-muted-foreground">
 				{$t('ui.pages.usagePage.showingGroups', { values: { shown, total: totalRows } })}
 			</p>
 			<button
 				type="button"
 				class="h-control rounded-control border border-line bg-surface px-3 text-sm font-medium text-ink hover:bg-hover"
+				data-plain
 				onclick={ontoggleall}
 			>
 				{showAll
@@ -388,7 +411,7 @@
 		</div>
 	{:else if query && rows.length > 0}
 		<p class="text-xs text-muted-foreground">
-			{$t('ui.pages.usagePage.showingGroups', { values: { shown, total: totalRows } })}
+			{$t('ui.pages.usagePage.showingMatches', { values: { shown } })}
 		</p>
 	{/if}
 {/if}

@@ -12,9 +12,10 @@
 	interface Props {
 		cards: MetricValue[];
 		days: UsageRollupRow[];
+		sparklineNote?: string;
 	}
 
-	let { cards, days }: Props = $props();
+	let { cards, days, sparklineNote = '' }: Props = $props();
 
 	const ICONS: Record<string, IconName> = {
 		requests: 'list',
@@ -82,6 +83,12 @@
 		});
 	}
 
+	function hasSeries(card: MetricValue): boolean {
+		return (
+			card.id !== 'plan_usage' && card.id !== 'spend_per_request' && card.id !== 'duration_max'
+		);
+	}
+
 	function sparkPath(values: number[]): string {
 		if (values.length < 2) return '';
 		const max = Math.max(1, ...values);
@@ -100,7 +107,7 @@
 		{$t('ui.pages.usagePage.metricsEmpty')}
 	</div>
 {:else}
-	<div class="grid grid-cols-1 gap-[var(--grid-gap)] sm:grid-cols-2 xl:grid-cols-3">
+	<div class="grid grid-cols-2 gap-[var(--grid-gap)] xl:grid-cols-3">
 		{#each cards.slice(0, 12) as card (card.id)}
 			{@const unit = card.unitKey ? $t('ui.pages.usagePage.' + card.unitKey) : ''}
 			{@const series = points(card)}
@@ -130,7 +137,7 @@
 						</p>
 					{/if}
 				</div>
-				{#if series.length > 1}
+				{#if hasSeries(card) && series.length > 1}
 					<svg
 						class="hidden h-11 w-24 shrink-0 overflow-visible sm:block"
 						viewBox="0 0 104 44"
@@ -150,4 +157,7 @@
 			</div>
 		{/each}
 	</div>
+	{#if sparklineNote}
+		<p class="mt-2 text-right text-xs text-muted-foreground">{sparklineNote}</p>
+	{/if}
 {/if}
