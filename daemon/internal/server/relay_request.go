@@ -543,6 +543,14 @@ func endpointBase(candidate routing.Candidate, authorized catalog.Authorization)
 // gateway's tool-name limit, so its request stays otherwise whole.
 func (s *Server) modelRequest(spec attemptSpec, template catalog.Template, templated bool) (*inference.Request, map[string]string) {
 	copied := modelRequest(spec.outcome.request, spec.candidate.Model.UpstreamID)
+	// A client that names no output ceiling leaves the upstream gateway its
+	// own default — often a silent 32K. When no fact layer detected a ceiling
+	// either, the wire carries the catalog default, so the turn matches the
+	// ceiling /v1/models and the generated client configs publish. A model a
+	// layer described keeps today's pass-through.
+	if copied.MaxTokens <= 0 && spec.candidate.Model.FactSources.MaxOutput == "" {
+		copied.MaxTokens = int(catalog.DefaultMaxOutput)
+	}
 	if spec.candidate.Model.APIFormat == catalog.FormatCloudCode && isClaudeAntigravity(spec.candidate) {
 		// Claude thinks through nothing on this transport, so a stated
 		// effort never reaches the codec.
