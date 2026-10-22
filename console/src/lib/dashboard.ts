@@ -460,6 +460,35 @@ export function activityYearDays(now: number): string[] {
 	return days;
 }
 
+/** One day's traffic as the dashboard's activity card reads it. */
+export interface ActivityDay {
+	key: string;
+	value: number;
+}
+
+/** The two figures beside the calendar: the busiest day of the year and the longest run of
+ *  consecutive days that carried any traffic. A quiet year has neither. */
+export function activityStats(days: readonly ActivityDay[]): {
+	busiest: ActivityDay | null;
+	streak: number;
+} {
+	const ordered = [...days].sort((a, b) => (a.key < b.key ? -1 : a.key > b.key ? 1 : 0));
+	let busiest: ActivityDay | null = null;
+	let streak = 0;
+	let run = 0;
+	let previous: string | null = null;
+	for (const day of ordered) {
+		if (day.value > 0 && (!busiest || day.value > busiest.value)) busiest = day;
+		const consecutive =
+			previous !== null &&
+			Date.parse(day.key + 'T00:00:00Z') - Date.parse(previous + 'T00:00:00Z') === 86_400_000;
+		run = day.value > 0 ? (consecutive ? run + 1 : 1) : 0;
+		if (run > streak) streak = run;
+		previous = day.key;
+	}
+	return { busiest, streak };
+}
+
 /** Bounds the selected summary period and the window before it, so one number means the same
  *  thing at every window.
  *  Today compares against the same span of yesterday rather than a full day, so a part-day today

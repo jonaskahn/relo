@@ -55,14 +55,7 @@
 		}
 		return spans;
 	});
-	const weekdays = $derived(
-		Array.from({ length: 7 }, (_, day) =>
-			new Date(Date.UTC(2026, 8, 28 + day)).toLocaleDateString(undefined, {
-				weekday: 'narrow',
-				timeZone: 'UTC'
-			})
-		)
-	);
+	const weekRows = [0, 1, 2, 3, 4, 5, 6];
 </script>
 
 <div class="section-surface flex min-w-0 flex-col p-4 max-sm:hidden sm:p-5">
@@ -84,14 +77,11 @@
 		<div class="overflow-x-auto pb-1">
 			<div
 				class="grid w-full gap-x-px gap-y-0.5"
-				style="grid-template-columns:0.75rem repeat({weeks.length},minmax(0,1fr))"
+				style="grid-template-columns:repeat({weeks.length},minmax(0,1fr))"
 				role="group"
 				aria-label={$t('ui.pages.dashboard.activityTitle') + ' · ' + readout}
 			>
-				{#each weekdays as weekday, day (day)}
-					<span class="text-xs leading-none text-muted-foreground" aria-hidden="true"
-						>{weekday}</span
-					>
+				{#each weekRows as day (day)}
 					{#each weeks as week (week[0]?.key ?? '')}
 						{@const cell = week[day]}
 						{#if today === '' || cell.key <= today}
@@ -117,7 +107,6 @@
 						{/if}
 					{/each}
 				{/each}
-				<span aria-hidden="true"></span>
 				{#each monthSpans as month, index (index)}
 					<span
 						class="truncate ps-0.5 text-xs leading-none text-muted-foreground"

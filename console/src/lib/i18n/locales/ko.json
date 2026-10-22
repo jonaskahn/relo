@@ -316,6 +316,9 @@
         "attentionLimited": "속도 제한 상태입니다",
         "activityTitle": "Activity",
         "activityDesc": "Requests per day over the last year.",
+        "activityBusiest": "Busiest day",
+        "activityStreak": "Longest streak",
+        "activityDayUnit": "days",
         "trendsTitle": "추이"
       },
       "doctor": {

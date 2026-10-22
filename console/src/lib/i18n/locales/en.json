@@ -316,7 +316,10 @@
         "attentionPaused": "is paused",
         "attentionLimited": "is rate limited",
         "activityTitle": "Activity",
-        "activityDesc": "Requests per day over the last year."
+        "activityDesc": "Requests per day over the last year.",
+        "activityBusiest": "Busiest day",
+        "activityStreak": "Longest streak",
+        "activityDayUnit": "days"
       },
       "doctor": {
         "title": "Doctor",

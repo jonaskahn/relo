@@ -316,6 +316,9 @@
         "attentionLimited": "bị giới hạn tần suất",
         "activityTitle": "Activity",
         "activityDesc": "Requests per day over the last year.",
+        "activityBusiest": "Busiest day",
+        "activityStreak": "Longest streak",
+        "activityDayUnit": "days",
         "trendsTitle": "Xu hướng"
       },
       "doctor": {

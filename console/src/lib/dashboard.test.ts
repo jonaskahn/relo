@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
 	DASHBOARD_LIVE_KEY,
 	accountAttention,
+	activityStats,
 	activityYearDays,
 	accountHealth,
 	deltaPercent,
@@ -549,6 +550,27 @@ describe('activityYearStart', () => {
 		expect(days[0]).toBe('2025-09-22');
 		expect(days[days.length - 1]).toBe('2026-09-27');
 		expect(days).toHaveLength(371);
+	});
+
+	it('reads the busiest day and the longest streak of the year', () => {
+		expect(
+			activityStats([
+				{ key: '2026-09-01', value: 2 },
+				{ key: '2026-09-02', value: 5 },
+				{ key: '2026-09-03', value: 0 },
+				{ key: '2026-09-04', value: 1 },
+				{ key: '2026-09-05', value: 3 },
+				{ key: '2026-09-06', value: 4 }
+			])
+		).toEqual({ busiest: { key: '2026-09-02', value: 5 }, streak: 3 });
+	});
+
+	it('leaves a quiet year without a busy day or a streak', () => {
+		expect(activityStats([])).toEqual({ busiest: null, streak: 0 });
+		expect(activityStats([{ key: '2026-09-01', value: 0 }])).toEqual({
+			busiest: null,
+			streak: 0
+		});
 	});
 });
 

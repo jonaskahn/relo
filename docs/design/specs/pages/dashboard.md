@@ -9,10 +9,11 @@ requires: [data-rows, status-and-banners, motion]
 1. **The attention band**: the accounts that need an operator on one scrolling row, read before the figures.
 2. **One row of six KPI tiles** (see `data-rows`): requests, success rate, paid spend, tokens, latency, ready accounts.
    Two a row on a phone, three on a tablet, six on a wide screen.
-3. **One row, full width**: the **Activity** card, a compact GitHub-style year of daily request cells — 53 Monday-first
-   week columns stretched across the card, each day a 10px-tall rectangle, the month named under the weeks it covers,
-   and the accent ladder from quiet to busy. It reads the trailing year whatever window the page control selects, and
-   it is hidden below 640px, where a phone reads the figures alone.
+3. **One row, two cards**: the **Activity** calendar takes ten of twelve columns, and one narrow column beside it
+   holds the **Busiest day** tile above the **Longest streak** tile. The calendar is a compact GitHub-style year of daily
+   request cells: 53 Monday-first week columns stretched across the card, each day a 10px-tall rectangle, the month
+   named under the weeks it covers, and the accent ladder from quiet to busy. It reads the trailing year whatever
+   window the page control selects. The row is hidden below 640px, where a phone reads the figures alone.
 4. **One row, two columns**: the **Routing Universe** on the wider two thirds, a narrow third beside it holding the
    **seven-day trend** (bar chart, `--accent-200` history, `--accent` today) on top and the **token mix** below. The two
    charts take the room the map leaves them, so the map's height is the trend's plus the mix's. Below the wide
@@ -26,11 +27,13 @@ requires: [data-rows, status-and-banners, motion]
 
 ## Activity
 
-One year of traffic at a glance: 53 Monday-first week columns stretched across the card, a narrow weekday gutter, and a
-month abbreviation spanning the weeks it covers. Each day is a 10px-tall rounded rectangle on the shared four-step
-accent ladder; hovering a cell names the day and its request count, and the card's readout states the year's total at
-rest. The year is trailing, not the page window, so the card keeps its shape while the controls above it change. Today
-is the last filled cell and the rest of its week stays quiet. The card is hidden below 640px.
+One year of traffic at a glance: 53 Monday-first week columns stretched across the card, with a month abbreviation
+spanning the weeks it covers. There is no weekday gutter. Each day is a 10px-tall rounded rectangle on the shared
+four-step accent ladder; hovering a cell names the day and its request count, and the card's readout states the year's
+total at rest. The year is trailing, not the page window, so the card keeps its shape while the controls above it
+change. Today is the last filled cell and the rest of its week stays quiet. Beside the calendar, **Busiest day** states
+the year's peak request count and its date, and **Longest streak** counts the longest run of consecutive days that
+carried traffic. The row is hidden below 640px.
 
 ## Routing Universe
 
