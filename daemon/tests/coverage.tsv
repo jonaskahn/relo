@@ -64,9 +64,10 @@ internal/server	internal/server/...,tests/unit/server/...,tests/integration/cont
 internal/updates	internal/updates/...,tests/unit/updates/...	79
 internal/application/catalog	tests/unit/service/...,tests/unit/server/...	77
 internal/adapters/templates	internal/adapters/templates/...	35
-# internal/inference is the canonical request and event vocabulary: plain data
-# with no behavior of its own to measure.
-exempt	internal/inference	canonical data types only
+# internal/inference is the canonical request and event vocabulary. It holds
+# the rules the canonical form itself carries, so it is measured against its own
+# white-box tests.
+internal/inference	internal/inference/...	68
 # internal/adapters/discovery is exercised through the catalog refresh the
 # management integration suite drives, which this gate does not run.
 exempt	internal/adapters/discovery	covered by tests/integration/management

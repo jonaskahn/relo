@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
 	DASHBOARD_LIVE_KEY,
+	accountAttention,
 	accountHealth,
 	deltaPercent,
 	formatCountdown,
@@ -10,17 +11,19 @@ import {
 	isWindowPeriod,
 	paidProviders,
 	planProviders,
-	providersByTraffic,
 	readDashboardLive,
 	rowTokens,
 	boardOverflowLabel,
-	spendBoardLimit,
 	spendKindOf,
 	spendRows,
+	spendSets,
+	showsDayLabels,
 	summaryWindow,
+	topSpendRows,
 	visibleBoard,
 	writeDashboardLive,
-	type LiveStorage
+	type LiveStorage,
+	type SpendRow
 } from './dashboard';
 import type { Account, Provider, QuotaWindow, UsageRollupRow } from './types';
 
@@ -73,11 +76,6 @@ function provider(id: string, kind: string): Provider {
 		created_at_ms: 0,
 		updated_at_ms: 0
 	};
-}
-
-/** The same connection, stating a different number of accounts. */
-function withAccounts(entry: Provider, accounts: number): Provider {
-	return { ...entry, counts: { ...entry.counts, accounts } };
 }
 
 function account(overrides: Partial<Account> = {}): Account {
@@ -219,6 +217,67 @@ describe('spendRows', () => {
 	});
 });
 
+describe('topSpendRows', () => {
+	function row(id: string, costMicros: number): SpendRow {
+		return {
+			provider: { ...provider(id, 'key'), label: id },
+			requests: 10,
+			errors: 0,
+			costMicros,
+			unpriced: 0,
+			tokens: 0
+		};
+	}
+
+	it('names the costliest connections first', () => {
+		const rows = topSpendRows([row('openai', 100), row('anthropic', 5000), row('google', 900)]);
+
+		expect(rows.map((entry) => entry.provider.id)).toEqual(['anthropic', 'google', 'openai']);
+	});
+
+	it('keeps the top few of them', () => {
+		const rows = topSpendRows([
+			row('openai', 100),
+			row('anthropic', 5000),
+			row('google', 900),
+			row('mistral', 700)
+		]);
+
+		expect(rows).toHaveLength(3);
+		expect(rows.map((entry) => entry.provider.id)).toEqual(['anthropic', 'google', 'mistral']);
+	});
+});
+
+describe('spendSets', () => {
+	it('splits the connections into the three cards', () => {
+		const sets = spendSets([
+			provider('openai', 'key'),
+			provider('claude', 'signin'),
+			{ ...provider('ollama', 'local') }
+		]);
+
+		expect(sets.paid.map((entry) => entry.id)).toEqual(['openai']);
+		expect(sets.plan.map((entry) => entry.id)).toEqual(['claude']);
+		expect(sets.free).toHaveLength(0);
+	});
+
+	it('keeps a keyless lane out of the paid and the plan cards', () => {
+		const sets = spendSets([
+			provider('openai', 'key'),
+			{
+				...provider('opencode', 'key'),
+				template_id: 'opencode-free',
+				modelsdev_provider_id: 'opencode',
+				auth: 'none'
+			}
+		]);
+
+		expect(sets.paid.map((entry) => entry.id)).toEqual(['openai']);
+		expect(sets.plan).toHaveLength(0);
+		expect(sets.free.map((entry) => entry.id)).toEqual(['opencode']);
+	});
+});
+
 describe('rowTokens', () => {
 	it('adds cache traffic to input and output', () => {
 		expect(rowTokens(rollup('x'))).toBe(130);
@@ -273,6 +332,78 @@ describe('accountHealth', () => {
 	});
 });
 
+describe('accountAttention', () => {
+	it('raises the accounts whose window is full or nearly full', () => {
+		const items = accountAttention(
+			[
+				account({ id: 'full', label: 'hi@claude.ai' }),
+				account({ id: 'near', label: 'Gecko Brisk' }),
+				account({ id: 'calm', label: 'calm' })
+			],
+			[
+				window({ credential_id: 'full', used_percent: 100 }),
+				window({ credential_id: 'near', used_percent: 96 }),
+				window({ credential_id: 'calm', used_percent: 40 })
+			],
+			now
+		);
+
+		expect(items.map((item) => item.account.id)).toEqual(['full', 'near']);
+		expect(items[0].reason).toBe('reached');
+		expect(items[0].tone).toBe('danger');
+		expect(items[1].reason).toBe('near');
+		expect(items[1].tone).toBe('warn');
+	});
+
+	it('raises a sign-in that expired before a window that is nearly full', () => {
+		const items = accountAttention(
+			[
+				account({ id: 'near', label: 'near' }),
+				account({ id: 'gated', label: 'gated', status: 'needs_reauth' })
+			],
+			[window({ credential_id: 'near', used_percent: 95 })],
+			now
+		);
+
+		expect(items.map((item) => item.account.id)).toEqual(['gated', 'near']);
+		expect(items[0].reason).toBe('needs_signin');
+		expect(items[0].tone).toBe('danger');
+	});
+
+	it('raises a paused and a rate limited account', () => {
+		const items = accountAttention(
+			[
+				account({ id: 'paused', status: 'paused' }),
+				account({ id: 'backoff', limit_state: 'limited', limited_until_ms: now })
+			],
+			[],
+			now
+		);
+
+		expect(items.map((item) => item.reason)).toEqual(['paused', 'limited']);
+	});
+
+	it('reads a balance as a fact and not as a limit', () => {
+		const items = accountAttention(
+			[account()],
+			[window({ used_percent: 100, amount: 7.48, currency: 'USD' })],
+			now
+		);
+
+		expect(items).toEqual([]);
+	});
+
+	it('opens the connection the account belongs to', () => {
+		const items = accountAttention(
+			[account({ provider_id: 'anthropic' })],
+			[window({ used_percent: 100 })],
+			now
+		);
+
+		expect(items[0].providerId).toBe('anthropic');
+	});
+});
+
 describe('healthCards', () => {
 	it('joins each account with its connection and its quota reading', () => {
 		const cards = healthCards(
@@ -314,43 +445,6 @@ describe('formatCountdown', () => {
 	});
 });
 
-describe('providersByTraffic', () => {
-	it('puts the busiest connection first and breaks ties by accounts', () => {
-		const openai = withAccounts(provider('openai', 'key'), 3);
-		const providers = [openai, provider('anthropic', 'key'), provider('ollama', 'local')];
-
-		const ordered = providersByTraffic(providers, [
-			rollup('openai', { Requests: 5 }),
-			rollup('ollama', { Requests: 40 })
-		]);
-
-		expect(ordered.map((entry) => entry.id)).toEqual(['ollama', 'openai', 'anthropic']);
-	});
-
-	it('orders connections that never served a request as quiet', () => {
-		// A connection with no row in the usage read is counted as zero rather
-		// than left out, so a fresh install still ranks every connection.
-		const providers = [provider('openai', 'key'), provider('ollama', 'local')];
-		const ordered = providersByTraffic(providers, []);
-
-		expect(ordered.map((entry) => entry.id)).toEqual(['openai', 'ollama']);
-	});
-
-	it('breaks a tie on accounts rather than on the order they arrived', () => {
-		const busy = withAccounts(provider('busy', 'key'), 9);
-		const quiet = withAccounts(provider('quiet', 'key'), 1);
-
-		// Both served the same number of requests, so the one with more
-		// accounts is the busier of the two whichever order they were given.
-		const ordered = providersByTraffic(
-			[busy, quiet],
-			[rollup('busy', { Requests: 5 }), rollup('quiet', { Requests: 5 })]
-		);
-
-		expect(ordered.map((entry) => entry.id)).toEqual(['busy', 'quiet']);
-	});
-});
-
 function memoryStorage(seed: Record<string, string> = {}): LiveStorage {
 	const held = new Map(Object.entries(seed));
 	return {
@@ -374,14 +468,6 @@ describe('board cap', () => {
 		expect(visibleBoard(items)).toEqual([1, 2, 3, 4, 5, 6]);
 		expect(boardOverflowLabel(items.length)).toBe('6+');
 		expect(boardOverflowLabel(6)).toBe('');
-	});
-
-	it('shows ten spend rows and marks an eleventh as 10+', () => {
-		const items = Array.from({ length: 12 }, (_, index) => index);
-		expect(visibleBoard(items, spendBoardLimit)).toHaveLength(10);
-		expect(visibleBoard(items, spendBoardLimit).at(-1)).toBe(9);
-		expect(boardOverflowLabel(items.length, spendBoardLimit)).toBe('10+');
-		expect(boardOverflowLabel(10, spendBoardLimit)).toBe('');
 	});
 });
 
@@ -430,6 +516,21 @@ describe('summaryWindow', () => {
 		expect(window.start).toBe(0);
 		expect(window.until).toBe(0);
 		expect(window.prevUntil).toBe(0);
+	});
+});
+
+describe('showsDayLabels', () => {
+	it('names the days of a window of a week or less', () => {
+		expect(showsDayLabels('24h')).toBe(true);
+		expect(showsDayLabels('today')).toBe(true);
+		expect(showsDayLabels('7d')).toBe(true);
+	});
+
+	it('leaves the days unnamed once the window runs past a week', () => {
+		expect(showsDayLabels('30d')).toBe(false);
+		expect(showsDayLabels('60d')).toBe(false);
+		expect(showsDayLabels('90d')).toBe(false);
+		expect(showsDayLabels('all')).toBe(false);
 	});
 });
 

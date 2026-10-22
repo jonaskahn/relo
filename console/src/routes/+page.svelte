@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { onDestroy, onMount, untrack } from 'svelte';
+	import { onDestroy, onMount } from 'svelte';
 	import { t } from 'svelte-i18n';
 	import { goto } from '$app/navigation';
 	import { api } from '$lib/api';
@@ -7,10 +7,11 @@
 	import { subscribe } from '$lib/sse';
 	import PageHeader from '$lib/components/ui/page-header.svelte';
 	import RoutingUniverse from '$lib/components/dashboard/routing-universe.svelte';
+	import AttentionBand from '$lib/components/dashboard/attention-band.svelte';
 	import DoctorChecks from '$lib/components/dashboard/doctor-checks.svelte';
 	import RecentRequests from '$lib/components/dashboard/recent-requests.svelte';
 	import HealthBoard from '$lib/components/dashboard/health-board.svelte';
-	import SpendBoard from '$lib/components/dashboard/spend-board.svelte';
+	import SpendBlock from '$lib/components/dashboard/spend-block.svelte';
 	import TrendChart from '$lib/components/dashboard/trend-chart.svelte';
 	import TokenMixDonut from '$lib/components/dashboard/token-mix-donut.svelte';
 	import KpiTile from '$lib/components/dashboard/kpi-tile.svelte';
@@ -20,13 +21,14 @@
 	import Icon, { type IconName } from '$lib/components/ui/icon.svelte';
 	import { formatCost, formatTokens, formatTokensExact, formatUptime } from '$lib/format';
 	import {
+		accountAttention,
 		deltaPercent,
 		healthCards,
-		paidProviders,
-		planProviders,
 		readDashboardLive,
 		rowTokens,
 		spendRows,
+		spendSets,
+		showsDayLabels,
 		summaryWindow,
 		windowStart,
 		writeDashboardLive,
@@ -34,8 +36,10 @@
 		type WindowPeriod
 	} from '$lib/dashboard';
 	import { browserStorage } from '$lib/filter-panel';
+	import type { TunnelTraffic } from '$lib/route-tunnel';
 	import { bucketDays, type ChartMetric } from '$lib/usage-charts';
 	import type {
+		AccessKey,
 		Account,
 		DoctorCheck,
 		Provider,
@@ -64,53 +68,49 @@
 	// range. The trend keeps its own seven UTC days.
 	let summaryRows = $state.raw<UsageRollupRow[]>([]);
 	let previousRows = $state.raw<UsageRollupRow[]>([]);
+	// clientRows holds the same window's traffic by the key that sent it, which is
+	// what the routing tunnel names its agents from.
+	let clientRows = $state.raw<UsageRollupRow[]>([]);
+	// keys names the coding client each key belongs to, so the tunnel can name the
+	// agent behind a key's traffic.
+	let keys = $state.raw<AccessKey[]>([]);
 	let dailyAll = $state.raw<UsageRollupRow[]>([]);
-	// traffic24 is the routing universe's own rolling day: the map is defined
-	// as 24-hour traffic, whatever window the summary above it shows.
-	let traffic24 = $state.raw<UsageRollupRow[]>([]);
 	let recent = $state.raw<UsageLogRow[]>([]);
 	let activityFailed = $state('');
 	// live tails the request log the same way the logs page does. The choice
-	// lives in this browser so a reload keeps the last on or off. Fifteen rows
-	// fill the card without scrolling past the blocks beside it.
+	// lives in this browser so a reload keeps the last on or off.
 	let live = $state(true);
-	const RECENT_LIMIT = 15;
-	let pulsingProviders = $state<Set<string>>(new Set());
-	let pulseTimers = new Map<string, ReturnType<typeof setTimeout>>();
+	// The recent-request list shows the newest rows of the request log, filling the
+	// column beside the three cards.
+	const RECENT_LIMIT = 19;
+	const recentList = $derived(recent.slice(0, RECENT_LIMIT));
 
 	// One window drives the whole windowed page: the KPI tiles, the paid-spend
-	// board and the trends. The routing map, doctor and request tail keep their
-	// own scopes below. The rolling 24 hours is the default the desktop window
-	// mirrors.
+	// board, the trends and the routing tunnel. The doctor and the request tail
+	// keep their own scopes below. The rolling 24 hours is the default the
+	// desktop window mirrors.
 	let summaryPeriod = $state<WindowPeriod>('24h');
-	// spendSet chooses which figure the board reads: the connections that pay
-	// per token, or the ones a plan covers.
-	type SpendSet = 'api' | 'plan';
-	// Reports whether a choice the control handed back is one the board reads.
-	function isSpendSet(value: string): value is SpendSet {
-		return value === 'api' || value === 'plan';
-	}
-	let spendSet = $state<SpendSet>('api');
-	let spendRowsState = $state<UsageRollupRow[]>([]);
-	let spendLoading = $state(false);
-	// The board fades in only when a window or set swap lands its new rows:
-	// boardShownKey names the choice the rendered rows belong to, so a plain
-	// refresh keeps the board quiet.
-	let boardShownKey = $state(untrack(() => summaryPeriod + '|' + spendSet));
-	let boardSwapped = $state(false);
+
+	// The routing tunnel reads the same window as the tiles above it: the keys that
+	// spoke, the connections that served them, and the newest request inside it.
+	const tunnelTraffic = $derived<TunnelTraffic>({
+		clients: clientRows,
+		connections: summaryRows,
+		newest: recent[0] ?? null,
+		since: windowStart(summaryPeriod, Date.now())
+	});
+
 	let trendMode = $state<ChartMetric>('requests');
 	let dailyPaid = $state<UsageRollupRow[]>([]);
-	let expandedSpend = $state('');
-	let spendKeys = $state<UsageRollupRow[]>([]);
-	let spendKeysLoading = $state(false);
-
-	const DAY = 86_400_000;
 
 	const configuredProviders = $derived(providers.filter((provider) => provider.configured));
-	const paid = $derived(paidProviders(providers).filter((provider) => provider.configured));
-	const plan = $derived(planProviders(providers).filter((provider) => provider.configured));
-	const boardSet = $derived(spendSet === 'api' ? paid : plan);
-	const paidSpendBoard = $derived(spendRows(boardSet, spendRowsState));
+	// The spend cards read the window's own rollup: what the pay-as-you-go
+	// connections cost, what the plans covered, and what the keyless free
+	// lanes carried.
+	const sets = $derived(spendSets(configuredProviders));
+	const apiSpendRows = $derived(spendRows(sets.paid, summaryRows));
+	const planUsageRows = $derived(spendRows(sets.plan, summaryRows));
+	const freeUsageRows = $derived(spendRows(sets.free, summaryRows));
 
 	const total = (rows: UsageRollupRow[], pick: (row: UsageRollupRow) => number) =>
 		rows.reduce((sum, row) => sum + pick(row), 0);
@@ -121,9 +121,11 @@
 
 	const requestsWindow = $derived(sumRequests(summaryRows));
 	const errorsWindow = $derived(sumErrors(summaryRows));
-	const paidIds = $derived(new Set(paid.map((provider) => provider.id)));
+	const paidIds = $derived(new Set(sets.paid.map((provider) => provider.id)));
 	const paidSpendWindow = $derived(sumCost(summaryRows.filter((row) => paidIds.has(row.Key))));
 	const tokensWindow = $derived(sumTokens(summaryRows));
+	const tokensInWindow = $derived(total(summaryRows, (row) => Number(row.InputTokens)));
+	const tokensOutWindow = $derived(total(summaryRows, (row) => Number(row.OutputTokens)));
 	const durationSum = $derived(total(summaryRows, (row) => Number(row.DurationMs)));
 	const avgDuration = $derived(requestsWindow > 0 ? durationSum / requestsWindow : 0);
 	// A rate with no requests behind it has nothing to claim, so it reports
@@ -145,6 +147,9 @@
 	const healthReady = $derived(
 		healthBoard.filter((card) => ['ready', 'near', 'probing'].includes(card.health.state)).length
 	);
+	// The accounts that need an operator, read before the figures: a sign-in that
+	// expired, a window that is full, a window that is nearly full.
+	const attentionItems = $derived(accountAttention(accounts, quotaWindows));
 
 	function accountWindows(accountId: string): QuotaWindow[] {
 		return quotaWindows.filter((window) => window.credential_id === accountId);
@@ -162,25 +167,12 @@
 		{ value: 'tokens', label: $t('ui.pages.dashboard.trendTokens'), icon: 'sparkles' },
 		{ value: 'spend', label: $t('ui.pages.dashboard.trendSpend'), icon: 'currency-dollar' }
 	]);
-	// openedSpend is the board row behind the operator's last click, with what
-	// its access-key read answered.
-	const openedSpend = $derived(
-		expandedSpend === ''
-			? null
-			: { providerId: expandedSpend, keys: spendKeys, loading: spendKeysLoading }
-	);
-
-	// The chosen connections are named only when they fit the daemon's filter
-	// cap; a wider roster reads every connection and the join keeps the ones
-	// asked for.
-	function spendUrl(
-		chosen: readonly Provider[],
-		start: number,
-		until = 0,
-		groupBy: 'provider' | 'day' = 'provider'
-	): string {
-		let url = '/activity/usage?group_by=' + groupBy + '&since_ms=' + start;
-		if (until > 0) url += '&until_ms=' + until;
+	// The trend's spend series reads the paid connections at day grain, so it
+	// asks for the same days the window covers. The connections are named only
+	// when they fit the daemon's filter cap; a wider roster reads every
+	// connection and the join keeps the ones asked for.
+	function paidDaysUrl(chosen: readonly Provider[], start: number): string {
+		let url = '/activity/usage?group_by=day&since_ms=' + start;
 		if (chosen.length > 0 && chosen.length <= 32) {
 			for (const provider of chosen) url += '&provider=' + encodeURIComponent(provider.id);
 		}
@@ -230,33 +222,14 @@
 		}
 	}
 
-	async function loadSpend() {
-		spendLoading = true;
-		boardSwapped = false;
-		try {
-			const start = windowStart(summaryPeriod, Date.now());
-			spendRowsState =
-				(await api<{ items: UsageRollupRow[] }>(spendUrl(boardSet, start))).items ?? [];
-			const key = summaryPeriod + '|' + spendSet;
-			if (key !== boardShownKey) {
-				boardShownKey = key;
-				boardSwapped = true;
-			}
-		} catch {
-			spendRowsState = [];
-		} finally {
-			spendLoading = false;
-		}
-	}
-
 	async function loadTrendPaid() {
 		try {
 			// The trend's spend series stays API spend, so it reads the paid
-			// connections whatever the board is showing.
+			// connections.
 			dailyPaid =
 				(
 					await api<{ items: UsageRollupRow[] }>(
-						spendUrl(paid, windowStart(summaryPeriod, Date.now()), 0, 'day')
+						paidDaysUrl(sets.paid, windowStart(summaryPeriod, Date.now()))
 					)
 				).items ?? [];
 		} catch {
@@ -275,6 +248,14 @@
 		}
 	}
 
+	async function loadKeys() {
+		try {
+			keys = (await api<{ items: AccessKey[] }>('/clients/keys')).items ?? [];
+		} catch {
+			keys = [];
+		}
+	}
+
 	// The equal window before the selected one is what a KPI delta compares
 	// against, so switching the period re-asks only this read.
 	async function loadSummary() {
@@ -283,6 +264,9 @@
 			const window = summaryWindow(summaryPeriod, Date.now());
 			const currentRead = api<{ items: UsageRollupRow[] }>(
 				'/activity/usage?group_by=provider&since_ms=' + window.start
+			);
+			const clientRead = api<{ items: UsageRollupRow[] }>(
+				'/activity/usage?group_by=client&since_ms=' + window.start
 			);
 			const previousRead =
 				window.prevUntil > 0
@@ -293,8 +277,13 @@
 								window.prevUntil
 						)
 					: null;
-			const [current, previous] = await Promise.all([currentRead, previousRead]);
+			const [current, clients, previous] = await Promise.all([
+				currentRead,
+				clientRead,
+				previousRead
+			]);
 			summaryRows = current.items ?? [];
+			clientRows = clients.items ?? [];
 			previousRows = previous?.items ?? [];
 		} catch (error) {
 			activityFailed = error instanceof Error ? error.message : String(error);
@@ -316,32 +305,17 @@
 		}
 	}
 
-	// The routing map reads the rolling day independently, so switching the
-	// summary window never redraws it.
-	async function loadTraffic() {
-		try {
-			traffic24 =
-				(
-					await api<{ items: UsageRollupRow[] }>(
-						'/activity/usage?group_by=provider&since_ms=' + (Date.now() - DAY)
-					)
-				).items ?? [];
-		} catch (error) {
-			activityFailed = error instanceof Error ? error.message : String(error);
-		}
-	}
-
 	async function loadEverything(includeRecent = live) {
 		try {
 			await Promise.all([
 				loadStatus(),
 				loadHealth(),
+				loadKeys(),
 				loadSummary(),
 				loadTrend(),
-				loadTraffic(),
+				loadTrendPaid(),
 				includeRecent ? loadRecent() : Promise.resolve()
 			]);
-			await Promise.all([loadSpend(), loadTrendPaid()]);
 		} finally {
 			contentLoading = false;
 		}
@@ -350,18 +324,6 @@
 	function setLive(next: boolean) {
 		live = next;
 		writeDashboardLive(browserStorage(), next);
-	}
-
-	function pulseProvider(id: string) {
-		if (pulseTimers.has(id)) clearTimeout(pulseTimers.get(id));
-		pulsingProviders = new Set([...pulsingProviders, id]);
-		pulseTimers.set(
-			id,
-			setTimeout(() => {
-				pulsingProviders = new Set([...pulsingProviders].filter((entry) => entry !== id));
-				pulseTimers.delete(id);
-			}, 600)
-		);
 	}
 
 	let refreshTimer: ReturnType<typeof setInterval>;
@@ -386,9 +348,7 @@
 			refreshing = true;
 			void loadEverything().finally(() => (refreshing = false));
 		}, 30_000);
-		unsubLogs = subscribe('logs', (payload: unknown) => {
-			const event = payload as { provider?: string } | null;
-			if (event?.provider) pulseProvider(event.provider);
+		unsubLogs = subscribe('logs', () => {
 			if (live) reloadRecent.schedule();
 		});
 		unsubQuota = subscribe('quota', () => reloadHealth.schedule());
@@ -399,48 +359,13 @@
 		unsubQuota?.();
 		reloadRecent.cancel();
 		reloadHealth.cancel();
-		pulseTimers.forEach((timer) => clearTimeout(timer));
 	});
 
-	// The KPI tiles, the spend board and both trend reads follow the page window,
-	// while the routing map, doctor and request tail keep their own scopes.
+	// The KPI tiles, the spend charts and both trend reads follow the page
+	// window, while the doctor and the request tail keep their own scopes.
 	function onSummaryPeriod(period: string) {
 		if (isWindowPeriod(period)) summaryPeriod = period;
-		void Promise.all([loadSummary(), loadSpend(), loadTrend(), loadTrendPaid()]);
-	}
-
-	// The expanded key row belongs to the set that was open, so it closes with
-	// the swap.
-	function onSpendSet(next: string) {
-		if (isSpendSet(next)) spendSet = next;
-		expandedSpend = '';
-		void loadSpend();
-	}
-
-	async function onExpandSpend(providerId: string) {
-		if (expandedSpend === providerId) {
-			expandedSpend = '';
-			return;
-		}
-		expandedSpend = providerId;
-		spendKeys = [];
-		spendKeysLoading = true;
-		try {
-			const start = windowStart(summaryPeriod, Date.now());
-			spendKeys =
-				(
-					await api<{ items: UsageRollupRow[] }>(
-						'/activity/usage?group_by=credential&since_ms=' +
-							start +
-							'&provider=' +
-							encodeURIComponent(providerId)
-					)
-				).items ?? [];
-		} catch {
-			spendKeys = [];
-		} finally {
-			spendKeysLoading = false;
-		}
+		void Promise.all([loadSummary(), loadTrend(), loadTrendPaid()]);
 	}
 </script>
 
@@ -494,27 +419,28 @@
 		</div>
 	{/if}
 
-	<div class="grid grid-cols-2 gap-[var(--grid-gap)] md:grid-cols-3 xl:grid-cols-6">
+	<!-- The accounts that need an operator, read before the figures below. -->
+	<AttentionBand
+		items={attentionItems}
+		onopen={(providerId) =>
+			goto('/connections?provider=' + encodeURIComponent(providerId) + '&tab=accounts')}
+	/>
+
+	<!-- The six figures of the window lead the page. -->
+	<div class="grid min-w-0 grid-cols-2 gap-[var(--grid-gap)] md:grid-cols-3 xl:grid-cols-6">
 		<KpiTile
 			icon="list"
 			labelKey="ui.pages.dashboard.requests24h"
 			loading={contentLoading}
 			pending={processing}
+			delta={requestsDelta}
 		>
-			<div class="mt-auto flex flex-wrap items-baseline gap-x-3 gap-y-1">
-				<span class="font-mono text-[1.625rem] leading-none font-medium tabular-nums text-ink">
-					<AnimatedNumber
-						value={requestsWindow}
-						format={(value) => Math.round(value).toLocaleString()}
-					/>
-				</span>
-				{#if requestsDelta !== null}
-					<span class="inline-flex items-center gap-1 text-xs font-medium text-muted-foreground">
-						<Icon name={requestsDelta >= 0 ? 'arrow-up' : 'arrow-down'} size={13} />
-						{(requestsDelta >= 0 ? '+' : '') + requestsDelta}%
-					</span>
-				{/if}
-			</div>
+			<span class="font-mono text-[1.625rem] leading-none font-medium tabular-nums text-ink">
+				<AnimatedNumber
+					value={requestsWindow}
+					format={(value) => Math.round(value).toLocaleString()}
+				/>
+			</span>
 			<p class="min-h-4 text-xs text-muted-foreground">
 				{#if errorsWindow > 0}{errorsWindow} {$t('ui.pages.dashboard.errors')}
 				{:else if successRate !== null}{$t('ui.pages.dashboard.percentOk', {
@@ -530,9 +456,7 @@
 			loading={contentLoading}
 			pending={processing}
 		>
-			<span
-				class="mt-auto font-mono text-[1.625rem] leading-none font-medium tabular-nums text-ink"
-			>
+			<span class="font-mono text-[1.625rem] leading-none font-medium tabular-nums text-ink">
 				<AnimatedNumber
 					value={successRate ?? 0}
 					format={(value) => (successRate === null ? '—' : value.toFixed(0) + '%')}
@@ -554,13 +478,11 @@
 			loading={contentLoading}
 			pending={processing}
 		>
-			<span
-				class="mt-auto font-mono text-[1.625rem] leading-none font-medium tabular-nums text-ink"
-			>
+			<span class="font-mono text-[1.625rem] leading-none font-medium tabular-nums text-ink">
 				<AnimatedNumber value={paidSpendWindow} format={(value) => formatCost(Math.round(value))} />
 			</span>
 			<p class="min-h-4 text-xs text-muted-foreground">
-				{$t('ui.pages.dashboard.paidSpendHint', { values: { count: paid.length } })}
+				{$t('ui.pages.dashboard.paidSpendHint', { values: { count: sets.paid.length } })}
 			</p>
 		</KpiTile>
 
@@ -569,22 +491,23 @@
 			labelKey="ui.pages.dashboard.tokens"
 			loading={contentLoading}
 			pending={processing}
+			delta={tokensDelta}
 		>
 			<span
-				class="mt-auto font-mono text-[1.625rem] leading-none font-medium tabular-nums text-ink"
+				class="font-mono text-[1.625rem] leading-none font-medium tabular-nums text-ink"
 				title={formatTokensExact(tokensWindow)}
 				><AnimatedNumber
 					value={tokensWindow}
 					format={(value) => formatTokens(Math.round(value))}
 				/></span
 			>
-			<p class="min-h-4 text-xs font-medium text-muted-foreground">
-				{#if tokensDelta !== null}
-					<span class="inline-flex items-center gap-1">
-						<Icon name={tokensDelta >= 0 ? 'arrow-up' : 'arrow-down'} size={13} />
-						{(tokensDelta >= 0 ? '+' : '') + tokensDelta}%
-					</span>
-				{/if}
+			<p class="min-h-4 text-xs text-muted-foreground">
+				{$t('ui.pages.usagePage.noteTokenMix', {
+					values: {
+						input: formatTokens(tokensInWindow),
+						output: formatTokens(tokensOutWindow)
+					}
+				})}
 			</p>
 		</KpiTile>
 
@@ -594,9 +517,7 @@
 			loading={contentLoading}
 			pending={processing}
 		>
-			<span
-				class="mt-auto font-mono text-[1.625rem] leading-none font-medium tabular-nums text-ink"
-			>
+			<span class="font-mono text-[1.625rem] leading-none font-medium tabular-nums text-ink">
 				<AnimatedNumber
 					value={avgDuration}
 					format={(value) => (value > 0 ? (value / 1000).toFixed(1) + 's' : '—')}
@@ -613,9 +534,7 @@
 			loading={contentLoading}
 			pending={processing}
 		>
-			<span
-				class="mt-auto font-mono text-[1.625rem] leading-none font-medium tabular-nums text-ink"
-			>
+			<span class="font-mono text-[1.625rem] leading-none font-medium tabular-nums text-ink">
 				<AnimatedNumber value={healthReady} format={(value) => String(Math.round(value))} /><span
 					class="text-sm font-normal text-muted-foreground"
 				>
@@ -635,69 +554,108 @@
 		</KpiTile>
 	</div>
 
-	<div class="grid min-w-0 grid-cols-1 gap-[var(--grid-gap)] lg:grid-cols-2">
-		<HealthBoard
-			cards={healthBoard}
-			loading={contentLoading || (accountsLoading && accounts.length === 0)}
-			failed={healthFailed}
-			windowsOf={accountWindows}
-			onretry={() => void loadHealth()}
-			onadd={() => goto('/connections?add=1')}
-			pending={processing}
-		/>
-
-		<SpendBoard
-			rows={paidSpendBoard}
-			loading={contentLoading || spendLoading}
-			swapped={boardSwapped}
-			set={spendSet}
-			opened={openedSpend}
-			onsetset={onSpendSet}
-			onexpand={(providerId) => void onExpandSpend(providerId)}
-			pending={processing}
-		/>
-	</div>
-
-	<div class="grid min-w-0 grid-cols-1 gap-[var(--grid-gap)] lg:grid-cols-2">
-		<TrendChart
-			days={trendDays}
-			metric={trendMode}
-			options={trendOptions}
+	<!-- The map takes the wider half; the trend and the token mix stack beside it. -->
+	<div
+		class="grid min-w-0 grid-cols-1 gap-[var(--grid-gap)] xl:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]"
+	>
+		<RoutingUniverse
+			traffic={tunnelTraffic}
+			{keys}
+			providers={configuredProviders}
+			{live}
 			loading={contentLoading}
 			pending={processing}
-			onmetric={(next) => (trendMode = next)}
+			onadd={() => goto('/connections?add=1')}
+			class="min-w-0"
 		/>
 
-		<TokenMixDonut rows={dailyAll} loading={contentLoading} pending={processing} />
-	</div>
-
-	<div class="grid min-w-0 grid-cols-1 gap-[var(--grid-gap)] lg:grid-cols-2">
 		<div class="flex min-w-0 flex-col gap-[var(--grid-gap)]">
-			<RoutingUniverse
-				providers={configuredProviders}
-				traffic={traffic24}
-				pulsing={pulsingProviders}
+			<TrendChart
+				days={trendDays}
+				metric={trendMode}
+				options={trendOptions}
+				showLabels={showsDayLabels(summaryPeriod)}
 				loading={contentLoading}
 				pending={processing}
-				onadd={() => goto('/connections?add=1')}
+				onmetric={(next) => (trendMode = next)}
 			/>
 
-			<DoctorChecks
-				checks={doctor}
-				loading={doctorLoading}
-				failed={doctorFailed}
+			<TokenMixDonut rows={dailyAll} loading={contentLoading} pending={processing} />
+		</div>
+	</div>
+
+	<!-- The accounts the operator has to look after. -->
+	<HealthBoard
+		cards={healthBoard}
+		loading={contentLoading || (accountsLoading && accounts.length === 0)}
+		failed={healthFailed}
+		windowsOf={accountWindows}
+		onretry={() => void loadHealth()}
+		onadd={() => goto('/connections?add=1')}
+		pending={processing}
+	/>
+
+	<!-- What the window cost, what the plans covered, and what the free lanes carried. -->
+	<div class="section-surface flex min-w-0 flex-col p-4 sm:p-5">
+		<div class="mb-4">
+			<h2 class="section-heading flex items-center gap-2">
+				<Icon name="currency-dollar" size={15} class="shrink-0 text-faint" />
+				{$t('ui.pages.dashboard.spendTitle')}
+			</h2>
+			<p class="text-xs text-muted-foreground">{$t('ui.pages.dashboard.spendTitleDesc')}</p>
+		</div>
+		<div class="grid min-w-0 grid-cols-1 gap-3 lg:grid-cols-3">
+			<SpendBlock
+				rows={apiSpendRows}
+				titleKey="ui.pages.dashboard.spendApi"
+				icon="key"
+				descriptionKey="ui.pages.dashboard.spendApiDesc"
+				emptyKey="ui.pages.dashboard.spendEmpty"
+				loading={contentLoading}
 				pending={processing}
-				onretry={() => void loadDoctor()}
+			/>
+
+			<SpendBlock
+				rows={planUsageRows}
+				titleKey="ui.pages.dashboard.spendPlan"
+				icon="tag"
+				descriptionKey="ui.pages.dashboard.spendPlanDesc"
+				emptyKey="ui.pages.dashboard.spendPlanEmpty"
+				loading={contentLoading}
+				pending={processing}
+			/>
+
+			<SpendBlock
+				rows={freeUsageRows}
+				titleKey="ui.pages.dashboard.spendFree"
+				icon="bolt"
+				descriptionKey="ui.pages.dashboard.spendFreeDesc"
+				emptyKey="ui.pages.dashboard.spendFreeEmpty"
+				loading={contentLoading}
+				pending={processing}
 			/>
 		</div>
+	</div>
 
+	<!-- Recent requests and the daemon's own checks. -->
+	<div
+		class="grid min-w-0 grid-cols-1 gap-[var(--grid-gap)] lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]"
+	>
 		<RecentRequests
-			rows={recent}
+			rows={recentList}
 			loading={contentLoading}
 			{live}
 			pending={processing}
 			ontoggle={setLive}
 			onviewall={() => goto('/logs')}
+		/>
+
+		<DoctorChecks
+			checks={doctor}
+			loading={doctorLoading}
+			failed={doctorFailed}
+			pending={processing}
+			onretry={() => void loadDoctor()}
 		/>
 	</div>
 </div>

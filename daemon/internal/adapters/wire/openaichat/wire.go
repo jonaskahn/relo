@@ -70,7 +70,7 @@ func (w chatWireRequest) toCanonical() (*inference.Request, error) {
 	}
 	return &inference.Request{
 		Model:       w.Model,
-		Messages:    messages,
+		Messages:    inference.MergeToolResults(messages),
 		Tools:       decodeTools(w.Tools),
 		ToolChoice:  decodeToolChoice(w.ToolChoice),
 		Stream:      w.Stream,

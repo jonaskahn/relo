@@ -151,6 +151,106 @@ func TestInboundKeepsAResultRightAfterItsCall(t *testing.T) {
 	}
 }
 
+// TestInboundMergesRepeatedResultsForOneCall covers Codex sending two output
+// items for one call; chat upstreams reject a call answered twice.
+func TestInboundMergesRepeatedResultsForOneCall(t *testing.T) {
+	request := inboundRequest(t, []byte(`{"model":"gpt-5","input":[
+		{"type":"custom_tool_call","call_id":"call_0","name":"exec","input":"1"},
+		{"type":"custom_tool_call_output","call_id":"call_0","output":"Script completed"},
+		{"type":"custom_tool_call_output","call_id":"call_0","output":"b"},
+		{"type":"custom_tool_call_output","call_id":"call_0","output":"c"},
+		{"type":"custom_tool_call_output","call_id":"call_0","output":"d"},
+		{"type":"custom_tool_call_output","call_id":"call_0","output":"real output"}]}`))
+
+	if len(request.Messages) != 2 {
+		t.Fatalf("messages = %+v, want one assistant turn and one result", request.Messages)
+	}
+	result := request.Messages[1]
+	if result.Role != inference.RoleTool || len(result.Content) != 5 || result.Content[4].Text != "real output" {
+		t.Fatalf("result = %+v, want both outputs kept on the one result", result)
+	}
+}
+
+// TestInboundMergesTheDoubledResultCodexSends replays the fixture Codex
+// really sent: a call answered twice, a status line and then the output. Every
+// upstream takes one result per call, and the two that were sent separately
+// read as one result.
+func TestInboundMergesTheDoubledResultCodexSends(t *testing.T) {
+	request := inboundRequest(t, readFixture(t, "openai/codex_request.json"))
+
+	results := 0
+	for _, message := range request.Messages {
+		if message.Role != inference.RoleTool {
+			continue
+		}
+		results++
+		if message.ToolCallID != "chatcmpl-tool-b7ba658441301cda" {
+			t.Fatalf("tool message = %+v, want the result bound to its call", message)
+		}
+		if len(message.Content) != 2 {
+			t.Fatalf("result = %+v, want the status line and the output", message.Content)
+		}
+		if message.Content[0].Text != "Script completed\nWall time: 0.1 seconds\nOutput:\n" {
+			t.Fatalf("result = %+v, want the status line first", message.Content[0].Text)
+		}
+		if !strings.HasPrefix(message.Content[1].Text, " M packaging/npm/package.json") {
+			t.Fatalf("result = %+v, want the output after the status line", message.Content[1].Text)
+		}
+	}
+	if results != 1 {
+		t.Fatalf("results = %d, want one result for the call", results)
+	}
+}
+
+// TestInboundMergesARepeatedResultThatArrivesLate covers a second output
+// item for a call that arrives after another turn: the result still belongs to
+// the call that made it.
+func TestInboundMergesARepeatedResultThatArrivesLate(t *testing.T) {
+	request := inboundRequest(t, []byte(`{"model":"gpt-5","input":[
+		{"type":"custom_tool_call","call_id":"call_0","name":"exec","input":"1"},
+		{"type":"custom_tool_call_output","call_id":"call_0","output":"Script completed"},
+		{"type":"message","role":"user","content":[{"type":"input_text","text":"and now?"}]},
+		{"type":"custom_tool_call_output","call_id":"call_0","output":"real output"}]}`))
+
+	results := 0
+	for _, message := range request.Messages {
+		if message.Role != inference.RoleTool {
+			continue
+		}
+		results++
+		if len(message.Content) != 2 || message.Content[0].Text != "Script completed" || message.Content[1].Text != "real output" {
+			t.Fatalf("result = %+v, want both outputs on the one result", message.Content)
+		}
+	}
+	if results != 1 {
+		t.Fatalf("results = %d, want one result for the call", results)
+	}
+}
+
+// TestInboundMergesResultsThatArriveOutOfCallOrder covers results for two
+// calls arriving in the other order: each call keeps its own result.
+func TestInboundMergesResultsThatArriveOutOfCallOrder(t *testing.T) {
+	request := inboundRequest(t, []byte(`{"model":"gpt-5","input":[
+		{"type":"custom_tool_call","call_id":"call_0","name":"exec","input":"1"},
+		{"type":"custom_tool_call","call_id":"call_1","name":"exec","input":"2"},
+		{"type":"custom_tool_call_output","call_id":"call_1","output":"second"},
+		{"type":"custom_tool_call_output","call_id":"call_0","output":"first"}]}`))
+
+	results := 0
+	for _, message := range request.Messages {
+		if message.Role != inference.RoleTool {
+			continue
+		}
+		results++
+		if len(message.Content) != 1 {
+			t.Fatalf("result = %+v, want one output for its own call", message.Content)
+		}
+	}
+	if results != 2 {
+		t.Fatalf("results = %d, want one result for each call", results)
+	}
+}
+
 // TestInboundReadsAResultMadeOfContentItems covers a result with several
 // parts, which Codex sends as a list rather than a string.
 func TestInboundReadsAResultMadeOfContentItems(t *testing.T) {

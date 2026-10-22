@@ -32,8 +32,9 @@ action as a button or link. No stripe on any side.
 `N need attention` (600, 14px). Then one wrapping line of text buttons, one per item — a 6px tone dot, the name in
 `--ink` 500, the reason in `--muted` (`weekly limit reached, resets in 1h 30m`, `at 92%`) — separated by 24px gaps. No
 pill fills and no icon tiles; danger dot for limit reached, warn for near limit and for the unpriced item; hover lifts
-the reason to `--ink`. An item is a button that opens what it names. Hide the band when nothing needs attention; the
-whole band is hidden below 640px.
+the reason to `--ink`. An item is a button that opens what it names. On the Dashboard the items name the accounts that
+need attention — a sign-in that expired, a window that is full, a window that is nearly full — and open the connection
+the account belongs to. Hide the band when nothing needs attention; the whole band is hidden below 640px.
 
 ## Empty state
 

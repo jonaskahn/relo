@@ -122,6 +122,9 @@ type UsageLogRow struct {
 	Origin              string
 	ClientKeyID         string
 	ClientKeyName       string
+	// ClientApp names the coding client the inbound key was issued for, so a
+	// reader knows which agent made the request even after the key is gone.
+	ClientApp string
 	// Warnings are the advisory notes this request carried.
 	Warnings []string
 }

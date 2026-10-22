@@ -21,6 +21,25 @@
      "text": "hello"
     }
    ]
+  },
+  {
+   "type": "custom_tool_call",
+   "call_id": "chatcmpl-tool-b7ba658441301cda",
+   "name": "exec",
+   "input": "// @exec: {\"yield_time_ms\": 30000}\nconst status = await exec_command({ cmd: \"git status --short\" });\nnotify(status.output);"
+  },
+  {
+   "type": "custom_tool_call_output",
+   "id": "ctco_01a15cd9-a3b8-7fa3-9c11-ca61e2c41e5e",
+   "call_id": "chatcmpl-tool-b7ba658441301cda",
+   "output": "Script completed\nWall time: 0.1 seconds\nOutput:\n"
+  },
+  {
+   "type": "custom_tool_call_output",
+   "id": "ctco_01a15cd9-a3b9-7fd0-a9b8-de01e00afeab",
+   "call_id": "chatcmpl-tool-b7ba658441301cda",
+   "name": "exec",
+   "output": " M packaging/npm/package.json\n packaging/npm/package.json | 2 +-..."
   }
  ],
  "tools": [

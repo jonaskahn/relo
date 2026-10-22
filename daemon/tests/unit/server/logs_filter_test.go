@@ -80,6 +80,37 @@ func TestRequestLogFiltersByNameAndClient(t *testing.T) {
 	})
 }
 
+// TestRequestLogReportsTheCodingClient covers the field the dashboard's route
+// map reads: every request row names the coding client its key was issued for,
+// so the console can draw which agent reached which connection.
+func TestRequestLogReportsTheCodingClient(t *testing.T) {
+	harness := newHarness(t)
+	ctx := context.Background()
+	if _, err := harness.usage.AppendEvent(ctx, sqlite.UsageEvent{
+		RequestID: "a", Timestamp: 1_000, Provider: "openai", Model: "gpt-4o", Status: 200,
+		ClientKeyID: "key-codex", ClientKeyName: "codex-integration", ClientApp: "codex",
+	}); err != nil {
+		t.Fatalf("AppendEvent() error = %v", err)
+	}
+
+	response := harness.management(http.MethodGet, "/api/v1/activity/requests?limit=1", adminToken, nil)
+	if response.Code != http.StatusOK {
+		t.Fatalf("status = %d, want 200 (%s)", response.Code, response.Body.String())
+	}
+	body := struct {
+		Items []struct {
+			RequestID string
+			ClientApp string
+		}
+	}{}
+	if err := json.Unmarshal(response.Body.Bytes(), &body); err != nil {
+		t.Fatalf("decode the response: %v", err)
+	}
+	if len(body.Items) != 1 || body.Items[0].ClientApp != "codex" {
+		t.Fatalf("items = %+v, want the coding client the key was issued for", body.Items)
+	}
+}
+
 // TestRequestLogFiltersByStatusClass covers the filter the logs page offers:
 // its Error option names the two classes a refusal arrives in, and its OK
 // option names the answers. A page that sent one exact code left a 429 out of

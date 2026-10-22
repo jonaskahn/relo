@@ -870,6 +870,21 @@ func TestInboundDecode(t *testing.T) {
 		}
 	})
 
+	t.Run("one call answered twice becomes one result", func(t *testing.T) {
+		body := []byte(`{"model":"claude-sonnet-4","max_tokens":8,"messages":[{"role":"user","content":[{"type":"tool_result","tool_use_id":"toolu_1","content":"first"},{"type":"tool_result","tool_use_id":"toolu_1","content":"second"}]}]}`)
+		request := inboundRequest(t, body)
+		results := messagesWithRole(request.Messages, inference.RoleTool)
+		if len(results) != 1 {
+			t.Fatalf("tool messages = %+v, want one result for the call", results)
+		}
+		if results[0].ToolCallID != "toolu_1" {
+			t.Fatalf("tool message = %+v, want the result bound to its call", results[0])
+		}
+		if len(results[0].Content) != 2 || results[0].Content[0].Text != "first" || results[0].Content[1].Text != "second" {
+			t.Fatalf("result = %+v, want both outputs in arrival order", results[0].Content)
+		}
+	})
+
 	t.Run("a request without a model is rejected", func(t *testing.T) {
 		_, err := decodeInbound([]byte(`{"messages":[]}`))
 		if !errors.Is(err, wire.ErrInvalidRequest) {

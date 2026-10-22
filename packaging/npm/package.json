@@ -4,7 +4,7 @@
 	"description": "One local proxy that lets Codex, Claude Code, Cursor and Grok, etc. Talk to any model, any provider with no config changes",
 	"license": "AGPL-3.0-only",
 	"type": "module",
-	"homepage": "https://github.com/jonaskahn/relo#readme",
+	"homepage": "https://relo.ifelse.one",
 	"repository": {
 		"type": "git",
 		"url": "git+https://github.com/jonaskahn/relo.git"

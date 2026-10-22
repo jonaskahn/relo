@@ -8,9 +8,9 @@
 	import { formatCost, formatDuration } from '$lib/format';
 	import type { UsageLogRow } from '$lib/types';
 
-	// RecentRequests is the tail of the request log as it arrives: fifteen
-	// dense rows, each a link into the Logs detail. The list stretches to the
-	// height of the blocks beside it so both end on one line.
+	// RecentRequests is the tail of the request log as it arrives: dense rows,
+	// each a link into the Logs detail. The card stops at half the height the
+	// rows would take, and the list scrolls inside it.
 
 	interface Props {
 		rows: UsageLogRow[];
@@ -24,10 +24,13 @@
 	let { rows, loading = false, live = false, pending, ontoggle, onviewall }: Props = $props();
 </script>
 
-<div class="section-surface flex min-h-0 flex-col">
+<div class="section-surface flex min-h-0 max-h-[30rem] flex-col">
 	<div class="flex items-center justify-between gap-3 px-4 pt-4 pb-3 sm:px-5">
 		<div>
-			<h2 class="section-heading">{$t('ui.pages.dashboard.recentTitle')}</h2>
+			<h2 class="section-heading flex items-center gap-2">
+				<Icon name="list" size={15} class="shrink-0 text-faint" />
+				{$t('ui.pages.dashboard.recentTitle')}
+			</h2>
 			<p class="text-xs text-muted-foreground">{$t('ui.pages.dashboard.recentDescription')}</p>
 		</div>
 		<div class="flex shrink-0 items-center gap-2">

@@ -4,11 +4,13 @@ import { describe, expect, it } from 'vitest';
 import logoIds from './provider-logo-ids.json';
 import { providerLogoPaths } from './provider-logo-paths';
 import {
+	logoPathTransform,
 	providerLogoIsColored,
 	providerLogoPath,
 	providerLogoSrc,
 	providerMonogram
 } from './provider-logo';
+import type { LogoPath } from './provider-logo-paths';
 
 const directory = resolve(import.meta.dirname, '../../static/provider-logos');
 
@@ -276,5 +278,43 @@ describe('providerMonogram', () => {
 	it('uses the first letters of two words, else the first two characters', () => {
 		expect(providerMonogram('Claude API')).toBe('CA');
 		expect(providerMonogram('Grok')).toBe('GR');
+	});
+});
+
+describe('logoPathTransform', () => {
+	function pathOf(id: string): LogoPath {
+		const path = providerLogoPath(id);
+		if (!path) throw new Error('no mark for ' + id);
+		return path;
+	}
+
+	/** Where a transform puts a point. */
+	function placed(transform: string, x: number, y: number): { x: number; y: number } {
+		const numbers = (transform.match(/-?\d*\.?\d+(?:e[-+]?\d+)?/gi) ?? []).map(Number);
+		const [cx, cy, scale, dx, dy] = numbers;
+		return { x: cx + scale * (x + dx), y: cy + scale * (y + dy) };
+	}
+
+	// A mark is drawn from its own geometry, so it has to land on the point its node
+	// sits at. Hanging it from the origin of its viewBox puts it in the corner of the
+	// circle instead of its middle.
+	it('centres the geometry on the point', () => {
+		const path = pathOf('opencode-free');
+		const transform = logoPathTransform(path, 100, 50, 20);
+		const centre = placed(transform, path.width / 2, path.height / 2);
+
+		expect(centre.x).toBeCloseTo(100);
+		expect(centre.y).toBeCloseTo(50);
+	});
+
+	it('keeps a mark that is not square inside its box', () => {
+		const path = pathOf('chutes');
+		const transform = logoPathTransform(path, 10, 20, 26);
+		const corner = placed(transform, 0, 0);
+		const edge = placed(transform, path.width, path.height);
+
+		expect(corner.x).toBeGreaterThanOrEqual(-3.01);
+		expect(edge.x).toBeLessThanOrEqual(23.01);
+		expect(placed(transform, path.width / 2, path.height / 2).y).toBeCloseTo(20);
 	});
 });

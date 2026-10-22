@@ -5,6 +5,7 @@
 	import { t } from 'svelte-i18n';
 
 	import { reducedMotion } from '$lib/card-layout-motion';
+	import Icon from '$lib/components/ui/icon.svelte';
 	import { formatTokens } from '$lib/format';
 	import { donutFill, donutSegments, rankedShares, tokenMixSeries } from '$lib/usage-charts';
 	import type { UsageRollupRow } from '$lib/types';
@@ -64,8 +65,11 @@
 	});
 </script>
 
-<div class="section-surface p-4 sm:p-5">
-	<h2 class="section-heading">{$t('ui.pages.usagePage.tokenMixTitle')}</h2>
+<div class="section-surface flex flex-1 flex-col p-4 sm:p-5">
+	<h2 class="section-heading flex items-center gap-2">
+		<Icon name="layers" size={15} class="shrink-0 text-faint" />
+		{$t('ui.pages.usagePage.tokenMixTitle')}
+	</h2>
 	{#if loading}
 		{@render pending()}
 	{:else if segments.length === 0}
@@ -81,10 +85,12 @@
 				{readout}
 			</p>
 		{/key}
-		<div class="flex flex-wrap items-center gap-4">
+		<!-- The legend keeps a floor of room, so a narrow card moves it under
+		     the ring instead of squeezing it. -->
+		<div class="flex flex-1 flex-wrap items-center justify-center gap-4">
 			<svg
 				viewBox="0 0 140 140"
-				class="h-36 w-36 shrink-0"
+				class="h-40 w-40 shrink-0"
 				role="img"
 				aria-label={$t('ui.pages.usagePage.tokenMixTitle') + ' · ' + readout}
 			>
@@ -123,7 +129,7 @@
 					>{$t('ui.pages.dashboard.trendTokens')}</text
 				>
 			</svg>
-			<ul class="min-w-0 flex-1 space-y-1.5">
+			<ul class="min-w-36 flex-1 space-y-1.5">
 				{#each segments as segment, index (segment.key)}
 					<li
 						class="flex items-center gap-2 text-sm"

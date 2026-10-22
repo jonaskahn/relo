@@ -48,7 +48,10 @@
 
 <div class="section-surface accounts-board flex min-w-0 flex-col">
 	<div class="px-4 pt-4 pb-3 sm:px-5">
-		<h2 class="section-heading">{$t('ui.pages.dashboard.accountsBoardTitle')}</h2>
+		<h2 class="section-heading flex items-center gap-2">
+			<Icon name="user" size={15} class="shrink-0 text-faint" />
+			{$t('ui.pages.dashboard.accountsBoardTitle')}
+		</h2>
 		<p class="text-xs text-muted-foreground">
 			{$t('ui.pages.dashboard.accountsBoardDesc')}{#if !loading && overflow}{' '}{overflow}{/if}
 		</p>
@@ -75,9 +78,9 @@
 				</Button>
 			</div>
 		{:else}
-			<!-- Two cards per row once the board itself is wide enough: it is
-			     half the page on a wide screen and the rail can take a column,
-			     so the board measures itself, not the viewport. -->
+			<!-- The board measures itself, not the viewport: it is a full row on a
+			     wide screen and the rail can take a column, so the cards a row
+			     holds follow the room the board has. -->
 			<div class="accounts-grid">
 				{#each shown as card (card.account.id)}
 					{@const state = chip[card.health.state]}
@@ -125,10 +128,11 @@
 </div>
 
 <style>
-	/* The accounts board changes between one and two cards per row on its own
-	   width: at half the page its width depends on the rail beside it, which
-	   a viewport breakpoint cannot see. Two cards need room for the quota
-	   meter's fixed label, number and time beside a readable bar. */
+	/* The accounts board changes between one, two and three cards per row on its
+	   own width: it is a full row on a wide screen and the rail can take a
+	   column, so its width depends on the rail beside it, which a viewport
+	   breakpoint cannot see. Three cards need room for the quota meter's fixed
+	   label, number and time beside a readable bar. */
 	.accounts-board {
 		container-type: inline-size;
 	}
@@ -142,6 +146,12 @@
 	@container (min-width: 32rem) {
 		.accounts-grid {
 			grid-template-columns: repeat(2, minmax(0, 1fr));
+		}
+	}
+
+	@container (min-width: 56rem) {
+		.accounts-grid {
+			grid-template-columns: repeat(3, minmax(0, 1fr));
 		}
 	}
 </style>

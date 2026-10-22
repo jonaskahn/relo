@@ -1,17 +1,7 @@
 import type { Account, Provider, QuotaWindow, UsageRollupRow } from './types';
+import { ATTENTION_PERCENT } from './provider-attention';
+import { isFreeConnection } from './provider-free';
 import { isMoneyReading } from './provider-quota';
-
-/** Orders connections the way the dashboard's routing universe reads them: the busiest 24 hours
- *  first, then the connection with more accounts to serve a request. */
-export function providersByTraffic(providers: Provider[], rows: UsageRollupRow[]): Provider[] {
-	const byTraffic = new Map(rows.map((row) => [row.Key, Number(row.Requests)]));
-	return [...providers].sort((a, b) => {
-		const ta = byTraffic.get(a.id) ?? 0;
-		const tb = byTraffic.get(b.id) ?? 0;
-		if (tb !== ta) return tb - ta;
-		return b.counts.accounts - a.counts.accounts;
-	});
-}
 
 // The dashboard reads several daemon answers and combines them into the
 // health-first board. These helpers hold the pure decisions: how a
@@ -135,6 +125,33 @@ export function rowTokens(row: UsageRollupRow): number {
 	);
 }
 
+/** The connections of the three spend cards: what the pay-as-you-go connections cost,
+ *  what the plans covered, and what the keyless free lanes carried. */
+export interface SpendSets {
+	/** The connections that pay per token. */
+	paid: Provider[];
+	/** The connections a plan covers. */
+	plan: Provider[];
+	/** The keyless free lanes, which bill nothing. */
+	free: Provider[];
+}
+
+/** Splits the connections into the three sets the spend cards read. A keyless lane is
+ *  free wherever it comes from, so it leaves the paid and the plan sets. */
+export function spendSets(providers: Provider[]): SpendSets {
+	const free = providers.filter((provider) => isFreeConnection(provider));
+	const freeIds = new Set(free.map((provider) => provider.id));
+	return {
+		paid: providers.filter(
+			(provider) => spendKindOf(provider) === 'paid' && !freeIds.has(provider.id)
+		),
+		plan: providers.filter(
+			(provider) => spendKindOf(provider) === 'plan' && !freeIds.has(provider.id)
+		),
+		free
+	};
+}
+
 /** Reports the change between two totals as a percentage, or null when there is no previous
  *  period to compare with.
  *  A half rounds away from zero, the same rule the daemon's own delta follows. */
@@ -200,6 +217,17 @@ export function healthCards(
 		.sort((a, b) => HEALTH_SEVERITY[a.health.state] - HEALTH_SEVERITY[b.health.state]);
 }
 
+/** The window an account reports that fills the most of its limit. A money reading is a
+ *  balance, not a limit, so it never fills one. */
+function worstWindow(windows: readonly QuotaWindow[]): QuotaWindow | null {
+	let worst: QuotaWindow | null = null;
+	for (const window of windows) {
+		if (isMoneyReading(window)) continue;
+		if (worst === null || window.used_percent > worst.used_percent) worst = window;
+	}
+	return worst;
+}
+
 /** Names the one state a dashboard card shows. A sign-in that expired or a paused account
  *  outranks a quota window, and the live rate-limit backoff outranks how full the windows are. */
 export function accountHealth(
@@ -216,16 +244,79 @@ export function accountHealth(
 	const used = windows.filter(
 		(window) => window.credential_id === account.id && !isMoneyReading(window)
 	);
-	let worst = 0;
+	const worst = worstWindow(used);
 	let nextResetMs = 0;
 	for (const window of used) {
-		if (window.used_percent > worst) worst = window.used_percent;
 		if (window.reset_at_ms > now && (nextResetMs === 0 || window.reset_at_ms < nextResetMs)) {
 			nextResetMs = window.reset_at_ms;
 		}
 	}
-	const state: AccountHealthState = worst >= 100 ? 'exhausted' : worst >= 80 ? 'near' : 'ready';
+	const usedPercent = worst?.used_percent ?? 0;
+	const state: AccountHealthState =
+		usedPercent >= 100 ? 'exhausted' : usedPercent >= 80 ? 'near' : 'ready';
 	return { state, nextResetMs, limitedUntilMs: 0 };
+}
+
+/** Why an account needs an operator, as the band reads it. */
+export type AccountAttentionReason = 'reached' | 'near' | 'needs_signin' | 'paused' | 'limited';
+
+/** One account that needs an operator, and why. */
+export interface AccountAttention {
+	/** The account that needs attention. */
+	account: Account;
+	/** The connection the account belongs to, which is what the item opens. */
+	providerId: string;
+	/** Why the account needs attention. */
+	reason: AccountAttentionReason;
+	/** The window the reason is about, when the reason is a window. */
+	window?: QuotaWindow;
+	/** The tone the band reads the reason in. */
+	tone: 'danger' | 'warn';
+}
+
+/** The accounts that need an operator, the worst first: a sign-in that expired and a
+ *  window that is full outrank a window that is nearly full. */
+export function accountAttention(
+	accounts: readonly Account[],
+	windows: readonly QuotaWindow[],
+	now: number = Date.now()
+): AccountAttention[] {
+	const items: AccountAttention[] = [];
+	for (const account of accounts) {
+		const health = accountHealth(account, windows, now);
+		if (health.state === 'needs_signin') {
+			items.push({
+				account,
+				providerId: account.provider_id,
+				reason: 'needs_signin',
+				tone: 'danger'
+			});
+			continue;
+		}
+		if (health.state === 'paused' || health.state === 'limited') {
+			items.push({
+				account,
+				providerId: account.provider_id,
+				reason: health.state,
+				tone: 'warn'
+			});
+			continue;
+		}
+		const worst = worstWindow(windows.filter((window) => window.credential_id === account.id));
+		if (!worst || worst.used_percent < ATTENTION_PERCENT) continue;
+		items.push({
+			account,
+			providerId: account.provider_id,
+			reason: worst.used_percent >= 100 ? 'reached' : 'near',
+			window: worst,
+			tone: worst.used_percent >= 100 ? 'danger' : 'warn'
+		});
+	}
+	const rank = { danger: 0, warn: 1 };
+	return items.sort(
+		(left, right) =>
+			rank[left.tone] - rank[right.tone] || left.account.label.localeCompare(right.account.label)
+	);
 }
 
 /** Renders a remaining time the way a dashboard reads it: coarse, with the smallest unit first
@@ -245,9 +336,24 @@ export function formatCountdown(remainingMs: number): string {
  *  the section description. */
 export const boardLimit = 6;
 
-/** The paid-spend board is the one board that can grow past the standard cap: an operator with
- *  many API connections still needs to see them all. */
-export const spendBoardLimit = 10;
+/** The spend cards name the costliest connections, not every one of them: the top few
+ *  say where the money went, and the total covers the rest. */
+export const spendChartLimit = 3;
+
+/** The connections one spend card names: the costliest first, the top few of them. */
+export function topSpendRows(
+	rows: readonly SpendRow[],
+	limit: number = spendChartLimit
+): SpendRow[] {
+	return rows
+		.slice()
+		.sort(
+			(left, right) =>
+				right.costMicros - left.costMicros ||
+				left.provider.label.localeCompare(right.provider.label)
+		)
+		.slice(0, Math.max(0, limit));
+}
 
 /** The rows a board paints. Anything past the limit stays in the totals and is named by
  *  boardOverflowLabel. */
@@ -302,6 +408,14 @@ const WINDOW_DAYS: Record<'7d' | '30d' | '60d' | '90d', number> = {
 	'60d': 60,
 	'90d': 90
 };
+
+/** Whether the trend names its days under the bars. A window of more than a week
+ *  draws too many labels to read, so it leaves them out. */
+export function showsDayLabels(period: WindowPeriod): boolean {
+	if (period === '24h' || period === 'today') return true;
+	if (period === 'all') return false;
+	return WINDOW_DAYS[period] <= 7;
+}
 
 /** One window of the summary series: its label, its rollups and its totals. */
 export interface SummaryWindow {

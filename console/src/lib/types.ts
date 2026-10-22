@@ -732,6 +732,9 @@ export interface UsageLogRow {
 	readonly RouteReason: string;
 	readonly ClientKeyID: string;
 	readonly ClientKeyName: string;
+	// ClientApp names the coding client the inbound key was issued for, so a reader
+	// knows which agent made the request even after the key is gone.
+	readonly ClientApp: string;
 	// Origin names where a request came from: internal traffic the console's
 	// chat tester ran, or external traffic a client sent.
 	readonly Origin: string;

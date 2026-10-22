@@ -36,6 +36,7 @@ provider traffic is stored in this repository.
 | `openai/responses_tool_call.txt`       | Responses stream with two parallel function calls                        |
 | `openai/responses_nonstreaming.json`   | A complete response object with reasoning, message, and call items       |
 | `openai/responses_request.json`        | A client Responses request with instructions, items, and a tool          |
+| `openai/codex_request.json`            | A client Responses request with Codex's tools and a doubled tool result |
 | `anthropic/messages_streaming.txt`     | Messages text stream with cache usage                                    |
 | `anthropic/messages_thinking.txt`      | Messages stream with a thinking signature and a prefixed tool call       |
 | `anthropic/messages_nonstreaming.json` | A complete message object                                                |
