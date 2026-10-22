@@ -29,8 +29,10 @@ action as a button or link. No stripe on any side.
 
 **Attention strip** (top of Connections, Dashboard): a neutral surface band — full hairline `--line` border,
 `--radius-card`, `--surface` fill, no tint, padding 10px 16px. On the left a 15px alert icon in the worst tone and
-`N need attention` (600, 14px). Then one wrapping line of text buttons, one per item — a 6px tone dot, the name in
-`--ink` 500, the reason in `--muted` (`weekly limit reached, resets in 1h 30m`, `at 92%`) — separated by 24px gaps. No
+`N need attention` (600, 14px). Then one scrolling row of text buttons — a 6px tone dot, the name in
+`--ink` 500, the reason in `--muted` (`weekly limit reached, resets in 1h 30m`, `at 92%`) — separated by 16px gaps.
+The row is the shared attention ticker: it runs left to right without a seam, pauses while the pointer or the
+keyboard is on it, and under `prefers-reduced-motion` stands still and reads as a row scrolled by hand. No
 pill fills and no icon tiles; danger dot for limit reached, warn for near limit and for the unpriced item; hover lifts
 the reason to `--ink`. An item is a button that opens what it names. On the Dashboard the items name the accounts that
 need attention — a sign-in that expired, a window that is full, a window that is nearly full — and open the connection

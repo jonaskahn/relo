@@ -6,7 +6,7 @@ requires: [data-rows, status-and-banners, motion]
 
 # Dashboard
 
-1. **The attention band**: the accounts that need an operator, read before the figures.
+1. **The attention band**: the accounts that need an operator on one scrolling row, read before the figures.
 2. **One row of six KPI tiles** (see `data-rows`): requests, success rate, paid spend, tokens, latency, ready accounts.
    Two a row on a phone, three on a tablet, six on a wide screen.
 3. **One row, two columns**: the **Routing Universe** on the wider two thirds, a narrow third beside it holding the
