@@ -580,7 +580,8 @@
 		</KpiTile>
 	</div>
 
-	<!-- The map takes the wider half; the trend and the token mix stack beside it. -->
+	<!-- The map takes the wider half; the trend and the token mix stack beside it.
+	     The map needs room for its two rails, so a phone reads the figures alone. -->
 	<div
 		class="grid min-w-0 grid-cols-1 gap-[var(--grid-gap)] xl:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]"
 	>
@@ -594,7 +595,7 @@
 			{refreshedAt}
 			onrefresh={loadTunnel}
 			onadd={() => goto('/connections?add=1')}
-			class="min-w-0"
+			class="min-w-0 max-sm:hidden"
 		/>
 
 		<div class="flex min-w-0 flex-col gap-[var(--grid-gap)]">
