@@ -116,7 +116,7 @@
 	}
 
 	const limit = 8;
-	const canToggle = !query && totalRows > limit;
+	const canToggle = $derived(!query && totalRows > limit);
 </script>
 
 <div class="flex flex-wrap items-end justify-between gap-3">
