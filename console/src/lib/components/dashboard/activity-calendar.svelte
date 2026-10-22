@@ -96,7 +96,7 @@
 						{@const cell = week[day]}
 						{#if today === '' || cell.key <= today}
 							<span
-								class="h-2.5 w-full rounded-[2px]"
+								class="h-2.5 w-full rounded-[3px]"
 								style="background:{HEAT_FILLS[cell.level]}"
 								role="img"
 								aria-label={shortDay(cell.key) +
@@ -130,7 +130,7 @@
 		<div class="mt-2 flex items-center justify-end gap-1.5 text-xs text-muted-foreground">
 			<span>{$t('ui.pages.usagePage.heatmapLess')}</span>
 			{#each HEAT_FILLS as fill (fill)}
-				<span class="size-2.5 rounded-[3px]" style="background:{fill}" aria-hidden="true"></span>
+				<span class="size-2.5 rounded-[4px]" style="background:{fill}" aria-hidden="true"></span>
 			{/each}
 			<span>{$t('ui.pages.usagePage.heatmapMore')}</span>
 		</div>
