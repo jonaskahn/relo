@@ -28,8 +28,8 @@ still need Git Bash or WSL.
 dialog with the command for the channel that installed it (shell, PowerShell,
 npm, or Homebrew), or with every command when the channel cannot be detected;
 the dialog always offers the GitHub release page. A stable build follows the
-appcast, and a prerelease build follows the public releases feed so it sees
-the next beta. Point GitHub Pages at the
+appcast, and a prerelease build follows the release catalog's newest beta,
+falling back to the public releases feed. Point GitHub Pages at the
 `gh-pages` branch once in the repository
 settings.
 

@@ -1,6 +1,6 @@
 // Package updates reports whether a newer Relo build is published: a stable
 // build follows the Sparkle appcast, and a prerelease build follows the
-// releases feed so it can see the next beta.
+// release catalog's newest beta, falling back to the releases feed.
 package updates
 
 import (
@@ -27,8 +27,12 @@ const (
 	// DefaultTTL is how long one check is reused before Relo reads the
 	// feed again.
 	DefaultTTL = 6 * time.Hour
+	// BetaTTL is how long a prerelease build reuses a check. It matches the
+	// dashboard's 30-second poll, so every refresh asks the catalog for the
+	// newest beta while a burst of clients still shares one read.
+	BetaTTL = 30 * time.Second
 	// DefaultReleasesURL is the public releases feed a prerelease build
-	// follows, because the appcast carries only stable releases.
+	// falls back to when the catalog cannot be read.
 	DefaultReleasesURL = "https://github.com/jonaskahn/relo/releases.atom"
 	maxFeedBytes       = 1 << 20
 	fetchTimeout       = 10 * time.Second
@@ -123,20 +127,58 @@ func (c *Checker) Status(ctx context.Context) Status {
 	// The feed is read without the lock, so one slow fetch never stacks
 	// every caller of the console behind it.
 	status := statusBase(c)
-	body, err := c.fetch()(ctx, c.feedURL())
-	if err == nil {
-		c.applyFeed(&status, body)
+	// A beta follows the catalog's latest_beta: CI writes it on every beta
+	// publish, so it names the newest beta without waiting for the feed. The
+	// releases feed remains the fallback when the catalog cannot be read.
+	if !isPrerelease(c.Current) || !c.applyBetaCatalog(ctx, &status) {
+		body, err := c.fetch()(ctx, c.feedURL())
+		if err == nil {
+			c.applyFeed(&status, body)
+		}
+		c.attachManifest(ctx, &status)
 	}
-	c.attachManifest(ctx, &status)
 	c.storeStatus(status, now)
 	return status
 }
 
 func (c *Checker) ttl() time.Duration {
-	if c == nil || c.TTL <= 0 {
+	if c == nil {
 		return DefaultTTL
 	}
-	return c.TTL
+	if c.TTL > 0 {
+		return c.TTL
+	}
+	if isPrerelease(c.Current) {
+		return BetaTTL
+	}
+	return DefaultTTL
+}
+
+// applyBetaCatalog reports whether the catalog named a latest beta. The status
+// keeps the feed's current version and installer either way.
+func (c *Checker) applyBetaCatalog(ctx context.Context, status *Status) bool {
+	catalog, err := c.catalog(ctx)
+	if err != nil {
+		return false
+	}
+	latest := strings.TrimPrefix(strings.TrimSpace(catalog.LatestBeta), "v")
+	if latest == "" {
+		return false
+	}
+	status.Latest = latest
+	status.Available = Newer(latest, c.Current)
+	if !status.Available {
+		return true
+	}
+	release, found := catalog.find(latest)
+	if !found {
+		return true
+	}
+	if page := strings.TrimSpace(release.Page); page != "" {
+		status.URL = page
+	}
+	c.applyCatalogRelease(status, release)
+	return true
 }
 
 func (c *Checker) attachManifest(ctx context.Context, status *Status) {
@@ -151,6 +193,10 @@ func (c *Checker) attachManifest(ctx context.Context, status *Status) {
 	if !found {
 		return
 	}
+	c.applyCatalogRelease(status, release)
+}
+
+func (c *Checker) applyCatalogRelease(status *Status, release manifestRelease) {
 	status.Notes = release.Notes
 	status.Page = release.Page
 	status.Downloads = downloadsFor(release.Files, runtime.GOOS, runtime.GOARCH)
