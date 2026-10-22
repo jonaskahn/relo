@@ -4,11 +4,16 @@ name: Publish Releases
 # beta publish and an edited changelog both refresh it. The catalog is rebuilt
 # from the API rather than from the event payload because it carries every
 # release, not only the one that fired this run.
+#
+# Also callable (workflow_call) so the beta lane refreshes the catalog in the
+# same run: a release created with GITHUB_TOKEN does not fire another
+# workflow's release event, so an event-only trigger would never see a beta.
 on:
   release:
     types:
       - published
       - edited
+  workflow_call:
   workflow_dispatch:
 
 permissions:

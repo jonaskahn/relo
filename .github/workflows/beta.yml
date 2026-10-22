@@ -183,6 +183,16 @@ jobs:
               --target "$SHA"
           fi
 
+  catalog:
+    name: Publish the release catalog
+    needs: [release]
+    # A release made with GITHUB_TOKEN does not trigger the release event that
+    # usually refreshes gh-pages/releases.json, so the beta lane calls the same
+    # workflow directly. The catalog's latest_beta is what a beta build reads.
+    uses: ./.github/workflows/publish-releases.yml
+    permissions:
+      contents: write
+
   npm:
     name: Publish npm beta
     needs: [gate, release]
