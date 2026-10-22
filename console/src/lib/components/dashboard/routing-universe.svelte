@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import type { Snippet } from 'svelte';
+	import { fade } from 'svelte/transition';
 	import { t } from 'svelte-i18n';
 
 	import Button from '$lib/components/ui/button.svelte';
@@ -9,6 +10,7 @@
 	import RailLabel from './rail-label.svelte';
 	import RouteTunnel from './route-tunnel.svelte';
 	import RoutingUniverseList from './routing-universe-list.svelte';
+	import { reducedMotion } from '$lib/card-layout-motion';
 	import { ageOf } from '$lib/format';
 	import {
 		MIN_TUNNEL_WIDTH,
@@ -94,6 +96,11 @@
 
 	// A card too narrow for two rails draws the rails as lists instead of a map.
 	const narrow = $derived(width > 0 && width < MIN_TUNNEL_WIDTH);
+	// A window that carried nothing says so in place of the map, so the card keeps
+	// its shape and the traffic that arrives later slides into it.
+	const empty = $derived(tunnel.agents.length === 0 && tunnel.connections.length === 0);
+	const FADE_MS = 160;
+	const FADE_OUT_MS = 120;
 </script>
 
 <div class={cn('section-surface flex flex-col p-4 sm:p-5', className)}>
@@ -140,14 +147,20 @@
 					{$t('ui.pages.providersPage.header.addProvider')}
 				</Button>
 			</div>
-		{:else if tunnel.agents.length === 0 && tunnel.connections.length === 0}
-			<p
-				class="flex flex-1 items-center justify-center py-8 text-center text-sm text-muted-foreground"
-			>
-				{$t('ui.pages.dashboard.universeNoTraffic')}
-			</p>
 		{:else if narrow}
-			<RoutingUniverseList {tunnel} />
+			<div class="relative flex min-w-0 flex-1 flex-col">
+				{#if empty}
+					<p
+						class="flex flex-1 items-center justify-center py-8 text-center text-sm text-muted-foreground"
+						in:fade={{ duration: reducedMotion() ? 0 : FADE_MS }}
+						out:fade={{ duration: reducedMotion() ? 0 : FADE_OUT_MS }}
+					>
+						{$t('ui.pages.dashboard.universeNoTraffic')}
+					</p>
+				{:else}
+					<RoutingUniverseList {tunnel} />
+				{/if}
+			</div>
 		{:else}
 			<div class="mb-2 flex items-center justify-between gap-3">
 				<RailLabel icon="device-desktop" label={$t('ui.pages.dashboard.universeClients')} />
@@ -155,10 +168,18 @@
 			</div>
 			<div
 				bind:clientHeight={height}
-				class="canvas min-w-0 flex-1"
+				class="canvas relative min-w-0 flex-1"
 				style="min-height: {tunnelHeight(tunnel)}px"
 			>
-				{#if width > 0}
+				{#if empty}
+					<p
+						class="absolute inset-0 flex items-center justify-center px-4 text-center text-sm text-muted-foreground"
+						in:fade={{ duration: reducedMotion() ? 0 : FADE_MS }}
+						out:fade={{ duration: reducedMotion() ? 0 : FADE_OUT_MS }}
+					>
+						{$t('ui.pages.dashboard.universeNoTraffic')}
+					</p>
+				{:else if width > 0}
 					<RouteTunnel {tunnel} {width} {height} {live} />
 				{/if}
 			</div>
@@ -178,5 +199,13 @@
 		background-size: 20px 20px;
 		border-radius: var(--radius-panel);
 		overflow: hidden;
+		/* The canvas grows with the traffic it holds, and eases there. */
+		transition: min-height 400ms cubic-bezier(0.2, 0.8, 0.2, 1);
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.canvas {
+			transition: none;
+		}
 	}
 </style>

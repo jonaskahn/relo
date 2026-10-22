@@ -119,7 +119,7 @@ export interface TunnelStroke {
 	hub: TunnelPoint;
 }
 
-/** The tile a node's mark sits in. */
+/** The tile a node's mark sits in, measured from the node's own origin. */
 export interface TunnelTile {
 	x: number;
 	y: number;
@@ -128,10 +128,10 @@ export interface TunnelTile {
 	radius: number;
 }
 
-/** The pill a node stands as: its box, its mark, its name and its count. */
+/** The pill a node stands as: its box, its mark, its name and the count. The pill is drawn at
+ *  the node's own origin, so the group carries the place and the pill the shape. */
 export interface TunnelPill {
-	x: number;
-	y: number;
+	/** The pill's width, from its left edge to its right. */
 	width: number;
 	height: number;
 	/** The corner the pill's radius gives it. */
@@ -140,24 +140,26 @@ export interface TunnelPill {
 	tile: TunnelTile;
 	/** The mark the node wears, and where it sits. */
 	mark: TunnelPoint & { size: number };
-	/** Where the name starts. */
+	/** Where the name starts, measured from the pill's left edge. */
 	textX: number;
-	/** Where the count starts, inside its chip. */
+	/** Where the count starts, measured from the pill's left edge. */
 	countX: number;
 	/** The chip the count wears. */
 	countChip: { x: number; y: number; width: number; height: number; radius: number };
-	/** The baseline the name and the count share. */
+	/** The baseline the name and the count share, measured from the pill's top edge. */
 	baseline: number;
 }
 
-/** Where one node stands: its pill, its name, and the line it rides. */
+/** Where one node stands: the pill, the name, and the line it rides. */
 export interface TunnelPlacement {
 	node: TunnelNode;
+	/** Where the node stands on the canvas: the origin its group is drawn at. */
+	at: TunnelPoint;
 	/** The pill the node stands as. */
 	pill: TunnelPill;
 	/** The name as it is drawn, cut to the room the rail has. */
 	text: string;
-	/** The line the node rides. */
+	/** The line the node rides, in the canvas's own coordinates. */
 	stroke: TunnelStroke;
 }
 
@@ -423,26 +425,23 @@ function row(options: RowOptions): TunnelPlacement {
 	const chipWidth = 2 * CHIP_PAD + countWidth;
 	const width = 2 * PILL_PAD + TILE + PILL_GAP + nameWidth + CHIP_GAP + chipWidth;
 	const x = options.side === 'left' ? options.edge - width : options.edge;
-	const baseline = options.y + 4;
-	const chipX = x + PILL_PAD + TILE + PILL_GAP + nameWidth + CHIP_GAP;
+	const chipX = PILL_PAD + TILE + PILL_GAP + nameWidth + CHIP_GAP;
 	const pill: TunnelPill = {
-		x,
-		y: options.y - PILL_HEIGHT / 2,
 		width,
 		height: PILL_HEIGHT,
 		radius: PILL_RADIUS,
-		tile: { x: x + PILL_PAD, y: options.y - TILE / 2, size: TILE, radius: TILE_RADIUS },
-		mark: { x: x + PILL_PAD + TILE / 2, y: options.y, size: MARK },
-		textX: x + PILL_PAD + TILE + PILL_GAP,
+		tile: { x: PILL_PAD, y: PILL_HEIGHT / 2 - TILE / 2, size: TILE, radius: TILE_RADIUS },
+		mark: { x: PILL_PAD + TILE / 2, y: PILL_HEIGHT / 2, size: MARK },
+		textX: PILL_PAD + TILE + PILL_GAP,
 		countX: chipX + CHIP_PAD,
 		countChip: {
 			x: chipX,
-			y: options.y - CHIP_HEIGHT / 2,
+			y: PILL_HEIGHT / 2 - CHIP_HEIGHT / 2,
 			width: chipWidth,
 			height: CHIP_HEIGHT,
 			radius: CHIP_HEIGHT / 2
 		},
-		baseline
+		baseline: PILL_HEIGHT / 2 + 4
 	};
 	const from = {
 		x: options.side === 'left' ? options.edge + LINE_GAP : options.edge - LINE_GAP,
@@ -455,6 +454,7 @@ function row(options: RowOptions): TunnelPlacement {
 	};
 	return {
 		node: options.node,
+		at: { x, y: options.y - PILL_HEIGHT / 2 },
 		pill,
 		text,
 		stroke: { from, flat, hub: options.hub }

@@ -1,6 +1,9 @@
 <script lang="ts">
+	import { fade } from 'svelte/transition';
 	import { t } from 'svelte-i18n';
 
+	import AnimatedNumber from '$lib/components/ui/animated-number.svelte';
+	import { reducedMotion } from '$lib/card-layout-motion';
 	import TunnelMark from './tunnel-mark.svelte';
 	import { tunnelGeometry, type RouteTunnel, type TunnelPlacement } from '$lib/route-tunnel';
 
@@ -19,6 +22,15 @@
 	let { tunnel, width, height, live = false }: Props = $props();
 
 	const geometry = $derived(tunnelGeometry(tunnel, { width, height }));
+
+	// A node that joins a rail fades in and one that leaves fades out. The map's shape
+	// moves in place: a pill slides to its row and its line redraws into it, so new
+	// traffic never lands as a jump.
+	const JOIN_MS = 240;
+	const LEAVE_MS = 160;
+
+	const formatCount = (value: number) => String(Math.floor(value));
+	const formatTotal = (value: number) => Math.round(value).toLocaleString();
 
 	// The destination of a new route pulses once, the way a live event lights the line it
 	// took. The first route the card draws is not an event, so it does not pulse.
@@ -53,10 +65,13 @@
 		<path
 			class="leg"
 			d={leg.path}
+			style="d: path('{leg.path}')"
 			fill="none"
 			stroke="var(--accent-200)"
 			stroke-width={leg.width}
 			stroke-linecap="round"
+			in:fade={{ duration: reducedMotion() ? 0 : JOIN_MS }}
+			out:fade={{ duration: reducedMotion() ? 0 : LEAVE_MS }}
 		/>
 	{/each}
 
@@ -65,6 +80,7 @@
 		<path
 			class="route-line"
 			d={geometry.active.path}
+			style="d: path('{geometry.active.path}')"
 			fill="none"
 			stroke="var(--accent)"
 			stroke-width="3"
@@ -74,6 +90,7 @@
 			class="route-flow"
 			class:route-moving={live}
 			d={geometry.active.path}
+			style="d: path('{geometry.active.path}')"
 			fill="none"
 			stroke-width="3"
 			stroke-linecap="round"
@@ -81,50 +98,64 @@
 	{/if}
 
 	{#each geometry.agents as placement (placement.node.id)}
-		{@render node(placement)}
+		<g
+			class="node"
+			transform="translate({placement.at.x} {placement.at.y})"
+			in:fade={{ duration: reducedMotion() ? 0 : JOIN_MS }}
+			out:fade={{ duration: reducedMotion() ? 0 : LEAVE_MS }}
+		>
+			{@render pill(placement)}
+		</g>
 	{/each}
 
 	{#each geometry.connections as placement (placement.node.id)}
-		{@render node(placement)}
+		<g
+			class="node"
+			transform="translate({placement.at.x} {placement.at.y})"
+			in:fade={{ duration: reducedMotion() ? 0 : JOIN_MS }}
+			out:fade={{ duration: reducedMotion() ? 0 : LEAVE_MS }}
+		>
+			{@render pill(placement)}
+		</g>
 	{/each}
 
 	<!-- Relo: the hub every route passes through. -->
-	<g>
+	<g class="hub" transform="translate({geometry.hub.x} {geometry.hub.y})">
 		<rect
-			x={geometry.hub.x}
-			y={geometry.hub.y}
+			x="0"
+			y="0"
 			width={geometry.hub.width}
 			height={geometry.hub.height}
 			rx={geometry.hub.radius}
 			fill="var(--ink)"
 		/>
 		<text
-			x={geometry.hub.x + geometry.hub.width / 2}
-			y={geometry.hub.y + 34}
+			x={geometry.hub.width / 2}
+			y="34"
 			text-anchor="middle"
 			font-size="13"
 			font-weight="700"
 			fill="var(--canvas)">Relo</text
 		>
 		<line
-			x1={geometry.hub.x + geometry.hub.width / 2 - 14}
-			y1={geometry.hub.y + 48}
-			x2={geometry.hub.x + geometry.hub.width / 2 + 14}
-			y2={geometry.hub.y + 48}
+			x1={geometry.hub.width / 2 - 14}
+			y1="48"
+			x2={geometry.hub.width / 2 + 14}
+			y2="48"
 			stroke="var(--canvas)"
 			stroke-opacity="0.35"
 			stroke-width="1"
 		/>
 		<text
 			class="hub-total mono-data"
-			x={geometry.hub.x + geometry.hub.width / 2}
-			y={geometry.hub.y + 78}
+			x={geometry.hub.width / 2}
+			y="78"
 			text-anchor="middle"
-			fill="var(--canvas)">{geometry.total.toLocaleString()}</text
+			fill="var(--canvas)"><AnimatedNumber value={geometry.total} format={formatTotal} /></text
 		>
 		<text
-			x={geometry.hub.x + geometry.hub.width / 2}
-			y={geometry.hub.y + 96}
+			x={geometry.hub.width / 2}
+			y="96"
 			text-anchor="middle"
 			font-size="11"
 			fill="var(--canvas)"
@@ -133,64 +164,62 @@
 	</g>
 </svg>
 
-{#snippet node(placement: TunnelPlacement)}
-	<g class="node">
-		<title>{placement.node.label}</title>
-		{#if pulse === placement.node.id}
-			{#key pulseKey}
-				<rect
-					class="node-halo"
-					x={placement.pill.tile.x}
-					y={placement.pill.tile.y}
-					width={placement.pill.tile.size}
-					height={placement.pill.tile.size}
-					rx={placement.pill.tile.radius}
-				/>
-			{/key}
-		{/if}
-		<rect
-			class="pill"
-			x={placement.pill.x}
-			y={placement.pill.y}
-			width={placement.pill.width}
-			height={placement.pill.height}
-			rx={placement.pill.radius}
-			fill="var(--surface)"
-			stroke="var(--line)"
-		/>
-		<rect
-			x={placement.pill.tile.x}
-			y={placement.pill.tile.y}
-			width={placement.pill.tile.size}
-			height={placement.pill.tile.size}
-			rx={placement.pill.tile.radius}
-			fill="var(--surface)"
-			stroke="var(--line)"
-		/>
-		<TunnelMark
-			markId={placement.node.markId}
-			label={placement.node.label}
-			x={placement.pill.mark.x}
-			y={placement.pill.mark.y}
-			size={placement.pill.mark.size}
-		/>
-		<text class="pill-name" x={placement.pill.textX} y={placement.pill.baseline}
-			>{placement.text}</text
-		>
-		<!-- The count wears a chip of its own, a margin off the name. -->
-		<rect
-			class="count-chip"
-			x={placement.pill.countChip.x}
-			y={placement.pill.countChip.y}
-			width={placement.pill.countChip.width}
-			height={placement.pill.countChip.height}
-			rx={placement.pill.countChip.radius}
-			fill="var(--sunken)"
-		/>
-		<text class="pill-count mono-data" x={placement.pill.countX} y={placement.pill.baseline}
-			>{placement.node.count}</text
-		>
-	</g>
+{#snippet pill(placement: TunnelPlacement)}
+	<title>{placement.node.label}</title>
+	{#if pulse === placement.node.id}
+		{#key pulseKey}
+			<rect
+				class="node-halo"
+				x={placement.pill.tile.x}
+				y={placement.pill.tile.y}
+				width={placement.pill.tile.size}
+				height={placement.pill.tile.size}
+				rx={placement.pill.tile.radius}
+			/>
+		{/key}
+	{/if}
+	<rect
+		class="pill"
+		x="0"
+		y="0"
+		width={placement.pill.width}
+		height={placement.pill.height}
+		rx={placement.pill.radius}
+		fill="var(--surface)"
+		stroke="var(--line)"
+	/>
+	<rect
+		x={placement.pill.tile.x}
+		y={placement.pill.tile.y}
+		width={placement.pill.tile.size}
+		height={placement.pill.tile.size}
+		rx={placement.pill.tile.radius}
+		fill="var(--surface)"
+		stroke="var(--line)"
+	/>
+	<TunnelMark
+		markId={placement.node.markId}
+		label={placement.node.label}
+		x={placement.pill.mark.x}
+		y={placement.pill.mark.y}
+		size={placement.pill.mark.size}
+	/>
+	<text class="pill-name" x={placement.pill.textX} y={placement.pill.baseline}
+		>{placement.text}</text
+	>
+	<!-- The count wears a chip of its own, a margin off the name. -->
+	<rect
+		class="count-chip"
+		x={placement.pill.countChip.x}
+		y={placement.pill.countChip.y}
+		width={placement.pill.countChip.width}
+		height={placement.pill.countChip.height}
+		rx={placement.pill.countChip.radius}
+		fill="var(--sunken)"
+	/>
+	<text class="pill-count mono-data" x={placement.pill.countX} y={placement.pill.baseline}
+		><AnimatedNumber value={placement.node.count} format={formatCount} /></text
+	>
 {/snippet}
 
 <style>
@@ -211,29 +240,38 @@
 	   number reads apart from the name beside it. */
 	.count-chip {
 		pointer-events: none;
+		transition: width 400ms cubic-bezier(0.2, 0.8, 0.2, 1);
 	}
 
 	.hub-total {
 		font-size: 14px;
 	}
 
-	/* The pill sits on the recessed canvas, so it needs the lift a card has. */
+	/* The pill sits on the recessed canvas, so it needs the lift a card has. Its width
+	   follows the count it wears, so it grows with the number rather than jumping. */
 	.pill {
 		filter: drop-shadow(0 1px 2px var(--shadow));
+		transition: width 400ms cubic-bezier(0.2, 0.8, 0.2, 1);
 	}
 
-	/* A line that takes more traffic thickens instead of jumping, and a line that joins
-	   a rail fades in with the node it belongs to. */
+	/* A line that takes more traffic thickens instead of jumping, and it redraws into
+	   the row its node moved to. */
 	.leg {
-		transition: stroke-width 200ms ease-out;
-		animation: tunnel-in 240ms ease-out;
+		transition:
+			stroke-width 200ms ease-out,
+			d 400ms cubic-bezier(0.2, 0.8, 0.2, 1);
 	}
 
-	/* The live route is a line of dots that travels along the path the newest request
+	/* The newest route is a line of dots that travels along the path the newest request
 	   took. It runs while the tail runs, and stops where the tail stops. */
 	.route-flow {
 		stroke: var(--surface);
 		stroke-dasharray: 0.1 12;
+		transition: d 400ms cubic-bezier(0.2, 0.8, 0.2, 1);
+	}
+
+	.route-line {
+		transition: d 400ms cubic-bezier(0.2, 0.8, 0.2, 1);
 	}
 
 	.route-moving {
@@ -246,17 +284,15 @@
 		}
 	}
 
+	/* A node that takes another row slides there, so the map takes new traffic without
+	   jumping. */
 	.node {
-		animation: tunnel-in 240ms ease-out;
+		transition: transform 400ms cubic-bezier(0.2, 0.8, 0.2, 1);
 	}
 
-	@keyframes tunnel-in {
-		from {
-			opacity: 0;
-		}
-		to {
-			opacity: 1;
-		}
+	/* Relo stands in the middle of the map, and moves with the rows it gathers. */
+	.hub {
+		transition: transform 400ms cubic-bezier(0.2, 0.8, 0.2, 1);
 	}
 
 	/* A live event lights the line it took and leaves a halo that expands off the
@@ -290,6 +326,16 @@
 
 		.node-halo {
 			display: none;
+		}
+
+		.leg,
+		.route-flow,
+		.route-line,
+		.node,
+		.hub,
+		.pill,
+		.count-chip {
+			transition: none;
 		}
 	}
 </style>
