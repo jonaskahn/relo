@@ -5,8 +5,9 @@
 	import { HEAT_FILLS, shortDay, type HeatCell } from '$lib/usage-charts';
 
 	// HeatmapCard is the range as a compact calendar: weekdays across the top,
-	// one row per Monday-first week, and the day of the month in every cell. The
-	// fill is the activity ladder, so a quiet day is as visible as a busy one.
+	// one row per Monday-first week, a month name where a week opens a new one,
+	// and the day of the month in every cell. The fill is the activity ladder,
+	// so a quiet day is as visible as a busy one.
 	interface Props {
 		weeks: HeatCell[][];
 	}
@@ -44,6 +45,21 @@
 			})
 		)
 	);
+	// monthMarks names the week that opens a new month, so the gutter reads as
+	// a calendar rather than seven anonymous rows.
+	const monthMarks = $derived.by(() => {
+		let previous = '';
+		return weeks.map((week) => {
+			const key = week[0]?.key;
+			if (!key) return '';
+			const date = new Date(key + 'T00:00:00Z');
+			if (Number.isNaN(date.getTime())) return '';
+			const label = date.toLocaleDateString(undefined, { month: 'short', timeZone: 'UTC' });
+			if (label === previous) return '';
+			previous = label;
+			return label;
+		});
+	});
 
 	function dayNumber(key: string): string {
 		const match = /^\d{4}-\d{2}-(\d{2})$/.exec(key);
@@ -68,18 +84,24 @@
 		<p class="mb-3 min-h-5 text-sm font-medium text-ink tabular-nums">{readout}</p>
 		<div class="overflow-x-auto pb-1">
 			<div
-				class="mx-auto grid w-fit grid-cols-7 gap-1"
+				class="grid w-full items-center justify-items-center gap-1"
+				style="grid-template-columns:2.75rem repeat(7,minmax(0,1fr))"
 				role="group"
 				aria-label={$t('ui.pages.usagePage.heatmapTitle') + ' · ' + readout}
 			>
+				<span aria-hidden="true"></span>
 				{#each weekdays as weekday, day (day)}
 					<span class="text-center text-xs text-muted-foreground" aria-hidden="true">{weekday}</span
 					>
 				{/each}
-				{#each weeks as week (week[0]?.key ?? '')}
+				{#each weeks as week, index (week[0]?.key ?? '')}
+					<span
+						class="flex items-center justify-self-start text-[0.6875rem] font-medium text-muted-foreground"
+						aria-hidden="true">{monthMarks[index]}</span
+					>
 					{#each week as cell (cell.key)}
 						<span
-							class="flex size-6 items-center justify-center rounded-[5px] text-[0.6875rem] font-medium tabular-nums transition-[filter] hover:brightness-95 {cell.level ===
+							class="flex aspect-square w-full max-w-7 min-w-0 items-center justify-center rounded-[5px] text-[0.6875rem] font-medium tabular-nums transition-[filter] hover:brightness-95 {cell.level ===
 							0
 								? 'border border-line'
 								: ''}"
