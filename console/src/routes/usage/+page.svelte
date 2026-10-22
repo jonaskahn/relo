@@ -690,12 +690,11 @@
 	const tokenDonut = $derived(donutSegments(tokenShares));
 	const tokenDonutTotal = $derived(tokenShares.reduce((sum, share) => sum + share.value, 0));
 	// donut lays the spend shares end to end around one turn, and heatWeeks
-	// folds the trend's own days into Monday-first week columns, so neither
-	// chart needs a read of its own.
+	// reads every day the range returned so the calendar keeps real dates.
 	const donut = $derived(donutSegments(spendShares));
 	const donutTotal = $derived(spendShares.reduce((sum, share) => sum + share.value, 0));
 	const heatWeeks = $derived(
-		heatmapCells(trendDays.map((row) => ({ key: row.Key, value: Number(row.Requests) })))
+		heatmapCells(daily.map((row) => ({ key: row.Key, value: Number(row.Requests) })))
 	);
 	const chartOptions = $derived(
 		CHART_METRICS.map((metric): { value: ChartMetric; label: string; icon: IconName } => ({

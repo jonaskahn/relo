@@ -4,8 +4,9 @@
 	import { formatCount } from '$lib/format';
 	import { HEAT_FILLS, shortDay, type HeatCell } from '$lib/usage-charts';
 
-	// HeatmapCard folds the range into Monday-first weeks, so a rhythm that
-	// spans months still reads as one grid.
+	// HeatmapCard is the range as a calendar: weekdays down the side, one
+	// column per Monday-first week, and the day of the month in every cell. The
+	// fill is the activity ladder, so a quiet day is as visible as a busy one.
 	interface Props {
 		weeks: HeatCell[][];
 	}
@@ -32,27 +33,79 @@
 		}
 		return formatCount(total) + ' ' + $t('ui.pages.usagePage.unitRequests');
 	});
+	const weekdays = $derived(
+		Array.from({ length: 7 }, (_, day) =>
+			new Date(Date.UTC(2026, 8, 28 + day)).toLocaleDateString(undefined, {
+				weekday: 'short',
+				timeZone: 'UTC'
+			})
+		)
+	);
+	const monthMarks = $derived.by(() => {
+		const marks = new Map<number, string>();
+		let previous = '';
+		for (const [index, week] of weeks.entries()) {
+			const key = week[0]?.key;
+			if (!key) continue;
+			const date = new Date(key + 'T00:00:00Z');
+			if (Number.isNaN(date.getTime())) continue;
+			const label = date.toLocaleDateString(undefined, { month: 'short', timeZone: 'UTC' });
+			if (label !== previous) {
+				marks.set(index, label);
+				previous = label;
+			}
+		}
+		return marks;
+	});
+	const columns = $derived('2.25rem repeat(' + weeks.length + ', 1.75rem)');
+	const minWidth = $derived(weeks.length * 1.75 + 2.25 + weeks.length * 0.25);
+
+	function dayNumber(key: string): string {
+		const match = /^\d{4}-\d{2}-(\d{2})$/.exec(key);
+		return match ? String(Number(match[1])) : '';
+	}
+
+	function cellInk(level: HeatCell['level']): string {
+		if (level >= 3) return 'var(--on-accent)';
+		if (level > 0) return 'var(--accent-ink)';
+		return 'var(--muted)';
+	}
 </script>
 
 <div class="section-surface p-4 sm:p-5">
 	<div class="mb-3 flex flex-wrap items-center justify-between gap-3">
 		<h2 class="section-heading">{$t('ui.pages.usagePage.heatmapTitle')}</h2>
+		<p class="text-xs text-muted-foreground">{$t('ui.pages.usagePage.unitRequests')}</p>
 	</div>
 	{#if weeks.length === 0}
 		<p class="mt-2 text-sm text-muted-foreground">{$t('ui.pages.usagePage.empty')}</p>
 	{:else}
-		<p class="mb-2 min-h-5 text-sm font-medium text-ink tabular-nums">{readout}</p>
-		<div
-			class="flex gap-1 overflow-x-auto pb-1"
-			role="img"
-			aria-label={$t('ui.pages.usagePage.heatmapTitle') + ' · ' + readout}
-		>
-			{#each weeks as week (week[0]?.key ?? '')}
-				<div class="flex shrink-0 flex-col gap-1">
-					{#each week as cell (cell.key)}
+		<p class="mb-3 min-h-5 text-sm font-medium text-ink tabular-nums">{readout}</p>
+		<div class="overflow-x-auto pb-1">
+			<div
+				class="grid gap-1"
+				style="grid-template-columns:{columns};min-width:{minWidth}rem"
+				role="group"
+				aria-label={$t('ui.pages.usagePage.heatmapTitle') + ' · ' + readout}
+			>
+				<span aria-hidden="true"></span>
+				{#each weeks as week, index (week[0]?.key ?? '')}
+					<span class="min-w-0 truncate text-[0.6875rem] text-muted-foreground" aria-hidden="true"
+						>{monthMarks.get(index) ?? ''}</span
+					>
+				{/each}
+				{#each weekdays as weekday, day (weekday)}
+					<span class="flex items-center text-[0.6875rem] text-muted-foreground" aria-hidden="true"
+						>{weekday}</span
+					>
+					{#each weeks as week (week[0]?.key ?? '')}
+						{@const cell = week[day]}
 						<span
-							class="size-3 rounded-[4px] {cell.level === 0 ? 'border border-line' : ''}"
-							style="background:{HEAT_FILLS[cell.level]}"
+							class="flex size-7 items-center justify-center rounded-[6px] text-[0.6875rem] font-medium tabular-nums transition-[filter] hover:brightness-95 {cell.level ===
+							0
+								? 'border border-line'
+								: ''}"
+							style="background:{HEAT_FILLS[cell.level]};color:{cellInk(cell.level)}"
 							role="img"
 							aria-label={shortDay(cell.key) +
 								': ' +
@@ -65,13 +118,13 @@
 								' ' +
 								$t('ui.pages.usagePage.unitRequests')}
 							onmouseenter={() => (hoveredKey = cell.key)}
-							onmouseleave={() => (hoveredKey = '')}
-						></span>
+							onmouseleave={() => (hoveredKey = '')}>{dayNumber(cell.key)}</span
+						>
 					{/each}
-				</div>
-			{/each}
+				{/each}
+			</div>
 		</div>
-		<div class="mt-2 flex items-center justify-end gap-1.5 text-xs text-muted-foreground">
+		<div class="mt-3 flex items-center justify-end gap-1.5 text-xs text-muted-foreground">
 			<span>{$t('ui.pages.usagePage.heatmapLess')}</span>
 			{#each HEAT_FILLS as fill (fill)}
 				<span
