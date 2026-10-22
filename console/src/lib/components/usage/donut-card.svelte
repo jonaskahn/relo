@@ -42,10 +42,10 @@
 				<span>{readout}</span>
 			{/if}
 		</div>
-		<div class="grid grid-cols-1 items-center gap-4 sm:grid-cols-[9rem_minmax(0,1fr)]">
+		<div class="flex flex-1 flex-col items-center gap-4 sm:flex-row">
 			<svg
 				viewBox="0 0 140 140"
-				class="mx-auto h-36 w-36 max-w-full shrink-0"
+				class="h-40 w-40 max-w-full shrink-0"
 				role="img"
 				aria-label={$t(titleKey) + ' · ' + readout}
 			>
@@ -88,31 +88,30 @@
 					>
 				{/if}
 			</svg>
-			<ul class="grid min-w-0 grid-cols-1 gap-x-4 gap-y-1.5 sm:grid-cols-2">
+			<ul class="grid w-full min-w-0 grid-cols-1 gap-x-4 gap-y-2 sm:grid-cols-2">
 				{#each segments as segment, index (segment.key)}
 					{@const caption = captionOf(segment.key)}
 					<li
-						class="flex min-w-0 items-center gap-2 text-sm"
+						class="grid min-w-0 grid-cols-[10px_minmax(0,1fr)_auto] items-baseline gap-x-2.5 text-sm"
 						role="img"
 						aria-label={caption + ': ' + segment.share.toFixed(1) + '% · ' + valueOf(segment.value)}
 						onmouseenter={() => (hoveredKey = segment.key)}
 						onmouseleave={() => (hoveredKey = '')}
 					>
 						<span
-							class="size-2.5 shrink-0 rounded-[4px]"
+							class="size-2.5 rounded-[4px]"
 							style="background:{donutFill(index)}"
 							aria-hidden="true"
 						></span>
-						<span
-							class="min-w-0 flex-1 truncate"
-							title={caption !== segment.key ? segment.key : undefined}>{caption}</span
+						<span class="min-w-0 truncate" title={caption !== segment.key ? segment.key : undefined}
+							>{caption}</span
 						>
-						<span class="shrink-0 text-xs text-muted-foreground tabular-nums" aria-hidden="true"
+						<span class="text-xs text-muted-foreground tabular-nums" aria-hidden="true"
 							>{segment.share.toFixed(0)}%</span
 						>
-						<span class="shrink-0 font-medium text-foreground tabular-nums"
-							>{valueOf(segment.value)}</span
-						>
+						<span class="col-span-2 col-start-2 text-xs text-muted-foreground">
+							<span class="font-medium text-foreground tabular-nums">{valueOf(segment.value)}</span>
+						</span>
 					</li>
 				{/each}
 			</ul>

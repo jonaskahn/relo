@@ -35,7 +35,7 @@
 	{:else}
 		<svg
 			viewBox="0 0 640 84"
-			class="h-24 w-full"
+			class="h-44 w-full sm:h-52"
 			preserveAspectRatio="none"
 			role="img"
 			aria-label={$t('ui.pages.usagePage.tokenMixTitle')}
@@ -100,7 +100,7 @@
 			{/each}
 		</svg>
 	{/if}
-	<ul class="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
+	<ul class="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
 		<li class="inline-flex items-center gap-1.5">
 			<span
 				class="inline-block size-2 rounded-sm"

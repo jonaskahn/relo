@@ -51,7 +51,7 @@
 		<div class="min-w-0">
 			<h2 id="usage-share-title" class="section-heading">
 				{$t('ui.pages.usagePage.shareTitle', {
-					values: { metric: metricLabel.toLowerCase(), group: groupLabel.toLowerCase() }
+					values: { metric: metricLabel, group: groupLabel.toLowerCase() }
 				})}
 			</h2>
 			<p class="mt-1 text-xs text-muted-foreground">
@@ -72,16 +72,16 @@
 		<p class="text-sm text-muted-foreground">{$t('ui.pages.usagePage.shareEmpty')}</p>
 	{:else}
 		<div
-			class="flex h-7 gap-0.5 overflow-hidden rounded-control bg-sunken"
+			class="flex h-7 gap-0.5 overflow-hidden rounded-control bg-sunken p-0.5"
 			role="img"
 			aria-label={$t('ui.pages.usagePage.shareTitle', {
-				values: { metric: metricLabel.toLowerCase(), group: groupLabel.toLowerCase() }
+				values: { metric: metricLabel, group: groupLabel.toLowerCase() }
 			})}
 		>
 			{#each segments as segment, index (segment.key)}
 				<span
-					class="min-w-[3px] first:rounded-s-control last:rounded-e-control"
-					style="flex:{segment.value};background:{donutFill(index)}"
+					class="min-w-[3px] rounded-[2px]"
+					style="flex:{segment.share};background:{donutFill(index)}"
 					title={labelOf(segment) +
 						': ' +
 						formatValue(segment.value, metricValue) +
