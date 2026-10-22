@@ -502,6 +502,24 @@ func zenChatStream(w http.ResponseWriter, _ zenAttempt) {
 	}, "\n"))
 }
 
+// zenChatLengthStream answers one streamed Chat Completions turn the way a
+// runaway does: text flowing until an output limit ends the turn.
+func zenChatLengthStream(w http.ResponseWriter, _ zenAttempt) {
+	w.Header().Set("Content-Type", "text/event-stream")
+	_, _ = io.WriteString(w, strings.Join([]string{
+		`data: {"choices":[{"index":0,"delta":{"role":"assistant","content":""}}]}`,
+		``,
+		`data: {"choices":[{"index":0,"delta":{"content":"an answer that kept flowing"}}]}`,
+		``,
+		`data: {"choices":[{"index":0,"delta":{},"finish_reason":"length"}],` +
+			`"usage":{"prompt_tokens":12,"completion_tokens":32768}}`,
+		``,
+		`data: [DONE]`,
+		``,
+		``, //nolint
+	}, "\n"))
+}
+
 // zenResponses answers one streamed Responses turn.
 func zenResponsesStream(w http.ResponseWriter, _ zenAttempt) {
 	w.Header().Set("Content-Type", "text/event-stream")
@@ -673,6 +691,43 @@ func TestZenFreeServesACompleteAnswerFromAStreamOnlyGateway(t *testing.T) {
 		}
 		if !strings.Contains(string(body), "OK") || !strings.Contains(string(body), "data: [DONE]") {
 			t.Fatalf("body = %s, want the relayed frames", body)
+		}
+	})
+}
+
+// TestZenFreeTruncatesLegibly covers the turn the runaway session made: a
+// Responses client that names no output ceiling, a gateway that ends the
+// streamed chat turn on finish_reason: length. The client must end on
+// response.incomplete — not response.completed — with the max_output_tokens
+// details, and the wire request must carry the catalog's default ceiling,
+// because no fact layer described this model either.
+func TestZenFreeTruncatesLegibly(t *testing.T) {
+	gateway := newZenGateway(t, zenChatLengthStream)
+	daemon := startZenFreeDaemon(t, gateway.URL(), zenFreeModel{ID: "beam-free"})
+
+	response := send(t, daemon.dataPlane, "/v1/responses", dataPlaneToken, `{"model":"beam-free","stream":true,"input":"hi"}`)
+	defer func() { _ = response.Body.Close() }()
+	if response.StatusCode != http.StatusOK {
+		t.Fatalf("status = %d, want 200", response.StatusCode)
+	}
+	body, err := io.ReadAll(response.Body)
+	if err != nil {
+		t.Fatalf("read stream: %v", err)
+	}
+
+	t.Run("the client answers a truncated turn as incomplete", func(t *testing.T) {
+		if !strings.Contains(string(body), "event: response.incomplete") {
+			t.Fatalf("stream = %s, want the terminal event to name the truncation", body)
+		}
+		if !strings.Contains(string(body), `"incomplete_details":{"reason":"max_output_tokens"}`) {
+			t.Fatalf("stream = %s, want the max_output_tokens reason", body)
+		}
+	})
+
+	t.Run("the wire carried the catalog default ceiling", func(t *testing.T) {
+		attempt := gateway.last
+		if ceiling, _ := attempt.body["max_tokens"].(float64); ceiling != float64(catalog.DefaultMaxOutput) {
+			t.Fatalf("max_tokens = %v, want the %d default for a fact-less model", attempt.body["max_tokens"], catalog.DefaultMaxOutput)
 		}
 	})
 }
