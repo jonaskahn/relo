@@ -4,7 +4,7 @@ BINARY   := relo
 BACKEND  := daemon
 CONSOLE := console
 NPM      := $(CURDIR)/packaging/npm
-VERSION ?= 0.1.6
+VERSION ?= 0.1.7
 MACOS_MIN_VERSION ?= 12.0
 COMMIT  ?= $(shell git rev-parse --short HEAD 2>/dev/null || echo none)
 LDFLAGS := -s -w -X github.com/jonaskahn/relo/internal/cli.version=$(VERSION) -X github.com/jonaskahn/relo/internal/cli.commit=$(COMMIT)
