@@ -2,8 +2,7 @@
 	import { t } from 'svelte-i18n';
 
 	import Icon, { type IconName } from '$lib/components/ui/icon.svelte';
-	import { metricLabelKey, type MetricValue } from '$lib/usage-metrics';
-	import { metricValueOf, type ChartMetric } from '$lib/usage-charts';
+	import { metricLabelKey, metricSeriesPoint, type MetricValue } from '$lib/usage-metrics';
 	import type { UsageRollupRow } from '$lib/types';
 
 	// MetricCards is the chosen figures at the top of the overview. The page
@@ -12,10 +11,11 @@
 	interface Props {
 		cards: MetricValue[];
 		days: UsageRollupRow[];
+		planDays?: UsageRollupRow[];
 		sparklineNote?: string;
 	}
 
-	let { cards, days, sparklineNote = '' }: Props = $props();
+	let { cards, days, planDays = [], sparklineNote = '' }: Props = $props();
 
 	const ICONS: Record<string, IconName> = {
 		requests: 'list',
@@ -40,65 +40,36 @@
 		duration_max: 'clock'
 	};
 
-	const SERIES: Record<string, ChartMetric | null> = {
-		requests: 'requests',
-		successes: 'requests',
-		errors: 'errors',
-		success_rate: 'requests',
-		error_rate: 'requests',
-		tokens_input: 'tokens',
-		tokens_output: 'tokens',
-		tokens_total: 'tokens',
-		cache_read: 'tokens',
-		cache_write: 'tokens',
-		spend: 'spend',
-		plan_usage: null,
-		duration_avg: 'latency',
-		duration_max: 'latency'
-	};
-
 	function cardLabel(card: MetricValue, unit: string): string {
 		return card.unitKey ? card.exact + ' ' + unit : card.exact;
 	}
 
-	function points(card: MetricValue): number[] {
-		const metric = SERIES[card.id];
-		if (!metric) return [];
-		return days.map((row) => {
-			if (card.id === 'successes') return Math.max(0, Number(row.Requests) - Number(row.Errors));
-			if (card.id === 'success_rate') {
-				return Number(row.Requests) > 0
-					? (Number(row.Requests) - Number(row.Errors)) / Number(row.Requests)
-					: 0;
-			}
-			if (card.id === 'error_rate') {
-				return Number(row.Requests) > 0 ? Number(row.Errors) / Number(row.Requests) : 0;
-			}
-			if (card.id === 'tokens_input') return Math.max(0, Number(row.InputTokens));
-			if (card.id === 'tokens_output') return Math.max(0, Number(row.OutputTokens));
-			if (card.id === 'cache_read') return Math.max(0, Number(row.CacheReadTokens));
-			if (card.id === 'cache_write') return Math.max(0, Number(row.CacheWriteTokens));
-			if (card.id === 'duration_max') return Math.max(0, Number(row.DurationMaxMs));
-			return metricValueOf(row, metric);
-		});
+	function points(card: MetricValue): Array<number | null> {
+		const planByDay = new Map(planDays.map((row) => [row.Key, Number(row.CostMicros)]));
+		return days.map((row) => metricSeriesPoint(card.id, row, planByDay.get(row.Key) ?? 0));
 	}
 
-	function hasSeries(card: MetricValue): boolean {
-		return (
-			card.id !== 'plan_usage' && card.id !== 'spend_per_request' && card.id !== 'duration_max'
-		);
+	function drawable(series: Array<number | null>): boolean {
+		const values = series.filter((value): value is number => value !== null);
+		return values.some((value) => value > 0) && values.length > 1;
 	}
 
-	function sparkPath(values: number[]): string {
+	function sparkPath(values: Array<number | null>): string {
 		if (values.length < 2) return '';
-		const max = Math.max(1, ...values);
-		return values
-			.map((value, index) => {
-				const x = (index / (values.length - 1)) * 104;
-				const y = 40 - (value / max) * 34;
-				return (index === 0 ? 'M' : 'L') + x.toFixed(1) + ' ' + y.toFixed(1);
-			})
-			.join(' ');
+		const max = Math.max(1, ...values.map((value) => value ?? 0));
+		let path = '';
+		let drawing = false;
+		for (const [index, value] of values.entries()) {
+			if (value === null) {
+				drawing = false;
+				continue;
+			}
+			const x = (index / (values.length - 1)) * 104;
+			const y = 40 - (value / max) * 34;
+			path += (drawing ? 'L' : 'M') + x.toFixed(1) + ' ' + y.toFixed(1);
+			drawing = true;
+		}
+		return path;
 	}
 </script>
 
@@ -137,7 +108,7 @@
 						</p>
 					{/if}
 				</div>
-				{#if hasSeries(card) && series.length > 1}
+				{#if drawable(series)}
 					<svg
 						class="hidden h-11 w-24 shrink-0 overflow-visible sm:block"
 						viewBox="0 0 104 44"

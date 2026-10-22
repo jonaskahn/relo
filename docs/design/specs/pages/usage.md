@@ -19,7 +19,8 @@ direction with a fade; the first paint mounts still. The overview opens directly
 above them. Other filter controls (38px) narrow the data.
 
 The overview combines configurable metric cards (KPI tiles per `data-rows`: 12.5px `--muted` label, `.mono-data`
-28px value, one context line, and a data sparkline where the daily series supports it), at most twelve in rows of
+28px value, one context line, and a data line for every card, drawn from the daily series of that same metric in
+the chosen range — a day with nothing to divide by breaks the line), at most twelve in rows of
 three on a wide screen, two on a tablet, and one on a phone, a 30-day trend, six more charts, and top connection and
 model lists. The charts all
 read the trend's own days, so no extra read draws them:

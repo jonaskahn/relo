@@ -145,6 +145,9 @@
 	// both ask for the recent 30 days, because a bar per day of every year is
 	// not a chart.
 	let daily = $state.raw<UsageRollupRow[]>([]);
+	// planDaily is the same days for the connections a plan covers. It lets a
+	// plan-usage card draw its own line after the API trend removed plan cost.
+	let planDaily = $state.raw<UsageRollupRow[]>([]);
 	let byProvider = $state.raw<UsageRollupRow[]>([]);
 	let byModel = $state.raw<UsageRollupRow[]>([]);
 	let summary = $state.raw<UsageSummary | null>(null);
@@ -373,6 +376,7 @@
 				modelRows,
 				rollup,
 				planProviders,
+				planTrend,
 				nonPaidProviders,
 				nonPaidTrend,
 				nonPaidModels,
@@ -395,6 +399,9 @@
 							'/activity/usage?' +
 								usageProvidersQuery({ ...filters, groupBy: 'provider' }, now, planIds)
 						)
+					: null,
+				splits && group === null && planIds.length > 0
+					? api<UsageRead>('/activity/usage?' + usageProvidersQuery(trendFilters, now, planIds))
 					: null,
 				splits
 					? api<UsageRead>(
@@ -430,6 +437,7 @@
 				byProvider = [];
 				byModel = [];
 			}
+			planDaily = planTrend?.items ?? [];
 			planByProvider = {};
 			if (scope === 'plan') {
 				// The filter names one connection a plan covers, so the whole
@@ -437,6 +445,7 @@
 				const planMicros = Number(summary?.cost_micros ?? 0);
 				spend = { apiSpendMicros: 0, planUsageMicros: planMicros, nonPaidMicros: planMicros };
 				planByProvider = { [filters.provider]: planMicros };
+				planDaily = daily;
 				summary = clearSummarySpend(summary);
 				if (wantsTrend) daily = clearRollupSpend(daily);
 				byProvider = clearRollupSpend(byProvider);
@@ -445,6 +454,7 @@
 			} else if (scope === 'local') {
 				// A local engine prices nothing that either figure counts.
 				spend = { apiSpendMicros: 0, planUsageMicros: 0, nonPaidMicros: 0 };
+				planDaily = [];
 				summary = clearSummarySpend(summary);
 				if (wantsTrend) daily = clearRollupSpend(daily);
 				byProvider = clearRollupSpend(byProvider);
@@ -461,6 +471,7 @@
 						group === 'day' ? (nonPaidGroups?.items ?? []) : (nonPaidTrend?.items ?? []);
 					daily = subtractRollupSpend(daily, removed);
 				}
+				planDaily = planTrend?.items ?? [];
 				if (group === null) {
 					byProvider = subtractRollupSpend(byProvider, nonPaidRows);
 					byModel = subtractRollupSpend(byModel, nonPaidModels?.items ?? []);
@@ -478,12 +489,14 @@
 					planUsageMicros: 0,
 					nonPaidMicros: 0
 				};
+				planDaily = [];
 			}
 			lastLoadedMs = now;
 		} catch (error) {
 			failure = error instanceof Error ? error.message : String(error);
 			groups = [];
 			daily = [];
+			planDaily = [];
 			byProvider = [];
 			byModel = [];
 			summary = null;
@@ -657,6 +670,9 @@
 	// whatever range the page is showing. A window wider than the chart holds
 	// shares its columns, so every total stays exact.
 	const trendDays = $derived(bucketDays(daily));
+	// The plan cards need the same day grain after the API trend dropped plan
+	// cost, so they read the plan rollup's own days.
+	const planDays = $derived(bucketDays(planDaily));
 	// The four overview charts all read the trend's own days, so no extra read
 	// is needed to draw them.
 	const mixPoints = $derived(tokenMixSeries(trendDays));
@@ -924,6 +940,7 @@
 						<MetricCards
 							{cards}
 							days={trendDays}
+							{planDays}
 							sparklineNote={filters.range === 'all'
 								? $t('ui.pages.usagePage.sparklineWindow')
 								: ''}
