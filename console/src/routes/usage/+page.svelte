@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { t } from 'svelte-i18n';
+	import { page } from '$app/state';
 	import type { TransitionConfig } from 'svelte/transition';
 
 	import { api } from '$lib/api';
@@ -14,14 +15,15 @@
 	import IconAction from '$lib/components/ui/icon-action.svelte';
 	import Input from '$lib/components/ui/input.svelte';
 	import NativeSelect from '$lib/components/ui/native-select.svelte';
-	import CompareCard from '$lib/components/usage/compare-card.svelte';
 	import DonutCard from '$lib/components/usage/donut-card.svelte';
 	import GroupTable from '$lib/components/usage/group-table.svelte';
 	import HeatmapCard from '$lib/components/usage/heatmap-card.svelte';
+	import InsightCards from '$lib/components/usage/insight-cards.svelte';
 	import LatencyCard from '$lib/components/usage/latency-card.svelte';
 	import MetricCards from '$lib/components/usage/metric-cards.svelte';
 	import RankTable from '$lib/components/usage/rank-table.svelte';
 	import ReliabilityCard from '$lib/components/usage/reliability-card.svelte';
+	import ShareCard from '$lib/components/usage/share-card.svelte';
 	import TokenMixCard from '$lib/components/usage/token-mix-card.svelte';
 	import TrendCard from '$lib/components/usage/trend-card.svelte';
 	import { Tabs } from 'bits-ui';
@@ -38,7 +40,6 @@
 	import { formatCost, formatTimestamp, formatTokens, formatTokensExact } from '$lib/format';
 	import {
 		CHART_METRICS,
-		barRows,
 		bucketDays,
 		donutSegments,
 		heatmapCells,
@@ -76,6 +77,18 @@
 		type UsageSummary,
 		type UsageTab
 	} from '$lib/usage-filters';
+	import {
+		defaultSort,
+		parseSort,
+		searchUsageRows,
+		shareSegments,
+		sortParam,
+		sortUsageRows,
+		usageInsights,
+		type UsageListRow,
+		type UsageSort,
+		type UsageSortKey
+	} from '$lib/usage-list';
 	import {
 		chosenMetrics,
 		metricLabelKey,
@@ -164,6 +177,14 @@
 	let spend = $state<SpendSplit>({ apiSpendMicros: 0, planUsageMicros: 0, nonPaidMicros: 0 });
 	let planByProvider = $state<Record<string, number>>({});
 
+	// The grouped list narrows and orders the rows already read. The address
+	// carries the query and sort, while expansion and Show all stay transient.
+	let listQuery = $state('');
+	let listSort = $state<UsageSort>(defaultSort('day'));
+	let listShowAll = $state(false);
+	let expandedKeys = $state<Set<string>>(new Set());
+	let shareMetric = $state<'requests' | 'tokens' | 'spend' | 'errors'>('spend');
+
 	// The account list is the one of the chosen connection, so a filter never
 	// offers an account that belongs to a different one.
 	const accountOptions = $derived(
@@ -171,6 +192,98 @@
 			? accounts.filter((account) => account.provider_id === filters.provider)
 			: accounts
 	);
+
+	const listRows = $derived.by<UsageListRow[]>(() => {
+		if (!groupTab) return [];
+		return groups.map((row) => ({
+			key: row.Key,
+			row,
+			label: groupCaption(row.Key),
+			id: groupTitle(row.Key) ?? row.Key,
+			searchText: tab === 'account' ? providerLabelOf(accountProvider(row.Key)) : undefined,
+			spend: spendReadout(row, tab === 'provider')
+		}));
+	});
+	const filteredListRows = $derived(searchUsageRows(listRows, listQuery));
+	const orderedListRows = $derived(sortUsageRows(filteredListRows, listSort));
+	const visibleListRows = $derived(
+		listQuery || listShowAll ? orderedListRows : orderedListRows.slice(0, 8)
+	);
+	const insights = $derived(usageInsights(listRows, 'spend'));
+	const shares = $derived(shareSegments(listRows, shareMetric));
+	// The share caption states the figure for the metric not being shared.
+	const shareTotal = $derived(shares.reduce((sum, segment) => sum + segment.value, 0));
+	const shareOptions = $derived(
+		(
+			[
+				['requests', 'chart.requests', 'list'],
+				['tokens', 'chart.tokens', 'sparkles'],
+				['spend', spendLabel(), 'currency-dollar'],
+				['errors', 'chart.errors', 'circle-alert']
+			] as const
+		).map(([value, label, icon]) => ({
+			value,
+			label: label.startsWith('chart.') ? $t('ui.pages.usagePage.' + label) : label,
+			icon
+		}))
+	);
+
+	function accountProvider(id: string): string {
+		return accounts.find((account) => account.id === id)?.provider_id ?? '';
+	}
+
+	function spendLabel(): string {
+		return tab === 'provider'
+			? $t('ui.pages.usagePage.estimatedValue')
+			: $t('ui.pages.usagePage.metric.spend');
+	}
+
+	function formatShareValue(
+		value: number,
+		metric: 'requests' | 'tokens' | 'spend' | 'errors'
+	): string {
+		if (metric === 'spend') return formatCost(value);
+		if (metric === 'tokens') return formatTokens(value);
+		return Math.round(value).toLocaleString();
+	}
+
+	// The address names the local query and sort so a reload keeps the list.
+	// Expansion and the row limit are not address state.
+	function writeListAddress() {
+		const url = new URL(window.location.href);
+		if (listQuery.trim()) url.searchParams.set('q', listQuery);
+		else url.searchParams.delete('q');
+		url.searchParams.set('sort', sortParam(listSort));
+		window.history.replaceState(null, '', url);
+	}
+
+	function resetListState() {
+		listQuery = '';
+		listSort = defaultSort(tab === 'overview' ? 'day' : tab);
+		listShowAll = false;
+		expandedKeys = new Set();
+		if (tab !== 'overview') shareMetric = 'spend';
+	}
+
+	function chooseListSort(key: UsageSortKey) {
+		listSort =
+			listSort.key === key
+				? { key, descending: !listSort.descending }
+				: { key, descending: key !== 'name' };
+		writeListAddress();
+	}
+
+	function chooseListQuery(query: string) {
+		listQuery = query;
+		writeListAddress();
+	}
+
+	function toggleRow(key: string) {
+		const next = new Set(expandedKeys);
+		if (next.has(key)) next.delete(key);
+		else next.add(key);
+		expandedKeys = next;
+	}
 
 	async function loadOptions() {
 		try {
@@ -377,6 +490,7 @@
 		tabDir = tabDirection(USAGE_TABS, tab, next);
 		tabbed = true;
 		tab = next;
+		resetListState();
 		void load();
 	}
 
@@ -396,6 +510,7 @@
 		if (!isUsageRange(next)) return;
 		if (next === filters.range) return;
 		filters.range = next;
+		expandedKeys = new Set();
 		void load();
 	}
 
@@ -406,11 +521,13 @@
 			const held = accounts.find((account) => account.id === filters.account);
 			if (held && held.provider_id !== next) filters.account = '';
 		}
+		expandedKeys = new Set();
 		void load();
 	}
 
 	function chooseStatus(next: UsageStatusFilter) {
 		filters.status = next;
+		expandedKeys = new Set();
 		void load();
 	}
 
@@ -430,6 +547,7 @@
 			origin: '',
 			status: ''
 		};
+		expandedKeys = new Set();
 		void load();
 	}
 
@@ -513,11 +631,6 @@
 	// The retried card is hidden from the overview; the picker and the config
 	// keep offering it, so an operator's stored choice is untouched.
 	const cards = $derived(metricValues(chosen, totals).filter((card) => card.id !== 'retried'));
-	const sorted = $derived(
-		[...groups].sort(
-			(a, b) => rowSpendMicros(b, tab === 'provider') - rowSpendMicros(a, tab === 'provider')
-		)
-	);
 	// The trend reads the newest day last, so the bars walk left to right over
 	// whatever range the page is showing. A window wider than the chart holds
 	// shares its columns, so every total stays exact.
@@ -546,7 +659,6 @@
 	const heatWeeks = $derived(
 		heatmapCells(trendDays.map((row) => ({ key: row.Key, value: Number(row.Requests) })))
 	);
-	const bars = $derived(barRows(groups, chartMetric));
 	const chartOptions = $derived(
 		CHART_METRICS.map((metric): { value: ChartMetric; label: string; icon: IconName } => ({
 			value: metric,
@@ -571,6 +683,16 @@
 	const statusValue = $derived(statusParam(filters.status));
 	const groupTab = $derived(tabGroup(tab) !== null);
 	const draftValid = $derived(draft.length >= metricsMin && draft.length <= metricsMax);
+
+	$effect(() => {
+		if (groupTab) {
+			listSort = parseSort(
+				page.url.searchParams.get('sort'),
+				defaultSort(tab as Exclude<UsageTab, 'overview'>)
+			);
+			listQuery = page.url.searchParams.get('q') ?? '';
+		}
+	});
 
 	function providerLabelOf(id: string): string {
 		if (id === '') return '';
@@ -635,7 +757,9 @@
 
 <div class="page-frame page-stack pt-6">
 	<Tabs.Root value={tab} onValueChange={chooseTab} class="flex flex-col gap-5">
-		<div class="toolbar-row">
+		<div
+			class="toolbar-row [&_.toolbar-end]:flex-wrap max-sm:[&_.toolbar-end]:w-full max-sm:[&_.toolbar-start]:w-full max-sm:[&_.toolbar-center]:order-last max-sm:[&_.toolbar-center]:col-span-full"
+		>
 			<div class="toolbar-start">
 				<FilterToggle
 					open={filtersOpen}
@@ -781,7 +905,7 @@
 			<Tabs.Content value="overview" class="flex flex-col gap-5 outline-none">
 				{#if tab === 'overview'}
 					<div in:paneIntro out:paneOutro class="flex flex-col gap-5">
-						<MetricCards {cards} />
+						<MetricCards {cards} days={trendDays} />
 
 						<TrendCard
 							days={trendDays}
@@ -791,7 +915,7 @@
 							onmetric={(next) => (chartMetric = next)}
 						/>
 
-						<div class="grid gap-3 lg:grid-cols-2">
+						<div class="grid items-stretch gap-[var(--grid-gap)] lg:grid-cols-2">
 							<TokenMixCard points={mixPoints} />
 							<ReliabilityCard points={relPoints} />
 							<LatencyCard days={trendDays} points={latPoints} />
@@ -816,7 +940,7 @@
 							<HeatmapCard weeks={heatWeeks} />
 						</div>
 
-						<div class="grid gap-3 lg:grid-cols-2">
+						<div class="grid items-stretch gap-[var(--grid-gap)] lg:grid-cols-2">
 							<RankTable
 								titleKey="ui.pages.usagePage.topProviders"
 								rows={topProviders}
@@ -885,22 +1009,47 @@
 										onmetric={(next) => (chartMetric = next)}
 									/>
 								{:else}
-									<CompareCard
-										{bars}
-										metric={chartMetric}
-										metricLabel={chartMetricLabel}
-										options={chartOptions}
-										captionOf={groupCaption}
-										titleOf={groupTitle}
-										onmetric={(next) => (chartMetric = next)}
+									<ShareCard
+										segments={shares}
+										total={formatShareValue(shareTotal, shareMetric)}
+										metricLabel={$t(
+											shareMetric === 'spend'
+												? 'ui.pages.usagePage.metric.spend'
+												: 'ui.pages.usagePage.chart.' + shareMetric
+										)}
+										metricValue={shareMetric}
+										options={shareOptions}
+										formatValue={formatShareValue}
+										groupLabel={$t(
+											tab === 'provider'
+												? 'ui.pages.usagePage.tabProvider'
+												: tab === 'model'
+													? 'ui.pages.usagePage.tabModel'
+													: tab === 'account'
+														? 'ui.pages.usagePage.tabAccount'
+														: 'ui.pages.usagePage.tabClient'
+										)}
+										onmetric={(metric) => (shareMetric = metric)}
 									/>
 								{/if}
 
+								<InsightCards {insights} shareLabel={spendLabel()} />
+
 								<GroupTable
-									rows={sorted}
-									captionOf={groupCaption}
-									titleOf={groupTitle}
-									spendOf={(row) => spendReadout(row, tab === 'provider')}
+									rows={visibleListRows}
+									total={donutTotal}
+									spendLabel={spendLabel()}
+									sort={listSort}
+									query={listQuery}
+									shown={visibleListRows.length}
+									totalRows={listRows.length}
+									showAll={listShowAll}
+									isDay={tab === 'day'}
+									onsort={chooseListSort}
+									onquery={chooseListQuery}
+									ontoggleall={() => (listShowAll = !listShowAll)}
+									onexpand={toggleRow}
+									expanded={expandedKeys}
 								/>
 							{/if}
 						</div>
