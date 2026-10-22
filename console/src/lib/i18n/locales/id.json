@@ -70,6 +70,7 @@
       "health": "Daemon",
       "healthRunning": "berjalan",
       "healthDown": "tidak terjangkau",
+      "latestBeta": "beta terbaru {version}",
       "updateAvailable": "Pembaruan tersedia",
       "quickAdd": "Tambah",
       "quickAddAccount": "Akun penyedia",

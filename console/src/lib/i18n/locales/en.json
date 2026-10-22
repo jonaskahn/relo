@@ -70,6 +70,7 @@
       "health": "Daemon",
       "healthRunning": "running",
       "healthDown": "unreachable",
+      "latestBeta": "latest beta {version}",
       "updateAvailable": "Update available",
       "quickAdd": "Add",
       "quickAddAccount": "Provider account",

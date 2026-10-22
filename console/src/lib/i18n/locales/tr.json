@@ -70,6 +70,7 @@
       "health": "Daemon",
       "healthRunning": "çalışıyor",
       "healthDown": "erişilemiyor",
+      "latestBeta": "en son beta {version}",
       "updateAvailable": "Güncelleme var",
       "quickAdd": "Hızlı ekleme",
       "quickAddAccount": "Sağlayıcı hesabı",

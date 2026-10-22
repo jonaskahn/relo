@@ -70,6 +70,7 @@
       "health": "데몬",
       "healthRunning": "실행 중",
       "healthDown": "연결 불가",
+      "latestBeta": "최신 베타 {version}",
       "updateAvailable": "업데이트가 있어요",
       "quickAdd": "추가",
       "quickAddAccount": "제공업체 계정",

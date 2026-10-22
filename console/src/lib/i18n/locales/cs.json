@@ -70,6 +70,7 @@
       "health": "daemon",
       "healthRunning": "běží",
       "healthDown": "nedostupný",
+      "latestBeta": "nejnovější beta {version}",
       "updateAvailable": "Je k dispozici aktualizace",
       "quickAdd": "Přidat",
       "quickAddAccount": "Účet poskytovatele",

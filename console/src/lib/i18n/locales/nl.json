@@ -70,6 +70,7 @@
       "health": "Daemon",
       "healthRunning": "actief",
       "healthDown": "onbereikbaar",
+      "latestBeta": "nieuwste bèta {version}",
       "updateAvailable": "Update beschikbaar",
       "quickAdd": "Toevoegen",
       "quickAddAccount": "Provideraccount",

@@ -70,6 +70,7 @@
       "health": "デーモン",
       "healthRunning": "実行中",
       "healthDown": "到達不可",
+      "latestBeta": "最新ベータ {version}",
       "updateAvailable": "アップデートがあります",
       "quickAdd": "追加",
       "quickAddAccount": "プロバイダーアカウント",
