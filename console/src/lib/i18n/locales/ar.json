@@ -265,6 +265,8 @@
         "universeLegend": "يوضح سُمك الخط حجم الطلبات. ويوضح الخط المنقط مسار آخر طلب.",
         "universeRequests": "الطلبات",
         "universeTotal": "{count, plural, zero {# طلب} one {# طلب} two {# طلبان} few {# طلبات} many {# طلبًا} other {# طلب}}",
+        "universeRefresh": "تحديث",
+        "universeRefreshed": "تم التحديث {age}",
         "noTraffic": "لا توجد حركة مرور خلال الـ 24 ساعة الماضية.",
         "noData": "لا توجد بيانات حتى الآن.",
         "trendRequests": "الطلبات",

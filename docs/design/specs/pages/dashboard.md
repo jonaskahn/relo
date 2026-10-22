@@ -53,6 +53,14 @@ rails as lists instead, every node with the share of the rail it carried. With n
 explanatory copy and an **Add connection** action; with connections but no traffic in the window it says the window is
 empty.
 
+The card reads the window whenever the page reads it, and it says when it last did: a caption states how old the map
+is, and an icon action reads the window again in the window the page's control selected. A read keeps the map on
+screen, so a refresh shows no spinner and empties no card.
+
+New traffic takes the map's place in place: a node that takes another row slides there, a node that joins a rail fades
+in and one that leaves fades out, the counts roll to their new figures, and the lines redraw into the rows they
+serve. A window that held no traffic says so over the map it would have drawn, so the card keeps its shape.
+
 ## Spend cards
 
 Three blocks answer what the window cost, each a recessed panel inside one card: the **API spend** block for the
@@ -64,6 +72,8 @@ connection reads as its mark, its name and what it cost.
 ## Rules
 
 - The layout stays in place; each slot shows a spinner until its data arrives.
+- The routing universe reads the window the page's control selects, states when it last read it, and takes new traffic
+  in place: no spinner, no emptied card, no jump.
 - Empty lists say what is missing; no fictitious data.
 - Doctor checks are status rows: pill, check name, result, and the fix when failing.
 - Recent requests are dense row-cards linking to the Logs detail modal: nineteen rows, scrolling inside a card that

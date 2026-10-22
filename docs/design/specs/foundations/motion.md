@@ -28,6 +28,7 @@ equalizer, and the dashboard's route flow, each only while its own state runs.
 | Routing pulse (live event)                    | about 600ms                                                                                | removed                 |
 | Tunnel line thickens (more traffic)           | stroke width 200ms ease-out, once per change                                               | no transition           |
 | Tunnel node joins a rail                      | fade in 240ms, no travel                                                                   | no transition           |
+| Tunnel takes new traffic (a refresh)          | rows slide 400ms, a joining node fades in 240ms, a leaving one fades out 160ms             | no transition           |
 | Route flow (dashboard, newest route)          | a line of dots travels the newest route, only while the live tail runs             | a plain accent line    |
 | Daemon running dot                            | 2.4s soft ring, only while running                                                         | removed                 |
 | Live-tail equalizer (logs, dashboard)         | four rounded bars pump on a staggered seamless loop, only while the tail runs              | removed                 |

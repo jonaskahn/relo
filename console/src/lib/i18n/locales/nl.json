@@ -265,6 +265,8 @@
         "universeLegend": "De dikte van de lijn toont het aantal verzoeken. De stippellijn is de route van het nieuwste verzoek.",
         "universeRequests": "verzoeken",
         "universeTotal": "{count, plural, one {# verzoek} other {# verzoeken}}",
+        "universeRefresh": "Vernieuwen",
+        "universeRefreshed": "Bijgewerkt {age}",
         "noTraffic": "Geen verkeer in de afgelopen 24 uur.",
         "noData": "Nog geen gegevens.",
         "trendRequests": "Aanvragen",

@@ -265,6 +265,8 @@
         "universeLegend": "Товщина лінії показує обсяг запитів. Пунктирна лінія — маршрут найновішого запиту.",
         "universeRequests": "запитів",
         "universeTotal": "{count, plural, one {# запит} few {# запити} many {# запитів} other {# запиту}}",
+        "universeRefresh": "Оновити",
+        "universeRefreshed": "Оновлено {age}",
         "noTraffic": "Немає трафіку за останні 24 години.",
         "noData": "Поки що немає даних.",
         "trendRequests": "Запити",

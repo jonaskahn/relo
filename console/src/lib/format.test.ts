@@ -227,6 +227,13 @@ describe('ageOf', () => {
 	it('states a fetch from the future as just now rather than a negative age', () => {
 		expect(ageOf(Date.now() + 60_000)).toContain('just');
 	});
+
+	it('ages a fetch against the clock the caller keeps', () => {
+		const read = Date.now();
+
+		expect(ageOf(read, read + 5 * 60_000)).toContain('5');
+		expect(ageOf(read, read)).toContain('just');
+	});
 });
 
 describe('formatDateTime and formatDate', () => {

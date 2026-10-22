@@ -15,7 +15,8 @@ import (
 
 // TestPublishedLimitsFollowTheOverride checks that a client's catalog receives
 // the resolved context and max output. An operator override wins over the
-// provider layer and models.dev, and a model that states neither limit omits both.
+// provider layer and models.dev, and a model that states neither limit keeps
+// the default output ceiling and no stated context.
 func TestPublishedLimitsFollowTheOverride(t *testing.T) {
 	db := testkit.OpenTestDB(t)
 	upstream := testkit.MockUpstream(t, map[string]string{})
@@ -45,8 +46,12 @@ func TestPublishedLimitsFollowTheOverride(t *testing.T) {
 	if got.ContextWindow == nil || *got.ContextWindow != overrideWindow || got.MaxOutput == nil || *got.MaxOutput != overrideOutput {
 		t.Fatalf("published = %+v, want the override limits", got)
 	}
-	if bare := published["relo-openai-bare"]; bare.ContextWindow != nil || bare.MaxOutput != nil {
-		t.Fatalf("bare = %+v, want no stated limits", bare)
+	// A model no layer describes keeps the default output ceiling, and no
+	// stated context: the ceiling is what /v1/models, the generated client
+	// catalogs, and a silent wire request all agree on.
+	if bare := published["relo-openai-bare"]; bare.ContextWindow != nil ||
+		bare.MaxOutput == nil || *bare.MaxOutput != catalog.DefaultMaxOutput {
+		t.Fatalf("bare = %+v, want only the default output ceiling", bare)
 	}
 
 	for _, kind := range []string{codingclients.FilePi, codingclients.FileOMP} {

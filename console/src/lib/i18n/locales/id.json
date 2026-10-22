@@ -265,6 +265,8 @@
         "universeLegend": "Ketebalan garis menunjukkan volume permintaan. Garis putus-putus adalah rute permintaan terbaru.",
         "universeRequests": "permintaan",
         "universeTotal": "{count, plural, one {# permintaan} other {# permintaan}}",
+        "universeRefresh": "Segarkan",
+        "universeRefreshed": "Diperbarui {age}",
         "noTraffic": "Tidak ada kemacetan dalam 24 jam terakhir.",
         "noData": "Belum ada datanya.",
         "trendRequests": "Permintaan",

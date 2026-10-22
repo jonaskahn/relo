@@ -29,7 +29,7 @@ func TestEnablePiCreatesTheCatalogAndRestoreKeepsTheFile(t *testing.T) {
 		t.Fatalf("Enable() error = %v", err)
 	}
 	merged := readFile(t, path)
-	if strings.Contains(merged, "rlo_ak_secret") || !strings.Contains(merged, "$RELO_PI_API_KEY") {
+	if strings.Contains(merged, "rlo_ak_secret") || !strings.Contains(merged, `"apiKey":"RELO_PI_API_KEY"`) {
 		t.Fatalf("catalog = %s, want the env reference and not the raw token", merged)
 	}
 	if !strings.Contains(merged, "openai") || !strings.Contains(merged, "dark") {

@@ -269,8 +269,8 @@ describe('tunnelGeometry', () => {
 		const geometry = drawn(tunnel);
 		const hub = geometry.hub;
 
-		expect(geometry.agents[0].pill.x + geometry.agents[0].pill.width).toBeLessThan(hub.x);
-		expect(geometry.connections[0].pill.x).toBeGreaterThan(hub.x + hub.width);
+		expect(geometry.agents[0].at.x + geometry.agents[0].pill.width).toBeLessThan(hub.x);
+		expect(geometry.connections[0].at.x).toBeGreaterThan(hub.x + hub.width);
 	});
 
 	it('draws every node as a pill that holds its name and its count', () => {
@@ -279,21 +279,30 @@ describe('tunnelGeometry', () => {
 
 		expect(pill?.width).toBeGreaterThan(0);
 		expect(pill?.height).toBe(36);
-		expect(pill?.textX).toBeGreaterThan(pill?.x ?? 0);
+		expect(pill?.textX).toBeGreaterThan(0);
 		expect(pill?.countX).toBeGreaterThan(pill?.textX ?? 0);
 		expect(geometry.agents.find((placement) => placement.node.id === 'client:codex')?.text).toBe(
 			'Codex'
 		);
 	});
 
+	it('draws a pill at the origin of the node that carries it', () => {
+		const geometry = drawn(tunnel);
+		const placement = geometry.agents.find((entry) => entry.node.id === 'client:codex');
+
+		expect(placement?.pill.textX).toBe(41);
+		expect(placement?.pill.countX).toBeGreaterThan(placement?.pill.textX ?? 0);
+		expect(placement?.pill.baseline).toBe(22);
+	});
+
 	it('keeps both rails clear of the hub', () => {
 		const geometry = drawn(tunnel);
 
 		for (const placement of geometry.agents) {
-			expect(placement.pill.x + placement.pill.width).toBeLessThan(geometry.hub.x);
+			expect(placement.at.x + placement.pill.width).toBeLessThan(geometry.hub.x);
 		}
 		for (const placement of geometry.connections) {
-			expect(placement.pill.x).toBeGreaterThan(geometry.hub.x + geometry.hub.width);
+			expect(placement.at.x).toBeGreaterThan(geometry.hub.x + geometry.hub.width);
 		}
 	});
 
@@ -356,7 +365,7 @@ describe('tunnelGeometry', () => {
 		);
 		const geometry = drawn(many);
 
-		const span = (geometry.agents.at(-1)?.pill.y ?? 0) - (geometry.agents[0]?.pill.y ?? 0);
+		const span = (geometry.agents.at(-1)?.at.y ?? 0) - (geometry.agents[0]?.at.y ?? 0);
 		const pitch = span / (RAIL_LIMIT - 1);
 		expect(pitch).toBeGreaterThanOrEqual(26);
 		expect(pitch).toBeLessThan(64);
@@ -378,7 +387,7 @@ describe('tunnelGeometry', () => {
 		const geometry = drawn(many);
 
 		for (const rail of [geometry.agents, geometry.connections]) {
-			const heights = rail.map((placement) => placement.pill.y);
+			const heights = rail.map((placement) => placement.at.y);
 			const gaps = heights.slice(1).map((height, index) => height - heights[index]);
 			expect(Math.min(...gaps)).toBeGreaterThanOrEqual(10);
 		}
@@ -398,8 +407,8 @@ describe('tunnelGeometry', () => {
 		);
 		const geometry = drawn(many);
 
-		const agentHeights = geometry.agents.map((placement) => placement.pill.y);
-		const connectionHeights = geometry.connections.map((placement) => placement.pill.y);
+		const agentHeights = geometry.agents.map((placement) => placement.at.y);
+		const connectionHeights = geometry.connections.map((placement) => placement.at.y);
 		expect(connectionHeights).toEqual(agentHeights);
 	});
 
@@ -448,7 +457,7 @@ describe('tunnelGeometry', () => {
 	it('spreads a short rail across the card', () => {
 		const geometry = drawn(tunnel);
 
-		const span = (geometry.agents.at(-1)?.pill.y ?? 0) - (geometry.agents[0]?.pill.y ?? 0);
+		const span = (geometry.agents.at(-1)?.at.y ?? 0) - (geometry.agents[0]?.at.y ?? 0);
 		expect(span).toBeGreaterThan(100);
 	});
 

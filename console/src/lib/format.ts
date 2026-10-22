@@ -123,10 +123,11 @@ export function parseDollars(value: string): number | null {
 }
 
 /** Renders how long ago a fetch happened, which is what a page shows beside a catalog it did not
- *  just download. */
-export function ageOf(ms: number | undefined | null): string {
+ *  just download. The clock is the caller's, so a surface that keeps its own tick reads the age
+ *  against it. */
+export function ageOf(ms: number | undefined | null, now: number = Date.now()): string {
 	if (!ms) return get(t)('ui.pages.providersPage.header.agoJustNow');
-	const diff = Math.max(0, Date.now() - ms);
+	const diff = Math.max(0, now - ms);
 	if (diff < 60_000) return get(t)('ui.pages.providersPage.header.agoJustNow');
 	if (diff < 3_600_000) {
 		return get(t)('ui.pages.providersPage.header.agoMinutes', {

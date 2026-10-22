@@ -265,6 +265,8 @@
         "universeLegend": "線の太さはリクエスト量を示します。点線は最新のリクエストの経路です。",
         "universeRequests": "リクエスト",
         "universeTotal": "{count, plural, other {# 件のリクエスト}}",
+        "universeRefresh": "更新",
+        "universeRefreshed": "{age}に更新",
         "noTraffic": "過去24時間のトラフィックはありません。",
         "noData": "まだデータがありません。",
         "trendRequests": "リクエスト",

@@ -265,6 +265,8 @@
         "universeLegend": "Tloušťka čáry ukazuje objem požadavků. Tečkovaná čára je cesta posledního požadavku.",
         "universeRequests": "požadavků",
         "universeTotal": "{count, plural, one {# požadavek} few {# požadavky} many {# požadavků} other {# požadavků}}",
+        "universeRefresh": "Obnovit",
+        "universeRefreshed": "Aktualizováno {age}",
         "noTraffic": "Za posledních 24 hodin žádný provoz.",
         "noData": "Zatím žádná data.",
         "trendRequests": "Požadavky",

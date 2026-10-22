@@ -265,6 +265,8 @@
         "universeLegend": "선의 굵기는 요청량을 나타냅니다. 점선은 최신 요청의 경로입니다.",
         "universeRequests": "요청",
         "universeTotal": "{count, plural, other {#건의 요청}}",
+        "universeRefresh": "새로고침",
+        "universeRefreshed": "{age} 업데이트",
         "noTraffic": "지난 24시간 동안 트래픽이 없어요.",
         "noData": "아직 데이터가 없어요.",
         "trendRequests": "요청",

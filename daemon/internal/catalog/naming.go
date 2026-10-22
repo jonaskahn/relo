@@ -45,6 +45,12 @@ const (
 	// DefaultContext is the window a prompt stays in the base rate at,
 	// published beside a separate 1M entry.
 	DefaultContext int64 = 200_000
+	// DefaultMaxOutput is the output ceiling a model keeps when neither the
+	// operator, the provider, nor the model index stated one. Without it the
+	// turn runs on whatever the upstream gateway quietly applies — often a
+	// 32K default a long answer truncates against. It matches the console
+	// clone dialog's suggested value.
+	DefaultMaxOutput int64 = 65_536
 	// MillionSlugSuffix distinguishes the 1M entry on clients that do not use
 	// Claude Code's bracketed context marker.
 	MillionSlugSuffix = "-1m"

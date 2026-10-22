@@ -1281,8 +1281,8 @@ func TestInboundBranches(t *testing.T) {
 		events := []inference.Event{{Kind: inference.EventTerminal, Terminal: &inference.TerminalInfo{Reason: inference.EventReasonLength}}}
 		frames := encodeEvents(t, openairesponses.NewInbound(), events)
 		last := frames[len(frames)-1]
-		if last.Name != "response.completed" {
-			t.Fatalf("last frame = %q, want the terminal response", last.Name)
+		if last.Name != "response.incomplete" {
+			t.Fatalf("last frame = %q, want the truncated response", last.Name)
 		}
 		var frame map[string]any
 		if err := json.Unmarshal([]byte(last.Data), &frame); err != nil {

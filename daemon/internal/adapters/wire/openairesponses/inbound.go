@@ -351,7 +351,13 @@ func (i *Inbound) terminalFrames(info *inference.TerminalInfo) []wire.SSEEvent {
 	if i.failure != nil {
 		return append(frames, i.failedFrame(i.failure)...)
 	}
-	return append(frames, i.frame(eventCompleted, map[string]any{"response": i.finalObject()})...)
+	// A length-truncated turn must not tell the client the response
+	// completed, so the terminal frame carries the matching event name.
+	terminal := eventCompleted
+	if i.status() == statusIncomplete {
+		terminal = eventIncomplete
+	}
+	return append(frames, i.frame(terminal, map[string]any{"response": i.finalObject()})...)
 }
 
 func (i *Inbound) failureFrames(failure *inference.ErrorInfo) []wire.SSEEvent {

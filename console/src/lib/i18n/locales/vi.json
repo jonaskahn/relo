@@ -265,6 +265,8 @@
         "universeLegend": "Độ dày đường thể hiện khối lượng yêu cầu. Đường nét đứt là tuyến của yêu cầu mới nhất.",
         "universeRequests": "yêu cầu",
         "universeTotal": "{count, plural, one {# yêu cầu} other {# yêu cầu}}",
+        "universeRefresh": "Làm mới",
+        "universeRefreshed": "Cập nhật {age}",
         "noTraffic": "Không có giao thông trong 24 giờ qua.",
         "noData": "Chưa có dữ liệu.",
         "trendRequests": "Yêu cầu",
