@@ -631,34 +631,40 @@
 			/>
 		</div>
 		<div class="flex min-w-0 flex-col gap-[var(--grid-gap)] md:col-span-2">
-			<KpiTile
-				icon="trending-up"
-				labelKey="ui.pages.dashboard.activityBusiest"
-				loading={contentLoading}
-				pending={processing}
-			>
-				<span class="mono-data text-[1.625rem] leading-none font-medium tabular-nums text-ink">
-					{activityFigures.busiest ? formatCount(activityFigures.busiest.value) : '—'}
-				</span>
-				<p class="mt-1 text-xs text-muted-foreground">
-					{activityFigures.busiest
-						? shortDay(activityFigures.busiest.key) + ' · ' + $t('ui.pages.usagePage.unitRequests')
-						: $t('ui.pages.dashboard.noData')}
-				</p>
-			</KpiTile>
-			<KpiTile
-				icon="activity"
-				labelKey="ui.pages.dashboard.activityStreak"
-				loading={contentLoading}
-				pending={processing}
-			>
-				<span class="mono-data text-[1.625rem] leading-none font-medium tabular-nums text-ink">
-					{activityFigures.streak}
-				</span>
-				<p class="mt-1 text-xs text-muted-foreground">
-					{$t('ui.pages.dashboard.activityDayUnit')}
-				</p>
-			</KpiTile>
+			<div class="min-h-0 flex-1 [&>div]:h-full">
+				<KpiTile
+					icon="trending-up"
+					labelKey="ui.pages.dashboard.activityBusiest"
+					loading={contentLoading}
+					pending={processing}
+				>
+					<span class="mono-data text-[1.625rem] leading-none font-medium tabular-nums text-ink">
+						{activityFigures.busiest ? formatCount(activityFigures.busiest.value) : '—'}
+					</span>
+					<p class="mt-1 text-xs text-muted-foreground">
+						{activityFigures.busiest
+							? shortDay(activityFigures.busiest.key) +
+								' · ' +
+								$t('ui.pages.usagePage.unitRequests')
+							: $t('ui.pages.dashboard.noData')}
+					</p>
+				</KpiTile>
+			</div>
+			<div class="min-h-0 flex-1 [&>div]:h-full">
+				<KpiTile
+					icon="activity"
+					labelKey="ui.pages.dashboard.activityStreak"
+					loading={contentLoading}
+					pending={processing}
+				>
+					<span class="mono-data text-[1.625rem] leading-none font-medium tabular-nums text-ink">
+						{activityFigures.streak}
+					</span>
+					<p class="mt-1 text-xs text-muted-foreground">
+						{$t('ui.pages.dashboard.activityDayUnit')}
+					</p>
+				</KpiTile>
+			</div>
 		</div>
 	</div>
 

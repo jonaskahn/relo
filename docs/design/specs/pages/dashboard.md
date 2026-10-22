@@ -28,12 +28,16 @@ requires: [data-rows, status-and-banners, motion]
 ## Activity
 
 One year of traffic at a glance: 53 Monday-first week columns stretched across the card, with a month abbreviation
-spanning the weeks it covers. There is no weekday gutter. Each day is a 10px-tall rounded rectangle on the shared
-four-step accent ladder; hovering a cell names the day and its request count, and the card's readout states the year's
-total at rest. The year is trailing, not the page window, so the card keeps its shape while the controls above it
-change. Today is the last filled cell and the rest of its week stays quiet. Beside the calendar, **Busiest day** states
-the year's peak request count and its date, and **Longest streak** counts the longest run of consecutive days that
-carried traffic. The row is hidden below 640px.
+spanning the weeks it covers. There is no weekday gutter. Each day is a rounded rectangle on the shared four-step
+accent ladder, stretched to fill the card's height; hovering a cell names the day and its request count, and the
+top-right chip states the year's total. At rest the readout names the range. The year is trailing, not the page
+window, so the card keeps its shape while the controls above it change. Today is the last filled cell and the rest of
+its week stays quiet. Beside the calendar, **Busiest day** states the year's peak request count and its date, and
+**Longest streak** counts the longest run of consecutive days that carried traffic; their stacked height is the
+calendar's height. The row is hidden below 640px.
+
+The header states the range on the title's row (`Oct 3 – Oct 25`) and swaps it for the hovered cell's day and count
+(`Oct 20 · 2.6k requests`); the total sits as an accent-soft chip at the header's end.
 
 ## Routing Universe
 
