@@ -12,7 +12,8 @@ requires: [data-rows, status-and-banners, motion]
 3. **One row, two columns**: the **Routing Universe** on the wider two thirds, a narrow third beside it holding the
    **seven-day trend** (bar chart, `--accent-200` history, `--accent` today) on top and the **token mix** below. The two
    charts take the room the map leaves them, so the map's height is the trend's plus the mix's. Below the wide
-   breakpoint each takes the full width.
+   breakpoint each takes the full width. The **Routing Universe** is hidden below 640px, so a phone reads the figures
+   alone.
 4. **One row, one card**: the **subscription accounts**, the accounts that need an operator, across the whole page.
 5. **One card, three blocks**: a **Spend** card that names the window's money, holding the **API spend**, **plan usage**
    and **free usage** blocks as recessed panels of its own.
@@ -46,6 +47,9 @@ under it, and a client that appears for the first time joins the rail in its own
 The map fills the card it stands in: the card gives the tunnel the height it has left, the rows spread across it, and
 the card never falls below the room its rows need. The two rails mirror each other, and a row never lands on its
 neighbour — the scattered rows always keep ten pixels of air between them.
+
+The card stands on a screen that has room for the map: below 640px the page hides it, and the trend and the token mix
+take the width the map would have had.
 
 Each node wears the mark of its own side: a coding client wears the harness's own mark, never its vendor's. A card
 wide enough for two rails draws them side by side and holds ten nodes a side; a card too narrow for that draws the two
