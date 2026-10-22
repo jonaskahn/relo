@@ -29,7 +29,7 @@ DECLARATIONS = [
     ("console/package.json", r'^\t"version": "(.+)",$', "json"),
     ('packaging/npm/package.json', r'^\t"version": "(.+)",$', "json"),
     ("console/package-lock.json", None, "json-lock"),
-    ("README.md", r"badge/version-([^)]+)-blue", "readme-badge"),
+    ("README.md", r"badge/next-([^)]+)-brightgreen", "readme-badge"),
 ]
 
 SEMVER = re.compile(r"^(\d+)\.(\d+)\.(\d+)(?:-(.+))?$")
@@ -148,7 +148,7 @@ def write(path, pattern, style, version):
         "makefile": f"VERSION ?= {version}",
         "go": f'\tversion = "{version}"',
         "json": f'\t"version": "{version}",',
-        "readme-badge": f"badge/version-{version}-blue",
+        "readme-badge": f"badge/next-{version}-brightgreen",
     }[style]
     path.write_text(re.sub(pattern, replacement, text, count=1, flags=re.MULTILINE))
 
