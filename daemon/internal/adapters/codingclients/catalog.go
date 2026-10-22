@@ -253,6 +253,15 @@ func braceKey(kind string) string {
 	return "${" + EnvKeyName(kindClient(kind)) + "}"
 }
 
+// envKeyName is the bare name of the variable one client reads its key from.
+// Pi and Oh My Pi resolve a configured key as the name of an environment
+// variable, a shell command, or a literal — never as a ${VAR} template — so a
+// template reaches the upstream as the secret itself and every request is
+// refused.
+func envKeyName(kind string) string {
+	return EnvKeyName(kindClient(kind))
+}
+
 func mergeJSON(existing string, path []string, raw string) (string, error) {
 	merged, err := spliceKey(existing, path, raw)
 	if err != nil {
@@ -288,7 +297,7 @@ func piProvider(address string, models []ModelRef, withKey bool) string {
 		`"api":"openai-completions"`,
 	}
 	if withKey {
-		fields = append(fields, `"apiKey":`+jsonString(dollarKey(FilePi)))
+		fields = append(fields, `"apiKey":`+jsonString(envKeyName(FilePi)))
 	}
 	fields = append(fields, `"models":`+piModels(models))
 	return "{" + strings.Join(fields, ",") + "}"
@@ -369,7 +378,7 @@ func idStrings(models []ModelRef) string {
 }
 
 func ompEntry(address string, models []ModelRef) string {
-	return "relo:\n  baseUrl: " + yamlQuote(address) + "\n  api: openai-completions\n  apiKey: " + yamlQuote(braceKey(FileOMP)) + "\n" + ompModels(models)
+	return "relo:\n  baseUrl: " + yamlQuote(address) + "\n  api: openai-completions\n  apiKey: " + yamlQuote(envKeyName(FileOMP)) + "\n" + ompModels(models)
 }
 
 func ompModels(models []ModelRef) string {

@@ -19,11 +19,11 @@ func TestCatalogMergeKeepsTheRestOfTheFile(t *testing.T) {
 		want     string
 		address  string
 	}{
-		{codingclients.FilePi, `{"theme":"dark","providers":{"openai":{"api":"openai"}}}` + "\n", "$RELO_PI_API_KEY", base + "/v1"},
+		{codingclients.FilePi, `{"theme":"dark","providers":{"openai":{"api":"openai"}}}` + "\n", "RELO_PI_API_KEY", base + "/v1"},
 		{codingclients.FileZCode, `{"providers":{"other":{}}}` + "\n", "$RELO_ZCODE_API_KEY", base + "/v1"},
 		{codingclients.FileClineProviders, `{"providers":{"openai":{"settings":{}}}}` + "\n", "$RELO_CLINE_API_KEY", base},
 		{codingclients.FileClineModels, "", "Relo", base},
-		{codingclients.FileOMP, "theme: dark\nproviders:\n  openai:\n    api: openai\n", "${RELO_OMP_API_KEY}", base + "/v1"},
+		{codingclients.FileOMP, "theme: dark\nproviders:\n  openai:\n    api: openai\n", "RELO_OMP_API_KEY", base + "/v1"},
 		{codingclients.FileDSH, "- id: other\n  config:\n    providers:\n      openai:\n        baseURL: http://example\n", "apiKeyEnv: RELO_DSH_API_KEY", base + "/v1"},
 		{codingclients.FileMCode, "editor: vim\n", "${RELO_MCODE_API_KEY}", base},
 		{codingclients.FileRaycast, "providers:\n  - id: openai\n    name: OpenAI\n", "Relo", base},
@@ -102,6 +102,60 @@ func TestPiAndOMPWriteResolvedLimits(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestPiAndOMPNameTheKeyVariable(t *testing.T) {
+	base := "http://127.0.0.1:10201"
+	models := []codingclients.ModelRef{{ID: "relo-openai-gpt-4o"}}
+	cases := []struct {
+		kind string
+		want string
+	}{
+		{codingclients.FilePi, "RELO_PI_API_KEY"},
+		{codingclients.FileOMP, "RELO_OMP_API_KEY"},
+	}
+	for _, testCase := range cases {
+		t.Run(testCase.kind, func(t *testing.T) {
+			merged, err := codingclients.MergeKind(testCase.kind, "", base, models)
+			if err != nil {
+				t.Fatalf("MergeKind() error = %v", err)
+			}
+			key := catalogKey(t, testCase.kind, merged)
+			if key != testCase.want {
+				t.Fatalf("apiKey = %q, want %q", key, testCase.want)
+			}
+			if strings.ContainsAny(key, "${}$") {
+				t.Fatalf("apiKey = %q, want a bare variable name", key)
+			}
+		})
+	}
+}
+
+// catalogKey reads the key one client catalog names for Relo. A client
+// resolves that value as the name of an environment variable, a shell
+// command, or a literal, so a template reaches the upstream as the secret
+// itself and every request is refused.
+func catalogKey(t *testing.T, kind, merged string) string {
+	t.Helper()
+	type provider struct {
+		APIKey string `json:"apiKey" yaml:"apiKey"`
+	}
+	var document struct {
+		Providers map[string]provider `json:"providers" yaml:"providers"`
+	}
+	switch kind {
+	case codingclients.FilePi:
+		if err := json.Unmarshal([]byte(merged), &document); err != nil {
+			t.Fatalf("parse Pi catalog: %v\n%s", err, merged)
+		}
+	case codingclients.FileOMP:
+		if err := yaml.Unmarshal([]byte(merged), &document); err != nil {
+			t.Fatalf("parse Oh My Pi catalog: %v\n%s", err, merged)
+		}
+	default:
+		t.Fatalf("kind %s has no provider catalog", kind)
+	}
+	return document.Providers["relo"].APIKey
 }
 
 type writtenLimit struct {
