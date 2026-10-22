@@ -362,6 +362,7 @@ func piModel(model ModelRef) string {
 	parts = append(parts, modelLimitFields(model, func(name string, value int64) string {
 		return `"` + name + `":` + strconv.FormatInt(value, 10)
 	})...)
+	parts = append(parts, piThinkingFields(model)...)
 	return "{" + strings.Join(parts, ",") + "}"
 }
 
@@ -395,6 +396,7 @@ func ompModels(models []ModelRef) string {
 		}) {
 			body.WriteString(field + "\n")
 		}
+		body.WriteString(ompThinkingFields(model))
 	}
 	return body.String()
 }

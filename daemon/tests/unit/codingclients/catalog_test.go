@@ -158,6 +158,189 @@ func catalogKey(t *testing.T, kind, merged string) string {
 	return document.Providers["relo"].APIKey
 }
 
+func TestOMPWritesTheThinkingLadder(t *testing.T) {
+	reasons := true
+	doesNot := false
+	toggle := true
+	cases := []struct {
+		name        string
+		model       codingclients.ModelRef
+		wantReason  bool
+		wantEfforts []string
+	}{
+		{
+			name:        "a model that reasons states its ladder",
+			model:       codingclients.ModelRef{ID: "relo-a", Reasoning: &reasons, ReasoningEfforts: []string{"high", "low"}},
+			wantReason:  true,
+			wantEfforts: []string{"low", "high"},
+		},
+		{
+			name:        "a model that does not reason carries no thinking",
+			model:       codingclients.ModelRef{ID: "relo-b", Reasoning: &doesNot},
+			wantReason:  false,
+			wantEfforts: nil,
+		},
+		{
+			name:        "a model the catalog does not know carries no thinking",
+			model:       codingclients.ModelRef{ID: "relo-c"},
+			wantReason:  false,
+			wantEfforts: nil,
+		},
+		{
+			name:        "a model that states no ladder offers the shared one",
+			model:       codingclients.ModelRef{ID: "relo-d", Reasoning: &reasons},
+			wantReason:  true,
+			wantEfforts: []string{"low", "medium", "high", "xhigh", "max"},
+		},
+		{
+			name:        "the off level is not an effort the client may name",
+			model:       codingclients.ModelRef{ID: "relo-e", Reasoning: &reasons, ReasoningEfforts: []string{"none", "low"}},
+			wantReason:  true,
+			wantEfforts: []string{"low"},
+		},
+		{
+			name:        "a model that states no usable effort carries no ladder",
+			model:       codingclients.ModelRef{ID: "relo-f", Reasoning: &reasons, ReasoningEfforts: []string{"none"}, ReasoningToggle: &toggle},
+			wantReason:  true,
+			wantEfforts: nil,
+		},
+	}
+	base := "http://127.0.0.1:10201"
+	for _, testCase := range cases {
+		t.Run(testCase.name, func(t *testing.T) {
+			merged, err := codingclients.MergeKind(codingclients.FileOMP, "", base, []codingclients.ModelRef{testCase.model})
+			if err != nil {
+				t.Fatalf("MergeKind() error = %v", err)
+			}
+			if !codingclients.KindPointsAt(codingclients.FileOMP, merged, base, []codingclients.ModelRef{testCase.model}) {
+				t.Fatalf("merged file does not point at Relo:\n%s", merged)
+			}
+			entry := catalogModel(t, codingclients.FileOMP, merged, testCase.model.ID)
+			if entry.Reasoning != testCase.wantReason {
+				t.Fatalf("reasoning = %v, want %v", entry.Reasoning, testCase.wantReason)
+			}
+			if strings.Join(entry.Efforts, ",") != strings.Join(testCase.wantEfforts, ",") {
+				t.Fatalf("efforts = %v, want %v", entry.Efforts, testCase.wantEfforts)
+			}
+			if entry.Mode != "effort" && len(entry.Efforts) > 0 {
+				t.Fatalf("mode = %q, want effort", entry.Mode)
+			}
+			if entry.DefaultLevel != "" {
+				t.Fatalf("defaultLevel = %q, want none", entry.DefaultLevel)
+			}
+		})
+	}
+}
+
+func TestPiWritesTheThinkingLevels(t *testing.T) {
+	reasons := true
+	toggle := true
+	models := []codingclients.ModelRef{
+		{ID: "relo-a", Reasoning: &reasons, ReasoningEfforts: []string{"low", "high"}},
+		{ID: "relo-b", Reasoning: &reasons, ReasoningToggle: &toggle},
+	}
+	base := "http://127.0.0.1:10201"
+	merged, err := codingclients.MergeKind(codingclients.FilePi, "", base, models)
+	if err != nil {
+		t.Fatalf("MergeKind() error = %v", err)
+	}
+	if !codingclients.KindPointsAt(codingclients.FilePi, merged, base, models) {
+		t.Fatalf("merged file does not point at Relo:\n%s", merged)
+	}
+	ladder := catalogPiLevels(t, merged, "relo-a")
+	if ladder["low"] != "low" || ladder["high"] != "high" {
+		t.Fatalf("levels = %v, want low and high offered", ladder)
+	}
+	if ladder["medium"] != nil {
+		t.Fatalf("levels = %v, want medium hidden", ladder)
+	}
+	if _, offered := ladder["off"]; offered {
+		t.Fatalf("levels = %v, want no off level", ladder)
+	}
+	toggled := catalogPiLevels(t, merged, "relo-b")
+	if toggled["off"] != "none" {
+		t.Fatalf("levels = %v, want an off level", toggled)
+	}
+}
+
+// catalogModel reads one model entry back out of a client catalog.
+func catalogModel(t *testing.T, kind, merged, id string) writtenModel {
+	t.Helper()
+	type model struct {
+		ID        string `json:"id" yaml:"id"`
+		Reasoning *bool  `json:"reasoning" yaml:"reasoning"`
+		Thinking  *struct {
+			Mode         string   `json:"mode" yaml:"mode"`
+			DefaultLevel string   `json:"defaultLevel" yaml:"defaultLevel"`
+			Efforts      []string `json:"efforts" yaml:"efforts"`
+		} `json:"thinking" yaml:"thinking"`
+	}
+	var document struct {
+		Providers map[string]struct {
+			Models []model `json:"models" yaml:"models"`
+		} `json:"providers" yaml:"providers"`
+	}
+	switch kind {
+	case codingclients.FilePi:
+		if err := json.Unmarshal([]byte(merged), &document); err != nil {
+			t.Fatalf("parse Pi catalog: %v\n%s", err, merged)
+		}
+	case codingclients.FileOMP:
+		if err := yaml.Unmarshal([]byte(merged), &document); err != nil {
+			t.Fatalf("parse Oh My Pi catalog: %v\n%s", err, merged)
+		}
+	default:
+		t.Fatalf("kind %s has no model catalog", kind)
+	}
+	for _, entry := range document.Providers["relo"].Models {
+		if entry.ID != id {
+			continue
+		}
+		written := writtenModel{Reasoning: entry.Reasoning != nil && *entry.Reasoning}
+		if entry.Thinking != nil {
+			written.Mode = entry.Thinking.Mode
+			written.Efforts = entry.Thinking.Efforts
+			written.DefaultLevel = entry.Thinking.DefaultLevel
+		}
+		return written
+	}
+	t.Fatalf("catalog has no model %q", id)
+	return writtenModel{}
+}
+
+// writtenModel is the thinking metadata one catalog entry carries.
+type writtenModel struct {
+	Reasoning    bool
+	Mode         string
+	Efforts      []string
+	DefaultLevel string
+}
+
+// catalogPiLevels reads the level map one Pi model entry carries. A level
+// the model does not take is null, which is how Pi hides it.
+func catalogPiLevels(t *testing.T, merged, id string) map[string]any {
+	t.Helper()
+	type model struct {
+		ID               string         `json:"id"`
+		ThinkingLevelMap map[string]any `json:"thinkingLevelMap"`
+	}
+	var document struct {
+		Providers map[string]struct {
+			Models []model `json:"models"`
+		} `json:"providers"`
+	}
+	if err := json.Unmarshal([]byte(merged), &document); err != nil {
+		t.Fatalf("parse Pi catalog: %v\n%s", err, merged)
+	}
+	for _, entry := range document.Providers["relo"].Models {
+		if entry.ID == id {
+			return entry.ThinkingLevelMap
+		}
+	}
+	t.Fatalf("catalog has no model %q", id)
+	return nil
+}
+
 type writtenLimit struct {
 	context    int64
 	output     int64
