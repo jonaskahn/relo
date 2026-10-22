@@ -265,6 +265,8 @@
         "universeLegend": "線條的粗細表示請求量。點線表示最新請求的路徑。",
         "universeRequests": "次請求",
         "universeTotal": "{count, plural, other {# 次請求}}",
+        "universeRefresh": "重新整理",
+        "universeRefreshed": "{age}更新",
         "noTraffic": "過去 24 小時內無流量。",
         "noData": "暫無資料。",
         "trendRequests": "請求",

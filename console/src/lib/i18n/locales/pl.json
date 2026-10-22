@@ -265,6 +265,8 @@
         "universeLegend": "Grubość linii pokazuje wolumen żądań. Kropkowana linia to ścieżka ostatniego żądania.",
         "universeRequests": "żądań",
         "universeTotal": "{count, plural, one {# żądanie} few {# żądania} many {# żądań} other {# żądania}}",
+        "universeRefresh": "Odśwież",
+        "universeRefreshed": "Zaktualizowano {age}",
         "noTraffic": "Brak ruchu w ostatnich 24 godzinach.",
         "noData": "Brak danych.",
         "trendRequests": "Żądania",

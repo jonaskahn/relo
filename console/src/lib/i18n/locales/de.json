@@ -265,6 +265,8 @@
         "universeLegend": "Die Stärke der Linie zeigt das Anfragevolumen. Die gepunktete Linie ist die Route der neuesten Anfrage.",
         "universeRequests": "Anfragen",
         "universeTotal": "{count, plural, one {# Anfrage} other {# Anfragen}}",
+        "universeRefresh": "Aktualisieren",
+        "universeRefreshed": "Aktualisiert {age}",
         "noTraffic": "Kein Traffic in den letzten 24 Stunden.",
         "noData": "Noch keine Daten.",
         "trendRequests": "Anfragen",

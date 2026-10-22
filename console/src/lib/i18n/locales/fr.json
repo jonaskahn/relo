@@ -265,6 +265,8 @@
         "universeLegend": "L'épaisseur des lignes indique le volume des requêtes. La ligne pointillée est la route de la requête la plus récente.",
         "universeRequests": "requêtes",
         "universeTotal": "{count, plural, one {# requête} many {# requêtes} other {# requêtes}}",
+        "universeRefresh": "Actualiser",
+        "universeRefreshed": "Mis à jour {age}",
         "noTraffic": "Aucun trafic au cours des dernières 24 heures.",
         "noData": "Aucune donnée pour l'instant.",
         "trendRequests": "Requêtes",

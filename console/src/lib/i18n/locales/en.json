@@ -265,6 +265,8 @@
         "universeLegend": "Line weight shows request volume. The dotted line is the newest request's route.",
         "universeRequests": "requests",
         "universeTotal": "{count, plural, one {# request} other {# requests}}",
+        "universeRefresh": "Refresh",
+        "universeRefreshed": "Updated {age}",
         "noTraffic": "No traffic in the last 24 hours.",
         "noData": "No data yet.",
         "trendsTitle": "Trends",

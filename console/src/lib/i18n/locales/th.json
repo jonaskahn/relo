@@ -265,6 +265,8 @@
         "universeLegend": "ความหนาของเส้นแสดงปริมาณคำขอ เส้นประที่เป็นเส้นทางของคำขอล่าสุด",
         "universeRequests": "คำขอ",
         "universeTotal": "{count, plural, other {# คำขอ}}",
+        "universeRefresh": "รีเฟรช",
+        "universeRefreshed": "อัปเดต {age}",
         "noTraffic": "ไม่มีการรับส่งข้อมูลใน 24 ชั่วโมงที่ผ่านมา",
         "noData": "ยังไม่มีข้อมูล",
         "trendRequests": "คำขอ",

@@ -265,6 +265,8 @@
         "universeLegend": "Lo spessore delle linee indica il volume delle richieste. La linea tratteggiata è il percorso della richiesta più recente.",
         "universeRequests": "richieste",
         "universeTotal": "{count, plural, one {# richiesta} other {# richieste}}",
+        "universeRefresh": "Aggiorna",
+        "universeRefreshed": "Aggiornato {age}",
         "noTraffic": "Nessun traffico nelle ultime 24 ore.",
         "noData": "Ancora nessun dato.",
         "trendRequests": "Richieste",

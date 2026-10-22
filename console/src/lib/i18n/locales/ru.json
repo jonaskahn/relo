@@ -265,6 +265,8 @@
         "universeLegend": "Толщина линии показывает объём запросов. Пунктирная линия — маршрут самого нового запроса.",
         "universeRequests": "запросов",
         "universeTotal": "{count, plural, one {# запрос} few {# запроса} many {# запросов} other {# запроса}}",
+        "universeRefresh": "Обновить",
+        "universeRefreshed": "Обновлено {age}",
         "noTraffic": "Нет трафика за последние 24 часа.",
         "noData": "Пока нет данных.",
         "trendRequests": "Запросы",

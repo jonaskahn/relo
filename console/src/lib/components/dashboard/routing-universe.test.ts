@@ -25,6 +25,23 @@ function markup(providers: ReturnType<typeof providerOf>[]): string {
 			providers,
 			live: false,
 			loading: false,
+			refreshedAt: 0,
+			onrefresh: async () => {},
+			onadd: () => {}
+		}
+	}).body;
+}
+
+function freshMarkup(): string {
+	return render(RoutingUniverse, {
+		props: {
+			traffic: traffic(),
+			keys: [],
+			providers: [providerOf({ id: 'openai', template_id: 'openai', label: 'OpenAI' })],
+			live: false,
+			loading: false,
+			refreshedAt: Date.now(),
+			onrefresh: async () => {},
 			onadd: () => {}
 		}
 	}).body;
@@ -48,5 +65,12 @@ describe('the routing universe', () => {
 		const html = markup([providerOf({ id: 'openai', template_id: 'openai', label: 'OpenAI' })]);
 
 		expect(html).toContain('No requests in this period');
+	});
+
+	it('states how fresh the map is and offers to read it again', () => {
+		const html = freshMarkup();
+
+		expect(html).toContain('Updated');
+		expect(html).toContain('Refresh');
 	});
 });

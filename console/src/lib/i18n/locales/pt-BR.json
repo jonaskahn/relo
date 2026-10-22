@@ -265,6 +265,8 @@
         "universeLegend": "A espessura das linhas mostra o volume de requisições. A linha pontilhada é a rota da requisição mais recente.",
         "universeRequests": "requisições",
         "universeTotal": "{count, plural, one {# requisição} other {# requisições}}",
+        "universeRefresh": "Atualizar",
+        "universeRefreshed": "Atualizado {age}",
         "noTraffic": "Sem tráfego nas últimas 24 horas.",
         "noData": "Sem dados ainda.",
         "trendRequests": "Solicitações",

@@ -265,6 +265,8 @@
         "universeLegend": "रेखा की मोटाई अनुरोधों की मात्रा दिखाती है। बिंदुदार रेखा नवीनतम अनुरोध का मार्ग है।",
         "universeRequests": "अनुरोध",
         "universeTotal": "{count, plural, one {# अनुरोध} other {# अनुरोध}}",
+        "universeRefresh": "ताज़ा करें",
+        "universeRefreshed": "{age} अद्यतन किया गया",
         "noTraffic": "पिछले 24 घंटों में कोई ट्रैफ़िक नहीं.",
         "noData": "अभी तक कोई डेटा नहीं.",
         "trendRequests": "अनुरोध",

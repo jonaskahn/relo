@@ -265,6 +265,8 @@
         "universeLegend": "El grosor de las líneas indica el volumen de solicitudes. La línea punteada es la ruta de la solicitud más reciente.",
         "universeRequests": "solicitudes",
         "universeTotal": "{count, plural, one {# solicitud} other {# solicitudes}}",
+        "universeRefresh": "Actualizar",
+        "universeRefreshed": "Actualizado {age}",
         "noTraffic": "Sin tráfico en las últimas 24 horas.",
         "noData": "Aún no hay datos.",
         "trendRequests": "Solicitudes",

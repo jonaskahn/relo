@@ -77,6 +77,9 @@
 	let dailyAll = $state.raw<UsageRollupRow[]>([]);
 	let recent = $state.raw<UsageLogRow[]>([]);
 	let activityFailed = $state('');
+	// refreshedAt is when the window's rollups were last read, so the routing
+	// universe can say how fresh its map is.
+	let refreshedAt = $state(0);
 	// live tails the request log the same way the logs page does. The choice
 	// lives in this browser so a reload keeps the last on or off.
 	let live = $state(true);
@@ -285,6 +288,29 @@
 			summaryRows = current.items ?? [];
 			clientRows = clients.items ?? [];
 			previousRows = previous?.items ?? [];
+			refreshedAt = Date.now();
+		} catch (error) {
+			activityFailed = error instanceof Error ? error.message : String(error);
+		}
+	}
+
+	// The routing universe reads the window on its own: the same two rollups
+	// the tiles read, so its rails and the figures beside it answer one
+	// question. The window is the one the control selected, so a refresh
+	// never asks for a different range than the page shows.
+	async function loadTunnel() {
+		activityFailed = '';
+		try {
+			const window = summaryWindow(summaryPeriod, Date.now());
+			const [current, clients] = await Promise.all([
+				api<{ items: UsageRollupRow[] }>(
+					'/activity/usage?group_by=provider&since_ms=' + window.start
+				),
+				api<{ items: UsageRollupRow[] }>('/activity/usage?group_by=client&since_ms=' + window.start)
+			]);
+			summaryRows = current.items ?? [];
+			clientRows = clients.items ?? [];
+			refreshedAt = Date.now();
 		} catch (error) {
 			activityFailed = error instanceof Error ? error.message : String(error);
 		}
@@ -565,6 +591,8 @@
 			{live}
 			loading={contentLoading}
 			pending={processing}
+			{refreshedAt}
+			onrefresh={loadTunnel}
 			onadd={() => goto('/connections?add=1')}
 			class="min-w-0"
 		/>

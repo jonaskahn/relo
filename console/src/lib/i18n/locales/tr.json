@@ -265,6 +265,8 @@
         "universeLegend": "Çizgi kalınlığı istek hacmini gösterir. Noktalı çizgi en son isteğin rotasıdır.",
         "universeRequests": "istek",
         "universeTotal": "{count, plural, one {# istek} other {# istek}}",
+        "universeRefresh": "Yenile",
+        "universeRefreshed": "{age} güncellendi",
         "noTraffic": "Son 24 saatte trafik yok.",
         "noData": "Henüz veri yok.",
         "trendRequests": "İstekler",

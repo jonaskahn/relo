@@ -1,12 +1,15 @@
 <script lang="ts">
+	import { onMount } from 'svelte';
 	import type { Snippet } from 'svelte';
 	import { t } from 'svelte-i18n';
 
 	import Button from '$lib/components/ui/button.svelte';
 	import Icon from '$lib/components/ui/icon.svelte';
+	import IconAction from '$lib/components/ui/icon-action.svelte';
 	import RailLabel from './rail-label.svelte';
 	import RouteTunnel from './route-tunnel.svelte';
 	import RoutingUniverseList from './routing-universe-list.svelte';
+	import { ageOf } from '$lib/format';
 	import {
 		MIN_TUNNEL_WIDTH,
 		RAIL_LIMIT,
@@ -28,6 +31,10 @@
 		live?: boolean;
 		loading?: boolean;
 		pending?: Snippet;
+		/** When the window's rollups were last read. */
+		refreshedAt: number;
+		/** Reads the window again, in the window the page shows. */
+		onrefresh: () => Promise<void>;
 		onadd: () => void;
 		class?: string;
 	}
@@ -39,9 +46,35 @@
 		live = false,
 		loading = false,
 		pending,
+		refreshedAt,
+		onrefresh,
 		onadd,
 		class: className
 	}: Props = $props();
+
+	// The caption states how fresh the map is, so a quiet window is not read as a
+	// frozen one. It ticks on its own, because a read that fails leaves the map
+	// on screen with nothing else to announce it.
+	const FRESH_TICK_MS = 30_000;
+	let now = $state(Date.now());
+	onMount(() => {
+		const timer = setInterval(() => (now = Date.now()), FRESH_TICK_MS);
+		return () => clearInterval(timer);
+	});
+	const age = $derived(ageOf(refreshedAt, now));
+
+	// The action spins while its read runs, so the operator sees the map is
+	// being read rather than wondering whether the press landed.
+	let refreshing = $state(false);
+	async function refresh() {
+		if (refreshing) return;
+		refreshing = true;
+		try {
+			await onrefresh();
+		} finally {
+			refreshing = false;
+		}
+	}
 
 	// The tunnel is drawn at the width it is given, so the names on it keep the size
 	// the card's type is. The card's own width is read once the browser has laid it out.
@@ -64,7 +97,7 @@
 </script>
 
 <div class={cn('section-surface flex flex-col p-4 sm:p-5', className)}>
-	<div class="mb-4 flex items-start justify-between gap-3">
+	<div class="mb-4 flex flex-wrap items-start justify-between gap-x-3 gap-y-2">
 		<div class="min-w-0">
 			<h2 class="section-heading flex items-center gap-2">
 				<Icon name="route" size={15} class="shrink-0 text-faint" />
@@ -72,11 +105,25 @@
 			</h2>
 			<p class="text-xs text-muted-foreground">{$t('ui.pages.dashboard.universeDesc')}</p>
 		</div>
-		{#if !loading && tunnel.total > 0}
-			<span class="mono-data shrink-0 text-[0.8125rem] text-muted-foreground">
-				{$t('ui.pages.dashboard.universeTotal', { values: { count: tunnel.total } })}
-			</span>
-		{/if}
+		<div class="ml-auto flex shrink-0 items-center gap-2">
+			{#if !loading && tunnel.total > 0}
+				<span class="mono-data text-[0.8125rem] text-muted-foreground">
+					{$t('ui.pages.dashboard.universeTotal', { values: { count: tunnel.total } })}
+				</span>
+			{/if}
+			{#if refreshedAt > 0}
+				<span class="text-xs text-muted-foreground">
+					{$t('ui.pages.dashboard.universeRefreshed', { values: { age } })}
+				</span>
+			{/if}
+			<IconAction
+				icon="refresh"
+				label={$t('ui.pages.dashboard.universeRefresh')}
+				onclick={() => void refresh()}
+				disabled={refreshing}
+				spin={refreshing}
+			/>
+		</div>
 	</div>
 	<div bind:clientWidth={width} class="flex min-w-0 flex-1 flex-col">
 		{#if loading}
