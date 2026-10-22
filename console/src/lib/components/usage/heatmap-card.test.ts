@@ -25,7 +25,7 @@ describe('the activity calendar', () => {
 		expect(html).toContain('>4</span>');
 		expect(html).toContain('var(--accent)');
 		expect(html).toContain('repeat(7,minmax(0,1fr))');
-		expect(html).toContain('aspect-square');
+		expect(html).toContain('h-6 w-full');
 		expect(html).toContain('>Sep</span>');
 		for (const weekday of ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']) {
 			expect(html).toContain('>' + weekday + '</span>');

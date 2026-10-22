@@ -101,7 +101,7 @@
 					>
 					{#each week as cell (cell.key)}
 						<span
-							class="flex aspect-square w-full max-w-7 min-w-0 items-center justify-center rounded-[5px] text-[0.6875rem] font-medium tabular-nums transition-[filter] hover:brightness-95 {cell.level ===
+							class="flex h-6 w-full min-w-0 items-center justify-center rounded-[5px] text-[0.6875rem] font-medium tabular-nums transition-[filter] hover:brightness-95 {cell.level ===
 							0
 								? 'border border-line'
 								: ''}"
