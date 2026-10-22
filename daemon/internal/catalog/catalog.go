@@ -749,6 +749,13 @@ func resolveModelWindows(res *Model, ov, pr, md FactsRecord) {
 	res.ContextWindow = RoundContextWindow(pickInt64(ov.ContextWindow, pr.ContextWindow, md.ContextWindow))
 	res.MaxInput = RoundContextWindow(pickInt64(ov.MaxInput, pr.MaxInput, md.MaxInput))
 	res.MaxOutput = pickInt64(ov.MaxOutput, pr.MaxOutput, md.MaxOutput)
+	if res.MaxOutput == nil {
+		// Every layer stayed silent on the output ceiling, so the resolved
+		// one is the default. FactSources.MaxOutput still reads empty, which
+		// is how the dam keeps pass-through for models a layer described.
+		ceiling := DefaultMaxOutput
+		res.MaxOutput = &ceiling
+	}
 }
 
 func resolveModelCapabilities(res *Model, host Provider, ov, pr, md FactsRecord) {
