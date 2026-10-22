@@ -19,7 +19,8 @@ direction with a fade; the first paint mounts still. The overview opens directly
 above them. Other filter controls (38px) narrow the data.
 
 The overview combines configurable metric cards (KPI tiles per `data-rows`: 12.5px `--muted` label, `.mono-data`
-26px value, one context line), at most twelve in rows of six, a 30-day trend, six more charts, and top connection and
+28px value, one context line, and a data sparkline where the daily series supports it), at most twelve in rows of
+three on a wide screen, two on a tablet, and one on a phone, a 30-day trend, six more charts, and top connection and
 model lists. The charts all
 read the trend's own days, so no extra read draws them:
 
@@ -38,9 +39,12 @@ read the trend's own days, so no extra read draws them:
 Hovering a bar or column updates the readout without losing the overall total. Tiles and panels wear the shared card
 hover and are not click targets.
 
-A grouped tab opens with its window chip and headline (requests, errors, tokens, API spend, plan usage), then the
-trend (day) or the comparison charts plus the group's rows. A comparison draws an SVG column chart of the groups by
-the selected metric, and then the rows. Rows are row-cards per `data-rows`, spend-ordered: identity
-and spend on the first line, a 7px `--accent` on `--accent-100` share meter, and the wrapped counters beneath —
-requests, errors (icon plus word, never colour alone), tokens in and out, cache reads and writes, average and slowest
-duration, attempts where there were any. Missing is a dash; local-engine spend is a dash, never $0.00.
+A grouped tab opens with its window chip and headline (requests, errors, tokens, API spend, plan usage), then up to
+three insight cards (highest value, highest error rate among groups with 50 or more requests, and slowest average),
+then the trend (day) or the share chart plus the group's rows. The share chart ranks the largest five groups on one
+horizontal accent strip and folds the rest into a named tail; its metric switch offers requests, tokens, spend/value,
+and errors. Rows are row-cards per `data-rows`, spend-ordered by default: identity
+and spend on the first line, a share meter, and the counters beneath — requests, errors (icon plus word, never colour
+alone), tokens, average and slowest duration. Search and sort narrow the returned rows without another read; eight
+show first and Show all reveals the rest. A row expands to input/output tokens, cache read/write, attempts, retried
+requests, slowest request, and errors. Missing is a dash; local-engine spend is a dash, never $0.00.

@@ -1407,7 +1407,15 @@
         "shareCaption": "Largest groups and everything else, out of {total}.",
         "shareMetric": "Share metric",
         "shareEmpty": "No positive value to share for this metric.",
-        "shareOther": "Other ({count})"
+        "shareOther": "Other ({count})",
+        "sortNameDesc": "Name: Z to A",
+        "sortRequestsAsc": "Fewest requests",
+        "sortErrorsAsc": "Lowest error rate",
+        "sortTokensAsc": "Fewest tokens",
+        "sortLatencyAsc": "Fastest average",
+        "sortSpendAsc": "Lowest amount",
+        "showingMatches": "Showing all {shown} matches.",
+        "sparklineWindow": "Sparklines cover the trend's most recent days."
       },
       "groupsPage": {
         "title": "Skupiny",
