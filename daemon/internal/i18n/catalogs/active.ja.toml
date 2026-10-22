@@ -668,6 +668,26 @@ other = "{{.Bundle}} をゴミ箱に入れてください"
 description = "The command to run when a removal could not be started"
 other = "Relo の削除を完了するには次を実行してください: {{.Command}}"
 
+[cli.uninstall.channel]
+description = "The installation channel the uninstall detected"
+other = "検出されたインストール: {{.Channel}}"
+
+[cli.uninstall.command]
+description = "The exact program-removal command for the detected channel"
+other = "プログラムを削除するには: {{.Command}}"
+
+[cli.uninstall.verified]
+description = "Confirmation that a path is gone after removal"
+other = "削除を確認しました: {{.Path}}"
+
+[cli.uninstall.failed]
+description = "A path that survived the removal"
+other = "まだ存在します: {{.Path}}"
+
+[cli.uninstall.self_delete]
+description = "A running Windows program scheduled for deletion after exit"
+other = "Relo の終了後、Windows がこのファイルを削除します: {{.Path}}"
+
 [tray.menu.quitting]
 description = "Tray quit action while final records are saved"
 other = "終了 — 処理中…"

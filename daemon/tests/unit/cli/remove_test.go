@@ -9,20 +9,29 @@ import (
 	"testing"
 
 	"github.com/jonaskahn/relo/internal/cli"
+	"github.com/jonaskahn/relo/internal/updates"
 )
 
 // removal records what a removal would have done, which is the only way to
-// drive these flavors without a package manager, npm, or an app bundle on the
-// test machine.
+// drive every install channel without a package manager, npm, or an app bundle
+// on the test machine.
 type removal struct {
 	spawned []string
 	removed []string
+	files   []string
 	run     []string
 	// removalsFail makes the removal itself fail while the package manager
 	// still answers that it knows the package.
-	removalsFail bool
-	knownTools   map[string]bool
-	quitAsked    bool
+	removalsFail  bool
+	knownTools    map[string]bool
+	quitAsked     bool
+	present       map[string]bool
+	goos          string
+	removeFile    func(string) error
+	setup         string
+	brewInstalled bool
+	npmRoot       string
+	running       []string
 }
 
 // report renders a message as its id followed by its data, so a test can see
@@ -30,7 +39,7 @@ type removal struct {
 func (r *removal) report(id string, data map[string]any) string {
 	rendered := id
 	for _, value := range data {
-		rendered += " " + strings.TrimSpace(strings.Join([]string{toText(value)}, ""))
+		rendered += " " + strings.TrimSpace(toText(value))
 	}
 	return rendered
 }
@@ -40,14 +49,35 @@ func toText(value any) string {
 	return text
 }
 
-// install points a remover's process seams at this recorder.
+// install points a remover's effects at this recorder.
 func (r *removal) install() cli.Remover {
+	if r.present == nil {
+		r.present = map[string]bool{}
+	}
 	return cli.Remover{
+		GOOS: r.goos,
 		LookPath: func(name string) (string, error) {
 			if r.knownTools[name] {
 				return "/usr/bin/" + name, nil
 			}
 			return "", errors.New("not found: " + name)
+		},
+		Exists: func(path string) bool { return r.present[path] },
+		SetupUninstaller: func() (string, bool) {
+			return r.setup, r.setup != ""
+		},
+		RemoveRunningProgram: func(executable string) error {
+			r.running = append(r.running, executable)
+			return nil
+		},
+		RemoveFromUserPath: func(string) error { return nil },
+		RemoveFile: func(path string) error {
+			if r.removeFile != nil {
+				return r.removeFile(path)
+			}
+			r.files = append(r.files, path)
+			delete(r.present, path)
+			return nil
 		},
 		SpawnDetached: func(name string, args ...string) error {
 			r.spawned = append(r.spawned, strings.Join(append([]string{name}, args...), " "))
@@ -56,13 +86,25 @@ func (r *removal) install() cli.Remover {
 		RunRemoval: func(_ io.Writer, name string, args ...string) error {
 			command := strings.Join(append([]string{name}, args...), " ")
 			r.run = append(r.run, command)
-			if r.removalsFail && !strings.Contains(command, "-s ") && !strings.Contains(command, "-q ") {
+			if name == "npm" && len(args) > 0 && args[0] == "uninstall" {
+				delete(r.present, r.npmRoot)
+			}
+			if name == "brew" && len(args) > 0 {
+				if args[0] == "uninstall" {
+					r.brewInstalled = false
+				}
+				if args[0] == "list" && !r.brewInstalled {
+					return errors.New("not installed")
+				}
+			}
+			if r.removalsFail && !strings.Contains(command, "-s ") && !strings.Contains(command, "-q ") && !strings.Contains(command, "list ") {
 				return errors.New("refused")
 			}
 			return nil
 		},
 		RemoveTree: func(path string) error {
 			r.removed = append(r.removed, path)
+			delete(r.present, path)
 			return nil
 		},
 		AskTrayToQuit: func() { r.quitAsked = true },
@@ -73,7 +115,7 @@ func (r *removal) install() cli.Remover {
 // relo, which is how the installed layout is reproduced.
 func npmPackage(t *testing.T) (root string, executable string) {
 	t.Helper()
-	root = t.TempDir()
+	root = filepath.Join(t.TempDir(), "node_modules", "@jonaskahn", "relo")
 	if err := os.MkdirAll(filepath.Join(root, "bin"), 0o755); err != nil {
 		t.Fatalf("create the bin directory: %v", err)
 	}
@@ -100,59 +142,87 @@ func macBundle(t *testing.T) (bundle string, executable string) {
 	return bundle, executable
 }
 
+func scriptInstall(t *testing.T, goos string) (dir, executable string) {
+	t.Helper()
+	dir = t.TempDir()
+	executable = filepath.Join(dir, "relo")
+	if goos == "windows" {
+		executable += ".exe"
+	}
+	if err := os.WriteFile(executable, []byte("binary"), 0o755); err != nil {
+		t.Fatalf("write the executable: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(dir, ".relo-install"), []byte("channel=script\n"), 0o600); err != nil {
+		t.Fatalf("write the receipt: %v", err)
+	}
+	return dir, executable
+}
+
 func TestRemoveInstalledProgram(t *testing.T) {
-	t.Run("an npm install is uninstalled by npm", func(t *testing.T) {
-		recorded := &removal{knownTools: map[string]bool{"npm": true}}
-		remover := recorded.install()
-		_, executable := npmPackage(t)
-		if err := remover.RemoveInstalledProgram(io.Discard, executable, recorded.report); err != nil {
-			t.Fatalf("RemoveInstalledProgram() error = %v", err)
+	t.Run("a shell script install deletes its binary and receipt", func(t *testing.T) {
+		_, executable := scriptInstall(t, "linux")
+		receipt := updates.ScriptReceiptPath(executable)
+		recorded := &removal{}
+		recorded.removeFile = func(path string) error {
+			recorded.files = append(recorded.files, path)
+			return os.Remove(path)
 		}
-		if len(recorded.spawned) != 1 || recorded.spawned[0] != "npm uninstall -g relo" {
-			t.Fatalf("spawned = %v, want the npm uninstall", recorded.spawned)
-		}
-	})
-
-	t.Run("a Debian package is removed by apt", func(t *testing.T) {
-		recorded := &removal{knownTools: map[string]bool{"dpkg": true, "apt-get": true}}
-		remover := recorded.install()
-		if err := remover.RemoveInstalledProgram(io.Discard, "/usr/bin/relo", recorded.report); err != nil {
-			t.Fatalf("RemoveInstalledProgram() error = %v", err)
-		}
-		if len(recorded.run) != 2 || !strings.HasSuffix(recorded.run[1], "remove -y relo") {
-			t.Fatalf("run = %v, want the dpkg question and the apt removal", recorded.run)
-		}
-	})
-
-	t.Run("an rpm package is removed by dnf", func(t *testing.T) {
-		recorded := &removal{knownTools: map[string]bool{"rpm": true, "dnf": true}}
-		remover := recorded.install()
-		if err := remover.RemoveInstalledProgram(io.Discard, "/usr/bin/relo", recorded.report); err != nil {
-			t.Fatalf("RemoveInstalledProgram() error = %v", err)
-		}
-		if !strings.HasSuffix(recorded.run[len(recorded.run)-1], "remove -y relo") {
-			t.Fatalf("run = %v, want the dnf removal", recorded.run)
-		}
-	})
-
-	t.Run("a failed package removal names the command to run", func(t *testing.T) {
-		recorded := &removal{knownTools: map[string]bool{"dpkg": true, "apt-get": true}, removalsFail: true}
-		remover := recorded.install()
 		out := &strings.Builder{}
-		err := remover.RemoveInstalledProgram(out, "/usr/bin/relo", recorded.report)
-		if !errors.Is(err, cli.ErrManualRemoval) {
-			t.Fatalf("RemoveInstalledProgram() error = %v, want the manual refusal", err)
+		if err := recorded.install().RemoveInstalledProgram(out, executable, recorded.report); err != nil {
+			t.Fatalf("RemoveInstalledProgram() error = %v", err)
 		}
-		if !strings.Contains(out.String(), "remove -y relo") {
-			t.Fatalf("out = %q, want the command to run", out.String())
+		for _, path := range []string{executable, receipt} {
+			if _, err := os.Stat(path); !os.IsNotExist(err) {
+				t.Fatalf("%s survived the script removal: %v", path, err)
+			}
+		}
+		if !strings.Contains(out.String(), "cli.uninstall.verified") {
+			t.Fatalf("out = %q, want the completed removal", out.String())
+		}
+	})
+
+	t.Run("an npm install is uninstalled by its scoped package name", func(t *testing.T) {
+		recorded := &removal{knownTools: map[string]bool{"npm": true}}
+		_, executable := npmPackage(t)
+		recorded.npmRoot = filepath.Dir(filepath.Dir(executable))
+		recorded.present = map[string]bool{recorded.npmRoot: true}
+		if err := recorded.install().RemoveInstalledProgram(io.Discard, executable, recorded.report); err != nil {
+			t.Fatalf("RemoveInstalledProgram() error = %v", err)
+		}
+		if len(recorded.run) != 1 || recorded.run[0] != "npm uninstall -g @jonaskahn/relo" {
+			t.Fatalf("run = %v, want the scoped npm removal", recorded.run)
+		}
+	})
+
+	t.Run("a Debian package prints the privileged command", func(t *testing.T) {
+		recorded := &removal{goos: "linux", knownTools: map[string]bool{"dpkg": true}}
+		out := &strings.Builder{}
+		if err := recorded.install().RemoveInstalledProgram(out, "/usr/bin/relo", recorded.report); err != nil {
+			t.Fatalf("RemoveInstalledProgram() error = %v", err)
+		}
+		if !strings.Contains(out.String(), "sudo apt remove relo") {
+			t.Fatalf("out = %q, want the apt command", out.String())
+		}
+		if len(recorded.files) != 0 || len(recorded.run) != 0 {
+			t.Fatalf("files = %v run = %v, want the package left for the operator", recorded.files, recorded.run)
+		}
+	})
+
+	t.Run("an rpm package prints the privileged command", func(t *testing.T) {
+		recorded := &removal{goos: "linux", knownTools: map[string]bool{"rpm": true}}
+		out := &strings.Builder{}
+		if err := recorded.install().RemoveInstalledProgram(out, "/usr/bin/relo", recorded.report); err != nil {
+			t.Fatalf("RemoveInstalledProgram() error = %v", err)
+		}
+		if !strings.Contains(out.String(), "sudo dnf remove relo") {
+			t.Fatalf("out = %q, want the dnf command", out.String())
 		}
 	})
 
 	t.Run("a macOS bundle deletes itself, after the tray is asked to quit", func(t *testing.T) {
-		recorded := &removal{}
-		remover := recorded.install()
 		bundle, executable := macBundle(t)
-		if err := remover.RemoveInstalledProgram(io.Discard, executable, recorded.report); err != nil {
+		recorded := &removal{present: map[string]bool{bundle: true}}
+		if err := recorded.install().RemoveInstalledProgram(io.Discard, executable, recorded.report); err != nil {
 			t.Fatalf("RemoveInstalledProgram() error = %v", err)
 		}
 		if !recorded.quitAsked {
@@ -163,44 +233,99 @@ func TestRemoveInstalledProgram(t *testing.T) {
 		}
 	})
 
-	t.Run("a bundle that cannot be deleted is reported as a move to the Trash", func(t *testing.T) {
+	t.Run("a Homebrew stable install runs brew uninstall relo", func(t *testing.T) {
+		recorded := &removal{knownTools: map[string]bool{"brew": true}, brewInstalled: true}
+		executable := filepath.Join(t.TempDir(), "Cellar", "relo", "0.1.3", "bin", "relo")
+		if err := recorded.install().RemoveInstalledProgram(io.Discard, executable, recorded.report); err != nil {
+			t.Fatalf("RemoveInstalledProgram() error = %v", err)
+		}
+		if len(recorded.run) != 2 || recorded.run[0] != "brew uninstall relo" {
+			t.Fatalf("run = %v, want the Homebrew removal and its verification", recorded.run)
+		}
+	})
+
+	t.Run("a Homebrew beta install runs brew uninstall relo-beta", func(t *testing.T) {
+		recorded := &removal{knownTools: map[string]bool{"brew": true}, brewInstalled: true}
+		executable := filepath.Join(t.TempDir(), "Cellar", "relo-beta", "0.1.4", "bin", "relo")
+		if err := recorded.install().RemoveInstalledProgram(io.Discard, executable, recorded.report); err != nil {
+			t.Fatalf("RemoveInstalledProgram() error = %v", err)
+		}
+		if len(recorded.run) != 2 || recorded.run[0] != "brew uninstall relo-beta" {
+			t.Fatalf("run = %v, want the beta removal", recorded.run)
+		}
+	})
+
+	t.Run("a Windows setup is handed to its uninstaller", func(t *testing.T) {
+		recorded := &removal{goos: "windows", setup: `C:/Users/me/AppData/Local/Programs/Relo/uninstall.exe`}
+		executable := `C:/Users/me/AppData/Local/Programs/Relo/relo.exe`
+		if err := recorded.install().RemoveInstalledProgram(io.Discard, executable, recorded.report); err != nil {
+			t.Fatalf("RemoveInstalledProgram() error = %v", err)
+		}
+		if len(recorded.spawned) != 1 || !strings.Contains(recorded.spawned[0], "/DATA=handled") {
+			t.Fatalf("spawned = %v, want the setup uninstaller", recorded.spawned)
+		}
+	})
+
+	t.Run("a Windows script install schedules its own deletion", func(t *testing.T) {
+		dir, executable := scriptInstall(t, "windows")
+		recorded := &removal{goos: "windows", present: map[string]bool{executable: true}}
+		if err := recorded.install().RemoveInstalledProgram(io.Discard, executable, recorded.report); err != nil {
+			t.Fatalf("RemoveInstalledProgram() error = %v", err)
+		}
+		if len(recorded.running) != 1 || !strings.Contains(recorded.running[0], executable) {
+			t.Fatalf("running = %v, want the delayed self removal", recorded.running)
+		}
+		_ = dir
+	})
+
+	t.Run("an unknown install deletes its own resolved binary", func(t *testing.T) {
+		dir := t.TempDir()
+		executable := filepath.Join(dir, "relo")
+		if err := os.WriteFile(executable, []byte("binary"), 0o755); err != nil {
+			t.Fatalf("write the executable: %v", err)
+		}
 		recorded := &removal{}
-		remover := recorded.install()
-		_, executable := macBundle(t)
-		remover.RemoveTree = func(string) error { return errors.New("busy") }
-		err := remover.RemoveInstalledProgram(io.Discard, executable, recorded.report)
+		recorded.removeFile = func(path string) error {
+			recorded.files = append(recorded.files, path)
+			return os.Remove(path)
+		}
+		if err := recorded.install().RemoveInstalledProgram(io.Discard, executable, recorded.report); err != nil {
+			t.Fatalf("RemoveInstalledProgram() error = %v", err)
+		}
+		if _, err := os.Stat(executable); !os.IsNotExist(err) {
+			t.Fatalf("the unknown install survived: %v", err)
+		}
+	})
+
+	t.Run("a failed removal reports the command and the failure", func(t *testing.T) {
+		dir, executable := scriptInstall(t, "linux")
+		recorded := &removal{present: map[string]bool{executable: true}}
+		recorded.removeFile = func(path string) error {
+			if path == executable {
+				return errors.New("busy")
+			}
+			delete(recorded.present, path)
+			return nil
+		}
+		out := &strings.Builder{}
+		err := recorded.install().RemoveInstalledProgram(out, executable, recorded.report)
 		if err == nil {
 			t.Fatal("RemoveInstalledProgram() error = nil, want the removal failure")
 		}
-		if !strings.Contains(err.Error(), "cli.uninstall.trash") {
-			t.Fatalf("error = %v, want the move-to-the-Trash report", err)
+		if !strings.Contains(out.String(), "cli.uninstall.run") {
+			t.Fatalf("out = %q, want the finishing command", out.String())
 		}
+		_ = dir
 	})
 
-	t.Run("an install nothing knows about is reported by hand", func(t *testing.T) {
-		recorded := &removal{}
-		remover := recorded.install()
-		out := &strings.Builder{}
-		err := remover.RemoveInstalledProgram(out, "/usr/local/bin/relo", recorded.report)
-		if !errors.Is(err, cli.ErrManualRemoval) {
-			t.Fatalf("RemoveInstalledProgram() error = %v, want the manual refusal", err)
-		}
-		if !strings.Contains(out.String(), "cli.uninstall.manual") {
-			t.Fatalf("out = %q, want the manual report", out.String())
-		}
-	})
-
-	t.Run("an npm that cannot be found is reported with the command", func(t *testing.T) {
-		recorded := &removal{}
-		remover := recorded.install()
-		_, executable := npmPackage(t)
-		out := &strings.Builder{}
-		err := remover.RemoveInstalledProgram(out, executable, recorded.report)
-		if !errors.Is(err, cli.ErrManualRemoval) {
-			t.Fatalf("RemoveInstalledProgram() error = %v, want the manual refusal", err)
-		}
-		if !strings.Contains(out.String(), "npm uninstall -g relo") {
-			t.Fatalf("out = %q, want the npm command", out.String())
+	t.Run("a path that survives verification fails the removal", func(t *testing.T) {
+		dir := t.TempDir()
+		executable := filepath.Join(dir, "relo")
+		recorded := &removal{present: map[string]bool{executable: true}}
+		recorded.removeFile = func(path string) error { return nil }
+		err := recorded.install().RemoveInstalledProgram(io.Discard, executable, recorded.report)
+		if err == nil || !strings.Contains(err.Error(), "cli.uninstall.failed") {
+			t.Fatalf("RemoveInstalledProgram() error = %v, want the verification failure", err)
 		}
 	})
 }

@@ -649,6 +649,26 @@ other = "{{.Bundle}} को ट्रैश में ले जाएँ"
 description = "The command to run when a removal could not be started"
 other = "Relo हटाने के लिए यह चलाएँ: {{.Command}}"
 
+[cli.uninstall.channel]
+description = "The installation channel the uninstall detected"
+other = "पहचानी गई इंस्टॉल: {{.Channel}}"
+
+[cli.uninstall.command]
+description = "The exact program-removal command for the detected channel"
+other = "प्रोग्राम हटाने के लिए: {{.Command}}"
+
+[cli.uninstall.verified]
+description = "Confirmation that a path is gone after removal"
+other = "हटाया गया सत्यापित: {{.Path}}"
+
+[cli.uninstall.failed]
+description = "A path that survived the removal"
+other = "अभी भी मौजूद: {{.Path}}"
+
+[cli.uninstall.self_delete]
+description = "A running Windows program scheduled for deletion after exit"
+other = "Relo बंद होने के बाद Windows यह फ़ाइल हटा देगा: {{.Path}}"
+
 [tray.menu.quitting]
 description = "Tray quit action while final records are saved"
 other = "बंद करें — प्रक्रिया जारी है…"

@@ -649,6 +649,26 @@ other = "pindahkan {{.Bundle}} ke Sampah"
 description = "The command to run when a removal could not be started"
 other = "jalankan ini untuk menyelesaikan penghapusan Relo: {{.Command}}"
 
+[cli.uninstall.channel]
+description = "The installation channel the uninstall detected"
+other = "Instalasi terdeteksi: {{.Channel}}"
+
+[cli.uninstall.command]
+description = "The exact program-removal command for the detected channel"
+other = "Hapus program dengan: {{.Command}}"
+
+[cli.uninstall.verified]
+description = "Confirmation that a path is gone after removal"
+other = "Penghapusan terverifikasi: {{.Path}}"
+
+[cli.uninstall.failed]
+description = "A path that survived the removal"
+other = "Masih ada: {{.Path}}"
+
+[cli.uninstall.self_delete]
+description = "A running Windows program scheduled for deletion after exit"
+other = "Windows akan menghapus file ini setelah Relo keluar: {{.Path}}"
+
 [tray.menu.quitting]
 description = "Tray quit action while final records are saved"
 other = "Keluar — memproses…"

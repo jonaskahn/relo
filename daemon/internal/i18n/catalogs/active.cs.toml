@@ -670,6 +670,26 @@ other = "Přesuňte {{.Bundle}} do Koše"
 description = "The command to run when a removal could not be started"
 other = "Spusťte to pro odebrání Relo: {{.Command}}"
 
+[cli.uninstall.channel]
+description = "The installation channel the uninstall detected"
+other = "Zjištěná instalace: {{.Channel}}"
+
+[cli.uninstall.command]
+description = "The exact program-removal command for the detected channel"
+other = "Odeberte program pomocí: {{.Command}}"
+
+[cli.uninstall.verified]
+description = "Confirmation that a path is gone after removal"
+other = "Odebrání ověřeno: {{.Path}}"
+
+[cli.uninstall.failed]
+description = "A path that survived the removal"
+other = "Stále existuje: {{.Path}}"
+
+[cli.uninstall.self_delete]
+description = "A running Windows program scheduled for deletion after exit"
+other = "Windows tento soubor smaže po ukončení Relo: {{.Path}}"
+
 [tray.menu.quitting]
 description = "Tray quit action while final records are saved"
 other = "Ukončit — zpracování…"
