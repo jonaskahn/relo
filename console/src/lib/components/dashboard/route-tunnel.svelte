@@ -98,25 +98,11 @@
 	{/if}
 
 	{#each geometry.agents as placement (placement.node.id)}
-		<g
-			class="node"
-			transform="translate({placement.at.x} {placement.at.y})"
-			in:fade={{ duration: reducedMotion() ? 0 : JOIN_MS }}
-			out:fade={{ duration: reducedMotion() ? 0 : LEAVE_MS }}
-		>
-			{@render pill(placement)}
-		</g>
+		{@render node(placement)}
 	{/each}
 
 	{#each geometry.connections as placement (placement.node.id)}
-		<g
-			class="node"
-			transform="translate({placement.at.x} {placement.at.y})"
-			in:fade={{ duration: reducedMotion() ? 0 : JOIN_MS }}
-			out:fade={{ duration: reducedMotion() ? 0 : LEAVE_MS }}
-		>
-			{@render pill(placement)}
-		</g>
+		{@render node(placement)}
 	{/each}
 
 	<!-- Relo: the hub every route passes through. -->
@@ -164,62 +150,72 @@
 	</g>
 </svg>
 
-{#snippet pill(placement: TunnelPlacement)}
-	<title>{placement.node.label}</title>
-	{#if pulse === placement.node.id}
-		{#key pulseKey}
-			<rect
-				class="node-halo"
-				x={placement.pill.tile.x}
-				y={placement.pill.tile.y}
-				width={placement.pill.tile.size}
-				height={placement.pill.tile.size}
-				rx={placement.pill.tile.radius}
-			/>
-		{/key}
-	{/if}
-	<rect
-		class="pill"
-		x="0"
-		y="0"
-		width={placement.pill.width}
-		height={placement.pill.height}
-		rx={placement.pill.radius}
-		fill="var(--surface)"
-		stroke="var(--line)"
-	/>
-	<rect
-		x={placement.pill.tile.x}
-		y={placement.pill.tile.y}
-		width={placement.pill.tile.size}
-		height={placement.pill.tile.size}
-		rx={placement.pill.tile.radius}
-		fill="var(--surface)"
-		stroke="var(--line)"
-	/>
-	<TunnelMark
-		markId={placement.node.markId}
-		label={placement.node.label}
-		x={placement.pill.mark.x}
-		y={placement.pill.mark.y}
-		size={placement.pill.mark.size}
-	/>
-	<text class="pill-name" x={placement.pill.textX} y={placement.pill.baseline}
-		>{placement.text}</text
+<!-- The node is a group of its own, and the group is what Svelte reads the shape from:
+     a snippet that starts with a group stays in the drawing's namespace, where a snippet
+     that starts with a title would not. -->
+{#snippet node(placement: TunnelPlacement)}
+	<g
+		class="node"
+		transform="translate({placement.at.x} {placement.at.y})"
+		in:fade={{ duration: reducedMotion() ? 0 : JOIN_MS }}
+		out:fade={{ duration: reducedMotion() ? 0 : LEAVE_MS }}
 	>
-	<!-- The count wears a chip of its own, a margin off the name. -->
-	<rect
-		class="count-chip"
-		x={placement.pill.countChip.x}
-		y={placement.pill.countChip.y}
-		width={placement.pill.countChip.width}
-		height={placement.pill.countChip.height}
-		rx={placement.pill.countChip.radius}
-		fill="var(--sunken)"
-	/>
-	<text class="pill-count mono-data" x={placement.pill.countX} y={placement.pill.baseline}
-		><AnimatedNumber value={placement.node.count} format={formatCount} /></text
-	>
+		<title>{placement.node.label}</title>
+		{#if pulse === placement.node.id}
+			{#key pulseKey}
+				<rect
+					class="node-halo"
+					x={placement.pill.tile.x}
+					y={placement.pill.tile.y}
+					width={placement.pill.tile.size}
+					height={placement.pill.tile.size}
+					rx={placement.pill.tile.radius}
+				/>
+			{/key}
+		{/if}
+		<rect
+			class="pill"
+			x="0"
+			y="0"
+			width={placement.pill.width}
+			height={placement.pill.height}
+			rx={placement.pill.radius}
+			fill="var(--surface)"
+			stroke="var(--line)"
+		/>
+		<rect
+			x={placement.pill.tile.x}
+			y={placement.pill.tile.y}
+			width={placement.pill.tile.size}
+			height={placement.pill.tile.size}
+			rx={placement.pill.tile.radius}
+			fill="var(--surface)"
+			stroke="var(--line)"
+		/>
+		<TunnelMark
+			markId={placement.node.markId}
+			label={placement.node.label}
+			x={placement.pill.mark.x}
+			y={placement.pill.mark.y}
+			size={placement.pill.mark.size}
+		/>
+		<text class="pill-name" x={placement.pill.textX} y={placement.pill.baseline}
+			>{placement.text}</text
+		>
+		<!-- The count wears a chip of its own, a margin off the name. -->
+		<rect
+			class="count-chip"
+			x={placement.pill.countChip.x}
+			y={placement.pill.countChip.y}
+			width={placement.pill.countChip.width}
+			height={placement.pill.countChip.height}
+			rx={placement.pill.countChip.radius}
+			fill="var(--sunken)"
+		/>
+		<text class="pill-count mono-data" x={placement.pill.countX} y={placement.pill.baseline}
+			><AnimatedNumber value={placement.node.count} format={formatCount} /></text
+		>
+	</g>
 {/snippet}
 
 <style>
