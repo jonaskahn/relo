@@ -4,8 +4,8 @@
 	import { formatCount } from '$lib/format';
 	import { HEAT_FILLS, shortDay, type HeatCell } from '$lib/usage-charts';
 
-	// HeatmapCard is the range as a calendar: weekdays down the side, one
-	// column per Monday-first week, and the day of the month in every cell. The
+	// HeatmapCard is the range as a compact calendar: weekdays across the top,
+	// one row per Monday-first week, and the day of the month in every cell. The
 	// fill is the activity ladder, so a quiet day is as visible as a busy one.
 	interface Props {
 		weeks: HeatCell[][];
@@ -31,34 +31,19 @@
 				);
 			}
 		}
-		return formatCount(total) + ' ' + $t('ui.pages.usagePage.unitRequests');
+		const first = weeks[0]?.[0]?.key;
+		const last = weeks[weeks.length - 1]?.[6]?.key;
+		const span = first && last ? ' · ' + shortDay(first) + ' – ' + shortDay(last) : '';
+		return formatCount(total) + ' ' + $t('ui.pages.usagePage.unitRequests') + span;
 	});
 	const weekdays = $derived(
 		Array.from({ length: 7 }, (_, day) =>
 			new Date(Date.UTC(2026, 8, 28 + day)).toLocaleDateString(undefined, {
-				weekday: 'short',
+				weekday: 'narrow',
 				timeZone: 'UTC'
 			})
 		)
 	);
-	const monthMarks = $derived.by(() => {
-		const marks = new Map<number, string>();
-		let previous = '';
-		for (const [index, week] of weeks.entries()) {
-			const key = week[0]?.key;
-			if (!key) continue;
-			const date = new Date(key + 'T00:00:00Z');
-			if (Number.isNaN(date.getTime())) continue;
-			const label = date.toLocaleDateString(undefined, { month: 'short', timeZone: 'UTC' });
-			if (label !== previous) {
-				marks.set(index, label);
-				previous = label;
-			}
-		}
-		return marks;
-	});
-	const columns = $derived('2.25rem repeat(' + weeks.length + ', 1.75rem)');
-	const minWidth = $derived(weeks.length * 1.75 + 2.25 + weeks.length * 0.25);
 
 	function dayNumber(key: string): string {
 		const match = /^\d{4}-\d{2}-(\d{2})$/.exec(key);
@@ -83,25 +68,18 @@
 		<p class="mb-3 min-h-5 text-sm font-medium text-ink tabular-nums">{readout}</p>
 		<div class="overflow-x-auto pb-1">
 			<div
-				class="grid gap-1"
-				style="grid-template-columns:{columns};min-width:{minWidth}rem"
+				class="mx-auto grid w-fit grid-cols-7 gap-1"
 				role="group"
 				aria-label={$t('ui.pages.usagePage.heatmapTitle') + ' · ' + readout}
 			>
-				<span aria-hidden="true"></span>
-				{#each weeks as week, index (week[0]?.key ?? '')}
-					<span class="min-w-0 truncate text-[0.6875rem] text-muted-foreground" aria-hidden="true"
-						>{monthMarks.get(index) ?? ''}</span
+				{#each weekdays as weekday (weekday)}
+					<span class="text-center text-xs text-muted-foreground" aria-hidden="true">{weekday}</span
 					>
 				{/each}
-				{#each weekdays as weekday, day (weekday)}
-					<span class="flex items-center text-[0.6875rem] text-muted-foreground" aria-hidden="true"
-						>{weekday}</span
-					>
-					{#each weeks as week (week[0]?.key ?? '')}
-						{@const cell = week[day]}
+				{#each weeks as week (week[0]?.key ?? '')}
+					{#each week as cell (cell.key)}
 						<span
-							class="flex size-7 items-center justify-center rounded-[6px] text-[0.6875rem] font-medium tabular-nums transition-[filter] hover:brightness-95 {cell.level ===
+							class="flex size-6 items-center justify-center rounded-[5px] text-[0.6875rem] font-medium tabular-nums transition-[filter] hover:brightness-95 {cell.level ===
 							0
 								? 'border border-line'
 								: ''}"

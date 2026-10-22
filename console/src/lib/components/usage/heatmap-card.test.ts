@@ -24,6 +24,6 @@ describe('the activity calendar', () => {
 		expect(html).toContain('>1</span>');
 		expect(html).toContain('>4</span>');
 		expect(html).toContain('var(--accent)');
-		expect(html).toContain('Mon');
+		expect(html).toContain('grid-cols-7');
 	});
 });
