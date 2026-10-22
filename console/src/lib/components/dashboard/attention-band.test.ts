@@ -75,4 +75,18 @@ describe('the attention band', () => {
 
 		expect(html).toContain('needs a new sign-in');
 	});
+
+	it('keeps the accounts on one scrolling row', () => {
+		const html = markup([item()]);
+
+		expect(html).toContain('attention-viewport');
+		expect(html).toContain('attention-track');
+	});
+
+	it('repeats the row once so the scroll loops without a seam', () => {
+		const html = markup([item()]);
+
+		expect(html.match(/hi@claude\.ai/g)?.length).toBe(2);
+		expect(html).toContain('tabindex="-1"');
+	});
 });
