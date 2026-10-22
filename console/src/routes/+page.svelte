@@ -81,6 +81,7 @@
 	// activityDays is the trailing year the dashboard calendar draws. It keeps
 	// its own read: the year must not shrink when the page window changes.
 	let activityDays = $state.raw<UsageRollupRow[]>([]);
+	let activityDayKeys = $state<string[]>([]);
 	let recent = $state.raw<UsageLogRow[]>([]);
 	let activityFailed = $state('');
 	// refreshedAt is when the window's rollups were last read, so the routing
@@ -169,9 +170,6 @@
 	// its columns, so every total stays exact.
 	const trendRows = $derived(trendMode === 'spend' ? dailyPaid : dailyAll);
 	const trendDays = $derived(bucketDays(trendRows));
-	// The calendar is a year even on a quiet install, so every day of the span
-	// is named and a day the read omitted stays a quiet cell.
-	const activityDayKeys = $derived(activityYearDays(Date.now()));
 	const activityWeeks = $derived.by(() => {
 		const byDay = new Map(activityDays.map((row) => [row.Key, Number(row.Requests)]));
 		return heatmapCells(activityDayKeys.map((key) => ({ key, value: byDay.get(key) ?? 0 })));
@@ -345,11 +343,13 @@
 	}
 
 	async function loadActivity() {
+		const now = Date.now();
+		activityDayKeys = activityYearDays(now);
 		try {
 			activityDays =
 				(
 					await api<{ items: UsageRollupRow[] }>(
-						'/activity/usage?group_by=day&since_ms=' + activityYearStart(Date.now())
+						'/activity/usage?group_by=day&since_ms=' + activityYearStart(now)
 					)
 				).items ?? [];
 		} catch (error) {

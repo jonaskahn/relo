@@ -7,7 +7,7 @@
 	import { HEAT_FILLS, shortDay, type HeatCell } from '$lib/usage-charts';
 
 	// ActivityCalendar is the dashboard's year of traffic as one GitHub-style
-	// strip: 53 Monday-first week columns of 10px cells, a month under the week
+	// strip: 53 Monday-first week columns of 10px-tall cells, a month under the week
 	// it opens, and a four-step accent ladder for what each day carried.
 	interface Props {
 		weeks: HeatCell[][];
@@ -66,28 +66,12 @@
 </script>
 
 <div class="section-surface flex min-w-0 flex-col p-4 max-sm:hidden sm:p-5">
-	<div class="mb-3 flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
-		<div class="min-w-0">
-			<h2 class="section-heading flex items-center gap-2">
-				<Icon name="activity" size={15} class="shrink-0 text-faint" />
-				{$t('ui.pages.dashboard.activityTitle')}
-			</h2>
-			<p class="text-xs text-muted-foreground">{$t('ui.pages.dashboard.activityDesc')}</p>
-		</div>
-		<div class="flex min-w-0 items-center gap-3">
-			<p class="mono-data min-h-5 truncate text-sm font-medium text-ink tabular-nums">{readout}</p>
-			<div class="flex shrink-0 items-center gap-1.5 text-xs text-muted-foreground">
-				<span>{$t('ui.pages.usagePage.heatmapLess')}</span>
-				{#each HEAT_FILLS as fill (fill)}
-					<span
-						class="size-2.5 rounded-[3px] border border-line"
-						style="background:{fill}"
-						aria-hidden="true"
-					></span>
-				{/each}
-				<span>{$t('ui.pages.usagePage.heatmapMore')}</span>
-			</div>
-		</div>
+	<div class="mb-2">
+		<h2 class="section-heading flex items-center gap-2">
+			<Icon name="activity" size={15} class="shrink-0 text-faint" />
+			{$t('ui.pages.dashboard.activityTitle')}
+		</h2>
+		<p class="text-xs text-muted-foreground">{$t('ui.pages.dashboard.activityDesc')}</p>
 	</div>
 	{#if loading}
 		{@render pending()}
@@ -96,15 +80,16 @@
 			{$t('ui.pages.dashboard.noData')}
 		</div>
 	{:else}
+		<p class="mono-data mb-2 min-h-5 font-medium text-ink tabular-nums">{readout}</p>
 		<div class="overflow-x-auto pb-1">
 			<div
 				class="grid w-full gap-x-px gap-y-0.5"
-				style="grid-template-columns:0.875rem repeat({weeks.length},minmax(0,1fr))"
+				style="grid-template-columns:0.75rem repeat({weeks.length},minmax(0,1fr))"
 				role="group"
 				aria-label={$t('ui.pages.dashboard.activityTitle') + ' · ' + readout}
 			>
 				{#each weekdays as weekday, day (day)}
-					<span class="text-[0.5625rem] leading-none text-muted-foreground" aria-hidden="true"
+					<span class="text-xs leading-none text-muted-foreground" aria-hidden="true"
 						>{weekday}</span
 					>
 					{#each weeks as week (week[0]?.key ?? '')}
@@ -133,14 +118,25 @@
 					{/each}
 				{/each}
 				<span aria-hidden="true"></span>
-				{#each monthSpans as month (month.label + month.span)}
+				{#each monthSpans as month, index (index)}
 					<span
-						class="truncate ps-0.5 text-[0.5625rem] leading-none text-muted-foreground"
+						class="truncate ps-0.5 text-xs leading-none text-muted-foreground"
 						style="grid-column: span {month.span}"
 						aria-hidden="true">{month.label}</span
 					>
 				{/each}
 			</div>
+		</div>
+		<div class="mt-2 flex items-center justify-end gap-1.5 text-xs text-muted-foreground">
+			<span>{$t('ui.pages.usagePage.heatmapLess')}</span>
+			{#each HEAT_FILLS as fill (fill)}
+				<span
+					class="size-2.5 rounded-[3px] border border-line"
+					style="background:{fill}"
+					aria-hidden="true"
+				></span>
+			{/each}
+			<span>{$t('ui.pages.usagePage.heatmapMore')}</span>
 		</div>
 	{/if}
 </div>

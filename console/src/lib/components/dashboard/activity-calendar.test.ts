@@ -31,6 +31,8 @@ describe('the dashboard activity calendar', () => {
 		expect(html).toContain('Oct');
 		expect(html).toContain('max-sm:hidden');
 		expect(html).toContain('h-2.5 w-full');
+		expect(html).toContain('text-xs');
+		expect(html).toContain('mono-data');
 		expect(html).toContain('var(--accent)');
 	});
 

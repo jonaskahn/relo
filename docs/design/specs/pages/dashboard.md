@@ -27,10 +27,10 @@ requires: [data-rows, status-and-banners, motion]
 ## Activity
 
 One year of traffic at a glance: 53 Monday-first week columns stretched across the card, a narrow weekday gutter, and a
-month abbreviation spanning the weeks it covers. Each day is a 10px-tall rounded rectangle on the shared four-step accent ladder;
-hovering a cell names the day and its request count, and the card's readout states the year's total at rest. The year
-is trailing, not the page window, so the card keeps its shape while the controls above it change. Today is the last
-filled cell and the rest of its week stays quiet. The card is hidden below 640px.
+month abbreviation spanning the weeks it covers. Each day is a 10px-tall rounded rectangle on the shared four-step
+accent ladder; hovering a cell names the day and its request count, and the card's readout states the year's total at
+rest. The year is trailing, not the page window, so the card keeps its shape while the controls above it change. Today
+is the last filled cell and the rest of its week stays quiet. The card is hidden below 640px.
 
 ## Routing Universe
 
