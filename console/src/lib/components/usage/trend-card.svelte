@@ -57,14 +57,21 @@
 	{#if values.length === 0}
 		<p class="mt-3 text-sm text-muted-foreground">{$t('ui.pages.usagePage.empty')}</p>
 	{:else}
-		<p
-			class="mb-2 flex min-h-5 flex-wrap items-center gap-2 text-sm font-medium tabular-nums text-ink"
-		>
-			{readout}
-		</p>
+		<div class="mb-4 flex flex-wrap items-baseline gap-x-3 gap-y-1">
+			<p
+				class="mono-data font-medium tabular-nums text-ink"
+				style="font-size:1.75rem;line-height:1.1"
+			>
+				{formatChartValue(trendTotal(days, metric), metric)}
+			</p>
+			<p class="text-xs text-muted-foreground">
+				{metricLabel.toLowerCase()} ·
+				{#if hoveredKey}{readout}{:else}{$t('ui.pages.usagePage.rangeLabel').toLowerCase()}{/if}
+			</p>
+		</div>
 		<svg
 			viewBox="0 0 640 84"
-			class="h-24 w-full"
+			class="h-44 w-full sm:h-52"
 			preserveAspectRatio="none"
 			role="img"
 			aria-label={$t('ui.pages.usagePage.chartTitle') + ' · ' + metricLabel}
