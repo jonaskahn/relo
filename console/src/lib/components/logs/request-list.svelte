@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { tick } from 'svelte';
 	import { flip } from 'svelte/animate';
 	import { fly } from 'svelte/transition';
 	import { t } from 'svelte-i18n';
@@ -58,6 +57,8 @@
 	// own instead of all at once.
 	let shownMax = $state(Number.POSITIVE_INFINITY);
 	const STAGGER_MS = 300;
+	const SWELL_MS = 1200;
+	let fresh = $state(new Set<number>());
 	const motion = $derived(!prefersReducedMotion());
 
 	$effect(() => {
@@ -75,12 +76,21 @@
 			return;
 		}
 		const next = Math.min(...waiting);
-		const timer = setTimeout(() => (shownMax = next), STAGGER_MS);
+		const timer = setTimeout(() => {
+			shownMax = next;
+			// Fresh only while it plays: a later remount must not swell again.
+			fresh = new Set(fresh).add(next);
+			setTimeout(() => {
+				const rest = new Set(fresh);
+				rest.delete(next);
+				fresh = rest;
+			}, SWELL_MS);
+		}, STAGGER_MS);
 		return () => clearTimeout(timer);
 	});
 
 	const groups = $derived(groupRequestsByHour(logs.filter((row) => row.ID <= shownMax)));
-	const isFresh = (row: UsageLogRow) => motion && row.ID > baseline;
+	const isFresh = (row: UsageLogRow) => motion && fresh.has(row.ID);
 
 	const cols =
 		'grid-cols-[6.5rem_minmax(0,2fr)_auto_5.5rem_5rem] sm:grid-cols-[6.5rem_minmax(0,2fr)_minmax(0,1fr)_auto_6rem_5rem_4.5rem]';
