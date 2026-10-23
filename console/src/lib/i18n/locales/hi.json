@@ -70,8 +70,6 @@
       "health": "daemon",
       "healthRunning": "चल रहा है",
       "healthDown": "अनुपलब्ध",
-      "latestBeta": "नवीनतम बीटा {version}",
-      "latest": "नवीनतम {version}",
       "updateAvailable": "अपडेट उपलब्ध है",
       "quickAdd": "जोड़ें",
       "quickAddAccount": "provider खाता",

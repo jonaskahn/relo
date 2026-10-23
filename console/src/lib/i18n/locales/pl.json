@@ -70,8 +70,6 @@
       "health": "Daemon",
       "healthRunning": "działa",
       "healthDown": "nieosiągalny",
-      "latestBeta": "najnowsza beta {version}",
-      "latest": "najnowsza {version}",
       "updateAvailable": "Dostępna aktualizacja",
       "quickAdd": "Dodaj",
       "quickAddAccount": "Konto dostawcy",

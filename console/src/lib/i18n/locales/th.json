@@ -70,8 +70,6 @@
       "health": "daemon",
       "healthRunning": "กำลังทำงาน",
       "healthDown": "เข้าถึงไม่ได้",
-      "latestBeta": "เบตาล่าสุด {version}",
-      "latest": "ล่าสุด {version}",
       "updateAvailable": "มีอัปเดต",
       "quickAdd": "เพิ่ม",
       "quickAddAccount": "บัญชี provider",

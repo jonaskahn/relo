@@ -70,8 +70,6 @@
       "health": "常駐程式",
       "healthRunning": "執行中",
       "healthDown": "無法連線",
-      "latestBeta": "最新測試版 {version}",
-      "latest": "最新版 {version}",
       "updateAvailable": "有可用更新",
       "quickAdd": "新增",
       "quickAddAccount": "供應商帳戶",

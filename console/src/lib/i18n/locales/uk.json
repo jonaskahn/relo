@@ -70,8 +70,6 @@
       "health": "Служба",
       "healthRunning": "працює",
       "healthDown": "недоступний",
-      "latestBeta": "остання бета {version}",
-      "latest": "остання {version}",
       "updateAvailable": "Доступне оновлення",
       "quickAdd": "Додати",
       "quickAddAccount": "Акаунт провайдера",

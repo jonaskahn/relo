@@ -70,8 +70,6 @@
       "health": "守护进程",
       "healthRunning": "运行中",
       "healthDown": "无法访问",
-      "latestBeta": "最新测试版 {version}",
-      "latest": "最新版 {version}",
       "updateAvailable": "有可用更新",
       "quickAdd": "添加",
       "quickAddAccount": "提供商账号",
