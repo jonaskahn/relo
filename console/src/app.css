@@ -902,17 +902,16 @@ html[data-theme-dir='sunset']::view-transition-new(root) {
 			margin: 0;
 		}
 	}
-	/* logs-toolbar stretches the section strip across its column with one
-	   third per section. */
-	.logs-toolbar .toolbar-center {
-		flex: 1 1 auto;
-	}
-	.logs-toolbar .toolbar-center .tab-track {
-		width: 100%;
-	}
-	.logs-toolbar .toolbar-center .tab-seg {
-		flex: 1 1 0;
-		justify-content: center;
+	/* logs-toolbar stretches the section strip across a phone's row with one
+	   third per section, so the switch stays a single tap target row. */
+	@media (max-width: 639.98px) {
+		.logs-toolbar .tab-track {
+			width: 100%;
+		}
+		.logs-toolbar .tab-track .tab-seg {
+			flex: 1 1 0;
+			justify-content: center;
+		}
 	}
 	/* tab-panel replays its entrance whenever bits-ui unhides it, so a tab
 	   switch reads as motion without remounting the lists behind it. */
