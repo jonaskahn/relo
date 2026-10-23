@@ -493,7 +493,7 @@ func saveRefreshModels(ctx context.Context, tx *sql.Tx, providerID string, model
 func markModelsUnavailable(ctx context.Context, tx *sql.Tx, providerID string, unavailableIDs []string, atMs int64) error {
 	for _, unavailID := range unavailableIDs {
 		if _, err := tx.ExecContext(ctx,
-			"UPDATE models SET available = 0, updated_at = ? WHERE provider_id = ? AND model_id = ?",
+			"UPDATE models SET available = 0, enabled = 0, updated_at = ? WHERE provider_id = ? AND model_id = ?",
 			atMs, providerID, unavailID); err != nil {
 			return fmt.Errorf("mark model %s unavailable: %w", unavailID, err)
 		}
