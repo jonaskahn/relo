@@ -68,13 +68,15 @@
 
 <div
 	bind:this={root}
-	class="pointer-events-none fixed inset-x-0 bottom-6 z-40 flex justify-center"
+	class="pointer-events-none fixed bottom-6 right-6 z-40"
 >
 	{#if visible}
 		<button
 			class={cn(
 				buttonVariants({ variant: 'outline', size: 'icon' }),
-				'pointer-events-auto shadow-[var(--shadow-pop)]'
+				// Twice a normal control so the control reads at a glance from
+				// the corner it floats in.
+				'h-[calc(var(--control-h)*2)] w-[calc(var(--control-h)*2)] pointer-events-auto shadow-[var(--shadow-pop)]'
 			)}
 			aria-label={$t('ui.common.scrollToTop')}
 			title={$t('ui.common.scrollToTop')}
@@ -82,7 +84,7 @@
 			out:leave
 			onclick={toTop}
 		>
-			<Icon name="arrow-up" size={16} />
+			<Icon name="arrow-up" size={24} />
 		</button>
 	{/if}
 </div>
