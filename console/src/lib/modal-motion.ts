@@ -206,3 +206,42 @@ export function drawerLeave(node: HTMLElement, params: DrawerMotionParams = {}):
 		css: (t) => `transform: translateX(calc(${startX * t}px - ${(1 - t) * 100}%))`
 	};
 }
+
+/** Slides a trailing-edge drawer in from the right, or up as a sheet on a phone.
+ *  Reduced motion is a fade. The logs request detail is the one caller. */
+export function sideDrawerMotion(_node: HTMLElement): TransitionConfig {
+	if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+		return { duration: 140, css: (t) => `opacity: ${t}` };
+	}
+	if (window.matchMedia('(max-width: 639.98px)').matches) {
+		return {
+			duration: 260,
+			easing: drawerOut,
+			css: (t) => `transform: translateY(${(1 - t) * 100}%)`
+		};
+	}
+	return {
+		duration: 220,
+		easing: drawerOut,
+		css: (t) => `transform: translateX(${(1 - t) * 100}%)`
+	};
+}
+
+/** Slides the trailing-edge drawer back out. A phone sheet drops down; reduced motion fades. */
+export function sideDrawerLeave(_node: HTMLElement): TransitionConfig {
+	if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+		return { duration: 140, css: (t) => `opacity: ${t}` };
+	}
+	if (window.matchMedia('(max-width: 639.98px)').matches) {
+		return {
+			duration: 220,
+			easing: drawerOut,
+			css: (t) => `transform: translateY(${(1 - t) * 100}%)`
+		};
+	}
+	return {
+		duration: 200,
+		easing: drawerOut,
+		css: (t) => `transform: translateX(${(1 - t) * 100}%)`
+	};
+}
