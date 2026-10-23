@@ -1,6 +1,6 @@
 {
-  "generated": "2026-10-23T13:20:20Z",
-  "latest": "v0.1.6",
+  "generated": "2026-10-23T14:56:26Z",
+  "latest": "v0.1.7",
   "latest_beta": "v0.1.7-beta.39.56d98f0d",
   "install": {
     "stable": {
@@ -17,6 +17,158 @@
     }
   },
   "releases": [
+    {
+      "tag": "v0.1.7",
+      "version": "0.1.7",
+      "name": "v0.1.7 - Water 💧",
+      "channel": "stable",
+      "draft": false,
+      "published_at": "2026-10-23T14:56:17Z",
+      "page": "https://github.com/jonaskahn/relo/releases/tag/v0.1.7",
+      "notes": "## What's Changed\r\n* chore: bump to 0.1.7 by @github-actions[bot] in https://github.com/jonaskahn/relo/pull/62\r\n* fix: align activity calendar test pending prop type by @jonaskahn in https://github.com/jonaskahn/relo/pull/63\r\n* fix: ci and code coverage by @jonaskahn in https://github.com/jonaskahn/relo/pull/64\r\n* Feat/redesign logs page by @jonaskahn in https://github.com/jonaskahn/relo/pull/65\r\n\r\n\r\n**Full Changelog**: https://github.com/jonaskahn/relo/compare/v0.1.6...v0.1.7",
+      "install": {
+        "script": "curl -fsSL https://relo.ifelse.one/install.sh | sh -s -- --version 0.1.7",
+        "powershell": "& ([scriptblock]::Create((irm https://relo.ifelse.one/install.ps1))) -Version 0.1.7",
+        "npm": "npm i -g @jonaskahn/relo@0.1.7"
+      },
+      "files": [
+        {
+          "name": "checksums.txt",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.1.7/checksums.txt",
+          "size": 582,
+          "os": "any",
+          "arch": "any",
+          "kind": "checksums",
+          "format": "txt"
+        },
+        {
+          "name": "Relo-0.1.7-arm64.zip",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.1.7/Relo-0.1.7-arm64.zip",
+          "size": 15078622,
+          "os": "macos",
+          "arch": "arm64",
+          "kind": "app",
+          "format": "zip"
+        },
+        {
+          "name": "relo-0.1.7-darwin-amd64.tar.gz",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.1.7/relo-0.1.7-darwin-amd64.tar.gz",
+          "size": 14222110,
+          "os": "macos",
+          "arch": "amd64",
+          "kind": "archive",
+          "format": "tar.gz"
+        },
+        {
+          "name": "relo-0.1.7-darwin-arm64.tar.gz",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.1.7/relo-0.1.7-darwin-arm64.tar.gz",
+          "size": 13800165,
+          "os": "macos",
+          "arch": "arm64",
+          "kind": "archive",
+          "format": "tar.gz"
+        },
+        {
+          "name": "relo-0.1.7-linux-amd64.tar.gz",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.1.7/relo-0.1.7-linux-amd64.tar.gz",
+          "size": 13918191,
+          "os": "linux",
+          "arch": "amd64",
+          "kind": "archive",
+          "format": "tar.gz"
+        },
+        {
+          "name": "relo-0.1.7-linux-arm64.tar.gz",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.1.7/relo-0.1.7-linux-arm64.tar.gz",
+          "size": 13160046,
+          "os": "linux",
+          "arch": "arm64",
+          "kind": "archive",
+          "format": "tar.gz"
+        },
+        {
+          "name": "Relo-0.1.7-universal.zip",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.1.7/Relo-0.1.7-universal.zip",
+          "size": 29665183,
+          "os": "macos",
+          "arch": "universal",
+          "kind": "app",
+          "format": "zip"
+        },
+        {
+          "name": "relo-0.1.7-windows-amd64.tar.gz",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.1.7/relo-0.1.7-windows-amd64.tar.gz",
+          "size": 13857056,
+          "os": "windows",
+          "arch": "amd64",
+          "kind": "archive",
+          "format": "tar.gz"
+        },
+        {
+          "name": "relo-0.1.7-windows-arm64.tar.gz",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.1.7/relo-0.1.7-windows-arm64.tar.gz",
+          "size": 13009799,
+          "os": "windows",
+          "arch": "arm64",
+          "kind": "archive",
+          "format": "tar.gz"
+        },
+        {
+          "name": "Relo-Setup-0.1.7-amd64.deb",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.1.7/Relo-Setup-0.1.7-amd64.deb",
+          "size": 14174502,
+          "os": "linux",
+          "arch": "amd64",
+          "kind": "installer",
+          "format": "deb"
+        },
+        {
+          "name": "Relo-Setup-0.1.7-amd64.exe",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.1.7/Relo-Setup-0.1.7-amd64.exe",
+          "size": 10051211,
+          "os": "windows",
+          "arch": "amd64",
+          "kind": "installer",
+          "format": "exe"
+        },
+        {
+          "name": "Relo-Setup-0.1.7-amd64.rpm",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.1.7/Relo-Setup-0.1.7-amd64.rpm",
+          "size": 14138273,
+          "os": "linux",
+          "arch": "amd64",
+          "kind": "installer",
+          "format": "rpm"
+        },
+        {
+          "name": "Relo-Setup-0.1.7-arm64.deb",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.1.7/Relo-Setup-0.1.7-arm64.deb",
+          "size": 13490820,
+          "os": "linux",
+          "arch": "arm64",
+          "kind": "installer",
+          "format": "deb"
+        },
+        {
+          "name": "Relo-Setup-0.1.7-arm64.exe",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.1.7/Relo-Setup-0.1.7-arm64.exe",
+          "size": 9043340,
+          "os": "windows",
+          "arch": "arm64",
+          "kind": "installer",
+          "format": "exe"
+        },
+        {
+          "name": "Relo-Setup-0.1.7-arm64.rpm",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.1.7/Relo-Setup-0.1.7-arm64.rpm",
+          "size": 13432140,
+          "os": "linux",
+          "arch": "arm64",
+          "kind": "installer",
+          "format": "rpm"
+        }
+      ]
+    },
     {
       "tag": "v0.1.7-beta.39.56d98f0d",
       "version": "0.1.7-beta.39.56d98f0d",
