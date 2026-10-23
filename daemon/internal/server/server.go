@@ -423,12 +423,16 @@ func (s *Server) serve(ctx context.Context, bound []boundListener) error {
 	if len(servers) == 0 {
 		return s.Shutdown(context.Background())
 	}
+	// Notify readiness (and run any work registered for it, such as
+	// starting background workers) before the listeners start serving, so
+	// a client that connects the instant the port opens observes a fully
+	// started daemon.
+	if onReady != nil {
+		onReady(s.Addrs())
+	}
 	failures := make(chan error, len(bound))
 	for index, item := range bound {
 		go serveListener(servers[index], item.listener, failures)
-	}
-	if onReady != nil {
-		onReady(s.Addrs())
 	}
 	select {
 	case <-s.lifetime.Done():
