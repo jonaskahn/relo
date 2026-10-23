@@ -474,6 +474,76 @@ func TestCheckerBeta(t *testing.T) {
 	})
 }
 
+func TestCheckerChannel(t *testing.T) {
+	const (
+		appcastURL = "https://example.com/appcast.xml"
+		betaFeed   = "https://example.com/releases.atom"
+		catalogURL = "https://example.com/releases.json"
+		// The catalog names a stable far ahead of the beta, so a beta build
+		// that followed it would be offered the wrong channel.
+		aheadCatalog = `{"latest":"v0.3.0","latest_beta":"v0.1.4-beta.28.1a2b3c4d","releases":[]}`
+	)
+	serve := func(url string) ([]byte, error) {
+		switch url {
+		case appcastURL:
+			return []byte(sampleAppcast), nil
+		case betaFeed:
+			return []byte(sampleReleases), nil
+		case catalogURL:
+			return []byte(aheadCatalog), nil
+		default:
+			return nil, fmt.Errorf("unexpected feed %s", url)
+		}
+	}
+	check := func(current string) updates.Status {
+		return (&updates.Checker{
+			URL:         appcastURL,
+			ReleasesURL: betaFeed,
+			ManifestURL: catalogURL,
+			Current:     current,
+			Fetch: func(_ context.Context, url string) ([]byte, error) {
+				return serve(url)
+			},
+		}).Status(context.Background())
+	}
+
+	tests := []struct {
+		name    string
+		current string
+		latest  string
+	}{
+		{"a beta build follows the beta, not the newer stable", "0.1.4-beta.27.8d9c8af7", "0.1.4-beta.28.1a2b3c4d"},
+		{"a v-prefixed beta follows the beta", "v0.1.4-beta.27.8d9c8af7", "0.1.4-beta.28.1a2b3c4d"},
+		{"a stable build follows the appcast, not the newer beta", "0.1.0", "0.2.0"},
+		{"build metadata keeps a build on the stable channel", "0.1.0+build-7", "0.2.0"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			status := check(tt.current)
+			if !status.Available || status.Latest != tt.latest {
+				t.Fatalf("status = %+v, want an update to %s", status, tt.latest)
+			}
+			if status.Current != tt.current {
+				t.Fatalf("current = %q, want %q", status.Current, tt.current)
+			}
+		})
+	}
+
+	t.Run("a current beta stays put while a stable is published", func(t *testing.T) {
+		status := check("0.1.4-beta.28.1a2b3c4d")
+		if status.Available || status.Latest != "0.1.4-beta.28.1a2b3c4d" {
+			t.Fatalf("status = %+v, want the beta to be current", status)
+		}
+	})
+
+	t.Run("a current stable stays put while a beta is published", func(t *testing.T) {
+		status := check("0.2.0")
+		if status.Available || status.Latest != "0.2.0" {
+			t.Fatalf("status = %+v, want the stable to be current", status)
+		}
+	})
+}
+
 func TestCheckerBetaCatalog(t *testing.T) {
 	const (
 		betaFeed    = "https://example.com/releases.atom"
