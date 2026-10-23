@@ -10,8 +10,10 @@
 	import Icon from '$lib/components/ui/icon.svelte';
 	import ProcessLine from '$lib/components/logs/process-line.svelte';
 	import { FILTER_PANEL_KEYS } from '$lib/filter-panel';
+	import { formatDateTime } from '$lib/format';
 	import {
 		buildDaemonQuery,
+		groupDaemonLines,
 		isDaemonLevel,
 		mergeDaemonLines,
 		type DaemonLevel,
@@ -46,6 +48,8 @@
 	}: Props = $props();
 
 	let lines = $state.raw<DaemonLine[]>([]);
+	let openRuns = $state<Record<string, boolean>>({});
+	const groups = $derived(groupDaemonLines(lines));
 	let nextCursor = $state('');
 	let end = $state('');
 	let loading = $state(true);
@@ -183,8 +187,50 @@
 		</div>
 	{:else}
 		<div class="flex flex-col gap-1.5">
-			{#each lines as line (line.offset)}
-				<ProcessLine {line} />
+			{#each groups as group (group.key)}
+				{#if group.count === 1}
+					<ProcessLine line={group.lines[0]} />
+				{:else}
+					<div class="rounded-panel border border-line bg-surface">
+						<button
+							type="button"
+							class="flex w-full items-center gap-2.5 px-3.5 py-2 text-left"
+							aria-expanded={openRuns[group.key] ?? false}
+							onclick={() => (openRuns[group.key] = !openRuns[group.key])}
+						>
+							<Icon
+								name="chevron-right"
+								size={12}
+								class="shrink-0 text-muted-foreground transition-transform duration-200 {openRuns[
+									group.key
+								]
+									? 'rotate-90'
+									: ''}"
+							/>
+							<span class="mono-data shrink-0 text-muted-foreground">
+								{group.latestMs ? formatDateTime(group.latestMs) : '—'}
+							</span>
+							<span class="min-w-0 flex-1 truncate text-sm text-ink" title={group.message}>
+								{group.message || '—'}
+							</span>
+							<span
+								class="rounded-full bg-sunken px-2 py-0.5 text-xs font-medium text-muted-foreground"
+							>
+								×{group.count}
+							</span>
+						</button>
+						{#if openRuns[group.key]}
+							<div class="flex flex-col gap-1.5 px-3.5 pb-2">
+								<p class="text-xs text-muted-foreground">
+									{formatDateTime(group.firstMs)} – {formatDateTime(group.latestMs)}
+								</p>
+								{#each group.lines as line (line.offset)}
+									<ProcessLine {line} />
+								{/each}
+							</div>
+						{/if}
+					</div>
+				{/if}
 			{/each}
 		</div>
 		{#if nextCursor}

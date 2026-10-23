@@ -252,10 +252,7 @@ export function groupDaemonLines(lines: readonly DaemonLine[]): DaemonLineGroup[
 	const groups: DaemonLineGroup[] = [];
 	let current: DaemonLineGroup | null = null;
 	for (const line of lines) {
-		const matches =
-			current &&
-			current.level === line.level &&
-			current.message === line.message;
+		const matches = current && current.level === line.level && current.message === line.message;
 		if (matches && current) {
 			current.count++;
 			current.lines.push(line);

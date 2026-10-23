@@ -4,11 +4,14 @@
 	import { page } from '$app/state';
 
 	import { api } from '$lib/api';
+	import Icon from '$lib/components/ui/icon.svelte';
+	import Input from '$lib/components/ui/input.svelte';
 	import RequestFilterPanel from '$lib/components/logs/request-filter-panel.svelte';
 	import RequestList from '$lib/components/logs/request-list.svelte';
 	import { coalesceReload } from '$lib/refresh';
 	import { subscribe } from '$lib/sse';
-	import { buildRequestQuery, type RequestFilters } from '$lib/process-logs';
+	import { formatDuration, formatTokens } from '$lib/format';
+	import { buildRequestQuery, computeRequestKpis, type RequestFilters } from '$lib/process-logs';
 	import type { AccessKey, Provider, UsageLogRow } from '$lib/types';
 
 	// AgentSection is the request log agents write to. The page owns the
@@ -33,6 +36,19 @@
 	let failure = $state('');
 	let providers = $state<Provider[]>([]);
 	let keys = $state<AccessKey[]>([]);
+	let query = $state('');
+
+	const visible = $derived.by(() => {
+		const needle = query.trim().toLowerCase();
+		if (!needle) return logs;
+		return logs.filter((row) =>
+			[row.Model, row.Provider, row.RouteProvider, row.ClientKeyName, row.Origin]
+				.join(' ')
+				.toLowerCase()
+				.includes(needle)
+		);
+	});
+	const kpis = $derived(computeRequestKpis(visible));
 
 	async function load(reset = true) {
 		if (reset) {
@@ -117,6 +133,59 @@
 <div class="flex flex-col gap-4">
 	<RequestFilterPanel {filters} {onfilters} {providers} {keys} bind:open={filtersOpen} />
 
+	<div class="relative max-w-md">
+		<span
+			class="pointer-events-none absolute inset-y-0 start-3 flex items-center text-muted-foreground"
+		>
+			<Icon name="search" size={15} />
+		</span>
+		<Input
+			class="ps-9"
+			type="search"
+			bind:value={query}
+			placeholder={$t('ui.pages.logsPage.searchPlaceholder')}
+			aria-label={$t('ui.pages.logsPage.searchPlaceholder')}
+		/>
+	</div>
+
+	{#if !loading && !failure && logs.length > 0}
+		<div class="grid grid-cols-2 gap-[var(--grid-gap)] xl:grid-cols-4">
+			<div class="section-surface min-w-0 p-4">
+				<p class="text-[0.8125rem] font-medium text-muted-foreground">
+					{$t('ui.pages.logsPage.requestsLoaded')}
+				</p>
+				<p class="mono-data mt-1 text-[1.375rem] font-medium tabular-nums">{kpis.total}</p>
+			</div>
+			<div class="section-surface min-w-0 p-4">
+				<p class="text-[0.8125rem] font-medium text-muted-foreground">
+					{$t('ui.pages.dashboard.successTile')}
+				</p>
+				<p class="mono-data mt-1 text-[1.375rem] font-medium tabular-nums text-ok">
+					{kpis.successRate}%
+				</p>
+			</div>
+			<div class="section-surface min-w-0 p-4">
+				<p class="text-[0.8125rem] font-medium text-muted-foreground">
+					{$t('ui.pages.usagePage.summaryTokens')}
+				</p>
+				<p class="mono-data mt-1 text-[1.375rem] font-medium tabular-nums">
+					{formatTokens(kpis.totalTokens)}
+				</p>
+			</div>
+			<div class="section-surface min-w-0 p-4">
+				<p class="text-[0.8125rem] font-medium text-muted-foreground">
+					{$t('ui.pages.logsPage.avgSlowest')}
+				</p>
+				<p class="mono-data mt-1 text-[1.375rem] font-medium tabular-nums">
+					{formatDuration(kpis.avgDurationMs)}
+					<span class="ms-1 text-xs font-normal text-muted-foreground">
+						· {formatDuration(kpis.slowestDurationMs)}
+					</span>
+				</p>
+			</div>
+		</div>
+	{/if}
+
 	{#if loading}
 		<p class="text-muted-foreground text-sm">{$t('ui.common.loading')}</p>
 	{:else if failure}
@@ -126,11 +195,18 @@
 		>
 			{failure}
 		</p>
-	{:else if logs.length === 0}
+	{:else if visible.length === 0}
 		<div class="empty-panel section-surface border-dashed">
 			{$t('ui.pages.logsPage.empty')}
 		</div>
 	{:else}
-		<RequestList {logs} {nextCursor} {loadingMore} onloadMore={() => load(false)} {onopen} />
+		<RequestList
+			logs={visible}
+			maxTokens={kpis.maxTokens}
+			{nextCursor}
+			{loadingMore}
+			onloadMore={() => load(false)}
+			{onopen}
+		/>
 	{/if}
 </div>
