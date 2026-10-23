@@ -74,9 +74,9 @@
 		<button
 			class={cn(
 				buttonVariants({ variant: 'outline', size: 'icon' }),
-				// Twice a normal control so the control reads at a glance from
-				// the corner it floats in.
-				'h-[calc(var(--control-h)*2)] w-[calc(var(--control-h)*2)] pointer-events-auto shadow-[var(--shadow-pop)]'
+				// A control and a half, so the corner control reads at a glance
+				// without crowding the page.
+				'scroll-top-button pointer-events-auto h-[calc(var(--control-h)*1.5)] w-[calc(var(--control-h)*1.5)] shadow-[var(--shadow-pop)]'
 			)}
 			aria-label={$t('ui.common.scrollToTop')}
 			title={$t('ui.common.scrollToTop')}
@@ -84,7 +84,41 @@
 			out:leave
 			onclick={toTop}
 		>
-			<Icon name="arrow-up" size={24} />
+			<Icon name="arrow-up" size={20} class="scroll-top-arrow" />
 		</button>
 	{/if}
 </div>
+
+<style>
+	/* The arrow idles with a slow bob so the corner control reads as live, and
+	   lifts harder on hover so it invites the click that returns to the top. */
+	.scroll-top-arrow {
+		animation: scroll-top-bob 2.4s ease-in-out infinite;
+	}
+	.scroll-top-button:hover :global(.scroll-top-arrow) {
+		animation: scroll-top-lift 0.4s ease-out forwards;
+	}
+
+	@keyframes scroll-top-bob {
+		0%,
+		100% {
+			transform: translateY(1.5px);
+		}
+		50% {
+			transform: translateY(-1.5px);
+		}
+	}
+
+	@keyframes scroll-top-lift {
+		to {
+			transform: translateY(-3px);
+		}
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.scroll-top-arrow,
+		.scroll-top-button:hover :global(.scroll-top-arrow) {
+			animation: none;
+		}
+	}
+</style>
