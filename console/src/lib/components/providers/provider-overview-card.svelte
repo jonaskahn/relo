@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { t } from 'svelte-i18n';
 	import { cubicOut } from 'svelte/easing';
+	import { slide } from 'svelte/transition';
 	import { Tween } from 'svelte/motion';
 	import type { Account, Provider, QuotaWindow } from '$lib/types';
 	import ProviderLogo from '$lib/components/ui/provider-logo.svelte';
@@ -10,6 +11,7 @@
 	import CardTitle from '$lib/components/ui/card-title.svelte';
 	import { selectedAccount } from '$lib/provider-quota';
 	import { isFreeConnection } from '$lib/provider-free';
+import { isPaidPlanConnection, isPayAsYouGoConnection } from '$lib/provider-billing';
 	import { isExperimentalConnection } from '$lib/provider-experimental';
 	import { providerStatus, type ProviderStatusName } from '$lib/provider-status';
 	import { ATTENTION_PERCENT } from '$lib/provider-attention';
@@ -41,6 +43,8 @@
 	}: Props = $props();
 
 	let picked = $state(0);
+	let hoveredChip = $state<'free' | 'payg' | 'paid' | null>(null);
+	let statusHovered = $state(false);
 	const current = $derived(selectedAccount(accounts, picked));
 	const status = $derived(providerStatus(provider));
 
@@ -112,6 +116,8 @@
 		worst >= 100 ? 'limitReached' : worst >= ATTENTION_PERCENT ? 'nearLimit' : status.name
 	);
 	const free = $derived(isFreeConnection(provider));
+	const paidPlan = $derived(isPaidPlanConnection(provider));
+	const payg = $derived(isPayAsYouGoConnection(provider));
 	// The lane logs what it is sent, so the card says so beside what it costs.
 	const experimental = $derived(isExperimentalConnection(provider.template_id || provider.id));
 </script>
@@ -146,8 +152,55 @@
 				<CardTitle class="flex min-w-0 items-center gap-1.5 truncate text-sm">
 					<span class="truncate">{provider.label}</span>
 					{#if free}
-						<span data-free-chip class="badge shrink-0 border border-ok/40 bg-ok/10 text-ok">
-							{$t('ui.pages.providersPage.list.tagFree')}
+						<button
+							type="button"
+							data-free-chip
+							class="badge shrink-0 border border-ok/40 bg-ok/10 text-ok"
+							aria-label={$t('ui.pages.providersPage.list.tagFree')}
+							role="img"
+							onmouseenter={() => (hoveredChip = 'free')}
+							onmouseleave={() => (hoveredChip = null)}
+						>
+							<Icon name="sparkles" size={11} />
+							{#if hoveredChip === 'free'}
+								<span transition:slide={{ duration: 150 }} class="ms-1">
+									{$t('ui.pages.providersPage.list.tagFree')}
+								</span>
+							{/if}
+						</button>
+					{/if}
+					{#if payg}
+						<span
+							data-payg-chip
+							class="badge shrink-0 border border-border bg-muted text-muted-foreground"
+							aria-label={$t('ui.pages.providersPage.list.tagPayAsYouGo')}
+							role="img"
+							onmouseenter={() => (hoveredChip = 'payg')}
+							onmouseleave={() => (hoveredChip = null)}
+						>
+							<Icon name="currency-dollar" size={11} />
+							{#if hoveredChip === 'payg'}
+								<span transition:slide={{ duration: 150 }} class="ms-1">
+									{$t('ui.pages.providersPage.list.tagPayAsYouGo')}
+								</span>
+							{/if}
+						</span>
+					{/if}
+					{#if paidPlan}
+						<span
+							data-paid-chip
+							class="badge shrink-0 border border-primary/40 bg-primary/10 text-primary"
+							aria-label={$t('ui.pages.providersPage.list.tagPaidPlan')}
+							role="img"
+							onmouseenter={() => (hoveredChip = 'paid')}
+							onmouseleave={() => (hoveredChip = null)}
+						>
+							<Icon name="layers" size={11} />
+							{#if hoveredChip === 'paid'}
+								<span transition:slide={{ duration: 150 }} class="ms-1">
+									{$t('ui.pages.providersPage.list.tagPaidPlan')}
+								</span>
+							{/if}
 						</span>
 					{/if}
 					{#if experimental}
@@ -163,10 +216,16 @@
 			</button>
 			<span
 				data-status-pill={pillName}
-				class="inline-flex shrink-0 items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium {pill.tone}"
+				class="group inline-flex shrink-0 items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium {pill.tone}"
+				aria-label={pill.label}
+				role="img"
+				onmouseenter={() => (statusHovered = true)}
+				onmouseleave={() => (statusHovered = false)}
 			>
 				<Icon name={pill.icon} size={12} />
-				{pill.label}
+				{#if statusHovered}
+					<span transition:slide={{ duration: 150 }} class="ms-1">{pill.label}</span>
+				{/if}
 			</span>
 		</div>
 		<!-- The account line stays when a provider has none, so every header

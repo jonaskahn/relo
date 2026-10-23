@@ -145,7 +145,7 @@ describe('the connection overview card', () => {
 		}).body;
 
 		expect(html).toContain('data-status-pill="limitReached"');
-		expect(html).toContain('Limit reached');
+		expect(html).toContain('aria-label="Limit reached"');
 		expect(html).toContain('card-limit');
 	});
 });
