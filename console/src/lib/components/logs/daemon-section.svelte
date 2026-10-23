@@ -151,34 +151,36 @@
 </script>
 
 <div class="flex flex-col gap-4">
-	<FilterPanel storageKey={FILTER_PANEL_KEYS.logsDaemon} columns={3} bind:open={filtersOpen}>
-		<Field id="daemon-level" label={$t('ui.pages.logsPage.filterLevel')}>
-			<NativeSelect
-				id="daemon-level"
-				value={level}
-				onchange={(event) => {
-					const { value } = event.currentTarget;
-					if (isDaemonLevel(value)) onlevelchange?.(value);
-				}}
-			>
-				<option value="all">{$t('ui.pages.logsPage.levelAll')}</option>
-				<option value="warning">{$t('ui.pages.logsPage.levelWarnings')}</option>
-				<option value="error">{$t('ui.pages.logsPage.levelErrors')}</option>
-			</NativeSelect>
-		</Field>
-		<Field id="daemon-requests" label={$t('ui.pages.logsPage.requestsLabel')}>
-			<NativeSelect
-				id="daemon-requests"
-				value={hideRequests ? 'hidden' : 'shown'}
-				onchange={(event) => {
-					onhiderequestschange?.(event.currentTarget.value !== 'shown');
-				}}
-			>
-				<option value="hidden">{$t('ui.pages.logsPage.requestsHidden')}</option>
-				<option value="shown">{$t('ui.pages.logsPage.requestsShown')}</option>
-			</NativeSelect>
-		</Field>
-	</FilterPanel>
+	<div class="max-sm:hidden">
+		<FilterPanel storageKey={FILTER_PANEL_KEYS.logsDaemon} columns={3} bind:open={filtersOpen}>
+			<Field id="daemon-level" label={$t('ui.pages.logsPage.filterLevel')}>
+				<NativeSelect
+					id="daemon-level"
+					value={level}
+					onchange={(event) => {
+						const { value } = event.currentTarget;
+						if (isDaemonLevel(value)) onlevelchange?.(value);
+					}}
+				>
+					<option value="all">{$t('ui.pages.logsPage.levelAll')}</option>
+					<option value="warning">{$t('ui.pages.logsPage.levelWarnings')}</option>
+					<option value="error">{$t('ui.pages.logsPage.levelErrors')}</option>
+				</NativeSelect>
+			</Field>
+			<Field id="daemon-requests" label={$t('ui.pages.logsPage.requestsLabel')}>
+				<NativeSelect
+					id="daemon-requests"
+					value={hideRequests ? 'hidden' : 'shown'}
+					onchange={(event) => {
+						onhiderequestschange?.(event.currentTarget.value !== 'shown');
+					}}
+				>
+					<option value="hidden">{$t('ui.pages.logsPage.requestsHidden')}</option>
+					<option value="shown">{$t('ui.pages.logsPage.requestsShown')}</option>
+				</NativeSelect>
+			</Field>
+		</FilterPanel>
+	</div>
 
 	{#if loading}
 		<p class="text-sm text-muted-foreground">{$t('ui.common.loading')}</p>

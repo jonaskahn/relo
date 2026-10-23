@@ -35,15 +35,16 @@ type openAIMetadata struct {
 }
 
 type openAIModelEntry struct {
-	ID            string              `json:"id"`
-	Name          string              `json:"name"`
-	ContextLength *int64              `json:"context_length"`
-	ContextWindow *int64              `json:"context_window"`
-	MaxOutput     *int64              `json:"max_output_tokens"`
-	IsFree        *bool               `json:"isFree"`
-	Architecture  *openAIArchitecture `json:"architecture"`
-	Metadata      *openAIMetadata     `json:"metadata"`
-	Pricing       *struct {
+	ID                 string              `json:"id"`
+	Name               string              `json:"name"`
+	ContextLength      *int64              `json:"context_length"`
+	ContextWindow      *int64              `json:"context_window"`
+	MaxOutput          *int64              `json:"max_output_tokens"`
+	IsFree             *bool               `json:"isFree"`
+	Architecture       *openAIArchitecture `json:"architecture"`
+	Metadata           *openAIMetadata     `json:"metadata"`
+	SupportedEndpoints []string            `json:"supported_endpoints"`
+	Pricing            *struct {
 		Prompt          string `json:"prompt"`
 		Completion      string `json:"completion"`
 		InputCacheRead  string `json:"input_cache_read"`
@@ -79,12 +80,29 @@ func openAIModel(entry openAIModelEntry) (Listed, bool) {
 	return Listed{
 		ID:             entry.ID,
 		Name:           entry.Name,
+		Format:         openAIEndpointFormat(entry.SupportedEndpoints),
 		ContextWindow:  openAIContextWindow(entry),
 		MaxOutput:      openAIMaxOutput(entry),
 		Prices:         openAIModelPrices(entry),
 		IsFree:         entry.IsFree,
 		SupportsVision: openAIVision(entry.Architecture),
 	}, true
+}
+
+// openAIEndpointFormat picks the wire format a listing declares. A model that
+// publishes an Anthropic shape needs the messages codec; a responses-only
+// model needs the responses codec; anything else keeps the connection's
+// own format.
+func openAIEndpointFormat(endpoints []string) catalog.APIFormat {
+	switch {
+	case slices.Contains(endpoints, "/messages"):
+		return catalog.FormatAnthropic
+	case slices.Contains(endpoints, "/responses") &&
+		!slices.Contains(endpoints, "/chat/completions"):
+		return catalog.FormatOpenAIResp
+	default:
+		return ""
+	}
 }
 
 func openAIContextWindow(entry openAIModelEntry) *int64 {

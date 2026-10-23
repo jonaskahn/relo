@@ -1,4 +1,5 @@
-// Command-code flow: sign-in through a pasted authorization code.
+// Command-code flow: sign-in through a browser approval that hands back an
+// API key.
 package oauth
 
 import (
@@ -6,48 +7,45 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"os"
-	"path/filepath"
-	"strings"
 )
 
 const (
-	providerCommandCode  = FlowCommandCode
-	commandCodeStudio    = "https://commandcode.ai"
-	commandCodeAuthPath  = "/studio/auth/cli"
-	commandCodeAPIBase   = "https://api.commandcode.ai"
-	commandCodeWhoAmI    = "/alpha/whoami"
-	commandCodePort      = 5959
-	commandCodePath      = "/callback"
-	commandCodeAuthDir   = ".commandcode"
-	commandCodeAuthFile  = "auth.json"
-	commandCodeUserKey   = "userId"
-	commandCodeImportKey = "source"
+	providerCommandCode = FlowCommandCode
+	commandCodeStudio   = "https://commandcode.ai"
+	commandCodeAuthPath = "/studio/auth/cli"
+	commandCodeAPIBase  = "https://api.commandcode.ai"
+	commandCodeWhoAmI   = "/alpha/whoami"
+	commandCodePort     = 5959
+	commandCodePath     = "/callback"
+	commandCodeUserKey  = "userId"
 )
 
-// Command-code errors name why a pasted-code sign-in failed: the key the
-// CLI rejected and the CLI authentication that is absent.
-var (
-	ErrCommandCodeKeyRejected = errors.New("command code rejected the API key")
-	ErrCommandCodeAuthMissing = errors.New("no Command Code CLI authentication is installed")
-)
+// ErrCommandCodeKeyRejected reports a key the provider rejected.
+var ErrCommandCodeKeyRejected = errors.New("command code rejected the API key")
 
-type commandCodeAuth struct {
-	APIKey   string `json:"apiKey"`
-	UserID   string `json:"userId"`
-	UserName string `json:"userName"`
-	KeyName  string `json:"keyName"`
-}
-
+// commandCodeIdentity is the shape the whoami endpoint answers with. Older
+// responses used the flat fields, so both are accepted.
 type commandCodeIdentity struct {
 	UserID   string `json:"userId"`
 	UserName string `json:"userName"`
 	KeyName  string `json:"keyName"`
+	User     struct {
+		ID       string `json:"id"`
+		UserName string `json:"userName"`
+		Name     string `json:"name"`
+	} `json:"user"`
 }
 
-// NewCommandCodeFlow returns the login for a Command Code account: the
-// installed CLI key when there is one, a browser approval otherwise,
-// which hands the API key back as the authorization code.
+func (i commandCodeIdentity) userID() string {
+	return firstNonEmpty(i.UserID, i.User.ID)
+}
+
+func (i commandCodeIdentity) userName() string {
+	return firstNonEmpty(i.UserName, i.User.UserName, i.User.Name)
+}
+
+// NewCommandCodeFlow returns the login for a Command Code account: a browser
+// approval that hands the API key back as the authorization code.
 func NewCommandCodeFlow(options ...Option) OAuthFlow {
 	settings := newOptions(options...)
 	flow := &commandCodeFlow{settings: settings}
@@ -77,27 +75,18 @@ func (f *commandCodeFlow) ProviderID() string {
 	return providerCommandCode
 }
 
-// CallbackPort returns the port the browser fallback needs. A login that
-// imports an installed CLI's key never reaches it.
+// CallbackPort returns the port the browser fallback needs.
 func (f *commandCodeFlow) CallbackPort() int {
 	return f.browser.CallbackPort()
 }
 
-// Login imports the installed CLI key, and falls back to the browser.
+// Login opens the browser approval.
 func (f *commandCodeFlow) Login(ctx context.Context, opts LoginOpts) (*OAuthCredential, error) {
-	imported, err := f.importCredential(ctx)
-	if err == nil {
-		announce(opts, AuthPrompt{Instructions: "Imported the installed Command Code CLI authentication."})
-		return imported, nil
-	}
-	if !errors.Is(err, ErrCommandCodeAuthMissing) {
-		return nil, err
-	}
 	return f.browser.Login(ctx, opts)
 }
 
-// Refresh re-validates the key, which is long-lived and only ever
-// rotated by a new login.
+// Refresh re-validates the key, which is long-lived and only ever rotated
+// by a new login.
 func (f *commandCodeFlow) Refresh(ctx context.Context, cred *OAuthCredential) (*OAuthCredential, error) {
 	if cred == nil || cred.AccessToken == "" {
 		return nil, ErrNoRefreshToken
@@ -134,37 +123,11 @@ func (f *commandCodeFlow) decode(response tokenResponse, credential *OAuthCreden
 	if err := response.decodeInto(&identity); err != nil {
 		return nil
 	}
-	credential.AccountID = firstNonEmpty(identity.UserID, credential.AccountID)
-	credential.Email = firstNonEmpty(identity.UserName, credential.Email)
-	addExtra(credential, commandCodeUserKey, identity.UserID)
+	credential.AccountID = firstNonEmpty(identity.userID(), credential.AccountID)
+	credential.Email = firstNonEmpty(identity.userName(), credential.Email)
+	addExtra(credential, commandCodeUserKey, identity.userID())
 	addExtra(credential, "keyName", identity.KeyName)
 	return nil
-}
-
-func (f *commandCodeFlow) importCredential(ctx context.Context) (*OAuthCredential, error) {
-	path := f.authPath()
-	raw, err := os.ReadFile(path)
-	if err != nil {
-		if errors.Is(err, os.ErrNotExist) {
-			return nil, ErrCommandCodeAuthMissing
-		}
-		return nil, fmt.Errorf("read the Command Code CLI authentication: %w", err)
-	}
-	auth := commandCodeAuth{}
-	if err := decodeJSONBody(raw, &auth); err != nil {
-		return nil, err
-	}
-	key := strings.TrimSpace(auth.APIKey)
-	if key == "" {
-		return nil, ErrCommandCodeAuthMissing
-	}
-	if _, err := f.whoami(ctx, key); err != nil {
-		return nil, err
-	}
-	credential := &OAuthCredential{AccessToken: key, RefreshToken: key, AccountID: auth.UserID, Email: auth.UserName}
-	addExtra(credential, commandCodeUserKey, auth.UserID)
-	addExtra(credential, commandCodeImportKey, filepath.Base(path))
-	return credential, nil
 }
 
 func (f *commandCodeFlow) whoami(ctx context.Context, key string) (commandCodeIdentity, error) {
@@ -184,15 +147,4 @@ func (f *commandCodeFlow) whoami(ctx context.Context, key string) (commandCodeId
 		return commandCodeIdentity{}, err
 	}
 	return identity, nil
-}
-
-func (f *commandCodeFlow) authPath() string {
-	if f.settings.CredentialsPath != "" {
-		return f.settings.CredentialsPath
-	}
-	home, err := os.UserHomeDir()
-	if err != nil {
-		return filepath.Join(commandCodeAuthDir, commandCodeAuthFile)
-	}
-	return filepath.Join(home, commandCodeAuthDir, commandCodeAuthFile)
 }

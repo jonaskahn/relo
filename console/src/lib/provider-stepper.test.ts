@@ -519,3 +519,11 @@ describe('the add stepper', () => {
 		expect(defaultVariables(null)).toEqual({});
 	});
 });
+
+test('Command Code is a key connection with a key field', () => {
+	const template = templateOf({ id: 'command-code', label: 'Command Code' });
+	expect(connectKindOf(template)).toBe('api_key');
+	expect(Object.keys(validateConnect('api_key', stateOf(), template))).toEqual([
+		'credential.secret'
+	]);
+});

@@ -24,6 +24,9 @@ type Listed struct {
 	ContextWindow *int64
 	MaxOutput     *int64
 	Prices        *Prices
+	// Format is the wire format this model answers on when the listing states
+	// one, empty when the connection's own format applies.
+	Format APIFormat
 	// IsFree is the provider's own mark that the entry needs no payment. It is
 	// a pointer because a listing that never states the flag says nothing, and
 	// a name that mentions no price proves neither way.

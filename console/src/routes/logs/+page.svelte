@@ -147,10 +147,10 @@
 				ariaLabel={$t('ui.pages.logsPage.sectionLabel')}
 				onchange={chooseSection}
 			/>
-			<div
-				class="ms-auto flex min-w-0 items-center justify-end gap-2.5 max-sm:w-full max-sm:flex-wrap"
-			>
-				{#if section === 'agent'}
+			{#if section === 'agent'}
+				<div
+					class="ms-auto flex min-w-0 items-center justify-end gap-2.5 max-sm:w-full max-sm:flex-wrap"
+				>
 					<div class="relative w-56 min-w-0 max-w-sm shrink max-sm:w-full">
 						<span
 							class="pointer-events-none absolute inset-y-0 start-3 flex items-center text-muted-foreground"
@@ -166,6 +166,7 @@
 						/>
 					</div>
 					<Segmented
+						class="max-sm:hidden"
 						bind:value={agentStatus}
 						options={[
 							{ value: 'any', label: $t('ui.pages.logsPage.filterAllShort') },
@@ -174,15 +175,17 @@
 						]}
 						ariaLabel={$t('ui.pages.logsPage.filterStatus')}
 					/>
-				{:else if section === 'daemon'}
+				</div>
+			{:else if section === 'daemon'}
+				<div class="ms-auto flex min-w-0 items-center justify-end gap-2.5 max-sm:hidden">
 					<FilterToggle
 						open={daemonFiltersOpen}
 						activeCount={daemonActiveFilters}
 						controls={filterPanelId(FILTER_PANEL_KEYS.logsDaemon)}
 						onclick={toggleDaemonFilters}
 					/>
-				{/if}
-			</div>
+				</div>
+			{/if}
 		</div>
 		<div class="grid">
 			{#key section}

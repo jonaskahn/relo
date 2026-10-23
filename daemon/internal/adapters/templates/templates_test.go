@@ -322,3 +322,40 @@ func TestRewrittenLabel(t *testing.T) {
 		t.Error("RewrittenLabel left a name the operator chose alone")
 	}
 }
+
+func TestCommandCodeKeyTemplate(t *testing.T) {
+	held, ok := Get("command-code", nil)
+	if !ok {
+		t.Fatal("command-code template not found")
+	}
+	if held.Label != "Command Code" {
+		t.Errorf("label = %q, want Command Code", held.Label)
+	}
+	if held.Kind != KindKey {
+		t.Errorf("kind = %q, want key", held.Kind)
+	}
+	if held.Auth != catalog.AuthAPIKey {
+		t.Errorf("auth = %q, want api_key", held.Auth)
+	}
+	if held.KeyHeader != catalog.KeyHeaderBearer {
+		t.Errorf("key header = %q, want bearer", held.KeyHeader)
+	}
+	if held.DefaultFormat != catalog.FormatOpenAIChat {
+		t.Errorf("default format = %q, want openai-chat", held.DefaultFormat)
+	}
+	if held.DefaultBaseURL != "https://api.commandcode.ai/provider/v1" {
+		t.Errorf("base url = %q, want the Command Code provider host", held.DefaultBaseURL)
+	}
+	if held.ModelsSource != "listing" {
+		t.Errorf("models source = %q, want listing", held.ModelsSource)
+	}
+	if held.ModelsFormat != catalog.ModelsOpenAI {
+		t.Errorf("models format = %q, want openai", held.ModelsFormat)
+	}
+	if len(held.LoginMethods) != 0 {
+		t.Errorf("login methods = %+v, want none", held.LoginMethods)
+	}
+	if held.DocURL != "https://commandcode.ai/docs/provider" {
+		t.Errorf("doc url = %q, want the Command Code provider docs", held.DocURL)
+	}
+}
