@@ -610,3 +610,46 @@ func TestListOpenAIReportsWhatTheProviderMarksFree(t *testing.T) {
 		}
 	}
 }
+
+const openAIEndpointRoster = `{
+  "data": [
+    {"id": "claude-sonnet-5", "supported_endpoints": ["/messages"]},
+    {"id": "responses-only", "supported_endpoints": ["/responses"]},
+    {"id": "chat-only", "supported_endpoints": ["/chat/completions"]},
+    {"id": "both", "supported_endpoints": ["/chat/completions", "/responses"]}
+  ]
+}`
+
+// TestListOpenAIReadsSupportedEndpoints asserts the dialect turns a provider's
+// advertised endpoints into a per-model wire format, so a single connection
+// can serve models that answer on different shapes.
+func TestListOpenAIReadsSupportedEndpoints(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(openAIEndpointRoster))
+	}))
+	t.Cleanup(server.Close)
+
+	listed, err := New(server.Client()).List(context.Background(), Target{
+		Format: catalog.ModelsOpenAI, BaseURL: server.URL, Auth: upstream.Authorization{},
+	})
+	if err != nil {
+		t.Fatalf("List(openai) error = %v", err)
+	}
+	byID := make(map[string]catalog.Listed, len(listed))
+	for _, entry := range listed {
+		byID[entry.ID] = entry
+	}
+	if got := byID["claude-sonnet-5"].Format; got != catalog.FormatAnthropic {
+		t.Fatalf("claude Format = %q, want anthropic", got)
+	}
+	if got := byID["responses-only"].Format; got != catalog.FormatOpenAIResp {
+		t.Fatalf("responses-only Format = %q, want openai-responses", got)
+	}
+	if got := byID["chat-only"].Format; got != "" {
+		t.Fatalf("chat-only Format = %q, want the connection default", got)
+	}
+	if got := byID["both"].Format; got != "" {
+		t.Fatalf("both Format = %q, want the connection default", got)
+	}
+}

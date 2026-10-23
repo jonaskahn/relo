@@ -58,6 +58,9 @@ func buildRoster(t catalog.Template, mode rosterMode, listed, typed []catalog.Li
 			return "", false
 		}
 		seen[id] = true
+		if entry.Format != "" {
+			return entry.Format, true
+		}
 		if t.FormatForModel == nil {
 			return "", true
 		}
