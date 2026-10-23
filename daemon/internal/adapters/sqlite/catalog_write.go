@@ -425,7 +425,7 @@ func (r *CatalogRepo) RecordRefresh(ctx context.Context, providerID string, atMs
 }
 
 // RefreshProviderModels updates a provider's models, marks missing models as unavailable, and updates fact layers.
-func (r *CatalogRepo) RefreshProviderModels(ctx context.Context, providerID string, models []ModelRow, facts []ModelFactsRow, unavailableIDs []string, atMs int64, refreshErr string) error {
+func (r *CatalogRepo) RefreshProviderModels(ctx context.Context, providerID string, models []ModelRow, facts []ModelFactsRow, unavailableIDs, supersededIDs []string, atMs int64, refreshErr string) error {
 	tx, err := r.db.sql.BeginTx(ctx, nil)
 	if err != nil {
 		return fmt.Errorf("begin refresh models: %w", err)
@@ -442,6 +442,9 @@ func (r *CatalogRepo) RefreshProviderModels(ctx context.Context, providerID stri
 		return err
 	}
 	if err := markModelsUnavailable(ctx, tx, providerID, unavailableIDs, atMs); err != nil {
+		return err
+	}
+	if err := deleteSupersededModels(ctx, tx, providerID, supersededIDs); err != nil {
 		return err
 	}
 	if err := saveFactRows(ctx, tx, facts); err != nil {
@@ -496,6 +499,22 @@ func markModelsUnavailable(ctx context.Context, tx *sql.Tx, providerID string, u
 			"UPDATE models SET available = 0, enabled = 0, updated_at = ? WHERE provider_id = ? AND model_id = ?",
 			atMs, providerID, unavailID); err != nil {
 			return fmt.Errorf("mark model %s unavailable: %w", unavailID, err)
+		}
+	}
+	return nil
+}
+
+// deleteSupersededModels removes the rows an earlier refresh stored for the
+// backend SKUs a collapsed model now publishes once. A row a group still routes
+// to stays, because its foreign key is restrictive and an operator's route is
+// not a refresh's to break.
+func deleteSupersededModels(ctx context.Context, tx *sql.Tx, providerID string, supersededIDs []string) error {
+	for _, supersededID := range supersededIDs {
+		if _, err := tx.ExecContext(ctx,
+			"DELETE FROM models WHERE provider_id = ? AND model_id = ? AND NOT EXISTS ("+
+				"SELECT 1 FROM model_group_members WHERE provider_id = ? AND model_id = ?)",
+			providerID, supersededID, providerID, supersededID); err != nil {
+			return fmt.Errorf("delete the superseded model %s: %w", supersededID, err)
 		}
 	}
 	return nil

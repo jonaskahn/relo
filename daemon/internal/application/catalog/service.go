@@ -28,7 +28,7 @@ type Store interface {
 	DeleteModelFactsLayer(ctx context.Context, providerID, modelID, layer string) error
 	CommitProbe(ctx context.Context, conn catalog.ConnectionRecord, cred account.PoolEntry, models []catalog.ModelRecord, facts []catalog.FactsRecord) error
 	RecordRefresh(ctx context.Context, providerID string, atMs int64, refreshErr string) error
-	RefreshProviderModels(ctx context.Context, providerID string, models []catalog.ModelRecord, facts []catalog.FactsRecord, unavailableIDs []string, atMs int64, refreshErr string) error
+	RefreshProviderModels(ctx context.Context, providerID string, models []catalog.ModelRecord, facts []catalog.FactsRecord, unavailableIDs, supersededIDs []string, atMs int64, refreshErr string) error
 	// SaveModelRequestConfigs replaces one account's exact request tuples.
 	SaveModelRequestConfigs(ctx context.Context, providerID, credentialID string, configs []catalog.ModelRequestConfig) error
 	// ModelRequestConfigs returns one account's exact request tuples.
