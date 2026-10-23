@@ -4,51 +4,63 @@
 	import { page } from '$app/state';
 
 	import { api } from '$lib/api';
-	import Icon from '$lib/components/ui/icon.svelte';
-	import Input from '$lib/components/ui/input.svelte';
-	import RequestFilterPanel from '$lib/components/logs/request-filter-panel.svelte';
 	import RequestList from '$lib/components/logs/request-list.svelte';
 	import { coalesceReload } from '$lib/refresh';
 	import { subscribe } from '$lib/sse';
-	import { formatDuration, formatTokens } from '$lib/format';
+	import { formatDuration, formatTimestamp, formatTokens } from '$lib/format';
 	import { buildRequestQuery, computeRequestKpis, type RequestFilters } from '$lib/process-logs';
-	import type { AccessKey, Provider, UsageLogRow } from '$lib/types';
+	import type { UsageLogRow } from '$lib/types';
 
 	// AgentSection is the request log agents write to. The page owns the
-	// toolbar row, so the filter values and the live switch arrive from it and
-	// only the fields grid renders here. The section mounts only while it
-	// shows, so a visit back reads fresh.
+	// toolbar, so status, search and the live switch arrive from it. The
+	// section mounts only while it shows, so a visit back reads fresh.
 
 	interface Props {
-		filters: RequestFilters;
-		onfilters: (patch: Partial<RequestFilters>) => void;
+		status: RequestFilters['status'];
+		query?: string;
 		live?: boolean;
-		filtersOpen?: boolean;
 		onopen: (row: UsageLogRow) => void;
+		onrows?: (rows: UsageLogRow[]) => void;
 	}
 
-	let { filters, onfilters, live = true, filtersOpen = $bindable(false), onopen }: Props = $props();
+	let { status, query = '', live = true, onopen, onrows }: Props = $props();
+
+	const filters = $derived<RequestFilters>({
+		provider: '',
+		status,
+		origin: 'any',
+		key: '',
+		client: ''
+	});
 
 	let logs = $state<UsageLogRow[]>([]);
 	let nextCursor = $state('');
 	let loading = $state(true);
 	let loadingMore = $state(false);
 	let failure = $state('');
-	let providers = $state<Provider[]>([]);
-	let keys = $state<AccessKey[]>([]);
-	let query = $state('');
 
 	const visible = $derived.by(() => {
 		const needle = query.trim().toLowerCase();
 		if (!needle) return logs;
 		return logs.filter((row) =>
-			[row.Model, row.Provider, row.RouteProvider, row.ClientKeyName, row.Origin]
+			[
+				row.Model,
+				row.Provider,
+				row.RouteProvider,
+				row.ClientKeyName,
+				row.Origin,
+				formatTimestamp(row.TimestampMs)
+			]
 				.join(' ')
 				.toLowerCase()
 				.includes(needle)
 		);
 	});
 	const kpis = $derived(computeRequestKpis(visible));
+
+	$effect(() => {
+		onrows?.(visible);
+	});
 
 	async function load(reset = true) {
 		if (reset) {
@@ -86,17 +98,6 @@
 			const row = logs.find((entry) => String(entry.ID) === wanted || entry.RequestID === wanted);
 			if (row) onopen(row);
 		}
-		// The filter lists are a convenience; their failure is not fatal.
-		try {
-			providers = (await api<{ items: Provider[] }>('/connections')).items;
-		} catch {
-			providers = [];
-		}
-		try {
-			keys = (await api<{ items: AccessKey[] }>('/clients/keys')).items ?? [];
-		} catch {
-			keys = [];
-		}
 	});
 
 	// A filter the page changed re-reads from the start. The mount read above
@@ -130,53 +131,39 @@
 	onDestroy(() => reloadLogs.cancel());
 </script>
 
-<div class="flex flex-col gap-4">
-	<RequestFilterPanel {filters} {onfilters} {providers} {keys} bind:open={filtersOpen} />
-
-	<div class="relative max-w-md">
-		<span
-			class="pointer-events-none absolute inset-y-0 start-3 flex items-center text-muted-foreground"
-		>
-			<Icon name="search" size={15} />
-		</span>
-		<Input
-			class="ps-9"
-			type="search"
-			bind:value={query}
-			placeholder={$t('ui.pages.logsPage.searchPlaceholder')}
-			aria-label={$t('ui.pages.logsPage.searchPlaceholder')}
-		/>
-	</div>
-
+<div class="flex flex-col gap-3">
 	{#if !loading && !failure && logs.length > 0}
 		<div class="grid grid-cols-2 gap-[var(--grid-gap)] xl:grid-cols-4">
-			<div class="section-surface min-w-0 p-4">
+			<div class="section-surface min-w-0 px-3.5 py-2">
 				<p class="text-[0.8125rem] font-medium text-muted-foreground">
 					{$t('ui.pages.logsPage.requestsLoaded')}
 				</p>
-				<p class="mono-data mt-1 text-[1.375rem] font-medium tabular-nums">{kpis.total}</p>
+				<p class="mono-data text-[1.1875rem] font-medium tabular-nums">{kpis.total}</p>
 			</div>
-			<div class="section-surface min-w-0 p-4">
+			<div class="section-surface min-w-0 px-3.5 py-2">
 				<p class="text-[0.8125rem] font-medium text-muted-foreground">
 					{$t('ui.pages.dashboard.successTile')}
 				</p>
-				<p class="mono-data mt-1 text-[1.375rem] font-medium tabular-nums text-ok">
+				<p class="mono-data text-[1.1875rem] font-medium tabular-nums">
 					{kpis.successRate}%
+					<span class="ms-1 text-xs font-normal text-muted-foreground">
+						{kpis.successCount}/{kpis.total}
+					</span>
 				</p>
 			</div>
-			<div class="section-surface min-w-0 p-4">
+			<div class="section-surface min-w-0 px-3.5 py-2">
 				<p class="text-[0.8125rem] font-medium text-muted-foreground">
 					{$t('ui.pages.usagePage.summaryTokens')}
 				</p>
-				<p class="mono-data mt-1 text-[1.375rem] font-medium tabular-nums">
+				<p class="mono-data text-[1.1875rem] font-medium tabular-nums">
 					{formatTokens(kpis.totalTokens)}
 				</p>
 			</div>
-			<div class="section-surface min-w-0 p-4">
+			<div class="section-surface min-w-0 px-3.5 py-2">
 				<p class="text-[0.8125rem] font-medium text-muted-foreground">
 					{$t('ui.pages.logsPage.avgSlowest')}
 				</p>
-				<p class="mono-data mt-1 text-[1.375rem] font-medium tabular-nums">
+				<p class="mono-data text-[1.1875rem] font-medium tabular-nums">
 					{formatDuration(kpis.avgDurationMs)}
 					<span class="ms-1 text-xs font-normal text-muted-foreground">
 						· {formatDuration(kpis.slowestDurationMs)}

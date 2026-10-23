@@ -1,17 +1,18 @@
 <script lang="ts">
+	import { tick } from 'svelte';
+	import { flip } from 'svelte/animate';
+	import { slide } from 'svelte/transition';
 	import { t } from 'svelte-i18n';
 
-	import Button from '$lib/components/ui/button.svelte';
-	import Icon from '$lib/components/ui/icon.svelte';
+	import { prefersReducedMotion } from '$lib/tab-motion';
 	import RequestRow from '$lib/components/logs/request-row.svelte';
 	import { formatTokens } from '$lib/format';
 	import { groupRequestsByHour } from '$lib/process-logs';
 	import type { UsageLogRow } from '$lib/types';
 
-	// RequestList is the request log's rows: a transparent header naming the
-	// columns, requests grouped by time interval (hour batches), one dense
-	// row-card per request with visual token proportion bars, and the page
-	// continuation from the oldest one shown.
+	// RequestList is one bordered panel of requests: a shared header, hour
+	// bands, and one hairline row per request. The panel is the border; the
+	// rows inside it do not each grow their own.
 
 	interface Props {
 		logs: UsageLogRow[];
@@ -31,48 +32,82 @@
 		onopen
 	}: Props = $props();
 
+	function watchMore(node: HTMLElement, load: () => void) {
+		let pending = false;
+		const observer = new IntersectionObserver((entries) => {
+			if (pending || !entries.some((entry) => entry.isIntersecting)) return;
+			pending = true;
+			load();
+		});
+		observer.observe(node);
+		return () => observer.disconnect();
+	}
+
 	const groups = $derived(groupRequestsByHour(logs));
+	// The first page paints still. A row that arrives afterwards uses the
+	// shared slide; flip eases the rows it pushes down. Reduced motion skips both.
+	let settled = $state(false);
+	const motion = $derived(!prefersReducedMotion());
+
+	$effect(() => {
+		if (logs.length === 0 || settled) return;
+		void tick().then(() => {
+			settled = true;
+		});
+	});
+
+	const cols =
+		'grid-cols-[6.5rem_minmax(0,2fr)_auto_5.5rem_5rem] sm:grid-cols-[6.5rem_minmax(0,2fr)_minmax(0,1fr)_auto_6rem_5rem_4.5rem]';
 </script>
 
-<div class="flex flex-col gap-2">
-	<!-- Transparent table header -->
+<div
+	class="overflow-hidden rounded-card border border-line bg-surface max-sm:border-transparent max-sm:bg-transparent"
+	role="table"
+	aria-label={$t('ui.pages.logsPage.tabAgent')}
+>
 	<div
-		class="grid grid-cols-[5rem_minmax(0,1.8fr)_4.25rem_5rem] items-center gap-x-3 px-3.5 py-1 text-xs font-medium text-muted-foreground sm:grid-cols-[5rem_minmax(0,1.8fr)_4.25rem_5rem_5.5rem_4.75rem] md:grid-cols-[5rem_minmax(0,2fr)_minmax(0,1.2fr)_4.25rem_5.5rem_5rem_4.75rem] lg:grid-cols-[5rem_minmax(0,2fr)_minmax(0,1.2fr)_4.25rem_6.5rem_5rem_4.75rem]"
+		class="hidden h-10 items-center gap-3.5 bg-canvas px-5 text-xs font-medium text-muted-foreground sm:grid {cols}"
+		role="row"
 	>
 		<span>{$t('ui.pages.logsPage.columnTime')}</span>
 		<span>{$t('ui.pages.logsPage.columnModel')}</span>
-		<span class="hidden md:block">{$t('ui.pages.logsPage.columnClient')}</span>
+		<span class="hidden sm:block">{$t('ui.pages.logsPage.columnClient')}</span>
 		<span>{$t('ui.pages.logsPage.columnStatus')}</span>
 		<span class="hidden sm:block">{$t('ui.pages.logsPage.columnTokens')}</span>
 		<span class="hidden text-right sm:block">{$t('ui.pages.logsPage.columnDuration')}</span>
 		<span class="text-right">{$t('ui.pages.logsPage.columnCost')}</span>
 	</div>
 
-	<!-- Requests grouped by hour interval -->
 	{#each groups as group (group.key)}
 		<div
-			class="flex items-center justify-between px-3 py-1 text-xs font-medium text-muted-foreground"
+			class="flex items-center justify-between bg-canvas px-5 py-1.5 text-xs font-medium text-muted-foreground max-sm:bg-transparent max-sm:px-0.5"
 		>
-			<span class="font-semibold text-ink">{group.hourLabel}</span>
-			<span class="mono-data text-[11.5px] opacity-80">
+			<span>{group.hourLabel}</span>
+			<span class="font-normal">
 				{group.requests.length}
 				{$t('ui.pages.usagePage.unitRequests')} · {formatTokens(group.totalTokens)}
 				{$t('ui.pages.usagePage.unitTokens')}
 			</span>
 		</div>
-		<div class="flex flex-col gap-1.5">
-			{#each group.requests as row (row.ID)}
-				<RequestRow {row} {maxTokens} {onopen} />
-			{/each}
-		</div>
+		{#each group.requests as row (row.ID)}
+			<div animate:flip={{ duration: motion && settled ? 200 : 0 }}>
+				{#if !settled || !motion}
+					<RequestRow {row} {maxTokens} {cols} {onopen} />
+				{:else}
+					<div in:slide={{ duration: 200 }}>
+						<RequestRow {row} {maxTokens} {cols} {onopen} />
+					</div>
+				{/if}
+			</div>
+		{/each}
 	{/each}
-</div>
 
-{#if nextCursor}
-	<div class="mt-4 text-center">
-		<Button variant="outline" size="sm" onclick={onloadMore} disabled={loadingMore}>
-			<Icon name={loadingMore ? 'loader' : 'arrow-down'} size={14} spin={loadingMore} />
-			{loadingMore ? $t('ui.common.loading') : $t('ui.pages.logsPage.loadMore')}
-		</Button>
-	</div>
-{/if}
+	{#if nextCursor}
+		<div
+			class="flex items-center justify-center px-5 py-4 text-xs text-muted-foreground"
+			{@attach (node) => watchMore(node, onloadMore)}
+		>
+			{loadingMore ? $t('ui.common.loading') : ''}
+		</div>
+	{/if}
+</div>

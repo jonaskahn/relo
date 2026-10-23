@@ -13,9 +13,10 @@
 	// threads match on.
 	interface Props {
 		line: DaemonLine;
+		plain?: boolean;
 	}
 
-	let { line }: Props = $props();
+	let { line, plain = false }: Props = $props();
 
 	const tone = $derived(daemonLevelTone(line.level));
 
@@ -36,7 +37,9 @@
 	}
 </script>
 
-<details class="group rounded-panel border border-line bg-surface px-3.5 py-2">
+<details
+	class="group px-5 py-2.5 {plain ? '' : 'rounded-panel border border-line bg-surface px-3.5'}"
+>
 	<summary
 		class="flex cursor-pointer list-none items-baseline gap-2.5 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring [&::-webkit-details-marker]:hidden"
 	>
