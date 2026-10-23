@@ -66,7 +66,9 @@
 	async function load(reset = true) {
 		if (!reset && (loadingMore || !nextCursor)) return;
 		if (reset) {
-			loading = true;
+			// Rows already on screen stay put while a filter reload runs, so
+			// the list animates instead of blanking.
+			loading = logs.length === 0;
 			nextCursor = '';
 		} else {
 			loadingMore = true;
