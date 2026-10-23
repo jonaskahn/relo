@@ -71,6 +71,30 @@ func TestAntigravityClaudeStatesNoThinking(t *testing.T) {
 	if res.ReasoningBudgetMin != nil || res.ReasoningBudgetMax != nil {
 		t.Fatalf("budget bounds = %v/%v, want none", res.ReasoningBudgetMin, res.ReasoningBudgetMax)
 	}
+
+	collapsed := &Model{ID: "claude-sonnet-5-5"}
+	resolveModelCapabilities(collapsed,
+		Provider{ModelsFormat: ModelsAntigravity},
+		FactsRecord{SupportsReasoning: &yes, ReasoningEfforts: []string{"low", "medium", "high"}},
+		FactsRecord{SupportsReasoning: &yes},
+		FactsRecord{},
+	)
+	if collapsed.SupportsReasoning == nil || !*collapsed.SupportsReasoning || len(collapsed.ReasoningEfforts) != 3 {
+		t.Fatalf("collapsed = %+v, want the 5.5 generation to keep its ladder", collapsed)
+	}
+}
+
+func TestClaudeAntigravityPassthrough(t *testing.T) {
+	for _, id := range []string{"claude-sonnet-4-6", "claude-opus-4-6-thinking", " CLAUDE-opus-4-6 "} {
+		if !ClaudeAntigravityPassthrough(id) {
+			t.Fatalf("ClaudeAntigravityPassthrough(%q) = false, want the 4.6 generation kept", id)
+		}
+	}
+	for _, id := range []string{"claude-sonnet-5-5", "claude-opus-5-5-high", "gemini-3.8-flash", ""} {
+		if ClaudeAntigravityPassthrough(id) {
+			t.Fatalf("ClaudeAntigravityPassthrough(%q) = true, want only the 4.6 generation", id)
+		}
+	}
 }
 
 func TestCleanAntigravityGeminiName(t *testing.T) {
@@ -85,6 +109,10 @@ func TestCleanAntigravityGeminiName(t *testing.T) {
 		{"Gemini 3.5 Flash (Extra Low)", "gemini-3.5-flash", "Gemini 3.5 Flash"},
 		{"Gemini 3.8 Flash", "gemini-3.8-flash", "Gemini 3.8 Flash"},
 		{"GPT-OSS 120B (Medium)", "gpt-oss-120b-medium", "GPT-OSS 120B (Medium)"},
+		{"Claude Sonnet 5.5 (Medium)", "claude-sonnet-5-5", "Claude Sonnet 5.5"},
+		{"Claude Opus 5.5 (High)", "claude-opus-5-5", "Claude Opus 5.5"},
+		{"Claude Sonnet 4.6 (Thinking)", "claude-sonnet-4-6", "Claude Sonnet 4.6 (Thinking)"},
+		{"Claude Opus 4.6 (Thinking)", "claude-opus-4-6-thinking", "Claude Opus 4.6 (Thinking)"},
 	}
 	for _, test := range cases {
 		t.Run(test.name, func(t *testing.T) {

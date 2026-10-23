@@ -551,7 +551,7 @@ func (s *Server) modelRequest(spec attemptSpec, template catalog.Template, templ
 	if copied.MaxTokens <= 0 && spec.candidate.Model.FactSources.MaxOutput == "" {
 		copied.MaxTokens = int(catalog.DefaultMaxOutput)
 	}
-	if spec.candidate.Model.APIFormat == catalog.FormatCloudCode && isClaudeAntigravity(spec.candidate) {
+	if spec.candidate.Model.APIFormat == catalog.FormatCloudCode && isClaudeAntigravityPassthrough(spec.candidate) {
 		// Claude thinks through nothing on this transport, so a stated
 		// effort never reaches the codec.
 		copied.Reasoning = nil

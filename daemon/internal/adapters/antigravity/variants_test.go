@@ -36,8 +36,15 @@ func TestCollapse(t *testing.T) {
 		{"pro off", "gemini-3.1-pro", "none", "gemini-3.1-pro-low", "MODEL_PLACEHOLDER_M36", maxOutputPro, true},
 		{"pro high", "gemini-3.1-pro", "high", "gemini-pro-agent", "MODEL_PLACEHOLDER_M16", maxOutputPro, true},
 
-		{"a claude model stays itself", "claude-sonnet-4-6", "high", "", "", 0, false},
-		{"an opus model stays itself", "claude-opus-4-6-thinking", "max", "", "", 0, false},
+		{"a claude 4.6 model stays itself", "claude-sonnet-4-6", "high", "", "", 0, false},
+		{"an opus 4.6 model stays itself", "claude-opus-4-6-thinking", "max", "", "", 0, false},
+
+		{"sonnet 5.5 low", "claude-sonnet-5-5", "low", "claude-sonnet-5-5-low", "", maxOutputClaude, true},
+		{"sonnet 5.5 medium", "claude-sonnet-5-5", "medium", "claude-sonnet-5-5-medium", "", maxOutputClaude, true},
+		{"sonnet 5.5 high", "claude-sonnet-5-5", "high", "claude-sonnet-5-5-high", "", maxOutputClaude, true},
+		{"opus 5.5 low", "claude-opus-5-5", "none", "claude-opus-5-5-low", "", maxOutputClaude, true},
+		{"opus 5.5 medium", "claude-opus-5-5", "medium", "claude-opus-5-5-medium", "", maxOutputClaude, true},
+		{"opus 5.5 high", "claude-opus-5-5", "max", "claude-opus-5-5-high", "", maxOutputClaude, true},
 
 		{"the ladder above the top band clamps down", "gemini-3.5-flash", "max", "gemini-3-flash-agent", "MODEL_PLACEHOLDER_M132", maxOutputGemini, true},
 

@@ -20,10 +20,29 @@ var RetiredAntigravityIDs = map[string]bool{
 }
 
 // ClaudeAntigravity reports whether one Antigravity id names a Claude model.
-// Claude passes through under its own id with no thinking, so it never
-// resolves an effort onto a wire SKU.
 func ClaudeAntigravity(id string) bool {
 	return strings.HasPrefix(strings.ToLower(strings.TrimSpace(id)), "claude")
+}
+
+// claudeAntigravityPassthrough are the Claude generations the vendor serves
+// under their own id. A later generation collapses onto a band the way a
+// Gemini model does, so it resolves an effort onto a wire SKU.
+var claudeAntigravityPassthrough = []string{"claude-sonnet-4-6", "claude-opus-4-6"}
+
+// ClaudeAntigravityPassthrough reports whether one Claude id reaches the wire
+// under its own id with no thinking. A collapsed generation returns false, and
+// so does a model that is not Claude.
+func ClaudeAntigravityPassthrough(id string) bool {
+	lowered := strings.ToLower(strings.TrimSpace(id))
+	if !strings.HasPrefix(lowered, "claude") {
+		return false
+	}
+	for _, generation := range claudeAntigravityPassthrough {
+		if strings.HasPrefix(lowered, generation) {
+			return true
+		}
+	}
+	return false
 }
 
 // RetiredAntigravity reports whether one Antigravity id is retired.
@@ -66,13 +85,16 @@ func AntigravityBand(effort string) string {
 var antigravityEffortSuffixes = []string{" (Low)", " (Medium)", " (High)", " (Extra Low)"}
 
 // CleanAntigravityGeminiName drops the thinking-effort suffix the vendor
-// appends to a Gemini display name. Relo publishes the model once, its effort
-// chosen per request, so the suffix is not part of the name. A model of another
-// family keeps its name, because the vendor spells those parentheses the same
-// way without meaning an effort.
+// appends to a display name. Relo publishes the model once, its effort chosen
+// per request, so the suffix is not part of the name. A model that passes
+// through under its own id keeps its name, because the vendor spells those
+// parentheses the same way without meaning an effort.
 func CleanAntigravityGeminiName(modelID, name string) string {
 	cleaned := strings.TrimSpace(name)
-	if !strings.HasPrefix(strings.ToLower(strings.TrimSpace(modelID)), "gemini") {
+	lowered := strings.ToLower(strings.TrimSpace(modelID))
+	collapsed := strings.HasPrefix(lowered, "gemini") ||
+		(strings.HasPrefix(lowered, "claude") && !ClaudeAntigravityPassthrough(modelID))
+	if !collapsed {
 		return cleaned
 	}
 	for _, suffix := range antigravityEffortSuffixes {

@@ -12,10 +12,11 @@ import (
 )
 
 // selectAntigravityAttempt resolves the exact Cloud Code SKU one attempt sends.
-// Claude passes through under its own id: any thinking the request states is
-// ignored rather than resolved onto a SKU.
+// A Claude generation the vendor serves under its own id passes through: any
+// thinking the request states is ignored rather than resolved onto a SKU. A
+// collapsed Claude generation resolves an effort the way a Gemini model does.
 func (s *Server) selectAntigravityAttempt(ctx context.Context, spec *attemptSpec, tried map[string][]string) (*wire.AntigravityRequest, error) {
-	if isClaudeAntigravity(spec.candidate) {
+	if isClaudeAntigravityPassthrough(spec.candidate) {
 		return nil, nil
 	}
 	effort := ""
@@ -109,10 +110,11 @@ func antigravitySelectionError(candidate routing.Candidate, _ string) error {
 	return fmt.Errorf("no account serves the requested effort for %s: %w", candidate.ModelID, wire.ErrUnsupportedFeature)
 }
 
-// isClaudeAntigravity reports whether one attempt names a Claude model, which
-// the vendor serves under its own id with no thinking to resolve.
-func isClaudeAntigravity(candidate routing.Candidate) bool {
-	return catalog.ClaudeAntigravity(candidate.ModelID) ||
-		catalog.ClaudeAntigravity(candidate.Model.ID) ||
-		catalog.ClaudeAntigravity(candidate.Model.UpstreamID)
+// isClaudeAntigravityPassthrough reports whether one attempt names a Claude
+// generation the vendor serves under its own id, which has no thinking to
+// resolve. A collapsed Claude generation is not one of these.
+func isClaudeAntigravityPassthrough(candidate routing.Candidate) bool {
+	return catalog.ClaudeAntigravityPassthrough(candidate.ModelID) ||
+		catalog.ClaudeAntigravityPassthrough(candidate.Model.ID) ||
+		catalog.ClaudeAntigravityPassthrough(candidate.Model.UpstreamID)
 }

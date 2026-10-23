@@ -476,9 +476,9 @@ func groupAntigravityServed(served map[string]antigravityServed) (map[string][]a
 		if !found && antigravity.Variants(item.id) != nil {
 			logical, found = item.id, true
 		}
-		if !found || !isGeminiLogical(logical) {
+		if !found || !antigravityCollapses(logical) {
 			itemListed := Listed{ID: item.id, Name: item.name, ContextWindow: item.ctx, MaxOutput: item.max}
-			if isClaudeModel(item.id) {
+			if catalog.ClaudeAntigravityPassthrough(item.id) {
 				noReasoning := false
 				itemListed.SupportsReasoning = &noReasoning
 				itemListed.ReasoningEfforts = []string{}
@@ -491,12 +491,15 @@ func groupAntigravityServed(served map[string]antigravityServed) (map[string][]a
 	return grouped, singletons
 }
 
-func isGeminiLogical(logical string) bool {
-	return len(logical) >= 6 && logical[:6] == "gemini"
-}
-
-func isClaudeModel(id string) bool {
-	return strings.HasPrefix(strings.ToLower(strings.TrimSpace(id)), "claude")
+// antigravityCollapses reports whether one logical id is published once with
+// its effort chosen per request: a Gemini model, or a Claude generation the
+// vendor does not serve under its own id.
+func antigravityCollapses(logical string) bool {
+	lowered := strings.ToLower(strings.TrimSpace(logical))
+	if strings.HasPrefix(lowered, "gemini") {
+		return true
+	}
+	return strings.HasPrefix(lowered, "claude") && !catalog.ClaudeAntigravityPassthrough(logical)
 }
 
 func antigravityGrouped(logical string, members []antigravityServed) Listed {
