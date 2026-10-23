@@ -36,6 +36,7 @@ if [ "$COLOR" = 1 ]; then
 else
 	OFF=""; BRIGHT=""; LIGHT=""; MID=""; DANGER=""; BOLD=""
 fi
+DIM="$MID"
 
 UTF8=0
 _probe="█"
@@ -85,6 +86,7 @@ framed() {
 }
 
 row() { printf '%s\n' "$(framed "$1")"; }
+row_tty() { framed "$1" >/dev/tty; printf '\n' >/dev/tty; }
 hline() { printf '%s%s%s\n' "${BRIGHT}$1${OFF}" "${BRIGHT}${DASHES}${OFF}" "${BRIGHT}$2${OFF}"; }
 center_row() {
 	_len="$(vislen "$1")"
@@ -156,9 +158,11 @@ error_box() {
 
 box_row() {
 	_len="$(vislen "$1")"
+	if [ "$_len" -gt "$INNER" ]; then _text="$(clip "$1")"; else _text="$1"; fi
+	_len="$(vislen "$_text")"
 	_pad=$((INNER - _len))
 	[ "$_pad" -ge 0 ] || _pad=0
-	printf '%s%s%*s%s\n' "${DANGER}│${OFF}" "$1" "$_pad" '' "${DANGER}│${OFF}" >&2
+	printf '%s%s%*s%s\n' "${DANGER}│${OFF}" "$_text" "$_pad" '' "${DANGER}│${OFF}" >&2
 }
 
 die() {
@@ -169,6 +173,180 @@ die() {
 
 have() { command -v "$1" >/dev/null 2>&1; }
 quote() { printf "'%s'" "$(printf '%s' "$1" | sed "s/'/'\\\\''/g")"; }
+
+# ------------------------------------------------------------ selections ----
+#
+# A selection menu reads single keys from /dev/tty, so the uninstaller can be
+# piped in on stdin and still ask questions on the terminal. Without a
+# terminal it falls back to a typed number.
+
+MENU_TTY_STATE=""
+MENU_PICK=1
+
+menu_enter() {
+	[ "$INTERACTIVE" = 1 ] && [ "$UTF8" = 1 ] || return 1
+	MENU_TTY_STATE="$(stty -g </dev/tty 2>/dev/null || true)"
+	[ -n "$MENU_TTY_STATE" ] || return 1
+	stty -echo -icanon min 1 time 0 </dev/tty 2>/dev/null || return 1
+	trap 'stty "$MENU_TTY_STATE" </dev/tty 2>/dev/null || true; exit 130' INT TERM HUP
+}
+
+menu_leave() {
+	if [ -n "$MENU_TTY_STATE" ]; then
+		stty "$MENU_TTY_STATE" </dev/tty 2>/dev/null || true
+		MENU_TTY_STATE=""
+	fi
+	trap - INT TERM HUP
+}
+
+# Keys are read as byte values: a character captured through $(...) loses a
+# trailing newline, and Enter is exactly that byte.
+read_key() {
+	_code="$(dd if=/dev/tty bs=1 count=1 2>/dev/null | od -An -tu1 | tr -d ' ')"
+	[ -n "$_code" ] || return 1
+	printf '%s' "$_code"
+}
+
+# read_key_timed prints nothing when no key follows: it tells a lone Escape
+# from the bracket that opens an arrow key sequence.
+read_key_timed() {
+	stty min 0 time 1 </dev/tty 2>/dev/null || true
+	_code="$(dd if=/dev/tty bs=1 count=1 2>/dev/null | od -An -tu1 | tr -d ' ')"
+	stty min 1 time 0 </dev/tty 2>/dev/null || true
+	printf '%s' "$_code"
+}
+
+MENU_HEIGHT=3
+
+menu_rewind() {
+	[ "$1" -gt 0 ] && printf '%s[%dA' "$ESC" "$1" >/dev/tty
+}
+
+# menu_row paints the button line: the chosen button reversed, the rest plain.
+menu_row() {
+	_line="  "
+	_i=1
+	for _item in "$@"; do
+		if [ "$_i" = "$MENU_PICK" ]; then
+			_line="$_line ${MENU_REV}[ $_item ]${MENU_OFF}"
+		else
+			_line="$_line ${DIM}[$_item]${OFF}"
+		fi
+		_i=$((_i + 1))
+	done
+	row_tty "$_line"
+}
+
+menu_draw() {
+	_prompt="$1"
+	shift
+	row_tty "  ${BRIGHT}▶${OFF} $_prompt"
+	menu_row "$@"
+	row_tty "  ${DIM}←/→ to move · Enter to pick · q to cancel${OFF}"
+}
+
+# menu_settle replaces the drawn menu with one answer row. The rows under it
+# are deleted, not blanked, so the frame closes up instead of leaving gaps.
+menu_settle() {
+	menu_rewind "$MENU_HEIGHT"
+	printf '\r%s[2K%s\n' "$ESC" "$(framed "$1")" >/dev/tty
+	_i=1
+	while [ "$_i" -lt "$MENU_HEIGHT" ]; do
+		printf '\r%s[M' "$ESC" >/dev/tty
+		_i=$((_i + 1))
+	done
+}
+
+menu_done() {
+	menu_settle "  ${BRIGHT}▶${OFF} $MENU_PROMPT ${BOLD}${MENU_ANSWER}${OFF}"
+}
+
+menu_stop() {
+	menu_settle "  ${DIM}▶ $MENU_PROMPT (canceled)${OFF}"
+	menu_leave
+}
+
+# menu_select <prompt> <default> <option>...; prints the chosen option and
+# returns 0. Returns 1 when the user cancels.
+menu_select() {
+	MENU_PROMPT="$1"
+	MENU_PICK="$2"
+	shift 2
+	_count=$#
+	[ "$MENU_PICK" -ge 1 ] || MENU_PICK=1
+	[ "$MENU_PICK" -le "$_count" ] || MENU_PICK="$_count"
+	if [ "$COLOR" = 1 ]; then
+		MENU_REV="$(printf '\033[7m')"
+		MENU_OFF="$(printf '\033[0m')"
+	else
+		MENU_REV=""
+		MENU_OFF=""
+	fi
+
+	if ! menu_enter; then
+		printf '  %s>%s %s\n' "$BRIGHT" "$OFF" "$MENU_PROMPT" >/dev/tty
+		_i=1
+		for _item in "$@"; do
+			printf '    [%s] %s\n' "$_i" "$_item" >/dev/tty
+			_i=$((_i + 1))
+		done
+		printf '  %s>%s Choose 1-%s: ' "$BRIGHT" "$OFF" "$_count" >/dev/tty
+		IFS= read -r _answer </dev/tty || return 1
+		case "$_answer" in
+		'') ;;
+		*[!0-9]*) return 1 ;;
+		*)
+			[ "$_answer" -ge 1 ] && [ "$_answer" -le "$_count" ] || return 1
+			MENU_PICK="$_answer"
+			;;
+		esac
+	else
+		while :; do
+			menu_draw "$MENU_PROMPT" "$@"
+			_key="$(read_key)" || {
+				menu_stop
+				return 1
+			}
+			case "$_key" in
+			10 | 13 | 32) break ;;
+			113 | 81) menu_stop; return 1 ;;
+			104 | 107) [ "$MENU_PICK" -gt 1 ] && MENU_PICK=$((MENU_PICK - 1)) ;;
+			106 | 108) [ "$MENU_PICK" -lt "$_count" ] && MENU_PICK=$((MENU_PICK + 1)) ;;
+			27)
+				_code="$(read_key_timed)"
+				if [ "$_code" = 91 ] || [ "$_code" = 79 ]; then
+					_code="$(read_key_timed)"
+					case "$_code" in
+					65 | 68) [ "$MENU_PICK" -gt 1 ] && MENU_PICK=$((MENU_PICK - 1)) ;;
+					66 | 67) [ "$MENU_PICK" -lt "$_count" ] && MENU_PICK=$((MENU_PICK + 1)) ;;
+					esac
+				else
+					menu_stop
+					return 1
+				fi
+				;;
+			esac
+			if [ "$_key" -ge 49 ] && [ "$_key" -le 57 ]; then
+				_digit=$((_key - 48))
+				[ "$_digit" -le "$_count" ] && MENU_PICK="$_digit"
+			fi
+			menu_rewind "$MENU_HEIGHT"
+		done
+		_i=1
+		for _item in "$@"; do
+			[ "$_i" = "$MENU_PICK" ] && MENU_ANSWER="$_item"
+			_i=$((_i + 1))
+		done
+		menu_done
+		menu_leave
+	fi
+
+	_i=1
+	for _item in "$@"; do
+		[ "$_i" = "$MENU_PICK" ] && printf '%s' "$_item"
+		_i=$((_i + 1))
+	done
+}
 
 # --------------------------------------------------------------- options ----
 
@@ -221,6 +399,14 @@ FORMULA=""
 NPM_ROOT=""
 
 detect() {
+	# Resolve the relo command first: the service is stopped through it for
+	# every channel, so it must be known before the early returns below.
+	if [ -n "$DIR_OPT" ] && [ -e "$DIR_OPT/relo" ]; then
+		BIN="$DIR_OPT/relo"
+	else
+		BIN="$(command -v relo 2>/dev/null || true)"
+	fi
+
 	# A package that owns the relo command is found even when the command is
 	# not on PATH, which is how a package manager can be asked to remove it.
 	if have brew; then
@@ -247,12 +433,6 @@ detect() {
 		CHANNEL="app"
 		if [ -x "$APP/Contents/MacOS/Relo" ]; then BIN="$APP/Contents/MacOS/Relo"; fi
 		return 0
-	fi
-
-	if [ -n "$DIR_OPT" ] && [ -e "$DIR_OPT/relo" ]; then
-		BIN="$DIR_OPT/relo"
-	else
-		BIN="$(command -v relo 2>/dev/null || true)"
 	fi
 
 	if [ -n "$BIN" ] && [ -f "$(dirname "$BIN")/$RECEIPT" ]; then CHANNEL="script"; return 0; fi
@@ -294,38 +474,40 @@ ask_data() {
 		note "Keeping the Relo data. Pass --wipe to remove it."
 		return 0
 	fi
-	printf '%s  %s▶%s Remove your Relo data (configuration, credentials, logs)? [y/N] ' "${BRIGHT}│${OFF}" "$BRIGHT" "$OFF" >/dev/tty
-	IFS= read -r answer </dev/tty || answer=""
-	case "$(printf '%s' "$answer" | tr '[:upper:]' '[:lower:]' | tr -d ' ')" in
-	y|yes) WIPE=1 ;;
-	*) WIPE=0 ;;
-	esac
+	# A selection, install.sh's way: pick with the arrow keys, and only an
+	# explicit "Remove data" wipes. q cancels the uninstall entirely.
+	if ! menu_select "Keep or remove your Relo data?" 1 "Keep data" "Remove data" >/dev/null; then
+		note "Canceled; nothing was removed."
+		screen_close
+		exit 0
+	fi
+	[ "$MENU_PICK" = 2 ] && WIPE=1 || WIPE=0
 }
 
-settle_data() {
+stop_relo() {
 	if [ -n "$BIN" ] && [ -x "$BIN" ]; then
-		step "Stopping Relo and settling its data"
-		if [ "$WIPE" = 1 ]; then
-			if "$BIN" --home "$HOME_DIR" uninstall --prepare --wipe >/dev/null 2>&1; then
-				done_ "Service stopped and data removed"
-				return 0
-			fi
-		else
-			if "$BIN" --home "$HOME_DIR" uninstall --prepare >/dev/null 2>&1; then
-				done_ "Service stopped; data kept"
-				return 0
-			fi
+		step "Stopping Relo"
+		if "$BIN" --home "$HOME_DIR" uninstall --prepare >/dev/null 2>&1; then
+			done_ "Service stopped"
+			return 0
 		fi
 		note "The installed Relo could not stop itself; continuing with file removal."
 	fi
-	if [ "$WIPE" = 1 ]; then
-		if [ -d "$HOME_DIR" ]; then
-			rm -rf "$HOME_DIR" || die "Could not remove $HOME_DIR"
-			done_ "Removed $HOME_DIR"
-			note "Keychain entries were not removed because the Relo binary could not do it."
-		fi
-	else
-		note "Keeping the Relo data in $HOME_DIR"
+}
+
+remove_data() {
+	[ "$WIPE" = 1 ] || return 0
+	# The service is already stopped; ask the binary to wipe the state and the
+	# keychain entries it owns, falling back to a plain directory removal.
+	if [ -n "$BIN" ] && [ -x "$BIN" ] && \
+		"$BIN" --home "$HOME_DIR" uninstall --prepare --wipe >/dev/null 2>&1; then
+		done_ "Data removed"
+		return 0
+	fi
+	if [ -d "$HOME_DIR" ]; then
+		rm -rf "$HOME_DIR" || die "Could not remove $HOME_DIR"
+		done_ "Removed $HOME_DIR"
+		note "Keychain entries were not removed because the Relo binary could not do it."
 	fi
 }
 
@@ -338,7 +520,7 @@ remove_program() {
 		[ ! -d "$APP" ] || die "$APP is still present" "Run: rm -rf $(quote "$APP")"
 		;;
 	brew)
-		if ! brew uninstall "$FORMULA"; then
+		if ! brew uninstall "$FORMULA" >/dev/null 2>&1; then
 			die "Homebrew did not remove $FORMULA" "Run: brew uninstall $FORMULA"
 		fi
 		if brew list --formula "$FORMULA" >/dev/null 2>&1; then
@@ -346,7 +528,7 @@ remove_program() {
 		fi
 		;;
 	npm)
-		if ! npm uninstall -g "$NPM_PACKAGE"; then
+		if ! npm uninstall -g "$NPM_PACKAGE" >/dev/null 2>&1; then
 			die "npm did not remove $NPM_PACKAGE" "Run: npm uninstall -g $NPM_PACKAGE"
 		fi
 		NPM_ROOT="$(npm root -g 2>/dev/null || true)"
@@ -430,8 +612,9 @@ if [ -n "$BIN" ]; then row "  ${MID}Binary${OFF}    $BIN"; fi
 row "  ${MID}Data${OFF}      $HOME_DIR"
 row ''
 
+stop_relo
 ask_data
-settle_data
+remove_data
 
 if [ "$CHANNEL" = "deb" ] || [ "$CHANNEL" = "rpm" ]; then
 	remove_program || true
