@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { tick } from 'svelte';
 	import { flip } from 'svelte/animate';
-	import { slide } from 'svelte/transition';
+	import { fly } from 'svelte/transition';
 	import { t } from 'svelte-i18n';
 
 	import { prefersReducedMotion } from '$lib/tab-motion';
@@ -50,7 +50,7 @@
 
 	const groups = $derived(groupRequestsByHour(logs));
 	// The first page paints still. A row that arrives afterwards uses the
-	// shared slide; flip eases the rows it pushes down. Reduced motion skips both.
+	// fade-in rise from below; flip eases the rows it pushes down. Reduced motion skips both.
 	let settled = $state(false);
 	const motion = $derived(!prefersReducedMotion());
 
@@ -99,7 +99,7 @@
 				{#if !settled || !motion}
 					<RequestRow {row} {maxTokens} {cols} {onopen} />
 				{:else}
-					<div in:slide={{ duration: 200 }}>
+					<div in:fly={{ y: 16, duration: 200 }}>
 						<RequestRow {row} {maxTokens} {cols} {onopen} />
 					</div>
 				{/if}
