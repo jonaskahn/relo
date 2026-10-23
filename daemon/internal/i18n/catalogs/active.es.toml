@@ -114,7 +114,7 @@ other = "Dirección"
 
 [cli.daemon.status.data_plane]
 description = "Status field label for the port each client protocol answers on"
-other = "Data plane"
+other = "Plano de datos"
 
 [cli.daemon.status.secret_mode]
 description = "Status field label"
@@ -134,7 +134,7 @@ other = "{{.Count}} ({{.Active}} activas)"
 
 [cli.daemon.status.no_keys]
 description = "Warning under the status report when no client key is active"
-other = "No hay claves de cliente activas. El proxy rechaza cada solicitud."
+other = "No hay ninguna clave de cliente activa. El plano de datos rechaza cada solicitud."
 
 [cli.daemon.run.short]
 description = "One-line summary of relo daemon run"
@@ -302,7 +302,7 @@ other = "Conectado"
 
 [api.callback.marker_failed]
 description = "Status marker of a login that did not finish"
-other = "No conectado"
+other = "Sin conexión"
 
 [api.callback.steps_label]
 description = "Accessible label of the progress list on the callback page"
@@ -330,19 +330,19 @@ other = "Relo guardó la cuenta y enruta las solicitudes por ella."
 
 [api.callback.failed_title]
 description = "Title of the callback page for a login that did not finish"
-other = "El inicio de sesión no terminé"
+other = "El inicio de sesión no terminó"
 
 [api.callback.expired_title]
 description = "Title of the callback page for a login this process no longer tracks"
-other = "Este inicio de sesión ya no está en curso"
+other = "Este inicio de sesión ya no está activo"
 
 [api.callback.expired_body]
 description = "Summary of the callback page for a login this process no longer tracks"
-other = "Relo ya no sigue este inicio de sesión. Vuelve a hacerlo desde la consola."
+other = "Relo ya no sigue este inicio de sesión. Inícialo de nuevo desde la consola."
 
 [api.callback.expired]
 description = "Refusal of a callback status poll for a login that is gone"
-other = "este inicio de sesión ya no está en curso"
+other = "este inicio de sesión ya no está activo"
 
 [api.callback.failure_denied]
 description = "Callback failure: the provider refused the authorization"
@@ -386,7 +386,7 @@ other = "no existe ese canal de eventos"
 
 [api.events.cannot_stream]
 description = "Refusal of an event stream over a listener that cannot stream"
-other = "este listener no puede hacer streaming"
+other = "este puerto de escucha no puede retransmitir"
 
 [api.events.too_many]
 description = "Refusal of an event stream when too many are already open"
@@ -426,7 +426,7 @@ other = "ninguna operación de inicio de sesión tiene ese id"
 
 [api.oauth.port_busy]
 description = "Refusal of a sign-in whose callback port another process holds"
-other = "{{process}} está usando el puerto {{port}}; ciérralo para iniciar sesión"
+other = "{{process}} ocupa el puerto {{port}}; termínalo para iniciar sesión"
 
 [api.integration.action_in_progress]
 description = "Refusal of a second run of an action the first has not finished"
@@ -446,11 +446,11 @@ other = "el servicio de gestión no está disponible"
 
 [api.settings.retention.invalid]
 description = "Refusal of a retention budget below the floor the ledger keeps"
-other = "request details are kept for at least a {{.Min}}-day window; use 0 to keep everything"
+other = "los detalles de las solicitudes se conservan al menos una ventana de {{.Min}} días; usa 0 para conservarlo todo"
 
 [api.settings.sweep.busy]
 description = "Refusal of a maintenance sweep while another one is running"
-other = "a maintenance sweep is already running; wait for it to finish"
+other = "ya hay una limpieza de mantenimiento en marcha; espera a que termine"
 
 [api.account.status_required]
 description = "Refusal of an account update that named neither status nor priority"
@@ -466,11 +466,11 @@ other = "Abrir panel"
 
 [tray.menu.restart]
 description = "Tray menu item that restarts the daemon"
-other = "Reiniciar servidor"
+other = "Reiniciar el daemon"
 
 [tray.menu.force_restart]
 description = "Tray menu item that kills the daemon and starts it again"
-other = "Forzar reinicio"
+other = "Forzar el reinicio"
 
 [tray.menu.autostart]
 description = "Tray menu item that toggles the login item"
@@ -554,7 +554,7 @@ other = "el registro del daemon está en {{.Path}}"
 
 [cli.daemon.stop.short]
 description = "One-line summary of relo daemon stop"
-other = "Detener el proxy de Relo de los comandos de ciclo de vida"
+other = "Detener el proxy de Relo que gestionan los comandos de ciclo de vida"
 
 [cli.daemon.stop.stopped]
 description = "Confirmation after a stop"
