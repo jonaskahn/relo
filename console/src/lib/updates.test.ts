@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { latestBetaVersion, updateAvailable, type UpdateNotice } from './updates';
+import { latestVersion, onBetaChannel, updateAvailable, type UpdateNotice } from './updates';
 
 const notice = (available: boolean, url = 'https://example.com/relo'): UpdateNotice => ({
 	current: '0.1.0',
@@ -27,37 +27,40 @@ describe('updateAvailable', () => {
 	});
 });
 
-describe('latestBetaVersion', () => {
-	const beta = (current: string, latest: string, available = false): UpdateNotice => ({
+describe('latestVersion', () => {
+	const channel = (current: string, latest: string, available = false): UpdateNotice => ({
 		current,
 		latest,
 		available,
 		url: 'https://example.com/relo'
 	});
 
-	it('names the newest beta beside a beta build', () => {
-		expect(
-			latestBetaVersion(
-				'0.1.7-beta.36.1ea2bdb4',
-				beta('0.1.7-beta.36.1ea2bdb4', '0.1.7-beta.37.aaaaaaaa')
-			)
-		).toBe('0.1.7-beta.37.aaaaaaaa');
+	it('names the newest beta beside a current beta build', () => {
+		expect(latestVersion(channel('0.1.7-beta.36.1ea2bdb4', '0.1.7-beta.36.1ea2bdb4'))).toBe(
+			'0.1.7-beta.36.1ea2bdb4'
+		);
 	});
 
-	it('leaves a newer beta to the update control', () => {
-		expect(
-			latestBetaVersion(
-				'0.1.7-beta.36.1ea2bdb4',
-				beta('0.1.7-beta.36.1ea2bdb4', '0.1.7-beta.37.aaaaaaaa', true)
-			)
-		).toBe('');
+	it('names the newest release beside a current stable build', () => {
+		expect(latestVersion(channel('0.1.7', '0.1.7'))).toBe('0.1.7');
 	});
 
-	it('names nothing on a stable build', () => {
-		expect(latestBetaVersion('0.1.7', beta('0.1.7', '0.1.8-beta.1.aaaaaaaa'))).toBe('');
+	it('leaves a newer build to the update control', () => {
+		expect(latestVersion(channel('0.1.7', '0.1.8', true))).toBe('');
+		expect(latestVersion(channel('0.1.7-beta.36.1ea2bdb4', '0.1.7-beta.37.aaaaaaaa', true))).toBe(
+			''
+		);
 	});
 
 	it('names nothing before the check answers', () => {
-		expect(latestBetaVersion('0.1.7-beta.36.1ea2bdb4', null)).toBe('');
+		expect(latestVersion(null)).toBe('');
+		expect(latestVersion(channel('0.1.7', ''))).toBe('');
+	});
+});
+
+describe('onBetaChannel', () => {
+	it('follows the version suffix', () => {
+		expect(onBetaChannel('0.1.7-beta.36.1ea2bdb4')).toBe(true);
+		expect(onBetaChannel('0.1.7')).toBe(false);
 	});
 });

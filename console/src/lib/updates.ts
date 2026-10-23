@@ -31,13 +31,16 @@ export function updateAvailable(notice: UpdateNotice | null | undefined): boolea
 	return Boolean(notice?.available && notice.url);
 }
 
-/** The newest published beta a beta build names beside its own version. A newer
- *  beta is already offered by the update control, so the label stays out of
- *  its way. */
-export function latestBetaVersion(
-	current: string,
-	notice: UpdateNotice | null | undefined
-): string {
-	if (!notice || updateAvailable(notice) || !isPrerelease(current)) return '';
+/** The newest published build on the running channel, named beside the running
+ *  version: the latest beta for a beta build, the latest release otherwise. A
+ *  newer build is already offered by the update control, so the label stays out
+ *  of its way. */
+export function latestVersion(notice: UpdateNotice | null | undefined): string {
+	if (!notice || updateAvailable(notice)) return '';
 	return notice.latest;
+}
+
+/** Reports whether the running build follows the beta channel. */
+export function onBetaChannel(current: string): boolean {
+	return isPrerelease(current);
 }
