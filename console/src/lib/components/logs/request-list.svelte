@@ -5,6 +5,7 @@
 
 	import { prefersReducedMotion } from '$lib/tab-motion';
 	import RequestRow from '$lib/components/logs/request-row.svelte';
+	import Icon from '$lib/components/ui/icon.svelte';
 	import { formatTokens } from '$lib/format';
 	import { groupRequestsByHour } from '$lib/process-logs';
 	import type { UsageLogRow } from '$lib/types';
@@ -143,7 +144,12 @@
 			class="flex items-center justify-center px-5 py-4 text-xs text-muted-foreground"
 			{@attach watchMore}
 		>
-			{loadingMore ? $t('ui.common.loading') : ''}
+			{#if loadingMore}
+				<span class="flex items-center gap-2">
+					<Icon name="loader" size={14} spin />
+					{$t('ui.common.loading')}
+				</span>
+			{/if}
 		</div>
 	{/if}
 </div>
