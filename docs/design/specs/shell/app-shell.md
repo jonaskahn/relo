@@ -41,7 +41,8 @@ No lines between regions: the chrome tint against `--canvas`, plus a soft right-
 - Right cluster, 38px controls, 8px gap: daemon pill, quick add `+`, appearance button (opens `appearance-popover`).
 - Daemon pill: `--surface`, full `--line` border, `--radius-control` corners (matches the buttons beside it), 8px dot
   (`--ok`, soft ring pulse while running), text "Daemon running" in sentence case, version in `.mono-data` `--muted`.
-  Stopped = `--faint` dot, no pulse, text says what is wrong and offers the next action.
+  A beta build also names the newest published beta beside its own version; when that beta is newer, the pill offers
+  the update. Stopped = `--faint` dot, no pulse, text says what is wrong and offers the next action.
 - Scrolled content under it adds `0 8px 24px -12px var(--shadow)`.
 
 ## Page header

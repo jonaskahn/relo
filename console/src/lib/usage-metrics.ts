@@ -5,6 +5,7 @@
 
 import { formatCost, formatDuration, formatTokens } from './format';
 import type { UsageTotals } from './usage-filters';
+import type { UsageRollupRow } from './types';
 
 /** One card: a compact value, the exact figure behind it, the unit it is counted in, and the
  *  line under it. */
@@ -39,6 +40,71 @@ function rate(part: number, whole: number): string {
 function average(total: number, parts: number, render: (value: number) => string): string {
 	if (parts <= 0) return '—';
 	return render(total / parts);
+}
+
+function rowTokens(row: UsageRollupRow): number {
+	return (
+		Math.max(0, Number(row.InputTokens)) +
+		Math.max(0, Number(row.OutputTokens)) +
+		Math.max(0, Number(row.CacheReadTokens)) +
+		Math.max(0, Number(row.CacheWriteTokens))
+	);
+}
+
+/** Reads one day of a chosen metric card from a daily rollup row. A per-request figure is null
+ *  when the day served nothing, so its line breaks rather than claiming a rate the day did not
+ *  have. planMicros is the plan usage the same day carried, which the API-spend rollup does not
+ *  include. */
+export function metricSeriesPoint(id: string, row: UsageRollupRow, planMicros = 0): number | null {
+	const requests = Math.max(0, Number(row.Requests));
+	const errors = Math.max(0, Number(row.Errors));
+	const tokens = rowTokens(row);
+	const unpriced = Math.max(0, Number(row.UnpricedRequests));
+	const priced = Math.max(0, requests - unpriced);
+	switch (id) {
+		case 'requests':
+			return requests;
+		case 'successes':
+			return Math.max(0, requests - errors);
+		case 'errors':
+			return errors;
+		case 'success_rate':
+			return requests > 0 ? (requests - errors) / requests : null;
+		case 'error_rate':
+			return requests > 0 ? errors / requests : null;
+		case 'attempts':
+			return Math.max(0, Number(row.Attempts));
+		case 'retried':
+			return Math.max(0, Number(row.RetriedRequests));
+		case 'tokens_input':
+			return Math.max(0, Number(row.InputTokens));
+		case 'tokens_output':
+			return Math.max(0, Number(row.OutputTokens));
+		case 'tokens_total':
+			return tokens;
+		case 'tokens_per_request':
+			return requests > 0 ? tokens / requests : null;
+		case 'cache_read':
+			return Math.max(0, Number(row.CacheReadTokens));
+		case 'cache_write':
+			return Math.max(0, Number(row.CacheWriteTokens));
+		case 'spend':
+			return Math.max(0, Number(row.CostMicros));
+		case 'plan_usage':
+			return Math.max(0, planMicros);
+		case 'spend_per_request':
+			return priced > 0 ? Math.max(0, Number(row.CostMicros)) / priced : null;
+		case 'priced_requests':
+			return priced;
+		case 'unpriced_requests':
+			return unpriced;
+		case 'duration_avg':
+			return requests > 0 ? Math.max(0, Number(row.DurationMs)) / requests : null;
+		case 'duration_max':
+			return Math.max(0, Number(row.DurationMaxMs));
+		default:
+			return null;
+	}
 }
 
 /** Renders one metric from the totals of a read.

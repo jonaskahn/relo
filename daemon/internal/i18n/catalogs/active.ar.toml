@@ -670,6 +670,26 @@ other = "انقل {{.Bundle}} إلى سلة المحذوفات"
 description = "The command to run when a removal could not be started"
 other = "نفّذ هذا لإكمال إزالة Relo: {{.Command}}"
 
+[cli.uninstall.channel]
+description = "The installation channel the uninstall detected"
+other = "تم اكتشاف التثبيت: {{.Channel}}"
+
+[cli.uninstall.command]
+description = "The exact program-removal command for the detected channel"
+other = "أزل البرنامج باستخدام: {{.Command}}"
+
+[cli.uninstall.verified]
+description = "Confirmation that a path is gone after removal"
+other = "تم التحقق من الإزالة: {{.Path}}"
+
+[cli.uninstall.failed]
+description = "A path that survived the removal"
+other = "لا يزال موجودًا: {{.Path}}"
+
+[cli.uninstall.self_delete]
+description = "A running Windows program scheduled for deletion after exit"
+other = "سيحذف Windows هذا الملف بعد خروج Relo: {{.Path}}"
+
 [tray.menu.quitting]
 description = "Tray quit action while final records are saved"
 other = "إنهاء — جارٍ المعالجة…"

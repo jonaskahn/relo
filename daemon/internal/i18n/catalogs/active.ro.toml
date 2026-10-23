@@ -670,6 +670,26 @@ other = "mută {{.Bundle}} în Coș"
 description = "The command to run when a removal could not be started"
 other = "rulează asta pentru a finaliza eliminarea lui Relo: {{.Command}}"
 
+[cli.uninstall.channel]
+description = "The installation channel the uninstall detected"
+other = "Instalare detectată: {{.Channel}}"
+
+[cli.uninstall.command]
+description = "The exact program-removal command for the detected channel"
+other = "Elimină programul cu: {{.Command}}"
+
+[cli.uninstall.verified]
+description = "Confirmation that a path is gone after removal"
+other = "Eliminare verificată: {{.Path}}"
+
+[cli.uninstall.failed]
+description = "A path that survived the removal"
+other = "Încă există: {{.Path}}"
+
+[cli.uninstall.self_delete]
+description = "A running Windows program scheduled for deletion after exit"
+other = "Windows va șterge acest fișier după ce Relo se închide: {{.Path}}"
+
 [tray.menu.quitting]
 description = "Tray quit action while final records are saved"
 other = "Închidere — în curs…"

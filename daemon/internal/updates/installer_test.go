@@ -64,8 +64,8 @@ func TestInstallerFor(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := installerFor(tt.executable, tt.goos); got != tt.want {
-				t.Fatalf("installerFor(%q, %q) = %q, want %q", tt.executable, tt.goos, got, tt.want)
+			if got := InstallerFor(tt.executable, tt.goos); got != tt.want {
+				t.Fatalf("InstallerFor(%q, %q) = %q, want %q", tt.executable, tt.goos, got, tt.want)
 			}
 		})
 	}
@@ -83,8 +83,8 @@ func TestInstallerForScriptReceipt(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			executable := installedBinary(t, t.TempDir(), "channel=script\nversion=0.1.3\n")
-			if got := installerFor(executable, tt.goos); got != tt.want {
-				t.Fatalf("installerFor(%q, %q) = %q, want %q", executable, tt.goos, got, tt.want)
+			if got := InstallerFor(executable, tt.goos); got != tt.want {
+				t.Fatalf("InstallerFor(%q, %q) = %q, want %q", executable, tt.goos, got, tt.want)
 			}
 		})
 	}
@@ -93,21 +93,21 @@ func TestInstallerForScriptReceipt(t *testing.T) {
 func TestInstallerForScriptReceiptBeatsPackagingPaths(t *testing.T) {
 	scriptDir := filepath.Join(t.TempDir(), "AppData", "Local", "Programs", "Relo", "bin")
 	scripted := installedBinary(t, scriptDir, "channel=script\n")
-	if got := installerFor(scripted, "windows"); got != InstallerPowerShell {
-		t.Fatalf("installerFor(%q, windows) = %q, want %q", scripted, got, InstallerPowerShell)
+	if got := InstallerFor(scripted, "windows"); got != InstallerPowerShell {
+		t.Fatalf("InstallerFor(%q, windows) = %q, want %q", scripted, got, InstallerPowerShell)
 	}
 
 	setupDir := filepath.Join(t.TempDir(), "AppData", "Local", "Programs", "Relo")
 	setup := filepath.Join(setupDir, "relo.exe")
-	if got := installerFor(setup, "windows"); got != InstallerSetup {
-		t.Fatalf("installerFor(%q, windows) = %q, want %q", setup, got, InstallerSetup)
+	if got := InstallerFor(setup, "windows"); got != InstallerSetup {
+		t.Fatalf("InstallerFor(%q, windows) = %q, want %q", setup, got, InstallerSetup)
 	}
 }
 
 func TestInstallerForForeignReceipt(t *testing.T) {
 	executable := installedBinary(t, t.TempDir(), "channel=manual\n")
-	if got := installerFor(executable, "linux"); got != InstallerUnknown {
-		t.Fatalf("installerFor(%q, linux) = %q, want %q", executable, got, InstallerUnknown)
+	if got := InstallerFor(executable, "linux"); got != InstallerUnknown {
+		t.Fatalf("InstallerFor(%q, linux) = %q, want %q", executable, got, InstallerUnknown)
 	}
 }
 
@@ -128,8 +128,8 @@ func TestInstallerForHomebrewSymlink(t *testing.T) {
 		t.Fatalf("link the binary: %v", err)
 	}
 
-	if got := installerFor(link, "darwin"); got != InstallerBrew {
-		t.Fatalf("installerFor(%q, darwin) = %q, want %q", link, got, InstallerBrew)
+	if got := InstallerFor(link, "darwin"); got != InstallerBrew {
+		t.Fatalf("InstallerFor(%q, darwin) = %q, want %q", link, got, InstallerBrew)
 	}
 }
 
@@ -138,8 +138,8 @@ func TestInstallerForBrokenSymlink(t *testing.T) {
 	if err := os.Symlink(filepath.Join(t.TempDir(), "missing"), link); err != nil {
 		t.Fatalf("link the missing binary: %v", err)
 	}
-	if got := installerFor(link, "linux"); got != InstallerUnknown {
-		t.Fatalf("installerFor(%q, linux) = %q, want %q", link, got, InstallerUnknown)
+	if got := InstallerFor(link, "linux"); got != InstallerUnknown {
+		t.Fatalf("InstallerFor(%q, linux) = %q, want %q", link, got, InstallerUnknown)
 	}
 }
 

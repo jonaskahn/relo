@@ -666,6 +666,26 @@ other = "переместите {{.Bundle}} в корзину"
 description = "The command to run when a removal could not be started"
 other = "выполните это, чтобы завершить удаление Relo: {{.Command}}"
 
+[cli.uninstall.channel]
+description = "The installation channel the uninstall detected"
+other = "Обнаружена установка: {{.Channel}}"
+
+[cli.uninstall.command]
+description = "The exact program-removal command for the detected channel"
+other = "Удалите программу командой: {{.Command}}"
+
+[cli.uninstall.verified]
+description = "Confirmation that a path is gone after removal"
+other = "Удаление проверено: {{.Path}}"
+
+[cli.uninstall.failed]
+description = "A path that survived the removal"
+other = "Всё ещё существует: {{.Path}}"
+
+[cli.uninstall.self_delete]
+description = "A running Windows program scheduled for deletion after exit"
+other = "Windows удалит этот файл после завершения Relo: {{.Path}}"
+
 [tray.menu.quitting]
 description = "Tray quit action while final records are saved"
 other = "Выход — обработка…"

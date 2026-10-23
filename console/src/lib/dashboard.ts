@@ -439,6 +439,56 @@ export function windowStart(period: WindowPeriod, now: number): number {
 	return utcDayStart(now) - (days - 1) * DAY_MS;
 }
 
+/** The first Monday of the trailing calendar year the dashboard's activity card draws.
+ *  The span is the current week plus the 52 weeks before it, so the card always has 53
+ *  Monday-first columns however quiet the range is. */
+export function activityYearStart(now: number): number {
+	const weekday = new Date(utcDayStart(now)).getUTCDay();
+	const monday = utcDayStart(now) - ((weekday + 6) % 7) * DAY_MS;
+	return monday - 52 * 7 * DAY_MS;
+}
+
+/** Every UTC day the dashboard's activity card draws, oldest first. The first is the Monday
+ *  a year back and the last is today; the calendar itself fills the rest of the current week. */
+export function activityYearDays(now: number): string[] {
+	const start = activityYearStart(now);
+	const end = utcDayStart(now);
+	const days: string[] = [];
+	for (let at = start; at <= end; at += DAY_MS) {
+		days.push(new Date(at).toISOString().slice(0, 10));
+	}
+	return days;
+}
+
+/** One day's traffic as the dashboard's activity card reads it. */
+export interface ActivityDay {
+	key: string;
+	value: number;
+}
+
+/** The two figures beside the calendar: the busiest day of the year and the longest run of
+ *  consecutive days that carried any traffic. A quiet year has neither. */
+export function activityStats(days: readonly ActivityDay[]): {
+	busiest: ActivityDay | null;
+	streak: number;
+} {
+	const ordered = [...days].sort((a, b) => (a.key < b.key ? -1 : a.key > b.key ? 1 : 0));
+	let busiest: ActivityDay | null = null;
+	let streak = 0;
+	let run = 0;
+	let previous: string | null = null;
+	for (const day of ordered) {
+		if (day.value > 0 && (!busiest || day.value > busiest.value)) busiest = day;
+		const consecutive =
+			previous !== null &&
+			Date.parse(day.key + 'T00:00:00Z') - Date.parse(previous + 'T00:00:00Z') === 86_400_000;
+		run = day.value > 0 ? (consecutive ? run + 1 : 1) : 0;
+		if (run > streak) streak = run;
+		previous = day.key;
+	}
+	return { busiest, streak };
+}
+
 /** Bounds the selected summary period and the window before it, so one number means the same
  *  thing at every window.
  *  Today compares against the same span of yesterday rather than a full day, so a part-day today

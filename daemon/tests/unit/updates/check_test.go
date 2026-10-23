@@ -49,6 +49,22 @@ const sampleReleases = `<?xml version="1.0" encoding="UTF-8"?>
 </feed>
 `
 
+const betaCatalog = `{
+  "latest": "v0.1.4",
+  "latest_beta": "v0.1.4-beta.28.1a2b3c4d",
+  "releases": [
+    {
+      "tag": "v0.1.4-beta.28.1a2b3c4d",
+      "version": "0.1.4-beta.28.1a2b3c4d",
+      "page": "https://github.com/jonaskahn/relo/releases/tag/v0.1.4-beta.28.1a2b3c4d",
+      "notes": "## What's Changed\n* The newest beta.\n",
+      "files": [
+        {"name": "relo-0.1.4-beta.28.1a2b3c4d-darwin-arm64.tar.gz", "url": "https://example.com/beta.tar.gz", "os": "macos", "arch": "arm64", "kind": "archive", "format": "tar.gz"}
+      ]
+    }
+  ]
+}`
+
 func TestInAppBundle(t *testing.T) {
 	if updates.InAppBundle() {
 		t.Fatal("InAppBundle() = true, want false in the test binary")
@@ -454,6 +470,103 @@ func TestCheckerBeta(t *testing.T) {
 		}
 		if status.Installer != updates.InstallerBrew {
 			t.Fatalf("installer = %q, want %q", status.Installer, updates.InstallerBrew)
+		}
+	})
+}
+
+func TestCheckerBetaCatalog(t *testing.T) {
+	const (
+		betaFeed    = "https://example.com/releases.atom"
+		catalogURL  = "https://example.com/releases.json"
+		betaCurrent = "0.1.4-beta.27.8d9c8af7"
+	)
+	checker := func(fetch updates.Fetch) *updates.Checker {
+		return &updates.Checker{
+			URL:         "https://example.com/appcast.xml",
+			ReleasesURL: betaFeed,
+			ManifestURL: catalogURL,
+			Current:     betaCurrent,
+			Installer:   updates.InstallerShell,
+			Fetch:       fetch,
+		}
+	}
+
+	t.Run("the catalog names the newest beta without reading the feed", func(t *testing.T) {
+		status := checker(func(_ context.Context, url string) ([]byte, error) {
+			switch url {
+			case catalogURL:
+				return []byte(betaCatalog), nil
+			case betaFeed:
+				return nil, errors.New("the catalog already answered")
+			default:
+				return nil, fmt.Errorf("unexpected feed %s", url)
+			}
+		}).Status(context.Background())
+		if !status.Available || status.Latest != "0.1.4-beta.28.1a2b3c4d" {
+			t.Fatalf("status = %+v, want the catalog's newest beta", status)
+		}
+		if status.URL != "https://github.com/jonaskahn/relo/releases/tag/v0.1.4-beta.28.1a2b3c4d" {
+			t.Fatalf("url = %q, want the beta tag page", status.URL)
+		}
+		if status.Notes == "" {
+			t.Fatalf("status = %+v, want the release notes", status)
+		}
+		if status.Installer != updates.InstallerShell {
+			t.Fatalf("installer = %q, want %q", status.Installer, updates.InstallerShell)
+		}
+	})
+
+	t.Run("a catalog without a beta falls back to the releases feed", func(t *testing.T) {
+		status := checker(func(_ context.Context, url string) ([]byte, error) {
+			switch url {
+			case catalogURL:
+				return []byte(`{"latest":"v0.1.3","latest_beta":null,"releases":[]}`), nil
+			case betaFeed:
+				return []byte(sampleReleases), nil
+			default:
+				return nil, fmt.Errorf("unexpected feed %s", url)
+			}
+		}).Status(context.Background())
+		if !status.Available || status.Latest != "0.1.4-beta.28.1a2b3c4d" {
+			t.Fatalf("status = %+v, want the feed's newest beta", status)
+		}
+	})
+
+	t.Run("an unreadable catalog falls back to the releases feed", func(t *testing.T) {
+		status := checker(func(_ context.Context, url string) ([]byte, error) {
+			if url == betaFeed {
+				return []byte(sampleReleases), nil
+			}
+			return nil, errors.New("offline")
+		}).Status(context.Background())
+		if !status.Available || status.Latest != "0.1.4-beta.28.1a2b3c4d" {
+			t.Fatalf("status = %+v, want the feed's newest beta", status)
+		}
+	})
+
+	t.Run("a beta check is fresh again after half a minute", func(t *testing.T) {
+		calls := 0
+		now := time.Date(2026, 10, 23, 10, 0, 0, 0, time.UTC)
+		instance := checker(func(_ context.Context, url string) ([]byte, error) {
+			calls++
+			switch url {
+			case catalogURL:
+				return []byte(betaCatalog), nil
+			default:
+				return nil, fmt.Errorf("unexpected feed %s", url)
+			}
+		})
+		instance.Now = func() time.Time { return now }
+		_ = instance.Status(context.Background())
+		now = now.Add(29 * time.Second)
+		_ = instance.Status(context.Background())
+		if calls != 1 {
+			t.Fatalf("fetch calls = %d, want the cached read", calls)
+		}
+		now = now.Add(time.Second)
+		_ = instance.Status(context.Background())
+		if calls != 2 {
+			t.Fatalf("fetch calls = %d, want a fresh read after 30s", calls)
 		}
 	})
 }

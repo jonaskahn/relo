@@ -1,7 +1,14 @@
 import { describe, expect, it } from 'vitest';
 
-import { chosenMetrics, metricLabelKey, metricValue, metricValues } from './usage-metrics';
+import {
+	chosenMetrics,
+	metricLabelKey,
+	metricSeriesPoint,
+	metricValue,
+	metricValues
+} from './usage-metrics';
 import { EMPTY_TOTALS, type UsageTotals } from './usage-filters';
+import type { UsageRollupRow } from './types';
 
 // One read with a figure in every field, so a metric that reads a total is
 // exercised with something to state rather than with the empty default.
@@ -148,6 +155,60 @@ describe('metricValues', () => {
 
 	it('renders nothing for no choice', () => {
 		expect(metricValues([], BUSY)).toEqual([]);
+	});
+});
+
+describe('metricSeriesPoint', () => {
+	const day: UsageRollupRow = {
+		Key: '2026-10-23',
+		Requests: 4,
+		Errors: 1,
+		InputTokens: 1_000,
+		OutputTokens: 400,
+		CacheReadTokens: 300,
+		CacheWriteTokens: 100,
+		CostMicros: 2_000,
+		UnpricedRequests: 1,
+		DurationMs: 8_000,
+		Attempts: 5,
+		RetriedRequests: 2,
+		DurationMaxMs: 3_000
+	};
+
+	it('reads the same figure a card states for every metric', () => {
+		expect(metricSeriesPoint('requests', day)).toBe(4);
+		expect(metricSeriesPoint('successes', day)).toBe(3);
+		expect(metricSeriesPoint('errors', day)).toBe(1);
+		expect(metricSeriesPoint('success_rate', day)).toBe(0.75);
+		expect(metricSeriesPoint('error_rate', day)).toBe(0.25);
+		expect(metricSeriesPoint('attempts', day)).toBe(5);
+		expect(metricSeriesPoint('retried', day)).toBe(2);
+		expect(metricSeriesPoint('tokens_input', day)).toBe(1_000);
+		expect(metricSeriesPoint('tokens_output', day)).toBe(400);
+		expect(metricSeriesPoint('tokens_total', day)).toBe(1_800);
+		expect(metricSeriesPoint('tokens_per_request', day)).toBe(450);
+		expect(metricSeriesPoint('cache_read', day)).toBe(300);
+		expect(metricSeriesPoint('cache_write', day)).toBe(100);
+		expect(metricSeriesPoint('spend', day)).toBe(2_000);
+		expect(metricSeriesPoint('plan_usage', day, 700)).toBe(700);
+		expect(metricSeriesPoint('spend_per_request', day)).toBeCloseTo(2_000 / 3);
+		expect(metricSeriesPoint('priced_requests', day)).toBe(3);
+		expect(metricSeriesPoint('unpriced_requests', day)).toBe(1);
+		expect(metricSeriesPoint('duration_avg', day)).toBe(2_000);
+		expect(metricSeriesPoint('duration_max', day)).toBe(3_000);
+	});
+
+	it('breaks a per-request line on a day with nothing to divide by', () => {
+		const quiet = { ...day, Requests: 0, CostMicros: 0, UnpricedRequests: 0 };
+		expect(metricSeriesPoint('success_rate', quiet)).toBeNull();
+		expect(metricSeriesPoint('error_rate', quiet)).toBeNull();
+		expect(metricSeriesPoint('tokens_per_request', quiet)).toBeNull();
+		expect(metricSeriesPoint('spend_per_request', quiet)).toBeNull();
+		expect(metricSeriesPoint('duration_avg', quiet)).toBeNull();
+	});
+
+	it('renders nothing for a metric this build does not know', () => {
+		expect(metricSeriesPoint('not_a_metric', day)).toBeNull();
 	});
 });
 

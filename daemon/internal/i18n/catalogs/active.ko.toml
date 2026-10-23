@@ -668,6 +668,26 @@ other = "{{.Bundle}}을(를) 휴지통으로 옮기세요"
 description = "The command to run when a removal could not be started"
 other = "Relo 제거를 마무리하려면 다음을 실행하세요: {{.Command}}"
 
+[cli.uninstall.channel]
+description = "The installation channel the uninstall detected"
+other = "감지된 설치: {{.Channel}}"
+
+[cli.uninstall.command]
+description = "The exact program-removal command for the detected channel"
+other = "프로그램을 제거하려면: {{.Command}}"
+
+[cli.uninstall.verified]
+description = "Confirmation that a path is gone after removal"
+other = "제거 확인됨: {{.Path}}"
+
+[cli.uninstall.failed]
+description = "A path that survived the removal"
+other = "아직 존재함: {{.Path}}"
+
+[cli.uninstall.self_delete]
+description = "A running Windows program scheduled for deletion after exit"
+other = "Relo가 종료되면 Windows가 이 파일을 삭제합니다: {{.Path}}"
+
 [tray.menu.quitting]
 description = "Tray quit action while final records are saved"
 other = "종료 — 처리 중…"

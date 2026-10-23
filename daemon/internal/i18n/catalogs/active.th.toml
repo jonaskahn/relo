@@ -668,6 +668,26 @@ other = "ย้าย {{.Bundle}} ไปยังถังขยะ"
 description = "The command to run when a removal could not be started"
 other = "รันคำสั่งนี้เพื่อถอน Relo ให้เสร็จ: {{.Command}}"
 
+[cli.uninstall.channel]
+description = "The installation channel the uninstall detected"
+other = "ตรวจพบการติดตั้ง: {{.Channel}}"
+
+[cli.uninstall.command]
+description = "The exact program-removal command for the detected channel"
+other = "ลบโปรแกรมด้วย: {{.Command}}"
+
+[cli.uninstall.verified]
+description = "Confirmation that a path is gone after removal"
+other = "ตรวจสอบการลบแล้ว: {{.Path}}"
+
+[cli.uninstall.failed]
+description = "A path that survived the removal"
+other = "ยังคงอยู่: {{.Path}}"
+
+[cli.uninstall.self_delete]
+description = "A running Windows program scheduled for deletion after exit"
+other = "Windows จะลบไฟล์นี้หลังจาก Relo ออกจากระบบ: {{.Path}}"
+
 [tray.menu.quitting]
 description = "Tray quit action while final records are saved"
 other = "ออก — กำลังดำเนินการ…"

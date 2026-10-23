@@ -668,6 +668,26 @@ other = "请将 {{.Bundle}} 移到废纸篓"
 description = "The command to run when a removal could not be started"
 other = "运行以下命令以完成卸载 Relo：{{.Command}}"
 
+[cli.uninstall.channel]
+description = "The installation channel the uninstall detected"
+other = "检测到的安装方式：{{.Channel}}"
+
+[cli.uninstall.command]
+description = "The exact program-removal command for the detected channel"
+other = "使用以下命令移除程序：{{.Command}}"
+
+[cli.uninstall.verified]
+description = "Confirmation that a path is gone after removal"
+other = "已确认移除：{{.Path}}"
+
+[cli.uninstall.failed]
+description = "A path that survived the removal"
+other = "仍然存在：{{.Path}}"
+
+[cli.uninstall.self_delete]
+description = "A running Windows program scheduled for deletion after exit"
+other = "Relo 退出后，Windows 将删除此文件：{{.Path}}"
+
 [tray.menu.quitting]
 description = "Tray quit action while final records are saved"
 other = "退出 — 正在处理…"

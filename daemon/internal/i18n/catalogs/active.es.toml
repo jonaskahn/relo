@@ -668,6 +668,26 @@ other = "mueve {{.Bundle}} a la Papelera"
 description = "The command to run when a removal could not be started"
 other = "ejecuta esto para terminar de quitar Relo: {{.Command}}"
 
+[cli.uninstall.channel]
+description = "The installation channel the uninstall detected"
+other = "Instalación detectada: {{.Channel}}"
+
+[cli.uninstall.command]
+description = "The exact program-removal command for the detected channel"
+other = "Elimina el programa con: {{.Command}}"
+
+[cli.uninstall.verified]
+description = "Confirmation that a path is gone after removal"
+other = "Eliminación verificada: {{.Path}}"
+
+[cli.uninstall.failed]
+description = "A path that survived the removal"
+other = "Todavía existe: {{.Path}}"
+
+[cli.uninstall.self_delete]
+description = "A running Windows program scheduled for deletion after exit"
+other = "Windows eliminará este archivo cuando Relo se cierre: {{.Path}}"
+
 [tray.menu.quitting]
 description = "Tray quit action while final records are saved"
 other = "Salir — procesando…"

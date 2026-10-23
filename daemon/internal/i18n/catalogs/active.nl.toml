@@ -670,6 +670,26 @@ other = "verplaats {{.Bundle}} naar de Prullenbak"
 description = "The command to run when a removal could not be started"
 other = "voer dit uit om het verwijderen van Relo af te ronden: {{.Command}}"
 
+[cli.uninstall.channel]
+description = "The installation channel the uninstall detected"
+other = "Gedetecteerde installatie: {{.Channel}}"
+
+[cli.uninstall.command]
+description = "The exact program-removal command for the detected channel"
+other = "Verwijder het programma met: {{.Command}}"
+
+[cli.uninstall.verified]
+description = "Confirmation that a path is gone after removal"
+other = "Verwijdering geverifieerd: {{.Path}}"
+
+[cli.uninstall.failed]
+description = "A path that survived the removal"
+other = "Nog aanwezig: {{.Path}}"
+
+[cli.uninstall.self_delete]
+description = "A running Windows program scheduled for deletion after exit"
+other = "Windows verwijdert dit bestand nadat Relo stopt: {{.Path}}"
+
 [tray.menu.quitting]
 description = "Tray quit action while final records are saved"
 other = "Afsluiten — bezig…"

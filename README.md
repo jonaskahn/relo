@@ -108,8 +108,19 @@ $ relo uninstall --wipe      # the same, and deletes $RELO_HOME and its keychain
 ```
 
 `relo uninstall` stops the running daemon, frees every configured port, turns off start-at-login, settles the data,
-and hands the program to whatever installed it: the Windows uninstaller, `apt`/`dnf` on Linux, `npm uninstall -g` on
-npm, or deleting `Relo.app` on macOS. What each native path keeps:
+detects how Relo was installed, and removes it the same way: the Windows setup uninstaller, `npm uninstall -g`, `brew
+uninstall`, deleting `Relo.app`, or deleting the script-installed binary. A `.deb` or `.rpm` install prints the
+privileged command instead of running it. The same detection is available without a working binary:
+
+```shell
+curl -fsSL https://relo.ifelse.one/uninstall.sh | sh
+```
+
+```shell
+irm https://relo.ifelse.one/uninstall.ps1 | iex
+```
+
+What each native path keeps:
 
 | Path                               | Data                                   |
 |------------------------------------|----------------------------------------|
@@ -118,6 +129,7 @@ npm, or deleting `Relo.app` on macOS. What each native path keeps:
 | `apt remove relo`                  | keeps (`apt purge relo` deletes)       |
 | `rpm -e relo`                      | keeps                                  |
 | `npm uninstall -g @jonaskahn/relo` | keeps                                  |
+| `brew uninstall relo`              | keeps                                  |
 
 An update or reinstall always keeps the data and stops the running service first, so nothing is lost by installing
 over a working install.

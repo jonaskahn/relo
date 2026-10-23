@@ -668,6 +668,26 @@ other = "Déplace {{.Bundle}} dans la Corbeille"
 description = "The command to run when a removal could not be started"
 other = "Exécute ceci pour terminer la suppression de Relo : {{.Command}}"
 
+[cli.uninstall.channel]
+description = "The installation channel the uninstall detected"
+other = "Installation détectée : {{.Channel}}"
+
+[cli.uninstall.command]
+description = "The exact program-removal command for the detected channel"
+other = "Supprimez le programme avec : {{.Command}}"
+
+[cli.uninstall.verified]
+description = "Confirmation that a path is gone after removal"
+other = "Suppression vérifiée : {{.Path}}"
+
+[cli.uninstall.failed]
+description = "A path that survived the removal"
+other = "Toujours présent : {{.Path}}"
+
+[cli.uninstall.self_delete]
+description = "A running Windows program scheduled for deletion after exit"
+other = "Windows supprimera ce fichier après la fermeture de Relo : {{.Path}}"
+
 [tray.menu.quitting]
 description = "Tray quit action while final records are saved"
 other = "Quitter — traitement en cours…"

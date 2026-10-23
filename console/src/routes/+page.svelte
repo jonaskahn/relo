@@ -7,6 +7,7 @@
 	import { subscribe } from '$lib/sse';
 	import PageHeader from '$lib/components/ui/page-header.svelte';
 	import RoutingUniverse from '$lib/components/dashboard/routing-universe.svelte';
+	import ActivityCalendar from '$lib/components/dashboard/activity-calendar.svelte';
 	import AttentionBand from '$lib/components/dashboard/attention-band.svelte';
 	import DoctorChecks from '$lib/components/dashboard/doctor-checks.svelte';
 	import RecentRequests from '$lib/components/dashboard/recent-requests.svelte';
@@ -19,9 +20,18 @@
 	import Segmented from '$lib/components/ui/segmented.svelte';
 	import Button from '$lib/components/ui/button.svelte';
 	import Icon, { type IconName } from '$lib/components/ui/icon.svelte';
-	import { formatCost, formatTokens, formatTokensExact, formatUptime } from '$lib/format';
+	import {
+		formatCost,
+		formatCount,
+		formatTokens,
+		formatTokensExact,
+		formatUptime
+	} from '$lib/format';
 	import {
 		accountAttention,
+		activityStats,
+		activityYearDays,
+		activityYearStart,
 		deltaPercent,
 		healthCards,
 		readDashboardLive,
@@ -37,7 +47,7 @@
 	} from '$lib/dashboard';
 	import { browserStorage } from '$lib/filter-panel';
 	import type { TunnelTraffic } from '$lib/route-tunnel';
-	import { bucketDays, type ChartMetric } from '$lib/usage-charts';
+	import { bucketDays, heatmapCells, shortDay, type ChartMetric } from '$lib/usage-charts';
 	import type {
 		AccessKey,
 		Account,
@@ -75,6 +85,10 @@
 	// agent behind a key's traffic.
 	let keys = $state.raw<AccessKey[]>([]);
 	let dailyAll = $state.raw<UsageRollupRow[]>([]);
+	// activityDays is the trailing year the dashboard calendar draws. It keeps
+	// its own read: the year must not shrink when the page window changes.
+	let activityDays = $state.raw<UsageRollupRow[]>([]);
+	let activityDayKeys = $state<string[]>([]);
 	let recent = $state.raw<UsageLogRow[]>([]);
 	let activityFailed = $state('');
 	// refreshedAt is when the window's rollups were last read, so the routing
@@ -163,6 +177,15 @@
 	// its columns, so every total stays exact.
 	const trendRows = $derived(trendMode === 'spend' ? dailyPaid : dailyAll);
 	const trendDays = $derived(bucketDays(trendRows));
+	const activityWeeks = $derived.by(() => {
+		const byDay = new Map(activityDays.map((row) => [row.Key, Number(row.Requests)]));
+		return heatmapCells(activityDayKeys.map((key) => ({ key, value: byDay.get(key) ?? 0 })));
+	});
+	const activityPoints = $derived.by(() => {
+		const byDay = new Map(activityDays.map((row) => [row.Key, Number(row.Requests)]));
+		return activityDayKeys.map((key) => ({ key, value: byDay.get(key) ?? 0 }));
+	});
+	const activityFigures = $derived(activityStats(activityPoints));
 	// The three series the trend switch offers. Spend reads the paid
 	// connections whatever the spend board below is showing.
 	const trendOptions: { value: ChartMetric; label: string; icon: IconName }[] = $derived([
@@ -331,6 +354,21 @@
 		}
 	}
 
+	async function loadActivity() {
+		const now = Date.now();
+		activityDayKeys = activityYearDays(now);
+		try {
+			activityDays =
+				(
+					await api<{ items: UsageRollupRow[] }>(
+						'/activity/usage?group_by=day&since_ms=' + activityYearStart(now)
+					)
+				).items ?? [];
+		} catch (error) {
+			activityFailed = error instanceof Error ? error.message : String(error);
+		}
+	}
+
 	async function loadEverything(includeRecent = live) {
 		try {
 			await Promise.all([
@@ -339,6 +377,7 @@
 				loadKeys(),
 				loadSummary(),
 				loadTrend(),
+				loadActivity(),
 				loadTrendPaid(),
 				includeRecent ? loadRecent() : Promise.resolve()
 			]);
@@ -582,6 +621,53 @@
 
 	<!-- The map takes the wider half; the trend and the token mix stack beside it.
 	     The map needs room for its two rails, so a phone reads the figures alone. -->
+	<div class="grid min-w-0 grid-cols-1 gap-[var(--grid-gap)] max-sm:hidden md:grid-cols-12">
+		<div class="min-w-0 md:col-span-10">
+			<ActivityCalendar
+				weeks={activityWeeks}
+				loading={contentLoading}
+				pending={processing}
+				today={activityDayKeys[activityDayKeys.length - 1] ?? ''}
+			/>
+		</div>
+		<div class="flex min-w-0 flex-col gap-[var(--grid-gap)] md:col-span-2">
+			<div class="min-h-0 flex-1 [&>div]:h-full">
+				<KpiTile
+					icon="trending-up"
+					labelKey="ui.pages.dashboard.activityBusiest"
+					loading={contentLoading}
+					pending={processing}
+				>
+					<span class="mono-data text-[1.625rem] leading-none font-medium tabular-nums text-ink">
+						{activityFigures.busiest ? formatCount(activityFigures.busiest.value) : '—'}
+					</span>
+					<p class="mt-1 text-xs text-muted-foreground">
+						{activityFigures.busiest
+							? shortDay(activityFigures.busiest.key) +
+								' · ' +
+								$t('ui.pages.usagePage.unitRequests')
+							: $t('ui.pages.dashboard.noData')}
+					</p>
+				</KpiTile>
+			</div>
+			<div class="min-h-0 flex-1 [&>div]:h-full">
+				<KpiTile
+					icon="activity"
+					labelKey="ui.pages.dashboard.activityStreak"
+					loading={contentLoading}
+					pending={processing}
+				>
+					<span class="mono-data text-[1.625rem] leading-none font-medium tabular-nums text-ink">
+						{activityFigures.streak}
+					</span>
+					<p class="mt-1 text-xs text-muted-foreground">
+						{$t('ui.pages.dashboard.activityDayUnit')}
+					</p>
+				</KpiTile>
+			</div>
+		</div>
+	</div>
+
 	<div
 		class="grid min-w-0 grid-cols-1 gap-[var(--grid-gap)] xl:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]"
 	>

@@ -37,10 +37,13 @@ func DetectInstaller() string {
 	if err != nil {
 		return InstallerUnknown
 	}
-	return installerFor(executable, runtime.GOOS)
+	return InstallerFor(executable, runtime.GOOS)
 }
 
-func installerFor(executable, goos string) string {
+// InstallerFor reports the channel that installed executable on goos. The
+// uninstaller and the update notice share this one answer, so a build cannot
+// be removed through a different channel than the one that updates it.
+func InstallerFor(executable, goos string) string {
 	slashPath := filepath.ToSlash(executable)
 	if inAppBundle(slashPath) {
 		return InstallerSparkle
@@ -72,8 +75,14 @@ func installerFor(executable, goos string) string {
 }
 
 func scriptReceiptInstalled(executable string) bool {
-	body, err := os.ReadFile(filepath.Join(filepath.Dir(executable), scriptReceipt))
+	body, err := os.ReadFile(ScriptReceiptPath(executable))
 	return err == nil && strings.Contains(string(body), receiptChannel)
+}
+
+// ScriptReceiptPath names the marker a shell or PowerShell install writes
+// beside its binary. The uninstaller deletes it with the program it proves.
+func ScriptReceiptPath(executable string) string {
+	return filepath.Join(filepath.Dir(executable), scriptReceipt)
 }
 
 func installerOf(c *Checker) string {

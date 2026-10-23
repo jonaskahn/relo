@@ -670,6 +670,26 @@ other = "Move {{.Bundle}} to the Trash"
 description = "The command to run when a removal could not be started"
 other = "Run this to finish removing Relo: {{.Command}}"
 
+[cli.uninstall.channel]
+description = "The installation channel the uninstall detected"
+other = "Detected install: {{.Channel}}"
+
+[cli.uninstall.command]
+description = "The exact program-removal command for the detected channel"
+other = "Remove the program with: {{.Command}}"
+
+[cli.uninstall.verified]
+description = "Confirmation that a path is gone after removal"
+other = "Verified removed: {{.Path}}"
+
+[cli.uninstall.failed]
+description = "A path that survived the removal"
+other = "Still present: {{.Path}}"
+
+[cli.uninstall.self_delete]
+description = "A running Windows program scheduled for deletion after exit"
+other = "Windows will delete this file after Relo exits: {{.Path}}"
+
 [tray.menu.quitting]
 description = "Tray quit action while final records are saved"
 other = "Quit — processing…"

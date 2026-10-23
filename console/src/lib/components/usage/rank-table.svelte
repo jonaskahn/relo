@@ -26,11 +26,11 @@
 	{#if rows.length === 0}
 		<p class="mt-2 text-sm text-muted-foreground">{$t('ui.pages.usagePage.empty')}</p>
 	{:else}
-		<ul class="mt-3 space-y-2">
+		<ul class="mt-3 flex flex-col">
 			{#each rows as row (row.Key)}
 				{@const caption = captionOf(row)}
 				{@const spend = spendOf(row)}
-				<li class="relative overflow-hidden rounded-md">
+				<li class="relative overflow-hidden py-2">
 					<span
 						class="absolute inset-y-0 start-0 bg-accent/10"
 						style="width: {Math.max(2, (spend.weight / top) * 100)}%"

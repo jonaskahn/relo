@@ -226,10 +226,10 @@ func startServeWorkers(ctx context.Context, wired wired) {
 }
 
 func serveWired(ctx context.Context, wired wired, cfg *config.Config, logger *slog.Logger, cause *signalCause) error {
-	startServeWorkers(ctx, wired)
 	logger.Info("relo serving", serveFields(cfg, wired)...)
 	FinishStartupLog()
-	if err := wired.server.Start(ctx); err != nil {
+	err := wired.server.Start(ctx)
+	if err != nil {
 		logger.Info("daemon stopped", "signal", cause.text(), "error", err)
 		return err
 	}

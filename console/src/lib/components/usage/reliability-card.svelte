@@ -56,7 +56,7 @@
 	{:else}
 		<svg
 			viewBox="0 0 640 84"
-			class="h-24 w-full"
+			class="h-44 w-full sm:h-52"
 			preserveAspectRatio="none"
 			role="img"
 			aria-label={$t('ui.pages.usagePage.reliabilityTitle')}
