@@ -74,7 +74,6 @@
 		toolbarTitle
 	}: Props = $props();
 
-	let limit = $state(50);
 	// active is the model the modal holds; editing asks the modal to open on
 	// its form rather than the read view.
 	let active = $state<Model | null>(null);
@@ -101,7 +100,6 @@
 	}
 
 	const visible = $derived(filterModels(models, filters));
-	const shown = $derived(visible.slice(0, limit));
 	const filtered = $derived(hasActiveFilters(filters));
 	const cloneIds = $derived(
 		models.filter((model) => model.provider_id === providerId).map((model) => model.model_id)
@@ -137,12 +135,22 @@
 	const toolbarActionsRow =
 		'flex w-full min-w-0 flex-nowrap items-center gap-0.75 overflow-x-auto overscroll-x-contain pb-0.5 [-webkit-overflow-scrolling:touch] md:contents';
 
-	function showMore() {
-		const next = limit + 50;
-		// A paged view asks the daemon for the next page once the rows it
-		// already holds are nearly used up.
-		if (onloadmore && hasMore && next > models.length - 20) onloadmore();
-		limit = next;
+	// The sentinel watches the foot of the list and asks the page for the next
+	// page once it scrolls into view. It re-arms after every page (the row
+	// count and the loading flag change), so a sentinel still in view keeps
+	// paging until the server runs out. It only fires when the page wired a
+	// paging handler, so a connection pane that loads its models whole is
+	// untouched.
+	function watchMore(node: HTMLElement) {
+		$effect(() => {
+			void models.length;
+			if (!onloadmore || !hasMore || loading) return;
+			const observer = new IntersectionObserver((entries) => {
+				if (entries.some((entry) => entry.isIntersecting)) onloadmore?.();
+			});
+			observer.observe(node);
+			return () => observer.disconnect();
+		});
 	}
 
 	async function toggle(model: Model, enabled: boolean) {
@@ -470,7 +478,7 @@
 			</div>
 		{:else}
 			<div class="flex flex-col gap-2 pb-2">
-				{#each shown as model (model.provider_id + '/' + model.model_id)}
+				{#each visible as model (model.provider_id + '/' + model.model_id)}
 					<ModelRow
 						{model}
 						{showProvider}
@@ -485,12 +493,17 @@
 					/>
 				{/each}
 			</div>
-			{#if shown.length < visible.length || hasMore}
-				<div class="flex justify-center py-3">
-					<Button variant="outline" size="sm" onclick={showMore}>
-						<Icon name="chevron-down" size={14} />
-						{$t('ui.pages.providersPage.models.showMore')}
-					</Button>
+			{#if onloadmore && hasMore}
+				<div
+					class="flex items-center justify-center py-3 text-xs text-muted-foreground"
+					{@attach watchMore}
+				>
+					{#if loading}
+						<span class="flex items-center gap-2">
+							<Icon name="loader" size={14} spin />
+							{$t('ui.common.loading')}
+						</span>
+					{/if}
 				</div>
 			{/if}
 		{/if}
