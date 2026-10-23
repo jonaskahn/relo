@@ -153,6 +153,10 @@ describe('providerLogoPath', () => {
 		expect(providerLogoSrc('claude')).toBe('/provider-logos/anthropic.svg');
 	});
 
+	it('draws the DeepSeek account with the vendor mark', () => {
+		expect(providerLogoSrc('deepseek-account')).toBe('/provider-logos/deepseek.svg');
+	});
+
 	it('is null for an id with no mark', () => {
 		expect(providerLogoPath('litellm')).toBeNull();
 	});

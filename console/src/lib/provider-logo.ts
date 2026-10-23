@@ -18,6 +18,8 @@ const aliases: Record<string, string> = {
 	kimi: 'kimi-code-plan-cn',
 	'orcarouter-oauth': 'orcarouter',
 	'meta-muse': 'meta',
+	// The DeepSeek account wears the vendor mark its grant belongs to.
+	'deepseek-account': 'deepseek',
 	// The keyless lane wears the gateway's mark: it is the same vendor, and the
 	// free pool is not a product of its own.
 	'kilo-free': 'kilo',
