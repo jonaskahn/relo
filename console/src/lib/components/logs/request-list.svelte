@@ -49,17 +49,19 @@
 	}
 
 	const groups = $derived(groupRequestsByHour(logs));
-	// The first page paints still. A row that arrives afterwards uses the
-	// fade-in rise from below; flip eases the rows it pushes down. Reduced motion skips both.
-	let settled = $state(false);
+	// The rows on screen when the list first paints are the baseline. Only a
+	// request newer than every one of them is a newcomer: it rises in and a
+	// light runs once around its border. Older pages and filter reloads stay
+	// still. Reduced motion skips all of it.
+	let baseline = $state(Number.POSITIVE_INFINITY);
 	const motion = $derived(!prefersReducedMotion());
 
 	$effect(() => {
-		if (logs.length === 0 || settled) return;
-		void tick().then(() => {
-			settled = true;
-		});
+		if (logs.length === 0 || baseline !== Number.POSITIVE_INFINITY) return;
+		baseline = Math.max(...logs.map((row) => row.ID));
 	});
+
+	const isFresh = (row: UsageLogRow) => motion && row.ID > baseline;
 
 	const cols =
 		'grid-cols-[6.5rem_minmax(0,2fr)_auto_5.5rem_5rem] sm:grid-cols-[6.5rem_minmax(0,2fr)_minmax(0,1fr)_auto_6rem_5rem_4.5rem]';
@@ -95,14 +97,16 @@
 			</span>
 		</div>
 		{#each group.requests as row (row.ID)}
-			<div animate:flip={{ duration: motion && settled ? 200 : 0 }}>
-				{#if !settled || !motion}
+			<div
+				animate:flip={{ duration: isFresh(row) || baseline !== Number.POSITIVE_INFINITY ? 200 : 0 }}
+			>
+				<div
+					class="relative"
+					class:row-fresh={isFresh(row)}
+					in:fly={{ y: 16, duration: isFresh(row) ? 200 : 0 }}
+				>
 					<RequestRow {row} {maxTokens} {cols} {onopen} />
-				{:else}
-					<div class="row-fresh" in:fly={{ y: 16, duration: 200 }}>
-						<RequestRow {row} {maxTokens} {cols} {onopen} />
-					</div>
-				{/if}
+				</div>
 			</div>
 		{/each}
 	{/each}
@@ -118,28 +122,51 @@
 </div>
 
 <style>
-	/* A row that arrives live rings in an accent glow, then settles to a plain row.
-	   The glow is inset so the panel's overflow clip does not cut it. */
-	.row-fresh {
-		animation: row-fresh 1800ms ease-out;
+	@property --run {
+		syntax: '<angle>';
+		inherits: false;
+		initial-value: 0deg;
 	}
 
-	@keyframes row-fresh {
+	/* One light runs a full circle around a newcomer's border, then is gone.
+	   The ring is a masked conic gradient, so only the 1px border shows. */
+	.row-fresh::after {
+		content: '';
+		position: absolute;
+		inset: 0;
+		padding: 1px;
+		pointer-events: none;
+		background: conic-gradient(
+			from var(--run),
+			transparent 0 70%,
+			color-mix(in srgb, var(--accent) 30%, transparent) 85%,
+			var(--accent) 100%
+		);
+		mask:
+			linear-gradient(#000 0 0) content-box,
+			linear-gradient(#000 0 0);
+		mask-composite: exclude;
+		animation: row-run 1400ms linear forwards;
+	}
+
+	@keyframes row-run {
 		from {
-			box-shadow:
-				inset 0 0 0 1px var(--accent),
-				inset 0 0 12px color-mix(in srgb, var(--accent) 45%, transparent);
+			--run: 0deg;
+			opacity: 1;
+		}
+		85% {
+			opacity: 1;
 		}
 		to {
-			box-shadow:
-				inset 0 0 0 1px transparent,
-				inset 0 0 12px transparent;
+			--run: 360deg;
+			opacity: 0;
 		}
 	}
 
 	@media (prefers-reduced-motion: reduce) {
-		.row-fresh {
+		.row-fresh::after {
 			animation: none;
+			display: none;
 		}
 	}
 </style>
