@@ -184,34 +184,36 @@
 				{/if}
 			</div>
 		</div>
-		{#key section}
-			<div in:paneIn out:paneOutro>
-				{#if section === 'agent'}
-					<AgentSection
-						status={agentStatus}
-						query={agentQuery}
-						live={agentLive}
-						onopen={(row) => (selected = row)}
-						onrows={(rows) => (agentRows = rows)}
-					/>
-				{:else if section === 'daemon'}
-					<DaemonSection
-						live={daemonLive}
-						level={daemonLevel}
-						onlevelchange={(next) => (daemonLevel = next)}
-						hideRequests={daemonHideRequests}
-						onhiderequestschange={(next) => (daemonHideRequests = next)}
-						bind:filtersOpen={daemonFiltersOpen}
-					/>
-				{:else}
-					<StartupSection
-						loading={startupLoading}
-						onloadingchange={(next) => (startupLoading = next)}
-						bind:this={startupRef}
-					/>
-				{/if}
-			</div>
-		{/key}
+		<div class="grid">
+			{#key section}
+				<div class="col-start-1 row-start-1 min-w-0" in:paneIn out:paneOutro>
+					{#if section === 'agent'}
+						<AgentSection
+							status={agentStatus}
+							query={agentQuery}
+							live={agentLive}
+							onopen={(row) => (selected = row)}
+							onrows={(rows) => (agentRows = rows)}
+						/>
+					{:else if section === 'daemon'}
+						<DaemonSection
+							live={daemonLive}
+							level={daemonLevel}
+							onlevelchange={(next) => (daemonLevel = next)}
+							hideRequests={daemonHideRequests}
+							onhiderequestschange={(next) => (daemonHideRequests = next)}
+							bind:filtersOpen={daemonFiltersOpen}
+						/>
+					{:else}
+						<StartupSection
+							loading={startupLoading}
+							onloadingchange={(next) => (startupLoading = next)}
+							bind:this={startupRef}
+						/>
+					{/if}
+				</div>
+			{/key}
+		</div>
 	</div>
 
 	<RequestDetailModal
