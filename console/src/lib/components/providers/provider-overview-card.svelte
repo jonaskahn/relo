@@ -145,14 +145,14 @@ import { isPaidPlanConnection, isPayAsYouGoConnection } from '$lib/provider-bill
 							type="button"
 							data-free-chip
 							data-plain
-							class="badge relative shrink-0 border border-ok/40 bg-ok/10 text-ok"
+							class="badge shrink-0 border border-ok/40 bg-ok/10 text-ok"
 							aria-label={$t('ui.pages.providersPage.list.tagFree')}
 							onmouseenter={() => (hoverFree = true)}
-												onmouseleave={() => (hoverFree = false)}
+							onmouseleave={() => (hoverFree = false)}
 						>
 							<Icon name="sparkles" size={11} />
 							{#if hoverFree}
-								<span transition:slide={{ duration: 150, axis: "x" }} class="absolute left-full top-0 ms-1 whitespace-nowrap">
+								<span transition:slide={{ duration: 150, axis: 'x' }} class="ms-1">
 									{$t('ui.pages.providersPage.list.tagFree')}
 								</span>
 							{/if}
@@ -161,15 +161,15 @@ import { isPaidPlanConnection, isPayAsYouGoConnection } from '$lib/provider-bill
 					{#if payg}
 						<span
 							data-payg-chip
-							class="badge relative shrink-0 border border-border bg-muted text-muted-foreground"
+							class="badge shrink-0 border border-border bg-muted text-muted-foreground"
 							aria-label={$t('ui.pages.providersPage.list.tagPayAsYouGo')}
 							role="img"
 							onmouseenter={() => (hoverPayg = true)}
-												onmouseleave={() => (hoverPayg = false)}
+							onmouseleave={() => (hoverPayg = false)}
 						>
 							<Icon name="currency-dollar" size={11} />
 							{#if hoverPayg}
-								<span transition:slide={{ duration: 150, axis: "x" }} class="absolute left-full top-0 ms-1 whitespace-nowrap">
+								<span transition:slide={{ duration: 150, axis: 'x' }} class="ms-1">
 									{$t('ui.pages.providersPage.list.tagPayAsYouGo')}
 								</span>
 							{/if}
@@ -178,15 +178,15 @@ import { isPaidPlanConnection, isPayAsYouGoConnection } from '$lib/provider-bill
 					{#if paidPlan}
 						<span
 							data-paid-chip
-							class="badge relative shrink-0 border border-primary/40 bg-primary/10 text-primary"
+							class="badge shrink-0 border border-primary/40 bg-primary/10 text-primary"
 							aria-label={$t('ui.pages.providersPage.list.tagPaidPlan')}
 							role="img"
 							onmouseenter={() => (hoverPaid = true)}
-												onmouseleave={() => (hoverPaid = false)}
+							onmouseleave={() => (hoverPaid = false)}
 						>
 							<Icon name="layers" size={11} />
 							{#if hoverPaid}
-								<span transition:slide={{ duration: 150, axis: "x" }} class="absolute left-full top-0 ms-1 whitespace-nowrap">
+								<span transition:slide={{ duration: 150, axis: 'x' }} class="ms-1">
 									{$t('ui.pages.providersPage.list.tagPaidPlan')}
 								</span>
 							{/if}
@@ -205,7 +205,7 @@ import { isPaidPlanConnection, isPayAsYouGoConnection } from '$lib/provider-bill
 			</button>
 			<span
 				data-status-pill={pillName}
-				class="group relative inline-flex shrink-0 items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium {pill.tone}"
+				class="group inline-flex shrink-0 items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium {pill.tone}"
 				aria-label={pill.label}
 				role="img"
 				onmouseenter={() => (statusHovered = true)}
@@ -213,7 +213,7 @@ import { isPaidPlanConnection, isPayAsYouGoConnection } from '$lib/provider-bill
 			>
 				<Icon name={pill.icon} size={12} />
 				{#if statusHovered}
-					<span transition:slide={{ duration: 150, axis: "x" }} class="absolute left-full top-0 ms-1 whitespace-nowrap">{pill.label}</span>
+					<span transition:slide={{ duration: 150, axis: 'x' }} class="ms-1">{pill.label}</span>
 				{/if}
 			</span>
 		</div>

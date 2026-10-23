@@ -170,23 +170,6 @@
 											</span>
 										{/if}
 									</span>
-									{#if isFreeConnection(billingProvider) || isPaidPlanConnection(billingProvider) || isPayAsYouGoConnection(billingProvider)}
-										<span class="ml-auto flex shrink-0 items-center gap-1.5">
-											{#if isFreeConnection(billingProvider)}
-												<span data-free-chip class="badge shrink-0 border border-ok/40 bg-ok/10 text-ok">
-													{$t('ui.pages.providersPage.list.tagFree')}
-												</span>
-											{:else if isPaidPlanConnection(billingProvider)}
-												<span data-paid-chip class="badge shrink-0 border border-primary/40 bg-primary/10 text-primary">
-													{$t('ui.pages.providersPage.list.tagPaidPlan')}
-												</span>
-											{:else if isPayAsYouGoConnection(billingProvider)}
-												<span data-payg-chip class="badge shrink-0 border border-border bg-muted text-muted-foreground">
-													{$t('ui.pages.providersPage.list.tagPayAsYouGo')}
-												</span>
-											{/if}
-										</span>
-									{/if}
 									<span class="block truncate font-mono text-[0.7rem] text-muted-foreground">
 										{hint(row)}{#if modelCount(row)}
 											· {modelCount(row)}{/if}
@@ -197,6 +180,19 @@
 										</span>
 									{/if}
 								</span>
+								{#if isFreeConnection(billingProvider)}
+									<span data-free-chip class="badge shrink-0 self-start border border-ok/40 bg-ok/10 text-ok">
+										{$t('ui.pages.providersPage.list.tagFree')}
+									</span>
+								{:else if isPaidPlanConnection(billingProvider)}
+									<span data-paid-chip class="badge shrink-0 self-start border border-primary/40 bg-primary/10 text-primary">
+										{$t('ui.pages.providersPage.list.tagPaidPlan')}
+									</span>
+								{:else if isPayAsYouGoConnection(billingProvider)}
+									<span data-payg-chip class="badge shrink-0 self-start border border-border bg-muted text-muted-foreground">
+										{$t('ui.pages.providersPage.list.tagPayAsYouGo')}
+									</span>
+								{/if}
 								{#if chosen}
 									<span
 										class="flex size-5 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground"
