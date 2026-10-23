@@ -1,8 +1,6 @@
 <script lang="ts">
 	import { t } from 'svelte-i18n';
-	import { cubicOut } from 'svelte/easing';
 	import { slide } from 'svelte/transition';
-	import { Tween } from 'svelte/motion';
 	import type { Account, Provider, QuotaWindow } from '$lib/types';
 	import ProviderLogo from '$lib/components/ui/provider-logo.svelte';
 	import Icon, { type IconName } from '$lib/components/ui/icon.svelte';
@@ -47,11 +45,6 @@ import { isPaidPlanConnection, isPayAsYouGoConnection } from '$lib/provider-bill
 	let statusHovered = $state(false);
 	const current = $derived(selectedAccount(accounts, picked));
 	const status = $derived(providerStatus(provider));
-
-	// Hovering the head scales it to 1.01 from its left edge; the card's
-	// content below never moves. Reduced motion keeps the head still.
-	const zoom = new Tween(1, { duration: 150, easing: cubicOut });
-	const reduced = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 	// The quota the account reported is the card's own reading, so the pill
 	// overrides the connection state when a window is near or at its end.
@@ -131,13 +124,7 @@ import { isPaidPlanConnection, isPayAsYouGoConnection } from '$lib/provider-bill
 	}}
 >
 	<div class="flex min-w-0 flex-col">
-		<div
-			class="flex items-start gap-2 px-4"
-			role="presentation"
-			style="transform: scale({zoom.current}); transform-origin: left center"
-			onmouseenter={() => (zoom.target = reduced() ? 1 : 1.01)}
-			onmouseleave={() => (zoom.target = 1)}
-		>
+		<div class="flex items-start gap-2 px-4">
 			<span class={provider.enabled ? '' : 'opacity-50'}>
 				<ProviderLogo id={provider.template_id || provider.id} label={provider.label} />
 			</span>
@@ -155,15 +142,15 @@ import { isPaidPlanConnection, isPayAsYouGoConnection } from '$lib/provider-bill
 						<button
 							type="button"
 							data-free-chip
+							data-plain
 							class="badge shrink-0 border border-ok/40 bg-ok/10 text-ok"
 							aria-label={$t('ui.pages.providersPage.list.tagFree')}
-							role="img"
 							onmouseenter={() => (hoveredChip = 'free')}
 							onmouseleave={() => (hoveredChip = null)}
 						>
 							<Icon name="sparkles" size={11} />
 							{#if hoveredChip === 'free'}
-								<span transition:slide={{ duration: 150 }} class="ms-1">
+								<span transition:slide={{ duration: 150, axis: "x" }} class="ms-1">
 									{$t('ui.pages.providersPage.list.tagFree')}
 								</span>
 							{/if}
@@ -180,7 +167,7 @@ import { isPaidPlanConnection, isPayAsYouGoConnection } from '$lib/provider-bill
 						>
 							<Icon name="currency-dollar" size={11} />
 							{#if hoveredChip === 'payg'}
-								<span transition:slide={{ duration: 150 }} class="ms-1">
+								<span transition:slide={{ duration: 150, axis: "x" }} class="ms-1">
 									{$t('ui.pages.providersPage.list.tagPayAsYouGo')}
 								</span>
 							{/if}
@@ -197,7 +184,7 @@ import { isPaidPlanConnection, isPayAsYouGoConnection } from '$lib/provider-bill
 						>
 							<Icon name="layers" size={11} />
 							{#if hoveredChip === 'paid'}
-								<span transition:slide={{ duration: 150 }} class="ms-1">
+								<span transition:slide={{ duration: 150, axis: "x" }} class="ms-1">
 									{$t('ui.pages.providersPage.list.tagPaidPlan')}
 								</span>
 							{/if}
@@ -224,7 +211,7 @@ import { isPaidPlanConnection, isPayAsYouGoConnection } from '$lib/provider-bill
 			>
 				<Icon name={pill.icon} size={12} />
 				{#if statusHovered}
-					<span transition:slide={{ duration: 150 }} class="ms-1">{pill.label}</span>
+					<span transition:slide={{ duration: 150, axis: "x" }} class="ms-1">{pill.label}</span>
 				{/if}
 			</span>
 		</div>
