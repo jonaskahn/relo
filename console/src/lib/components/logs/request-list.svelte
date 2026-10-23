@@ -51,7 +51,7 @@
 	const groups = $derived(groupRequestsByHour(logs));
 	// The rows on screen when the list first paints are the baseline. Only a
 	// request newer than every one of them is a newcomer: it rises in and a
-	// light runs once around its border. Older pages and filter reloads stay
+	// swells a little as it settles. Older pages and filter reloads stay
 	// still. Reduced motion skips all of it.
 	let baseline = $state(Number.POSITIVE_INFINITY);
 	const motion = $derived(!prefersReducedMotion());
@@ -100,12 +100,10 @@
 			<div
 				animate:flip={{ duration: isFresh(row) || baseline !== Number.POSITIVE_INFINITY ? 200 : 0 }}
 			>
-				<div
-					class="relative"
-					class:row-fresh={isFresh(row)}
-					in:fly={{ y: 16, duration: isFresh(row) ? 200 : 0 }}
-				>
-					<RequestRow {row} {maxTokens} {cols} {onopen} />
+				<div in:fly={{ y: 16, duration: isFresh(row) ? 200 : 0 }}>
+					<div class:row-fresh={isFresh(row)}>
+						<RequestRow {row} {maxTokens} {cols} {onopen} />
+					</div>
 				</div>
 			</div>
 		{/each}
@@ -122,51 +120,23 @@
 </div>
 
 <style>
-	@property --run {
-		syntax: '<angle>';
-		inherits: false;
-		initial-value: 0deg;
+	/* A newcomer swells a little, then settles to its size. */
+	.row-fresh {
+		animation: row-swell 600ms cubic-bezier(0.2, 0.8, 0.2, 1);
 	}
 
-	/* One light runs a full circle around a newcomer's border, then is gone.
-	   The ring is a masked conic gradient, so only the 1px border shows. */
-	.row-fresh::after {
-		content: '';
-		position: absolute;
-		inset: 0;
-		padding: 1px;
-		pointer-events: none;
-		background: conic-gradient(
-			from var(--run),
-			transparent 0 70%,
-			color-mix(in srgb, var(--accent) 30%, transparent) 85%,
-			var(--accent) 100%
-		);
-		mask:
-			linear-gradient(#000 0 0) content-box,
-			linear-gradient(#000 0 0);
-		mask-composite: exclude;
-		animation: row-run 1400ms linear forwards;
-	}
-
-	@keyframes row-run {
+	@keyframes row-swell {
 		from {
-			--run: 0deg;
-			opacity: 1;
-		}
-		85% {
-			opacity: 1;
+			transform: scale(1.025);
 		}
 		to {
-			--run: 360deg;
-			opacity: 0;
+			transform: scale(1);
 		}
 	}
 
 	@media (prefers-reduced-motion: reduce) {
-		.row-fresh::after {
+		.row-fresh {
 			animation: none;
-			display: none;
 		}
 	}
 </style>
