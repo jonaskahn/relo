@@ -246,22 +246,6 @@ var signInTemplates = []signInTemplate{
 	},
 	{
 		Template: Template{
-			ID:             "command-code",
-			Label:          "Command Code",
-			Kind:           KindSignIn,
-			Origin:         catalog.OriginSignIn,
-			Auth:           catalog.AuthOAuth,
-			KeyHeader:      catalog.KeyHeaderBearer,
-			DefaultFormat:  catalog.FormatOpenAIChat,
-			DefaultBaseURL: "https://api.commandcode.ai/provider/v1",
-			ModelsSource:   "listing",
-			ModelsFormat:   catalog.ModelsOpenAI,
-			LoginMethods:   []LoginMethod{{Flow: oauth.FlowCommandCode, Kind: LoginCLI}},
-		},
-		authorize: authorizeDefault,
-	},
-	{
-		Template: Template{
 			ID:             "kiro",
 			Label:          "Kiro",
 			Kind:           KindSignIn,
