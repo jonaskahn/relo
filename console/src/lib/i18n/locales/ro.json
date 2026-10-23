@@ -224,6 +224,7 @@
       "optional": "Opțional",
       "back": "Înapoi",
       "reveal": "Arată valoarea",
+      "scrollToTop": "Derulați sus",
       "hide": "Ascunde valoarea",
       "timeAgo": "{value} în urmă",
       "requestFailed": "cererea a eșuat cu {status}",

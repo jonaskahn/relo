@@ -224,6 +224,7 @@
       "optional": "선택",
       "back": "뒤로",
       "reveal": "값 보기",
+      "scrollToTop": "맨 위로 스크롤",
       "hide": "값 숨기기",
       "timeAgo": "{value} 전",
       "requestFailed": "요청이 실패했어요 ({status})",

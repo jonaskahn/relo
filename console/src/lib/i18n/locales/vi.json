@@ -224,6 +224,7 @@
       "optional": "Tùy chọn",
       "back": "Quay lại",
       "reveal": "Hiện giá trị",
+      "scrollToTop": "Cuộn lên đầu",
       "hide": "Ẩn giá trị",
       "timeAgo": "{value} trước",
       "requestFailed": "yêu cầu thất bại với {status}",

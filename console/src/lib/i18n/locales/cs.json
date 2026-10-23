@@ -224,6 +224,7 @@
       "optional": "Volitelné",
       "back": "Zpět",
       "reveal": "Zobrazit hodnotu",
+      "scrollToTop": "Přejít nahoru",
       "hide": "Skrýt hodnotu",
       "timeAgo": "před {value}",
       "requestFailed": "požadavek selhal s {status}",

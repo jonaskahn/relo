@@ -224,6 +224,7 @@
       "optional": "Opcional",
       "back": "Voltar",
       "reveal": "Mostrar valor",
+      "scrollToTop": "Voltar ao topo",
       "hide": "Ocultar valor",
       "timeAgo": "{value} atrás",
       "requestFailed": "a requisição falhou com {status}",

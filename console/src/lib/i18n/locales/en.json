@@ -227,6 +227,7 @@
       "optional": "Optional",
       "back": "Back",
       "reveal": "Show value",
+      "scrollToTop": "Scroll to top",
       "hide": "Hide value",
       "timeAgo": "{value} ago",
       "requestFailed": "the request failed with {status}",

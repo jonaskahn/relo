@@ -14,6 +14,7 @@
 	import DaemonSection from '$lib/components/logs/daemon-section.svelte';
 	import RequestDetailModal from '$lib/components/logs/request-detail-modal.svelte';
 	import StartupSection from '$lib/components/logs/startup-section.svelte';
+	import ScrollToTop from '$lib/components/ui/scroll-to-top.svelte';
 	import {
 		browserStorage,
 		filterPanelId,
@@ -225,4 +226,6 @@
 		onclose={() => (selected = null)}
 		onselect={(row) => (selected = row)}
 	/>
+
+	<ScrollToTop />
 </div>

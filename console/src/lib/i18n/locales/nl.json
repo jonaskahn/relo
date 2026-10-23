@@ -224,6 +224,7 @@
       "optional": "Optioneel",
       "back": "Terug",
       "reveal": "Waarde tonen",
+      "scrollToTop": "Naar boven scrollen",
       "hide": "Waarde verbergen",
       "timeAgo": "{value} geleden",
       "requestFailed": "de aanvraag is mislukt met {status}",

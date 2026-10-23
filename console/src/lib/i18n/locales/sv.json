@@ -224,6 +224,7 @@
       "optional": "Valfritt",
       "back": "Tillbaka",
       "reveal": "Visa värde",
+      "scrollToTop": "Scrolla till toppen",
       "hide": "Dölj värde",
       "timeAgo": "{value} sedan",
       "requestFailed": "begäran misslyckades med {status}",

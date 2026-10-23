@@ -224,6 +224,7 @@
       "optional": "Opcional",
       "back": "Atrás",
       "reveal": "Mostrar valor",
+      "scrollToTop": "Volver arriba",
       "hide": "Ocultar valor",
       "timeAgo": "hace {value}",
       "requestFailed": "la solicitud falló con {status}",

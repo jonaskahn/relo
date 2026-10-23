@@ -224,6 +224,7 @@
       "optional": "ไม่บังคับ",
       "back": "ย้อนกลับ",
       "reveal": "แสดงค่า",
+      "scrollToTop": "เลื่อนไปด้านบน",
       "hide": "ซ่อนค่า",
       "timeAgo": "{value} ที่แล้ว",
       "requestFailed": "คำขอล้มเหลว ({status})",

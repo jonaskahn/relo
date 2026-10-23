@@ -224,6 +224,7 @@
       "optional": "Facoltativo",
       "back": "Indietro",
       "reveal": "Mostra valore",
+      "scrollToTop": "Torna in alto",
       "hide": "Nascondi valore",
       "timeAgo": "{value} fa",
       "requestFailed": "la richiesta non è riuscita: {status}",

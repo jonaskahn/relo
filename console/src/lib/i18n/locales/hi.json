@@ -224,6 +224,7 @@
       "optional": "वैकल्पिक",
       "back": "वापस",
       "reveal": "मान दिखाएँ",
+      "scrollToTop": "ऊपर स्क्रॉल करें",
       "hide": "मान छिपाएँ",
       "timeAgo": "{value} पहले",
       "requestFailed": "अनुरोध {status} के साथ विफल रहा",

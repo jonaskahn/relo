@@ -224,6 +224,7 @@
       "optional": "Opsional",
       "back": "Kembali",
       "reveal": "Tampilkan nilai",
+      "scrollToTop": "Gulir ke atas",
       "hide": "Sembunyikan nilai",
       "timeAgo": "{value} lalu",
       "requestFailed": "permintaan gagal dengan {status}",

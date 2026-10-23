@@ -224,6 +224,7 @@
       "optional": "任意",
       "back": "戻る",
       "reveal": "値を表示",
+      "scrollToTop": "先頭へスクロール",
       "hide": "値を隠す",
       "timeAgo": "{value}前",
       "requestFailed": "リクエストが失敗しました（{status}）",

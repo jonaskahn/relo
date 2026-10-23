@@ -224,6 +224,7 @@
       "optional": "اختياري",
       "back": "رجوع",
       "reveal": "إظهار القيمة",
+      "scrollToTop": "انتقل إلى الأعلى",
       "hide": "إخفاء القيمة",
       "timeAgo": "منذ {value}",
       "requestFailed": "فشل الطلب بالحالة {status}",

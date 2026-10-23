@@ -224,6 +224,7 @@
       "optional": "Optional",
       "back": "Zurück",
       "reveal": "Wert anzeigen",
+      "scrollToTop": "Nach oben scrollen",
       "hide": "Wert verbergen",
       "timeAgo": "vor {value}",
       "requestFailed": "die Anfrage ist mit {status} fehlgeschlagen",

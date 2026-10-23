@@ -224,6 +224,7 @@
       "optional": "Opcjonalne",
       "back": "Wstecz",
       "reveal": "Pokaż wartość",
+      "scrollToTop": "Przewiń do góry",
       "hide": "Ukryj wartość",
       "timeAgo": "{value} temu",
       "requestFailed": "żądanie nie powiodło się: {status}",

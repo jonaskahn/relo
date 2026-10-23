@@ -224,6 +224,7 @@
       "optional": "İsteğe bağlı",
       "back": "Geri",
       "reveal": "Değeri göster",
+      "scrollToTop": "En üste kaydır",
       "hide": "Değeri gizle",
       "timeAgo": "{value} önce",
       "requestFailed": "istek {status} ile başarısız oldu",

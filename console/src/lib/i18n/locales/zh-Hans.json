@@ -224,6 +224,7 @@
       "optional": "可选",
       "back": "返回",
       "reveal": "显示值",
+      "scrollToTop": "回到顶部",
       "hide": "隐藏值",
       "timeAgo": "{value}前",
       "requestFailed": "请求失败，状态码 {status}",
