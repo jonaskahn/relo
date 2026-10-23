@@ -1248,7 +1248,15 @@
         "requestsShown": "Shown",
         "requestsLoaded": "Załadowane żądania",
         "avgSlowest": "Średnia · najdłuższa",
-        "searchPlaceholder": "Szukaj modelu, klucza, dostawcy, czasu"
+        "searchPlaceholder": "Szukaj modelu, klucza, dostawcy, czasu",
+        "filterAllShort": "Wszystkie",
+        "filterSuccess": "Sukces",
+        "filterErrors": "Błędy",
+        "showingLoaded": "Wyświetlono {shown}",
+        "slowRequest": "Ponad 2 minuty",
+        "browseRequests": "Przeglądaj żądania",
+        "previousRequest": "Poprzednie żądanie",
+        "nextRequest": "Następne żądanie"
       },
       "usage": {
         "title": "Zużycie",

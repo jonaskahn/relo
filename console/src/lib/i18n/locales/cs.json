@@ -1248,7 +1248,15 @@
         "requestsShown": "Shown",
         "requestsLoaded": "Načtené požadavky",
         "avgSlowest": "Průměr · nejpomalejší",
-        "searchPlaceholder": "Hledat model, klientský klíč, poskytovatele, čas"
+        "searchPlaceholder": "Hledat model, klientský klíč, poskytovatele, čas",
+        "filterAllShort": "Vše",
+        "filterSuccess": "Úspěch",
+        "filterErrors": "Chyby",
+        "showingLoaded": "Zobrazeno {shown} načtených",
+        "slowRequest": "Přes 2 minuty",
+        "browseRequests": "Procházet požadavky",
+        "previousRequest": "Předchozí požadavek",
+        "nextRequest": "Další požadavek"
       },
       "usage": {
         "title": "Využití",

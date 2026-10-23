@@ -1248,7 +1248,15 @@
         "requestsShown": "Shown",
         "requestsLoaded": "الطلبات المحملة",
         "avgSlowest": "المتوسط · الأبطأ",
-        "searchPlaceholder": "البحث عن النموذج ومفتاح العميل والمزود والوقت"
+        "searchPlaceholder": "البحث عن النموذج ومفتاح العميل والمزود والوقت",
+        "filterAllShort": "الكل",
+        "filterSuccess": "نجاح",
+        "filterErrors": "أخطاء",
+        "showingLoaded": "عرض {shown} محمّل",
+        "slowRequest": "أكثر من دقيقتين",
+        "browseRequests": "تصفح الطلبات",
+        "previousRequest": "الطلب السابق",
+        "nextRequest": "الطلب التالي"
       },
       "usage": {
         "title": "الاستخدام",

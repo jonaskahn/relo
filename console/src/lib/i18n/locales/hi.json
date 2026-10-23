@@ -1248,7 +1248,15 @@
         "requestsShown": "Shown",
         "requestsLoaded": "लोड किए गए अनुरोध",
         "avgSlowest": "औसत · सबसे धीमा",
-        "searchPlaceholder": "मॉडल, क्लाइंट कुंजी, प्रदाता, समय खोजें"
+        "searchPlaceholder": "मॉडल, क्लाइंट कुंजी, प्रदाता, समय खोजें",
+        "filterAllShort": "सभी",
+        "filterSuccess": "सफल",
+        "filterErrors": "त्रुटियाँ",
+        "showingLoaded": "{shown} लोड दिख रहे हैं",
+        "slowRequest": "2 मिनट से अधिक",
+        "browseRequests": "अनुरोध देखें",
+        "previousRequest": "पिछला अनुरोध",
+        "nextRequest": "अगला अनुरोध"
       },
       "usage": {
         "title": "उपयोग",

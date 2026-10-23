@@ -1248,7 +1248,15 @@
         "requestsShown": "Shown",
         "requestsLoaded": "Geladene Anfragen",
         "avgSlowest": "Mittel · am längsten",
-        "searchPlaceholder": "Modell, Clientschlüssel, Provider oder Zeit suchen"
+        "searchPlaceholder": "Modell, Clientschlüssel, Provider oder Zeit suchen",
+        "filterAllShort": "Alle",
+        "filterSuccess": "Erfolg",
+        "filterErrors": "Fehler",
+        "showingLoaded": "{shown} geladen",
+        "slowRequest": "Über 2 Minuten",
+        "browseRequests": "Anfragen durchsehen",
+        "previousRequest": "Vorherige Anfrage",
+        "nextRequest": "Nächste Anfrage"
       },
       "usage": {
         "title": "Verbrauch",

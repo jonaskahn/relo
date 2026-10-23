@@ -1248,7 +1248,15 @@
         "requestsShown": "Shown",
         "requestsLoaded": "Requisições carregadas",
         "avgSlowest": "Média · mais lenta",
-        "searchPlaceholder": "Buscar modelo, chave de cliente, provedor, horário"
+        "searchPlaceholder": "Buscar modelo, chave de cliente, provedor, horário",
+        "filterAllShort": "Todos",
+        "filterSuccess": "Sucesso",
+        "filterErrors": "Erros",
+        "showingLoaded": "Mostrando {shown} carregados",
+        "slowRequest": "Mais de 2 minutos",
+        "browseRequests": "Percorrer solicitações",
+        "previousRequest": "Solicitação anterior",
+        "nextRequest": "Próxima solicitação"
       },
       "usage": {
         "title": "Uso",

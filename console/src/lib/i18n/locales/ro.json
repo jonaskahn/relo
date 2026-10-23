@@ -1248,7 +1248,15 @@
         "requestsShown": "Shown",
         "requestsLoaded": "Cereri încărcate",
         "avgSlowest": "Medie · cel mai lent",
-        "searchPlaceholder": "Căutare model, cheie client, furnizor, timp"
+        "searchPlaceholder": "Căutare model, cheie client, furnizor, timp",
+        "filterAllShort": "Toate",
+        "filterSuccess": "Reușit",
+        "filterErrors": "Erori",
+        "showingLoaded": "Se afișează {shown}",
+        "slowRequest": "Peste 2 minute",
+        "browseRequests": "Răsfoiește cererile",
+        "previousRequest": "Cererea anterioară",
+        "nextRequest": "Cererea următoare"
       },
       "usage": {
         "title": "Utilizare",

@@ -1248,7 +1248,15 @@
         "requestsShown": "Shown",
         "requestsLoaded": "Завантажено запитів",
         "avgSlowest": "Середнє · найдовше",
-        "searchPlaceholder": "Пошук моделі, ключа клієнта, постачальника, часу"
+        "searchPlaceholder": "Пошук моделі, ключа клієнта, постачальника, часу",
+        "filterAllShort": "Усі",
+        "filterSuccess": "Успіх",
+        "filterErrors": "Помилки",
+        "showingLoaded": "Показано {shown}",
+        "slowRequest": "Понад 2 хвилини",
+        "browseRequests": "Перегляд запитів",
+        "previousRequest": "Попередній запит",
+        "nextRequest": "Наступний запит"
       },
       "usage": {
         "title": "Використання",

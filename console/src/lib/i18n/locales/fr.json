@@ -1248,7 +1248,15 @@
         "requestsShown": "Shown",
         "requestsLoaded": "Requêtes chargées",
         "avgSlowest": "Moyenne · la plus lente",
-        "searchPlaceholder": "Rechercher un modèle, une clé, un fournisseur, une heure"
+        "searchPlaceholder": "Rechercher un modèle, une clé, un fournisseur, une heure",
+        "filterAllShort": "Tous",
+        "filterSuccess": "Réussi",
+        "filterErrors": "Erreurs",
+        "showingLoaded": "{shown} chargées affichées",
+        "slowRequest": "Plus de 2 minutes",
+        "browseRequests": "Parcourir les requêtes",
+        "previousRequest": "Requête précédente",
+        "nextRequest": "Requête suivante"
       },
       "usage": {
         "title": "Utilisation",

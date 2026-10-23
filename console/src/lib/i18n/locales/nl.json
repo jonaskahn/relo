@@ -1248,7 +1248,15 @@
         "requestsShown": "Shown",
         "requestsLoaded": "Geladen verzoeken",
         "avgSlowest": "Gemiddeld · traagste",
-        "searchPlaceholder": "Zoek model, clientsleutel, provider, tijd"
+        "searchPlaceholder": "Zoek model, clientsleutel, provider, tijd",
+        "filterAllShort": "Alles",
+        "filterSuccess": "Geslaagd",
+        "filterErrors": "Fouten",
+        "showingLoaded": "{shown} geladen",
+        "slowRequest": "Meer dan 2 minuten",
+        "browseRequests": "Verzoeken doorlopen",
+        "previousRequest": "Vorig verzoek",
+        "nextRequest": "Volgend verzoek"
       },
       "usage": {
         "title": "Verbruik",

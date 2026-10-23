@@ -1248,7 +1248,15 @@
         "requestsShown": "Shown",
         "requestsLoaded": "Загружено запросов",
         "avgSlowest": "Среднее · самое долгое",
-        "searchPlaceholder": "Поиск модели, ключа, провайдера или времени"
+        "searchPlaceholder": "Поиск модели, ключа, провайдера или времени",
+        "filterAllShort": "Все",
+        "filterSuccess": "Успех",
+        "filterErrors": "Ошибки",
+        "showingLoaded": "Показано {shown}",
+        "slowRequest": "Больше 2 минут",
+        "browseRequests": "Просмотр запросов",
+        "previousRequest": "Предыдущий запрос",
+        "nextRequest": "Следующий запрос"
       },
       "usage": {
         "title": "Использование",

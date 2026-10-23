@@ -1248,7 +1248,15 @@
         "requestsShown": "Shown",
         "requestsLoaded": "已載入請求",
         "avgSlowest": "平均 · 最慢",
-        "searchPlaceholder": "搜尋模型、用戶端金鑰、提供者、時間"
+        "searchPlaceholder": "搜尋模型、用戶端金鑰、提供者、時間",
+        "filterAllShort": "全部",
+        "filterSuccess": "成功",
+        "filterErrors": "錯誤",
+        "showingLoaded": "已顯示 {shown} 筆",
+        "slowRequest": "超過 2 分鐘",
+        "browseRequests": "瀏覽請求",
+        "previousRequest": "上一筆請求",
+        "nextRequest": "下一筆請求"
       },
       "usage": {
         "title": "用量",

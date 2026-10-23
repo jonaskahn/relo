@@ -1248,7 +1248,15 @@
         "requestsShown": "Shown",
         "requestsLoaded": "Permintaan dimuat",
         "avgSlowest": "Rata-rata · terlambat",
-        "searchPlaceholder": "Cari model, kunci klien, penyedia, waktu"
+        "searchPlaceholder": "Cari model, kunci klien, penyedia, waktu",
+        "filterAllShort": "Semua",
+        "filterSuccess": "Berhasil",
+        "filterErrors": "Galat",
+        "showingLoaded": "Menampilkan {shown} yang dimuat",
+        "slowRequest": "Lebih dari 2 menit",
+        "browseRequests": "Telusuri permintaan",
+        "previousRequest": "Permintaan sebelumnya",
+        "nextRequest": "Permintaan berikutnya"
       },
       "usage": {
         "title": "Penggunaan",

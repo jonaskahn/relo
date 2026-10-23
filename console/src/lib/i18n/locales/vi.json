@@ -1248,7 +1248,15 @@
         "requestsShown": "Shown",
         "requestsLoaded": "Yêu cầu đã tải",
         "avgSlowest": "Trung bình · chậm nhất",
-        "searchPlaceholder": "Tìm kiếm mô hình, khóa máy khách, nhà cung cấp, thời gian"
+        "searchPlaceholder": "Tìm kiếm mô hình, khóa máy khách, nhà cung cấp, thời gian",
+        "filterAllShort": "Tất cả",
+        "filterSuccess": "Thành công",
+        "filterErrors": "Lỗi",
+        "showingLoaded": "Đang hiện {shown}",
+        "slowRequest": "Hơn 2 phút",
+        "browseRequests": "Duyệt yêu cầu",
+        "previousRequest": "Yêu cầu trước",
+        "nextRequest": "Yêu cầu sau"
       },
       "usage": {
         "title": "Cách sử dụng",

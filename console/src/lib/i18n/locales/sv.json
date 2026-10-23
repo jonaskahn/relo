@@ -1248,7 +1248,15 @@
         "requestsShown": "Shown",
         "requestsLoaded": "Inlästa förfrågningar",
         "avgSlowest": "Snitt · långsammaste",
-        "searchPlaceholder": "Sök modell, klientnyckel, leverantör, tid"
+        "searchPlaceholder": "Sök modell, klientnyckel, leverantör, tid",
+        "filterAllShort": "Alla",
+        "filterSuccess": "Lyckade",
+        "filterErrors": "Fel",
+        "showingLoaded": "Visar {shown}",
+        "slowRequest": "Över 2 minuter",
+        "browseRequests": "Bläddra bland förfrågningar",
+        "previousRequest": "Föregående förfrågan",
+        "nextRequest": "Nästa förfrågan"
       },
       "usage": {
         "title": "Användning",
