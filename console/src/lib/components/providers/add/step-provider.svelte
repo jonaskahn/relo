@@ -164,15 +164,15 @@
 										{/if}
 										{#if isFreeConnection(billingProvider)}
 											<span data-free-chip class="badge shrink-0 border border-ok/40 bg-ok/10 text-ok">
-												<Icon name="sparkles" size={11} />
+												{$t('ui.pages.providersPage.list.tagFree')}
 											</span>
 										{:else if isPaidPlanConnection(billingProvider)}
 											<span data-paid-chip class="badge shrink-0 border border-primary/40 bg-primary/10 text-primary">
-												<Icon name="layers" size={11} />
+												{$t('ui.pages.providersPage.list.tagPaidPlan')}
 											</span>
 										{:else if isPayAsYouGoConnection(billingProvider)}
 											<span data-payg-chip class="badge shrink-0 border border-border bg-muted text-muted-foreground">
-												<Icon name="currency-dollar" size={11} />
+												{$t('ui.pages.providersPage.list.tagPayAsYouGo')}
 											</span>
 										{/if}
 										{#if row.added}

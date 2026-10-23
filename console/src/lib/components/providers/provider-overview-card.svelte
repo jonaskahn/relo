@@ -41,7 +41,9 @@ import { isPaidPlanConnection, isPayAsYouGoConnection } from '$lib/provider-bill
 	}: Props = $props();
 
 	let picked = $state(0);
-	let hoveredChip = $state<'free' | 'payg' | 'paid' | null>(null);
+	let hoverFree = $state(false);
+	let hoverPayg = $state(false);
+	let hoverPaid = $state(false);
 	let statusHovered = $state(false);
 	const current = $derived(selectedAccount(accounts, picked));
 	const status = $derived(providerStatus(provider));
@@ -145,11 +147,11 @@ import { isPaidPlanConnection, isPayAsYouGoConnection } from '$lib/provider-bill
 							data-plain
 							class="badge shrink-0 border border-ok/40 bg-ok/10 text-ok"
 							aria-label={$t('ui.pages.providersPage.list.tagFree')}
-							onmouseenter={() => (hoveredChip = 'free')}
-							onmouseleave={() => (hoveredChip = null)}
+							onmouseenter={() => (hoverFree = true)}
+												onmouseleave={() => (hoverFree = false)}
 						>
 							<Icon name="sparkles" size={11} />
-							{#if hoveredChip === 'free'}
+							{#if hoverFree}
 								<span transition:slide={{ duration: 150, axis: "x" }} class="ms-1">
 									{$t('ui.pages.providersPage.list.tagFree')}
 								</span>
@@ -162,11 +164,11 @@ import { isPaidPlanConnection, isPayAsYouGoConnection } from '$lib/provider-bill
 							class="badge shrink-0 border border-border bg-muted text-muted-foreground"
 							aria-label={$t('ui.pages.providersPage.list.tagPayAsYouGo')}
 							role="img"
-							onmouseenter={() => (hoveredChip = 'payg')}
-							onmouseleave={() => (hoveredChip = null)}
+							onmouseenter={() => (hoverPayg = true)}
+												onmouseleave={() => (hoverPayg = false)}
 						>
 							<Icon name="currency-dollar" size={11} />
-							{#if hoveredChip === 'payg'}
+							{#if hoverPayg}
 								<span transition:slide={{ duration: 150, axis: "x" }} class="ms-1">
 									{$t('ui.pages.providersPage.list.tagPayAsYouGo')}
 								</span>
@@ -179,11 +181,11 @@ import { isPaidPlanConnection, isPayAsYouGoConnection } from '$lib/provider-bill
 							class="badge shrink-0 border border-primary/40 bg-primary/10 text-primary"
 							aria-label={$t('ui.pages.providersPage.list.tagPaidPlan')}
 							role="img"
-							onmouseenter={() => (hoveredChip = 'paid')}
-							onmouseleave={() => (hoveredChip = null)}
+							onmouseenter={() => (hoverPaid = true)}
+												onmouseleave={() => (hoverPaid = false)}
 						>
 							<Icon name="layers" size={11} />
-							{#if hoveredChip === 'paid'}
+							{#if hoverPaid}
 								<span transition:slide={{ duration: 150, axis: "x" }} class="ms-1">
 									{$t('ui.pages.providersPage.list.tagPaidPlan')}
 								</span>
