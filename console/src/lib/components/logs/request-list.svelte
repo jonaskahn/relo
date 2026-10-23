@@ -32,15 +32,20 @@
 		onopen
 	}: Props = $props();
 
-	function watchMore(node: HTMLElement, load: () => void) {
-		let pending = false;
-		const observer = new IntersectionObserver((entries) => {
-			if (pending || !entries.some((entry) => entry.isIntersecting)) return;
-			pending = true;
-			load();
+	// The sentinel watches the foot of the list. It re-arms after every page
+	// (loadingMore and the row count change), so a sentinel still in view asks
+	// for the next page until the cursor runs out. A failed page sets no new
+	// rows, so it does not loop; Retry lives with the error.
+	function watchMore(node: HTMLElement) {
+		$effect(() => {
+			void logs.length;
+			if (loadingMore) return;
+			const observer = new IntersectionObserver((entries) => {
+				if (entries.some((entry) => entry.isIntersecting)) onloadMore();
+			});
+			observer.observe(node);
+			return () => observer.disconnect();
 		});
-		observer.observe(node);
-		return () => observer.disconnect();
 	}
 
 	const groups = $derived(groupRequestsByHour(logs));
@@ -105,7 +110,7 @@
 	{#if nextCursor}
 		<div
 			class="flex items-center justify-center px-5 py-4 text-xs text-muted-foreground"
-			{@attach (node) => watchMore(node, onloadMore)}
+			{@attach watchMore}
 		>
 			{loadingMore ? $t('ui.common.loading') : ''}
 		</div>

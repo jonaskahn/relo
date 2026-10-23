@@ -26,7 +26,7 @@ summarise the visible rows: requests loaded, success rate, tokens, and average Â
 
 The panel has a sentence-case header and hour bands. A row carries time (exact value in a tooltip), model over provider,
 client key over origin, status with icon and code, tokens with a proportional bar, duration (warn tone at 2 minutes or
-more), and cost. The client column hides below 900px. Reaching the end of the loaded rows reads the next page. There is no load button. Live mode subscribes
+more), and cost. The client column hides below 900px. Reaching the end of the loaded rows reads the next page, and keeps reading while the end stays in view, until the answer carries no cursor. A failed page shows its error with Retry and does not loop. There is no load button. Live mode subscribes
 to the `logs` event stream only while the section is open and reloads once on return.
 
 A row opens a trailing drawer, the logs exception to `CenteredModal`: up to 1040px wide, scrim behind it, previous and

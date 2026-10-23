@@ -4,6 +4,7 @@
 	import { page } from '$app/state';
 
 	import { api } from '$lib/api';
+	import Button from '$lib/components/ui/button.svelte';
 	import RequestList from '$lib/components/logs/request-list.svelte';
 	import { coalesceReload } from '$lib/refresh';
 	import { subscribe } from '$lib/sse';
@@ -63,6 +64,7 @@
 	});
 
 	async function load(reset = true) {
+		if (!reset && (loadingMore || !nextCursor)) return;
 		if (reset) {
 			loading = true;
 			nextCursor = '';
@@ -77,7 +79,9 @@
 			if (reset) {
 				logs = data.items;
 			} else {
-				logs = [...logs, ...data.items];
+				// A cursor boundary must not render one request twice.
+				const known = new Set(logs.map((row) => row.ID));
+				logs = [...logs, ...data.items.filter((row) => !known.has(row.ID))];
 			}
 			nextCursor = data.next_cursor ?? '';
 		} catch (error) {
@@ -175,7 +179,7 @@
 
 	{#if loading}
 		<p class="text-muted-foreground text-sm">{$t('ui.common.loading')}</p>
-	{:else if failure}
+	{:else if failure && logs.length === 0}
 		<p
 			class="rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive"
 			role="alert"
@@ -192,8 +196,21 @@
 			maxTokens={kpis.maxTokens}
 			{nextCursor}
 			{loadingMore}
-			onloadMore={() => load(false)}
+			onloadMore={() => {
+				if (!failure) void load(false);
+			}}
 			{onopen}
 		/>
+		{#if failure}
+			<div
+				class="flex items-center gap-3 rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2"
+				role="alert"
+			>
+				<p class="flex-1 text-sm text-destructive">{failure}</p>
+				<Button variant="outline" size="sm" onclick={() => void load(false)}>
+					{$t('ui.common.retry')}
+				</Button>
+			</div>
+		{/if}
 	{/if}
 </div>
