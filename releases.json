@@ -1,7 +1,7 @@
 {
-  "generated": "2026-10-22T11:59:02Z",
+  "generated": "2026-10-23T04:23:35Z",
   "latest": "v0.1.6",
-  "latest_beta": "v0.1.6-beta.35.63f1fcf2",
+  "latest_beta": "v0.1.7-beta.37.36f8fdb5",
   "install": {
     "stable": {
       "script": "curl -fsSL https://relo.ifelse.one/install.sh | sh",
@@ -17,6 +17,166 @@
     }
   },
   "releases": [
+    {
+      "tag": "v0.1.7-beta.37.36f8fdb5",
+      "version": "0.1.7-beta.37.36f8fdb5",
+      "name": "v0.1.7-beta.37.36f8fdb5",
+      "channel": "beta",
+      "draft": false,
+      "published_at": "2026-10-23T04:23:25Z",
+      "page": "https://github.com/jonaskahn/relo/releases/tag/v0.1.7-beta.37.36f8fdb5",
+      "notes": "## What's Changed\n* fix: align activity calendar test pending prop type by @jonaskahn in https://github.com/jonaskahn/relo/pull/63\n\n\n**Full Changelog**: https://github.com/jonaskahn/relo/compare/v0.1.7-beta.36.1ea2bdb4...v0.1.7-beta.37.36f8fdb5",
+      "install": {
+        "script": "curl -fsSL https://relo.ifelse.one/install.sh | sh -s -- --version 0.1.7-beta.37.36f8fdb5",
+        "powershell": "& ([scriptblock]::Create((irm https://relo.ifelse.one/install.ps1))) -Version 0.1.7-beta.37.36f8fdb5",
+        "npm": "npm i -g @jonaskahn/relo@0.1.7-beta.37.36f8fdb5"
+      },
+      "files": [
+        {
+          "name": "checksums.txt",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.1.7-beta.37.36f8fdb5/checksums.txt",
+          "size": 684,
+          "os": "any",
+          "arch": "any",
+          "kind": "checksums",
+          "format": "txt"
+        },
+        {
+          "name": "relo-0.1.7-beta.37.36f8fdb5-darwin-amd64.tar.gz",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.1.7-beta.37.36f8fdb5/relo-0.1.7-beta.37.36f8fdb5-darwin-amd64.tar.gz",
+          "size": 14215804,
+          "os": "macos",
+          "arch": "amd64",
+          "kind": "archive",
+          "format": "tar.gz"
+        },
+        {
+          "name": "relo-0.1.7-beta.37.36f8fdb5-darwin-arm64.tar.gz",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.1.7-beta.37.36f8fdb5/relo-0.1.7-beta.37.36f8fdb5-darwin-arm64.tar.gz",
+          "size": 13792412,
+          "os": "macos",
+          "arch": "arm64",
+          "kind": "archive",
+          "format": "tar.gz"
+        },
+        {
+          "name": "relo-0.1.7-beta.37.36f8fdb5-linux-amd64.tar.gz",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.1.7-beta.37.36f8fdb5/relo-0.1.7-beta.37.36f8fdb5-linux-amd64.tar.gz",
+          "size": 13910806,
+          "os": "linux",
+          "arch": "amd64",
+          "kind": "archive",
+          "format": "tar.gz"
+        },
+        {
+          "name": "relo-0.1.7-beta.37.36f8fdb5-linux-arm64.tar.gz",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.1.7-beta.37.36f8fdb5/relo-0.1.7-beta.37.36f8fdb5-linux-arm64.tar.gz",
+          "size": 13151241,
+          "os": "linux",
+          "arch": "arm64",
+          "kind": "archive",
+          "format": "tar.gz"
+        },
+        {
+          "name": "relo-0.1.7-beta.37.36f8fdb5-windows-amd64.tar.gz",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.1.7-beta.37.36f8fdb5/relo-0.1.7-beta.37.36f8fdb5-windows-amd64.tar.gz",
+          "size": 13849696,
+          "os": "windows",
+          "arch": "amd64",
+          "kind": "archive",
+          "format": "tar.gz"
+        },
+        {
+          "name": "relo-0.1.7-beta.37.36f8fdb5-windows-arm64.tar.gz",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.1.7-beta.37.36f8fdb5/relo-0.1.7-beta.37.36f8fdb5-windows-arm64.tar.gz",
+          "size": 13002822,
+          "os": "windows",
+          "arch": "arm64",
+          "kind": "archive",
+          "format": "tar.gz"
+        }
+      ]
+    },
+    {
+      "tag": "v0.1.7-beta.36.1ea2bdb4",
+      "version": "0.1.7-beta.36.1ea2bdb4",
+      "name": "v0.1.7-beta.36.1ea2bdb4",
+      "channel": "beta",
+      "draft": false,
+      "published_at": "2026-10-22T12:33:08Z",
+      "page": "https://github.com/jonaskahn/relo/releases/tag/v0.1.7-beta.36.1ea2bdb4",
+      "notes": "## What's Changed\n* chore: bump to 0.1.7 by @github-actions[bot] in https://github.com/jonaskahn/relo/pull/62\n\n\n**Full Changelog**: https://github.com/jonaskahn/relo/compare/v0.1.6...v0.1.7-beta.36.1ea2bdb4",
+      "install": {
+        "script": "curl -fsSL https://relo.ifelse.one/install.sh | sh -s -- --version 0.1.7-beta.36.1ea2bdb4",
+        "powershell": "& ([scriptblock]::Create((irm https://relo.ifelse.one/install.ps1))) -Version 0.1.7-beta.36.1ea2bdb4",
+        "npm": "npm i -g @jonaskahn/relo@0.1.7-beta.36.1ea2bdb4"
+      },
+      "files": [
+        {
+          "name": "checksums.txt",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.1.7-beta.36.1ea2bdb4/checksums.txt",
+          "size": 684,
+          "os": "any",
+          "arch": "any",
+          "kind": "checksums",
+          "format": "txt"
+        },
+        {
+          "name": "relo-0.1.7-beta.36.1ea2bdb4-darwin-amd64.tar.gz",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.1.7-beta.36.1ea2bdb4/relo-0.1.7-beta.36.1ea2bdb4-darwin-amd64.tar.gz",
+          "size": 14180162,
+          "os": "macos",
+          "arch": "amd64",
+          "kind": "archive",
+          "format": "tar.gz"
+        },
+        {
+          "name": "relo-0.1.7-beta.36.1ea2bdb4-darwin-arm64.tar.gz",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.1.7-beta.36.1ea2bdb4/relo-0.1.7-beta.36.1ea2bdb4-darwin-arm64.tar.gz",
+          "size": 13765375,
+          "os": "macos",
+          "arch": "arm64",
+          "kind": "archive",
+          "format": "tar.gz"
+        },
+        {
+          "name": "relo-0.1.7-beta.36.1ea2bdb4-linux-amd64.tar.gz",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.1.7-beta.36.1ea2bdb4/relo-0.1.7-beta.36.1ea2bdb4-linux-amd64.tar.gz",
+          "size": 13879129,
+          "os": "linux",
+          "arch": "amd64",
+          "kind": "archive",
+          "format": "tar.gz"
+        },
+        {
+          "name": "relo-0.1.7-beta.36.1ea2bdb4-linux-arm64.tar.gz",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.1.7-beta.36.1ea2bdb4/relo-0.1.7-beta.36.1ea2bdb4-linux-arm64.tar.gz",
+          "size": 13124769,
+          "os": "linux",
+          "arch": "arm64",
+          "kind": "archive",
+          "format": "tar.gz"
+        },
+        {
+          "name": "relo-0.1.7-beta.36.1ea2bdb4-windows-amd64.tar.gz",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.1.7-beta.36.1ea2bdb4/relo-0.1.7-beta.36.1ea2bdb4-windows-amd64.tar.gz",
+          "size": 13814594,
+          "os": "windows",
+          "arch": "amd64",
+          "kind": "archive",
+          "format": "tar.gz"
+        },
+        {
+          "name": "relo-0.1.7-beta.36.1ea2bdb4-windows-arm64.tar.gz",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.1.7-beta.36.1ea2bdb4/relo-0.1.7-beta.36.1ea2bdb4-windows-arm64.tar.gz",
+          "size": 12962595,
+          "os": "windows",
+          "arch": "arm64",
+          "kind": "archive",
+          "format": "tar.gz"
+        }
+      ]
+    },
     {
       "tag": "v0.1.6",
       "version": "0.1.6",
