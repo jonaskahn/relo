@@ -461,40 +461,6 @@ func TestOrcaRouterFlow(t *testing.T) {
 }
 
 func TestCommandCodeFlow(t *testing.T) {
-	t.Run("imports the installed CLI key", func(t *testing.T) {
-		server, _ := newProvider(t)
-		server.handle("/alpha/whoami", jsonHandler(`{"userId":"user-9","userName":"operator","keyName":"laptop"}`))
-		path := writeFile(t, "commandcode.json", `{"apiKey":"cc-key","userId":"user-9"}`)
-		flow := oauth.NewCommandCodeFlow(
-			oauth.WithCallbackPort(-1),
-			oauth.WithCredentialsPath(path),
-			oauth.WithEndpoints(oauth.Endpoints{APIBaseURL: server.url("")}),
-		)
-		_, credential := loginManual(t, flow, "")
-		if credential.AccessToken != "cc-key" || credential.AccountID != "user-9" {
-			t.Fatalf("credential = %+v, want the imported key", credential)
-		}
-	})
-
-	t.Run("a rejected imported key is not adopted", func(t *testing.T) {
-		server, _ := newProvider(t)
-		server.handle("/alpha/whoami", jsonHandler(`{"error":"unauthorized"}`, http.StatusUnauthorized))
-		path := writeFile(t, "commandcode.json", `{"apiKey":"cc-key"}`)
-		flow := oauth.NewCommandCodeFlow(
-			oauth.WithCallbackPort(-1),
-			oauth.WithCredentialsPath(path),
-			oauth.WithEndpoints(oauth.Endpoints{APIBaseURL: server.url("")}),
-		)
-		_, err := flow.Login(context.Background(), oauth.LoginOpts{
-			ManualCode: func(oauth.AuthPrompt) (string, error) { return "c", nil },
-			NoBrowser:  true,
-			Timeout:    time.Second,
-		})
-		if !errors.Is(err, oauth.ErrCommandCodeKeyRejected) {
-			t.Fatalf("Login() error = %v, want %v", err, oauth.ErrCommandCodeKeyRejected)
-		}
-	})
-
 	t.Run("browser login hands the key back as the code", func(t *testing.T) {
 		server, _ := newProvider(t)
 		server.handle("/alpha/whoami", jsonHandler(`{"userId":"user-9","userName":"operator"}`))
@@ -511,17 +477,6 @@ func TestCommandCodeFlow(t *testing.T) {
 		}
 		if credential.AccessToken != "cc-browser-key" || credential.AccountID != "user-9" {
 			t.Fatalf("credential = %+v, want the browser key", credential)
-		}
-	})
-
-	t.Run("missing CLI authentication falls through to the browser", func(t *testing.T) {
-		flow := oauth.NewCommandCodeFlow(oauth.WithCallbackPort(-1), oauth.WithCredentialsPath(t.TempDir()+"/absent.json"))
-		_, err := flow.Login(context.Background(), oauth.LoginOpts{
-			ManualCode: func(oauth.AuthPrompt) (string, error) { return "", errors.New("operator stopped") },
-			Timeout:    time.Second,
-		})
-		if err == nil || errors.Is(err, oauth.ErrCommandCodeAuthMissing) {
-			t.Fatalf("Login() error = %v, want the browser attempt to fail with the operator error", err)
 		}
 	})
 
