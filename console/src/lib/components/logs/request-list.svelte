@@ -100,7 +100,7 @@
 			<div
 				animate:flip={{ duration: isFresh(row) || baseline !== Number.POSITIVE_INFINITY ? 200 : 0 }}
 			>
-				<div in:fly={{ y: 16, duration: isFresh(row) ? 200 : 0 }}>
+				<div in:fly={{ y: 16, duration: isFresh(row) ? 400 : 0 }}>
 					<div class:row-fresh={isFresh(row)}>
 						<RequestRow {row} {maxTokens} {cols} {onopen} />
 					</div>
@@ -122,7 +122,7 @@
 <style>
 	/* A newcomer swells a little, then settles to its size. */
 	.row-fresh {
-		animation: row-swell 600ms cubic-bezier(0.2, 0.8, 0.2, 1);
+		animation: row-swell 1200ms cubic-bezier(0.2, 0.8, 0.2, 1);
 	}
 
 	@keyframes row-swell {
