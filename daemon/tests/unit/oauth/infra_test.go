@@ -401,7 +401,7 @@ func TestRegistry(t *testing.T) {
 
 	t.Run("the default registry carries every shipped flow", func(t *testing.T) {
 		registry := oauth.DefaultRegistry()
-		want := []string{"claude", "command-code", "copilot", "cursor", "devin", "google-antigravity", "grok", "iflow", "kimi", "kiro", "meta-muse", "nous", "openai-codex", "openai-codex-device", "orcarouter-oauth", "qwen"}
+		want := []string{"claude", "command-code", "copilot", "cursor", "deepseek-account", "devin", "google-antigravity", "grok", "iflow", "kimi", "kiro", "meta-muse", "nous", "openai-codex", "openai-codex-device", "orcarouter-oauth", "qwen"}
 		got := registry.ProviderIDs()
 		if strings.Join(got, ",") != strings.Join(want, ",") {
 			t.Fatalf("ProviderIDs() = %v, want %v", got, want)

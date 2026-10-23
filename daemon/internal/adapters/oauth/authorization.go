@@ -19,6 +19,9 @@ const (
 	FlowCommandCode       = "command-code"
 	FlowQwen              = "qwen"
 	FlowIFlow             = "iflow"
+	// FlowDeepSeekAccount imports the grant an installed DeepSeek Harness
+	// Desktop holds, which is a platform account rather than an API key.
+	FlowDeepSeekAccount = "deepseek-account"
 )
 
 // Credential extra keys a flow stores and a request reads back, so a token
@@ -40,10 +43,14 @@ const (
 // token, the headers that go beside it, and any endpoint the credential
 // itself selects.
 type Authorization struct {
-	Token     string
-	Headers   map[string]string
-	BaseURL   string
-	Project   string
+	Token   string
+	Headers map[string]string
+	BaseURL string
+	Project string
+	// KeyHeader overrides where the token travels, for a sign-in whose grant
+	// belongs in a vendor header rather than the bearer slot. Empty keeps the
+	// bearer the sign-in flows have always used.
+	KeyHeader string
 	AccountID string
 }
 
