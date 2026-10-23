@@ -48,19 +48,38 @@
 		});
 	}
 
-	const groups = $derived(groupRequestsByHour(logs));
 	// The rows on screen when the list first paints are the baseline. Only a
-	// request newer than every one of them is a newcomer: it rises in and a
+	// request newer than every one of them is a newcomer: it rises in and
 	// swells a little as it settles. Older pages and filter reloads stay
 	// still. Reduced motion skips all of it.
 	let baseline = $state(Number.POSITIVE_INFINITY);
+	// shownMax is the newest request let onto the list. A burst of newcomers
+	// is released oldest first, one per STAGGER_MS, so each animates on its
+	// own instead of all at once.
+	let shownMax = $state(Number.POSITIVE_INFINITY);
+	const STAGGER_MS = 300;
 	const motion = $derived(!prefersReducedMotion());
 
 	$effect(() => {
 		if (logs.length === 0 || baseline !== Number.POSITIVE_INFINITY) return;
 		baseline = Math.max(...logs.map((row) => row.ID));
+		shownMax = baseline;
 	});
 
+	$effect(() => {
+		if (baseline === Number.POSITIVE_INFINITY) return;
+		const waiting = logs.map((row) => row.ID).filter((id) => id > shownMax);
+		if (waiting.length === 0) return;
+		if (!motion) {
+			shownMax = Math.max(...waiting);
+			return;
+		}
+		const next = Math.min(...waiting);
+		const timer = setTimeout(() => (shownMax = next), STAGGER_MS);
+		return () => clearTimeout(timer);
+	});
+
+	const groups = $derived(groupRequestsByHour(logs.filter((row) => row.ID <= shownMax)));
 	const isFresh = (row: UsageLogRow) => motion && row.ID > baseline;
 
 	const cols =

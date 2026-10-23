@@ -125,7 +125,7 @@
 	// The live tail reloads on the event stream; a burst of announcements
 	// reloads once rather than once per relayed request. The pause control
 	// stops the subscription without closing the page.
-	const reloadLogs = coalesceReload(() => load(true), 100);
+	const reloadLogs = coalesceReload(() => load(true), 250);
 
 	$effect(() => {
 		if (!live) return;
