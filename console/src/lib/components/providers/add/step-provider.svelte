@@ -181,16 +181,31 @@
 									{/if}
 								</span>
 								{#if isFreeConnection(billingProvider)}
-									<span data-free-chip class="badge shrink-0 self-start border border-ok/40 bg-ok/10 text-ok">
-										{$t('ui.pages.providersPage.list.tagFree')}
+									<span
+										data-free-chip
+										class="badge shrink-0 self-start border border-ok/40 bg-ok/10 text-ok"
+										aria-label={$t('ui.pages.providersPage.list.tagFree')}
+									>
+										<Icon name="sparkles" size={11} class="sm:hidden" />
+										<span class="max-sm:hidden">{$t('ui.pages.providersPage.list.tagFree')}</span>
 									</span>
 								{:else if isPaidPlanConnection(billingProvider)}
-									<span data-paid-chip class="badge shrink-0 self-start border border-primary/40 bg-primary/10 text-primary">
-										{$t('ui.pages.providersPage.list.tagPaidPlan')}
+									<span
+										data-paid-chip
+										class="badge shrink-0 self-start border border-primary/40 bg-primary/10 text-primary"
+										aria-label={$t('ui.pages.providersPage.list.tagPaidPlan')}
+									>
+										<Icon name="layers" size={11} class="sm:hidden" />
+										<span class="max-sm:hidden">{$t('ui.pages.providersPage.list.tagPaidPlan')}</span>
 									</span>
 								{:else if isPayAsYouGoConnection(billingProvider)}
-									<span data-payg-chip class="badge shrink-0 self-start border border-border bg-muted text-muted-foreground">
-										{$t('ui.pages.providersPage.list.tagPayAsYouGo')}
+									<span
+										data-payg-chip
+										class="badge shrink-0 self-start border border-border bg-muted text-muted-foreground"
+										aria-label={$t('ui.pages.providersPage.list.tagPayAsYouGo')}
+									>
+										<Icon name="currency-dollar" size={11} class="sm:hidden" />
+										<span class="max-sm:hidden">{$t('ui.pages.providersPage.list.tagPayAsYouGo')}</span>
 									</span>
 								{/if}
 								{#if chosen}
