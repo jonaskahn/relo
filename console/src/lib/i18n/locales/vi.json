@@ -479,7 +479,9 @@
           "filters": "Bộ lọc kết nối",
           "filterOption": "{label} ({count})",
           "tagFree": "Miễn phí",
-          "tagExperimental": "Thử nghiệm"
+          "tagExperimental": "Thử nghiệm",
+          "tagPayAsYouGo": "Pay as you go",
+          "tagPaidPlan": "Paid plan"
         },
         "status": {
           "ready": "Sẵn sàng",

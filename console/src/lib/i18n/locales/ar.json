@@ -479,7 +479,9 @@
           "filters": "عوامل تصفية الاتصالات",
           "filterOption": "{label} ({count})",
           "tagFree": "مجاني",
-          "tagExperimental": "تجريبي"
+          "tagExperimental": "تجريبي",
+          "tagPayAsYouGo": "Pay as you go",
+          "tagPaidPlan": "Paid plan"
         },
         "status": {
           "ready": "جاهز",

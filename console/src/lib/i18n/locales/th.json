@@ -479,7 +479,9 @@
           "filters": "ตัวกรองการเชื่อมต่อ",
           "filterOption": "{label} ({count})",
           "tagFree": "ฟรี",
-          "tagExperimental": "ทดลอง"
+          "tagExperimental": "ทดลอง",
+          "tagPayAsYouGo": "Pay as you go",
+          "tagPaidPlan": "Paid plan"
         },
         "status": {
           "ready": "พร้อมใช้งาน",

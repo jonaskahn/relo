@@ -479,7 +479,9 @@
           "filters": "Фильтры подключений",
           "filterOption": "{label} ({count})",
           "tagFree": "Бесплатно",
-          "tagExperimental": "Экспериментальный"
+          "tagExperimental": "Экспериментальный",
+          "tagPayAsYouGo": "Pay as you go",
+          "tagPaidPlan": "Paid plan"
         },
         "status": {
           "ready": "Готов",

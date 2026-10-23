@@ -479,7 +479,9 @@
           "filters": "Filter koneksi",
           "filterOption": "{label} ({count})",
           "tagFree": "Gratis",
-          "tagExperimental": "Eksperimental"
+          "tagExperimental": "Eksperimental",
+          "tagPayAsYouGo": "Pay as you go",
+          "tagPaidPlan": "Paid plan"
         },
         "status": {
           "ready": "Siap",

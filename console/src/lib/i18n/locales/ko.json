@@ -479,7 +479,9 @@
           "filters": "연결 필터",
           "filterOption": "{label} ({count})",
           "tagFree": "무료",
-          "tagExperimental": "실험적"
+          "tagExperimental": "실험적",
+          "tagPayAsYouGo": "Pay as you go",
+          "tagPaidPlan": "Paid plan"
         },
         "status": {
           "ready": "준비됨",

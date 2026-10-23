@@ -479,7 +479,9 @@
           "filters": "Filtry připojení",
           "filterOption": "{label} ({count})",
           "tagFree": "Zdarma",
-          "tagExperimental": "Experimentální"
+          "tagExperimental": "Experimentální",
+          "tagPayAsYouGo": "Pay as you go",
+          "tagPaidPlan": "Paid plan"
         },
         "status": {
           "ready": "Připraveno",

@@ -479,7 +479,9 @@
           "filters": "कनेक्शन फ़िल्टर",
           "filterOption": "{label} ({count})",
           "tagFree": "मुफ़्त",
-          "tagExperimental": "प्रायोगिक"
+          "tagExperimental": "प्रायोगिक",
+          "tagPayAsYouGo": "Pay as you go",
+          "tagPaidPlan": "Paid plan"
         },
         "status": {
           "ready": "तैयार",

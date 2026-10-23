@@ -479,7 +479,9 @@
           "filters": "接続フィルター",
           "filterOption": "{label} ({count})",
           "tagFree": "無料",
-          "tagExperimental": "実験的"
+          "tagExperimental": "実験的",
+          "tagPayAsYouGo": "Pay as you go",
+          "tagPaidPlan": "Paid plan"
         },
         "status": {
           "ready": "準備完了",

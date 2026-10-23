@@ -479,7 +479,9 @@
           "filters": "Filtry połączeń",
           "filterOption": "{label} ({count})",
           "tagFree": "Bezpłatne",
-          "tagExperimental": "Eksperymentalne"
+          "tagExperimental": "Eksperymentalne",
+          "tagPayAsYouGo": "Pay as you go",
+          "tagPaidPlan": "Paid plan"
         },
         "status": {
           "ready": "Gotowe",

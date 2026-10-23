@@ -479,7 +479,9 @@
           "filters": "連接篩選",
           "filterOption": "{label} ({count})",
           "tagFree": "免費",
-          "tagExperimental": "實驗性"
+          "tagExperimental": "實驗性",
+          "tagPayAsYouGo": "Pay as you go",
+          "tagPaidPlan": "Paid plan"
         },
         "status": {
           "ready": "就緒",

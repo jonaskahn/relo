@@ -479,7 +479,9 @@
           "filters": "Verbindungsfilter",
           "filterOption": "{label} ({count})",
           "tagFree": "Kostenlos",
-          "tagExperimental": "Experimentell"
+          "tagExperimental": "Experimentell",
+          "tagPayAsYouGo": "Pay as you go",
+          "tagPaidPlan": "Paid plan"
         },
         "status": {
           "ready": "Bereit",

@@ -479,7 +479,9 @@
           "filters": "Filtre conexiuni",
           "filterOption": "{label} ({count})",
           "tagFree": "Gratuit",
-          "tagExperimental": "Experimental"
+          "tagExperimental": "Experimental",
+          "tagPayAsYouGo": "Pay as you go",
+          "tagPaidPlan": "Paid plan"
         },
         "status": {
           "ready": "Pregătit",

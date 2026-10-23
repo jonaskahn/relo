@@ -479,7 +479,9 @@
           "filters": "Anslutningsfilter",
           "filterOption": "{label} ({count})",
           "tagFree": "Gratis",
-          "tagExperimental": "Experimentell"
+          "tagExperimental": "Experimentell",
+          "tagPayAsYouGo": "Pay as you go",
+          "tagPaidPlan": "Paid plan"
         },
         "status": {
           "ready": "Redo",
