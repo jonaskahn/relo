@@ -14,6 +14,9 @@
 		type TemplateRow
 	} from '$lib/provider-sections';
 	import { isExperimentalConnection } from '$lib/provider-experimental';
+	import { isFreeConnection } from '$lib/provider-free';
+	import { isPaidPlanConnection, isPayAsYouGoConnection } from '$lib/provider-billing';
+	import { slide } from 'svelte/transition';
 
 	// The provider picker is a radio list: choosing marks a row and the
 	// footer's Next advances, so a misread row never opens the form by itself.
@@ -116,6 +119,15 @@
 						aria-label={$t(SECTION_LABEL_KEY[group.section])}
 					>
 						{#each group.rows as row (row.id)}
+							{@const billingProvider = {
+								id: row.id,
+								template_id: row.id,
+								kind: row.template?.kind ?? '',
+								auth: row.template?.auth ?? '',
+								origin: row.template?.origin ?? '',
+								base_url: row.template?.default_base_url ?? '',
+								modelsdev_provider_id: row.template?.modelsdev_provider_id ?? ''
+							}}
 							{@const chosen = selected === row.id}
 							<button
 								type="button"
@@ -148,6 +160,19 @@
 												class="badge shrink-0 border border-border text-muted-foreground"
 											>
 												{$t('ui.pages.providersPage.list.tagExperimental')}
+											</span>
+										{/if}
+										{#if isFreeConnection(billingProvider)}
+											<span data-free-chip class="badge shrink-0 border border-ok/40 bg-ok/10 text-ok">
+												<Icon name="sparkles" size={11} />
+											</span>
+										{:else if isPaidPlanConnection(billingProvider)}
+											<span data-paid-chip class="badge shrink-0 border border-primary/40 bg-primary/10 text-primary">
+												<Icon name="layers" size={11} />
+											</span>
+										{:else if isPayAsYouGoConnection(billingProvider)}
+											<span data-payg-chip class="badge shrink-0 border border-border bg-muted text-muted-foreground">
+												<Icon name="currency-dollar" size={11} />
 											</span>
 										{/if}
 										{#if row.added}
