@@ -185,3 +185,11 @@ describe('provider sections', () => {
 		expect(isProviderId('')).toBe(false);
 	});
 });
+
+test('files a Command Code key template under keys', () => {
+	const rows = buildTemplateRows(
+		[templateOf({ id: 'command-code', label: 'Command Code', kind: 'key' })],
+		new Set()
+	);
+	expect(rows.key.map((row) => row.id)).toEqual(['command-code']);
+});
