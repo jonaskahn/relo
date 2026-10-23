@@ -18,7 +18,7 @@
 	import ModelList from './model-list.svelte';
 	import AccountsTab from './accounts-tab.svelte';
 	import SettingsTab from './settings-tab.svelte';
-	import { supportsPaidFree } from '$lib/model-filters';
+	import { splitsPaidFree } from '$lib/model-filters';
 	import { EMPTY_MODEL_FILTERS, type ModelFilters } from '$lib/model-filters';
 	import type { ModelLabelFilter } from '$lib/model-filters';
 	import { providerStatus } from '$lib/provider-status';
@@ -78,6 +78,7 @@
 	let quotaRevision = $state(0);
 
 	const status = $derived(providerStatus(provider));
+	const paidFree = $derived(splitsPaidFree(models));
 	// The lane logs what it is sent, so the header says so beside what it is.
 	const experimental = $derived(isExperimentalConnection(provider.template_id || provider.id));
 	const quotaStale = $derived(windows.some((window) => window.stale));
@@ -362,12 +363,7 @@
 			{/key}
 			<div class="pt-actions">
 				{#if tab === 'models'}
-					<ModelFilterMenu
-						filters={shownFilters}
-						onfilters={setFilters}
-						{models}
-						paidFree={supportsPaidFree(provider.template_id)}
-					/>
+					<ModelFilterMenu filters={shownFilters} onfilters={setFilters} {models} {paidFree} />
 				{/if}
 				{#if tab === 'accounts' && accounts.length > 0}
 					<CardLayoutToggle />
@@ -406,7 +402,7 @@
 				loading={modelsLoading}
 				failed={modelsFailed}
 				canAdd={provider.models_format === 'none'}
-				paidFree={supportsPaidFree(provider.template_id)}
+				{paidFree}
 				filters={shownFilters}
 				onfilters={setFilters}
 				hideSearchFilters
