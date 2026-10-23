@@ -73,10 +73,11 @@ banner stay.
 
 ### Models tab
 
-Toolbar, one row that wraps: the bulk-actions menu (turn the shown models on or off, set one context window
-across the connection, set a capability across the connection). Search and the one filter menu (category, price
+Toolbar, one row that wraps: the bulk-actions menu (turn the shown models on or off, and — once the connection lists
+both paid and free models — turn all paid or all free on or off). Search and the one filter menu (category, price
 paid/free, status, Unpriced / Overridden / Unavailable with an active-dimension badge and Clear filters) sit in the
-pane toolbar beside Back. Active filters mark their control with `--accent-soft`.
+pane toolbar beside Back. The paid/free items appear only when the connection's roster holds both, since not every
+provider publishes free models. Active filters mark their control with `--accent-soft`.
 
 **Model row-card** (no table, no row lines — each model is its own container, `--surface`, full 1px `--line`,
 `--radius-card`, gap 8px between rows):
