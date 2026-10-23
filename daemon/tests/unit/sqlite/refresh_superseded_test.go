@@ -64,3 +64,29 @@ func TestRefreshDeletesSupersededRows(t *testing.T) {
 		t.Fatalf("models = %+v, want the row a group routes to kept", stored)
 	}
 }
+
+// TestRefreshReportsASupersededDeleteFailure keeps the refresh from half
+// applying: a delete the database refuses fails the whole call.
+func TestRefreshReportsASupersededDeleteFailure(t *testing.T) {
+	ctx := context.Background()
+	db := testkit.OpenTestDB(t)
+	repo := sqlite.NewCatalogRepo(db)
+	if err := repo.SaveProvider(ctx, sqlite.ProviderRow{
+		ID: "google-antigravity", Origin: "template", Label: "Google Antigravity", Auth: "oauth", Enabled: true,
+	}); err != nil {
+		t.Fatalf("SaveProvider() error = %v", err)
+	}
+	if err := repo.SaveModel(ctx, sqlite.ModelRow{
+		ProviderID: "google-antigravity", ModelID: "claude-sonnet-5-5-low", Source: "listing",
+	}); err != nil {
+		t.Fatalf("SaveModel() error = %v", err)
+	}
+	if _, err := db.SQL().ExecContext(ctx,
+		"CREATE TRIGGER refuse_delete BEFORE DELETE ON models BEGIN SELECT RAISE(ABORT, 'refused'); END"); err != nil {
+		t.Fatalf("create trigger: %v", err)
+	}
+	err := repo.RefreshProviderModels(ctx, "google-antigravity", nil, nil, nil, []string{"claude-sonnet-5-5-low"}, 1, "")
+	if err == nil {
+		t.Fatal("RefreshProviderModels() error = nil, want the refused delete reported")
+	}
+}

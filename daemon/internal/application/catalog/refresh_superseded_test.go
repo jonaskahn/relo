@@ -52,3 +52,24 @@ func TestCollectMembersNamesTheBackendSkus(t *testing.T) {
 		t.Fatalf("members = %v, want only the backend SKUs", assembly.members)
 	}
 }
+
+// TestCollectMembersSkipsTuplesThatNameNoOtherSku covers the tuples that add
+// nothing: another transport, an unreadable tuple, and a wire model that is the
+// published id itself.
+func TestCollectMembersSkipsTuplesThatNameNoOtherSku(t *testing.T) {
+	entry := rosterEntry{Listed: catalog.Listed{
+		ID: "claude-sonnet-5-5",
+		RequestConfigs: []catalog.ModelRequestConfig{
+			{ModelID: "claude-sonnet-5-5", APIFormat: catalog.FormatOpenAIChat, WireConfig: "{}"},
+			{ModelID: "claude-sonnet-5-5", APIFormat: catalog.FormatCloudCode, WireConfig: "not json"},
+			catalog.EncodeAntigravityConfig(catalog.AntigravityVariant{
+				LogicalID: "claude-sonnet-5-5", WireModel: "claude-sonnet-5-5",
+			}),
+		},
+	}}
+	assembly := refreshAssembly{members: map[string]bool{}}
+	assembly.collectMembers(entry)
+	if len(assembly.members) != 0 {
+		t.Fatalf("members = %v, want none", assembly.members)
+	}
+}
