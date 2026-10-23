@@ -213,7 +213,9 @@ import { isPaidPlanConnection, isPayAsYouGoConnection } from '$lib/provider-bill
 			>
 				<Icon name={pill.icon} size={12} />
 				{#if statusHovered}
-					<span transition:slide={{ duration: 150, axis: 'x' }} class="ms-1">{pill.label}</span>
+					<span transition:slide={{ duration: 150, axis: 'x' }} class="ms-1 whitespace-nowrap"
+						>{pill.label}</span
+					>
 				{/if}
 			</span>
 		</div>
