@@ -126,7 +126,14 @@ func (c *Codec) authorize(request *http.Request, opts wire.CodecOpts, authOAuth,
 		return
 	}
 	if authOAuth {
-		request.Header.Set("Authorization", "Bearer "+opts.CredentialRef)
+		// A sign-in that names its own header carries the grant there rather
+		// than in the bearer slot, which is where a vendor that issues a
+		// non-bearer token expects it.
+		if opts.KeyHeader != "" && opts.KeyHeader != "bearer" {
+			wire.ApplyCredential(request, opts)
+		} else {
+			request.Header.Set("Authorization", "Bearer "+opts.CredentialRef)
+		}
 		for name, value := range opts.ExtraHeaders {
 			request.Header.Set(name, value)
 		}

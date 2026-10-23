@@ -336,6 +336,9 @@ func (s *Source) signInAuthorization(providerID string, entry account.PoolEntry,
 		Token: resolved.Token, Headers: resolved.Headers,
 		BaseURL: resolved.BaseURL, Project: resolved.Project,
 		AccountID: resolved.AccountID,
+		// A sign-in whose grant belongs outside the bearer slot names the
+		// header here; an empty one keeps the bearer every other sign-in uses.
+		KeyHeader: catalog.KeyHeader(resolved.KeyHeader),
 	}, nil
 }
 

@@ -90,6 +90,25 @@ func TestEncodeRequest(t *testing.T) {
 		}
 	})
 
+	// A sign-in whose grant is not a bearer token names the header it travels
+	// in. The codec writes it there and leaves the bearer slot empty, or the
+	// upstream would read a second, invalid credential beside the real one.
+	t.Run("an OAuth credential that names its own header keeps the bearer empty", func(t *testing.T) {
+		request := newTestRequest(t, canonicalRequest(true), wire.CodecOpts{
+			CredentialRef: "grant-token", AuthMethod: "oauth", KeyHeader: "x-dsh-auth-token",
+			TemplateID: "deepseek-account",
+		})
+		if got := request.Header.Get("x-dsh-auth-token"); got != "grant-token" {
+			t.Fatalf("x-dsh-auth-token = %q, want the grant", got)
+		}
+		if got := request.Header.Get("Authorization"); got != "" {
+			t.Fatalf("Authorization = %q, want no bearer token", got)
+		}
+		if got := request.Header.Get("x-api-key"); got != "" {
+			t.Fatalf("x-api-key = %q, want no API key", got)
+		}
+	})
+
 	t.Run("an OAuth request leads the system with the Claude Code identity", func(t *testing.T) {
 		body := encodeBody(t, canonicalRequest(false), wire.CodecOpts{CredentialRef: "oauth-token", AuthMethod: "oauth"})
 		blocks, _ := body["system"].([]any)

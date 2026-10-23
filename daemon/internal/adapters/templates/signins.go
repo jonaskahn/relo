@@ -42,6 +42,19 @@ func authorizeKiro(cred oauth.OAuthCredential) oauth.Authorization {
 	return auth
 }
 
+// A DeepSeek account grant travels in the harness header on the one inference
+// host it may reach, which is also the Anthropic Messages wire. The base URL is
+// pinned here rather than read from the connection, so a connection that names
+// another host cannot send the grant there.
+func authorizeDeepSeekAccount(cred oauth.OAuthCredential) oauth.Authorization {
+	auth := authorizeDefault(cred)
+	auth.BaseURL = oauth.DeepSeekAccountBaseURL
+	// The grant travels in the harness header, not the bearer slot, so the
+	// connection declares that header and the relay writes the token there.
+	auth.KeyHeader = oauth.DeepSeekAccountHeader
+	return auth
+}
+
 // The Grok subscription token is minted for the Grok CLI's own proxy rather
 // than the public xAI API, so a signed-in request goes to that proxy with the
 // headers the CLI sends. An API-key xAI connection is a different credential
@@ -293,6 +306,27 @@ var signInTemplates = []signInTemplate{
 			LoginMethods:   []LoginMethod{{Flow: oauth.FlowIFlow, Kind: LoginBrowser}},
 		},
 		authorize: authorizeDefault,
+	},
+	{
+		Template: Template{
+			ID:     "deepseek-account",
+			Label:  "DeepSeek Account (Harness)",
+			Kind:   KindSignIn,
+			Origin: catalog.OriginSignIn,
+			Auth:   catalog.AuthOAuth,
+			// The grant travels in the harness header, never as a bearer token,
+			// so the header slot names that header and no API key is added.
+			KeyHeader:      catalog.KeyHeader(oauth.DeepSeekAccountHeader),
+			DefaultFormat:  catalog.FormatAnthropic,
+			DefaultBaseURL: "https://api.deepseek.com/anthropic/v1",
+			ModelsSource:   "manual",
+			// The account grant authorizes inference only, so Relo never asks it
+			// for a model list: the operator types the ids the account serves.
+			ModelsFormat: catalog.ModelsNone,
+			LoginMethods: []LoginMethod{{Flow: oauth.FlowDeepSeekAccount, Kind: LoginCLI}},
+			DocURL:       "https://platform.deepseek.com",
+		},
+		authorize: authorizeDeepSeekAccount,
 	},
 	{
 		Template: Template{
