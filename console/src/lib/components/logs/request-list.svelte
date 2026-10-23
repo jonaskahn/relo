@@ -99,7 +99,7 @@
 				{#if !settled || !motion}
 					<RequestRow {row} {maxTokens} {cols} {onopen} />
 				{:else}
-					<div in:fly={{ y: 16, duration: 200 }}>
+					<div class="row-fresh" in:fly={{ y: 16, duration: 200 }}>
 						<RequestRow {row} {maxTokens} {cols} {onopen} />
 					</div>
 				{/if}
@@ -116,3 +116,25 @@
 		</div>
 	{/if}
 </div>
+
+<style>
+	/* A row that arrives live glows in the accent, then settles to a plain row. */
+	.row-fresh {
+		animation: row-fresh 1800ms ease-out;
+	}
+
+	@keyframes row-fresh {
+		from {
+			background-color: color-mix(in srgb, var(--accent) 18%, transparent);
+		}
+		to {
+			background-color: transparent;
+		}
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.row-fresh {
+			animation: none;
+		}
+	}
+</style>
