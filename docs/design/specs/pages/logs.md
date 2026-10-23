@@ -11,7 +11,7 @@ Route `/logs`. Three sections behind one segmented switch — **Agent**, **Daemo
 `?request=` link lands on the agent section and opens its detail.
 
 One toolbar row sits above the panes and stays mounted, so the section thumb springs instead of jumping; only the pane
-below it slides. The section switch (Agent, Daemon, Startup, without counts) stays on the left of the toolbar. The open section's own controls sit at the right end of that row. Live — or Refresh on Startup — sits on the title row, at the right. On a phone the controls wrap. Only
+below it slides. The section switch (Agent, Daemon, Startup, without counts) stays on the left of the toolbar. The open section's own controls sit at the right end of that row. Live — or Refresh on Startup — sits on the title row, at the right. On a phone the switch takes a full-width row, one third per section; the status segment and the daemon filter toggle stand down, so search is the only control under it. Only
 the open section mounts; a visit back reads fresh.
 
 The request list and the daemon and startup lists are one bordered panel, a logs exception to the separate row-card
