@@ -71,6 +71,7 @@
       "healthRunning": "đang chạy",
       "healthDown": "không thể kết nối",
       "latestBeta": "bản beta mới nhất {version}",
+      "latest": "mới nhất {version}",
       "updateAvailable": "Có bản cập nhật",
       "quickAdd": "Thêm",
       "quickAddAccount": "Tài khoản nhà cung cấp",

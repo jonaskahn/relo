@@ -71,6 +71,7 @@
       "healthRunning": "قيد التشغيل",
       "healthDown": "غير متاح",
       "latestBeta": "أحدث نسخة تجريبية {version}",
+      "latest": "الأحدث {version}",
       "updateAvailable": "يتوفر تحديث",
       "quickAdd": "إضافة",
       "quickAddAccount": "حساب مزوّد",

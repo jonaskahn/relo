@@ -71,6 +71,7 @@
       "healthRunning": "körs",
       "healthDown": "oåtkomlig",
       "latestBeta": "senaste beta {version}",
+      "latest": "senaste {version}",
       "updateAvailable": "Uppdatering tillgänglig",
       "quickAdd": "Lägg till",
       "quickAddAccount": "Leverantörskonto",

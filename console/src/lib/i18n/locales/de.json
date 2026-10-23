@@ -71,6 +71,7 @@
       "healthRunning": "läuft",
       "healthDown": "nicht erreichbar",
       "latestBeta": "neueste Beta {version}",
+      "latest": "neueste {version}",
       "updateAvailable": "Update verfügbar",
       "quickAdd": "Hinzufügen",
       "quickAddAccount": "Anbieter-Konto",

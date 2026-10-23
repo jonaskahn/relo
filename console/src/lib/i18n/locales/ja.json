@@ -71,6 +71,7 @@
       "healthRunning": "実行中",
       "healthDown": "到達不可",
       "latestBeta": "最新ベータ {version}",
+      "latest": "最新 {version}",
       "updateAvailable": "アップデートがあります",
       "quickAdd": "追加",
       "quickAddAccount": "プロバイダーアカウント",

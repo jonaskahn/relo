@@ -71,6 +71,7 @@
       "healthRunning": "rulează",
       "healthDown": "inaccesibil",
       "latestBeta": "cea mai nouă versiune beta {version}",
+      "latest": "cea mai nouă {version}",
       "updateAvailable": "Actualizare disponibilă",
       "quickAdd": "Adaugă",
       "quickAddAccount": "Cont de furnizor",

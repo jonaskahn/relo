@@ -71,6 +71,7 @@
       "healthRunning": "berjalan",
       "healthDown": "tidak terjangkau",
       "latestBeta": "beta terbaru {version}",
+      "latest": "terbaru {version}",
       "updateAvailable": "Pembaruan tersedia",
       "quickAdd": "Tambah",
       "quickAddAccount": "Akun penyedia",

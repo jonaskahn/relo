@@ -71,6 +71,7 @@
       "healthRunning": "работает",
       "healthDown": "недоступен",
       "latestBeta": "последняя бета {version}",
+      "latest": "последняя {version}",
       "updateAvailable": "Доступно обновление",
       "quickAdd": "Добавить",
       "quickAddAccount": "Аккаунт провайдера",
