@@ -37,6 +37,9 @@ func All(idx *modelsdev.Index) []Template {
 
 	for _, t := range curatedTemplates {
 		seen[t.ID] = true
+		if t.ModelsDevProviderID != "" {
+			seen[t.ModelsDevProviderID] = true
+		}
 		t.Normalize()
 		t.ModelsDevModels = modelsDevModelCount(idx, t.ModelsDevProviderID)
 		list = append(list, t)
