@@ -45,6 +45,8 @@ $script:Side = [string][char]0x2502
 $script:Bullet = [string][char]0x25B6
 $script:Check = [string][char]0x2713
 $script:Dot = [string][char]0x00B7
+$script:Left = [string][char]0x2190
+$script:Right = [string][char]0x2192
 
 function Paint([string] $Text, [string] $Tone) {
 	if (-not $script:Color) { return $Text }
@@ -52,15 +54,40 @@ function Paint([string] $Text, [string] $Tone) {
 		'bright' { return "$($script:Esc)[38;2;155;188;15m$Text$($script:Esc)[0m" }
 		'rose' { return "$($script:Esc)[38;2;139;172;15m$Text$($script:Esc)[0m" }
 		'slate' { return "$($script:Esc)[38;2;48;98;48m$Text$($script:Esc)[0m" }
+		'dim' { return "$($script:Esc)[38;2;48;98;48m$Text$($script:Esc)[0m" }
+		'red' { return "$($script:Esc)[38;2;214;60;60m$Text$($script:Esc)[0m" }
 		'bold' { return "$($script:Esc)[1m$Text$($script:Esc)[0m" }
 		default { return $Text }
 	}
 }
 
 function Get-Visible([string] $Text) { return ($Text -replace "$($script:Esc)\[[0-9;]*m", '') }
+function Clip-Text([string] $Text) {
+	$out = ''
+	$vis = 0
+	$i = 0
+	while ($i -lt $Text.Length -and $vis -lt ($script:Inner - 1)) {
+		if ($Text[$i] -eq $script:Esc) {
+			$j = $Text.IndexOf('m', $i)
+			if ($j -lt 0) { break }
+			$out += $Text.Substring($i, $j - $i + 1)
+			$i = $j + 1
+			continue
+		}
+		$out += $Text[$i]
+		$vis++
+		$i++
+	}
+	return $out + [char]0x2026
+}
+
 function Format-Row([string] $Text) {
 	if (-not $script:Framed) { return $Text }
 	$visible = (Get-Visible $Text).Length
+	if ($visible -gt $script:Inner) {
+		$Text = Clip-Text $Text
+		$visible = (Get-Visible $Text).Length
+	}
 	$pad = [Math]::Max(0, $script:Inner - $visible)
 	return (Paint $script:Side 'bright') + $Text + (' ' * $pad) + (Paint $script:Side 'bright')
 }
@@ -219,27 +246,161 @@ function Get-ChannelCommand {
 	}
 }
 
+# ------------------------------------------------------------ selections ----
+#
+# A selection menu reads single keys from the console, so the uninstaller can
+# arrive on a pipeline and still ask questions. Without a key-capable console
+# it falls back to a typed number.
+
+function Read-Answer([string] $Prompt) {
+	if ($script:Framed) {
+		# Leave the row open while reading: the terminal's caret then sits
+		# right after the question, inside the frame.
+		Write-Host ((Paint $script:Side 'bright') + "  " + (Paint $script:Bullet 'bright') + " $Prompt ") -NoNewline
+		$value = Read-Host
+		Write-Host ("`r" + $script:Esc + "[1A" + $script:Esc + "[2K") -NoNewline
+		Write-Row ("  " + (Paint $script:Bullet 'bright') + " $Prompt " + $value)
+	} else {
+		$value = Read-Host (Paint "  > $Prompt" 'red')
+	}
+	if ($null -eq $value) { Fail 'Uninstall canceled: the terminal input closed.' @() }
+	return $value.Trim()
+}
+
+function Clear-Choice([int] $Height) {
+	Write-Host ("{0}[{1}A" -f $script:Esc, $Height) -NoNewline
+	for ($i = 0; $i -lt $Height; $i++) { Write-Host ("`r{0}[2K" -f $script:Esc) }
+	# Back to the first row, so the next draw replaces the block in place.
+	Write-Host ("{0}[{1}A" -f $script:Esc, $Height) -NoNewline
+}
+
+# Settle-Choice replaces the drawn menu with one answer row and deletes the
+# rows under it, so the frame closes up instead of leaving gaps.
+function Settle-Choice([int] $Height, [string] $Text) {
+	Write-Host ("{0}[{1}A" -f $script:Esc, $Height) -NoNewline
+	Write-Host ("`r{0}[2K{1}" -f $script:Esc, (Format-Row $Text))
+	for ($i = 1; $i -lt $Height; $i++) { Write-Host ("`r{0}[1M" -f $script:Esc) -NoNewline }
+}
+
+function Write-Choice([string] $Prompt, [string[]] $Options, [int] $Pick) {
+	Write-Row ("  " + (Paint $script:Bullet 'bright') + " $Prompt")
+	$line = '  '
+	for ($i = 0; $i -lt $Options.Count; $i++) {
+		if ($i -eq $Pick) {
+			$line += " " + $(if ($script:Color) { "$($script:Esc)[7m[ $($Options[$i]) ]$($script:Esc)[0m" } else { "[ $($Options[$i]) ]" })
+		} else {
+			$line += " " + (Paint "[$($Options[$i])]" 'dim')
+		}
+	}
+	Write-Row $line
+	Write-Row ('  ' + (Paint ($script:Left + '/' + $script:Right + ' to move ' + $script:Dot + ' Enter to pick ' + $script:Dot + ' q to cancel') 'dim'))
+}
+
+# Select-UninstallOption asks a question and returns the 0-based index, or -1
+# when the user cancels.
+function Select-UninstallOption([string] $Prompt, [string[]] $Options, [int] $Default = 0) {
+	$pick = $Default
+	if ($pick -lt 0) { $pick = 0 }
+	if ($pick -ge $Options.Count) { $pick = $Options.Count - 1 }
+	$height = $Options.Count + 2
+
+	if (-not $script:Visual) {
+		Write-Row ("  " + (Paint '>' 'bright') + " $Prompt")
+		for ($i = 0; $i -lt $Options.Count; $i++) { Write-Row "    [$($i + 1)] $($Options[$i])" }
+		$answer = Read-Answer "Choose 1-$($Options.Count)"
+		if ($answer -eq '') { return $pick }
+		if ($answer -match '^[0-9]+$' -and [int]$answer -ge 1 -and [int]$answer -le $Options.Count) {
+			return ([int]$answer - 1)
+		}
+		return -1
+	}
+
+	try {
+		while ($true) {
+			Write-Choice $Prompt $Options $pick
+			$key = [Console]::ReadKey($true)
+			switch ([string]$key.Key) {
+				'LeftArrow' { if ($pick -gt 0) { $pick-- } }
+				'RightArrow' { if ($pick -lt $Options.Count - 1) { $pick++ } }
+				'UpArrow' { if ($pick -gt 0) { $pick-- } }
+				'DownArrow' { if ($pick -lt $Options.Count - 1) { $pick++ } }
+				'K' { if ($pick -gt 0) { $pick-- } }
+				'J' { if ($pick -lt $Options.Count - 1) { $pick++ } }
+				'Enter' {
+					Settle-Choice $height ("  " + (Paint $script:Bullet 'bright') + " $Prompt " + (Paint $Options[$pick] 'bold'))
+					return $pick
+				}
+				'Spacebar' {
+					Settle-Choice $height ("  " + (Paint $script:Bullet 'bright') + " $Prompt " + (Paint $Options[$pick] 'bold'))
+					return $pick
+				}
+				'Escape' { Settle-Choice $height ('  ' + (Paint ($script:Bullet + ' ' + $Prompt + ' (canceled)') 'dim')); return -1 }
+				'Q' { Settle-Choice $height ('  ' + (Paint ($script:Bullet + ' ' + $Prompt + ' (canceled)') 'dim')); return -1 }
+				default {
+					$digit = [string]$key.KeyChar
+					if ($digit -match '^[1-9]$' -and [int]$digit -le $Options.Count) { $pick = [int]$digit - 1 }
+				}
+			}
+			Clear-Choice $height
+		}
+	} catch {
+		# No console to read keys from: ask for a number instead.
+		Clear-Choice $height
+		Write-Row ("  " + (Paint '>' 'bright') + " $Prompt")
+		for ($i = 0; $i -lt $Options.Count; $i++) { Write-Row "    [$($i + 1)] $($Options[$i])" }
+		$answer = Read-Answer "Choose 1-$($Options.Count)"
+		if ($answer -eq '') { return $pick }
+		if ($answer -match '^[0-9]+$' -and [int]$answer -ge 1 -and [int]$answer -le $Options.Count) {
+			return ([int]$answer - 1)
+		}
+		return -1
+	}
+}
+
 function Read-DataChoice {
 	if ($KeepData -or $Wipe) { return }
 	if ($Yes -or -not $script:Terminal) {
 		Write-Note 'Keeping the Relo data. Pass -Wipe to remove it.'
 		return
 	}
-	$answer = Read-Host (Paint '  > Remove your Relo data (configuration, credentials, logs)? [y/N]' 'bright')
-	if ($answer -match '^(?i)y(es)?$') { $script:Wipe = $true }
+	# A selection, install.ps1's way: pick with the arrow keys, and only an
+	# explicit "Remove data" wipes. q cancels the uninstall entirely.
+	$pick = Select-UninstallOption 'Keep or remove your Relo data?' @('Keep data', 'Remove data') 0
+	if ($pick -lt 0) {
+		Write-Note 'Canceled; nothing was removed.'
+		Write-ScreenClose
+		exit 0
+	}
+	if ($pick -eq 1) { $script:Wipe = $true }
 }
 
 function Stop-Relo {
 	if (-not $script:Binary -or -not (Test-Path $script:Binary)) { return }
-	Write-Step 'Stopping Relo and settling its data'
-	$arguments = @('--home', $script:ReloHome, 'uninstall', '--prepare')
-	if ($script:Wipe) { $arguments += '--wipe' }
-	& $script:Binary @arguments 2>$null | Out-Null
+	Write-Step 'Stopping Relo'
+	& $script:Binary --home $script:ReloHome uninstall --prepare 2>$null | Out-Null
 	if ($LASTEXITCODE -eq 0) {
-		if ($script:Wipe) { Write-OK 'Service stopped and data removed' } else { Write-OK 'Service stopped; data kept' }
+		Write-OK 'Service stopped'
 		return
 	}
 	Write-Note 'The installed Relo could not stop itself; continuing with file removal.'
+}
+
+function Remove-Data {
+	if (-not $script:Wipe) { return }
+	# The service is already stopped; ask the binary to wipe the state and the
+	# keychain entries it owns, falling back to a plain directory removal.
+	if ($script:Binary -and (Test-Path $script:Binary)) {
+		& $script:Binary --home $script:ReloHome uninstall --prepare --wipe 2>$null | Out-Null
+		if ($LASTEXITCODE -eq 0) {
+			Write-OK 'Data removed'
+			return
+		}
+	}
+	if (Test-Path $script:ReloHome) {
+		Remove-Item -Recurse -Force $script:ReloHome
+		Write-OK "Removed $script:ReloHome"
+		Write-Note 'Keychain entries were not removed because the Relo binary could not do it.'
+	}
 }
 
 function Remove-Program {
@@ -254,7 +415,7 @@ function Remove-Program {
 			if (Test-Path $script:Binary) { Fail 'Relo Setup did not remove the program.' @("Run: $command") }
 		}
 		'npm' {
-			& npm uninstall -g $NpmPackage
+			& npm uninstall -g $NpmPackage 2>$null | Out-Null
 			if ($LASTEXITCODE -ne 0) { Fail 'npm did not remove Relo.' @("Run: npm uninstall -g $NpmPackage") }
 			$root = (& npm root -g 2>$null)
 			if ($root -and (Test-Path (Join-Path $root $NpmPackage))) { Fail 'The npm package is still installed.' @("Run: npm uninstall -g $NpmPackage") }
@@ -299,7 +460,6 @@ function Write-Summary {
 }
 
 Find-Relo
-Read-DataChoice
 Write-ScreenOpen ("UNINSTALLER  $([char]0x00B7)  $(Get-ChannelLabel)")
 Write-Section 'Remove Relo'
 Write-Row ('  ' + (Paint 'Channel' 'slate') + "   $(Get-ChannelLabel)")
@@ -307,5 +467,7 @@ if ($script:Binary) { Write-Row ('  ' + (Paint 'Binary' 'slate') + "    $script:
 Write-Row ('  ' + (Paint 'Data' 'slate') + "      $script:ReloHome")
 Write-Row ''
 Stop-Relo
+Read-DataChoice
+Remove-Data
 Remove-Program
 Write-Summary
