@@ -70,7 +70,6 @@
       "health": "守护进程",
       "healthRunning": "运行中",
       "healthDown": "无法访问",
-      "latestBeta": "最新测试版 {version}",
       "updateAvailable": "有可用更新",
       "quickAdd": "添加",
       "quickAddAccount": "提供商账号",
@@ -1246,7 +1245,18 @@
         "copyRawRequest": "复制原始 JSON",
         "sectionLabel": "Log section",
         "requestsHidden": "Hidden",
-        "requestsShown": "Shown"
+        "requestsShown": "Shown",
+        "requestsLoaded": "已加载请求",
+        "avgSlowest": "平均 · 最慢",
+        "searchPlaceholder": "搜索模型、客户端密钥、提供商、时间",
+        "filterAllShort": "全部",
+        "filterSuccess": "成功",
+        "filterErrors": "错误",
+        "showingLoaded": "已显示 {shown} 条",
+        "slowRequest": "超过 2 分钟",
+        "browseRequests": "浏览请求",
+        "previousRequest": "上一条请求",
+        "nextRequest": "下一条请求"
       },
       "usage": {
         "title": "用量",

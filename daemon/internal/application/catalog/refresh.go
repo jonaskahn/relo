@@ -253,13 +253,20 @@ type refreshAssembly struct {
 	records []catalog.ModelRecord
 	facts   []catalog.FactsRecord
 	seen    map[string]bool
+	// members are the backend SKUs a collapsed model publishes once. A row an
+	// earlier refresh stored under one of them is a duplicate of the collapsed
+	// model, not a model of its own.
+	members map[string]bool
 	matched int
 	priced  int
 	added   int
 }
 
 func assembleRefreshModels(roster []rosterEntry, mdIdx *catalog.ModelsDevIndex, providerID, modelsDevID string, existing map[string]catalog.Model) refreshAssembly {
-	out := refreshAssembly{seen: make(map[string]bool, len(roster))}
+	out := refreshAssembly{
+		seen:    make(map[string]bool, len(roster)),
+		members: make(map[string]bool),
+	}
 	for _, entry := range roster {
 		out.add(entry, mdIdx, providerID, modelsDevID, existing)
 	}
@@ -268,6 +275,7 @@ func assembleRefreshModels(roster []rosterEntry, mdIdx *catalog.ModelsDevIndex, 
 
 func (a *refreshAssembly) add(entry rosterEntry, mdIdx *catalog.ModelsDevIndex, providerID, modelsDevID string, existing map[string]catalog.Model) {
 	a.seen[entry.ID] = true
+	a.collectMembers(entry)
 	pmMatch, pmRef, mdModel, foundMD := matchRefreshEntry(entry, mdIdx, modelsDevID)
 	if foundMD {
 		a.matched++
@@ -291,6 +299,19 @@ func (a *refreshAssembly) add(entry rosterEntry, mdIdx *catalog.ModelsDevIndex, 
 		Available:    &available,
 	})
 	a.facts = append(a.facts, factsForRefresh(providerID, entry, mdModel, foundMD)...)
+}
+
+// collectMembers names the backend SKUs one collapsed model sends, which is
+// every wire model its request tuples resolve to. A model published under its
+// own id names nothing extra.
+func (a *refreshAssembly) collectMembers(entry rosterEntry) {
+	for _, config := range entry.RequestConfigs {
+		variant, ok := catalog.DecodeAntigravityConfig(config)
+		if !ok || variant.WireModel == "" || variant.WireModel == entry.ID {
+			continue
+		}
+		a.members[variant.WireModel] = true
+	}
 }
 
 func matchRefreshEntry(entry rosterEntry, mdIdx *catalog.ModelsDevIndex, modelsDevID string) (string, string, catalog.ModelsDevModel, bool) {
@@ -385,7 +406,10 @@ func (s *Service) finishRefresh(ctx context.Context, providerID string, fin refr
 	// reference it, and marked unavailable. A listing that answered with nothing
 	// at all is the same evidence as a listing that dropped one id.
 	unavailable := markRefreshUnavailable(fin.existing, fin.assembly.seen)
-	if err := s.store.RefreshProviderModels(ctx, providerID, fin.assembly.records, fin.assembly.facts, unavailable, fin.atMs, ""); err != nil {
+	// A row an earlier refresh stored for a backend SKU is what the collapsed
+	// model replaced, so it is removed rather than left beside it.
+	superseded := markRefreshSuperseded(fin.existing, fin.assembly)
+	if err := s.store.RefreshProviderModels(ctx, providerID, fin.assembly.records, fin.assembly.facts, unavailable, superseded, fin.atMs, ""); err != nil {
 		return RefreshResult{}, err
 	}
 	return RefreshResult{
@@ -415,6 +439,22 @@ func markRefreshUnavailable(existing []catalog.Model, seen map[string]bool) []st
 		}
 	}
 	return unavailable
+}
+
+// markRefreshSuperseded names the rows a collapsed model replaced: a listed
+// row whose id is a backend SKU the model now resolves per effort. A clone and
+// a model an operator typed are not the provider's to retire.
+func markRefreshSuperseded(existing []catalog.Model, assembly refreshAssembly) []string {
+	var superseded []string
+	for _, m := range existing {
+		if m.ClonedFrom != "" || m.Source != SourceListing || assembly.seen[m.ID] {
+			continue
+		}
+		if assembly.members[m.ID] {
+			superseded = append(superseded, m.ID)
+		}
+	}
+	return superseded
 }
 
 type accountRosters struct {

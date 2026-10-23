@@ -757,8 +757,8 @@ func TestRefreshMarksTheRosterUnavailableWhenTheListIsEmpty(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Models() error = %v", err)
 	}
-	if len(models) != 1 || models[0].Available == nil || *models[0].Available {
-		t.Fatalf("models = %+v, want the id kept and marked unavailable", models)
+	if len(models) != 1 || models[0].Available == nil || *models[0].Available || models[0].Enabled {
+		t.Fatalf("models = %+v, want the id kept, marked unavailable, and switched off", models)
 	}
 	host, err := manager.Provider(context.Background(), "groq")
 	if err != nil {

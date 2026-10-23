@@ -4,39 +4,71 @@
 	import { page } from '$app/state';
 
 	import { api } from '$lib/api';
-	import RequestFilterPanel from '$lib/components/logs/request-filter-panel.svelte';
+	import Button from '$lib/components/ui/button.svelte';
 	import RequestList from '$lib/components/logs/request-list.svelte';
 	import { coalesceReload } from '$lib/refresh';
 	import { subscribe } from '$lib/sse';
-	import { buildRequestQuery, type RequestFilters } from '$lib/process-logs';
-	import type { AccessKey, Provider, UsageLogRow } from '$lib/types';
+	import { formatDuration, formatTimestamp, formatTokens } from '$lib/format';
+	import { buildRequestQuery, computeRequestKpis, type RequestFilters } from '$lib/process-logs';
+	import type { UsageLogRow } from '$lib/types';
 
 	// AgentSection is the request log agents write to. The page owns the
-	// toolbar row, so the filter values and the live switch arrive from it and
-	// only the fields grid renders here. The section mounts only while it
-	// shows, so a visit back reads fresh.
+	// toolbar, so status, search and the live switch arrive from it. The
+	// section mounts only while it shows, so a visit back reads fresh.
 
 	interface Props {
-		filters: RequestFilters;
-		onfilters: (patch: Partial<RequestFilters>) => void;
+		status: RequestFilters['status'];
+		query?: string;
 		live?: boolean;
-		filtersOpen?: boolean;
 		onopen: (row: UsageLogRow) => void;
+		onrows?: (rows: UsageLogRow[]) => void;
 	}
 
-	let { filters, onfilters, live = true, filtersOpen = $bindable(false), onopen }: Props = $props();
+	let { status, query = '', live = true, onopen, onrows }: Props = $props();
+
+	const filters = $derived<RequestFilters>({
+		provider: '',
+		status,
+		origin: 'any',
+		key: '',
+		client: ''
+	});
 
 	let logs = $state<UsageLogRow[]>([]);
 	let nextCursor = $state('');
 	let loading = $state(true);
 	let loadingMore = $state(false);
 	let failure = $state('');
-	let providers = $state<Provider[]>([]);
-	let keys = $state<AccessKey[]>([]);
+
+	const visible = $derived.by(() => {
+		const needle = query.trim().toLowerCase();
+		if (!needle) return logs;
+		return logs.filter((row) =>
+			[
+				row.Model,
+				row.Provider,
+				row.RouteProvider,
+				row.ClientKeyName,
+				row.Origin,
+				formatTimestamp(row.TimestampMs)
+			]
+				.join(' ')
+				.toLowerCase()
+				.includes(needle)
+		);
+	});
+	const kpis = $derived(computeRequestKpis(visible));
+
+	$effect(() => {
+		onrows?.(visible);
+	});
 
 	async function load(reset = true) {
+		if (!reset && (loadingMore || !nextCursor)) return;
 		if (reset) {
-			loading = true;
+			// Rows already on screen stay put while a filter reload runs, so
+			// the list animates instead of blanking.
+			loading = logs.length === 0;
 			nextCursor = '';
 		} else {
 			loadingMore = true;
@@ -49,7 +81,9 @@
 			if (reset) {
 				logs = data.items;
 			} else {
-				logs = [...logs, ...data.items];
+				// A cursor boundary must not render one request twice.
+				const known = new Set(logs.map((row) => row.ID));
+				logs = [...logs, ...data.items.filter((row) => !known.has(row.ID))];
 			}
 			nextCursor = data.next_cursor ?? '';
 		} catch (error) {
@@ -69,17 +103,6 @@
 		if (wanted) {
 			const row = logs.find((entry) => String(entry.ID) === wanted || entry.RequestID === wanted);
 			if (row) onopen(row);
-		}
-		// The filter lists are a convenience; their failure is not fatal.
-		try {
-			providers = (await api<{ items: Provider[] }>('/connections')).items;
-		} catch {
-			providers = [];
-		}
-		try {
-			keys = (await api<{ items: AccessKey[] }>('/clients/keys')).items ?? [];
-		} catch {
-			keys = [];
 		}
 	});
 
@@ -102,7 +125,7 @@
 	// The live tail reloads on the event stream; a burst of announcements
 	// reloads once rather than once per relayed request. The pause control
 	// stops the subscription without closing the page.
-	const reloadLogs = coalesceReload(() => load(true));
+	const reloadLogs = coalesceReload(() => load(true), 250);
 
 	$effect(() => {
 		if (!live) return;
@@ -114,23 +137,82 @@
 	onDestroy(() => reloadLogs.cancel());
 </script>
 
-<div class="flex flex-col gap-4">
-	<RequestFilterPanel {filters} {onfilters} {providers} {keys} bind:open={filtersOpen} />
+<div class="flex flex-col gap-3">
+	{#if !loading && !failure && logs.length > 0}
+		<div class="grid grid-cols-2 gap-[var(--grid-gap)] xl:grid-cols-4">
+			<div class="section-surface min-w-0 px-3.5 py-2">
+				<p class="text-[0.8125rem] font-medium text-muted-foreground">
+					{$t('ui.pages.logsPage.requestsLoaded')}
+				</p>
+				<p class="mono-data text-[1.1875rem] font-medium tabular-nums">{kpis.total}</p>
+			</div>
+			<div class="section-surface min-w-0 px-3.5 py-2">
+				<p class="text-[0.8125rem] font-medium text-muted-foreground">
+					{$t('ui.pages.dashboard.successTile')}
+				</p>
+				<p class="mono-data text-[1.1875rem] font-medium tabular-nums">
+					{kpis.successRate}%
+					<span class="ms-1 text-xs font-normal text-muted-foreground">
+						{kpis.successCount}/{kpis.total}
+					</span>
+				</p>
+			</div>
+			<div class="section-surface min-w-0 px-3.5 py-2">
+				<p class="text-[0.8125rem] font-medium text-muted-foreground">
+					{$t('ui.pages.usagePage.summaryTokens')}
+				</p>
+				<p class="mono-data text-[1.1875rem] font-medium tabular-nums">
+					{formatTokens(kpis.totalTokens)}
+				</p>
+			</div>
+			<div class="section-surface min-w-0 px-3.5 py-2">
+				<p class="text-[0.8125rem] font-medium text-muted-foreground">
+					{$t('ui.pages.logsPage.avgSlowest')}
+				</p>
+				<p class="mono-data text-[1.1875rem] font-medium tabular-nums">
+					{formatDuration(kpis.avgDurationMs)}
+					<span class="ms-1 text-xs font-normal text-muted-foreground">
+						· {formatDuration(kpis.slowestDurationMs)}
+					</span>
+				</p>
+			</div>
+		</div>
+	{/if}
 
 	{#if loading}
 		<p class="text-muted-foreground text-sm">{$t('ui.common.loading')}</p>
-	{:else if failure}
+	{:else if failure && logs.length === 0}
 		<p
 			class="rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive"
 			role="alert"
 		>
 			{failure}
 		</p>
-	{:else if logs.length === 0}
+	{:else if visible.length === 0}
 		<div class="empty-panel section-surface border-dashed">
 			{$t('ui.pages.logsPage.empty')}
 		</div>
 	{:else}
-		<RequestList {logs} {nextCursor} {loadingMore} onloadMore={() => load(false)} {onopen} />
+		<RequestList
+			logs={visible}
+			maxTokens={kpis.maxTokens}
+			{nextCursor}
+			{loadingMore}
+			onloadMore={() => {
+				if (!failure) void load(false);
+			}}
+			{onopen}
+		/>
+		{#if failure}
+			<div
+				class="flex items-center gap-3 rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2"
+				role="alert"
+			>
+				<p class="flex-1 text-sm text-destructive">{failure}</p>
+				<Button variant="outline" size="sm" onclick={() => void load(false)}>
+					{$t('ui.common.retry')}
+				</Button>
+			</div>
+		{/if}
 	{/if}
 </div>

@@ -5,7 +5,7 @@
 	import { api } from '$lib/api';
 	import { daemonDialog } from '$lib/daemon-dialog.svelte';
 	import { subscribe } from '$lib/sse';
-	import { latestBetaVersion, updateAvailable, type UpdateNotice } from '$lib/updates';
+	import { updateAvailable, type UpdateNotice } from '$lib/updates';
 	import { cn } from '$lib/utils';
 	import UpdateDialog from '$lib/components/shell/update-dialog.svelte';
 
@@ -19,10 +19,6 @@
 	let version = $state('');
 	let notice = $state<UpdateNotice | null>(null);
 	let updateOpen = $state(false);
-	// A beta build always names the newest beta the catalog carries, so the
-	// dashboard shows what the next check would offer even when the running
-	// build is already the newest one.
-	const latestBeta = $derived(latestBetaVersion(version, notice));
 
 	// A poll still waiting for its answers is the same question the timer
 	// would ask again, so the tick that finds one running skips it. That also
@@ -93,11 +89,6 @@
 		</span>
 		{#if version && up}
 			<span class="mono-data text-muted-foreground">{version}</span>
-		{/if}
-		{#if latestBeta}
-			<span class="mono-data text-muted-foreground">
-				{$t('ui.topbar.latestBeta', { values: { version: latestBeta } })}
-			</span>
 		{/if}
 		{#if updateAvailable(notice)}
 			<button

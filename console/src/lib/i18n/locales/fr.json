@@ -70,7 +70,6 @@
       "health": "Daemon",
       "healthRunning": "en marche",
       "healthDown": "inaccessible",
-      "latestBeta": "dernière bêta {version}",
       "updateAvailable": "Mise à jour disponible",
       "quickAdd": "Ajouter",
       "quickAddAccount": "Compte provider",
@@ -1246,7 +1245,18 @@
         "copyRawRequest": "Copier le JSON brut",
         "sectionLabel": "Log section",
         "requestsHidden": "Hidden",
-        "requestsShown": "Shown"
+        "requestsShown": "Shown",
+        "requestsLoaded": "Requêtes chargées",
+        "avgSlowest": "Moyenne · la plus lente",
+        "searchPlaceholder": "Rechercher un modèle, une clé, un fournisseur, une heure",
+        "filterAllShort": "Tous",
+        "filterSuccess": "Réussi",
+        "filterErrors": "Erreurs",
+        "showingLoaded": "{shown} chargées affichées",
+        "slowRequest": "Plus de 2 minutes",
+        "browseRequests": "Parcourir les requêtes",
+        "previousRequest": "Requête précédente",
+        "nextRequest": "Requête suivante"
       },
       "usage": {
         "title": "Utilisation",

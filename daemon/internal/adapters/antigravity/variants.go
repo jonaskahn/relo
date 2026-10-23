@@ -1,5 +1,6 @@
-// The wire SKU each logical Gemini model collapses onto per effort.
-// Claude models pass through unchanged and never consult this table.
+// The wire SKU each logical model collapses onto per effort. Gemini models
+// and the Claude 5.5 generation collapse; an earlier Claude generation passes
+// through unchanged and never consults this table.
 package antigravity
 
 import "github.com/jonaskahn/relo/internal/catalog"
@@ -48,6 +49,16 @@ var variants = map[string]map[string]Variant{
 		catalog.AntigravityBandLow:  {WireModel: "gemini-3.1-pro-low", ModelEnum: "MODEL_PLACEHOLDER_M36", MaxOutput: maxOutputPro},
 		catalog.AntigravityBandHigh: {WireModel: "gemini-pro-agent", ModelEnum: "MODEL_PLACEHOLDER_M16", MaxOutput: maxOutputPro},
 	},
+	"claude-sonnet-5-5": {
+		catalog.AntigravityBandLow:    {WireModel: "claude-sonnet-5-5-low", MaxOutput: maxOutputClaude},
+		catalog.AntigravityBandMedium: {WireModel: "claude-sonnet-5-5-medium", MaxOutput: maxOutputClaude},
+		catalog.AntigravityBandHigh:   {WireModel: "claude-sonnet-5-5-high", MaxOutput: maxOutputClaude},
+	},
+	"claude-opus-5-5": {
+		catalog.AntigravityBandLow:    {WireModel: "claude-opus-5-5-low", MaxOutput: maxOutputClaude},
+		catalog.AntigravityBandMedium: {WireModel: "claude-opus-5-5-medium", MaxOutput: maxOutputClaude},
+		catalog.AntigravityBandHigh:   {WireModel: "claude-opus-5-5-high", MaxOutput: maxOutputClaude},
+	},
 }
 
 // Variant is the wire identity one logical model collapses onto at one
@@ -62,8 +73,8 @@ type Variant struct {
 	ThinkingBudget *int
 }
 
-// ClaudeVariant reports the wire identity one Claude model sends: its own id
-// under the vendor's output ceiling, with no effort mapping.
+// ClaudeVariant reports the wire identity one Claude model sends when the
+// table names no band for it: its own id under the vendor's output ceiling.
 func ClaudeVariant(model string) Variant {
 	return Variant{WireModel: model, MaxOutput: maxOutputClaude}
 }

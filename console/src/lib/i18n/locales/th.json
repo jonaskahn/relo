@@ -70,7 +70,6 @@
       "health": "daemon",
       "healthRunning": "กำลังทำงาน",
       "healthDown": "เข้าถึงไม่ได้",
-      "latestBeta": "เบตาล่าสุด {version}",
       "updateAvailable": "มีอัปเดต",
       "quickAdd": "เพิ่ม",
       "quickAddAccount": "บัญชี provider",
@@ -1246,7 +1245,18 @@
         "copyRawRequest": "คัดลอก JSON ดิบ",
         "sectionLabel": "Log section",
         "requestsHidden": "Hidden",
-        "requestsShown": "Shown"
+        "requestsShown": "Shown",
+        "requestsLoaded": "คำขอที่โหลดแล้ว",
+        "avgSlowest": "เฉลี่ย · ช้าที่สุด",
+        "searchPlaceholder": "ค้นหาโมเดล คีย์ไคลเอนต์ ผู้ให้บริการ เวลา",
+        "filterAllShort": "ทั้งหมด",
+        "filterSuccess": "สำเร็จ",
+        "filterErrors": "ข้อผิดพลาด",
+        "showingLoaded": "แสดง {shown} รายการ",
+        "slowRequest": "เกิน 2 นาที",
+        "browseRequests": "เรียกดูคำขอ",
+        "previousRequest": "คำขอก่อนหน้า",
+        "nextRequest": "คำขอถัดไป"
       },
       "usage": {
         "title": "การใช้งาน",

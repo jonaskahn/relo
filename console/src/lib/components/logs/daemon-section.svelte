@@ -10,8 +10,10 @@
 	import Icon from '$lib/components/ui/icon.svelte';
 	import ProcessLine from '$lib/components/logs/process-line.svelte';
 	import { FILTER_PANEL_KEYS } from '$lib/filter-panel';
+	import { formatDateTime } from '$lib/format';
 	import {
 		buildDaemonQuery,
+		groupDaemonLines,
 		isDaemonLevel,
 		mergeDaemonLines,
 		type DaemonLevel,
@@ -24,6 +26,17 @@
 	// so loading runs on mount and polling follows the live control. The page
 	// owns the toolbar row, so the filters and the live switch arrive bound
 	// and only the fields grid renders here.
+
+	function watchMore(node: HTMLElement, load: () => void) {
+		let pending = false;
+		const observer = new IntersectionObserver((entries) => {
+			if (pending || !entries.some((entry) => entry.isIntersecting)) return;
+			pending = true;
+			load();
+		});
+		observer.observe(node);
+		return () => observer.disconnect();
+	}
 
 	const PAGE_SIZE = 200;
 
@@ -46,6 +59,8 @@
 	}: Props = $props();
 
 	let lines = $state.raw<DaemonLine[]>([]);
+	let openRuns = $state<Record<string, boolean>>({});
+	const groups = $derived(groupDaemonLines(lines));
 	let nextCursor = $state('');
 	let end = $state('');
 	let loading = $state(true);
@@ -182,17 +197,59 @@
 			{$t('ui.pages.logsPage.daemonEmpty')}
 		</div>
 	{:else}
-		<div class="flex flex-col gap-1.5">
-			{#each lines as line (line.offset)}
-				<ProcessLine {line} />
+		<div class="overflow-hidden rounded-card border border-line bg-surface">
+			{#each groups as group (group.key)}
+				{#if group.count === 1}
+					<ProcessLine line={group.lines[0]} plain />
+				{:else}
+					<div>
+						<button
+							type="button"
+							class="flex w-full items-center gap-2.5 px-5 py-2.5 text-left hover:bg-hover"
+							aria-expanded={openRuns[group.key] ?? false}
+							onclick={() => (openRuns[group.key] = !openRuns[group.key])}
+						>
+							<Icon
+								name="chevron-right"
+								size={12}
+								class="shrink-0 text-muted-foreground transition-transform duration-200 {openRuns[
+									group.key
+								]
+									? 'rotate-90'
+									: ''}"
+							/>
+							<span class="mono-data shrink-0 text-muted-foreground">
+								{group.latestMs ? formatDateTime(group.latestMs) : '—'}
+							</span>
+							<span class="min-w-0 flex-1 truncate text-sm text-ink" title={group.message}>
+								{group.message || '—'}
+							</span>
+							<span
+								class="rounded-full bg-sunken px-2 py-0.5 text-xs font-medium text-muted-foreground"
+							>
+								×{group.count}
+							</span>
+						</button>
+						{#if openRuns[group.key]}
+							<div class="flex flex-col gap-1.5 px-5 pb-2">
+								<p class="text-xs text-muted-foreground">
+									{formatDateTime(group.firstMs)} – {formatDateTime(group.latestMs)}
+								</p>
+								{#each group.lines as line (line.offset)}
+									<ProcessLine {line} plain />
+								{/each}
+							</div>
+						{/if}
+					</div>
+				{/if}
 			{/each}
 		</div>
 		{#if nextCursor}
-			<div class="mt-4 text-center">
-				<Button variant="outline" size="sm" onclick={() => void load(false)} disabled={loadingMore}>
-					<Icon name={loadingMore ? 'loader' : 'arrow-down'} size={14} spin={loadingMore} />
-					{loadingMore ? $t('ui.common.loading') : $t('ui.pages.logsPage.daemonLoadOlder')}
-				</Button>
+			<div
+				class="py-4 text-center text-xs text-muted-foreground"
+				{@attach (node) => watchMore(node, () => void load(false))}
+			>
+				{loadingMore ? $t('ui.common.loading') : ''}
 			</div>
 		{/if}
 	{/if}

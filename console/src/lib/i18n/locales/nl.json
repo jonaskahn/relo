@@ -70,7 +70,6 @@
       "health": "Daemon",
       "healthRunning": "actief",
       "healthDown": "onbereikbaar",
-      "latestBeta": "nieuwste bèta {version}",
       "updateAvailable": "Update beschikbaar",
       "quickAdd": "Toevoegen",
       "quickAddAccount": "Provideraccount",
@@ -1246,7 +1245,18 @@
         "copyRawRequest": "Ruwe JSON kopiëren",
         "sectionLabel": "Log section",
         "requestsHidden": "Hidden",
-        "requestsShown": "Shown"
+        "requestsShown": "Shown",
+        "requestsLoaded": "Geladen verzoeken",
+        "avgSlowest": "Gemiddeld · traagste",
+        "searchPlaceholder": "Zoek model, clientsleutel, provider, tijd",
+        "filterAllShort": "Alles",
+        "filterSuccess": "Geslaagd",
+        "filterErrors": "Fouten",
+        "showingLoaded": "{shown} geladen",
+        "slowRequest": "Meer dan 2 minuten",
+        "browseRequests": "Verzoeken doorlopen",
+        "previousRequest": "Vorig verzoek",
+        "nextRequest": "Volgend verzoek"
       },
       "usage": {
         "title": "Verbruik",

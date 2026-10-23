@@ -70,7 +70,6 @@
       "health": "Daemon",
       "healthRunning": "berjalan",
       "healthDown": "tidak terjangkau",
-      "latestBeta": "beta terbaru {version}",
       "updateAvailable": "Pembaruan tersedia",
       "quickAdd": "Tambah",
       "quickAddAccount": "Akun penyedia",
@@ -1246,7 +1245,18 @@
         "copyRawRequest": "Salin JSON mentah",
         "sectionLabel": "Log section",
         "requestsHidden": "Hidden",
-        "requestsShown": "Shown"
+        "requestsShown": "Shown",
+        "requestsLoaded": "Permintaan dimuat",
+        "avgSlowest": "Rata-rata · terlambat",
+        "searchPlaceholder": "Cari model, kunci klien, penyedia, waktu",
+        "filterAllShort": "Semua",
+        "filterSuccess": "Berhasil",
+        "filterErrors": "Galat",
+        "showingLoaded": "Menampilkan {shown} yang dimuat",
+        "slowRequest": "Lebih dari 2 menit",
+        "browseRequests": "Telusuri permintaan",
+        "previousRequest": "Permintaan sebelumnya",
+        "nextRequest": "Permintaan berikutnya"
       },
       "usage": {
         "title": "Penggunaan",

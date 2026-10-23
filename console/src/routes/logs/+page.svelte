@@ -4,6 +4,7 @@
 	import { page } from '$app/state';
 
 	import Button from '$lib/components/ui/button.svelte';
+	import Input from '$lib/components/ui/input.svelte';
 	import FilterToggle from '$lib/components/ui/filter-toggle.svelte';
 	import Icon, { type IconName } from '$lib/components/ui/icon.svelte';
 	import LiveButton from '$lib/components/ui/live-button.svelte';
@@ -20,13 +21,7 @@
 		writePanelOpen,
 		FILTER_PANEL_KEYS
 	} from '$lib/filter-panel';
-	import {
-		countRequestFilters,
-		parseLogSection,
-		type DaemonLevel,
-		type LogSection,
-		type RequestFilters
-	} from '$lib/process-logs';
+	import { parseLogSection, type DaemonLevel, type LogSection } from '$lib/process-logs';
 	import { prefersReducedMotion, tabDirection, tabPaneIn, tabPaneOut } from '$lib/tab-motion';
 	import type { TransitionConfig } from 'svelte/transition';
 	import type { UsageLogRow } from '$lib/types';
@@ -45,12 +40,10 @@
 	// fresh visit paints still and only a section change slides.
 	let sectionSwapped = $state(false);
 
-	// The toolbar row is fixed above the panes: the filter toggle, the
-	// section strip centred, and the live or refresh control. The daemon's
-	// filters and live switch live here while its fields render in the pane,
-	// so the strip never remounts when the section changes.
+	// The toolbar stays mounted above the panes: the section switch, the
+	// open section's controls, and the live or refresh control. The daemon's
+	// filters live here while its fields render in the pane.
 	let agentLive = $state(true);
-	let agentFiltersOpen = $state(false);
 	let daemonFiltersOpen = $state(false);
 	let daemonLive = $state(true);
 	let daemonLevel = $state<DaemonLevel>('all');
@@ -58,21 +51,16 @@
 	let startupLoading = $state(true);
 	let startupRef = $state<{ refresh: () => void } | null>(null);
 
-	// The request log's filters are page state: the toggle above the panes
-	// counts what is active while the section's fields edit the values.
-	let agentFilters = $state<RequestFilters>({
-		provider: '',
-		status: 'any',
-		origin: 'any',
-		key: '',
-		client: ''
-	});
-	const activeFilters = $derived(countRequestFilters(agentFilters));
+	// The request log narrows by status from the toolbar. Provider, origin
+	// and key stay unset: the search box covers them over the loaded rows.
+	let agentStatus = $state<'any' | 'ok' | 'error'>('any');
+	let agentQuery = $state('');
 	const daemonActiveFilters = $derived(
 		(daemonLevel !== 'all' ? 1 : 0) + (daemonHideRequests ? 0 : 1)
 	);
 
 	let selected = $state<UsageLogRow | null>(null);
+	let agentRows = $state<UsageLogRow[]>([]);
 
 	function chooseSection(next: LogSection) {
 		if (next === section) return;
@@ -115,11 +103,6 @@
 		}
 	]);
 
-	function toggleAgentFilters() {
-		agentFiltersOpen = !agentFiltersOpen;
-		writePanelOpen(browserStorage(), FILTER_PANEL_KEYS.logs, agentFiltersOpen);
-	}
-
 	function toggleDaemonFilters() {
 		daemonFiltersOpen = !daemonFiltersOpen;
 		writePanelOpen(browserStorage(), FILTER_PANEL_KEYS.logsDaemon, daemonFiltersOpen);
@@ -129,25 +112,67 @@
 		section = parseLogSection(page.url.searchParams.get('section'));
 		// A deep link names a request, which lives on the agent section.
 		if (page.url.searchParams.get('request')) section = 'agent';
-		agentFiltersOpen = readPanelOpen(browserStorage(), FILTER_PANEL_KEYS.logs);
 		daemonFiltersOpen = readPanelOpen(browserStorage(), FILTER_PANEL_KEYS.logsDaemon);
 	});
 </script>
 
 <svelte:head><title>{$t('ui.pages.logs.title')} · Relo</title></svelte:head>
 
-<PageHeader title="ui.pages.logs.title" description="ui.pages.logs.description" />
+<PageHeader title="ui.pages.logs.title" description="ui.pages.logs.description">
+	{#snippet actions()}
+		{#if section === 'agent'}
+			<LiveButton live={agentLive} ontoggle={() => (agentLive = !agentLive)} />
+		{:else if section === 'daemon'}
+			<LiveButton live={daemonLive} ontoggle={() => (daemonLive = !daemonLive)} />
+		{:else}
+			<Button
+				variant="outline"
+				size="sm"
+				onclick={() => startupRef?.refresh()}
+				disabled={startupLoading}
+			>
+				<Icon name={startupLoading ? 'loader' : 'refresh'} size={14} spin={startupLoading} />
+				{$t('ui.common.retry')}
+			</Button>
+		{/if}
+	{/snippet}
+</PageHeader>
 
 <div class="page-frame page-stack pt-6">
 	<div class="flex flex-col gap-5">
-		<div class="toolbar-row logs-toolbar">
-			<div class="toolbar-start">
+		<div class="logs-toolbar flex items-center gap-2.5 max-sm:flex-wrap">
+			<Segmented
+				bind:value={section}
+				options={sectionOptions}
+				ariaLabel={$t('ui.pages.logsPage.sectionLabel')}
+				onchange={chooseSection}
+			/>
+			<div
+				class="ms-auto flex min-w-0 items-center justify-end gap-2.5 max-sm:w-full max-sm:flex-wrap"
+			>
 				{#if section === 'agent'}
-					<FilterToggle
-						open={agentFiltersOpen}
-						activeCount={activeFilters}
-						controls={filterPanelId(FILTER_PANEL_KEYS.logs)}
-						onclick={toggleAgentFilters}
+					<div class="relative w-56 min-w-0 max-w-sm shrink max-sm:w-full">
+						<span
+							class="pointer-events-none absolute inset-y-0 start-3 flex items-center text-muted-foreground"
+						>
+							<Icon name="search" size={15} />
+						</span>
+						<Input
+							class="h-[var(--control-h)] ps-9"
+							type="search"
+							bind:value={agentQuery}
+							placeholder={$t('ui.pages.logsPage.searchPlaceholder')}
+							aria-label={$t('ui.pages.logsPage.searchPlaceholder')}
+						/>
+					</div>
+					<Segmented
+						bind:value={agentStatus}
+						options={[
+							{ value: 'any', label: $t('ui.pages.logsPage.filterAllShort') },
+							{ value: 'ok', label: $t('ui.pages.logsPage.filterSuccess') },
+							{ value: 'error', label: $t('ui.pages.logsPage.filterErrors') }
+						]}
+						ariaLabel={$t('ui.pages.logsPage.filterStatus')}
 					/>
 				{:else if section === 'daemon'}
 					<FilterToggle
@@ -158,62 +183,43 @@
 					/>
 				{/if}
 			</div>
-			<div class="toolbar-center">
-				<Segmented
-					bind:value={section}
-					options={sectionOptions}
-					ariaLabel={$t('ui.pages.logsPage.sectionLabel')}
-					onchange={chooseSection}
-					class="w-full"
-				/>
-			</div>
-			<div class="toolbar-end">
-				{#if section === 'agent'}
-					<LiveButton live={agentLive} ontoggle={() => (agentLive = !agentLive)} />
-				{:else if section === 'daemon'}
-					<LiveButton live={daemonLive} ontoggle={() => (daemonLive = !daemonLive)} />
-				{:else}
-					<Button
-						variant="outline"
-						size="sm"
-						onclick={() => startupRef?.refresh()}
-						disabled={startupLoading}
-					>
-						<Icon name={startupLoading ? 'loader' : 'refresh'} size={14} spin={startupLoading} />
-						{$t('ui.common.retry')}
-					</Button>
-				{/if}
-			</div>
 		</div>
-		{#key section}
-			<div in:paneIn out:paneOutro>
-				{#if section === 'agent'}
-					<AgentSection
-						filters={agentFilters}
-						onfilters={(patch) => (agentFilters = { ...agentFilters, ...patch })}
-						live={agentLive}
-						bind:filtersOpen={agentFiltersOpen}
-						onopen={(row) => (selected = row)}
-					/>
-				{:else if section === 'daemon'}
-					<DaemonSection
-						live={daemonLive}
-						level={daemonLevel}
-						onlevelchange={(next) => (daemonLevel = next)}
-						hideRequests={daemonHideRequests}
-						onhiderequestschange={(next) => (daemonHideRequests = next)}
-						bind:filtersOpen={daemonFiltersOpen}
-					/>
-				{:else}
-					<StartupSection
-						loading={startupLoading}
-						onloadingchange={(next) => (startupLoading = next)}
-						bind:this={startupRef}
-					/>
-				{/if}
-			</div>
-		{/key}
+		<div class="grid">
+			{#key section}
+				<div class="col-start-1 row-start-1 min-w-0" in:paneIn out:paneOutro>
+					{#if section === 'agent'}
+						<AgentSection
+							status={agentStatus}
+							query={agentQuery}
+							live={agentLive}
+							onopen={(row) => (selected = row)}
+							onrows={(rows) => (agentRows = rows)}
+						/>
+					{:else if section === 'daemon'}
+						<DaemonSection
+							live={daemonLive}
+							level={daemonLevel}
+							onlevelchange={(next) => (daemonLevel = next)}
+							hideRequests={daemonHideRequests}
+							onhiderequestschange={(next) => (daemonHideRequests = next)}
+							bind:filtersOpen={daemonFiltersOpen}
+						/>
+					{:else}
+						<StartupSection
+							loading={startupLoading}
+							onloadingchange={(next) => (startupLoading = next)}
+							bind:this={startupRef}
+						/>
+					{/if}
+				</div>
+			{/key}
+		</div>
 	</div>
 
-	<RequestDetailModal row={selected} onclose={() => (selected = null)} />
+	<RequestDetailModal
+		row={selected}
+		rows={agentRows}
+		onclose={() => (selected = null)}
+		onselect={(row) => (selected = row)}
+	/>
 </div>

@@ -70,7 +70,6 @@
       "health": "데몬",
       "healthRunning": "실행 중",
       "healthDown": "연결 불가",
-      "latestBeta": "최신 베타 {version}",
       "updateAvailable": "업데이트가 있어요",
       "quickAdd": "추가",
       "quickAddAccount": "제공업체 계정",
@@ -1246,7 +1245,18 @@
         "copyRawRequest": "원시 JSON 복사",
         "sectionLabel": "Log section",
         "requestsHidden": "Hidden",
-        "requestsShown": "Shown"
+        "requestsShown": "Shown",
+        "requestsLoaded": "로드된 요청",
+        "avgSlowest": "평균 · 최대",
+        "searchPlaceholder": "모델, 클라이언트 키, 제공자, 시간 검색",
+        "filterAllShort": "전체",
+        "filterSuccess": "성공",
+        "filterErrors": "오류",
+        "showingLoaded": "{shown}개 표시",
+        "slowRequest": "2분 초과",
+        "browseRequests": "요청 이동",
+        "previousRequest": "이전 요청",
+        "nextRequest": "다음 요청"
       },
       "usage": {
         "title": "사용량",

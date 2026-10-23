@@ -1,5 +1,3 @@
-import { isPrerelease } from './update-install';
-
 /** One channel that installed the running build. */
 export type UpdateInstaller =
 	'sparkle' | 'brew' | 'npm' | 'shell' | 'powershell' | 'installer' | 'unknown';
@@ -29,15 +27,4 @@ export type UpdateNotice = {
 /** Reports whether a notice is one to act on. */
 export function updateAvailable(notice: UpdateNotice | null | undefined): boolean {
 	return Boolean(notice?.available && notice.url);
-}
-
-/** The newest published beta a beta build names beside its own version. A newer
- *  beta is already offered by the update control, so the label stays out of
- *  its way. */
-export function latestBetaVersion(
-	current: string,
-	notice: UpdateNotice | null | undefined
-): string {
-	if (!notice || updateAvailable(notice) || !isPrerelease(current)) return '';
-	return notice.latest;
 }

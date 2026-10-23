@@ -70,7 +70,6 @@
       "health": "Служба",
       "healthRunning": "работает",
       "healthDown": "недоступен",
-      "latestBeta": "последняя бета {version}",
       "updateAvailable": "Доступно обновление",
       "quickAdd": "Добавить",
       "quickAddAccount": "Аккаунт провайдера",
@@ -1246,7 +1245,18 @@
         "copyRawRequest": "Копировать исходный JSON",
         "sectionLabel": "Log section",
         "requestsHidden": "Hidden",
-        "requestsShown": "Shown"
+        "requestsShown": "Shown",
+        "requestsLoaded": "Загружено запросов",
+        "avgSlowest": "Среднее · самое долгое",
+        "searchPlaceholder": "Поиск модели, ключа, провайдера или времени",
+        "filterAllShort": "Все",
+        "filterSuccess": "Успех",
+        "filterErrors": "Ошибки",
+        "showingLoaded": "Показано {shown}",
+        "slowRequest": "Больше 2 минут",
+        "browseRequests": "Просмотр запросов",
+        "previousRequest": "Предыдущий запрос",
+        "nextRequest": "Следующий запрос"
       },
       "usage": {
         "title": "Использование",

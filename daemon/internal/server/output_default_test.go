@@ -50,4 +50,17 @@ func TestModelRequestOutputDefault(t *testing.T) {
 			t.Fatalf("MaxTokens = %d, want no ceiling sent", sent.MaxTokens)
 		}
 	})
+
+	t.Run("a passthrough Claude on Antigravity sends no reasoning", func(t *testing.T) {
+		claude := &attemptSpec{
+			outcome: &requestOutcome{request: &inference.Request{Reasoning: &inference.ReasoningConfig{}}},
+			candidate: routing.Candidate{
+				ModelID: "claude-sonnet-4-6",
+				Model:   catalog.Model{APIFormat: catalog.FormatCloudCode},
+			},
+		}
+		if sent, _ := (&Server{}).modelRequest(*claude, catalog.Template{}, false); sent.Reasoning != nil {
+			t.Fatalf("Reasoning = %v, want none", sent.Reasoning)
+		}
+	})
 }

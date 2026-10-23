@@ -70,7 +70,6 @@
       "health": "常駐程式",
       "healthRunning": "執行中",
       "healthDown": "無法連線",
-      "latestBeta": "最新測試版 {version}",
       "updateAvailable": "有可用更新",
       "quickAdd": "新增",
       "quickAddAccount": "供應商帳戶",
@@ -1246,7 +1245,18 @@
         "copyRawRequest": "複製原始 JSON",
         "sectionLabel": "Log section",
         "requestsHidden": "Hidden",
-        "requestsShown": "Shown"
+        "requestsShown": "Shown",
+        "requestsLoaded": "已載入請求",
+        "avgSlowest": "平均 · 最慢",
+        "searchPlaceholder": "搜尋模型、用戶端金鑰、提供者、時間",
+        "filterAllShort": "全部",
+        "filterSuccess": "成功",
+        "filterErrors": "錯誤",
+        "showingLoaded": "已顯示 {shown} 筆",
+        "slowRequest": "超過 2 分鐘",
+        "browseRequests": "瀏覽請求",
+        "previousRequest": "上一筆請求",
+        "nextRequest": "下一筆請求"
       },
       "usage": {
         "title": "用量",

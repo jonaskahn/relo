@@ -10,24 +10,28 @@ Route `/logs`. Three sections behind one segmented switch — **Agent**, **Daemo
 ("Logs" with the subtitle naming all three) and the address (`?section=agent|daemon|startup`, agent when unnamed). A
 `?request=` link lands on the agent section and opens its detail.
 
-One fixed toolbar row sits above the panes: the filter toggle on the left, the section switch (one surface strip per
-`form-controls` with a thumb that slides under the active one) centred, and the live control — or Refresh on Startup —
-on the right. The row stays mounted across sections, so the thumb springs instead of jumping; only the pane below it
-slides. On a phone the strip takes a full-width second row. The fields the toggle opens render inside the pane, under
-its own storage key. Only the open section mounts; a visit back reads fresh.
+One toolbar row sits above the panes and stays mounted, so the section thumb springs instead of jumping; only the pane
+below it slides. The section switch (Agent, Daemon, Startup, without counts) stays on the left of the toolbar. The open section's own controls sit at the right end of that row. Live — or Refresh on Startup — sits on the title row, at the right. On a phone the controls wrap. Only
+the open section mounts; a visit back reads fresh.
+
+The request list and the daemon and startup lists are one bordered panel, a logs exception to the separate row-card
+rule: a full border on the panel, hairline rows inside it, and no sideways scroll. Below 640px each request becomes its
+own card.
 
 ## Agent
 
-The request log: filters (provider, status class, origin, coding client, access key, all selection boxes) in the pane's
-fields grid, the dense row-card list, `Load more` paging, and the `wide` CenteredModal with
-overview, tokens and cost, the agent exchange and the per-attempt provider exchange. Live mode subscribes to the `logs`
-event stream only while the section is open and reloads once on return, so a burst of announcements still lands as one
-read.
+The request log. The toolbar holds a search (model, client key, provider, time, over the loaded rows) and an All /
+Success / Errors segment. Success and Errors still ask the activity read for `2xx` and `4xx,5xx`. Four compact KPI tiles
+summarise the visible rows: requests loaded, success rate, tokens, and average · slowest.
 
-Rows are dense row-cards per `data-rows` (8px 14px, 13px text): a transparent sentence-case header row, then one card
-per request — time (exact value in a tooltip), model, provider, origin, client key, status with icon and code, tokens,
-duration, cost. Secondary columns hide below wide screens instead of scrolling sideways; identity, status and cost
-survive every width. The whole card opens the detail modal.
+The panel has a sentence-case header and hour bands. A row carries time (exact value in a tooltip), model over provider,
+client key over origin, status with icon and code, tokens with a proportional bar, duration (warn tone at 2 minutes or
+more), and cost. The client column hides below 900px. Reaching the end of the loaded rows reads the next page, and keeps reading while the end stays in view, until the answer carries no cursor. A failed page shows its error with Retry and does not loop. There is no load button. Live mode subscribes
+to the `logs` event stream only while the section is open and reloads once on return.
+
+A row opens a trailing drawer, the logs exception to `CenteredModal`: up to 1040px wide, scrim behind it, previous and
+next through the visible rows, Escape and the scrim close it, and focus returns to the row. Below 640px it is a bottom
+sheet. The body keeps overview, tokens and cost, the agent exchange and the per-attempt provider exchange.
 
 ## Daemon
 
@@ -37,10 +41,10 @@ to match, never colour alone), the message sentence, and the flattened fields un
 `METHOD path · status · duration`). A disclosure opens the full message and fields with a copy action.
 
 - **Controls**: level floor (all levels, warnings and errors, errors only) and an HTTP-requests selector (hidden or
-  shown), both selection boxes in the pane's fields grid behind their own storage key; live/pause in the page toolbar.
+  shown), both selection boxes behind the toolbar filter toggle and their own storage key; live/pause in the page toolbar.
   Requests
   hide by default: the access lines of every poll would bury the events the section exists for.
-- **Paging**: `Load older` continues from the oldest line on screen; the live tail polls newer lines every 2s and
+- **Paging**: scrolling to the oldest line continues from there; the live tail polls newer lines every 2s and
   merges them by byte offset, so a line never shows twice. A failed poll stays silent and retries; a failed load
   answers inline with the reason and a Retry action, never as a toast.
 - **Empty**: "The daemon has not written a log yet." Missing is a dash; the section never invents rows.
@@ -71,6 +75,6 @@ way the activity reads do. Rotated daemon archives (`.gz`) stay out: the section
 
 ## Motion
 
-The page adds no motion of its own. Sections slide 16px from the travel direction with a fade like the usage panes;
+A row that arrives after the list is already showing uses the shared slide, and flip eases the rows it pushes down. The first page stays still. The request drawer slides in from the trailing edge and back out the same way. Otherwise the page adds no motion of its own. Sections slide 16px from the travel direction with a fade like the usage panes;
 the shared live control pumps like a music wave while the tail runs; disclosures, pills and the filter fields keep their
 shared motion. Everything honours `prefers-reduced-motion`.

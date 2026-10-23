@@ -70,7 +70,6 @@
       "health": "Daemon",
       "healthRunning": "çalışıyor",
       "healthDown": "erişilemiyor",
-      "latestBeta": "en son beta {version}",
       "updateAvailable": "Güncelleme var",
       "quickAdd": "Hızlı ekleme",
       "quickAddAccount": "Sağlayıcı hesabı",
@@ -1246,7 +1245,18 @@
         "copyRawRequest": "Ham JSON’u kopyalayın",
         "sectionLabel": "Log section",
         "requestsHidden": "Hidden",
-        "requestsShown": "Shown"
+        "requestsShown": "Shown",
+        "requestsLoaded": "Yüklenen istekler",
+        "avgSlowest": "Ortalama · en yavaş",
+        "searchPlaceholder": "Model, istemci anahtarı, sağlayıcı, zaman ara",
+        "filterAllShort": "Tümü",
+        "filterSuccess": "Başarılı",
+        "filterErrors": "Hatalar",
+        "showingLoaded": "{shown} yüklendi",
+        "slowRequest": "2 dakikadan uzun",
+        "browseRequests": "İsteklerde gezin",
+        "previousRequest": "Önceki istek",
+        "nextRequest": "Sonraki istek"
       },
       "usage": {
         "title": "Kullanım",

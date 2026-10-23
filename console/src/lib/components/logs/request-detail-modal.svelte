@@ -2,8 +2,11 @@
 	import { t } from 'svelte-i18n';
 
 	import { api } from '$lib/api';
+	import Button from '$lib/components/ui/button.svelte';
 	import CenteredModal from '$lib/components/ui/centered-modal.svelte';
+	import Icon from '$lib/components/ui/icon.svelte';
 	import StatusBadge from '$lib/components/ui/status-badge.svelte';
+	import { formatTimestamp } from '$lib/format';
 	import RequestDetailExchange from '$lib/components/logs/request-detail-exchange.svelte';
 	import RequestDetailOverview from '$lib/components/logs/request-detail-overview.svelte';
 	import RequestDetailTokens from '$lib/components/logs/request-detail-tokens.svelte';
@@ -15,10 +18,34 @@
 
 	interface Props {
 		row: UsageLogRow | null;
+		rows?: UsageLogRow[];
 		onclose: () => void;
+		onselect?: (row: UsageLogRow) => void;
 	}
 
-	let { row, onclose }: Props = $props();
+	let { row, rows = [], onclose, onselect }: Props = $props();
+
+	const index = $derived(row ? rows.findIndex((entry) => entry.ID === row.ID) : -1);
+	const previous = $derived(index > 0 ? rows[index - 1] : null);
+	const next = $derived(index >= 0 && index < rows.length - 1 ? rows[index + 1] : null);
+
+	function move(step: -1 | 1) {
+		const target = step < 0 ? previous : next;
+		if (target) onselect?.(target);
+	}
+
+	function onKeydown(event: KeyboardEvent) {
+		if (row === null) return;
+		const tag = document.activeElement?.tagName ?? '';
+		if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+		if (event.key === 'ArrowLeft') {
+			event.preventDefault();
+			move(-1);
+		} else if (event.key === 'ArrowRight') {
+			event.preventDefault();
+			move(1);
+		}
+	}
 
 	let attempts = $state<UsageAttemptRow[]>([]);
 	let captures = $state<UsageCapture[]>([]);
@@ -89,14 +116,49 @@
 	});
 </script>
 
+<svelte:window onkeydown={onKeydown} />
+
 <CenteredModal
 	open={row !== null}
 	onOpenChange={(value) => {
 		if (!value) onclose();
 	}}
+	placement="drawer"
 	size="wide"
 	title={$t('ui.pages.logsPage.detailTitle')}
+	description={row ? formatTimestamp(row.TimestampMs) + ' · ' + row.Model : undefined}
 >
+	{#snippet headerNav()}
+		{#if index >= 0}
+			<div
+				class="flex items-center gap-1"
+				role="group"
+				aria-label={$t('ui.pages.logsPage.browseRequests')}
+			>
+				<Button
+					variant="outline"
+					size="icon"
+					aria-label={$t('ui.pages.logsPage.previousRequest')}
+					disabled={previous === null}
+					onclick={() => move(-1)}
+				>
+					<Icon name="arrow-left" size={16} />
+				</Button>
+				<span class="mono-data min-w-14 text-center text-xs text-muted-foreground"
+					>{index + 1} / {rows.length}</span
+				>
+				<Button
+					variant="outline"
+					size="icon"
+					aria-label={$t('ui.pages.logsPage.nextRequest')}
+					disabled={next === null}
+					onclick={() => move(1)}
+				>
+					<Icon name="chevron-right" size={16} />
+				</Button>
+			</div>
+		{/if}
+	{/snippet}
 	{#snippet titleAside()}
 		{#if traced}
 			<StatusBadge kind="muted" label={$t('ui.pages.logsPage.traceBadge')} />

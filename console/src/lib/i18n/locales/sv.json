@@ -70,7 +70,6 @@
       "health": "Daemon",
       "healthRunning": "körs",
       "healthDown": "oåtkomlig",
-      "latestBeta": "senaste beta {version}",
       "updateAvailable": "Uppdatering tillgänglig",
       "quickAdd": "Lägg till",
       "quickAddAccount": "Leverantörskonto",
@@ -1246,7 +1245,18 @@
         "copyRawRequest": "Kopiera rå JSON",
         "sectionLabel": "Log section",
         "requestsHidden": "Hidden",
-        "requestsShown": "Shown"
+        "requestsShown": "Shown",
+        "requestsLoaded": "Inlästa förfrågningar",
+        "avgSlowest": "Snitt · långsammaste",
+        "searchPlaceholder": "Sök modell, klientnyckel, leverantör, tid",
+        "filterAllShort": "Alla",
+        "filterSuccess": "Lyckade",
+        "filterErrors": "Fel",
+        "showingLoaded": "Visar {shown}",
+        "slowRequest": "Över 2 minuter",
+        "browseRequests": "Bläddra bland förfrågningar",
+        "previousRequest": "Föregående förfrågan",
+        "nextRequest": "Nästa förfrågan"
       },
       "usage": {
         "title": "Användning",

@@ -70,7 +70,6 @@
       "health": "daemon",
       "healthRunning": "běží",
       "healthDown": "nedostupný",
-      "latestBeta": "nejnovější beta {version}",
       "updateAvailable": "Je k dispozici aktualizace",
       "quickAdd": "Přidat",
       "quickAddAccount": "Účet poskytovatele",
@@ -1246,7 +1245,18 @@
         "copyRawRequest": "Kopírovat surový JSON",
         "sectionLabel": "Log section",
         "requestsHidden": "Hidden",
-        "requestsShown": "Shown"
+        "requestsShown": "Shown",
+        "requestsLoaded": "Načtené požadavky",
+        "avgSlowest": "Průměr · nejpomalejší",
+        "searchPlaceholder": "Hledat model, klientský klíč, poskytovatele, čas",
+        "filterAllShort": "Vše",
+        "filterSuccess": "Úspěch",
+        "filterErrors": "Chyby",
+        "showingLoaded": "Zobrazeno {shown} načtených",
+        "slowRequest": "Přes 2 minuty",
+        "browseRequests": "Procházet požadavky",
+        "previousRequest": "Předchozí požadavek",
+        "nextRequest": "Další požadavek"
       },
       "usage": {
         "title": "Využití",

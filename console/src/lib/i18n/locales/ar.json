@@ -70,7 +70,6 @@
       "health": "daemon",
       "healthRunning": "قيد التشغيل",
       "healthDown": "غير متاح",
-      "latestBeta": "أحدث نسخة تجريبية {version}",
       "updateAvailable": "يتوفر تحديث",
       "quickAdd": "إضافة",
       "quickAddAccount": "حساب مزوّد",
@@ -1246,7 +1245,18 @@
         "copyRawRequest": "انسخ ملف JSON الخام",
         "sectionLabel": "Log section",
         "requestsHidden": "Hidden",
-        "requestsShown": "Shown"
+        "requestsShown": "Shown",
+        "requestsLoaded": "الطلبات المحملة",
+        "avgSlowest": "المتوسط · الأبطأ",
+        "searchPlaceholder": "البحث عن النموذج ومفتاح العميل والمزود والوقت",
+        "filterAllShort": "الكل",
+        "filterSuccess": "نجاح",
+        "filterErrors": "أخطاء",
+        "showingLoaded": "عرض {shown} محمّل",
+        "slowRequest": "أكثر من دقيقتين",
+        "browseRequests": "تصفح الطلبات",
+        "previousRequest": "الطلب السابق",
+        "nextRequest": "الطلب التالي"
       },
       "usage": {
         "title": "الاستخدام",

@@ -70,7 +70,6 @@
       "health": "デーモン",
       "healthRunning": "実行中",
       "healthDown": "到達不可",
-      "latestBeta": "最新ベータ {version}",
       "updateAvailable": "アップデートがあります",
       "quickAdd": "追加",
       "quickAddAccount": "プロバイダーアカウント",
@@ -1246,7 +1245,18 @@
         "copyRawRequest": "生JSONをコピー",
         "sectionLabel": "Log section",
         "requestsHidden": "Hidden",
-        "requestsShown": "Shown"
+        "requestsShown": "Shown",
+        "requestsLoaded": "読み込み済みリクエスト",
+        "avgSlowest": "平均 · 最長",
+        "searchPlaceholder": "モデル、クライアントキー、プロバイダー、時刻を検索",
+        "filterAllShort": "すべて",
+        "filterSuccess": "成功",
+        "filterErrors": "エラー",
+        "showingLoaded": "{shown} 件を表示",
+        "slowRequest": "2分超",
+        "browseRequests": "リクエストを移動",
+        "previousRequest": "前のリクエスト",
+        "nextRequest": "次のリクエスト"
       },
       "usage": {
         "title": "使用量",

@@ -385,6 +385,8 @@ const antigravityListing = `{
     "gemini-3-flash": {"displayName": "Gemini 3 Flash"},
     "claude-sonnet-4-6": {"displayName": "Claude Sonnet 4.6 (Thinking)"},
     "claude-opus-4-6-thinking": {"displayName": "Claude Opus 4.6 (Thinking)"},
+    "claude-sonnet-5-5-medium": {"displayName": "Claude Sonnet 5.5 (Medium)"},
+    "claude-opus-5-5-high": {"displayName": "Claude Opus 5.5 (High)"},
     "gpt-oss-120b-medium": {"displayName": "GPT-OSS 120B (Medium)"},
     "chat_20706": {"displayName": ""},
     "tab_flash_lite_preview": {"displayName": ""}
@@ -392,7 +394,8 @@ const antigravityListing = `{
   "agentModelSorts": [{"displayName": "Recommended", "groups": [{"modelIds": [
     "gemini-3.8-flash-high", "gemini-3.7-flash-low", "gemini-3.6-flash-medium",
     "gemini-pro-agent", "gemini-3.1-pro-low", "claude-sonnet-4-6",
-    "claude-opus-4-6-thinking", "gpt-oss-120b-medium"
+    "claude-opus-4-6-thinking", "claude-sonnet-5-5-medium",
+    "claude-opus-5-5-high", "gpt-oss-120b-medium"
   ]}]}],
   "tieredModelIds": {"flash": ["gemini-3.8-flash-tiered"], "flashLite": ["gemini-3.5-flash-lite"]},
   "imageGenerationModelIds": ["gemini-3.1-flash-image"],
@@ -433,7 +436,8 @@ func antigravityListIDs(t *testing.T, body string) []string {
 func TestListAntigravityKeepsOnlyTheAgentSurface(t *testing.T) {
 	got := antigravityListIDs(t, antigravityListing)
 	want := []string{
-		"claude-opus-4-6-thinking", "claude-sonnet-4-6", "gemini-2.5-pro",
+		"claude-opus-4-6-thinking", "claude-opus-5-5", "claude-sonnet-4-6",
+		"claude-sonnet-5-5", "gemini-2.5-pro",
 		"gemini-3.1-flash-image", "gemini-3.1-pro", "gemini-3.5-flash-lite",
 		"gemini-3.6-flash", "gemini-3.7-flash", "gemini-3.8-flash",
 		"gemini-3.8-flash-tiered", "gpt-oss-120b-medium",
@@ -472,6 +476,23 @@ func TestListAntigravityKeepsOnlyTheAgentSurface(t *testing.T) {
 		t.Fatal("gemini-3.8-flash missing from listed models")
 	} else if gemini.Name != "Gemini 3.8 Flash" {
 		t.Fatalf("gemini.Name = %q, want clean Gemini 3.8 Flash", gemini.Name)
+	}
+	sonnet55, ok := byID["claude-sonnet-5-5"]
+	if !ok {
+		t.Fatal("claude-sonnet-5-5 missing from listed models")
+	}
+	if sonnet55.Name != "Claude Sonnet 5.5" {
+		t.Fatalf("sonnet 5.5 name = %q, want the effort dropped", sonnet55.Name)
+	}
+	if sonnet55.SupportsReasoning == nil || !*sonnet55.SupportsReasoning {
+		t.Fatalf("sonnet 5.5 reasoning = %v, want the collapsed generation to think", sonnet55.SupportsReasoning)
+	}
+	opus55, ok := byID["claude-opus-5-5"]
+	if !ok {
+		t.Fatal("claude-opus-5-5 missing from listed models")
+	}
+	if opus55.Name != "Claude Opus 5.5" {
+		t.Fatalf("opus 5.5 name = %q, want the effort dropped", opus55.Name)
 	}
 }
 

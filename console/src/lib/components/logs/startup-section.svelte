@@ -99,11 +99,11 @@
 			{$t('ui.pages.logsPage.startupEmpty')}
 		</div>
 	{:else}
-		<div class="flex flex-col gap-1.5">
+		<div class="overflow-hidden rounded-card border border-line bg-surface">
 			{#each entries as entry (entry.name)}
 				{@const transcript = transcripts[entry.name]}
 				<details
-					class="group rounded-panel border border-line bg-surface px-3.5 py-2"
+					class="group px-5 py-2.5"
 					open={open[entry.name] ?? false}
 					ontoggle={(event) => void openTranscript(entry, event.currentTarget.open)}
 				>

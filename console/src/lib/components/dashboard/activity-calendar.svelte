@@ -5,6 +5,7 @@
 	import Icon from '$lib/components/ui/icon.svelte';
 	import { formatCount } from '$lib/format';
 	import { HEAT_FILLS, shortDay, type HeatCell } from '$lib/usage-charts';
+	import { newSnake, SNAKE_ROWS, stepSnake } from '$lib/snake';
 
 	// ActivityCalendar is the dashboard's year of traffic as one GitHub-style
 	// strip: 53 Monday-first week columns of 10px-tall cells, a month under the week
@@ -20,6 +21,105 @@
 	let { weeks, loading, pending, today }: Props = $props();
 
 	let hoveredKey = $state('');
+
+	// Once the data is in, turns repeat: a snake crawls the grid and eats the active days,
+	// the whole grid dissolves pixel by pixel, then the real heatmap fades back in and the
+	// next turn starts. Reduced motion skips all of it.
+	const SNAKE_DELAY_MS = 1500;
+	const SNAKE_STEP_MS = 90;
+	// The snake hunts greedily, so a sparse year could run long; cap each turn.
+	const SNAKE_MAX_STEPS = 320;
+	const DISSOLVE_TICK_MS = 45;
+	const DISSOLVE_TICKS = 16;
+	const FADE_IN_MS = 700;
+	const TURN_PAUSE_MS = 2500;
+	type Phase = 'idle' | 'play' | 'dissolve' | 'hidden' | 'fadein';
+	let phase = $state<Phase>('idle');
+	let body = $state<number[]>([]);
+	let eaten = $state<Set<number>>(new Set());
+	let tick = $state(0);
+	let vanishAt: number[] = [];
+
+	$effect(() => {
+		if (loading || weeks.length === 0) return;
+		if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+		const open: boolean[] = [];
+		const food = new Set<number>();
+		weeks.forEach((week, col) =>
+			week.forEach((cell, row) => {
+				const index = col * SNAKE_ROWS + row;
+				open[index] = today === '' || cell.key <= today;
+				if (open[index] && cell.value > 0) food.add(index);
+			})
+		);
+		if (food.size === 0) return;
+		let timer: ReturnType<typeof setTimeout> | undefined;
+		const later = (fn: () => void, ms: number) => (timer = setTimeout(fn, ms));
+
+		const turn = () => {
+			const game = newSnake(open, food, weeks.length, Math.random() < 0.5);
+			let steps = 0;
+			phase = 'play';
+			const move = () => {
+				stepSnake(game);
+				steps += 1;
+				body = [...game.body];
+				eaten = new Set(game.eaten);
+				if (game.done || steps >= SNAKE_MAX_STEPS) later(dissolve, 500);
+				else later(move, SNAKE_STEP_MS);
+			};
+			move();
+		};
+		const dissolve = () => {
+			vanishAt = Array.from({ length: weeks.length * SNAKE_ROWS }, () =>
+				Math.floor(Math.random() * DISSOLVE_TICKS)
+			);
+			tick = 0;
+			phase = 'dissolve';
+			const advance = () => {
+				tick += 1;
+				if (tick >= DISSOLVE_TICKS) {
+					phase = 'hidden';
+					body = [];
+					eaten = new Set();
+					later(() => {
+						phase = 'fadein';
+						later(() => {
+							phase = 'idle';
+							later(turn, TURN_PAUSE_MS);
+						}, FADE_IN_MS);
+					}, 150);
+				} else later(advance, DISSOLVE_TICK_MS);
+			};
+			later(advance, DISSOLVE_TICK_MS);
+		};
+
+		later(turn, SNAKE_DELAY_MS);
+		return () => {
+			clearTimeout(timer);
+			phase = 'idle';
+			body = [];
+			eaten = new Set();
+		};
+	});
+
+	function fill(cell: HeatCell, col: number, row: number): string {
+		if (body.length === 0) return HEAT_FILLS[cell.level];
+		const at = col * SNAKE_ROWS + row;
+		if (at === body[0]) return 'var(--accent)';
+		if (body.includes(at)) return 'var(--accent-400)';
+		return eaten.has(at) ? HEAT_FILLS[0] : HEAT_FILLS[cell.level];
+	}
+
+	// A cell vanishes all at once, never fades, so the dissolve reads as pixels.
+	function cellStyle(cell: HeatCell, col: number, row: number): string {
+		const at = col * SNAKE_ROWS + row;
+		const gone = phase === 'hidden' || (phase === 'dissolve' && tick >= (vanishAt[at] ?? 0));
+		const fade = phase === 'fadein' ? 'opacity ' + FADE_IN_MS + 'ms ease-out' : 'none';
+		return (
+			'background:' + fill(cell, col, row) + ';opacity:' + (gone ? 0 : 1) + ';transition:' + fade
+		);
+	}
 
 	const total = $derived(
 		weeks.reduce((sum, week) => sum + week.reduce((day, cell) => day + cell.value, 0), 0)
@@ -102,12 +202,12 @@
 					aria-label={$t('ui.pages.dashboard.activityTitle') + ' · ' + readout}
 				>
 					{#each weekRows as day (day)}
-						{#each weeks as week (week[0]?.key ?? '')}
+						{#each weeks as week, col (week[0]?.key ?? '')}
 							{@const cell = week[day]}
 							{#if today === '' || cell.key <= today}
 								<span
 									class="h-full min-h-2.5 w-full min-w-0 rounded-[3px]"
-									style="background:{HEAT_FILLS[cell.level]}"
+									style={cellStyle(cell, col, day)}
 									role="img"
 									aria-label={shortDay(cell.key) +
 										': ' +

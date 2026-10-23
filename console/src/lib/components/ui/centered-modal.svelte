@@ -5,7 +5,12 @@
 	import { fade } from 'svelte/transition';
 	import { Dialog } from 'bits-ui';
 	import Icon from '$lib/components/ui/icon.svelte';
-	import { modalMotion, trackModalOrigin } from '$lib/modal-motion';
+	import {
+		modalMotion,
+		sideDrawerLeave,
+		sideDrawerMotion,
+		trackModalOrigin
+	} from '$lib/modal-motion';
 	import { cn } from '$lib/utils';
 
 	type ModalSize = 'compact' | 'standard' | 'wide' | 'xl';
@@ -33,6 +38,11 @@
 		// onClosed runs once the closing transition has finished and the content
 		// is really gone, which is what a hand-off to a confirmation waits for.
 		onClosed?: () => void;
+		// placement="drawer" pins the surface to the trailing edge. The logs page
+		// is the one caller; every other dialog stays centred.
+		placement?: 'center' | 'drawer';
+		// headerNav replaces the title-aside slot when a drawer browses a list.
+		headerNav?: Snippet;
 	}
 
 	let {
@@ -48,7 +58,9 @@
 		class: className,
 		chrome = {},
 		bodyClass,
-		onClosed
+		onClosed,
+		placement = 'center',
+		headerNav
 	}: Props = $props();
 
 	const maxWidth: Record<ModalSize, string> = {
@@ -108,6 +120,13 @@
 		window.addEventListener('pointercancel', finish);
 	}
 
+	function surfaceMotion(node: HTMLElement, params: { startY?: () => number } = {}) {
+		return placement === 'drawer' ? sideDrawerMotion(node) : modalMotion(node, params);
+	}
+
+	function surfaceOutro(node: HTMLElement) {
+		return placement === 'drawer' ? sideDrawerLeave(node) : surfaceMotion(node);
+	}
 	const dragStyle = $derived(
 		dragging
 			? 'transform: translateY(' + dragY + 'px); transition: none;'
@@ -166,10 +185,13 @@
 			forceMount
 			interactOutsideBehavior={dismissible ? 'close' : 'ignore'}
 			class={cn(
-				'fixed left-1/2 top-1/2 z-50 flex w-[calc(100%-1.5rem)] -translate-x-1/2 -translate-y-1/2 flex-col overflow-hidden rounded-card bg-surface text-ink shadow-modal outline-none',
-				'max-h-[min(90dvh,800px)]',
-				'max-sm:inset-x-0 max-sm:bottom-0 max-sm:top-auto max-sm:w-full max-sm:max-w-none max-sm:translate-x-0 max-sm:translate-y-0 max-sm:rounded-b-none max-sm:rounded-t-card max-sm:max-h-[92dvh]',
-				maxWidth[size],
+				placement === 'drawer'
+					? 'fixed inset-y-0 end-0 z-50 flex h-full w-[min(1040px,94vw)] max-w-none translate-x-0 translate-y-0 flex-col overflow-hidden rounded-none bg-surface text-ink shadow-modal outline-none max-sm:inset-x-0 max-sm:bottom-0 max-sm:top-auto max-sm:h-[92dvh] max-sm:w-full max-sm:rounded-t-card'
+					: 'fixed left-1/2 top-1/2 z-50 flex w-[calc(100%-1.5rem)] -translate-x-1/2 -translate-y-1/2 flex-col overflow-hidden rounded-card bg-surface text-ink shadow-modal outline-none',
+				placement === 'center' && 'max-h-[min(90dvh,800px)]',
+				placement === 'center' &&
+					'max-sm:inset-x-0 max-sm:bottom-0 max-sm:top-auto max-sm:w-full max-sm:max-w-none max-sm:translate-x-0 max-sm:translate-y-0 max-sm:rounded-b-none max-sm:rounded-t-card max-sm:max-h-[92dvh]',
+				placement === 'center' && maxWidth[size],
 				className
 			)}
 			bind:ref={contentEl}
@@ -180,7 +202,8 @@
 					<div
 						{...props}
 						data-reduced-motion-fade
-						transition:modalMotion={{ startY: () => dragY }}
+						in:surfaceMotion={{ startY: () => dragY }}
+						out:surfaceOutro
 						{@attach (_node) => {
 							mounted = true;
 							return () => {
@@ -203,11 +226,12 @@
 							role="presentation"
 							class={cn(
 								'flex shrink-0 items-start justify-between gap-3 bg-surface px-5 py-4 max-sm:px-4',
+								placement === 'drawer' && 'items-center',
 								chrome.header
 							)}
 							onpointerdown={onSheetPointerDown}
 						>
-							<div class="min-w-0">
+							<div class="min-w-0 flex-1">
 								<div class="flex items-center gap-2">
 									<Dialog.Title
 										class={cn('text-[1.125rem] font-semibold leading-snug', chrome.title)}
@@ -216,11 +240,12 @@
 									{@render titleAside?.()}
 								</div>
 								{#if description}
-									<Dialog.Description class="mt-0.5 text-sm text-muted-foreground"
+									<Dialog.Description class="mt-0.5 truncate text-sm text-muted-foreground"
 										>{description}</Dialog.Description
 									>
 								{/if}
 							</div>
+							{@render headerNav?.()}
 							{#if dismissible}
 								<Dialog.Close
 									class="flex size-8 shrink-0 items-center justify-center rounded-control text-muted-foreground transition-colors hover:bg-hover hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
