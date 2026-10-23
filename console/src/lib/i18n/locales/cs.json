@@ -1247,7 +1247,10 @@
         "copyRawRequest": "Kopírovat surový JSON",
         "sectionLabel": "Log section",
         "requestsHidden": "Hidden",
-        "requestsShown": "Shown"
+        "requestsShown": "Shown",
+        "requestsLoaded": "Načtené požadavky",
+        "avgSlowest": "Průměr · nejpomalejší",
+        "searchPlaceholder": "Hledat model, klientský klíč, poskytovatele, čas"
       },
       "usage": {
         "title": "Využití",

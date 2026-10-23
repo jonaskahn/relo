@@ -1247,7 +1247,10 @@
         "copyRawRequest": "复制原始 JSON",
         "sectionLabel": "Log section",
         "requestsHidden": "Hidden",
-        "requestsShown": "Shown"
+        "requestsShown": "Shown",
+        "requestsLoaded": "已加载请求",
+        "avgSlowest": "平均 · 最慢",
+        "searchPlaceholder": "搜索模型、客户端密钥、提供商、时间"
       },
       "usage": {
         "title": "用量",

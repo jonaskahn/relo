@@ -1247,7 +1247,10 @@
         "copyRawRequest": "Копировать исходный JSON",
         "sectionLabel": "Log section",
         "requestsHidden": "Hidden",
-        "requestsShown": "Shown"
+        "requestsShown": "Shown",
+        "requestsLoaded": "Загружено запросов",
+        "avgSlowest": "Среднее · самое долгое",
+        "searchPlaceholder": "Поиск модели, ключа, провайдера или времени"
       },
       "usage": {
         "title": "Использование",

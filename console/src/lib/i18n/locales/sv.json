@@ -1247,7 +1247,10 @@
         "copyRawRequest": "Kopiera rå JSON",
         "sectionLabel": "Log section",
         "requestsHidden": "Hidden",
-        "requestsShown": "Shown"
+        "requestsShown": "Shown",
+        "requestsLoaded": "Inlästa förfrågningar",
+        "avgSlowest": "Snitt · långsammaste",
+        "searchPlaceholder": "Sök modell, klientnyckel, leverantör, tid"
       },
       "usage": {
         "title": "Användning",

@@ -1247,7 +1247,10 @@
         "copyRawRequest": "원시 JSON 복사",
         "sectionLabel": "Log section",
         "requestsHidden": "Hidden",
-        "requestsShown": "Shown"
+        "requestsShown": "Shown",
+        "requestsLoaded": "로드된 요청",
+        "avgSlowest": "평균 · 최대",
+        "searchPlaceholder": "모델, 클라이언트 키, 제공자, 시간 검색"
       },
       "usage": {
         "title": "사용량",

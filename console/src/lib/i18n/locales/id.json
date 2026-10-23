@@ -1247,7 +1247,10 @@
         "copyRawRequest": "Salin JSON mentah",
         "sectionLabel": "Log section",
         "requestsHidden": "Hidden",
-        "requestsShown": "Shown"
+        "requestsShown": "Shown",
+        "requestsLoaded": "Permintaan dimuat",
+        "avgSlowest": "Rata-rata · terlambat",
+        "searchPlaceholder": "Cari model, kunci klien, penyedia, waktu"
       },
       "usage": {
         "title": "Penggunaan",

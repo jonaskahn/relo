@@ -1247,7 +1247,10 @@
         "copyRawRequest": "Sao chép JSON thô",
         "sectionLabel": "Log section",
         "requestsHidden": "Hidden",
-        "requestsShown": "Shown"
+        "requestsShown": "Shown",
+        "requestsLoaded": "Yêu cầu đã tải",
+        "avgSlowest": "Trung bình · chậm nhất",
+        "searchPlaceholder": "Tìm kiếm mô hình, khóa máy khách, nhà cung cấp, thời gian"
       },
       "usage": {
         "title": "Cách sử dụng",

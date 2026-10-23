@@ -1247,7 +1247,10 @@
         "copyRawRequest": "Ruwe JSON kopiëren",
         "sectionLabel": "Log section",
         "requestsHidden": "Hidden",
-        "requestsShown": "Shown"
+        "requestsShown": "Shown",
+        "requestsLoaded": "Geladen verzoeken",
+        "avgSlowest": "Gemiddeld · traagste",
+        "searchPlaceholder": "Zoek model, clientsleutel, provider, tijd"
       },
       "usage": {
         "title": "Verbruik",

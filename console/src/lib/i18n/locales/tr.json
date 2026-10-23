@@ -1247,7 +1247,10 @@
         "copyRawRequest": "Ham JSON’u kopyalayın",
         "sectionLabel": "Log section",
         "requestsHidden": "Hidden",
-        "requestsShown": "Shown"
+        "requestsShown": "Shown",
+        "requestsLoaded": "Yüklenen istekler",
+        "avgSlowest": "Ortalama · en yavaş",
+        "searchPlaceholder": "Model, istemci anahtarı, sağlayıcı, zaman ara"
       },
       "usage": {
         "title": "Kullanım",

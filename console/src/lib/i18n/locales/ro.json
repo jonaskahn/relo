@@ -1247,7 +1247,10 @@
         "copyRawRequest": "Copiați JSON-ul brut",
         "sectionLabel": "Log section",
         "requestsHidden": "Hidden",
-        "requestsShown": "Shown"
+        "requestsShown": "Shown",
+        "requestsLoaded": "Cereri încărcate",
+        "avgSlowest": "Medie · cel mai lent",
+        "searchPlaceholder": "Căutare model, cheie client, furnizor, timp"
       },
       "usage": {
         "title": "Utilizare",

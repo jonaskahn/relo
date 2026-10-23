@@ -1247,7 +1247,10 @@
         "copyRawRequest": "คัดลอก JSON ดิบ",
         "sectionLabel": "Log section",
         "requestsHidden": "Hidden",
-        "requestsShown": "Shown"
+        "requestsShown": "Shown",
+        "requestsLoaded": "คำขอที่โหลดแล้ว",
+        "avgSlowest": "เฉลี่ย · ช้าที่สุด",
+        "searchPlaceholder": "ค้นหาโมเดล คีย์ไคลเอนต์ ผู้ให้บริการ เวลา"
       },
       "usage": {
         "title": "การใช้งาน",

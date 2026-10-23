@@ -1247,7 +1247,10 @@
         "copyRawRequest": "Копіювати вихідний JSON",
         "sectionLabel": "Log section",
         "requestsHidden": "Hidden",
-        "requestsShown": "Shown"
+        "requestsShown": "Shown",
+        "requestsLoaded": "Завантажено запитів",
+        "avgSlowest": "Середнє · найдовше",
+        "searchPlaceholder": "Пошук моделі, ключа клієнта, постачальника, часу"
       },
       "usage": {
         "title": "Використання",

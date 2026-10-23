@@ -1247,7 +1247,10 @@
         "copyRawRequest": "Copia il JSON grezzo",
         "sectionLabel": "Log section",
         "requestsHidden": "Hidden",
-        "requestsShown": "Shown"
+        "requestsShown": "Shown",
+        "requestsLoaded": "Richieste caricate",
+        "avgSlowest": "Media · più lenta",
+        "searchPlaceholder": "Cerca modello, chiave client, provider, orario"
       },
       "usage": {
         "title": "Utilizzo",

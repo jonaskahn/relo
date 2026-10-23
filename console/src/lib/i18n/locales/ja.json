@@ -1247,7 +1247,10 @@
         "copyRawRequest": "生JSONをコピー",
         "sectionLabel": "Log section",
         "requestsHidden": "Hidden",
-        "requestsShown": "Shown"
+        "requestsShown": "Shown",
+        "requestsLoaded": "読み込み済みリクエスト",
+        "avgSlowest": "平均 · 最長",
+        "searchPlaceholder": "モデル、クライアントキー、プロバイダー、時刻を検索"
       },
       "usage": {
         "title": "使用量",

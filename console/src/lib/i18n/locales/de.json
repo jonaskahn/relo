@@ -1247,7 +1247,10 @@
         "copyRawRequest": "Rohes JSON kopieren",
         "sectionLabel": "Log section",
         "requestsHidden": "Hidden",
-        "requestsShown": "Shown"
+        "requestsShown": "Shown",
+        "requestsLoaded": "Geladene Anfragen",
+        "avgSlowest": "Mittel · am längsten",
+        "searchPlaceholder": "Modell, Clientschlüssel, Provider oder Zeit suchen"
       },
       "usage": {
         "title": "Verbrauch",

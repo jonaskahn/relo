@@ -1247,7 +1247,10 @@
         "copyRawRequest": "انسخ ملف JSON الخام",
         "sectionLabel": "Log section",
         "requestsHidden": "Hidden",
-        "requestsShown": "Shown"
+        "requestsShown": "Shown",
+        "requestsLoaded": "الطلبات المحملة",
+        "avgSlowest": "المتوسط · الأبطأ",
+        "searchPlaceholder": "البحث عن النموذج ومفتاح العميل والمزود والوقت"
       },
       "usage": {
         "title": "الاستخدام",

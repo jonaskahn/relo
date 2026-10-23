@@ -1247,7 +1247,10 @@
         "copyRawRequest": "Copier le JSON brut",
         "sectionLabel": "Log section",
         "requestsHidden": "Hidden",
-        "requestsShown": "Shown"
+        "requestsShown": "Shown",
+        "requestsLoaded": "Requêtes chargées",
+        "avgSlowest": "Moyenne · la plus lente",
+        "searchPlaceholder": "Rechercher un modèle, une clé, un fournisseur, une heure"
       },
       "usage": {
         "title": "Utilisation",

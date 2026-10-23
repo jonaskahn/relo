@@ -1247,7 +1247,10 @@
         "copyRawRequest": "Copiar o JSON bruto",
         "sectionLabel": "Log section",
         "requestsHidden": "Hidden",
-        "requestsShown": "Shown"
+        "requestsShown": "Shown",
+        "requestsLoaded": "Requisições carregadas",
+        "avgSlowest": "Média · mais lenta",
+        "searchPlaceholder": "Buscar modelo, chave de cliente, provedor, horário"
       },
       "usage": {
         "title": "Uso",

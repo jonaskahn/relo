@@ -1247,7 +1247,10 @@
         "copyRawRequest": "Kopiuj surowy JSON",
         "sectionLabel": "Log section",
         "requestsHidden": "Hidden",
-        "requestsShown": "Shown"
+        "requestsShown": "Shown",
+        "requestsLoaded": "Załadowane żądania",
+        "avgSlowest": "Średnia · najdłuższa",
+        "searchPlaceholder": "Szukaj modelu, klucza, dostawcy, czasu"
       },
       "usage": {
         "title": "Zużycie",
