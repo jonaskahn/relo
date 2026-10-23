@@ -3,9 +3,11 @@
 	import { toast } from 'svelte-sonner';
 	import { api } from '$lib/api';
 	import type { Account, Model, Provider, QuotaWindow, TemplateFormatOption } from '$lib/types';
-	import { Tabs } from 'bits-ui';
+	import { Tabs, DropdownMenu } from 'bits-ui';
 	import TabStrip from '$lib/components/ui/tab-strip.svelte';
 	import Button from '$lib/components/ui/button.svelte';
+	import { buttonVariants } from '$lib/components/ui/button.svelte';
+	import { cn } from '$lib/utils';
 	import IconAction from '$lib/components/ui/icon-action.svelte';
 	import Input from '$lib/components/ui/input.svelte';
 	import ConfirmDialog from '$lib/components/ui/confirm-dialog.svelte';
@@ -14,11 +16,12 @@
 	import ProviderLogo from '$lib/components/ui/provider-logo.svelte';
 	import ProviderBanner from './provider-banner.svelte';
 	import ModelFilterMenu from './model-filter-menu.svelte';
+	import MenuPanel from '$lib/components/ui/menu-panel.svelte';
 	import CardLayoutToggle from './card-layout-toggle.svelte';
 	import ModelList from './model-list.svelte';
 	import AccountsTab from './accounts-tab.svelte';
 	import SettingsTab from './settings-tab.svelte';
-	import { splitsPaidFree } from '$lib/model-filters';
+	import { splitsPaidFree, filterModels, isFreeModel } from '$lib/model-filters';
 	import { EMPTY_MODEL_FILTERS, type ModelFilters } from '$lib/model-filters';
 	import type { ModelLabelFilter } from '$lib/model-filters';
 	import { providerStatus } from '$lib/provider-status';
@@ -163,6 +166,35 @@
 	function reloadModels() {
 		void loadModels(provider.id);
 		void refreshProvider(provider.id);
+	}
+
+	// The bulk menu acts on the rows currently shown, so a filter keeps its
+	// meaning when a button is pressed.
+	const visibleModels = $derived(filterModels(models, shownFilters));
+	const bulkPaidIds = $derived(
+		visibleModels.filter((model) => !isFreeModel(model.model_id)).map((model) => model.model_id)
+	);
+	const bulkFreeIds = $derived(
+		visibleModels.filter((model) => isFreeModel(model.model_id)).map((model) => model.model_id)
+	);
+
+	let bulkWorking = $state(false);
+	async function bulkApply(ids: string[], enabled: boolean) {
+		if (ids.length === 0) return;
+		bulkWorking = true;
+		try {
+			await toggleModels(enabled, ids);
+			toast.success($t('ui.pages.providersPage.models.toggled', { values: { count: ids.length } }));
+			reloadModels();
+		} catch (error) {
+			toast.error(
+				$t('ui.pages.providersPage.pane.refreshFailed', {
+					values: { detail: error instanceof Error ? error.message : String(error) }
+				})
+			);
+		} finally {
+			bulkWorking = false;
+		}
 	}
 
 	function reloadAccounts() {
@@ -364,6 +396,92 @@
 			<div class="pt-actions">
 				{#if tab === 'models'}
 					<ModelFilterMenu filters={shownFilters} onfilters={setFilters} {models} {paidFree} />
+					<DropdownMenu.Root>
+						<DropdownMenu.Trigger
+							class={cn(
+								buttonVariants({ variant: 'outline', size: 'icon' }),
+								'text-muted-foreground hover:text-foreground'
+							)}
+							aria-label={$t('ui.pages.providersPage.models.bulkActions')}
+							title={$t('ui.pages.providersPage.models.bulkActions')}
+							disabled={bulkWorking}
+						>
+							<Icon name="power" size={15} />
+						</DropdownMenu.Trigger>
+						<MenuPanel class="z-50 min-w-56 surface-pop p-1" align="end">
+							<DropdownMenu.Item
+								class="flex min-h-control cursor-pointer items-center gap-2 rounded-control px-2 py-1.5 text-sm outline-none data-highlighted:bg-hover"
+								disabled={bulkWorking || visibleModels.length === 0}
+								onSelect={() =>
+									void bulkApply(
+										visibleModels.map((m) => m.model_id),
+										true
+									)}
+							>
+								<Icon name="power" size={14} />
+								{$t('ui.pages.providersPage.models.turnOnAll', {
+									values: { count: visibleModels.length }
+								})}
+							</DropdownMenu.Item>
+							<DropdownMenu.Item
+								class="flex min-h-control cursor-pointer items-center gap-2 rounded-control px-2 py-1.5 text-sm outline-none data-highlighted:bg-hover"
+								disabled={bulkWorking || visibleModels.length === 0}
+								onSelect={() =>
+									void bulkApply(
+										visibleModels.map((m) => m.model_id),
+										false
+									)}
+							>
+								<Icon name="circle-off" size={14} />
+								{$t('ui.pages.providersPage.models.turnOffAll', {
+									values: { count: visibleModels.length }
+								})}
+							</DropdownMenu.Item>
+							{#if bulkPaidIds.length > 0 && bulkFreeIds.length > 0}
+								<DropdownMenu.Separator class="my-1 h-px bg-border" />
+								<DropdownMenu.Item
+									class="flex min-h-control cursor-pointer items-center gap-2 rounded-control px-2 py-1.5 text-sm outline-none data-highlighted:bg-hover"
+									disabled={bulkWorking || bulkPaidIds.length === 0}
+									onSelect={() => void bulkApply(bulkPaidIds, true)}
+								>
+									<Icon name="power" size={14} />
+									{$t('ui.pages.providersPage.models.turnOnPaid', {
+										values: { count: bulkPaidIds.length }
+									})}
+								</DropdownMenu.Item>
+								<DropdownMenu.Item
+									class="flex min-h-control cursor-pointer items-center gap-2 rounded-control px-2 py-1.5 text-sm outline-none data-highlighted:bg-hover"
+									disabled={bulkWorking || bulkPaidIds.length === 0}
+									onSelect={() => void bulkApply(bulkPaidIds, false)}
+								>
+									<Icon name="circle-off" size={14} />
+									{$t('ui.pages.providersPage.models.turnOffPaid', {
+										values: { count: bulkPaidIds.length }
+									})}
+								</DropdownMenu.Item>
+								<DropdownMenu.Item
+									class="flex min-h-control cursor-pointer items-center gap-2 rounded-control px-2 py-1.5 text-sm outline-none data-highlighted:bg-hover"
+									disabled={bulkWorking || bulkFreeIds.length === 0}
+									onSelect={() => void bulkApply(bulkFreeIds, true)}
+								>
+									<Icon name="power" size={14} />
+									{$t('ui.pages.providersPage.models.turnOnFree', {
+										values: { count: bulkFreeIds.length }
+									})}
+								</DropdownMenu.Item>
+								<DropdownMenu.Item
+									class="flex min-h-control cursor-pointer items-center gap-2 rounded-control px-2 py-1.5 text-sm outline-none data-highlighted:bg-hover"
+									disabled={bulkWorking || bulkFreeIds.length === 0}
+									onSelect={() => void bulkApply(bulkFreeIds, false)}
+								>
+									<Icon name="circle-off" size={14} />
+									{$t('ui.pages.providersPage.models.turnOffFree', {
+										values: { count: bulkFreeIds.length }
+									})}
+								</DropdownMenu.Item>
+							{/if}
+						</MenuPanel>
+					</DropdownMenu.Root>
 				{/if}
 				{#if tab === 'accounts' && accounts.length > 0}
 					<CardLayoutToggle />

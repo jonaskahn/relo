@@ -19,7 +19,6 @@
 		EMPTY_MODEL_FILTERS,
 		filterModels,
 		hasActiveFilters,
-		isFreeModel,
 		type ModelFilters
 	} from '$lib/model-filters';
 
@@ -118,14 +117,6 @@
 	const menuIconTrigger =
 		'relative inline-flex size-control shrink-0 items-center justify-center rounded-md border border-border text-muted-foreground hover:border-border-strong hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring data-[state=open]:border-border-strong data-[state=open]:text-foreground';
 
-	// The bulk toggle acts on what the operator is currently looking at, not the
-	// whole roster, so a filter keeps its meaning when a button is pressed.
-	const paidIds = $derived(
-		visible.filter((model) => !isFreeModel(model.model_id)).map((model) => model.model_id)
-	);
-	const freeIds = $derived(
-		visible.filter((model) => isFreeModel(model.model_id)).map((model) => model.model_id)
-	);
 	const connectionBulk = $derived(providerId !== '' && providerModelIDs.length > 0);
 	// The context-window and capability bulk menus stay off; the on/off menu is
 	// gated on the enable/disable handlers being wired (a connection tab) below.
@@ -160,21 +151,6 @@
 		notice = '';
 		try {
 			await (enabled ? onenable : ondisable)([model.model_id]);
-			onreload();
-		} finally {
-			working = false;
-		}
-	}
-
-	// One entry point for every bulk toggle, whatever subset it covers, so the
-	// working state and the notice stay in one place.
-	async function applyTo(ids: string[], enabled: boolean) {
-		if (!onenable || !ondisable || ids.length === 0) return;
-		working = true;
-		notice = '';
-		try {
-			await (enabled ? onenable : ondisable)(ids);
-			notice = $t('ui.pages.providersPage.models.toggled', { values: { count: ids.length } });
 			onreload();
 		} finally {
 			working = false;
@@ -412,96 +388,6 @@
 								</MenuPanel>
 							</DropdownMenu.Root>
 						{/each}
-					</div>
-				{/if}
-				{#if onenable && ondisable}
-					<div
-						class={hideSearchFilters ? toolbarGroup : toolbarSection}
-						role="group"
-						aria-label={$t('ui.pages.providersPage.models.bulkActions')}
-					>
-						<DropdownMenu.Root>
-							<DropdownMenu.Trigger
-								class={menuIconTrigger}
-								aria-label={$t('ui.pages.providersPage.models.bulkActions')}
-								title={$t('ui.pages.providersPage.models.bulkActions')}
-							>
-								<Icon name="power" size={16} />
-							</DropdownMenu.Trigger>
-							<MenuPanel class="z-50 min-w-56 surface-pop p-1" align="end">
-								<DropdownMenu.Item
-									class="flex min-h-control cursor-pointer items-center gap-2 rounded-control px-2 py-1.5 text-sm outline-none data-highlighted:bg-hover"
-									disabled={working || visible.length === 0}
-									onSelect={() =>
-										void applyTo(
-											visible.map((model) => model.model_id),
-											true
-										)}
-								>
-									<Icon name="power" size={14} />
-									{$t('ui.pages.providersPage.models.turnOnAll', {
-										values: { count: visible.length }
-									})}
-								</DropdownMenu.Item>
-								<DropdownMenu.Item
-									class="flex min-h-control cursor-pointer items-center gap-2 rounded-control px-2 py-1.5 text-sm outline-none data-highlighted:bg-hover"
-									disabled={working || visible.length === 0}
-									onSelect={() =>
-										void applyTo(
-											visible.map((model) => model.model_id),
-											false
-										)}
-								>
-									<Icon name="circle-off" size={14} />
-									{$t('ui.pages.providersPage.models.turnOffAll', {
-										values: { count: visible.length }
-									})}
-								</DropdownMenu.Item>
-								{#if paidIds.length > 0 && freeIds.length > 0}
-									<DropdownMenu.Separator class="my-1 h-px bg-border" />
-									<DropdownMenu.Item
-										class="flex min-h-control cursor-pointer items-center gap-2 rounded-control px-2 py-1.5 text-sm outline-none data-highlighted:bg-hover"
-										disabled={working || paidIds.length === 0}
-										onSelect={() => void applyTo(paidIds, true)}
-									>
-										<Icon name="power" size={14} />
-										{$t('ui.pages.providersPage.models.turnOnPaid', {
-											values: { count: paidIds.length }
-										})}
-									</DropdownMenu.Item>
-									<DropdownMenu.Item
-										class="flex min-h-control cursor-pointer items-center gap-2 rounded-control px-2 py-1.5 text-sm outline-none data-highlighted:bg-hover"
-										disabled={working || paidIds.length === 0}
-										onSelect={() => void applyTo(paidIds, false)}
-									>
-										<Icon name="circle-off" size={14} />
-										{$t('ui.pages.providersPage.models.turnOffPaid', {
-											values: { count: paidIds.length }
-										})}
-									</DropdownMenu.Item>
-									<DropdownMenu.Item
-										class="flex min-h-control cursor-pointer items-center gap-2 rounded-control px-2 py-1.5 text-sm outline-none data-highlighted:bg-hover"
-										disabled={working || freeIds.length === 0}
-										onSelect={() => void applyTo(freeIds, true)}
-									>
-										<Icon name="power" size={14} />
-										{$t('ui.pages.providersPage.models.turnOnFree', {
-											values: { count: freeIds.length }
-										})}
-									</DropdownMenu.Item>
-									<DropdownMenu.Item
-										class="flex min-h-control cursor-pointer items-center gap-2 rounded-control px-2 py-1.5 text-sm outline-none data-highlighted:bg-hover"
-										disabled={working || freeIds.length === 0}
-										onSelect={() => void applyTo(freeIds, false)}
-									>
-										<Icon name="circle-off" size={14} />
-										{$t('ui.pages.providersPage.models.turnOffFree', {
-											values: { count: freeIds.length }
-										})}
-									</DropdownMenu.Item>
-								{/if}
-							</MenuPanel>
-						</DropdownMenu.Root>
 					</div>
 				{/if}
 				{#if canAdd}
