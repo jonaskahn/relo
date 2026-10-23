@@ -123,7 +123,7 @@ func buildDeps(ctx context.Context, cfg *config.Config, options Options, db *sql
 	if err := w.statusLayer(); err != nil {
 		return wired{}, err
 	}
-	return wired{secrets: w.built.secrets, server: newServer(w.built), deps: w.built}, nil
+	return wired{secrets: w.built.secrets, server: newServer(w.ctx, w.built), deps: w.built}, nil
 }
 
 func (w *wiring) foundation() error {
@@ -541,7 +541,7 @@ func (d *lateDrain) Drained() bool {
 	return bound == nil || bound.Drained()
 }
 
-func newServer(built deps) *server.Server {
+func newServer(ctx context.Context, built deps) *server.Server {
 	options := newServerOptions(built)
 	served := server.New(options)
 	built.drain.bind(served)
@@ -557,10 +557,12 @@ func newServer(built deps) *server.Server {
 			return ui.Theme, ui.Accent
 		},
 	}))
-	if built.onReady != nil {
-		ready := built.onReady
-		served.OnReady(func(addrs server.Addrs) { ready(addrs) })
-	}
+	served.OnReady(func(addrs server.Addrs) {
+		startServeWorkers(ctx, wired{secrets: built.secrets, server: served, deps: built})
+		if built.onReady != nil {
+			built.onReady(addrs)
+		}
+	})
 	return served
 }
 
