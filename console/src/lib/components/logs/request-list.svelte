@@ -118,17 +118,22 @@
 </div>
 
 <style>
-	/* A row that arrives live glows in the accent, then settles to a plain row. */
+	/* A row that arrives live rings in an accent glow, then settles to a plain row.
+	   The glow is inset so the panel's overflow clip does not cut it. */
 	.row-fresh {
 		animation: row-fresh 1800ms ease-out;
 	}
 
 	@keyframes row-fresh {
 		from {
-			background-color: color-mix(in srgb, var(--accent) 18%, transparent);
+			box-shadow:
+				inset 0 0 0 1px var(--accent),
+				inset 0 0 12px color-mix(in srgb, var(--accent) 45%, transparent);
 		}
 		to {
-			background-color: transparent;
+			box-shadow:
+				inset 0 0 0 1px transparent,
+				inset 0 0 12px transparent;
 		}
 	}
 
