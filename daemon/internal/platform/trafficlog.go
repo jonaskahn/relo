@@ -63,6 +63,20 @@ type closedIndex struct {
 	lines   map[string][]int64
 }
 
+// daySource is one day's file and the size it held when the day was listed,
+// which is the bound a read must not pass: the open day keeps growing.
+type daySource struct {
+	file *os.File
+	size int64
+}
+
+// dayChunk is one read of a day file and the offset it began at, so a cursor
+// inside it converts to a file offset.
+type dayChunk struct {
+	data  []byte
+	start int64
+}
+
 // trafficLog is the writer for the state's logs folder and the offset index
 // that makes reading one request back cheap.
 type trafficLog struct {
@@ -164,45 +178,54 @@ func (t *trafficLog) Halves(ctx context.Context, requestID string) ([]server.Tra
 	}
 	openFile, openSize, openOffsets := t.openDayHalves(requestID)
 	if len(openOffsets) > 0 {
-		halves, err := readHalvesAt(ctx, openFile, openSize, openOffsets, requestID)
-		return halves, err
+		return readHalvesAt(ctx, daySource{openFile, openSize}, openOffsets, requestID)
 	}
 	paths, err := t.dayFiles()
 	if err != nil {
 		return nil, err
 	}
 	for _, path := range paths {
-		if err := ctx.Err(); err != nil {
-			return nil, err
+		halves, found, err := t.closedDayHalvesAt(ctx, path, requestID)
+		if err != nil || found {
+			return halves, err
 		}
-		offsets, size, err := t.closedDayHalves(path, requestID)
-		if err != nil {
-			if os.IsNotExist(err) {
-				continue
-			}
-			return nil, err
-		}
-		if len(offsets) == 0 {
-			continue
-		}
-		file, err := os.Open(path)
-		if err != nil {
-			if os.IsNotExist(err) {
-				continue
-			}
-			return nil, err
-		}
-		halves, readErr := readHalvesAt(ctx, file, size, offsets, requestID)
-		closeErr := file.Close()
-		if readErr != nil {
-			return nil, readErr
-		}
-		if closeErr != nil {
-			return nil, closeErr
-		}
-		return halves, nil
 	}
 	return nil, nil
+}
+
+// closedDayHalvesAt reads one finished day's halves for a request, reporting
+// whether the day held any. A day that vanished after it was listed is neither
+// an answer nor a failure, so the caller moves on to the next one.
+func (t *trafficLog) closedDayHalvesAt(ctx context.Context, path, requestID string) ([]server.TrafficHalf, bool, error) {
+	if err := ctx.Err(); err != nil {
+		return nil, false, err
+	}
+	offsets, size, err := t.closedDayHalves(path, requestID)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return nil, false, nil
+		}
+		return nil, false, err
+	}
+	if len(offsets) == 0 {
+		return nil, false, nil
+	}
+	file, err := os.Open(path)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return nil, false, nil
+		}
+		return nil, false, err
+	}
+	halves, readErr := readHalvesAt(ctx, daySource{file, size}, offsets, requestID)
+	closeErr := file.Close()
+	if readErr != nil {
+		return nil, false, readErr
+	}
+	if closeErr != nil {
+		return nil, false, closeErr
+	}
+	return halves, true, nil
 }
 
 // openDayHalves snapshots the offsets the open day's index holds for one
@@ -227,7 +250,22 @@ func (t *trafficLog) closedDayHalves(path, requestID string) ([]int64, int64, er
 	if err != nil {
 		return nil, 0, err
 	}
+	if cached, ok := t.cachedDay(path, info); ok {
+		return cached.lines[requestID], cached.size, nil
+	}
+	lines, err := indexFile(path, info.Size())
+	if err != nil {
+		return nil, 0, err
+	}
+	t.rememberDay(closedIndex{path: path, modTime: info.ModTime(), size: info.Size(), lines: lines})
+	return lines[requestID], info.Size(), nil
+}
+
+// cachedDay answers the remembered index that still matches the file, moving it
+// to the front so the days a session browses stay resident.
+func (t *trafficLog) cachedDay(path string, info os.FileInfo) (closedIndex, bool) {
 	t.mu.Lock()
+	defer t.mu.Unlock()
 	for position, cached := range t.closed {
 		if cached.path != path || !cached.modTime.Equal(info.ModTime()) || cached.size != info.Size() {
 			continue
@@ -235,34 +273,38 @@ func (t *trafficLog) closedDayHalves(path, requestID string) ([]int64, int64, er
 		if position > 0 {
 			t.closed = append([]closedIndex{cached}, append(t.closed[:position], t.closed[position+1:]...)...)
 		}
-		offsets := cached.lines[requestID]
-		t.mu.Unlock()
-		return offsets, cached.size, nil
+		return cached, true
 	}
-	t.mu.Unlock()
+	return closedIndex{}, false
+}
 
-	file, err := os.Open(path)
-	if err != nil {
-		return nil, 0, err
-	}
-	lines, scanErr := indexDay(file, info.Size())
-	closeErr := file.Close()
-	if scanErr != nil {
-		return nil, 0, scanErr
-	}
-	if closeErr != nil {
-		return nil, 0, closeErr
-	}
-
+// rememberDay caches a freshly built index, dropping the least recent past the
+// bound.
+func (t *trafficLog) rememberDay(day closedIndex) {
 	t.mu.Lock()
-	t.closed = append([]closedIndex{{
-		path: path, modTime: info.ModTime(), size: info.Size(), lines: lines,
-	}}, t.closed...)
+	defer t.mu.Unlock()
+	t.closed = append([]closedIndex{day}, t.closed...)
 	if len(t.closed) > closedIndexKeep {
 		t.closed = t.closed[:closedIndexKeep]
 	}
-	t.mu.Unlock()
-	return lines[requestID], info.Size(), nil
+}
+
+// indexFile opens one finished day and indexes it, closing the file even when
+// indexing fails.
+func indexFile(path string, size int64) (map[string][]int64, error) {
+	file, err := os.Open(path)
+	if err != nil {
+		return nil, err
+	}
+	lines, scanErr := indexDay(file, size)
+	closeErr := file.Close()
+	if scanErr != nil {
+		return nil, scanErr
+	}
+	if closeErr != nil {
+		return nil, closeErr
+	}
+	return lines, nil
 }
 
 // dayFiles lists the day's files newest first, so a request that ran today is
@@ -299,27 +341,12 @@ func indexDay(file *os.File, size int64) (map[string][]int64, error) {
 	if size == 0 {
 		return lines, nil
 	}
-	chunk := make([]byte, 1<<20)
+	buf := make([]byte, 1<<20)
 	var offset, lineStart int64 = 0, -1
 	for offset < size {
-		read, err := file.ReadAt(chunk, offset)
+		read, err := file.ReadAt(buf, offset)
 		if read > 0 {
-			view := chunk[:read]
-			cursor := 0
-			for cursor < len(view) {
-				if lineStart < 0 {
-					lineStart = offset + int64(cursor)
-				}
-				newline := bytes.IndexByte(view[cursor:], '\n')
-				if newline < 0 {
-					break
-				}
-				if id, ok := requestIDAt(file, lineStart); ok {
-					lines[id] = append(lines[id], lineStart)
-				}
-				cursor += newline + 1
-				lineStart = -1
-			}
+			lineStart = indexChunk(file, lines, dayChunk{buf[:read], offset}, lineStart)
 		}
 		offset += int64(read)
 		if errors.Is(err, io.EOF) || read == 0 {
@@ -330,6 +357,26 @@ func indexDay(file *os.File, size int64) (map[string][]int64, error) {
 		}
 	}
 	return lines, nil
+}
+
+// indexChunk records the lines that end inside one chunk, carrying the start of
+// a line that began in an earlier one, and returns the start still open.
+func indexChunk(file *os.File, lines map[string][]int64, chunk dayChunk, lineStart int64) int64 {
+	for cursor := 0; cursor < len(chunk.data); {
+		if lineStart < 0 {
+			lineStart = chunk.start + int64(cursor)
+		}
+		newline := bytes.IndexByte(chunk.data[cursor:], '\n')
+		if newline < 0 {
+			break
+		}
+		if id, ok := requestIDAt(file, lineStart); ok {
+			lines[id] = append(lines[id], lineStart)
+		}
+		cursor += newline + 1
+		lineStart = -1
+	}
+	return lineStart
 }
 
 // requestIDAt reads the request id at the head of one line, which is all an
@@ -357,13 +404,13 @@ func requestIDAt(file *os.File, offset int64) (string, bool) {
 
 // readHalvesAt decodes the lines one request occupies, checking the caller's
 // context between them so a drawer an operator browsed past stops reading.
-func readHalvesAt(ctx context.Context, file *os.File, size int64, offsets []int64, requestID string) ([]server.TrafficHalf, error) {
+func readHalvesAt(ctx context.Context, day daySource, offsets []int64, requestID string) ([]server.TrafficHalf, error) {
 	halves := make([]server.TrafficHalf, 0, len(offsets))
 	for _, offset := range offsets {
 		if err := ctx.Err(); err != nil {
 			return nil, err
 		}
-		line, err := readLineAt(file, offset, size)
+		line, err := readLineAt(day.file, offset, day.size)
 		if err != nil {
 			return nil, err
 		}
