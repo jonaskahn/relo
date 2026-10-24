@@ -2,7 +2,7 @@
 
 [cli.root.short]
 description = "One-line summary of the relo command"
-other = "本機 AI 代理，整合多帳戶憑證池"
+other = "本機 AI 代理，整合多賬號憑證池"
 
 [cli.root.home]
 description = "Usage of the --home flag"
@@ -106,7 +106,7 @@ other = "版本"
 
 [cli.daemon.status.uptime]
 description = "Status field label"
-other = "運行時間"
+other = "執行時間"
 
 [cli.daemon.status.address]
 description = "Status field label"
@@ -114,7 +114,7 @@ other = "位址"
 
 [cli.daemon.status.data_plane]
 description = "Status field label for the port each client protocol answers on"
-other = "Data plane"
+other = "資料面"
 
 [cli.daemon.status.secret_mode]
 description = "Status field label"
@@ -134,11 +134,11 @@ other = "{{.Count}} 個（{{.Active}} 個啟用）"
 
 [cli.daemon.status.no_keys]
 description = "Warning under the status report when no client key is active"
-other = "沒有啟用中的用戶端金鑰，代理會拒絕所有請求"
+other = "沒有啟用中的用戶端金鑰，資料面會拒絕所有請求"
 
 [cli.daemon.run.short]
 description = "One-line summary of relo daemon run"
-other = "在前臺啟動 Relo 代理"
+other = "在前景啟動 Relo 代理"
 
 [cli.daemon.run.port]
 description = "Usage of the daemon run --port flag"
@@ -266,7 +266,7 @@ other = "只能從本機登入"
 
 [api.auth.invalid_token]
 description = "Sign-in refusal for a wrong admin token"
-other = "管理員權杖 無效"
+other = "管理員權杖無效"
 
 [api.auth.session_failed]
 description = "Sign-in failure when no session could be started"
@@ -286,11 +286,11 @@ other = "請求主體無效：應為單一 JSON 物件"
 
 [api.callback.heading]
 description = "Title of the page a browser lands on after a provider redirect"
-other = "完成登入"
+other = "正在完成登入"
 
 [api.callback.summary]
 description = "Summary of the callback page while the authorization is exchanged"
-other = "Relo 已取得授權，正在儲存帳戶。"
+other = "Relo 已取得授權，正在儲存賬號。"
 
 [api.callback.marker_working]
 description = "Status marker of a login that is still running"
@@ -310,15 +310,15 @@ other = "登入進度"
 
 [api.callback.step_authorized]
 description = "First step of a login: the provider authorized the request"
-other = "{{.Provider}} 已授權"
+other = "已由 {{.Provider}} 授權"
 
 [api.callback.step_exchanging]
 description = "Second step of a login: the authorization is traded for tokens"
-other = "正在兌換授權"
+other = "正在交換授權"
 
 [api.callback.step_stored]
 description = "Third step of a login: the account is stored"
-other = "帳戶已儲存"
+other = "賬號已儲存"
 
 [api.callback.connected_title]
 description = "Title of the callback page for a login that finished"
@@ -326,7 +326,7 @@ other = "已連線"
 
 [api.callback.connected_body]
 description = "Summary of the callback page for a login that finished"
-other = "Relo 已儲存帳戶，並透過它轉送請求。"
+other = "Relo 已儲存賬號，並透過它轉送請求。"
 
 [api.callback.failed_title]
 description = "Title of the callback page for a login that did not finish"
@@ -338,7 +338,7 @@ other = "此登入已失效"
 
 [api.callback.expired_body]
 description = "Summary of the callback page for a login this process no longer tracks"
-other = "Relo 已不再追蹤此登入。請從主控台重新發起登入。"
+other = "Relo 已不再追蹤這次登入。請從主控台重新開始。"
 
 [api.callback.expired]
 description = "Refusal of a callback status poll for a login that is gone"
@@ -346,11 +346,11 @@ other = "此登入已失效"
 
 [api.callback.failure_denied]
 description = "Callback failure: the provider refused the authorization"
-other = "供應商拒絕了授權。"
+other = "供應商拒絕了這筆授權。"
 
 [api.callback.failure_state]
 description = "Callback failure: the callback did not match the login Relo started"
-other = "回呼與 Relo 發起的登入不符，或已被使用。"
+other = "回呼與 Relo 開始的登入不符，或已經被用過。"
 
 [api.callback.failure_timeout]
 description = "Callback failure: the provider did not answer in time"
@@ -358,15 +358,15 @@ other = "供應商未及時回應。"
 
 [api.callback.failure_exchange]
 description = "Callback failure: the provider would not exchange the authorization"
-other = "供應商未將授權兌換成權杖。"
+other = "供應商拒絕把這筆授權換成權杖。"
 
 [api.callback.account_label]
 description = "Label of the stored account on the callback page"
-other = "帳戶"
+other = "賬號"
 
 [api.callback.close_hint]
 description = "What the callback page tells an operator once the login finished"
-other = "可以關閉此分頁。"
+other = "你可以關閉這個分頁。"
 
 [api.callback.closing_in]
 description = "Countdown shown on the callback page before it closes itself"
@@ -418,11 +418,11 @@ other = "擷取 ID 必須是數字"
 
 [api.logs.capture_missing]
 description = "Refusal of a capture read that names no stored capture"
-other = "沒有這個 ID 的擷取記錄"
+other = "沒有這個 ID 的擷取紀錄"
 
 [api.oauth.unknown]
 description = "Refusal of a login operation that does not exist"
-other = "沒有這個 ID 的登入操作"
+other = "沒有這個 ID 的登入作業"
 
 [api.oauth.port_busy]
 description = "Refusal of a sign-in whose callback port another process holds"
@@ -430,7 +430,7 @@ other = "{{process}} 正在使用連接埠 {{port}}，請先結束它再登入"
 
 [api.integration.action_in_progress]
 description = "Refusal of a second run of an action the first has not finished"
-other = "該操作已在執行中，請等待其完成"
+other = "這個操作正在執行，請等它完成"
 
 [api.route.missing]
 description = "Refusal of a management path that matches no route"
@@ -446,11 +446,11 @@ other = "管理服務無法使用"
 
 [api.settings.retention.invalid]
 description = "Refusal of a retention budget below the floor the ledger keeps"
-other = "request details are kept for at least a {{.Min}}-day window; use 0 to keep everything"
+other = "請求明細至少保留 {{.Min}} 天的範圍；填 0 就全部保留"
 
 [api.settings.sweep.busy]
 description = "Refusal of a maintenance sweep while another one is running"
-other = "a maintenance sweep is already running; wait for it to finish"
+other = "已經有清理作業在跑，請等它完成"
 
 [api.account.status_required]
 description = "Refusal of an account update that named neither status nor priority"
@@ -466,11 +466,11 @@ other = "開啟主控台"
 
 [tray.menu.restart]
 description = "Tray menu item that restarts the daemon"
-other = "重啟伺服器"
+other = "重新啟動伺服器"
 
 [tray.menu.force_restart]
 description = "Tray menu item that kills the daemon and starts it again"
-other = "強制重啟伺服器"
+other = "強制重新啟動伺服器"
 
 [tray.menu.autostart]
 description = "Tray menu item that toggles the login item"
@@ -506,11 +506,11 @@ other = "請求 {{.Value}}"
 
 [tray.info.tokens]
 description = "Tray menu row that charts the last day of tokens"
-other = "權杖 {{.Value}}"
+other = "Token {{.Value}}"
 
 [tray.info.spend]
 description = "Tray menu row that charts the last day of spend"
-other = "花費 {{.Value}}"
+other = "支出 {{.Value}}"
 
 [tray.error.unknown]
 description = "Placeholder when a failure carried no message"
@@ -566,7 +566,7 @@ other = "Relo 未在執行"
 
 [cli.daemon.restart.short]
 description = "One-line summary of relo daemon restart"
-other = "重啟 Relo 代理"
+other = "重新啟動 Relo 代理"
 
 [cli.daemon.restart.port]
 description = "Usage of the restart --port flag"
@@ -574,7 +574,7 @@ other = "覆寫監聽埠"
 
 [cli.daemon.restart.force]
 description = "Usage of the restart --force flag"
-other = "結束執行中的程序並啟動新的常駐程式"
+other = "結束執行中的程序，再啟動新的常駐程式"
 
 [cli.daemon.restart.restarted]
 description = "Confirmation after a restart"
@@ -582,7 +582,7 @@ other = "Relo 執行於 {{.Addr}}"
 
 [cli.daemon.status.no_keys_hint]
 description = "How to create the first client key"
-other = "可在主控台的金鑰頁面建立"
+other = "可以到主控台的用戶端金鑰頁面建立"
 
 [api.daemon.not_headless]
 description = "Refusal of a stop request when this process is not a headless daemon"
@@ -622,7 +622,7 @@ other = "無法啟動"
 
 [cli.daemon.stop.force]
 description = "Usage of the stop --force flag"
-other = "結束執行中的行程，並釋放 Relo 正在服務的連接埠"
+other = "結束執行中的程序，並釋放 Relo 正在服務的連接埠"
 
 [cli.uninstall.short]
 description = "One-line summary of relo uninstall"
@@ -662,7 +662,7 @@ other = "請手動移除 Relo 程式"
 
 [cli.uninstall.trash]
 description = "What an uninstall says when the macOS app bundle could not be deleted"
-other = "請將 {{.Bundle}} 移到廢紙簍"
+other = "請將 {{.Bundle}} 移到垃圾桶"
 
 [cli.uninstall.run]
 description = "The command to run when a removal could not be started"
