@@ -343,14 +343,28 @@ export function settingsReady(settings: ChatSettings): boolean {
 
 /** The body one turn posts: the shape the management API documents, built from a thread's
  *  settings and the text so far. */
+export function historyOf(thread: ChatThread): ChatTesterMessage[] {
+	const out: ChatTesterMessage[] = [];
+	if (thread.seed !== undefined) out.push(...thread.seed.messages);
+	for (const turn of thread.turns) {
+		if (turn.result.status !== 'success') continue;
+		if (turn.result.text.trim() === '') continue;
+		out.push({ role: 'user', content: turn.prompt });
+		out.push({ role: 'assistant', content: turn.result.text });
+	}
+	return out;
+}
+
 export function chatRequest(
 	settings: ChatSettings,
 	prompt: string,
-	messages: ChatTesterMessage[],
+	threadOrMessages: ChatThread | ChatTesterMessage[],
 	seed?: ChatThreadSeed
 ): ChatTesterRequest {
 	const route = usesRoute(settings);
-	const context = seed ? seed.messages : messages;
+	const context = Array.isArray(threadOrMessages)
+		? [...threadOrMessages, ...(seed ? seed.messages : [])]
+		: historyOf(threadOrMessages);
 	return {
 		mode: settings.mode,
 		format: settings.format,
