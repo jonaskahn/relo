@@ -185,7 +185,7 @@
       "enjoyTitle": "Keyfini çıkar",
       "enjoyBody": "Relo {account} hesabına bağlandı.",
       "enjoyRetry": "Bu işe yaramadı. Oturum açmayı konsoldan yeniden başlat.",
-      "closeHint": "Bu sekmeyi kapatabilirsiniz."
+      "closeHint": "Bu sekmeyi kapatabilirsin."
     },
     "common": {
       "window24h": "24 saat",
@@ -229,7 +229,7 @@
       "timeAgo": "{value} önce",
       "requestFailed": "istek {status} ile başarısız oldu",
       "discardTitle": "Değişiklikler atılsın mı?",
-      "discardBody": "Kaydedilmemiş değişiklikleriniz var.",
+      "discardBody": "Kaydedilmemiş değişikliklerin var.",
       "discardConfirm": "Vazgeçin",
       "dismiss": "Kapat",
       "windowToday": "Bugün",
@@ -945,7 +945,7 @@
           "commitFailed": "Sağlayıcı eklenemedi: {detail}",
           "keyAdded": "Anahtar {label} bağlantısına eklendi.",
           "legend": "1M token başına fiyat, giriş / çıkış",
-          "retainsPrompts": "Bu ücretsiz havuz hesap gerektirmez. Gönderdiğiniz istemler sağlayıcı tarafından kaydedilebilir."
+          "retainsPrompts": "Bu ücretsiz havuz hesap gerektirmez. Gönderdiğin istemler sağlayıcı tarafından kaydedilebilir."
         },
         "format": {
           "openaiChat": "OpenAI Chat Completions; çoğu istemci ve gateway ile çalışır",
@@ -1115,7 +1115,7 @@
         "updated": "güncellendi",
         "autoSyncing": "Fiyatlar models.dev’den eşitleniyor…",
         "autoSyncResult": "models.dev’den {n} fiyat eşitlendi",
-        "autoSyncSkipped": "mevcut geçersiz kılmalar korundu — tarifeleriniz saklandı",
+        "autoSyncSkipped": "mevcut geçersiz kılmalar korundu — tarifelerin saklandı",
         "forceResync": "Zorla yeniden eşitle (geçersiz kılmaları üzerine yaz)",
         "priceSynced": "eşitlendi",
         "priceEdited": "düzenlendi",
@@ -1507,7 +1507,7 @@
         "moveUp": "Yukarı taşıyın",
         "moveDown": "Aşağı taşıyın",
         "dirtyTitle": "Değişiklikler atılsın mı?",
-        "dirtyBody": "Grup düzenleyicide kaydedilmemiş değişiklikleriniz var.",
+        "dirtyBody": "Grup düzenleyicide kaydedilmemiş değişikliklerin var.",
         "dirtyLeave": "Vazgeçin",
         "step": {
           "basics": "Adlandırın",
@@ -1911,7 +1911,7 @@
       "releasePage": "Sürüm sayfasını aç",
       "sparkle": "Relo.app güncellemelerini kendisi yükler.",
       "installer": "Bu sürümün yükleyicisini indirin.",
-      "unknown": "Relo'nun nasıl yüklendiğini algılayamadık. Yüklerken kullandığınız yöntemi kullanın.",
+      "unknown": "Relo’nun nasıl yüklendiğini algılayamadık. Yüklerken kullandığın yöntemi kullan.",
       "methodShell": "Kabuk betiği",
       "methodPowerShell": "PowerShell",
       "methodNpm": "npm",
