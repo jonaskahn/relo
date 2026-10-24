@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { t } from 'svelte-i18n';
+	import { goto } from '$app/navigation';
 
 	import { api } from '$lib/api';
 	import Button from '$lib/components/ui/button.svelte';
@@ -128,7 +129,34 @@
 	title={$t('ui.pages.logsPage.detailTitle')}
 	description={row ? formatTimestamp(row.TimestampMs) + ' · ' + row.Model : undefined}
 >
+	{#snippet titleAside()}
+		{#if traced}
+			<StatusBadge kind="muted" label={$t('ui.pages.logsPage.traceBadge')} />
+		{/if}
+	{/snippet}
 	{#snippet headerNav()}
+		{#if traced && row}
+			<!-- The traffic log holds this request whole, so the Chat tester can
+			     send the same conversation again through Relo. Nothing is sent
+			     until the operator presses Send on that page. -->
+			<Button
+				variant="outline"
+				size="sm"
+				title={$t('ui.pages.logsPage.impersonateHint')}
+				onclick={() => {
+					const provider = row.RouteProvider || row.Provider;
+					onclose();
+					void goto(
+						'/chat?replay=' +
+							row.ID +
+							(provider === '' ? '' : '&provider=' + encodeURIComponent(provider))
+					);
+				}}
+			>
+				<Icon name="message-square" size={14} />
+				<span class="ms-1">{$t('ui.pages.logsPage.impersonate')}</span>
+			</Button>
+		{/if}
 		{#if index >= 0}
 			<div
 				class="flex items-center gap-1"
@@ -157,11 +185,6 @@
 					<Icon name="chevron-right" size={16} />
 				</Button>
 			</div>
-		{/if}
-	{/snippet}
-	{#snippet titleAside()}
-		{#if traced}
-			<StatusBadge kind="muted" label={$t('ui.pages.logsPage.traceBadge')} />
 		{/if}
 	{/snippet}
 	{#if row}

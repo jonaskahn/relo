@@ -2,6 +2,8 @@
 	import { onMount, tick } from 'svelte';
 	import { t } from 'svelte-i18n';
 	import { fade, fly, slide } from 'svelte/transition';
+	import { replaceState } from '$app/navigation';
+	import { page } from '$app/state';
 
 	import { api } from '$lib/api';
 	import { ChatSender } from '$lib/chat-send.svelte';
@@ -35,7 +37,8 @@
 	import Icon from '$lib/components/ui/icon.svelte';
 	import Button from '$lib/components/ui/button.svelte';
 	import { navDrawer } from '$lib/nav-drawer.svelte';
-	import type { Group, Model, Provider } from '$lib/types';
+	import { seedFromCapture, settingsOfSeed, surfaceOfURL, threadOfSeed } from '$lib/log-replay';
+	import type { Group, Model, Provider, UsageCapture } from '$lib/types';
 
 	// The Chat page is the tester an operator opens before pointing a real
 	// client at Relo. It stores its conversations in this browser, so the
@@ -59,6 +62,14 @@
 	let modelsProviderId = $state('');
 	let loading = $state(true);
 	let catalogFailed = $state('');
+	// replayOf names the request a seeded conversation came from, and
+	// replayDropped names the parts the tester could not carry. Both are read
+	// once, from the address the log drawer opened.
+	let replayOf = $state('');
+	let replayDropped = $state<string[]>([]);
+	// replayFailed marks an address that named a request this page could not read,
+	// so the empty state says why rather than looking untouched.
+	let replayFailed = $state(false);
 
 	const chatSend = new ChatSender();
 	// The sender writes into this page's conversation store and composer, and
@@ -288,9 +299,88 @@
 		else catalogFailed = message(connections.reason);
 		routes = routeList.status === 'fulfilled' ? (routeList.value.items ?? []) : [];
 		seedActiveThread();
+		// A captured request is seeded after the catalogs, because the settings it
+		// carries name a connection and a model that have to exist.
+		await seedFromLog();
 		const current = activeThread(store);
 		await loadModels(current === null ? '' : current.settings.providerId);
 		loading = false;
+	}
+
+	// seedFromLog reads the request the log drawer named, resolves its captured
+	// agent request, and opens a conversation holding the same turns. Nothing is
+	// sent: the operator presses Send. A request that cannot be read lands on the
+	// normal empty state with one line saying so, and the address loses the
+	// parameter so a reload does not try again.
+	async function seedFromLog() {
+		const raw = page.url.searchParams.get('replay');
+		const providerId = page.url.searchParams.get('provider') ?? '';
+		if (raw === null || raw === '') return;
+		const eventId = Number(raw);
+		if (!Number.isInteger(eventId) || eventId <= 0) return;
+		const seed = await readReplaySeed(eventId, providerId);
+		if (seed === null) {
+			// A seed that could not be read is named on the page, never as a toast.
+			replayFailed = true;
+			clearReplayParam();
+			return;
+		}
+		const settings = settingsOfSeed(seed, { providerId: seed.providerId });
+		const fresh = threadOfSeed(seed, seedSettings(settings));
+		// A conversation with nothing to carry is not worth an empty thread, so a
+		// body with no turns and no prompt reads as the failure it is.
+		if (fresh.turns.length === 0 && fresh.draft === '') {
+			replayFailed = true;
+			clearReplayParam();
+			return;
+		}
+		store = withActive(withThread(store, fresh), fresh.id);
+		draft = fresh.draft;
+		replayOf = String(eventId);
+		replayDropped = [...seed.dropped];
+		clearReplayParam();
+	}
+
+	// readReplaySeed answers the turns of the captured request, or null when the
+	// traffic log does not hold one this build can read.
+	async function readReplaySeed(
+		eventId: number,
+		providerId: string
+	): Promise<ReturnType<typeof seedFromCapture>> {
+		const list = await read<{ items: UsageCapture[]; traced?: boolean }>(
+			'/activity/requests/' + eventId + '/captures',
+			{ items: [] }
+		);
+		if (list.traced !== true) return null;
+		const agent = (list.items ?? []).find((capture) => capture.kind === 'agent_request');
+		if (agent === undefined) return null;
+		const body = await readCaptureBody(eventId, agent.id);
+		if (body === null) return null;
+		return seedFromCapture(body, {
+			providerId,
+			surface: surfaceOfURL(agent.url),
+			requestId: String(eventId)
+		});
+	}
+
+	// A capture body is raw bytes, not JSON, so it is read as text: a body that is
+	// not UTF-8 answers null rather than a mojibake parse.
+	async function readCaptureBody(eventId: number, captureId: number): Promise<string | null> {
+		try {
+			const response = await fetch(
+				'/api/v1/activity/requests/' + eventId + '/captures/' + captureId + '/body',
+				{ credentials: 'same-origin', headers: { Accept: 'application/octet-stream' } }
+			);
+			if (!response.ok) return null;
+			return await response.text();
+		} catch {
+			return null;
+		}
+	}
+
+	function clearReplayParam() {
+		if (typeof window === 'undefined') return;
+		replaceState('/chat', {});
 	}
 
 	// A conversation that has not sent anything is pointed at a connection, a
@@ -474,6 +564,16 @@
 
 	function message(error: unknown): string {
 		return error instanceof Error ? error.message : String(error);
+	}
+
+	// read answers the fallback for a read that fails, because a seed that cannot
+	// be read is a state the page names rather than an error it raises.
+	async function read<T>(path: string, fallback: T): Promise<T> {
+		try {
+			return await api<T>(path);
+		} catch {
+			return fallback;
+		}
 	}
 
 	// A reader who scrolled up keeps their place; the button waits until they
@@ -686,7 +786,7 @@
 			{/if}
 		</header>
 
-		{#if notice !== '' || catalogFailed !== ''}
+		{#if notice !== '' || catalogFailed !== '' || replayFailed || replayOf !== ''}
 			<div class="mx-auto w-full max-w-3xl shrink-0 space-y-2 px-4 pb-3">
 				{#if catalogFailed !== ''}
 					<p
@@ -697,6 +797,32 @@
 						<span class="min-w-0 flex-1">
 							{$t('ui.pages.chatPage.loadFailed', { values: { detail: catalogFailed } })}
 						</span>
+					</p>
+				{/if}
+				{#if replayOf !== ''}
+					<div
+						class="flex flex-wrap items-start gap-2 rounded-card border border-warn/40 bg-warn/10 px-4 py-3 text-sm text-warn"
+					>
+						<Icon name="alert-triangle" size={15} class="mt-0.5 shrink-0" />
+						<div class="min-w-0 flex-1 space-y-1">
+							<p>{$t('ui.pages.chatPage.replaySeeded', { values: { id: replayOf } })}</p>
+							{#if replayDropped.length > 0}
+								<p class="text-xs">
+									{$t('ui.pages.chatPage.replayDropped', {
+										values: { parts: replayDropped.join(', ') }
+									})}
+								</p>
+							{/if}
+						</div>
+					</div>
+				{/if}
+				{#if replayFailed}
+					<p
+						class="flex items-start gap-2 rounded-card border border-warn/40 bg-warn/10 px-4 py-3 text-sm text-warn"
+						role="alert"
+					>
+						<Icon name="alert-triangle" size={15} class="mt-0.5 shrink-0" />
+						<span class="min-w-0 flex-1">{$t('ui.pages.chatPage.replayFailed')}</span>
 					</p>
 				{/if}
 				{#if notice !== ''}
