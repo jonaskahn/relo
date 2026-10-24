@@ -627,11 +627,11 @@ other = "Hapus data Relo (konfigurasi, kredensial, log)? [y/T]"
 
 [cli.uninstall.kept]
 description = "What an uninstall reports when the Relo data stays"
-other = "Data Relo Anda ada di {{.Home}}"
+other = "Data Relo kamu ada di {{.Home}}"
 
 [cli.uninstall.wiped]
 description = "What an uninstall reports after the Relo data is removed"
-other = "Data Relo Anda telah dihapus"
+other = "Data Relo kamu sudah dihapus"
 
 [cli.uninstall.removing]
 description = "What an uninstall says as it hands the program to its installer"
