@@ -933,6 +933,7 @@
           "title": "검토",
           "providerId": "제공업체 ID",
           "label": "라벨",
+          "billing": "과금",
           "summary": "제공업체에서 {listing}개, 직접 입력 {manual}개, 가격 설정 {priced}개예요.",
           "turnAllOn": "모두 켜기",
           "turnAllOff": "모두 끄기",

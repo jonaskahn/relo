@@ -933,6 +933,7 @@
           "title": "Übersicht",
           "providerId": "Anbieter-ID",
           "label": "Bezeichnung",
+          "billing": "Abrechnung",
           "summary": "{listing} vom Anbieter, {manual} von Hand eingegeben, {priced} bepreist.",
           "turnAllOn": "Alle einschalten",
           "turnAllOff": "Alle ausschalten",

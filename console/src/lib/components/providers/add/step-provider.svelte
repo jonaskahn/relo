@@ -14,8 +14,7 @@
 		type TemplateRow
 	} from '$lib/provider-sections';
 	import { isExperimentalConnection } from '$lib/provider-experimental';
-	import { isFreeConnection } from '$lib/provider-free';
-	import { isPaidPlanConnection, isPayAsYouGoConnection } from '$lib/provider-billing';
+	import BillingChip from '$lib/components/providers/billing-chip.svelte';
 
 	// The provider picker is a radio list: choosing marks a row and the
 	// footer's Next advances, so a misread row never opens the form by itself.
@@ -179,38 +178,7 @@
 										</span>
 									{/if}
 								</span>
-								{#if isFreeConnection(billingProvider)}
-									<span
-										data-free-chip
-										class="badge shrink-0 self-start border border-ok/40 bg-ok/10 text-ok"
-										aria-label={$t('ui.pages.providersPage.list.tagFree')}
-									>
-										<Icon name="sparkles" size={11} class="sm:hidden" />
-										<span class="max-sm:hidden">{$t('ui.pages.providersPage.list.tagFree')}</span>
-									</span>
-								{:else if isPaidPlanConnection(billingProvider)}
-									<span
-										data-paid-chip
-										class="badge shrink-0 self-start border border-primary/40 bg-primary/10 text-primary"
-										aria-label={$t('ui.pages.providersPage.list.tagPaidPlan')}
-									>
-										<Icon name="layers" size={11} class="sm:hidden" />
-										<span class="max-sm:hidden"
-											>{$t('ui.pages.providersPage.list.tagPaidPlan')}</span
-										>
-									</span>
-								{:else if isPayAsYouGoConnection(billingProvider)}
-									<span
-										data-payg-chip
-										class="badge shrink-0 self-start border border-border bg-muted text-muted-foreground"
-										aria-label={$t('ui.pages.providersPage.list.tagPayAsYouGo')}
-									>
-										<Icon name="currency-dollar" size={11} class="sm:hidden" />
-										<span class="max-sm:hidden"
-											>{$t('ui.pages.providersPage.list.tagPayAsYouGo')}</span
-										>
-									</span>
-								{/if}
+								<BillingChip provider={billingProvider} class="self-start" />
 								{#if chosen}
 									<span
 										class="flex size-5 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground"

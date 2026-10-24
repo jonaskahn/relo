@@ -47,4 +47,37 @@ describe('the review step', () => {
 
 		expect(html).not.toContain('may be logged by the provider');
 	});
+
+	// Review is the last look before the write, so it names what the connection
+	// will cost through the same chip every other surface wears.
+	it('names the billing lane the connection will be stored under', () => {
+		const plan = render(StepReview, {
+			props: {
+				probe,
+				templateId: 'alibaba-coding-plan-cn',
+				billing: { template_id: 'alibaba-coding-plan-cn' },
+				onchange: () => {}
+			}
+		}).body;
+		expect(plan).toContain('data-paid-chip');
+
+		const payg = render(StepReview, {
+			props: {
+				probe,
+				templateId: 'openai',
+				billing: { template_id: 'openai', kind: 'key' },
+				onchange: () => {}
+			}
+		}).body;
+		expect(payg).toContain('data-payg-chip');
+	});
+
+	it('leaves the billing line off a key added to a connection it already has', () => {
+		const html = render(StepReview, {
+			props: { probe, isAddKey: true, targetLabel: 'OpenAI', onchange: () => {} }
+		}).body;
+
+		expect(html).not.toContain('data-paid-chip');
+		expect(html).not.toContain('data-payg-chip');
+	});
 });

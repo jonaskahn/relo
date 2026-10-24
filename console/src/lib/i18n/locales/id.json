@@ -933,6 +933,7 @@
           "title": "Tinjau",
           "providerId": "ID penyedia",
           "label": "Label",
+          "billing": "Penagihan",
           "summary": "{listing} dari penyedia, {manual} ditulis manual, {priced} diberi harga.",
           "turnAllOn": "Aktifkan semua",
           "turnAllOff": "Nonaktifkan semua",

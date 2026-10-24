@@ -933,6 +933,7 @@
           "title": "Przegląd",
           "providerId": "Id dostawcy",
           "label": "Etykieta",
+          "billing": "Rozliczenie",
           "summary": "Z dostawcy: {listing}, wpisane ręcznie: {manual}, wycenione: {priced}.",
           "turnAllOn": "Włącz wszystkie",
           "turnAllOff": "Wyłącz wszystkie",

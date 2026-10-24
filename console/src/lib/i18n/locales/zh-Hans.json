@@ -933,6 +933,7 @@
           "title": "确认",
           "providerId": "提供商 ID",
           "label": "标签",
+          "billing": "计费",
           "summary": "{listing} 个来自提供商，{manual} 个手动输入，{priced} 个有价格。",
           "turnAllOn": "全部启用",
           "turnAllOff": "全部关闭",

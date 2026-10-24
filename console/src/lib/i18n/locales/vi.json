@@ -933,6 +933,7 @@
           "title": "Xem lại",
           "providerId": "Id nhà cung cấp",
           "label": "Nhãn",
+          "billing": "Cách tính phí",
           "summary": "{listing} từ nhà cung cấp, {manual} nhập tay, {priced} đã có giá.",
           "turnAllOn": "Bật tất cả",
           "turnAllOff": "Tắt tất cả",

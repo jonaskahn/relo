@@ -933,6 +933,7 @@
           "title": "Granska",
           "providerId": "Leverantörs-id",
           "label": "Etikett",
+          "billing": "Fakturering",
           "summary": "{listing} från leverantören, {manual} skrivna för hand, {priced} prissatta.",
           "turnAllOn": "Slå på alla",
           "turnAllOff": "Stäng av alla",

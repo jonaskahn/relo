@@ -933,6 +933,7 @@
           "title": "مراجعة",
           "providerId": "معرّف المزوّد",
           "label": "التسمية",
+          "billing": "الفوترة",
           "summary": "{listing} من المزوّد، و{manual} مكتوبة يدويًا، و{priced} مسعّرة.",
           "turnAllOn": "شغّل الكل",
           "turnAllOff": "أوقف الكل",

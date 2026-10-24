@@ -933,6 +933,7 @@
           "title": "Récapitulatif",
           "providerId": "Id de provider",
           "label": "Libellé",
+          "billing": "Facturation",
           "summary": "{listing} du provider, {manual} saisis à la main, {priced} avec prix.",
           "turnAllOn": "Tout activer",
           "turnAllOff": "Tout désactiver",

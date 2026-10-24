@@ -933,6 +933,7 @@
           "title": "समीक्षा",
           "providerId": "प्रदाता id",
           "label": "लेबल",
+          "billing": "बिलिंग",
           "summary": "{listing} प्रदाता से, {manual} हाथ से लिखे, {priced} कीमत वाले।",
           "turnAllOn": "सभी चालू करें",
           "turnAllOff": "सभी बंद करें",

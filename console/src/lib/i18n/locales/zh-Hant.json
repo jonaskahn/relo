@@ -933,6 +933,7 @@
           "title": "檢視",
           "providerId": "供應商 ID",
           "label": "標籤",
+          "billing": "計費",
           "summary": "{listing} 個來自供應商，{manual} 個手動輸入，{priced} 個已計價。",
           "turnAllOn": "全部開啟",
           "turnAllOff": "全部關閉",

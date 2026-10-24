@@ -933,6 +933,7 @@
           "title": "Revisão",
           "providerId": "Id do provedor",
           "label": "Rótulo",
+          "billing": "Cobrança",
           "summary": "Do provedor: {listing}. À mão: {manual}. Com preço: {priced}.",
           "turnAllOn": "Ativar todos",
           "turnAllOff": "Desativar todos",

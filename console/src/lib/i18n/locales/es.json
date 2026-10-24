@@ -933,6 +933,7 @@
           "title": "Revisar",
           "providerId": "Id del provider",
           "label": "Etiqueta",
+          "billing": "Facturación",
           "summary": "{listing} del provider, {manual} a mano, {priced} con precio.",
           "turnAllOn": "Activar todos",
           "turnAllOff": "Desactivar todos",

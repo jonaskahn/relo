@@ -55,6 +55,13 @@ Status pill: Ready, Near limit, Limit reached, Sign in again, Paused, derived fr
 A card at its limit wears a full `color-mix(in srgb,var(--danger) 30%,var(--line))` border. Status is never colour
 alone: every pill keeps its icon or word.
 
+A connection also wears one **billing chip** from a single classification: **Free** for the keyless lanes, **Paid plan**
+for a subscription (a sign-in account, an OpenCode/Kilo plan, or any `token-plan`, `coding-plan`, `code-plan`, or
+`step-plan` identifier and the DashScope coding hosts), and **Pay as you go** for an API key or cloud credential. The
+same chip, drawn by one component, appears on the grid card, the sidebar row, the pane header, the add flow's provider
+list and Review step; on the grid card it expands to its word on hover. Because it is the same predicate the usage
+report reads, a connection's chip and its spend bucket never disagree.
+
 ## Connection pane
 
 Header: 46px logo tile, name, and (640px and up) the status word with its refresh age, e.g. `Ready (Refreshed 54

@@ -99,6 +99,29 @@ describe('the connection overview card', () => {
 		expect(metered).not.toContain('data-free-chip');
 	});
 
+	// A Coding Plan is a plan even though it arrives as an ordinary key, and its
+	// pay-as-you-go twin is not, so the card has to tell the two apart.
+	it('chips a coding plan as a paid plan and its twin as pay-as-you-go', () => {
+		const plan = render(ProviderOverviewCard, {
+			props: {
+				provider: providerOf({
+					id: 'alibaba-coding-plan-cn',
+					label: 'Alibaba Coding Plan',
+					template_id: 'alibaba-coding-plan-cn'
+				}),
+				onopen: () => {}
+			}
+		}).body;
+		expect(plan).toContain('data-paid-chip');
+		expect(plan).not.toContain('data-payg-chip');
+
+		const payg = render(ProviderOverviewCard, {
+			props: { provider: providerOf({ id: 'alibaba', label: 'Alibaba' }), onopen: () => {} }
+		}).body;
+		expect(payg).toContain('data-payg-chip');
+		expect(payg).not.toContain('data-paid-chip');
+	});
+
 	// The keyless Kilo pool logs every prompt at the vendor, so it is offered
 	// for throwaway work. The card says which lane that is, because a Free chip
 	// on its own reads like any other free connection.

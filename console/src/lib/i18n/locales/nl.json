@@ -933,6 +933,7 @@
           "title": "Controleren",
           "providerId": "Provider-id",
           "label": "Label",
+          "billing": "Facturering",
           "summary": "{listing} uit de provider, {manual} handmatig getypt, {priced} geprijsd.",
           "turnAllOn": "Alles inschakelen",
           "turnAllOff": "Alles uitschakelen",

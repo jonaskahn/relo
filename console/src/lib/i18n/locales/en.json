@@ -933,6 +933,7 @@
           "title": "Review",
           "providerId": "Provider id",
           "label": "Label",
+          "billing": "Billing",
           "summary": "{listing} from the provider, {manual} typed by hand, {priced} priced.",
           "turnAllOn": "Turn all on",
           "turnAllOff": "Turn all off",

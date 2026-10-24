@@ -933,6 +933,7 @@
           "title": "Просмотр",
           "providerId": "ID провайдера",
           "label": "Название",
+          "billing": "Тарификация",
           "summary": "{listing} от провайдера, {manual} вручную, {priced} с ценой.",
           "turnAllOn": "Включить все",
           "turnAllOff": "Выключить все",

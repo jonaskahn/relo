@@ -933,6 +933,7 @@
           "title": "確認",
           "providerId": "プロバイダーID",
           "label": "ラベル",
+          "billing": "課金",
           "summary": "プロバイダーから{listing}件、手入力{manual}件、価格設定済み{priced}件",
           "turnAllOn": "すべてオンにする",
           "turnAllOff": "すべてオフにする",

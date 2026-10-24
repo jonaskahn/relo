@@ -8,13 +8,12 @@
 	import CardDescription from '$lib/components/ui/card-description.svelte';
 	import CardTitle from '$lib/components/ui/card-title.svelte';
 	import { selectedAccount } from '$lib/provider-quota';
-	import { isFreeConnection } from '$lib/provider-free';
-	import { isPaidPlanConnection, isPayAsYouGoConnection } from '$lib/provider-billing';
 	import { isExperimentalConnection } from '$lib/provider-experimental';
 	import { providerStatus, type ProviderStatusName } from '$lib/provider-status';
 	import { ATTENTION_PERCENT } from '$lib/provider-attention';
 	import { isCardOpenClick } from '$lib/card-target';
 	import { cardLayoutCard, type CardLayout } from '$lib/theme.svelte';
+	import BillingChip from './billing-chip.svelte';
 	import ProviderQuotaFooter from './provider-quota-footer.svelte';
 
 	// The card leads with what the connection is and the account on show, and
@@ -41,9 +40,6 @@
 	}: Props = $props();
 
 	let picked = $state(0);
-	let hoverFree = $state(false);
-	let hoverPayg = $state(false);
-	let hoverPaid = $state(false);
 	let statusHovered = $state(false);
 	const current = $derived(selectedAccount(accounts, picked));
 	const status = $derived(providerStatus(provider));
@@ -110,9 +106,6 @@
 	const pillName = $derived(
 		worst >= 100 ? 'limitReached' : worst >= ATTENTION_PERCENT ? 'nearLimit' : status.name
 	);
-	const free = $derived(isFreeConnection(provider));
-	const paidPlan = $derived(isPaidPlanConnection(provider));
-	const payg = $derived(isPayAsYouGoConnection(provider));
 	// The lane logs what it is sent, so the card says so beside what it costs.
 	const experimental = $derived(isExperimentalConnection(provider.template_id || provider.id));
 </script>
@@ -140,58 +133,7 @@
 			>
 				<CardTitle class="flex min-w-0 items-center gap-1.5 truncate text-sm">
 					<span class="truncate">{provider.label}</span>
-					{#if free}
-						<button
-							type="button"
-							data-free-chip
-							data-plain
-							class="badge shrink-0 border border-ok/40 bg-ok/10 text-ok"
-							aria-label={$t('ui.pages.providersPage.list.tagFree')}
-							onmouseenter={() => (hoverFree = true)}
-							onmouseleave={() => (hoverFree = false)}
-						>
-							<Icon name="sparkles" size={11} />
-							{#if hoverFree}
-								<span transition:slide={{ duration: 150, axis: 'x' }} class="ms-1">
-									{$t('ui.pages.providersPage.list.tagFree')}
-								</span>
-							{/if}
-						</button>
-					{/if}
-					{#if payg}
-						<span
-							data-payg-chip
-							class="badge shrink-0 border border-border bg-muted text-muted-foreground"
-							aria-label={$t('ui.pages.providersPage.list.tagPayAsYouGo')}
-							role="img"
-							onmouseenter={() => (hoverPayg = true)}
-							onmouseleave={() => (hoverPayg = false)}
-						>
-							<Icon name="currency-dollar" size={11} />
-							{#if hoverPayg}
-								<span transition:slide={{ duration: 150, axis: 'x' }} class="ms-1">
-									{$t('ui.pages.providersPage.list.tagPayAsYouGo')}
-								</span>
-							{/if}
-						</span>
-					{/if}
-					{#if paidPlan}
-						<span
-							data-paid-chip
-							class="badge shrink-0 border border-primary/40 bg-primary/10 text-primary"
-							aria-label={$t('ui.pages.providersPage.list.tagPaidPlan')}
-							role="img"
-							onmouseenter={() => (hoverPaid = true)}
-							onmouseleave={() => (hoverPaid = false)}
-						>
-							<Icon name="layers" size={11} />
-							{#if hoverPaid}
-								<span transition:slide={{ duration: 150, axis: 'x' }} class="ms-1">
-									{$t('ui.pages.providersPage.list.tagPaidPlan')}
-								</span>
-							{/if}
-						</span>
-					{/if}
+					<BillingChip {provider} hover />
 					{#if experimental}
 						<span
 							data-experimental-chip

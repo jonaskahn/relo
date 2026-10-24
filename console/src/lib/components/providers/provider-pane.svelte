@@ -26,6 +26,7 @@
 	import type { ModelLabelFilter } from '$lib/model-filters';
 	import { providerStatus } from '$lib/provider-status';
 	import { isExperimentalConnection } from '$lib/provider-experimental';
+	import BillingChip from './billing-chip.svelte';
 	import { ageOf } from '$lib/format';
 
 	interface Props {
@@ -294,6 +295,7 @@
 			<ProviderLogo id={provider.template_id || provider.id} label={provider.label} />
 			<div class="min-w-0">
 				<h2 class="flex min-w-0 items-center gap-1.5 truncate text-base font-semibold">
+					<BillingChip {provider} />
 					{#if experimental}
 						<span
 							data-experimental-chip

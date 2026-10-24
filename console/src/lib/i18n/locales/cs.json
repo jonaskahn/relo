@@ -933,6 +933,7 @@
           "title": "Zkontrolovat",
           "providerId": "Id poskytovatele",
           "label": "Označení",
+          "billing": "Účtování",
           "summary": "{listing} od poskytovatele, {manual} zadáno ručně, {priced} s cenou.",
           "turnAllOn": "Zapnout vše",
           "turnAllOff": "Vypnout vše",

@@ -933,6 +933,7 @@
           "title": "Revizuire",
           "providerId": "Id de furnizor",
           "label": "Etichetă",
+          "billing": "Facturare",
           "summary": "{listing} de la furnizor, {manual} adăugate de mână, {priced} cu preț.",
           "turnAllOn": "Pornește toate",
           "turnAllOff": "Oprește toate",

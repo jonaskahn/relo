@@ -933,6 +933,7 @@
           "title": "İncele",
           "providerId": "Sağlayıcı kimliği",
           "label": "Etiket",
+          "billing": "Faturalama",
           "summary": "Sağlayıcıdan {listing}, elle girilmiş {manual}, fiyatlandırılmış {priced}.",
           "turnAllOn": "Tümünü aç",
           "turnAllOff": "Tümünü kapat",

@@ -933,6 +933,7 @@
           "title": "Riepilogo",
           "providerId": "ID provider",
           "label": "Nome",
+          "billing": "Fatturazione",
           "summary": "{listing} dal provider, {manual} digitati a mano, {priced} con prezzo.",
           "turnAllOn": "Attiva tutti",
           "turnAllOff": "Disattiva tutti",
