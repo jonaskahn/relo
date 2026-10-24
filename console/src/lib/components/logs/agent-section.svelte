@@ -94,6 +94,27 @@
 		}
 	}
 
+	// The live tail refetches the newest page and folds only the newcomers
+	// into the rows already on screen, so a scroll to page three stays put
+	// while a fresh request arrives. A filter change still resets, because
+	// that is a new window rather than the same one catching up.
+	async function refresh() {
+		if (loading || loadingMore) return;
+		failure = '';
+		try {
+			const data = await api<{ items: UsageLogRow[]; next_cursor?: string }>(
+				'/activity/requests?' + buildRequestQuery(filters, '')
+			);
+			// Newcomers are the rows newer than anything already shown; the
+			// paging cursor stays where the last page left it, so scrolling on
+			// keeps reading the tail rather than re-reading the newcomers.
+			const known = new Set(logs.map((row) => row.ID));
+			logs = [...data.items.filter((row) => !known.has(row.ID)), ...logs];
+		} catch (error) {
+			failure = error instanceof Error ? error.message : String(error);
+		}
+	}
+
 	onMount(async () => {
 		await load(true);
 		// A dashboard row links straight to its own request, so the detail
@@ -125,7 +146,7 @@
 	// The live tail reloads on the event stream; a burst of announcements
 	// reloads once rather than once per relayed request. The pause control
 	// stops the subscription without closing the page.
-	const reloadLogs = coalesceReload(() => load(true), 250);
+	const reloadLogs = coalesceReload(() => refresh(), 250);
 
 	$effect(() => {
 		if (!live) return;

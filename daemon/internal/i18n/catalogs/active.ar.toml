@@ -4,7 +4,7 @@
 
 [cli.root.short]
 description = "One-line summary of the relo command"
-other = "proxy ذكاء اصطناعي محلي مع تجميع بيانات اعتماد متعددة الحسابات"
+other = "بروكسي ذكاء اصطناعي محلي مع تجميع بيانات اعتماد عدة حسابات"
 
 [cli.root.home]
 description = "Usage of the --home flag"
@@ -12,7 +12,7 @@ other = "مجلد الحالة (الافتراضي $RELO_HOME، ثم ~/.relo)"
 
 [cli.root.lang]
 description = "Usage of the --lang flag"
-other = "لغة هذا التشغيل (auto، أو وسم مثل en، de، ja)"
+other = "لغة هذا التشغيل (auto، أو وسم مثل en أو de أو ja)"
 
 [cli.usage.title]
 description = "Heading above the usage line of a help screen"
@@ -56,7 +56,7 @@ other = "مساعدة حول أي أمر"
 
 [cli.help.long]
 description = "Long description of relo help; {{.Name}} is the program name"
-other = "تشرح المساعدة أي أمر في التطبيق.\nاكتب {{.Name}} help [مسار الأمر] لعرض التفاصيل كاملة."
+other = "تشرح المساعدة أي أمر في التطبيق.\nاكتب {{.Name}} help [مسار الأمر] لترى كل التفاصيل."
 
 [cli.help.flag]
 description = "Usage of the -h/--help flag; {{.Name}} is the command name"
@@ -84,11 +84,11 @@ other = "اطبع الإصدار والمنصة"
 
 [cli.daemon.short]
 description = "One-line summary of relo daemon"
-other = "شغّل daemon وأدِره"
+other = "شغّل الخادم وأدِرْه"
 
 [cli.daemon.status.short]
 description = "One-line summary of relo daemon status"
-other = "اعرض ما إذا كان daemon قيد التشغيل"
+other = "اعرض ما إذا كان الخادم قيد التشغيل"
 
 [cli.daemon.status.json]
 description = "Usage of the status --json flag"
@@ -116,7 +116,7 @@ other = "العنوان"
 
 [cli.daemon.status.data_plane]
 description = "Status field label for the port each client protocol answers on"
-other = "مسار البيانات"
+other = "مستوى البيانات"
 
 [cli.daemon.status.secret_mode]
 description = "Status field label"
@@ -136,11 +136,11 @@ other = "{{.Count}} ({{.Active}} نشط)"
 
 [cli.daemon.status.no_keys]
 description = "Warning under the status report when no client key is active"
-other = "لا يوجد مفتاح عميل نشط. يرفض proxy كل الطلبات."
+other = "لا يوجد مفتاح عميل نشط. يرفض مستوى البيانات كل طلب استدلال."
 
 [cli.daemon.run.short]
 description = "One-line summary of relo daemon run"
-other = "شغّل proxy Relo في المقدمة"
+other = "شغّل بروكسي Relo في المقدمة"
 
 [cli.daemon.run.port]
 description = "Usage of the daemon run --port flag"
@@ -152,7 +152,7 @@ other = "أدر ما إذا كان Relo يبدأ عند تسجيل الدخول"
 
 [cli.autostart.enable.short]
 description = "One-line summary of relo autostart enable"
-other = "شغّل تطبيق سطح المكتب و daemon عند تسجيل الدخول"
+other = "شغّل تطبيق سطح المكتب والخادم عند تسجيل الدخول"
 
 [cli.autostart.disable.short]
 description = "One-line summary of relo autostart disable"
@@ -268,15 +268,15 @@ other = "تسجيل الدخول متاح من هذا الجهاز فقط"
 
 [api.auth.invalid_token]
 description = "Sign-in refusal for a wrong admin token"
-other = "admin token غير صالح"
+other = "رمز المشرف غير صالح"
 
 [api.auth.session_failed]
 description = "Sign-in failure when no session could be started"
-other = "تعذّر على وحدة التحكم بدء جلسة"
+other = "تعذّر على الكونسول بدء جلسة"
 
 [api.auth.session_missing]
 description = "Refusal of a management request without a live session"
-other = "جلسة dashboard مفقودة أو منتهية الصلاحية"
+other = "جلسة الكونسول مفقودة أو منتهية الصلاحية"
 
 [api.body.invalid]
 description = "Refusal of a body that does not parse, with the parser's detail"
@@ -316,7 +316,7 @@ other = "تم التفويض من {{.Provider}}"
 
 [api.callback.step_exchanging]
 description = "Second step of a login: the authorization is traded for tokens"
-other = "استبدال التفويض بـ token"
+other = "استبدال التفويض برمز"
 
 [api.callback.step_stored]
 description = "Third step of a login: the account is stored"
@@ -340,7 +340,7 @@ other = "تسجيل الدخول هذا لم يعد مفتوحًا"
 
 [api.callback.expired_body]
 description = "Summary of the callback page for a login this process no longer tracks"
-other = "لم يعد Relo يتابع تسجيل الدخول هذا. ابدأه من جديد من وحدة التحكم."
+other = "لم يعد Relo يتابع تسجيل الدخول هذا. ابدأه من جديد من الكونسول."
 
 [api.callback.expired]
 description = "Refusal of a callback status poll for a login that is gone"
@@ -360,7 +360,7 @@ other = "لم يرد المزوّد في الوقت المحدد."
 
 [api.callback.failure_exchange]
 description = "Callback failure: the provider would not exchange the authorization"
-other = "رفض المزوّد استبدال التفويض بـ token."
+other = "رفض المزوّد استبدال التفويض برمز."
 
 [api.callback.account_label]
 description = "Label of the stored account on the callback page"
@@ -376,11 +376,11 @@ other = "الإغلاق خلال {{.Seconds}} ثانية…"
 
 [api.callback.console_link]
 description = "Link from the callback page to the console page that lists accounts"
-other = "افتح وحدة التحكم"
+other = "افتح الكونسول"
 
 [api.dashboard.missing]
 description = "Refusal of a console request in a build without one"
-other = "لا يتوفر dashboard في هذا البناء"
+other = "لا يتوفر كونسول في هذا البناء"
 
 [api.events.unknown]
 description = "Refusal of an event stream for a channel that does not exist"
@@ -392,11 +392,11 @@ other = "لا يدعم هذا المستمع البث"
 
 [api.events.too_many]
 description = "Refusal of an event stream when too many are already open"
-other = "عدد تدفقات الأحداث المفتوحة كبير جدًا"
+other = "تدفقات الأحداث المفتوحة كثيرة جدًا"
 
 [api.inference.retired]
 description = "Refusal of an inference path that moved to the port of its protocol"
-other = "انتقل منفذ الطلبات إلى {{.BaseURL}}"
+other = "انتقلت مسارات الاستدلال إلى {{.BaseURL}}"
 
 [api.keys.invalid]
 description = "Refusal of an inference request with a key that does not authenticate"
@@ -440,7 +440,7 @@ other = "لا يوجد مسار مطابق"
 
 [api.route.unavailable]
 description = "Refusal of a management endpoint that is not implemented"
-other = "لا يتوفر endpoint هنا بعد"
+other = "لا تتوفر نقطة نهاية هنا بعد"
 
 [api.service.unavailable]
 description = "Refusal of a management request when the service is missing"
@@ -448,23 +448,23 @@ other = "خدمة الإدارة غير متوفرة"
 
 [api.settings.retention.invalid]
 description = "Refusal of a retention budget below the floor the ledger keeps"
-other = "request details are kept for at least a {{.Min}}-day window; use 0 to keep everything"
+other = "تُحفظ تفاصيل الطلبات لنافذة {{.Min}} يومًا على الأقل؛ استخدم 0 للاحتفاظ بكل شيء"
 
 [api.settings.sweep.busy]
 description = "Refusal of a maintenance sweep while another one is running"
-other = "a maintenance sweep is already running; wait for it to finish"
+other = "هناك عملية صيانة جارية بالفعل؛ انتظر حتى تنتهي"
 
 [api.account.status_required]
 description = "Refusal of an account update that named neither status nor priority"
-other = "الحالة أو الأولوية مطلوبة"
+other = "تحتاج إلى الحالة أو الأولوية"
 
 [tray.tooltip]
 description = "Tooltip of the tray icon"
-other = "Relo — proxy محلي للذكاء الاصطناعي"
+other = "Relo — بروكسي ذكاء اصطناعي محلي"
 
 [tray.menu.open_dashboard]
 description = "Tray menu item that opens the console in a browser"
-other = "افتح dashboard"
+other = "افتح الكونسول"
 
 [tray.menu.restart]
 description = "Tray menu item that restarts the daemon"
@@ -488,7 +488,7 @@ other = "إنهاء"
 
 [tray.notify.failed]
 description = "Notification when a proxy run failed"
-other = "لم يبدأ الوكيل. {{.Detail}}"
+other = "لم يبدأ البروكسي. {{.Detail}}"
 
 [tray.status.running]
 description = "Tray menu status row for a running daemon"
@@ -508,7 +508,7 @@ other = "الطلبات {{.Value}}"
 
 [tray.info.tokens]
 description = "Tray menu row that charts the last day of tokens"
-other = "tokens {{.Value}}"
+other = "الرموز {{.Value}}"
 
 [tray.info.spend]
 description = "Tray menu row that charts the last day of spend"
@@ -532,7 +532,7 @@ other = "تعذّر حفظ اللغة"
 
 [cli.daemon.start.short]
 description = "One-line summary of relo daemon start"
-other = "شغّل proxy Relo في الخلفية"
+other = "شغّل بروكسي Relo في الخلفية"
 
 [cli.daemon.start.port]
 description = "Usage of the start --port flag"
@@ -548,15 +548,15 @@ other = "Relo يعمل بالفعل على {{.Addr}}"
 
 [cli.daemon.start.failed]
 description = "What start prints when the daemon never became healthy"
-other = "لم يبدأ daemon: {{.Detail}}"
+other = "لم يبدأ الخادم: {{.Detail}}"
 
 [cli.daemon.start.log]
 description = "Where a started daemon writes what it logs"
-other = "سجل daemon في {{.Path}}"
+other = "سجل الخادم في {{.Path}}"
 
 [cli.daemon.stop.short]
 description = "One-line summary of relo daemon stop"
-other = "أوقف proxy Relo الذي تديره أوامر دورة الحياة"
+other = "أوقف بروكسي Relo الذي تديره أوامر دورة الحياة"
 
 [cli.daemon.stop.stopped]
 description = "Confirmation after a stop"
@@ -568,7 +568,7 @@ other = "Relo لا يعمل"
 
 [cli.daemon.restart.short]
 description = "One-line summary of relo daemon restart"
-other = "أعد تشغيل proxy Relo"
+other = "أعد تشغيل بروكسي Relo"
 
 [cli.daemon.restart.port]
 description = "Usage of the restart --port flag"
@@ -576,7 +576,7 @@ other = "غيّر منفذ الاستماع"
 
 [cli.daemon.restart.force]
 description = "Usage of the restart --force flag"
-other = "أنهِ العملية الجارية وابدأ daemon جديدًا"
+other = "أنهِ العملية الجارية وابدأ خادمًا جديدًا"
 
 [cli.daemon.restart.restarted]
 description = "Confirmation after a restart"
@@ -584,7 +584,7 @@ other = "Relo يعمل على {{.Addr}}"
 
 [cli.daemon.status.no_keys_hint]
 description = "How to create the first client key"
-other = "أنشئ مفتاحًا في صفحة المفاتيح بوحدة التحكم."
+other = "أنشئ مفتاحًا من صفحة المفاتيح في الكونسول."
 
 [api.daemon.not_headless]
 description = "Refusal of a stop request when this process is not a headless daemon"
@@ -592,7 +592,7 @@ other = "لا تقبل هذه العملية طلب إيقاف"
 
 [api.daemon.instance_mismatch]
 description = "Refusal of a stop request naming another instance"
-other = "طلب الإيقاف يشير إلى نسخة مختلفة"
+other = "يشير طلب الإيقاف إلى نسخة أخرى"
 
 [tray.menu.version]
 description = "Tray menu version label"

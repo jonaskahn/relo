@@ -17,11 +17,35 @@ type streamDecoder struct {
 	finishReason string
 	failure      *inference.ErrorInfo
 	terminated   bool
+	// reasoningTail holds the end of the reasoning seen so far, so a marker
+	// the stream split across two deltas is still read.
+	reasoningTail string
+	// sawToolCall records a real tool_calls delta, which clears a marker: the
+	// fault is a call that never arrived, not the text around it.
+	sawToolCall bool
+	// leakedToolCall records template text that means the model formatted a
+	// call as prose.
+	leakedToolCall bool
 }
 
 const (
 	finishError       = "error"
 	upstreamErrorCode = "upstream_error"
+
+	// leakedToolCallCode names a turn that meant to call a tool but wrote the
+	// call as template text instead. The client has no call to run, so the
+	// turn ends as a plain stop that would otherwise read as a success.
+	leakedToolCallCode = "leaked_tool_call"
+
+	// leakedToolCallMarker is the tag the serving chat template writes around
+	// a call parameter. A real tool_call clears it; without one it is the only
+	// trace of the call the model never made.
+	leakedToolCallMarker = "rfl:parameter"
+
+	// leakedToolCallTail keeps enough reasoning to span a marker split across
+	// two deltas, since where a chunk splits is the stream's choice, not the
+	// model's.
+	leakedToolCallTail = len(leakedToolCallMarker) - 1
 )
 
 // NewStreamDecoder returns a decoder for one upstream response.
@@ -51,11 +75,30 @@ func (d *streamDecoder) Finish() ([]inference.Event, error) {
 		return nil, nil
 	}
 	d.terminated = true
+	events := d.leakedToolCallEvents()
+	events = append(events, d.toolCallEnds()...)
 	terminal := inference.Event{
 		Kind:     inference.EventTerminal,
 		Terminal: &inference.TerminalInfo{Reason: d.terminalReason()},
 	}
-	return append(d.toolCallEnds(), terminal), nil
+	return append(events, terminal), nil
+}
+
+// leakedToolCallEvents refuses a turn that formatted its tool call as text.
+// Only a turn that called nothing is refused: the marker beside a real call is
+// template noise, but alone it is a stop the client cannot act on. The answer
+// has already reached the client by now, so this reports the fault instead of
+// replaying a partial stream.
+func (d *streamDecoder) leakedToolCallEvents() []inference.Event {
+	if !d.leakedToolCall || d.sawToolCall || d.failure != nil {
+		return nil
+	}
+	d.failure = &inference.ErrorInfo{
+		Code:    leakedToolCallCode,
+		Message: "the endpoint sent a tool call as text instead of calling it",
+		Status:  http.StatusBadGateway,
+	}
+	return []inference.Event{{Kind: inference.EventError, Error: d.failure}}
 }
 
 func (d *streamDecoder) absorb(envelope *chatEnvelope) []inference.Event {
@@ -104,9 +147,22 @@ func (d *streamDecoder) textEvents(message *chatMessageBody) []inference.Event {
 		events = append(events, inference.Event{Kind: inference.EventTextDelta, Text: message.Content})
 	}
 	if reasoning := message.reasoningText(); reasoning != "" {
+		d.observeReasoning(reasoning)
 		events = append(events, inference.Event{Kind: inference.EventReasoningDelta, Text: reasoning})
 	}
 	return events
+}
+
+// observeReasoning reads one reasoning delta for the leaked call marker,
+// keeping only the tail that a later delta could complete.
+func (d *streamDecoder) observeReasoning(delta string) {
+	window := d.reasoningTail + delta
+	if strings.Contains(window, leakedToolCallMarker) {
+		d.leakedToolCall = true
+	}
+	if len(window) > leakedToolCallTail {
+		d.reasoningTail = window[len(window)-leakedToolCallTail:]
+	}
 }
 
 func (d *streamDecoder) toolCallEvents(calls []chatToolCallBody) []inference.Event {
@@ -127,6 +183,7 @@ func (d *streamDecoder) toolCallEvents(calls []chatToolCallBody) []inference.Eve
 }
 
 func (d *streamDecoder) startToolCall(call chatToolCallBody) {
+	d.sawToolCall = true
 	d.pending[call.Index] = &inference.ToolCallDelta{
 		Index:     call.Index,
 		ID:        call.ID,

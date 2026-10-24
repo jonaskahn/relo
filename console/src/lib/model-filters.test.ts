@@ -9,7 +9,7 @@ import {
 	isPriced,
 	modelCounts,
 	priceTag,
-	supportsPaidFree,
+	splitsPaidFree,
 	visiblePrices
 } from './model-filters';
 import { emptyPrices, modelOf, modelPrices, pricesOf } from './provider-fixtures';
@@ -152,14 +152,13 @@ describe('model filters', () => {
 		expect(modelCounts(models)).toMatchObject({ paid: 1, free: 2 });
 	});
 
-	test('supportsPaidFree names the routers that list both', () => {
-		expect(supportsPaidFree('opencode')).toBe(true);
-		expect(supportsPaidFree('openrouter')).toBe(true);
-		expect(supportsPaidFree('orcarouter')).toBe(true);
-		expect(supportsPaidFree('orcarouter-oauth')).toBe(true);
-		expect(supportsPaidFree('teamorouter')).toBe(true);
-		expect(supportsPaidFree('opencode-go')).toBe(false);
-		expect(supportsPaidFree('anthropic')).toBe(false);
+	test('splitsPaidFree reports only when both kinds are present', () => {
+		const paid = modelOf({ model_id: 'gpt-5' });
+		const free = modelOf({ model_id: 'gpt-5-free' });
+		expect(splitsPaidFree([paid, free])).toBe(true);
+		expect(splitsPaidFree([paid])).toBe(false);
+		expect(splitsPaidFree([free])).toBe(false);
+		expect(splitsPaidFree([])).toBe(false);
 	});
 
 	test('the unavailable chip keeps the models a listing dropped', () => {

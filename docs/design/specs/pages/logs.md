@@ -33,6 +33,13 @@ A row opens a trailing drawer, the logs exception to `CenteredModal`: up to 1040
 next through the visible rows, Escape and the scrim close it, and focus returns to the row. Below 640px it is a bottom
 sheet. The body keeps overview, tokens and cost, the agent exchange and the per-attempt provider exchange.
 
+When the traffic log holds the request whole (the `Full trace` badge), the drawer also offers **Impersonate**: the Chat
+tester opens on a new conversation seeded with the captured request — its dialect, system prompt, token limit, stream
+choice, and every completed exchange — with the last prompt left in the composer. Nothing is sent until the operator
+presses Send. Tools, images and thinking parts cannot travel in a text-only conversation, and the seeded conversation
+says which of them was dropped rather than hiding it. An unreadable body lands on the Chat page's empty state with one
+line saying so, never as a toast.
+
 ## Daemon
 
 The daemon's own JSONL log (`$RELO_HOME/logs/daemon.log`), newest first, with a live tail. One row per line: time

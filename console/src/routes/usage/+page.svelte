@@ -55,9 +55,11 @@
 		activeFilterCount,
 		clearRollupSpend,
 		clearSummarySpend,
+		mergeRollups,
 		nonPaidProviderIds,
 		planProviderIds,
 		providerPlanMicros,
+		providerReadChunks,
 		spendScopeOf,
 		splitSpend,
 		statusParam,
@@ -365,6 +367,18 @@
 				groupBy: 'day' as const
 			};
 			const wantsTrend = group === null || group === 'day';
+			// A set of connections wider than one read accepts is read in
+			// chunks, and the rows add up across them. A refused read would
+			// answer nothing, which reports a plan's traffic as API spend.
+			const readProviders = (
+				readFilters: UsageFilters,
+				ids: readonly string[]
+			): Promise<UsageRead[]> =>
+				Promise.all(
+					providerReadChunks(ids).map((chunk) =>
+						api<UsageRead>('/activity/usage?' + usageProvidersQuery(readFilters, now, chunk))
+					)
+				);
 			// The overview and the day tab draw the trend. The top connections
 			// and the top models belong to the overview, which is the one tab
 			// that shows them. A tab that draws no trend keeps the one it has,
@@ -395,34 +409,18 @@
 					? null
 					: api<UsageRead>('/activity/usage?' + usageQuery({ ...filters, groupBy: group }, now)),
 				splits && planIds.length > 0
-					? api<UsageRead>(
-							'/activity/usage?' +
-								usageProvidersQuery({ ...filters, groupBy: 'provider' }, now, planIds)
-						)
+					? readProviders({ ...filters, groupBy: 'provider' }, planIds)
 					: null,
 				splits && group === null && planIds.length > 0
-					? api<UsageRead>('/activity/usage?' + usageProvidersQuery(trendFilters, now, planIds))
+					? readProviders(trendFilters, planIds)
 					: null,
-				splits
-					? api<UsageRead>(
-							'/activity/usage?' +
-								usageProvidersQuery({ ...filters, groupBy: 'provider' }, now, nonPaidIds)
-						)
-					: null,
-				splits && wantsTrend && group !== 'day'
-					? api<UsageRead>('/activity/usage?' + usageProvidersQuery(trendFilters, now, nonPaidIds))
-					: null,
+				splits ? readProviders({ ...filters, groupBy: 'provider' }, nonPaidIds) : null,
+				splits && wantsTrend && group !== 'day' ? readProviders(trendFilters, nonPaidIds) : null,
 				splits && group === null
-					? api<UsageRead>(
-							'/activity/usage?' +
-								usageProvidersQuery({ ...filters, groupBy: 'model' }, now, nonPaidIds)
-						)
+					? readProviders({ ...filters, groupBy: 'model' }, nonPaidIds)
 					: null,
 				splits && group !== null && group !== 'provider'
-					? api<UsageRead>(
-							'/activity/usage?' +
-								usageProvidersQuery({ ...filters, groupBy: group }, now, nonPaidIds)
-						)
+					? readProviders({ ...filters, groupBy: group }, nonPaidIds)
 					: null
 			]);
 			if (trend) {
@@ -437,7 +435,7 @@
 				byProvider = [];
 				byModel = [];
 			}
-			planDaily = planTrend?.items ?? [];
+			planDaily = mergeRollups((planTrend ?? []).map((read) => read.items ?? []));
 			planByProvider = {};
 			if (scope === 'plan') {
 				// The filter names one connection a plan covers, so the whole
@@ -461,26 +459,31 @@
 				byModel = clearRollupSpend(byModel);
 				groups = clearRollupSpend(groups);
 			} else if (splits) {
-				const planRows = planProviders?.items ?? [];
-				const nonPaidRows = nonPaidProviders?.items ?? [];
+				// Each set is read in as many chunks as the cap allows, so the
+				// rows are the whole set however wide it is.
+				const planRows = mergeRollups((planProviders ?? []).map((read) => read.items ?? []));
+				const nonPaidRows = mergeRollups((nonPaidProviders ?? []).map((read) => read.items ?? []));
 				spend = splitSpend(Number(summary?.cost_micros ?? 0), nonPaidRows, providers);
 				planByProvider = providerPlanMicros(planRows, providers);
 				summary = subtractSummarySpend(summary, spend.nonPaidMicros);
+				const nonPaidDays = mergeRollups((nonPaidTrend ?? []).map((read) => read.items ?? []));
+				const nonPaidDayRows = mergeRollups((nonPaidGroups ?? []).map((read) => read.items ?? []));
 				if (wantsTrend) {
-					const removed =
-						group === 'day' ? (nonPaidGroups?.items ?? []) : (nonPaidTrend?.items ?? []);
-					daily = subtractRollupSpend(daily, removed);
+					daily = subtractRollupSpend(daily, group === 'day' ? nonPaidDayRows : nonPaidDays);
 				}
-				planDaily = planTrend?.items ?? [];
+				planDaily = mergeRollups((planTrend ?? []).map((read) => read.items ?? []));
 				if (group === null) {
 					byProvider = subtractRollupSpend(byProvider, nonPaidRows);
-					byModel = subtractRollupSpend(byModel, nonPaidModels?.items ?? []);
+					byModel = subtractRollupSpend(
+						byModel,
+						mergeRollups((nonPaidModels ?? []).map((read) => read.items ?? []))
+					);
 				} else if (group === 'provider') {
 					// The rows themselves keep the plan figure for their spend
 					// cell, so the subtraction only reaches the comparison bars.
 					groups = subtractRollupSpend(groups, nonPaidRows);
 				} else {
-					groups = subtractRollupSpend(groups, nonPaidGroups?.items ?? []);
+					groups = subtractRollupSpend(groups, nonPaidDayRows);
 				}
 			} else {
 				// Only pay-as-you-go connections, so the summary is API spend.

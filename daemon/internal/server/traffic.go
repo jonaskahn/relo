@@ -69,7 +69,7 @@ type trafficAttemptHalf struct {
 // appended to, and the place the request detail page reads whole bodies from.
 type TrafficLog interface {
 	AppendHalf(half TrafficHalf) error
-	Halves(requestID string) ([]TrafficHalf, error)
+	Halves(ctx context.Context, requestID string) ([]TrafficHalf, error)
 }
 
 // trafficMessageFor names the message of one stored capture inside a trace, so
@@ -213,7 +213,7 @@ func (s *Server) trafficTrace(ctx context.Context, reads captureReader, eventID 
 	if err != nil || requestID == "" {
 		return trafficTrace{}, false
 	}
-	halves, err := s.opts.Traffic.Halves(requestID)
+	halves, err := s.opts.Traffic.Halves(ctx, requestID)
 	if err != nil || len(halves) == 0 {
 		return trafficTrace{}, false
 	}

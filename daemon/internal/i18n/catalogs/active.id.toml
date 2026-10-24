@@ -427,11 +427,11 @@ other = "layanan manajemen tidak tersedia"
 
 [api.settings.retention.invalid]
 description = "Refusal of a retention budget below the floor the ledger keeps"
-other = "request details are kept for at least a {{.Min}}-day window; use 0 to keep everything"
+other = "detail permintaan disimpan minimal {{.Min}} hari; pakai 0 untuk menyimpan semuanya"
 
 [api.settings.sweep.busy]
 description = "Refusal of a maintenance sweep while another one is running"
-other = "a maintenance sweep is already running; wait for it to finish"
+other = "pembersihan sedang berjalan; tunggu sampai selesai"
 
 [api.account.status_required]
 description = "Refusal of an account update that named neither status nor priority"
@@ -627,11 +627,11 @@ other = "Hapus data Relo (konfigurasi, kredensial, log)? [y/T]"
 
 [cli.uninstall.kept]
 description = "What an uninstall reports when the Relo data stays"
-other = "Data Relo Anda ada di {{.Home}}"
+other = "Data Relo kamu ada di {{.Home}}"
 
 [cli.uninstall.wiped]
 description = "What an uninstall reports after the Relo data is removed"
-other = "Data Relo Anda telah dihapus"
+other = "Data Relo kamu sudah dihapus"
 
 [cli.uninstall.removing]
 description = "What an uninstall says as it hands the program to its installer"

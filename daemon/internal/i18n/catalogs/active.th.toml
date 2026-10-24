@@ -2,11 +2,11 @@
 
 [cli.root.short]
 description = "One-line summary of the relo command"
-other = "proxy AI ในเครื่องที่รวม credential จากหลายบัญชี"
+other = "พร็อกซี AI ในเครื่องที่รวมข้อมูลรับรองจากหลายบัญชี"
 
 [cli.root.home]
 description = "Usage of the --home flag"
-other = "ไดเรกทอรีเก็บ state (ค่าเริ่มต้น $RELO_HOME แล้วเป็น ~/.relo)"
+other = "ไดเรกทอรีเก็บสถานะ (ค่าเริ่มต้น $RELO_HOME แล้วเป็น ~/.relo)"
 
 [cli.root.lang]
 description = "Usage of the --lang flag"
@@ -62,11 +62,11 @@ other = "ความช่วยเหลือของ {{.Name}}"
 
 [cli.completion.short]
 description = "One-line summary of relo completion"
-other = "สร้างสคริปต์เติมคำอัตโนมัติสำหรับ shell ที่ระบุ"
+other = "สร้างสคริปต์เติมคำอัตโนมัติสำหรับเชลล์ที่ระบุ"
 
 [cli.completion.long]
 description = "Long description of relo completion; {{.Name}} is the program name"
-other = "สร้างสคริปต์เติมคำอัตโนมัติของ {{.Name}} สำหรับ shell ที่ระบุ\nดูวิธีใช้สคริปต์ที่สร้างได้จากความช่วยเหลือของแต่ละคำสั่งย่อย"
+other = "สร้างสคริปต์เติมคำอัตโนมัติของ {{.Name}} สำหรับเชลล์ที่ระบุ\nดูวิธีใช้สคริปต์ที่สร้างได้จากความช่วยเหลือของแต่ละคำสั่งย่อย"
 
 [cli.completion.shell]
 description = "One-line summary of relo completion for one shell; {{.Shell}} is the shell name"
@@ -82,11 +82,11 @@ other = "แสดงเวอร์ชันและแพลตฟอร์�
 
 [cli.daemon.short]
 description = "One-line summary of relo daemon"
-other = "เรียกใช้และจัดการ daemon"
+other = "เรียกใช้และจัดการดีมอน"
 
 [cli.daemon.status.short]
 description = "One-line summary of relo daemon status"
-other = "แสดงสถานะการทำงานของ daemon"
+other = "ดูว่าดีมอนกำลังทำงานอยู่หรือไม่"
 
 [cli.daemon.status.json]
 description = "Usage of the status --json flag"
@@ -114,7 +114,7 @@ other = "ที่อยู่"
 
 [cli.daemon.status.data_plane]
 description = "Status field label for the port each client protocol answers on"
-other = "data plane"
+other = "ดาต้าเพลน"
 
 [cli.daemon.status.secret_mode]
 description = "Status field label"
@@ -126,7 +126,7 @@ other = "เวอร์ชันสคีมา"
 
 [cli.daemon.status.client_keys]
 description = "Status field label"
-other = "client key"
+other = "คีย์ไคลเอ็นต์"
 
 [cli.daemon.status.key_count]
 description = "How many client keys exist, and how many still authenticate"
@@ -134,11 +134,11 @@ other = "{{.Count}} ({{.Active}} ใช้งานอยู่)"
 
 [cli.daemon.status.no_keys]
 description = "Warning under the status report when no client key is active"
-other = "ไม่มี client key ที่ใช้งานอยู่ data plane จะปฏิเสธทุกคำขอ"
+other = "ไม่มีคีย์ไคลเอ็นต์ที่ใช้งานอยู่ ดาต้าเพลนจะปฏิเสธทุกคำขอ"
 
 [cli.daemon.run.short]
 description = "One-line summary of relo daemon run"
-other = "เริ่ม proxy ของ Relo ในเบื้องหน้า"
+other = "เริ่มพร็อกซีของ Relo ในเบื้องหน้า"
 
 [cli.daemon.run.port]
 description = "Usage of the daemon run --port flag"
@@ -150,7 +150,7 @@ other = "จัดการว่า Relo จะเริ่มทำงาน�
 
 [cli.autostart.enable.short]
 description = "One-line summary of relo autostart enable"
-other = "ให้แอปเดสก์ท็อปและ daemon เริ่มทำงานเมื่อเข้าสู่ระบบ"
+other = "ให้แอปเดสก์ท็อปและดีมอนเริ่มทำงานเมื่อเข้าสู่ระบบ"
 
 [cli.autostart.disable.short]
 description = "One-line summary of relo autostart disable"
@@ -266,15 +266,15 @@ other = "เข้าสู่ระบบได้จากเครื่อ�
 
 [api.auth.invalid_token]
 description = "Sign-in refusal for a wrong admin token"
-other = "admin token ไม่ถูกต้อง"
+other = "โทเคนผู้ดูแลไม่ถูกต้อง"
 
 [api.auth.session_failed]
 description = "Sign-in failure when no session could be started"
-other = "console เริ่ม session ไม่สำเร็จ"
+other = "คอนโซลเริ่มเซสชันไม่สำเร็จ"
 
 [api.auth.session_missing]
 description = "Refusal of a management request without a live session"
-other = "session ของ dashboard หายไปหรือหมดอายุ"
+other = "เซสชันของแดชบอร์ดหายไปหรือหมดอายุ"
 
 [api.body.invalid]
 description = "Refusal of a body that does not parse, with the parser's detail"
@@ -282,7 +282,7 @@ other = "เนื้อหาคำขอไม่ถูกต้อง: {{.Det
 
 [api.body.single_object]
 description = "Refusal of a body that carries more than one JSON object"
-other = "เนื้อหาคำขอไม่ถูกต้อง: ต้องเป็น JSON object เดียว"
+other = "เนื้อหาคำขอไม่ถูกต้อง: ต้องเป็นออบเจกต์ JSON หนึ่งรายการ"
 
 [api.callback.heading]
 description = "Title of the page a browser lands on after a provider redirect"
@@ -310,7 +310,7 @@ other = "ความคืบหน้าการเข้าสู่ระ�
 
 [api.callback.step_authorized]
 description = "First step of a login: the provider authorized the request"
-other = "ได้รับอนุญาตจาก {{.Provider}}"
+other = "ได้รับสิทธิ์จาก {{.Provider}}"
 
 [api.callback.step_exchanging]
 description = "Second step of a login: the authorization is traded for tokens"
@@ -338,7 +338,7 @@ other = "การเข้าสู่ระบบนี้ปิดแล้�
 
 [api.callback.expired_body]
 description = "Summary of the callback page for a login this process no longer tracks"
-other = "Relo ไม่ติดตามการเข้าสู่ระบบนี้แล้ว เริ่มใหม่จาก console"
+other = "Relo ไม่ติดตามการเข้าสู่ระบบนี้แล้ว เริ่มใหม่จากคอนโซล"
 
 [api.callback.expired]
 description = "Refusal of a callback status poll for a login that is gone"
@@ -346,19 +346,19 @@ other = "การเข้าสู่ระบบนี้ปิดแล้�
 
 [api.callback.failure_denied]
 description = "Callback failure: the provider refused the authorization"
-other = "provider ปฏิเสธสิทธิ์เข้าใช้"
+other = "ผู้ให้บริการปฏิเสธสิทธิ์เข้าใช้"
 
 [api.callback.failure_state]
 description = "Callback failure: the callback did not match the login Relo started"
-other = "callback ไม่ตรงกับการเข้าสู่ระบบที่ Relo เริ่มหรือถูกใช้ไปแล้ว"
+other = "การเรียกกลับไม่ตรงกับการเข้าสู่ระบบที่ Relo เริ่ม หรือถูกใช้ไปแล้ว"
 
 [api.callback.failure_timeout]
 description = "Callback failure: the provider did not answer in time"
-other = "provider ไม่ตอบก่อนหมดเวลา"
+other = "ผู้ให้บริการไม่ตอบก่อนหมดเวลา"
 
 [api.callback.failure_exchange]
 description = "Callback failure: the provider would not exchange the authorization"
-other = "provider ไม่ยอมแลกสิทธิ์เข้าใช้เป็น token"
+other = "ผู้ให้บริการไม่ยอมแลกสิทธิ์เข้าใช้เป็นโทเคน"
 
 [api.callback.account_label]
 description = "Label of the stored account on the callback page"
@@ -374,31 +374,31 @@ other = "จะปิดในอีก {{.Seconds}} วินาที…"
 
 [api.callback.console_link]
 description = "Link from the callback page to the console page that lists accounts"
-other = "เปิด console"
+other = "เปิดคอนโซล"
 
 [api.dashboard.missing]
 description = "Refusal of a console request in a build without one"
-other = "build นี้ไม่มี dashboard"
+other = "บิลด์นี้ไม่มีแดชบอร์ด"
 
 [api.events.unknown]
 description = "Refusal of an event stream for a channel that does not exist"
-other = "ไม่มีช่อง event นี้"
+other = "ไม่มีช่องอีเวนต์นี้"
 
 [api.events.cannot_stream]
 description = "Refusal of an event stream over a listener that cannot stream"
-other = "listener นี้ stream ไม่ได้"
+other = "พอร์ตรอรับนี้สตรีมไม่ได้"
 
 [api.events.too_many]
 description = "Refusal of an event stream when too many are already open"
-other = "เปิด event stream มากเกินไป"
+other = "เปิดสตรีมอีเวนต์มากเกินไป"
 
 [api.inference.retired]
 description = "Refusal of an inference path that moved to the port of its protocol"
-other = "พอร์ตสำหรับ inference ย้ายไปที่ {{.BaseURL}}"
+other = "จุดให้บริการโมเดลย้ายไปที่ {{.BaseURL}}"
 
 [api.keys.invalid]
 description = "Refusal of an inference request with a key that does not authenticate"
-other = "API key ไม่ถูกต้อง"
+other = "คีย์ API ไม่ถูกต้อง"
 
 [api.keys.missing_header]
 description = "Refusal of an inference request without a credential"
@@ -406,39 +406,39 @@ other = "Authorization header หายไปหรือไม่ถูกต�
 
 [api.keys.store_unavailable]
 description = "Refusal of an inference request when the key store is down"
-other = "ที่เก็บ API key ไม่พร้อมใช้งาน"
+other = "ที่เก็บคีย์ API ไม่พร้อมใช้งาน"
 
 [api.logs.event_id_number]
 description = "Refusal of a log request whose event id is not a number"
-other = "event id ต้องเป็นตัวเลข"
+other = "รหัสอีเวนต์ต้องเป็นตัวเลข"
 
 [api.logs.capture_id_number]
 description = "Refusal of a capture read whose capture id is not a number"
-other = "capture id ต้องเป็นตัวเลข"
+other = "รหัสแคปเจอร์ต้องเป็นตัวเลข"
 
 [api.logs.capture_missing]
 description = "Refusal of a capture read that names no stored capture"
-other = "ไม่มี capture ที่เก็บไว้ซึ่งมี id นี้"
+other = "ไม่มีแคปเจอร์ที่เก็บไว้ซึ่งมีรหัสนี้"
 
 [api.oauth.unknown]
 description = "Refusal of a login operation that does not exist"
-other = "ไม่มี operation การเข้าสู่ระบบที่มี id นี้"
+other = "ไม่มีการดำเนินการเข้าสู่ระบบที่มีรหัสนี้"
 
 [api.oauth.port_busy]
 description = "Refusal of a sign-in whose callback port another process holds"
-other = "{{process}} กำลังใช้พอร์ต {{port}}; ปิดก่อนจึงจะลงชื่อเข้าใช้ได้"
+other = "{{process}} กำลังใช้พอร์ต {{port}} ปิดก่อนจึงจะเข้าสู่ระบบได้"
 
 [api.integration.action_in_progress]
 description = "Refusal of a second run of an action the first has not finished"
-other = "การกระทำนี้กำลังทำงานอยู่; โปรดรอจนเสร็จสิ้น"
+other = "การกระทำนี้กำลังทำงานอยู่ รอให้เสร็จก่อน"
 
 [api.route.missing]
 description = "Refusal of a management path that matches no route"
-other = "ไม่มี route ที่ตรงกัน"
+other = "ไม่มีเส้นทางที่ตรงกัน"
 
 [api.route.unavailable]
 description = "Refusal of a management endpoint that is not implemented"
-other = "endpoint นี้ยังไม่พร้อมใช้งาน"
+other = "ปลายทางนี้ยังไม่พร้อมใช้งาน"
 
 [api.service.unavailable]
 description = "Refusal of a management request when the service is missing"
@@ -446,31 +446,31 @@ other = "บริการจัดการไม่พร้อมใช้�
 
 [api.settings.retention.invalid]
 description = "Refusal of a retention budget below the floor the ledger keeps"
-other = "request details are kept for at least a {{.Min}}-day window; use 0 to keep everything"
+other = "บัญชีคำขอเก็บรายละเอียดไว้อย่างน้อย {{.Min}} วัน ใส่ 0 เพื่อเก็บทั้งหมด"
 
 [api.settings.sweep.busy]
 description = "Refusal of a maintenance sweep while another one is running"
-other = "a maintenance sweep is already running; wait for it to finish"
+other = "กำลังล้างข้อมูลบำรุงรักษาอยู่แล้ว รอให้เสร็จก่อน"
 
 [api.account.status_required]
 description = "Refusal of an account update that named neither status nor priority"
-other = "ต้องระบุ status หรือ priority"
+other = "ต้องระบุสถานะหรือลำดับความสำคัญ"
 
 [tray.tooltip]
 description = "Tooltip of the tray icon"
-other = "Relo — proxy AI ในเครื่อง"
+other = "Relo — พร็อกซี AI ในเครื่อง"
 
 [tray.menu.open_dashboard]
 description = "Tray menu item that opens the console in a browser"
-other = "เปิด Dashboard"
+other = "เปิดแดชบอร์ด"
 
 [tray.menu.restart]
 description = "Tray menu item that restarts the daemon"
-other = "เริ่ม Server ใหม่"
+other = "รีสตาร์ตเซิร์ฟเวอร์"
 
 [tray.menu.force_restart]
 description = "Tray menu item that kills the daemon and starts it again"
-other = "บังคับเริ่ม Server ใหม่"
+other = "รีสตาร์ตเซิร์ฟเวอร์แบบบังคับ"
 
 [tray.menu.autostart]
 description = "Tray menu item that toggles the login item"
@@ -506,7 +506,7 @@ other = "คำขอ {{.Value}}"
 
 [tray.info.tokens]
 description = "Tray menu row that charts the last day of tokens"
-other = "token {{.Value}}"
+other = "โทเคน {{.Value}}"
 
 [tray.info.spend]
 description = "Tray menu row that charts the last day of spend"
@@ -530,7 +530,7 @@ other = "บันทึกภาษาไม่สำเร็จ"
 
 [cli.daemon.start.short]
 description = "One-line summary of relo daemon start"
-other = "เริ่ม proxy ของ Relo ในเบื้องหลัง"
+other = "เริ่มพร็อกซีของ Relo ในเบื้องหลัง"
 
 [cli.daemon.start.port]
 description = "Usage of the start --port flag"
@@ -546,15 +546,15 @@ other = "Relo กำลังทำงานที่ {{.Addr}} อยู่แ�
 
 [cli.daemon.start.failed]
 description = "What start prints when the daemon never became healthy"
-other = "daemon เริ่มทำงานไม่สำเร็จ: {{.Detail}}"
+other = "ดีมอนเริ่มทำงานไม่สำเร็จ: {{.Detail}}"
 
 [cli.daemon.start.log]
 description = "Where a started daemon writes what it logs"
-other = "log ของ daemon อยู่ที่ {{.Path}}"
+other = "ไฟล์บันทึกของดีมอนอยู่ที่ {{.Path}}"
 
 [cli.daemon.stop.short]
 description = "One-line summary of relo daemon stop"
-other = "หยุด proxy ของ Relo ที่คำสั่ง lifecycle ควบคุมไว้"
+other = "หยุดพร็อกซีของ Relo ที่คำสั่ง lifecycle ดูแลอยู่"
 
 [cli.daemon.stop.stopped]
 description = "Confirmation after a stop"
@@ -566,7 +566,7 @@ other = "Relo ไม่ได้ทำงานอยู่"
 
 [cli.daemon.restart.short]
 description = "One-line summary of relo daemon restart"
-other = "เริ่ม proxy ของ Relo ใหม่"
+other = "รีสตาร์ตพร็อกซีของ Relo"
 
 [cli.daemon.restart.port]
 description = "Usage of the restart --port flag"
@@ -574,7 +574,7 @@ other = "เปลี่ยนพอร์ตที่รับฟัง"
 
 [cli.daemon.restart.force]
 description = "Usage of the restart --force flag"
-other = "kill process ที่ทำงานอยู่แล้วเริ่ม daemon ใหม่"
+other = "ปิดโปรเซสที่ทำงานอยู่แล้วเริ่มดีมอนใหม่"
 
 [cli.daemon.restart.restarted]
 description = "Confirmation after a restart"
@@ -582,15 +582,15 @@ other = "Relo กำลังทำงานที่ {{.Addr}}"
 
 [cli.daemon.status.no_keys_hint]
 description = "How to create the first client key"
-other = "สร้างที่หน้า Keys ของ console"
+other = "สร้างสักอันที่หน้าคีย์ของคอนโซล"
 
 [api.daemon.not_headless]
 description = "Refusal of a stop request when this process is not a headless daemon"
-other = "process นี้ไม่รับคำขอหยุด"
+other = "โปรเซสนี้ไม่รับคำขอหยุด"
 
 [api.daemon.instance_mismatch]
 description = "Refusal of a stop request naming another instance"
-other = "คำขอหยุดระบุ instance อื่น"
+other = "คำขอหยุดระบุอินสแตนซ์อื่น"
 
 [tray.menu.version]
 description = "Tray menu version label"
@@ -622,7 +622,7 @@ other = "เริ่มไม่ได้"
 
 [cli.daemon.stop.force]
 description = "Usage of the stop --force flag"
-other = "หยุดกระบวนการที่กำลังทำงานและปล่อยพอร์ตที่ Relo ให้บริการ"
+other = "ปิดโปรเซสที่กำลังทำงานและปล่อยพอร์ตที่ Relo ให้บริการ"
 
 [cli.uninstall.short]
 description = "One-line summary of relo uninstall"

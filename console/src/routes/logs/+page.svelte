@@ -2,6 +2,7 @@
 	import { onMount } from 'svelte';
 	import { t } from 'svelte-i18n';
 	import { page } from '$app/state';
+	import { goto } from '$app/navigation';
 
 	import Button from '$lib/components/ui/button.svelte';
 	import Input from '$lib/components/ui/input.svelte';
@@ -14,6 +15,7 @@
 	import DaemonSection from '$lib/components/logs/daemon-section.svelte';
 	import RequestDetailModal from '$lib/components/logs/request-detail-modal.svelte';
 	import StartupSection from '$lib/components/logs/startup-section.svelte';
+	import ScrollToTop from '$lib/components/ui/scroll-to-top.svelte';
 	import {
 		browserStorage,
 		filterPanelId,
@@ -224,5 +226,20 @@
 		rows={agentRows}
 		onclose={() => (selected = null)}
 		onselect={(row) => (selected = row)}
+		onimpersonate={(row) => {
+			const provider = row.RouteProvider || row.Provider;
+			selected = null;
+			const url =
+				'/chat?replay=' +
+				row.ID +
+				(provider === '' ? '' : '&provider=' + encodeURIComponent(provider));
+			try {
+				void goto(url);
+			} catch {
+				window.location.assign(url);
+			}
+		}}
 	/>
+
+	<ScrollToTop />
 </div>

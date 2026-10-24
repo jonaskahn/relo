@@ -7,7 +7,12 @@
 // carry, what a turn becomes once it fails — live here, apart from the
 // components, so a test can hold them directly.
 
-import type { ChatTesterAnswer, ChatTesterMessage, ChatTesterRequest } from './types';
+import type {
+	CapturedEntry,
+	ChatTesterAnswer,
+	ChatTesterMessage,
+	ChatTesterRequest
+} from './types';
 
 /** The one key the console owns for chat history.
  *  The version is part of the key, so a later shape is a new key rather than a migration that
@@ -77,6 +82,12 @@ export interface ChatTurn {
 }
 
 /** A conversation, with the settings it was started under. */
+export interface ChatThreadSeed {
+	messages: ChatTesterMessage[];
+	entries: CapturedEntry[];
+	sourceRequestId: string;
+}
+
 export interface ChatThread {
 	id: string;
 	title: string;
@@ -85,6 +96,7 @@ export interface ChatThread {
 	draft: string;
 	settings: ChatSettings;
 	turns: ChatTurn[];
+	seed?: ChatThreadSeed;
 }
 
 /** Every thread the tester holds, and which one is open. */
@@ -172,7 +184,7 @@ export function titleFromPrompt(prompt: string): string {
  *  names a thread that exists. */
 export function settle(store: ChatStore): ChatStore {
 	const threads = store.threads
-		.filter((thread) => thread.turns.length > 0)
+		.filter((thread) => thread.turns.length > 0 || thread.seed !== undefined)
 		.map((thread) => ({
 			...thread,
 			// The annotation is what keeps 'interrupted' a status rather than a
@@ -336,12 +348,28 @@ export function settingsReady(settings: ChatSettings): boolean {
 
 /** The body one turn posts: the shape the management API documents, built from a thread's
  *  settings and the text so far. */
+export function historyOf(thread: ChatThread): ChatTesterMessage[] {
+	const out: ChatTesterMessage[] = [];
+	if (thread.seed !== undefined) out.push(...thread.seed.messages);
+	for (const turn of thread.turns) {
+		if (turn.result.status !== 'success') continue;
+		if (turn.result.text.trim() === '') continue;
+		out.push({ role: 'user', content: turn.prompt });
+		out.push({ role: 'assistant', content: turn.result.text });
+	}
+	return out;
+}
+
 export function chatRequest(
 	settings: ChatSettings,
 	prompt: string,
-	messages: ChatTesterMessage[]
+	threadOrMessages: ChatThread | ChatTesterMessage[],
+	seed?: ChatThreadSeed
 ): ChatTesterRequest {
 	const route = usesRoute(settings);
+	const context = Array.isArray(threadOrMessages)
+		? [...threadOrMessages, ...(seed ? seed.messages : [])]
+		: historyOf(threadOrMessages);
 	return {
 		mode: settings.mode,
 		format: settings.format,
@@ -351,7 +379,7 @@ export function chatRequest(
 		system: settings.system,
 		max_tokens: settings.maxTokens,
 		stream: settings.stream,
-		messages: [...messages, { role: 'user', content: prompt }]
+		messages: [...context, { role: 'user', content: prompt }]
 	};
 }
 

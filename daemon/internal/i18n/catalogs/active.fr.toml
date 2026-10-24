@@ -46,7 +46,7 @@ other = "Sujets d’aide supplémentaires :"
 
 [cli.usage.footer]
 description = "Closing hint of a help screen; {{.CommandPath}} is the command path and [command] --help stays literal"
-other = "Utilisez « {{.CommandPath}} [command] --help » pour en savoir plus sur une commande."
+other = "Utilise « {{.CommandPath}} [command] --help » pour en savoir plus sur une commande."
 
 [cli.help.short]
 description = "One-line summary of relo help"
@@ -54,7 +54,7 @@ other = "Aide sur n’importe quelle commande"
 
 [cli.help.long]
 description = "Long description of relo help; {{.Name}} is the program name"
-other = "L’aide décrit chaque commande de l’application.\nSaisissez {{.Name}} help [chemin de la commande] pour tous les détails."
+other = "L’aide décrit chaque commande de l’application.\nSaisis {{.Name}} help [chemin de la commande] pour tous les détails."
 
 [cli.help.flag]
 description = "Usage of the -h/--help flag; {{.Name}} is the command name"
@@ -114,7 +114,7 @@ other = "Adresse"
 
 [cli.daemon.status.data_plane]
 description = "Status field label for the port each client protocol answers on"
-other = "Data plane"
+other = "Plan de données"
 
 [cli.daemon.status.secret_mode]
 description = "Status field label"
@@ -134,7 +134,7 @@ other = "{{.Count}} ({{.Active}} actives)"
 
 [cli.daemon.status.no_keys]
 description = "Warning under the status report when no client key is active"
-other = "Aucune clé client active. Le data plane refuse chaque requête."
+other = "Aucune clé client active. Le plan de données refuse chaque requête."
 
 [cli.daemon.run.short]
 description = "One-line summary of relo daemon run"
@@ -338,7 +338,7 @@ other = "Cette connexion n’est plus ouverte"
 
 [api.callback.expired_body]
 description = "Summary of the callback page for a login this process no longer tracks"
-other = "Relo ne suit plus cette connexion. Recommencez la connexion depuis la console."
+other = "Relo ne suit plus cette connexion. Recommence-la depuis la console."
 
 [api.callback.expired]
 description = "Refusal of a callback status poll for a login that is gone"
@@ -366,7 +366,7 @@ other = "Compte"
 
 [api.callback.close_hint]
 description = "What the callback page tells an operator once the login finished"
-other = "Vous pouvez fermer cet onglet."
+other = "Tu peux fermer cet onglet."
 
 [api.callback.closing_in]
 description = "Countdown shown on the callback page before it closes itself"
@@ -426,11 +426,11 @@ other = "aucune opération de connexion ne porte cet id"
 
 [api.oauth.port_busy]
 description = "Refusal of a sign-in whose callback port another process holds"
-other = "{{process}} occupe le port {{port}} ; ferme-le pour te connecter"
+other = "{{process}} occupe le port {{port}} ; ferme-le pour te connecter"
 
 [api.integration.action_in_progress]
 description = "Refusal of a second run of an action the first has not finished"
-other = "cette action est déjà en cours ; attends qu’elle se termine"
+other = "cette action est déjà en cours ; attends qu’elle se termine"
 
 [api.route.missing]
 description = "Refusal of a management path that matches no route"
@@ -446,11 +446,11 @@ other = "le service de gestion est indisponible"
 
 [api.settings.retention.invalid]
 description = "Refusal of a retention budget below the floor the ledger keeps"
-other = "request details are kept for at least a {{.Min}}-day window; use 0 to keep everything"
+other = "les détails des requêtes sont conservés au moins une fenêtre de {{.Min}} jours ; mets 0 pour tout conserver"
 
 [api.settings.sweep.busy]
 description = "Refusal of a maintenance sweep while another one is running"
-other = "a maintenance sweep is already running; wait for it to finish"
+other = "une récupération d’espace est déjà en cours ; attends qu’elle se termine"
 
 [api.account.status_required]
 description = "Refusal of an account update that named neither status nor priority"
@@ -486,7 +486,7 @@ other = "Quitter"
 
 [tray.notify.failed]
 description = "Notification when a proxy run failed"
-other = "Le proxy n'a pas démarré. {{.Detail}}"
+other = "Le proxy n’a pas démarré. {{.Detail}}"
 
 [tray.status.running]
 description = "Tray menu status row for a running daemon"
@@ -582,7 +582,7 @@ other = "Relo est en cours d’exécution sur {{.Addr}}"
 
 [cli.daemon.status.no_keys_hint]
 description = "How to create the first client key"
-other = "Créez-en une sur la page Clés de la console."
+other = "Crées-en une sur la page Clés de la console."
 
 [api.daemon.not_headless]
 description = "Refusal of a stop request when this process is not a headless daemon"
@@ -642,7 +642,7 @@ other = "arrêter le service et désactiver le démarrage automatique, en laissa
 
 [cli.uninstall.ask_data]
 description = "The question an interactive uninstall asks about the Relo data"
-other = "Supprimer les données Relo (configuration, identifiants, journaux) ? [o/N]"
+other = "Supprimer tes données Relo (configuration, identifiants, journaux) ? [o/N]"
 
 [cli.uninstall.kept]
 description = "What an uninstall reports when the Relo data stays"
@@ -666,27 +666,27 @@ other = "Déplace {{.Bundle}} dans la Corbeille"
 
 [cli.uninstall.run]
 description = "The command to run when a removal could not be started"
-other = "Exécute ceci pour terminer la suppression de Relo : {{.Command}}"
+other = "Exécute ceci pour terminer la suppression de Relo : {{.Command}}"
 
 [cli.uninstall.channel]
 description = "The installation channel the uninstall detected"
-other = "Installation détectée : {{.Channel}}"
+other = "Installation détectée : {{.Channel}}"
 
 [cli.uninstall.command]
 description = "The exact program-removal command for the detected channel"
-other = "Supprimez le programme avec : {{.Command}}"
+other = "Supprime le programme avec : {{.Command}}"
 
 [cli.uninstall.verified]
 description = "Confirmation that a path is gone after removal"
-other = "Suppression vérifiée : {{.Path}}"
+other = "Suppression vérifiée : {{.Path}}"
 
 [cli.uninstall.failed]
 description = "A path that survived the removal"
-other = "Toujours présent : {{.Path}}"
+other = "Toujours présent : {{.Path}}"
 
 [cli.uninstall.self_delete]
 description = "A running Windows program scheduled for deletion after exit"
-other = "Windows supprimera ce fichier après la fermeture de Relo : {{.Path}}"
+other = "Windows supprimera ce fichier après la fermeture de Relo : {{.Path}}"
 
 [tray.menu.quitting]
 description = "Tray quit action while final records are saved"

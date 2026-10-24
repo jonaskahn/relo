@@ -114,7 +114,7 @@ other = "地址"
 
 [cli.daemon.status.data_plane]
 description = "Status field label for the port each client protocol answers on"
-other = "数据路径"
+other = "数据面"
 
 [cli.daemon.status.secret_mode]
 description = "Status field label"
@@ -134,7 +134,7 @@ other = "{{.Count}} 个（{{.Active}} 个启用）"
 
 [cli.daemon.status.no_keys]
 description = "Warning under the status report when no client key is active"
-other = "没有启用的客户端密钥。数据路径会拒绝所有请求。"
+other = "没有启用的客户端密钥，数据面会拒绝所有请求。"
 
 [cli.daemon.status.no_keys_hint]
 description = "How to create the first client key"
@@ -322,7 +322,7 @@ other = "只能从本机登录"
 
 [api.auth.invalid_token]
 description = "Sign-in refusal for a wrong admin token"
-other = "admin token 无效"
+other = "管理员令牌无效"
 
 [api.auth.session_failed]
 description = "Sign-in failure when no session could be started"
@@ -414,7 +414,7 @@ other = "提供商未及时响应。"
 
 [api.callback.failure_exchange]
 description = "Callback failure: the provider would not exchange the authorization"
-other = "提供商未将授权交换为令牌。"
+other = "提供商没有把授权换成令牌。"
 
 [api.callback.account_label]
 description = "Label of the stored account on the callback page"
@@ -470,11 +470,11 @@ other = "事件 ID 必须是数字"
 
 [api.logs.capture_id_number]
 description = "Refusal of a capture read whose capture id is not a number"
-other = "抓取 ID 必须是数字"
+other = "记录 ID 必须是数字"
 
 [api.logs.capture_missing]
 description = "Refusal of a capture read that names no stored capture"
-other = "没有该 ID 的已存抓取记录"
+other = "没有这个 ID 的已存记录"
 
 [api.oauth.unknown]
 description = "Refusal of a login operation that does not exist"
@@ -502,11 +502,11 @@ other = "管理服务不可用"
 
 [api.settings.retention.invalid]
 description = "Refusal of a retention budget below the floor the ledger keeps"
-other = "request details are kept for at least a {{.Min}}-day window; use 0 to keep everything"
+other = "请求详情至少保留 {{.Min}} 天；填 0 则全部保留"
 
 [api.settings.sweep.busy]
 description = "Refusal of a maintenance sweep while another one is running"
-other = "a maintenance sweep is already running; wait for it to finish"
+other = "已有一次空间回收在进行，请等它结束"
 
 [api.account.status_required]
 description = "Refusal of an account update that named neither status nor priority"
@@ -570,11 +570,11 @@ other = "请求 {{.Value}}"
 
 [tray.info.tokens]
 description = "Tray menu row that charts the last day of tokens"
-other = "令牌 {{.Value}}"
+other = "Token {{.Value}}"
 
 [tray.info.spend]
 description = "Tray menu row that charts the last day of spend"
-other = "花费 {{.Value}}"
+other = "支出 {{.Value}}"
 
 [tray.error.unknown]
 description = "Placeholder when a failure carried no message"

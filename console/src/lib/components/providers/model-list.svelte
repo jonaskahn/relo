@@ -19,7 +19,6 @@
 		EMPTY_MODEL_FILTERS,
 		filterModels,
 		hasActiveFilters,
-		isFreeModel,
 		type ModelFilters
 	} from '$lib/model-filters';
 
@@ -75,7 +74,6 @@
 		toolbarTitle
 	}: Props = $props();
 
-	let limit = $state(50);
 	// active is the model the modal holds; editing asks the modal to open on
 	// its form rather than the read view.
 	let active = $state<Model | null>(null);
@@ -102,7 +100,6 @@
 	}
 
 	const visible = $derived(filterModels(models, filters));
-	const shown = $derived(visible.slice(0, limit));
 	const filtered = $derived(hasActiveFilters(filters));
 	const cloneIds = $derived(
 		models.filter((model) => model.provider_id === providerId).map((model) => model.model_id)
@@ -118,25 +115,9 @@
 	const menuIconTrigger =
 		'relative inline-flex size-control shrink-0 items-center justify-center rounded-md border border-border text-muted-foreground hover:border-border-strong hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring data-[state=open]:border-border-strong data-[state=open]:text-foreground';
 
-	const paidIds = $derived(
-		models
-			.filter(
-				(model) =>
-					(providerId === '' || model.provider_id === providerId) && !isFreeModel(model.model_id)
-			)
-			.map((model) => model.model_id)
-	);
-	const freeIds = $derived(
-		models
-			.filter(
-				(model) =>
-					(providerId === '' || model.provider_id === providerId) && isFreeModel(model.model_id)
-			)
-			.map((model) => model.model_id)
-	);
 	const connectionBulk = $derived(providerId !== '' && providerModelIDs.length > 0);
-	// showBulkActions hides the connection-wide context, capability and
-	// on/off menus on the UI; set it to true to enable them again later.
+	// The context-window and capability bulk menus stay off; the on/off menu is
+	// gated on the enable/disable handlers being wired (a connection tab) below.
 	const showBulkActions = false;
 	const capabilityBulk = [
 		{ field: 'tools', labelKey: 'ui.pages.providersPage.modelsTable.columnTools', icon: 'wrench' },
@@ -154,18 +135,22 @@
 	const toolbarActionsRow =
 		'flex w-full min-w-0 flex-nowrap items-center gap-0.75 overflow-x-auto overscroll-x-contain pb-0.5 [-webkit-overflow-scrolling:touch] md:contents';
 
-	function showMore() {
-		const next = limit + 50;
-		// A paged view asks the daemon for the next page once the rows it
-		// already holds are nearly used up.
-		if (onloadmore && hasMore && next > models.length - 20) onloadmore();
-		limit = next;
-	}
-
-	// A bulk action names a direction as well as a target, so the two halves
-	// stay apart: a caller wires only the one its own API takes.
-	async function setEnabled(enabled: boolean, ids: string[]): Promise<void> {
-		await (enabled ? onenable : ondisable)?.(ids);
+	// The sentinel watches the foot of the list and asks the page for the next
+	// page once it scrolls into view. It re-arms after every page (the row
+	// count and the loading flag change), so a sentinel still in view keeps
+	// paging until the server runs out. It only fires when the page wired a
+	// paging handler, so a connection pane that loads its models whole is
+	// untouched.
+	function watchMore(node: HTMLElement) {
+		$effect(() => {
+			void models.length;
+			if (!onloadmore || !hasMore || loading) return;
+			const observer = new IntersectionObserver((entries) => {
+				if (entries.some((entry) => entry.isIntersecting)) onloadmore?.();
+			});
+			observer.observe(node);
+			return () => observer.disconnect();
+		});
 	}
 
 	async function toggle(model: Model, enabled: boolean) {
@@ -173,38 +158,7 @@
 		working = true;
 		notice = '';
 		try {
-			await setEnabled(enabled, [model.model_id]);
-			onreload();
-		} finally {
-			working = false;
-		}
-	}
-
-	async function bulk(enabled: boolean) {
-		if (!onenable || !ondisable) return;
-		working = true;
-		notice = '';
-		try {
-			await setEnabled(
-				enabled,
-				visible.map((model) => model.model_id)
-			);
-			notice = $t('ui.pages.providersPage.models.toggled', { values: { count: visible.length } });
-			onreload();
-		} finally {
-			working = false;
-		}
-	}
-
-	async function bulkClass(enabled: boolean, kind: 'paid' | 'free') {
-		if (!onenable || !ondisable) return;
-		const ids = kind === 'free' ? freeIds : paidIds;
-		if (ids.length === 0) return;
-		working = true;
-		notice = '';
-		try {
-			await setEnabled(enabled, ids);
-			notice = $t('ui.pages.providersPage.models.toggled', { values: { count: ids.length } });
+			await (enabled ? onenable : ondisable)([model.model_id]);
 			onreload();
 		} finally {
 			working = false;
@@ -444,88 +398,6 @@
 						{/each}
 					</div>
 				{/if}
-				{#if onenable && ondisable && showBulkActions}
-					<div
-						class={toolbarSection}
-						role="group"
-						aria-label={$t('ui.pages.providersPage.models.bulkActions')}
-					>
-						<DropdownMenu.Root>
-							<DropdownMenu.Trigger
-								class={menuIconTrigger}
-								aria-label={$t('ui.pages.providersPage.models.bulkActions')}
-								title={$t('ui.pages.providersPage.models.bulkActions')}
-							>
-								<Icon name="power" size={16} />
-							</DropdownMenu.Trigger>
-							<MenuPanel class="z-50 min-w-56 surface-pop p-1" align="end">
-								<DropdownMenu.Item
-									class="flex min-h-control cursor-pointer items-center gap-2 rounded-control px-2 py-1.5 text-sm outline-none data-highlighted:bg-hover"
-									disabled={working || visible.length === 0}
-									onSelect={() => void bulk(true)}
-								>
-									<Icon name="power" size={14} />
-									{$t('ui.pages.providersPage.models.turnOnAll', {
-										values: { count: visible.length }
-									})}
-								</DropdownMenu.Item>
-								<DropdownMenu.Item
-									class="flex min-h-control cursor-pointer items-center gap-2 rounded-control px-2 py-1.5 text-sm outline-none data-highlighted:bg-hover"
-									disabled={working || visible.length === 0}
-									onSelect={() => void bulk(false)}
-								>
-									<Icon name="circle-off" size={14} />
-									{$t('ui.pages.providersPage.models.turnOffAll', {
-										values: { count: visible.length }
-									})}
-								</DropdownMenu.Item>
-								{#if paidFree}
-									<DropdownMenu.Separator class="my-1 h-px bg-border" />
-									<DropdownMenu.Item
-										class="flex min-h-control cursor-pointer items-center gap-2 rounded-control px-2 py-1.5 text-sm outline-none data-highlighted:bg-hover"
-										disabled={working || paidIds.length === 0}
-										onSelect={() => void bulkClass(true, 'paid')}
-									>
-										<Icon name="power" size={14} />
-										{$t('ui.pages.providersPage.models.turnOnPaid', {
-											values: { count: paidIds.length }
-										})}
-									</DropdownMenu.Item>
-									<DropdownMenu.Item
-										class="flex min-h-control cursor-pointer items-center gap-2 rounded-control px-2 py-1.5 text-sm outline-none data-highlighted:bg-hover"
-										disabled={working || paidIds.length === 0}
-										onSelect={() => void bulkClass(false, 'paid')}
-									>
-										<Icon name="circle-off" size={14} />
-										{$t('ui.pages.providersPage.models.turnOffPaid', {
-											values: { count: paidIds.length }
-										})}
-									</DropdownMenu.Item>
-									<DropdownMenu.Item
-										class="flex min-h-control cursor-pointer items-center gap-2 rounded-control px-2 py-1.5 text-sm outline-none data-highlighted:bg-hover"
-										disabled={working || freeIds.length === 0}
-										onSelect={() => void bulkClass(true, 'free')}
-									>
-										<Icon name="power" size={14} />
-										{$t('ui.pages.providersPage.models.turnOnFree', {
-											values: { count: freeIds.length }
-										})}
-									</DropdownMenu.Item>
-									<DropdownMenu.Item
-										class="flex min-h-control cursor-pointer items-center gap-2 rounded-control px-2 py-1.5 text-sm outline-none data-highlighted:bg-hover"
-										disabled={working || freeIds.length === 0}
-										onSelect={() => void bulkClass(false, 'free')}
-									>
-										<Icon name="circle-off" size={14} />
-										{$t('ui.pages.providersPage.models.turnOffFree', {
-											values: { count: freeIds.length }
-										})}
-									</DropdownMenu.Item>
-								{/if}
-							</MenuPanel>
-						</DropdownMenu.Root>
-					</div>
-				{/if}
 				{#if canAdd}
 					<Button variant="outline" size="sm" class="shrink-0" onclick={() => (adding = !adding)}>
 						<Icon name="plus" size={14} />
@@ -606,7 +478,7 @@
 			</div>
 		{:else}
 			<div class="flex flex-col gap-2 pb-2">
-				{#each shown as model (model.provider_id + '/' + model.model_id)}
+				{#each visible as model (model.provider_id + '/' + model.model_id)}
 					<ModelRow
 						{model}
 						{showProvider}
@@ -621,12 +493,17 @@
 					/>
 				{/each}
 			</div>
-			{#if shown.length < visible.length || hasMore}
-				<div class="flex justify-center py-3">
-					<Button variant="outline" size="sm" onclick={showMore}>
-						<Icon name="chevron-down" size={14} />
-						{$t('ui.pages.providersPage.models.showMore')}
-					</Button>
+			{#if onloadmore && hasMore}
+				<div
+					class="flex items-center justify-center py-3 text-xs text-muted-foreground"
+					{@attach watchMore}
+				>
+					{#if loading}
+						<span class="flex items-center gap-2">
+							<Icon name="loader" size={14} spin />
+							{$t('ui.common.loading')}
+						</span>
+					{/if}
 				</div>
 			{/if}
 		{/if}

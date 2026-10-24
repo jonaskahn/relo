@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { t } from 'svelte-i18n';
-	import { cubicOut } from 'svelte/easing';
-	import { Tween } from 'svelte/motion';
+	import { slide } from 'svelte/transition';
 	import type { Account, Provider, QuotaWindow } from '$lib/types';
 	import ProviderLogo from '$lib/components/ui/provider-logo.svelte';
 	import Icon, { type IconName } from '$lib/components/ui/icon.svelte';
@@ -9,12 +8,12 @@
 	import CardDescription from '$lib/components/ui/card-description.svelte';
 	import CardTitle from '$lib/components/ui/card-title.svelte';
 	import { selectedAccount } from '$lib/provider-quota';
-	import { isFreeConnection } from '$lib/provider-free';
 	import { isExperimentalConnection } from '$lib/provider-experimental';
 	import { providerStatus, type ProviderStatusName } from '$lib/provider-status';
 	import { ATTENTION_PERCENT } from '$lib/provider-attention';
 	import { isCardOpenClick } from '$lib/card-target';
 	import { cardLayoutCard, type CardLayout } from '$lib/theme.svelte';
+	import BillingChip from './billing-chip.svelte';
 	import ProviderQuotaFooter from './provider-quota-footer.svelte';
 
 	// The card leads with what the connection is and the account on show, and
@@ -41,13 +40,9 @@
 	}: Props = $props();
 
 	let picked = $state(0);
+	let statusHovered = $state(false);
 	const current = $derived(selectedAccount(accounts, picked));
 	const status = $derived(providerStatus(provider));
-
-	// Hovering the head scales it to 1.01 from its left edge; the card's
-	// content below never moves. Reduced motion keeps the head still.
-	const zoom = new Tween(1, { duration: 150, easing: cubicOut });
-	const reduced = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 	// The quota the account reported is the card's own reading, so the pill
 	// overrides the connection state when a window is near or at its end.
@@ -111,7 +106,6 @@
 	const pillName = $derived(
 		worst >= 100 ? 'limitReached' : worst >= ATTENTION_PERCENT ? 'nearLimit' : status.name
 	);
-	const free = $derived(isFreeConnection(provider));
 	// The lane logs what it is sent, so the card says so beside what it costs.
 	const experimental = $derived(isExperimentalConnection(provider.template_id || provider.id));
 </script>
@@ -125,13 +119,7 @@
 	}}
 >
 	<div class="flex min-w-0 flex-col">
-		<div
-			class="flex items-start gap-2 px-4"
-			role="presentation"
-			style="transform: scale({zoom.current}); transform-origin: left center"
-			onmouseenter={() => (zoom.target = reduced() ? 1 : 1.01)}
-			onmouseleave={() => (zoom.target = 1)}
-		>
+		<div class="flex items-start gap-2 px-4">
 			<span class={provider.enabled ? '' : 'opacity-50'}>
 				<ProviderLogo id={provider.template_id || provider.id} label={provider.label} />
 			</span>
@@ -145,11 +133,7 @@
 			>
 				<CardTitle class="flex min-w-0 items-center gap-1.5 truncate text-sm">
 					<span class="truncate">{provider.label}</span>
-					{#if free}
-						<span data-free-chip class="badge shrink-0 border border-ok/40 bg-ok/10 text-ok">
-							{$t('ui.pages.providersPage.list.tagFree')}
-						</span>
-					{/if}
+					<BillingChip {provider} hover />
 					{#if experimental}
 						<span
 							data-experimental-chip
@@ -163,10 +147,18 @@
 			</button>
 			<span
 				data-status-pill={pillName}
-				class="inline-flex shrink-0 items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium {pill.tone}"
+				class="group inline-flex shrink-0 items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium {pill.tone}"
+				aria-label={pill.label}
+				role="img"
+				onmouseenter={() => (statusHovered = true)}
+				onmouseleave={() => (statusHovered = false)}
 			>
 				<Icon name={pill.icon} size={12} />
-				{pill.label}
+				{#if statusHovered}
+					<span transition:slide={{ duration: 150, axis: 'x' }} class="ms-1 whitespace-nowrap"
+						>{pill.label}</span
+					>
+				{/if}
 			</span>
 		</div>
 		<!-- The account line stays when a provider has none, so every header

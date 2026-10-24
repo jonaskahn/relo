@@ -1,6 +1,7 @@
 package platform
 
 import (
+	"context"
 	"encoding/json"
 	"os"
 	"path/filepath"
@@ -111,7 +112,7 @@ func TestTrafficLogReadsBackTheHalvesOfOneRequest(t *testing.T) {
 		}
 	}
 
-	found, err := traffic.Halves("req-41")
+	found, err := traffic.Halves(context.Background(), "req-41")
 	if err != nil || len(found) != 2 {
 		t.Fatalf("Halves(req-41) = %+v, %v, want only that request's halves", found, err)
 	}
@@ -124,7 +125,7 @@ func TestTrafficLogReadsBackTheHalvesOfOneRequest(t *testing.T) {
 		*found[1].Ordinal != ordinal || found[1].Status != 200 {
 		t.Fatalf("second half = %+v, want the attempt it was written for", found[1])
 	}
-	if missing, err := traffic.Halves("req-42"); err != nil || len(missing) != 0 {
+	if missing, err := traffic.Halves(context.Background(), "req-42"); err != nil || len(missing) != 0 {
 		t.Fatalf("Halves(req-42) = %+v, %v, want no halves", missing, err)
 	}
 }
@@ -148,7 +149,7 @@ func TestTrafficLogReadsBackARequestOlderThanTheNewestFile(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	halves, err := traffic.Halves("req-3")
+	halves, err := traffic.Halves(context.Background(), "req-3")
 	if err != nil || len(halves) != 1 || halves[0].RequestID != "req-3" {
 		t.Fatalf("Halves(req-3) = %+v, %v, want the older day's half", halves, err)
 	}

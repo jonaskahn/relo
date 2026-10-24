@@ -39,9 +39,8 @@
 	});
 	const weekdays = $derived(
 		Array.from({ length: 7 }, (_, day) =>
-			new Date(Date.UTC(2026, 8, 28 + day)).toLocaleDateString(undefined, {
-				weekday: 'short',
-				timeZone: 'UTC'
+			new Date(Date.UTC(2026, 8, 28 + day)).toLocaleDateString('en', {
+ 				weekday: 'short',
 			})
 		)
 	);
@@ -54,7 +53,7 @@
 			if (!key) return '';
 			const date = new Date(key + 'T00:00:00Z');
 			if (Number.isNaN(date.getTime())) return '';
-			const label = date.toLocaleDateString(undefined, { month: 'short', timeZone: 'UTC' });
+			const label = date.toLocaleDateString('en', { month: 'short' });
 			if (label === previous) return '';
 			previous = label;
 			return label;

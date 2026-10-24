@@ -1,6 +1,6 @@
 [cli.root.short]
 description = "One-line summary of the relo command"
-other = "Локальний ШІ-проксі з пулом облікових даних із кількох акаунтів"
+other = "Локальний ШІ-проксі з пулом облікових даних кількох акаунтів"
 
 [cli.root.home]
 description = "Usage of the --home flag"
@@ -112,7 +112,7 @@ other = "Адреса"
 
 [cli.daemon.status.data_plane]
 description = "Status field label for the port each client protocol answers on"
-other = "Data plane"
+other = "Площина даних"
 
 [cli.daemon.status.secret_mode]
 description = "Status field label"
@@ -132,7 +132,7 @@ other = "{{.Count}} (активних: {{.Active}})"
 
 [cli.daemon.status.no_keys]
 description = "Warning under the status report when no client key is active"
-other = "Немає активного клієнтського ключа. Data plane відкидає кожен запит."
+other = "Немає активного клієнтського ключа. Площина даних відкидає кожен запит."
 
 [cli.daemon.run.short]
 description = "One-line summary of relo daemon run"
@@ -160,7 +160,7 @@ other = "Relo запускатиметься під час входу в сис�
 
 [cli.autostart.removed]
 description = "Confirmation after removing the login items"
-other = "Relo більше не запускатиметься підчас входу в систему"
+other = "Relo більше не запускатиметься під час входу в систему"
 
 [language.auto]
 description = "The language choice that follows the system locale"
@@ -272,7 +272,7 @@ other = "консоль не змогла створити сесію"
 
 [api.auth.session_missing]
 description = "Refusal of a management request without a live session"
-other = "сесія панелі відсутня або протермінована"
+other = "сесія консолі відсутня або прострочена"
 
 [api.body.invalid]
 description = "Refusal of a body that does not parse, with the parser's detail"
@@ -288,7 +288,7 @@ other = "Завершення входу"
 
 [api.callback.summary]
 description = "Summary of the callback page while the authorization is exchanged"
-other = "Relo отримав авторизацію та зберігає акаунт."
+other = "Relo отримав дозвіл і зберігає акаунт."
 
 [api.callback.marker_working]
 description = "Status marker of a login that is still running"
@@ -308,11 +308,11 @@ other = "Хід входу"
 
 [api.callback.step_authorized]
 description = "First step of a login: the provider authorized the request"
-other = "Авторизовано {{.Provider}}"
+other = "Дозвіл від {{.Provider}}"
 
 [api.callback.step_exchanging]
 description = "Second step of a login: the authorization is traded for tokens"
-other = "Обмін авторизації"
+other = "Обмін дозволом"
 
 [api.callback.step_stored]
 description = "Third step of a login: the account is stored"
@@ -332,7 +332,7 @@ other = "Вхід не завершено"
 
 [api.callback.expired_title]
 description = "Title of the callback page for a login this process no longer tracks"
-other = "Вхід більше не триває"
+other = "Цей вхід більше не діє"
 
 [api.callback.expired_body]
 description = "Summary of the callback page for a login this process no longer tracks"
@@ -340,15 +340,15 @@ other = "Relo більше не стежить за цим входом. Поч�
 
 [api.callback.expired]
 description = "Refusal of a callback status poll for a login that is gone"
-other = "вхід більше не триває"
+other = "вхід більше не діє"
 
 [api.callback.failure_denied]
 description = "Callback failure: the provider refused the authorization"
-other = "Провайдер відхилив авторизацію."
+other = "Провайдер відхилив дозвіл."
 
 [api.callback.failure_state]
 description = "Callback failure: the callback did not match the login Relo started"
-other = "Зворотний виклик не збігся з входом, який почав Relo, або вже використаний."
+other = "Зворотний виклик не збігся з входом, який почав Relo, або його вже використали."
 
 [api.callback.failure_timeout]
 description = "Callback failure: the provider did not answer in time"
@@ -356,7 +356,7 @@ other = "Провайдер не відповів вчасно."
 
 [api.callback.failure_exchange]
 description = "Callback failure: the provider would not exchange the authorization"
-other = "Провайдер не обміняв авторизацію на токен."
+other = "Провайдер не обміняв дозвіл на токен."
 
 [api.callback.account_label]
 description = "Label of the stored account on the callback page"
@@ -364,7 +364,7 @@ other = "Акаунт"
 
 [api.callback.close_hint]
 description = "What the callback page tells an operator once the login finished"
-other = "Ти можеш закрити цю вкладку."
+other = "Можеш закрити цю вкладку."
 
 [api.callback.closing_in]
 description = "Countdown shown on the callback page before it closes itself"
@@ -376,7 +376,7 @@ other = "Відкрити консоль"
 
 [api.dashboard.missing]
 description = "Refusal of a console request in a build without one"
-other = "у цій збірці немає панелі"
+other = "у цій збірці немає консолі"
 
 [api.events.unknown]
 description = "Refusal of an event stream for a channel that does not exist"
@@ -392,7 +392,7 @@ other = "відкрито забагато потоків подій"
 
 [api.inference.retired]
 description = "Refusal of an inference path that moved to the port of its protocol"
-other = "точки введення переїхали на {{.BaseURL}}"
+other = "виклики моделей переїхали на {{.BaseURL}}"
 
 [api.keys.invalid]
 description = "Refusal of an inference request with a key that does not authenticate"
@@ -424,11 +424,11 @@ other = "немає операції входу з таким ідентифік
 
 [api.oauth.port_busy]
 description = "Refusal of a sign-in whose callback port another process holds"
-other = "{{process}} займає порт {{port}}; завершіть його, щоб увійти"
+other = "{{process}} займає порт {{port}}; заверши його, щоб увійти"
 
 [api.integration.action_in_progress]
 description = "Refusal of a second run of an action the first has not finished"
-other = "ця дія вже виконується; зачекайте на завершення"
+other = "ця дія вже виконується; зачекай на завершення"
 
 [api.route.missing]
 description = "Refusal of a management path that matches no route"
@@ -444,11 +444,11 @@ other = "служба керування недоступна"
 
 [api.settings.retention.invalid]
 description = "Refusal of a retention budget below the floor the ledger keeps"
-other = "request details are kept for at least a {{.Min}}-day window; use 0 to keep everything"
+other = "подробиці запитів зберігаються щонайменше {{.Min}} дн.; вкажи 0, щоб зберігати все"
 
 [api.settings.sweep.busy]
 description = "Refusal of a maintenance sweep while another one is running"
-other = "a maintenance sweep is already running; wait for it to finish"
+other = "прибирання вже триває; зачекай, доки воно завершиться"
 
 [api.account.status_required]
 description = "Refusal of an account update that named neither status nor priority"
@@ -460,15 +460,15 @@ other = "Relo — локальний ШІ-проксі"
 
 [tray.menu.open_dashboard]
 description = "Tray menu item that opens the console in a browser"
-other = "Відкрити панель"
+other = "Відкрити консоль"
 
 [tray.menu.restart]
 description = "Tray menu item that restarts the daemon"
-other = "Перезапустити сервер"
+other = "Перезапустити службу"
 
 [tray.menu.force_restart]
 description = "Tray menu item that kills the daemon and starts it again"
-other = "Примусово перезапустити сервер"
+other = "Примусово перезапустити службу"
 
 [tray.menu.autostart]
 description = "Tray menu item that toggles the login item"
@@ -580,11 +580,11 @@ other = "Relo працює на {{.Addr}}"
 
 [cli.daemon.status.no_keys_hint]
 description = "How to create the first client key"
-other = "Створи ключ на сторінці « Ключі » в консолі."
+other = "Створи ключ на сторінці «Клієнтські ключі» в консолі."
 
 [api.daemon.not_headless]
 description = "Refusal of a stop request when this process is not a headless daemon"
-other = "цей процес не приймає запит на зупинку"
+other = "цей процес не приймає запиту на зупинку"
 
 [api.daemon.instance_mismatch]
 description = "Refusal of a stop request naming another instance"
@@ -624,7 +624,7 @@ other = "завершити запущений процес і звільнит�
 
 [cli.uninstall.short]
 description = "One-line summary of relo uninstall"
-other = "видалити Relo з цього комп'ютера"
+other = "видалити Relo з цього комп’ютера"
 
 [cli.uninstall.keep_data]
 description = "Usage of the uninstall --keep-data flag"
@@ -644,11 +644,11 @@ other = "Видалити дані Relo (конфігурація, обліко�
 
 [cli.uninstall.kept]
 description = "What an uninstall reports when the Relo data stays"
-other = "Ваші дані Relo зберігаються в {{.Home}}"
+other = "Твої дані Relo зберігаються в {{.Home}}"
 
 [cli.uninstall.wiped]
 description = "What an uninstall reports after the Relo data is removed"
-other = "Ваші дані Relo видалено"
+other = "Твої дані Relo видалено"
 
 [cli.uninstall.removing]
 description = "What an uninstall says as it hands the program to its installer"
@@ -656,15 +656,15 @@ other = "Видалення Relo…"
 
 [cli.uninstall.manual]
 description = "What an uninstall says when nothing on the machine removes Relo"
-other = "видаліть програму Relo вручну"
+other = "видали програму Relo вручну"
 
 [cli.uninstall.trash]
 description = "What an uninstall says when the macOS app bundle could not be deleted"
-other = "перемістіть {{.Bundle}} до кошика"
+other = "перемісти {{.Bundle}} до Кошика"
 
 [cli.uninstall.run]
 description = "The command to run when a removal could not be started"
-other = "виконайте це, щоб завершити видалення Relo: {{.Command}}"
+other = "виконай це, щоб завершити видалення Relo: {{.Command}}"
 
 [cli.uninstall.channel]
 description = "The installation channel the uninstall detected"
@@ -672,7 +672,7 @@ other = "Виявлено встановлення: {{.Channel}}"
 
 [cli.uninstall.command]
 description = "The exact program-removal command for the detected channel"
-other = "Видаліть програму командою: {{.Command}}"
+other = "Видали програму командою: {{.Command}}"
 
 [cli.uninstall.verified]
 description = "Confirmation that a path is gone after removal"

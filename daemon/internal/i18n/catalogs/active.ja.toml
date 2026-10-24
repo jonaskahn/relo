@@ -114,7 +114,7 @@ other = "アドレス"
 
 [cli.daemon.status.data_plane]
 description = "Status field label for the port each client protocol answers on"
-other = "data plane"
+other = "データプレーン"
 
 [cli.daemon.status.secret_mode]
 description = "Status field label"
@@ -134,7 +134,7 @@ other = "{{.Count}}件（有効{{.Active}}件）"
 
 [cli.daemon.status.no_keys]
 description = "Warning under the status report when no client key is active"
-other = "有効なクライアントキーがありません。data planeはすべてのリクエストを拒否します。"
+other = "有効なクライアントキーがありません。データプレーンはすべてのリクエストを拒否します。"
 
 [cli.daemon.run.short]
 description = "One-line summary of relo daemon run"
@@ -326,7 +326,7 @@ other = "接続しました"
 
 [api.callback.connected_body]
 description = "Summary of the callback page for a login that finished"
-other = "Reloがアカウントを保存しました。リクエストはこのアカウント経由でルーティングされます。"
+other = "Reloがアカウントを保存しました。以降のリクエストはこのアカウント経由で送られます。"
 
 [api.callback.failed_title]
 description = "Title of the callback page for a login that did not finish"
@@ -350,7 +350,7 @@ other = "プロバイダーが認証を拒否しました。"
 
 [api.callback.failure_state]
 description = "Callback failure: the callback did not match the login Relo started"
-other = "コールバックがReloが開始したログインと一致しないか、すでに使用されています。"
+other = "Reloが開始したログインとコールバックが一致しないか、すでに使われています。"
 
 [api.callback.failure_timeout]
 description = "Callback failure: the provider did not answer in time"
@@ -394,7 +394,7 @@ other = "開いているイベントストリームが多すぎます"
 
 [api.inference.retired]
 description = "Refusal of an inference path that moved to the port of its protocol"
-other = "推論ポートは{{.BaseURL}}に移動しました"
+other = "推論のサーフェスは{{.BaseURL}}に移動しました"
 
 [api.keys.invalid]
 description = "Refusal of an inference request with a key that does not authenticate"
@@ -410,11 +410,11 @@ other = "APIキーストアを利用できません"
 
 [api.logs.event_id_number]
 description = "Refusal of a log request whose event id is not a number"
-other = "イベントIDは数値である必要があります"
+other = "イベントIDは数値で指定してください"
 
 [api.logs.capture_id_number]
 description = "Refusal of a capture read whose capture id is not a number"
-other = "キャプチャIDは数値である必要があります"
+other = "キャプチャIDは数値で指定してください"
 
 [api.logs.capture_missing]
 description = "Refusal of a capture read that names no stored capture"
@@ -430,7 +430,7 @@ other = "{{process}} がポート {{port}} を使用しています。終了し�
 
 [api.integration.action_in_progress]
 description = "Refusal of a second run of an action the first has not finished"
-other = "その操作はすでに実行中です。完了をお待ちください"
+other = "その操作はすでに実行中です。終わるまでお待ちください"
 
 [api.route.missing]
 description = "Refusal of a management path that matches no route"
@@ -446,15 +446,15 @@ other = "管理サービスを利用できません"
 
 [api.settings.retention.invalid]
 description = "Refusal of a retention budget below the floor the ledger keeps"
-other = "request details are kept for at least a {{.Min}}-day window; use 0 to keep everything"
+other = "リクエストの詳細は最低 {{.Min}} 日間保持します。すべて残すには 0 を指定してください"
 
 [api.settings.sweep.busy]
 description = "Refusal of a maintenance sweep while another one is running"
-other = "a maintenance sweep is already running; wait for it to finish"
+other = "メンテナンスの掃除がすでに実行中です。終わるまでお待ちください"
 
 [api.account.status_required]
 description = "Refusal of an account update that named neither status nor priority"
-other = "statusまたはpriorityの指定が必要です"
+other = "statusまたはpriorityを指定してください"
 
 [tray.tooltip]
 description = "Tooltip of the tray icon"
@@ -618,11 +618,11 @@ other = "データベース利用不可"
 
 [tray.error.start_failed]
 description = "Daemon start error"
-other = "起動できない"
+other = "起動失敗"
 
 [cli.daemon.stop.force]
 description = "Usage of the stop --force flag"
-other = "実行中のプロセスを終了し、Relo が使用しているポートを解放する"
+other = "実行中のプロセスを終了し、Reloが使っているポートを解放する"
 
 [cli.uninstall.short]
 description = "One-line summary of relo uninstall"

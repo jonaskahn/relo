@@ -1,6 +1,7 @@
 package server_test
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
 	"strconv"
@@ -34,7 +35,7 @@ func (j *journalTraffic) AppendHalf(half server.TrafficHalf) error {
 	return nil
 }
 
-func (j *journalTraffic) Halves(requestID string) ([]server.TrafficHalf, error) {
+func (j *journalTraffic) Halves(ctx context.Context, requestID string) ([]server.TrafficHalf, error) {
 	j.mu.Lock()
 	defer j.mu.Unlock()
 	found := make([]server.TrafficHalf, 0, len(j.halves))

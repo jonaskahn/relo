@@ -131,7 +131,7 @@
 			</div>
 
 			<div class="mt-4">
-				<h3 class="sr-only">{labelOf(turn)}</h3>
+				<h3 class="mb-1 text-xs font-medium text-muted-foreground">{labelOf(turn)}</h3>
 				{#if turn.result.status === 'pending'}
 					{#if turn.result.text !== ''}
 						<p class="text-[15px] leading-7 break-words whitespace-pre-wrap">{turn.result.text}</p>

@@ -5,7 +5,9 @@
 	import Input from '$lib/components/ui/input.svelte';
 	import Label from '$lib/components/ui/label.svelte';
 	import Icon from '$lib/components/ui/icon.svelte';
+	import BillingChip from '$lib/components/providers/billing-chip.svelte';
 	import { formatUnitPrice } from '$lib/format';
+	import type { BillingInput } from '$lib/provider-billing';
 
 	// Review is the last look before the write: what will be stored on the
 	// left, and the models the connection will serve on the right, each one
@@ -20,6 +22,10 @@
 		isAddKey?: boolean;
 		targetLabel?: string;
 		templateId?: string;
+		// billing is the connection the commit will store, so the last look before
+		// the write names what it will cost. The stepper computes it once from the
+		// draft, so the review never classifies a connection a second way.
+		billing?: BillingInput;
 	}
 
 	let {
@@ -31,7 +37,8 @@
 		onchange,
 		isAddKey = false,
 		targetLabel = '',
-		templateId = ''
+		templateId = '',
+		billing = {}
 	}: Props = $props();
 
 	let search = $state('');
@@ -88,6 +95,12 @@
 					value={label}
 					oninput={(event) => onchange({ label: event.currentTarget.value })}
 				/>
+			</div>
+			<!-- What the connection will cost is part of the last look: the same chip
+			     the card, the row, and the detail header wear. -->
+			<div class="flex items-center gap-2 text-xs text-muted-foreground">
+				<span>{$t('ui.pages.providersPage.review.billing')}</span>
+				<BillingChip provider={{ id: providerId, ...billing }} />
 			</div>
 			<p class="text-xs text-muted-foreground">
 				{$t('ui.pages.providersPage.review.summary', {
