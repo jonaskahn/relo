@@ -126,7 +126,7 @@ func TestTrafficLogIndexDayEmptySize(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer f.Close()
+	defer func() { _ = f.Close() }()
 	lines, err := indexDay(f, 0)
 	if err != nil || len(lines) != 0 {
 		t.Fatalf("indexDay(empty) = %v, %v", lines, err)
@@ -147,7 +147,7 @@ func TestTrafficLogRequestIDAtShortAndBad(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer f.Close()
+	defer func() { _ = f.Close() }()
 	if _, ok := requestIDAt(f, 0); ok {
 		t.Fatal("requestIDAt(short) = true, want false")
 	}
@@ -167,7 +167,7 @@ func TestTrafficLogReadLineAtReturnsLineWithoutNewline(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer f.Close()
+	defer func() { _ = f.Close() }()
 	line, err := readLineAt(f, 0, 11)
 	if err != nil || string(line) != "hello world" {
 		t.Fatalf("readLineAt() = %q, %v", line, err)
@@ -188,7 +188,7 @@ func TestTrafficLogReadLineAtEmptyRoom(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer f.Close()
+	defer func() { _ = f.Close() }()
 	line, err := readLineAt(f, 5, 5)
 	if err != nil || len(line) != 0 {
 		t.Fatalf("readLineAt(empty room) = %q, %v", line, err)
