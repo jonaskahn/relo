@@ -66,10 +66,7 @@
 	}
 </script>
 
-<div
-	bind:this={root}
-	class="pointer-events-none fixed bottom-6 right-6 z-40"
->
+<div bind:this={root} class="pointer-events-none fixed bottom-6 right-6 z-40">
 	{#if visible}
 		<button
 			class={cn(

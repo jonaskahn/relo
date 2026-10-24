@@ -1,4 +1,3 @@
-import type { Provider } from '$lib/types';
 import { isFreeConnection } from '$lib/provider-free';
 
 export type BillingInput = {
@@ -31,14 +30,16 @@ function openCodePlan(p: BillingInput): boolean {
 		const u = new URL(p.base_url ?? '');
 		const host = u.hostname.toLowerCase();
 		const path = u.pathname.toLowerCase();
-		return host.includes('opencode.ai') && (path.includes('/zen') || path.includes('/inference/go'));
+		return (
+			host.includes('opencode.ai') && (path.includes('/zen') || path.includes('/inference/go'))
+		);
 	} catch {
 		return false;
 	}
 }
 
 export function isPaidPlanConnection(p: BillingInput): boolean {
-	if (isFreeConnection(p as any)) return false;
+	if (isFreeConnection({ template_id: p.template_id ?? '' })) return false;
 	if (PAID_PLAN_TEMPLATES.has(p.template_id ?? '')) return true;
 	if (p.origin === 'signin' || p.kind === 'signin' || p.auth === 'oauth') return true;
 	if (tokenPlan(p)) return true;
@@ -47,7 +48,7 @@ export function isPaidPlanConnection(p: BillingInput): boolean {
 }
 
 export function isPayAsYouGoConnection(p: BillingInput): boolean {
-	if (isFreeConnection(p as any)) return false;
+	if (isFreeConnection({ template_id: p.template_id ?? '' })) return false;
 	if (isPaidPlanConnection(p)) return false;
 	return p.kind === 'key' || p.kind === 'cloud';
 }

@@ -9,7 +9,7 @@
 	import CardTitle from '$lib/components/ui/card-title.svelte';
 	import { selectedAccount } from '$lib/provider-quota';
 	import { isFreeConnection } from '$lib/provider-free';
-import { isPaidPlanConnection, isPayAsYouGoConnection } from '$lib/provider-billing';
+	import { isPaidPlanConnection, isPayAsYouGoConnection } from '$lib/provider-billing';
 	import { isExperimentalConnection } from '$lib/provider-experimental';
 	import { providerStatus, type ProviderStatusName } from '$lib/provider-status';
 	import { ATTENTION_PERCENT } from '$lib/provider-attention';
