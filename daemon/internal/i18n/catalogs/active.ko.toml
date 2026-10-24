@@ -446,11 +446,11 @@ other = "관리 서비스를 사용할 수 없어요"
 
 [api.settings.retention.invalid]
 description = "Refusal of a retention budget below the floor the ledger keeps"
-other = "요청 상세는 최소 {{.Min}}일 동안 보관해요. 0이면 전부 보관해요"
+other = "요청 상세는 최소 {{.Min}}일 동안 보관해요. 전부 보관하려면 0을 쓰세요"
 
 [api.settings.sweep.busy]
 description = "Refusal of a maintenance sweep while another one is running"
-other = "이미 정리 작업이 돌고 있어요. 끝날 때까지 기다리세요"
+other = "정리가 이미 돌고 있어요. 끝날 때까지 기다려 주세요"
 
 [api.account.status_required]
 description = "Refusal of an account update that named neither status nor priority"
