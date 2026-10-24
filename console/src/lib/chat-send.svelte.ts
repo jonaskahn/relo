@@ -198,7 +198,8 @@ export class ChatSender {
 		// The turns that answered carry the context; the one being retried and
 		// the new prompt are added on top of it.
 		const messages = contextMessages(next);
-		host.setStore(withThread(host.store(), next));
+		const stored = next.seed !== undefined ? { ...next, seed: undefined } : next;
+		host.setStore(withThread(host.store(), stored));
 		if (replaceTurnId === '') host.clearDraft();
 		host.persist();
 
@@ -206,7 +207,7 @@ export class ChatSender {
 		this.inflightThreadId = next.id;
 		this.#controller = new AbortController();
 		try {
-			const request = chatRequest(next.settings, prompt, messages);
+			const request = chatRequest(next.settings, prompt, messages, next.seed);
 			if (next.settings.stream) {
 				await this.#stream(next.id, turn.id, request, this.#controller.signal);
 			} else {

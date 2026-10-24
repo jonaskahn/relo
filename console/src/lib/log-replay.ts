@@ -8,6 +8,7 @@ import {
 	type ChatFormat,
 	type ChatSettings,
 	type ChatThread,
+	type ChatThreadSeed,
 	type ChatTurn
 } from './chat-threads';
 import type { ChatTesterMessage } from './types';
@@ -242,7 +243,7 @@ export function settingsOfSeed(
 ): ChatSettings {
 	const routeId = target.routeId ?? '';
 	return {
-		mode: routeId === '' ? 'direct' : 'format',
+		mode: 'format',
 		target: routeId === '' ? 'model' : 'route',
 		format: seed.format,
 		providerId: target.providerId ?? seed.providerId,
@@ -287,7 +288,8 @@ export function threadOfSeed(seed: CapturedChatSeed, settings: ChatSettings): Ch
 		updatedAt: now,
 		draft: seed.draft || pending,
 		settings: { ...settings },
-		turns
+		turns,
+		seed: { messages: [...seed.messages], sourceRequestId: seed.sourceRequestId }
 	};
 }
 

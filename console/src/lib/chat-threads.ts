@@ -77,6 +77,11 @@ export interface ChatTurn {
 }
 
 /** A conversation, with the settings it was started under. */
+export interface ChatThreadSeed {
+	messages: ChatTesterMessage[];
+	sourceRequestId: string;
+}
+
 export interface ChatThread {
 	id: string;
 	title: string;
@@ -85,6 +90,7 @@ export interface ChatThread {
 	draft: string;
 	settings: ChatSettings;
 	turns: ChatTurn[];
+	seed?: ChatThreadSeed;
 }
 
 /** Every thread the tester holds, and which one is open. */
@@ -172,7 +178,7 @@ export function titleFromPrompt(prompt: string): string {
  *  names a thread that exists. */
 export function settle(store: ChatStore): ChatStore {
 	const threads = store.threads
-		.filter((thread) => thread.turns.length > 0)
+		.filter((thread) => thread.turns.length > 0 || thread.seed !== undefined)
 		.map((thread) => ({
 			...thread,
 			// The annotation is what keeps 'interrupted' a status rather than a
@@ -339,9 +345,11 @@ export function settingsReady(settings: ChatSettings): boolean {
 export function chatRequest(
 	settings: ChatSettings,
 	prompt: string,
-	messages: ChatTesterMessage[]
+	messages: ChatTesterMessage[],
+	seed?: ChatThreadSeed
 ): ChatTesterRequest {
 	const route = usesRoute(settings);
+	const context = seed ? seed.messages : messages;
 	return {
 		mode: settings.mode,
 		format: settings.format,
@@ -351,7 +359,7 @@ export function chatRequest(
 		system: settings.system,
 		max_tokens: settings.maxTokens,
 		stream: settings.stream,
-		messages: [...messages, { role: 'user', content: prompt }]
+		messages: [...context, { role: 'user', content: prompt }]
 	};
 }
 

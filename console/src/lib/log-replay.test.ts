@@ -257,7 +257,7 @@ describe('the conversation a seed builds', () => {
 	it('takes the captured target and dialect as its settings', () => {
 		const settings = settingsOfSeed(seed);
 		expect(settings).toEqual({
-			mode: 'direct',
+			mode: 'format',
 			target: 'model',
 			format: 'openai-chat',
 			providerId: 'openai',
