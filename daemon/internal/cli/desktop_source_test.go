@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/jonaskahn/relo/internal/adapters/sqlite"
+	"github.com/jonaskahn/relo/internal/catalog"
 )
 
 // TestPlanConnectionsAreNotSpend covers the spend definition the console
@@ -69,6 +70,27 @@ func TestPaidConnectionsAreTheOnlySpend(t *testing.T) {
 				t.Fatalf("paidConnection(%+v) = %v, want %v", tt.row, got, tt.paid)
 			}
 		})
+	}
+}
+
+// TestConnectionKindResolvesTheFallback covers the branches connectionKind
+// takes when no curated template names the kind: a custom origin reads as
+// local, and everything else reads as a key.
+func TestConnectionKindResolvesTheFallback(t *testing.T) {
+	if got := connectionKind(sqlite.ProviderRow{Origin: string(catalog.OriginCustom)}); got != catalog.KindLocal {
+		t.Fatalf("connectionKind(custom) = %v, want local", got)
+	}
+	if got := connectionKind(sqlite.ProviderRow{Origin: "signin"}); got != catalog.KindKey {
+		t.Fatalf("connectionKind(signin) = %v, want key", got)
+	}
+}
+
+// TestPlanPricedConnectionRejectsAnUnparseableURL covers the error branch:
+// a malformed base URL never reads as a plan.
+func TestPlanPricedConnectionRejectsAnUnparseableURL(t *testing.T) {
+	row := sqlite.ProviderRow{BaseURL: "://not-a-url"}
+	if planPricedConnection(row) {
+		t.Fatalf("planPricedConnection(%q) = true, want false", row.BaseURL)
 	}
 }
 
