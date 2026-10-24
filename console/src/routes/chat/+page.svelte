@@ -139,7 +139,9 @@
 	);
 	const publishedRoutes = $derived(routes.filter((route) => route.enabled));
 	const ready = $derived(settingsReady(settings));
-	const locked = $derived(thread !== null && needsNewThread(thread));
+	// Settings stay editable throughout a conversation: changing them only
+	// shapes the next request, so a thread's captured model is never lost.
+	const locked = false;
 	const empty = $derived(
 		thread === null || (thread.turns.length === 0 && thread.seed === undefined)
 	);
