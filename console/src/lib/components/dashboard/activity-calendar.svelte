@@ -151,7 +151,7 @@
 			if (!key) continue;
 			const date = new Date(key + 'T00:00:00Z');
 			if (Number.isNaN(date.getTime())) continue;
-			const label = date.toLocaleDateString(undefined, { month: 'short', timeZone: 'UTC' });
+			const label = date.toLocaleDateString('en', { month: 'short', timeZone: 'UTC' });
 			const last = spans[spans.length - 1];
 			if (last && last.label === label) last.span += 1;
 			else spans.push({ label, span: 1 });

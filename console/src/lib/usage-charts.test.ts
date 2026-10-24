@@ -362,7 +362,7 @@ describe('barGeom', () => {
 describe('shortDay', () => {
 	it('names a day the way a chart axis reads it', () => {
 		expect(shortDay('2026-09-03')).toBe(
-			new Date('2026-09-03T00:00:00Z').toLocaleDateString(undefined, {
+			new Date('2026-09-03T00:00:00Z').toLocaleDateString('en', {
 				month: 'short',
 				day: 'numeric',
 				timeZone: 'UTC'
