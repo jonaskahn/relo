@@ -2,6 +2,7 @@
 	import { onMount } from 'svelte';
 	import { t } from 'svelte-i18n';
 	import { page } from '$app/state';
+import { goto } from '$app/navigation';
 
 	import Button from '$lib/components/ui/button.svelte';
 	import Input from '$lib/components/ui/input.svelte';
@@ -225,6 +226,17 @@
 		rows={agentRows}
 		onclose={() => (selected = null)}
 		onselect={(row) => (selected = row)}
+		onimpersonate={(row) => {
+			const provider = row.RouteProvider || row.Provider;
+			selected = null;
+			const url =
+				'/chat?replay=' + row.ID + (provider === '' ? '' : '&provider=' + encodeURIComponent(provider));
+			try {
+				void goto(url);
+			} catch {
+				window.location.assign(url);
+			}
+		}}
 	/>
 
 	<ScrollToTop />

@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { t } from 'svelte-i18n';
-	import { goto } from '$app/navigation';
-
+	
 	import { api } from '$lib/api';
 	import Button from '$lib/components/ui/button.svelte';
 	import CenteredModal from '$lib/components/ui/centered-modal.svelte';
@@ -22,9 +21,10 @@
 		rows?: UsageLogRow[];
 		onclose: () => void;
 		onselect?: (row: UsageLogRow) => void;
+		onimpersonate?: (row: UsageLogRow) => void;
 	}
 
-	let { row, rows = [], onclose, onselect }: Props = $props();
+	let { row, rows = [], onclose, onselect, onimpersonate }: Props = $props();
 
 	const index = $derived(row ? rows.findIndex((entry) => entry.ID === row.ID) : -1);
 	const previous = $derived(index > 0 ? rows[index - 1] : null);
@@ -144,13 +144,7 @@
 				size="sm"
 				title={$t('ui.pages.logsPage.impersonateHint')}
 				onclick={() => {
-					const provider = row.RouteProvider || row.Provider;
-					onclose();
-					void goto(
-						'/chat?replay=' +
-							row.ID +
-							(provider === '' ? '' : '&provider=' + encodeURIComponent(provider))
-					);
+					if (row && onimpersonate) onimpersonate(row);
 				}}
 			>
 				<Icon name="message-square" size={14} />
