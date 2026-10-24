@@ -8,7 +8,9 @@ import (
 	"net/http/httptest"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
+	"time"
 
 	"github.com/jonaskahn/relo/internal/adapters/oauth"
 )
@@ -198,6 +200,120 @@ func TestDeepSeekAccountReadsTheHarnessHome(t *testing.T) {
 	_, credential := loginManual(t, flow, "")
 	if credential.AccessToken != "dsh-grant-token" {
 		t.Fatalf("access token = %q, want the grant from DSH_HOME", credential.AccessToken)
+	}
+}
+
+// The store is another application's file: an unreadable one, a malformed one,
+// and one that answers with a refusal all have to name why the import failed
+// rather than surfacing a bare transport error.
+func TestDeepSeekAccountFailures(t *testing.T) {
+	t.Run("Validate accepts a live grant", func(t *testing.T) {
+		flow := oauth.NewDeepSeekAccountFlow()
+		if err := flow.Validate(context.Background(), &oauth.OAuthCredential{AccessToken: "a"}); err != nil {
+			t.Fatalf("Validate() error = %v", err)
+		}
+	})
+
+	t.Run("Validate names a missing and an expired grant", func(t *testing.T) {
+		flow := oauth.NewDeepSeekAccountFlow()
+		if err := flow.Validate(context.Background(), nil); !errors.Is(err, oauth.ErrTokenResponse) {
+			t.Fatalf("Validate(nil) error = %v, want %v", err, oauth.ErrTokenResponse)
+		}
+		expired := &oauth.OAuthCredential{AccessToken: "a", ExpiresAt: time.Now().Add(-time.Minute)}
+		if err := flow.Validate(context.Background(), expired); !errors.Is(err, oauth.ErrCredentialExpired) {
+			t.Fatalf("Validate(expired) error = %v, want %v", err, oauth.ErrCredentialExpired)
+		}
+	})
+
+	t.Run("a store that cannot be read is named", func(t *testing.T) {
+		// A directory cannot be read as a file, which is the read failure that
+		// is not the harness-never-wrote-it case.
+		flow := oauth.NewDeepSeekAccountFlow(oauth.WithCredentialsPath(t.TempDir()))
+		_, err := flow.Login(context.Background(), oauth.LoginOpts{NoBrowser: true})
+		if err == nil || errors.Is(err, oauth.ErrDeepSeekHarnessMissing) {
+			t.Fatalf("Login() error = %v, want the read failure", err)
+		}
+		if !strings.Contains(err.Error(), "read the DeepSeek Harness credential") {
+			t.Fatalf("Login() error = %q, want the read failure named", err)
+		}
+	})
+
+	t.Run("a malformed store is named", func(t *testing.T) {
+		store := filepath.Join(t.TempDir(), "credentials.yaml")
+		if err := os.WriteFile(store, []byte("records: [not: a: map"), 0o600); err != nil {
+			t.Fatalf("write the store: %v", err)
+		}
+		flow := oauth.NewDeepSeekAccountFlow(oauth.WithCredentialsPath(store))
+		_, err := flow.Login(context.Background(), oauth.LoginOpts{NoBrowser: true})
+		if err == nil || !strings.Contains(err.Error(), "decode the DeepSeek Harness credential") {
+			t.Fatalf("Login() error = %v, want the decode failure named", err)
+		}
+	})
+
+	t.Run("an unreachable platform is a transport failure", func(t *testing.T) {
+		flow := oauth.NewDeepSeekAccountFlow(
+			oauth.WithCredentialsPath(writeHarnessStore(t, signedInGrant)),
+			oauth.WithEndpoints(oauth.Endpoints{UserURL: "http://127.0.0.1:1/profile"}),
+		)
+		_, err := flow.Login(context.Background(), oauth.LoginOpts{NoBrowser: true})
+		if err == nil || !strings.Contains(err.Error(), "validate the DeepSeek account grant") {
+			t.Fatalf("Login() error = %v, want the transport failure named", err)
+		}
+	})
+
+	t.Run("a non-success status carries the platform code", func(t *testing.T) {
+		server := profileServer(t, http.StatusInternalServerError,
+			`{"error":{"code":"internal"}}`, nil)
+		flow := oauth.NewDeepSeekAccountFlow(
+			oauth.WithCredentialsPath(writeHarnessStore(t, signedInGrant)),
+			oauth.WithEndpoints(oauth.Endpoints{UserURL: server.URL}),
+		)
+		_, err := flow.Login(context.Background(), oauth.LoginOpts{NoBrowser: true})
+		if err == nil || !strings.Contains(err.Error(), "validate the DeepSeek account grant") {
+			t.Fatalf("Login() error = %v, want the status failure named", err)
+		}
+	})
+
+	t.Run("a body that is not JSON is refused", func(t *testing.T) {
+		server := profileServer(t, http.StatusOK, "not json", nil)
+		flow := oauth.NewDeepSeekAccountFlow(
+			oauth.WithCredentialsPath(writeHarnessStore(t, signedInGrant)),
+			oauth.WithEndpoints(oauth.Endpoints{UserURL: server.URL}),
+		)
+		if _, err := flow.Login(context.Background(), oauth.LoginOpts{NoBrowser: true}); err == nil {
+			t.Fatal("Login() error = nil, want the decode failure")
+		}
+	})
+
+	// The envelope has two codes, and either one being non-zero is the
+	// platform refusing the grant rather than answering with a profile.
+	t.Run("a non-zero envelope code is a refusal", func(t *testing.T) {
+		for _, body := range []string{
+			`{"code":1,"data":{"biz_code":0,"biz_data":{"id":"acct-77"}}}`,
+			`{"code":0,"data":{"biz_code":1,"biz_data":{"id":"acct-77"}}}`,
+		} {
+			server := profileServer(t, http.StatusOK, body, nil)
+			flow := oauth.NewDeepSeekAccountFlow(
+				oauth.WithCredentialsPath(writeHarnessStore(t, signedInGrant)),
+				oauth.WithEndpoints(oauth.Endpoints{UserURL: server.URL}),
+			)
+			if _, err := flow.Login(context.Background(), oauth.LoginOpts{NoBrowser: true}); !errors.Is(err, oauth.ErrDeepSeekGrantRejected) {
+				t.Fatalf("Login(%s) error = %v, want %v", body, err, oauth.ErrDeepSeekGrantRejected)
+			}
+		}
+	})
+}
+
+// The store lives under the harness home, which falls back to the user's home
+// directory when DSH_HOME names nothing. A host that cannot report one has no
+// path to read, so the import names the missing store rather than guessing.
+func TestDeepSeekAccountWithoutAHome(t *testing.T) {
+	t.Setenv("DSH_HOME", "")
+	t.Setenv("HOME", "")
+	flow := oauth.NewDeepSeekAccountFlow()
+	_, err := flow.Login(context.Background(), oauth.LoginOpts{NoBrowser: true})
+	if !errors.Is(err, oauth.ErrDeepSeekHarnessMissing) {
+		t.Fatalf("Login() error = %v, want %v", err, oauth.ErrDeepSeekHarnessMissing)
 	}
 }
 
