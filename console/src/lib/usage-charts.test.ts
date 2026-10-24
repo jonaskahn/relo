@@ -364,8 +364,7 @@ describe('shortDay', () => {
 		expect(shortDay('2026-09-03')).toBe(
 			new Date('2026-09-03T00:00:00Z').toLocaleDateString('en', {
 				month: 'short',
-				day: 'numeric',
-				timeZone: 'UTC'
+				day: 'numeric'
 			})
 		);
 	});

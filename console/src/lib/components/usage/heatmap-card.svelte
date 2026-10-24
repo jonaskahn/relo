@@ -54,7 +54,7 @@
 			if (!key) return '';
 			const date = new Date(key + 'T00:00:00Z');
 			if (Number.isNaN(date.getTime())) return '';
-			const label = date.toLocaleDateString('en', { month: 'short', timeZone: 'UTC' });
+			const label = date.toLocaleDateString('en', { month: 'short' });
 			if (label === previous) return '';
 			previous = label;
 			return label;
