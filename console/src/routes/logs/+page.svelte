@@ -2,7 +2,7 @@
 	import { onMount } from 'svelte';
 	import { t } from 'svelte-i18n';
 	import { page } from '$app/state';
-import { goto } from '$app/navigation';
+	import { goto } from '$app/navigation';
 
 	import Button from '$lib/components/ui/button.svelte';
 	import Input from '$lib/components/ui/input.svelte';
@@ -230,7 +230,9 @@ import { goto } from '$app/navigation';
 			const provider = row.RouteProvider || row.Provider;
 			selected = null;
 			const url =
-				'/chat?replay=' + row.ID + (provider === '' ? '' : '&provider=' + encodeURIComponent(provider));
+				'/chat?replay=' +
+				row.ID +
+				(provider === '' ? '' : '&provider=' + encodeURIComponent(provider));
 			try {
 				void goto(url);
 			} catch {

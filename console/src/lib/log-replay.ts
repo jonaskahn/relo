@@ -8,7 +8,6 @@ import {
 	type ChatFormat,
 	type ChatSettings,
 	type ChatThread,
-	type ChatThreadSeed,
 	type ChatTurn
 } from './chat-threads';
 import type { CapturedEntry, CapturedPart, ChatTesterMessage } from './types';
@@ -79,9 +78,7 @@ export function seedFromCapture(
 	if (format === null) return null;
 
 	const turns =
-		format === 'openai-responses'
-			? readResponsesInput(parsed)
-			: readMessages(parsed.messages);
+		format === 'openai-responses' ? readResponsesInput(parsed) : readMessages(parsed.messages);
 	const split = splitTrailingUser(turns);
 	const system = readSystem(parsed.system, format, parsed.messages);
 	const dropped = droppedParts(parsed);
@@ -230,30 +227,41 @@ function readChatEntries(value: unknown): CapturedEntry[] {
 		if (role !== 'user' && role !== 'assistant' && role !== 'tool') continue;
 		const parts: CapturedPart[] = [];
 		const content = entry.content;
-		if (typeof content === 'string' && content.trim() !== '') parts.push({ kind: 'text', text: content });
-		else if (Array.isArray(content)) for (const block of content) {
-			if (!isRecord(block)) continue;
-			const kind = textOf(block.type);
-			if (kind === 'text' || kind === 'input_text' || kind === 'output_text') {
-				const text = textOf(block.text);
-				if (text !== '') parts.push({ kind: 'text', text });
-			} else if (kind === 'image' || kind === 'image_url' || kind === 'input_image') parts.push({ kind: 'image' });
-			else if (kind === 'thinking' || kind === 'redacted_thinking' || kind === 'reasoning') parts.push({ kind: 'thinking' });
-		}
+		if (typeof content === 'string' && content.trim() !== '')
+			parts.push({ kind: 'text', text: content });
+		else if (Array.isArray(content))
+			for (const block of content) {
+				if (!isRecord(block)) continue;
+				const kind = textOf(block.type);
+				if (kind === 'text' || kind === 'input_text' || kind === 'output_text') {
+					const text = textOf(block.text);
+					if (text !== '') parts.push({ kind: 'text', text });
+				} else if (kind === 'image' || kind === 'image_url' || kind === 'input_image')
+					parts.push({ kind: 'image' });
+				else if (kind === 'thinking' || kind === 'redacted_thinking' || kind === 'reasoning')
+					parts.push({ kind: 'thinking' });
+			}
 		const calls = entry.tool_calls;
-		if (Array.isArray(calls)) for (const call of calls) {
-			if (!isRecord(call)) continue;
-			const fn = isRecord(call.function) ? call.function : call;
-			parts.push({
-				kind: 'tool_call',
-				id: textOf(call.id),
-				name: textOf(fn.name),
-				arguments: typeof fn.arguments === 'string' ? fn.arguments : JSON.stringify(fn.arguments ?? '')
-			});
-		}
+		if (Array.isArray(calls))
+			for (const call of calls) {
+				if (!isRecord(call)) continue;
+				const fn = isRecord(call.function) ? call.function : call;
+				parts.push({
+					kind: 'tool_call',
+					id: textOf(call.id),
+					name: textOf(fn.name),
+					arguments:
+						typeof fn.arguments === 'string' ? fn.arguments : JSON.stringify(fn.arguments ?? '')
+				});
+			}
 		if (role === 'tool') {
 			const text = typeof content === 'string' ? content : textOfBlocks(content);
-			parts.unshift({ kind: 'tool_result', callId: textOf(entry.tool_call_id), name: textOf(entry.name), text });
+			parts.unshift({
+				kind: 'tool_result',
+				callId: textOf(entry.tool_call_id),
+				name: textOf(entry.name),
+				text
+			});
 		}
 		if (parts.length > 0) entries.push({ role: role as CapturedEntry['role'], parts });
 	}
@@ -273,29 +281,33 @@ function readAnthropicEntries(value: unknown): CapturedEntry[] {
 		const toolResults: CapturedPart[] = [];
 		if (typeof content === 'string') {
 			if (content.trim() !== '') textParts.push({ kind: 'text', text: content });
-		} else if (Array.isArray(content)) for (const block of content) {
-			if (!isRecord(block)) continue;
-			const kind = textOf(block.type);
-			if (kind === 'text') {
-				const text = textOf(block.text);
-				if (text !== '') textParts.push({ kind: 'text', text });
-			} else if (kind === 'tool_use') {
-				toolCalls.push({
-					kind: 'tool_call',
-					id: textOf(block.id),
-					name: textOf(block.name),
-					arguments: typeof block.input === 'string' ? block.input : JSON.stringify(block.input ?? {})
-				});
-			} else if (kind === 'tool_result') {
-				toolResults.push({
-					kind: 'tool_result',
-					callId: textOf(block.tool_use_id),
-					name: '',
-					text: textOfBlocks(block.content)
-				});
-			} else if (kind === 'image' || kind === 'image_url' || kind === 'input_image') textParts.push({ kind: 'image' });
-			else if (kind === 'thinking' || kind === 'redacted_thinking') textParts.push({ kind: 'thinking' });
-		}
+		} else if (Array.isArray(content))
+			for (const block of content) {
+				if (!isRecord(block)) continue;
+				const kind = textOf(block.type);
+				if (kind === 'text') {
+					const text = textOf(block.text);
+					if (text !== '') textParts.push({ kind: 'text', text });
+				} else if (kind === 'tool_use') {
+					toolCalls.push({
+						kind: 'tool_call',
+						id: textOf(block.id),
+						name: textOf(block.name),
+						arguments:
+							typeof block.input === 'string' ? block.input : JSON.stringify(block.input ?? {})
+					});
+				} else if (kind === 'tool_result') {
+					toolResults.push({
+						kind: 'tool_result',
+						callId: textOf(block.tool_use_id),
+						name: '',
+						text: textOfBlocks(block.content)
+					});
+				} else if (kind === 'image' || kind === 'image_url' || kind === 'input_image')
+					textParts.push({ kind: 'image' });
+				else if (kind === 'thinking' || kind === 'redacted_thinking')
+					textParts.push({ kind: 'thinking' });
+			}
 		// Anthropic carries tool results inside user turns: split them into their
 		// own cards so the exchange reads the way it happened.
 		if (toolResults.length > 0) entries.push({ role: 'tool', parts: toolResults });
@@ -318,42 +330,54 @@ function readResponsesEntries(body: Record<string, unknown>): CapturedEntry[] {
 		if (type === 'function_call') {
 			entries.push({
 				role: 'assistant',
-				parts: [{
-					kind: 'tool_call',
-					id: textOf(entry.call_id ?? entry.id),
-					name: textOf(entry.name),
-					arguments: typeof entry.arguments === 'string' ? entry.arguments : JSON.stringify(entry.arguments ?? '')
-				}]
+				parts: [
+					{
+						kind: 'tool_call',
+						id: textOf(entry.call_id ?? entry.id),
+						name: textOf(entry.name),
+						arguments:
+							typeof entry.arguments === 'string'
+								? entry.arguments
+								: JSON.stringify(entry.arguments ?? '')
+					}
+				]
 			});
 			continue;
 		}
 		if (type === 'function_call_output') {
 			entries.push({
 				role: 'tool',
-				parts: [{
-					kind: 'tool_result',
-					callId: textOf(entry.call_id),
-					name: '',
-					text: textOf(entry.output)
-				}]
+				parts: [
+					{
+						kind: 'tool_result',
+						callId: textOf(entry.call_id),
+						name: '',
+						text: textOf(entry.output)
+					}
+				]
 			});
 			continue;
 		}
-		if (type === 'reasoning') { entries.push({ role: 'assistant', parts: [{ kind: 'thinking' }] }); continue; }
+		if (type === 'reasoning') {
+			entries.push({ role: 'assistant', parts: [{ kind: 'thinking' }] });
+			continue;
+		}
 		const role = textOf(entry.role, 'user');
 		if (role !== 'user' && role !== 'assistant' && role !== 'system') continue;
 		const content = entry.content;
 		const parts: CapturedPart[] = [];
-		if (typeof content === 'string' && content.trim() !== '') parts.push({ kind: 'text', text: content });
-		else if (Array.isArray(content)) for (const block of content) {
-			if (!isRecord(block)) continue;
-			const kind = textOf(block.type);
-			if (kind === 'input_text' || kind === 'output_text' || kind === 'text') {
-				const text = textOf(block.text);
-				if (text !== '') parts.push({ kind: 'text', text });
-			} else if (kind === 'image' || kind === 'input_image') parts.push({ kind: 'image' });
-			else if (kind === 'reasoning') parts.push({ kind: 'thinking' });
-		}
+		if (typeof content === 'string' && content.trim() !== '')
+			parts.push({ kind: 'text', text: content });
+		else if (Array.isArray(content))
+			for (const block of content) {
+				if (!isRecord(block)) continue;
+				const kind = textOf(block.type);
+				if (kind === 'input_text' || kind === 'output_text' || kind === 'text') {
+					const text = textOf(block.text);
+					if (text !== '') parts.push({ kind: 'text', text });
+				} else if (kind === 'image' || kind === 'input_image') parts.push({ kind: 'image' });
+				else if (kind === 'reasoning') parts.push({ kind: 'thinking' });
+			}
 		if (parts.length > 0) entries.push({ role: role as CapturedEntry['role'], parts });
 	}
 	return entries;
@@ -445,7 +469,11 @@ export function threadOfSeed(seed: CapturedChatSeed, settings: ChatSettings): Ch
 		draft: seed.draft || pending,
 		settings: { ...settings },
 		turns,
-		seed: { messages: [...seed.messages], entries: [...(seed.entries ?? [])], sourceRequestId: seed.sourceRequestId }
+		seed: {
+			messages: [...seed.messages],
+			entries: [...(seed.entries ?? [])],
+			sourceRequestId: seed.sourceRequestId
+		}
 	};
 }
 

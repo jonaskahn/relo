@@ -1027,7 +1027,6 @@ export interface QuotaWindow {
 	readonly stale: boolean;
 }
 
-
 /** One part of a captured client turn. */
 export type CapturedPart =
 	| { kind: 'text'; text: string }

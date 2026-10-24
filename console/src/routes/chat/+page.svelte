@@ -127,7 +127,9 @@
 	];
 
 	const wide = $derived(navDrawer.wide);
-	const rail = $derived(sortedThreads(store).filter((entry) => entry.turns.length > 0 || entry.seed !== undefined));
+	const rail = $derived(
+		sortedThreads(store).filter((entry) => entry.turns.length > 0 || entry.seed !== undefined)
+	);
 	const thread = $derived(activeThread(store));
 	const settings = $derived(thread === null ? defaultChatSettings() : thread.settings);
 	const configured = $derived(
@@ -138,7 +140,9 @@
 	const publishedRoutes = $derived(routes.filter((route) => route.enabled));
 	const ready = $derived(settingsReady(settings));
 	const locked = $derived(thread !== null && needsNewThread(thread));
-	const empty = $derived(thread === null || (thread.turns.length === 0 && thread.seed === undefined));
+	const empty = $derived(
+		thread === null || (thread.turns.length === 0 && thread.seed === undefined)
+	);
 	const canSend = $derived(ready && !chatSend.sending && !loading && draft.trim() !== '');
 	// A suggestion is sent whole, so the chips in the opening state wait for a
 	// ready target before they appear.
@@ -895,7 +899,9 @@
 										<div class="mt-2 space-y-2">
 											{#each entry.parts as part, j (j)}
 												{#if part.kind === 'text'}
-													<p class="text-sm leading-6 break-words whitespace-pre-wrap text-ink">{part.text}</p>
+													<p class="text-sm leading-6 break-words whitespace-pre-wrap text-ink">
+														{part.text}
+													</p>
 												{:else if part.kind === 'tool_call'}
 													<div class="rounded-panel bg-sunken px-3 py-2">
 														<p class="text-xs font-medium text-muted-foreground">
@@ -906,7 +912,9 @@
 												{:else if part.kind === 'tool_result'}
 													<div class="rounded-panel bg-sunken px-3 py-2">
 														<p class="text-xs font-medium text-muted-foreground">
-															{$t('ui.pages.chatPage.toolResult')}{part.callId ? ' · ' + part.callId : ''}
+															{$t('ui.pages.chatPage.toolResult')}{part.callId
+																? ' · ' + part.callId
+																: ''}
 														</p>
 														<pre class="mono-data mt-1 overflow-auto text-xs">{part.text}</pre>
 													</div>

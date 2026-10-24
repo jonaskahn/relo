@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { t } from 'svelte-i18n';
-	
+
 	import { api } from '$lib/api';
 	import Button from '$lib/components/ui/button.svelte';
 	import CenteredModal from '$lib/components/ui/centered-modal.svelte';

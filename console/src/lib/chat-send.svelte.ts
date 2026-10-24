@@ -6,7 +6,6 @@ import { readChatStream } from './chat-stream';
 import {
 	activeThread,
 	chatRequest,
-	contextMessages,
 	failedResult,
 	interruptedResult,
 	newId,
@@ -195,9 +194,6 @@ export class ChatSender {
 			draft: '',
 			turns: [...keptTurns, turn]
 		};
-		// The turns that answered carry the context; the one being retried and
-		// the new prompt are added on top of it.
-		const messages = contextMessages(next);
 		host.setStore(withThread(host.store(), next));
 		if (replaceTurnId === '') host.clearDraft();
 		host.persist();
