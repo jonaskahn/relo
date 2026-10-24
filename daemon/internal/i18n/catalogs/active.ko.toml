@@ -2,7 +2,7 @@
 
 [cli.root.short]
 description = "One-line summary of the relo command"
-other = "다중 계정 자격 증명 풀링을 지원하는 로컬 AI 프록시"
+other = "여러 계정의 인증 정보를 모아 쓰는 로컬 AI 프록시"
 
 [cli.root.home]
 description = "Usage of the --home flag"
@@ -114,7 +114,7 @@ other = "주소"
 
 [cli.daemon.status.data_plane]
 description = "Status field label for the port each client protocol answers on"
-other = "데이터 경로"
+other = "데이터 플레인"
 
 [cli.daemon.status.secret_mode]
 description = "Status field label"
@@ -134,7 +134,7 @@ other = "{{.Count}}개 중 {{.Active}}개 활성"
 
 [cli.daemon.status.no_keys]
 description = "Warning under the status report when no client key is active"
-other = "활성 클라이언트 키가 없어요. 데이터 경로가 모든 요청을 거부해요"
+other = "활성 클라이언트 키가 없어요. 데이터 플레인이 모든 추론 요청을 거부해요"
 
 [cli.daemon.run.short]
 description = "One-line summary of relo daemon run"
@@ -290,7 +290,7 @@ other = "로그인 마무리 중"
 
 [api.callback.summary]
 description = "Summary of the callback page while the authorization is exchanged"
-other = "Relo가 인증을 받아 계정을 저장하고 있어요"
+other = "Relo가 승인을 받아 계정을 저장하고 있어요"
 
 [api.callback.marker_working]
 description = "Status marker of a login that is still running"
@@ -314,7 +314,7 @@ other = "{{.Provider}} 승인 완료"
 
 [api.callback.step_exchanging]
 description = "Second step of a login: the authorization is traded for tokens"
-other = "인증 교환 중"
+other = "승인 교환 중"
 
 [api.callback.step_stored]
 description = "Third step of a login: the account is stored"
@@ -338,7 +338,7 @@ other = "이 로그인은 더 이상 유효하지 않아요"
 
 [api.callback.expired_body]
 description = "Summary of the callback page for a login this process no longer tracks"
-other = "Relo가 이 로그인을 더 이상 추적하지 않아요. 콘솔에서 다시 시작해 주세요"
+other = "Relo가 이 로그인을 더 이상 추적하지 않아요. 콘솔에서 다시 시작하세요"
 
 [api.callback.expired]
 description = "Refusal of a callback status poll for a login that is gone"
@@ -346,7 +346,7 @@ other = "이 로그인은 더 이상 유효하지 않아요"
 
 [api.callback.failure_denied]
 description = "Callback failure: the provider refused the authorization"
-other = "제공업체가 인증을 거부했어요"
+other = "제공업체가 승인을 거부했어요"
 
 [api.callback.failure_state]
 description = "Callback failure: the callback did not match the login Relo started"
@@ -358,7 +358,7 @@ other = "제공업체가 제때 응답하지 않았어요"
 
 [api.callback.failure_exchange]
 description = "Callback failure: the provider would not exchange the authorization"
-other = "제공업체가 인증을 토큰으로 교환하지 않았어요"
+other = "제공업체가 승인을 토큰으로 교환하지 않았어요"
 
 [api.callback.account_label]
 description = "Label of the stored account on the callback page"
@@ -394,7 +394,7 @@ other = "이벤트 스트림이 너무 많이 열려 있어요"
 
 [api.inference.retired]
 description = "Refusal of an inference path that moved to the port of its protocol"
-other = "추론 포트가 {{.BaseURL}}로 옮겨졌어요"
+other = "추론 엔드포인트가 {{.BaseURL}}로 옮겨졌어요"
 
 [api.keys.invalid]
 description = "Refusal of an inference request with a key that does not authenticate"
@@ -426,11 +426,11 @@ other = "해당 ID의 로그인 작업이 없어요"
 
 [api.oauth.port_busy]
 description = "Refusal of a sign-in whose callback port another process holds"
-other = "{{process}}이(가) 포트 {{port}}을(를) 사용 중입니다. 종료 후 로그인하세요"
+other = "{{process}}이(가) 포트 {{port}}를 쓰고 있어요. 종료하면 로그인할 수 있어요"
 
 [api.integration.action_in_progress]
 description = "Refusal of a second run of an action the first has not finished"
-other = "해당 작업이 이미 실행 중입니다. 완료될 때까지 기다려 주세요"
+other = "이미 실행 중인 작업이에요. 끝날 때까지 기다리세요"
 
 [api.route.missing]
 description = "Refusal of a management path that matches no route"
@@ -446,11 +446,11 @@ other = "관리 서비스를 사용할 수 없어요"
 
 [api.settings.retention.invalid]
 description = "Refusal of a retention budget below the floor the ledger keeps"
-other = "request details are kept for at least a {{.Min}}-day window; use 0 to keep everything"
+other = "요청 상세는 최소 {{.Min}}일 동안 보관해요. 0이면 전부 보관해요"
 
 [api.settings.sweep.busy]
 description = "Refusal of a maintenance sweep while another one is running"
-other = "a maintenance sweep is already running; wait for it to finish"
+other = "이미 정리 작업이 돌고 있어요. 끝날 때까지 기다리세요"
 
 [api.account.status_required]
 description = "Refusal of an account update that named neither status nor priority"
@@ -486,7 +486,7 @@ other = "종료"
 
 [tray.notify.failed]
 description = "Notification when a proxy run failed"
-other = "프록시가 시작되지 않았습니다. {{.Detail}}"
+other = "프록시가 시작되지 않았어요. {{.Detail}}"
 
 [tray.status.running]
 description = "Tray menu status row for a running daemon"
@@ -554,7 +554,7 @@ other = "데몬 로그 경로: {{.Path}}"
 
 [cli.daemon.stop.short]
 description = "One-line summary of relo daemon stop"
-other = "라이프사이클 명령이 관리하는 Relo 프록시 중지"
+other = "라이프사이클 명령으로 Relo 프록시 중지"
 
 [cli.daemon.stop.stopped]
 description = "Confirmation after a stop"
@@ -630,27 +630,27 @@ other = "이 컴퓨터에서 Relo 제거"
 
 [cli.uninstall.keep_data]
 description = "Usage of the uninstall --keep-data flag"
-other = "Relo 데이터 유지(설정, 자격 증명, 로그)"
+other = "Relo 데이터 유지(설정, 인증 정보, 로그)"
 
 [cli.uninstall.wipe]
 description = "Usage of the uninstall --wipe flag"
-other = "Relo 데이터 삭제(설정, 자격 증명, 로그)"
+other = "Relo 데이터 삭제(설정, 인증 정보, 로그)"
 
 [cli.uninstall.prepare]
 description = "Usage of the hidden uninstall --prepare flag"
-other = "서비스를 중지하고 자동 시작을 끄되 프로그램은 그대로 둡니다"
+other = "서비스를 중지하고 자동 시작을 끄되 프로그램은 그대로 둬요"
 
 [cli.uninstall.ask_data]
 description = "The question an interactive uninstall asks about the Relo data"
-other = "Relo 데이터(설정, 자격 증명, 로그)를 삭제할까요? [y/N]"
+other = "Relo 데이터(설정, 인증 정보, 로그)를 삭제할까요? [y/N]"
 
 [cli.uninstall.kept]
 description = "What an uninstall reports when the Relo data stays"
-other = "Relo 데이터는 {{.Home}}에 있습니다"
+other = "Relo 데이터는 {{.Home}}에 있어요"
 
 [cli.uninstall.wiped]
 description = "What an uninstall reports after the Relo data is removed"
-other = "Relo 데이터를 삭제했습니다"
+other = "Relo 데이터를 지웠어요"
 
 [cli.uninstall.removing]
 description = "What an uninstall says as it hands the program to its installer"
@@ -686,7 +686,7 @@ other = "아직 존재함: {{.Path}}"
 
 [cli.uninstall.self_delete]
 description = "A running Windows program scheduled for deletion after exit"
-other = "Relo가 종료되면 Windows가 이 파일을 삭제합니다: {{.Path}}"
+other = "Relo가 종료되면 Windows가 이 파일을 삭제해요: {{.Path}}"
 
 [tray.menu.quitting]
 description = "Tray quit action while final records are saved"
