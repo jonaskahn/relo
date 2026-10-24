@@ -251,6 +251,7 @@ describe('the conversation a seed builds', () => {
 		],
 		draft: 'Say more.',
 		sourceRequestId: '42',
+		entries: [],
 		dropped: []
 	};
 

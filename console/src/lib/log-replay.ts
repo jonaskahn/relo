@@ -11,7 +11,7 @@ import {
 	type ChatThreadSeed,
 	type ChatTurn
 } from './chat-threads';
-import type { ChatTesterMessage } from './types';
+import type { CapturedEntry, CapturedPart, ChatTesterMessage } from './types';
 
 /** A captured request read as the seed of a chat thread. */
 export interface CapturedChatSeed {
@@ -28,6 +28,10 @@ export interface CapturedChatSeed {
 	stream: boolean;
 	/** Every completed exchange, oldest first. */
 	messages: ChatTesterMessage[];
+	/** The full exchange as the client sent it, including tool turns the tester
+	 *  cannot re-send. Read-only: it is what the transcript draws, not what
+	 *  the next request carries. */
+	entries: CapturedEntry[];
 	/** The trailing user message, prefilled in the composer rather than sent: a
 	 *  link must never spend tokens without a keypress. */
 	draft: string;
@@ -75,10 +79,13 @@ export function seedFromCapture(
 	if (format === null) return null;
 
 	const turns =
-		format === 'openai-responses' ? readResponsesInput(parsed) : readMessages(parsed.messages);
+		format === 'openai-responses'
+			? readResponsesInput(parsed)
+			: readMessages(parsed.messages);
 	const split = splitTrailingUser(turns);
 	const system = readSystem(parsed.system, format, parsed.messages);
 	const dropped = droppedParts(parsed);
+	const entries = readEntries(parsed, format);
 	return {
 		providerId: options.providerId,
 		modelId: textOf(parsed.model),
@@ -87,6 +94,7 @@ export function seedFromCapture(
 		maxTokens: readMaxTokens(parsed, format),
 		stream: parsed.stream === true,
 		messages: split.messages,
+		entries,
 		draft: split.draft,
 		sourceRequestId: options.requestId ?? '',
 		dropped
@@ -203,6 +211,154 @@ function splitTrailingUser(turns: ChatTesterMessage[]): {
 	return { messages: turns.slice(0, -1), draft: last.content };
 }
 
+/** Reads the full exchange a client sent, including tool turns the tester
+ *  cannot re-send. Returns the turns in order, one per message the client
+ *  carried. */
+function readEntries(body: Record<string, unknown>, format: ChatFormat): CapturedEntry[] {
+	if (format === 'openai-responses') return readResponsesEntries(body);
+	if (format === 'anthropic') return readAnthropicEntries(body.messages);
+	return readChatEntries(body.messages);
+}
+
+function readChatEntries(value: unknown): CapturedEntry[] {
+	if (!Array.isArray(value)) return [];
+	const entries: CapturedEntry[] = [];
+	for (const entry of value) {
+		if (!isRecord(entry)) continue;
+		const role = textOf(entry.role, 'user');
+		if (role === 'system' || role === 'developer') continue;
+		if (role !== 'user' && role !== 'assistant' && role !== 'tool') continue;
+		const parts: CapturedPart[] = [];
+		const content = entry.content;
+		if (typeof content === 'string' && content.trim() !== '') parts.push({ kind: 'text', text: content });
+		else if (Array.isArray(content)) for (const block of content) {
+			if (!isRecord(block)) continue;
+			const kind = textOf(block.type);
+			if (kind === 'text' || kind === 'input_text' || kind === 'output_text') {
+				const text = textOf(block.text);
+				if (text !== '') parts.push({ kind: 'text', text });
+			} else if (kind === 'image' || kind === 'image_url' || kind === 'input_image') parts.push({ kind: 'image' });
+			else if (kind === 'thinking' || kind === 'redacted_thinking' || kind === 'reasoning') parts.push({ kind: 'thinking' });
+		}
+		const calls = entry.tool_calls;
+		if (Array.isArray(calls)) for (const call of calls) {
+			if (!isRecord(call)) continue;
+			const fn = isRecord(call.function) ? call.function : call;
+			parts.push({
+				kind: 'tool_call',
+				id: textOf(call.id),
+				name: textOf(fn.name),
+				arguments: typeof fn.arguments === 'string' ? fn.arguments : JSON.stringify(fn.arguments ?? '')
+			});
+		}
+		if (role === 'tool') {
+			const text = typeof content === 'string' ? content : textOfBlocks(content);
+			parts.unshift({ kind: 'tool_result', callId: textOf(entry.tool_call_id), name: textOf(entry.name), text });
+		}
+		if (parts.length > 0) entries.push({ role: role as CapturedEntry['role'], parts });
+	}
+	return entries;
+}
+
+function readAnthropicEntries(value: unknown): CapturedEntry[] {
+	if (!Array.isArray(value)) return [];
+	const entries: CapturedEntry[] = [];
+	for (const entry of value) {
+		if (!isRecord(entry)) continue;
+		const role = textOf(entry.role, 'user');
+		if (role !== 'user' && role !== 'assistant') continue;
+		const content = entry.content;
+		const textParts: CapturedPart[] = [];
+		const toolCalls: CapturedPart[] = [];
+		const toolResults: CapturedPart[] = [];
+		if (typeof content === 'string') {
+			if (content.trim() !== '') textParts.push({ kind: 'text', text: content });
+		} else if (Array.isArray(content)) for (const block of content) {
+			if (!isRecord(block)) continue;
+			const kind = textOf(block.type);
+			if (kind === 'text') {
+				const text = textOf(block.text);
+				if (text !== '') textParts.push({ kind: 'text', text });
+			} else if (kind === 'tool_use') {
+				toolCalls.push({
+					kind: 'tool_call',
+					id: textOf(block.id),
+					name: textOf(block.name),
+					arguments: typeof block.input === 'string' ? block.input : JSON.stringify(block.input ?? {})
+				});
+			} else if (kind === 'tool_result') {
+				toolResults.push({
+					kind: 'tool_result',
+					callId: textOf(block.tool_use_id),
+					name: '',
+					text: textOfBlocks(block.content)
+				});
+			} else if (kind === 'image' || kind === 'image_url' || kind === 'input_image') textParts.push({ kind: 'image' });
+			else if (kind === 'thinking' || kind === 'redacted_thinking') textParts.push({ kind: 'thinking' });
+		}
+		// Anthropic carries tool results inside user turns: split them into their
+		// own cards so the exchange reads the way it happened.
+		if (toolResults.length > 0) entries.push({ role: 'tool', parts: toolResults });
+		const rest = [...textParts, ...toolCalls];
+		if (rest.length > 0) entries.push({ role: role as CapturedEntry['role'], parts: rest });
+	}
+	return entries;
+}
+
+function readResponsesEntries(body: Record<string, unknown>): CapturedEntry[] {
+	const input = body.input;
+	if (typeof input === 'string') {
+		return input.trim() === '' ? [] : [{ role: 'user', parts: [{ kind: 'text', text: input }] }];
+	}
+	if (!Array.isArray(input)) return [];
+	const entries: CapturedEntry[] = [];
+	for (const entry of input) {
+		if (!isRecord(entry)) continue;
+		const type = textOf(entry.type, 'message');
+		if (type === 'function_call') {
+			entries.push({
+				role: 'assistant',
+				parts: [{
+					kind: 'tool_call',
+					id: textOf(entry.call_id ?? entry.id),
+					name: textOf(entry.name),
+					arguments: typeof entry.arguments === 'string' ? entry.arguments : JSON.stringify(entry.arguments ?? '')
+				}]
+			});
+			continue;
+		}
+		if (type === 'function_call_output') {
+			entries.push({
+				role: 'tool',
+				parts: [{
+					kind: 'tool_result',
+					callId: textOf(entry.call_id),
+					name: '',
+					text: textOf(entry.output)
+				}]
+			});
+			continue;
+		}
+		if (type === 'reasoning') { entries.push({ role: 'assistant', parts: [{ kind: 'thinking' }] }); continue; }
+		const role = textOf(entry.role, 'user');
+		if (role !== 'user' && role !== 'assistant' && role !== 'system') continue;
+		const content = entry.content;
+		const parts: CapturedPart[] = [];
+		if (typeof content === 'string' && content.trim() !== '') parts.push({ kind: 'text', text: content });
+		else if (Array.isArray(content)) for (const block of content) {
+			if (!isRecord(block)) continue;
+			const kind = textOf(block.type);
+			if (kind === 'input_text' || kind === 'output_text' || kind === 'text') {
+				const text = textOf(block.text);
+				if (text !== '') parts.push({ kind: 'text', text });
+			} else if (kind === 'image' || kind === 'input_image') parts.push({ kind: 'image' });
+			else if (kind === 'reasoning') parts.push({ kind: 'thinking' });
+		}
+		if (parts.length > 0) entries.push({ role: role as CapturedEntry['role'], parts });
+	}
+	return entries;
+}
+
 /** Names every part of the body the tester cannot carry. */
 function droppedParts(body: Record<string, unknown>): CapturedDrop[] {
 	const dropped: CapturedDrop[] = [];
@@ -289,7 +445,7 @@ export function threadOfSeed(seed: CapturedChatSeed, settings: ChatSettings): Ch
 		draft: seed.draft || pending,
 		settings: { ...settings },
 		turns,
-		seed: { messages: [...seed.messages], sourceRequestId: seed.sourceRequestId }
+		seed: { messages: [...seed.messages], entries: [...(seed.entries ?? [])], sourceRequestId: seed.sourceRequestId }
 	};
 }
 

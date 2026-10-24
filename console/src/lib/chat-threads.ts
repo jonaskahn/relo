@@ -7,7 +7,7 @@
 // carry, what a turn becomes once it fails — live here, apart from the
 // components, so a test can hold them directly.
 
-import type { ChatTesterAnswer, ChatTesterMessage, ChatTesterRequest } from './types';
+import type { CapturedEntry, ChatTesterAnswer, ChatTesterMessage, ChatTesterRequest } from './types';
 
 /** The one key the console owns for chat history.
  *  The version is part of the key, so a later shape is a new key rather than a migration that
@@ -79,6 +79,7 @@ export interface ChatTurn {
 /** A conversation, with the settings it was started under. */
 export interface ChatThreadSeed {
 	messages: ChatTesterMessage[];
+	entries: CapturedEntry[];
 	sourceRequestId: string;
 }
 
