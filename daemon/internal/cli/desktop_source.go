@@ -74,8 +74,9 @@ func usageRows(rows []activity.UsageRollupRow) []desktop.UsageRow {
 }
 
 func planConnection(row sqlite.ProviderRow) bool {
-	return row.Origin == string(catalog.OriginSignIn) || planPricedConnection(row) ||
-		openCodeConnection(row) || row.TemplateID == catalog.KiloFreeTemplate
+	return row.Origin == string(catalog.OriginSignIn) || planTemplate(row) ||
+		planPricedConnection(row) || openCodeConnection(row) ||
+		row.TemplateID == catalog.KiloFreeTemplate
 }
 
 func paidConnection(row sqlite.ProviderRow) bool {
@@ -110,9 +111,15 @@ var planHostMarkers = []string{
 	"coding-intl.dashscope.aliyuncs.com",
 }
 
-// planPricedConnection reports a connection a subscription plan covers: its
-// identifier or its base URL host names the plan, so its traffic is plan usage
-// and never pay-as-you-go spend.
+// planTemplates are the curated templates sold as a subscription whose own kind
+// is a plain key, so nothing about their identifier or host says they are a
+// plan. The console keeps the same list in provider-plan.ts, and
+// desktop_source_test.go asserts the two agree.
+var planTemplates = []string{"open-design", "opencode-go"}
+
+// planPricedConnection reports a connection a subscription plan covers by its
+// identifier or its base URL host, so its traffic is plan usage and never
+// pay-as-you-go spend.
 func planPricedConnection(row sqlite.ProviderRow) bool {
 	for _, id := range []string{row.ID, row.TemplateID, row.ModelsDevProviderID} {
 		lower := strings.ToLower(id)
@@ -129,6 +136,17 @@ func planPricedConnection(row sqlite.ProviderRow) bool {
 	host := strings.ToLower(parsed.Hostname())
 	for _, marker := range planHostMarkers {
 		if strings.Contains(host, marker) {
+			return true
+		}
+	}
+	return false
+}
+
+// planTemplate reports a connection added from a template sold as a
+// subscription.
+func planTemplate(row sqlite.ProviderRow) bool {
+	for _, id := range planTemplates {
+		if row.TemplateID == id {
 			return true
 		}
 	}

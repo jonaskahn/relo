@@ -28,6 +28,10 @@ func TestPlanConnectionsAreNotSpend(t *testing.T) {
 		{"a coding-plan models.dev id", sqlite.ProviderRow{ModelsDevProviderID: "zai-coding-plan"}, true},
 		{"a step-plan id", sqlite.ProviderRow{ID: "stepfun-step-plan"}, true},
 		{"a coding host", sqlite.ProviderRow{BaseURL: "https://coding-intl.dashscope.aliyuncs.com/v1"}, true},
+		// The curated templates are sold as subscriptions with nothing in their
+		// identifier or host saying so, which is what planTemplates is for.
+		{"the OpenDesign plan template", sqlite.ProviderRow{TemplateID: "open-design"}, true},
+		{"the OpenCode Go plan template", sqlite.ProviderRow{TemplateID: "opencode-go"}, true},
 		{"a sign-in account", sqlite.ProviderRow{Origin: "signin"}, true},
 		{"an OpenAI key", sqlite.ProviderRow{TemplateID: "openai", BaseURL: "https://api.openai.com/v1"}, false},
 		// The pay-as-you-go twin of a Coding Plan stays metered: same vendor,
@@ -56,6 +60,7 @@ func TestPaidConnectionsAreTheOnlySpend(t *testing.T) {
 		{"an endpoint the operator added by hand", sqlite.ProviderRow{Origin: "custom"}, false},
 		{"a plan-covered connection", sqlite.ProviderRow{TemplateID: "opencode-go"}, false},
 		{"a coding plan", sqlite.ProviderRow{TemplateID: "alibaba-coding-plan-cn"}, false},
+		{"the OpenDesign plan template", sqlite.ProviderRow{TemplateID: "open-design"}, false},
 		{"a sign-in account", sqlite.ProviderRow{Origin: "signin"}, false},
 	}
 	for _, tt := range tests {
@@ -64,5 +69,23 @@ func TestPaidConnectionsAreTheOnlySpend(t *testing.T) {
 				t.Fatalf("paidConnection(%+v) = %v, want %v", tt.row, got, tt.paid)
 			}
 		})
+	}
+}
+
+// TestEveryPlanTemplateIsAPlan keeps the curated list and the rule that reads
+// it in step: a template named in planTemplates must classify as a plan, so a
+// template added to one and not the other fails here rather than in the tray.
+func TestEveryPlanTemplateIsAPlan(t *testing.T) {
+	if len(planTemplates) == 0 {
+		t.Fatal("planTemplates names no template")
+	}
+	for _, id := range planTemplates {
+		row := sqlite.ProviderRow{TemplateID: id}
+		if !planConnection(row) {
+			t.Errorf("planConnection(%q) = false, want a plan", id)
+		}
+		if paidConnection(row) {
+			t.Errorf("paidConnection(%q) = true, want no spend", id)
+		}
 	}
 }

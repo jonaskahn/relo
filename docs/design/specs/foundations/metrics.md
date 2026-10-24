@@ -11,11 +11,18 @@ Where a surface covers a different window, a chip names it.
 
 ## Definitions
 
+One connection's lane is decided in one place —
+`console/src/lib/provider-plan.ts` for the console and
+`daemon/internal/cli/desktop_source.go` for the tray — so a chip and a spend
+bucket cannot disagree.
+
 | Metric           | Rule                                                                                                                                |
 |------------------|-------------------------------------------------------------------------------------------------------------------------------------|
 | Requests, errors | every logged request; an error is a status of 400 or more                                                                           |
 | Tokens           | `input + output + cache_read + cache_write` — the whole traffic, cache included                                                     |
 | Spend            | pay-as-you-go connections only; a plan-covered connection is plan usage, a local engine is neither, and both stay out of the figure |
+| Plan usage       | every connection a subscription covers: a sign-in account, the keyless free lanes, a plan-priced identifier or host, or a curated plan template (`open-design`, `opencode-go`) |
+
 | Success rate     | `(requests − errors) / requests`, and "—" when there is no traffic — never a perfect score                                          |
 | Latency          | `duration / requests` over the window                                                                                               |
 | Trend latency    | the request-weighted mean of the days' averages, never their sum                                                                    |

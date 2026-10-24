@@ -19,6 +19,12 @@ describe('isPaidPlanConnection', () => {
 		expect(isPaidPlanConnection({ auth: 'oauth' })).toBe(true);
 	});
 
+	// A curated template is sold as a subscription even though its own kind is a
+	// plain key, so naming only its kind would call it pay-as-you-go.
+	it('counts a curated plan template as a plan', () => {
+		expect(isPaidPlanConnection({ template_id: 'open-design', kind: 'key' })).toBe(true);
+	});
+
 	it('finds a token plan in any identifier or in the host', () => {
 		expect(isPaidPlanConnection({ id: 'vendor-token-plan' })).toBe(true);
 		expect(isPaidPlanConnection({ template_id: 'Vendor-Token-Plan' })).toBe(true);

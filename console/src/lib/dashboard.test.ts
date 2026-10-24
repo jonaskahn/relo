@@ -8,7 +8,6 @@ import {
 	deltaPercent,
 	formatCountdown,
 	healthCards,
-	isKiloFree,
 	isWindowPeriod,
 	paidProviders,
 	planProviders,
@@ -27,6 +26,8 @@ import {
 	type LiveStorage,
 	type SpendRow
 } from './dashboard';
+import { isPaidPlanConnection } from './provider-billing';
+import { billingLane, PLAN_TEMPLATES } from './provider-plan';
 import type { Account, Provider, QuotaWindow, UsageRollupRow } from './types';
 
 const now = Date.parse('2026-09-27T12:00:00Z');
@@ -177,7 +178,6 @@ describe('paidProviders', () => {
 		];
 		expect(paidProviders(list).map((p) => p.id)).toEqual(['openai']);
 		expect(planProviders(list).map((p) => p.id)).toEqual(['kilo']);
-		expect(isKiloFree(provider('kilo', 'key'))).toBe(false);
 	});
 
 	it('classifies sign-in accounts, token plans, and OpenCode as plan usage', () => {
@@ -194,10 +194,11 @@ describe('paidProviders', () => {
 		);
 	});
 
-	// A plan is not only a token plan: models.dev sells the same fixed-fee
-	// model under a coding-plan, code-plan, or step-plan identifier, and
-	// Alibaba's Coding Plan is served from its own DashScope host.
-	it('classifies a coding, code, or step plan as plan usage', () => {
+	// A subscription is not only a token plan. models.dev sells the same
+	// fixed-fee model under coding-plan, code-plan, and step-plan identifiers,
+	// Alibaba serves its Coding Plan off its own DashScope host, and a curated
+	// template can be a plan with nothing in its identifier saying so.
+	it('classifies a coding, code, step, or curated plan as plan usage', () => {
 		for (const id of [
 			'alibaba-coding-plan-cn',
 			'zai-coding-plan',
@@ -215,6 +216,17 @@ describe('paidProviders', () => {
 			})
 		).toBe('plan');
 		expect(spendKindOf(provider('alibaba', 'key'))).toBe('paid');
+	});
+
+	// The chip and the spend board read one lane, so the curated templates that
+	// are sold as a subscription count as plan usage here too. They used to
+	// disagree: the chip said Paid plan and the board counted API spend.
+	it('counts a curated plan template as plan usage on the spend board', () => {
+		for (const id of PLAN_TEMPLATES) {
+			expect(spendKindOf({ ...provider(id, 'key'), template_id: id }), id).toBe('plan');
+		}
+		expect(isPaidPlanConnection({ template_id: 'open-design' })).toBe(true);
+		expect(billingLane({ template_id: 'open-design', kind: 'key' })).toBe('plan');
 	});
 });
 

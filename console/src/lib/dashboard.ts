@@ -1,7 +1,7 @@
 import type { Account, Provider, QuotaWindow, UsageRollupRow } from './types';
 import { ATTENTION_PERCENT } from './provider-attention';
 import { isFreeConnection } from './provider-free';
-import { isPlanPricedConnection } from './provider-plan';
+import { billingLane } from './provider-plan';
 import { isMoneyReading } from './provider-quota';
 
 // The dashboard reads several daemon answers and combines them into the
@@ -25,49 +25,21 @@ export function planProviders(providers: Provider[]): Provider[] {
 	return providers.filter((provider) => spendKindOf(provider) === 'plan');
 }
 
-/** Reports how one connection's cost counts. A plan covers sign-in accounts, plan-priced APIs,
- *  the keyless free lanes; a local engine has no per-token price at all, and everything else is
- *  pay-as-you-go. */
+/** Reports how one connection's cost counts. It reads the one lane rule the chip, the usage
+ *  report, and the tray's rows also read, so a chip and a spend bucket cannot disagree: a plan
+ *  of any kind is plan usage, a key or a cloud credential is pay-as-you-go, and a local engine
+ *  has no per-token price at all. The keyless free lanes count as plan usage here because a
+ *  plan card is the one board that names them without charging for them. */
 export function spendKindOf(
-	provider: Pick<Provider, 'kind' | 'id' | 'template_id' | 'modelsdev_provider_id' | 'base_url'>
+	provider: Pick<
+		Provider,
+		'kind' | 'id' | 'template_id' | 'modelsdev_provider_id' | 'base_url' | 'auth' | 'origin'
+	>
 ): SpendKind {
-	if (
-		provider.kind === 'signin' ||
-		isPlanPricedConnection(provider) ||
-		isOpenCode(provider) ||
-		isKiloFree(provider)
-	) {
-		return 'plan';
-	}
-	if (provider.kind === 'key' || provider.kind === 'cloud') return 'paid';
+	const lane = billingLane(provider);
+	if (lane === 'plan' || lane === 'free') return 'plan';
+	if (lane === 'payg') return 'paid';
 	return 'local';
-}
-
-/** Reports a connection served by OpenCode, Go or Free.
- *  A custom base URL that still points at that gateway counts the same way. */
-export function isOpenCode(
-	provider: Pick<Provider, 'template_id' | 'modelsdev_provider_id' | 'base_url'>
-): boolean {
-	for (const id of [provider.template_id, provider.modelsdev_provider_id]) {
-		if (id === 'opencode-go' || id === 'opencode-free' || id === 'opencode') return true;
-	}
-	return openCodeURL(provider.base_url);
-}
-
-function openCodeURL(baseURL: string): boolean {
-	try {
-		return new URL(baseURL).hostname.toLowerCase() === 'opencode.ai';
-	} catch {
-		return false;
-	}
-}
-
-/** Reports a connection served by the keyless Kilo pool, which bills no token
- *  because it accepts no account. */
-export function isKiloFree(
-	provider: Pick<Provider, 'template_id' | 'modelsdev_provider_id'>
-): boolean {
-	return provider.template_id === 'kilo-free' || provider.modelsdev_provider_id === 'kilo-free';
 }
 
 /** One connection on the spend board. */
