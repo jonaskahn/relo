@@ -174,6 +174,56 @@ export function usageProvidersQuery(
 	return params.toString();
 }
 
+/** How many connections one usage read may name. The daemon refuses a wider set
+ *  (`activity.MaxProvidersFilter`), and a refused read answers no rows rather than some, which
+ *  would report a plan's traffic as API spend. */
+export const PROVIDER_READ_CAP = 32;
+
+/** Splits a set of connections into the reads the usage API accepts, so a set wider than the cap
+ *  is read in full instead of refused. An empty set is one read that names none. */
+export function providerReadChunks(ids: readonly string[]): string[][] {
+	if (ids.length === 0) return [[]];
+	const chunks: string[][] = [];
+	for (let at = 0; at < ids.length; at += PROVIDER_READ_CAP) {
+		chunks.push(ids.slice(at, at + PROVIDER_READ_CAP));
+	}
+	return chunks;
+}
+
+/** Sums the rows of several reads of one grouping, so a set split across reads reports the same
+ *  figures it would in one read. A day or a model can be named by more than one read, which is
+ *  why the counters add rather than the rows being concatenated. */
+export function mergeRollups(reads: readonly (readonly UsageRollupRow[])[]): UsageRollupRow[] {
+	const merged = new Map<string, UsageRollupRow>();
+	for (const rows of reads) {
+		for (const row of rows) {
+			const seen = merged.get(row.Key);
+			if (seen === undefined) {
+				merged.set(row.Key, { ...row });
+				continue;
+			}
+			merged.set(row.Key, {
+				...seen,
+				Requests: Number(seen.Requests) + Number(row.Requests),
+				Errors: Number(seen.Errors) + Number(row.Errors),
+				InputTokens: Number(seen.InputTokens) + Number(row.InputTokens),
+				OutputTokens: Number(seen.OutputTokens) + Number(row.OutputTokens),
+				CacheReadTokens: Number(seen.CacheReadTokens) + Number(row.CacheReadTokens),
+				CacheWriteTokens: Number(seen.CacheWriteTokens) + Number(row.CacheWriteTokens),
+				CostMicros: Number(seen.CostMicros) + Number(row.CostMicros),
+				UnpricedRequests: Number(seen.UnpricedRequests) + Number(row.UnpricedRequests),
+				DurationMs: Number(seen.DurationMs) + Number(row.DurationMs),
+				Attempts: Number(seen.Attempts) + Number(row.Attempts),
+				RetriedRequests: Number(seen.RetriedRequests) + Number(row.RetriedRequests),
+				// A slowest request is a max, not a total: two reads that each saw the
+				// same slowest request must not add it twice.
+				DurationMaxMs: Math.max(Number(seen.DurationMaxMs), Number(row.DurationMaxMs))
+			});
+		}
+	}
+	return [...merged.values()];
+}
+
 /** Names what the cost of a filtered read answers:
  *  API spend for a pay-as-you-go connection, plan usage for a plan connection, neither for a
  *  local engine, and both when no connection is named. */

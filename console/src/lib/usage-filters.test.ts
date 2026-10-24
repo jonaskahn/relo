@@ -10,9 +10,12 @@ import {
 	isUsageOrigin,
 	isUsageRange,
 	isUsageTab,
+	mergeRollups,
 	nonPaidProviderIds,
 	planProviderIds,
 	providerPlanMicros,
+	providerReadChunks,
+	PROVIDER_READ_CAP,
 	spendScopeOf,
 	splitSpend,
 	statusParam,
@@ -211,6 +214,39 @@ describe('spend split', () => {
 	it('asks the usage API for each connection of a set', () => {
 		const query = usageProvidersQuery(DEFAULT_USAGE_FILTERS, nowMs, ['go', 'go-2']);
 		expect(new URLSearchParams(query).getAll('provider')).toEqual(['go', 'go-2']);
+	});
+
+	// The daemon refuses a read that names more connections than its cap, and
+	// a refused read answers no rows, so a wide set has to be split rather
+	// than dropped or sent whole.
+	it('splits a set wider than the read cap into reads the daemon accepts', () => {
+		const ids = Array.from({ length: 40 }, (_, at) => 'p' + at);
+		const chunks = providerReadChunks(ids);
+		expect(chunks).toHaveLength(2);
+		expect(chunks[0]).toHaveLength(PROVIDER_READ_CAP);
+		expect(chunks[1]).toEqual(['p32', 'p33', 'p34', 'p35', 'p36', 'p37', 'p38', 'p39']);
+		expect(chunks.flat()).toEqual(ids);
+		// A set that fits, and an empty one, stay one read each.
+		expect(providerReadChunks(['openai'])).toEqual([['openai']]);
+		expect(providerReadChunks([])).toEqual([[]]);
+		expect(providerReadChunks(Array.from({ length: 32 }, (_, at) => 'p' + at))).toHaveLength(1);
+	});
+
+	it('adds the rows of several reads of one grouping', () => {
+		const merged = mergeRollups([
+			[rollup('day-1', 100, 2)],
+			[rollup('day-1', 300, 3), rollup('day-2', 50, 1)]
+		]);
+		const day1 = merged.find((row) => row.Key === 'day-1');
+		expect(day1?.CostMicros).toBe(400);
+		expect(day1?.Requests).toBe(5);
+		expect(merged.map((row) => row.Key)).toEqual(['day-1', 'day-2']);
+		// A slowest request is a max: two reads that each saw it must not add it.
+		const slowest = mergeRollups([
+			[{ ...rollup('day-1', 100), DurationMaxMs: 900 }],
+			[{ ...rollup('day-1', 100), DurationMaxMs: 400 }]
+		]);
+		expect(slowest[0].DurationMaxMs).toBe(900);
 	});
 
 	it('names what a filter is scoped to', () => {

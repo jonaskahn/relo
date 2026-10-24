@@ -46,6 +46,7 @@
 		type WindowPeriod
 	} from '$lib/dashboard';
 	import { browserStorage } from '$lib/filter-panel';
+	import { mergeRollups, providerReadChunks } from '$lib/usage-filters';
 	import type { TunnelTraffic } from '$lib/route-tunnel';
 	import { bucketDays, heatmapCells, shortDay, type ChartMetric } from '$lib/usage-charts';
 	import type {
@@ -194,15 +195,15 @@
 		{ value: 'spend', label: $t('ui.pages.dashboard.trendSpend'), icon: 'currency-dollar' }
 	]);
 	// The trend's spend series reads the paid connections at day grain, so it
-	// asks for the same days the window covers. The connections are named only
-	// when they fit the daemon's filter cap; a wider roster reads every
-	// connection and the join keeps the ones asked for.
-	function paidDaysUrl(chosen: readonly Provider[], start: number): string {
-		let url = '/activity/usage?group_by=day&since_ms=' + start;
-		if (chosen.length > 0 && chosen.length <= 32) {
-			for (const provider of chosen) url += '&provider=' + encodeURIComponent(provider.id);
-		}
-		return url;
+	// asks for the same days the window covers. A roster wider than the
+	// daemon's filter cap is read in chunks rather than unfiltered, because an
+	// unfiltered read would bring every plan's cost into API spend.
+	function paidDaysUrls(chosen: readonly Provider[], start: number): string[] {
+		return providerReadChunks(chosen.map((provider) => provider.id)).map((ids) => {
+			let url = '/activity/usage?group_by=day&since_ms=' + start;
+			for (const id of ids) url += '&provider=' + encodeURIComponent(id);
+			return url;
+		});
 	}
 
 	async function loadStatus() {
@@ -251,13 +252,14 @@
 	async function loadTrendPaid() {
 		try {
 			// The trend's spend series stays API spend, so it reads the paid
-			// connections.
-			dailyPaid =
-				(
-					await api<{ items: UsageRollupRow[] }>(
-						paidDaysUrl(sets.paid, windowStart(summaryPeriod, Date.now()))
-					)
-				).items ?? [];
+			// connections. A roster wider than one read accepts is read in
+			// chunks, and the days add up across them.
+			const reads = await Promise.all(
+				paidDaysUrls(sets.paid, windowStart(summaryPeriod, Date.now())).map((url) =>
+					api<{ items: UsageRollupRow[] }>(url)
+				)
+			);
+			dailyPaid = mergeRollups(reads.map((read) => read.items ?? []));
 		} catch {
 			dailyPaid = [];
 		}
