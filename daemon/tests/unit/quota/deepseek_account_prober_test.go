@@ -6,6 +6,7 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"github.com/jonaskahn/relo/internal/activity"
@@ -56,6 +57,17 @@ func TestDeepSeekAccountProber(t *testing.T) {
 		prober := quota.NewDeepSeekAccountProber(quota.ProberOptions{})
 		if _, err := prober.Probe(context.Background(), activity.Credential{ID: "c1"}); !errors.Is(err, activity.ErrNoCredential) {
 			t.Fatalf("Probe() error = %v, want %v", err, activity.ErrNoCredential)
+		}
+	})
+
+	// An endpoint the request cannot be built for is a local failure, named
+	// rather than sent: a probe never guesses at an address it cannot encode.
+	t.Run("an address that cannot be a request is named", func(t *testing.T) {
+		prober := quota.NewDeepSeekAccountProber(quota.ProberOptions{Endpoint: "://invalid"})
+		_, err := prober.Probe(context.Background(),
+			activity.Credential{ID: "c1", AccessToken: "grant"})
+		if err == nil || !strings.Contains(err.Error(), "build the DeepSeek account probe") {
+			t.Fatalf("Probe() error = %v, want the request failure named", err)
 		}
 	})
 }
