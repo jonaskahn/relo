@@ -24,8 +24,15 @@ func TestPlanConnectionsAreNotSpend(t *testing.T) {
 		{"the Free gateway", sqlite.ProviderRow{BaseURL: "https://opencode.ai/zen/v1"}, true},
 		{"a token-plan id", sqlite.ProviderRow{ID: "xiaomi-token-plan-sgp"}, true},
 		{"a token-plan host", sqlite.ProviderRow{BaseURL: "https://token-plan-ams.xiaomimimo.com/v1"}, true},
+		{"a coding-plan template", sqlite.ProviderRow{TemplateID: "alibaba-coding-plan-cn"}, true},
+		{"a coding-plan models.dev id", sqlite.ProviderRow{ModelsDevProviderID: "zai-coding-plan"}, true},
+		{"a step-plan id", sqlite.ProviderRow{ID: "stepfun-step-plan"}, true},
+		{"a coding host", sqlite.ProviderRow{BaseURL: "https://coding-intl.dashscope.aliyuncs.com/v1"}, true},
 		{"a sign-in account", sqlite.ProviderRow{Origin: "signin"}, true},
 		{"an OpenAI key", sqlite.ProviderRow{TemplateID: "openai", BaseURL: "https://api.openai.com/v1"}, false},
+		// The pay-as-you-go twin of a Coding Plan stays metered: same vendor,
+		// different product and host.
+		{"the Alibaba pay-as-you-go template", sqlite.ProviderRow{TemplateID: "alibaba", BaseURL: "https://dashscope.aliyuncs.com/compatible-mode/v1"}, false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -48,6 +55,7 @@ func TestPaidConnectionsAreTheOnlySpend(t *testing.T) {
 		{"a key generated from models.dev", sqlite.ProviderRow{ID: "openai"}, true},
 		{"an endpoint the operator added by hand", sqlite.ProviderRow{Origin: "custom"}, false},
 		{"a plan-covered connection", sqlite.ProviderRow{TemplateID: "opencode-go"}, false},
+		{"a coding plan", sqlite.ProviderRow{TemplateID: "alibaba-coding-plan-cn"}, false},
 		{"a sign-in account", sqlite.ProviderRow{Origin: "signin"}, false},
 	}
 	for _, tt := range tests {

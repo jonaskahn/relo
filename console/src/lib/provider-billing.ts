@@ -1,4 +1,5 @@
 import { isFreeConnection } from '$lib/provider-free';
+import { isPlanPricedConnection } from '$lib/provider-plan';
 
 export type BillingInput = {
 	id?: string;
@@ -12,16 +13,6 @@ export type BillingInput = {
 
 const PAID_PLAN_TEMPLATES = new Set(['open-design', 'opencode-go']);
 const OPENCODE_IDS = new Set(['opencode-go', 'opencode-free', 'opencode']);
-
-function tokenPlan(p: BillingInput): boolean {
-	const ids = [p.id, p.template_id, p.modelsdev_provider_id];
-	if (ids.some((v) => (v ?? '').toLowerCase().includes('token-plan'))) return true;
-	try {
-		return new URL(p.base_url ?? '').hostname.toLowerCase().includes('token-plan');
-	} catch {
-		return false;
-	}
-}
 
 function openCodePlan(p: BillingInput): boolean {
 	if (OPENCODE_IDS.has(p.template_id ?? '') || OPENCODE_IDS.has(p.modelsdev_provider_id ?? ''))
@@ -42,7 +33,7 @@ export function isPaidPlanConnection(p: BillingInput): boolean {
 	if (isFreeConnection({ template_id: p.template_id ?? '' })) return false;
 	if (PAID_PLAN_TEMPLATES.has(p.template_id ?? '')) return true;
 	if (p.origin === 'signin' || p.kind === 'signin' || p.auth === 'oauth') return true;
-	if (tokenPlan(p)) return true;
+	if (isPlanPricedConnection(p)) return true;
 	if (openCodePlan(p) && p.template_id !== 'opencode-free') return true;
 	return false;
 }

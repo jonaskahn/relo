@@ -26,6 +26,27 @@ describe('isPaidPlanConnection', () => {
 		expect(isPaidPlanConnection({ base_url: 'https://token-plan.example.test/v1' })).toBe(true);
 	});
 
+	// Alibaba's Coding Plan is sold under a different identifier family and a
+	// different host from its pay-as-you-go key, so both have to be read.
+	it('finds a coding plan by identifier and by base URL', () => {
+		expect(isPaidPlanConnection({ template_id: 'alibaba-coding-plan-cn' })).toBe(true);
+		expect(isPaidPlanConnection({ modelsdev_provider_id: 'zai-coding-plan' })).toBe(true);
+		expect(isPaidPlanConnection({ id: 'stepfun-step-plan' })).toBe(true);
+		expect(
+			isPaidPlanConnection({ base_url: 'https://coding-intl.dashscope.aliyuncs.com/v1' })
+		).toBe(true);
+	});
+
+	it('leaves the pay-as-you-go twin of a plan outside the paid lane', () => {
+		expect(isPaidPlanConnection({ template_id: 'alibaba', kind: 'key' })).toBe(false);
+		expect(
+			isPaidPlanConnection({
+				kind: 'key',
+				base_url: 'https://dashscope.aliyuncs.com/compatible-mode/v1'
+			})
+		).toBe(false);
+	});
+
 	it('finds the OpenCode gateway by identifier or by path', () => {
 		expect(isPaidPlanConnection({ template_id: 'opencode-go' })).toBe(true);
 		expect(isPaidPlanConnection({ modelsdev_provider_id: 'opencode' })).toBe(true);

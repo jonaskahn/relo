@@ -255,6 +255,23 @@ describe('spend split', () => {
 		expect(split.nonPaidMicros).toBe(1400);
 	});
 
+	// A coding plan is a plan like any other, so its cost never reads as API
+	// spend even though it arrives as an ordinary key.
+	it('moves a coding plan out of API spend', () => {
+		const providers = [
+			provider(),
+			provider({ id: 'alibaba-coding-plan-cn', template_id: 'alibaba-coding-plan-cn' }),
+			provider({ id: 'zai', template_id: 'zai-coding-plan' })
+		];
+		const rows = [rollup('openai', 100), rollup('alibaba-coding-plan-cn', 300), rollup('zai', 600)];
+		const split = splitSpend(1000, rows, providers);
+		expect(split.apiSpendMicros).toBe(100);
+		expect(split.planUsageMicros).toBe(900);
+		expect(split.nonPaidMicros).toBe(900);
+		expect(planProviderIds(providers)).toEqual(['alibaba-coding-plan-cn', 'zai']);
+		expect(nonPaidProviderIds(providers)).toEqual(['alibaba-coding-plan-cn', 'zai']);
+	});
+
 	it('keeps a local engine out of both figures', () => {
 		const providers = [
 			provider(),

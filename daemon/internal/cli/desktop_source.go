@@ -74,7 +74,7 @@ func usageRows(rows []activity.UsageRollupRow) []desktop.UsageRow {
 }
 
 func planConnection(row sqlite.ProviderRow) bool {
-	return row.Origin == string(catalog.OriginSignIn) || tokenPlanConnection(row) ||
+	return row.Origin == string(catalog.OriginSignIn) || planPricedConnection(row) ||
 		openCodeConnection(row) || row.TemplateID == catalog.KiloFreeTemplate
 }
 
@@ -96,14 +96,43 @@ func connectionKind(row sqlite.ProviderRow) catalog.Kind {
 	return catalog.KindKey
 }
 
-func tokenPlanConnection(row sqlite.ProviderRow) bool {
+// planIDMarkers are the identifier families a subscription plan is sold under.
+// models.dev lists a plan provider under one of these, and the console keeps
+// the same list in provider-plan.ts.
+var planIDMarkers = []string{"token-plan", "coding-plan", "code-plan", "step-plan"}
+
+// planHostMarkers are the hosts a plan is served from. Alibaba sells its
+// Coding Plan off a "coding" DashScope host while the general key stays on the
+// pay-as-you-go host.
+var planHostMarkers = []string{
+	"token-plan",
+	"coding.dashscope.aliyuncs.com",
+	"coding-intl.dashscope.aliyuncs.com",
+}
+
+// planPricedConnection reports a connection a subscription plan covers: its
+// identifier or its base URL host names the plan, so its traffic is plan usage
+// and never pay-as-you-go spend.
+func planPricedConnection(row sqlite.ProviderRow) bool {
 	for _, id := range []string{row.ID, row.TemplateID, row.ModelsDevProviderID} {
-		if strings.Contains(strings.ToLower(id), "token-plan") {
-			return true
+		lower := strings.ToLower(id)
+		for _, marker := range planIDMarkers {
+			if strings.Contains(lower, marker) {
+				return true
+			}
 		}
 	}
 	parsed, err := url.Parse(strings.TrimSpace(row.BaseURL))
-	return err == nil && strings.Contains(strings.ToLower(parsed.Hostname()), "token-plan")
+	if err != nil {
+		return false
+	}
+	host := strings.ToLower(parsed.Hostname())
+	for _, marker := range planHostMarkers {
+		if strings.Contains(host, marker) {
+			return true
+		}
+	}
+	return false
 }
 
 func openCodeConnection(row sqlite.ProviderRow) bool {

@@ -9,7 +9,6 @@ import {
 	formatCountdown,
 	healthCards,
 	isKiloFree,
-	isTokenPlan,
 	isWindowPeriod,
 	paidProviders,
 	planProviders,
@@ -193,10 +192,29 @@ describe('paidProviders', () => {
 		expect(spendKindOf({ ...provider('z', 'key'), modelsdev_provider_id: 'opencode' })).toBe(
 			'plan'
 		);
-		expect(isTokenPlan({ ...provider('x', 'key'), template_id: 'xiaomi-token-plan-cn' })).toBe(
-			true
-		);
-		expect(isTokenPlan(provider('openai', 'key'))).toBe(false);
+	});
+
+	// A plan is not only a token plan: models.dev sells the same fixed-fee
+	// model under a coding-plan, code-plan, or step-plan identifier, and
+	// Alibaba's Coding Plan is served from its own DashScope host.
+	it('classifies a coding, code, or step plan as plan usage', () => {
+		for (const id of [
+			'alibaba-coding-plan-cn',
+			'zai-coding-plan',
+			'kimi-code-plan-global',
+			'minimax-coding-plan',
+			'stepfun-step-plan',
+			'tencent-coding-plan'
+		]) {
+			expect(spendKindOf({ ...provider(id, 'key'), modelsdev_provider_id: id }), id).toBe('plan');
+		}
+		expect(
+			spendKindOf({
+				...provider('dashscope', 'key'),
+				base_url: 'https://coding-intl.dashscope.aliyuncs.com/v1'
+			})
+		).toBe('plan');
+		expect(spendKindOf(provider('alibaba', 'key'))).toBe('paid');
 	});
 });
 

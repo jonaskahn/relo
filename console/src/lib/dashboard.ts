@@ -1,6 +1,7 @@
 import type { Account, Provider, QuotaWindow, UsageRollupRow } from './types';
 import { ATTENTION_PERCENT } from './provider-attention';
 import { isFreeConnection } from './provider-free';
+import { isPlanPricedConnection } from './provider-plan';
 import { isMoneyReading } from './provider-quota';
 
 // The dashboard reads several daemon answers and combines them into the
@@ -18,13 +19,13 @@ export function paidProviders(providers: Provider[]): Provider[] {
 	return providers.filter((provider) => spendKindOf(provider) === 'paid');
 }
 
-/** Lists the connections a plan covers: sign-in accounts, token-plan APIs, and the keyless free
+/** Lists the connections a plan covers: sign-in accounts, plan-priced APIs, and the keyless free
  *  lanes. */
 export function planProviders(providers: Provider[]): Provider[] {
 	return providers.filter((provider) => spendKindOf(provider) === 'plan');
 }
 
-/** Reports how one connection's cost counts. A plan covers sign-in accounts, token-plan APIs,
+/** Reports how one connection's cost counts. A plan covers sign-in accounts, plan-priced APIs,
  *  the keyless free lanes; a local engine has no per-token price at all, and everything else is
  *  pay-as-you-go. */
 export function spendKindOf(
@@ -32,7 +33,7 @@ export function spendKindOf(
 ): SpendKind {
 	if (
 		provider.kind === 'signin' ||
-		isTokenPlan(provider) ||
+		isPlanPricedConnection(provider) ||
 		isOpenCode(provider) ||
 		isKiloFree(provider)
 	) {
@@ -40,21 +41,6 @@ export function spendKindOf(
 	}
 	if (provider.kind === 'key' || provider.kind === 'cloud') return 'paid';
 	return 'local';
-}
-
-/** Reports a connection billed by the token rather than the request: its identifier or its base
- *  URL host names the plan. */
-export function isTokenPlan(
-	provider: Pick<Provider, 'id' | 'template_id' | 'modelsdev_provider_id' | 'base_url'>
-): boolean {
-	for (const id of [provider.id, provider.template_id, provider.modelsdev_provider_id]) {
-		if (id.toLowerCase().includes('token-plan')) return true;
-	}
-	try {
-		return new URL(provider.base_url).hostname.toLowerCase().includes('token-plan');
-	} catch {
-		return false;
-	}
 }
 
 /** Reports a connection served by OpenCode, Go or Free.
