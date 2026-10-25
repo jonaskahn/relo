@@ -1571,7 +1571,7 @@
         "suggestTitle": "Similar models on other connections",
         "suggestHint": "Same family, matching your billing scope.",
         "suggestAddAll": "Add all ({count})",
-        "suggestConflict": "{count} model(s) left out because their tools setting disagrees with the group.",
+        "suggestConflict": "Left out for a tools conflict ({count})",
         "laneManual": "Manual",
         "addModels": "Add models",
         "allConnections": "All connections",
