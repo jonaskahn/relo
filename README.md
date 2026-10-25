@@ -7,7 +7,7 @@
 
 <a href="https://github.com/jonaskahn/relo/actions/workflows/ci.yml"><img src="https://github.com/jonaskahn/relo/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
 <a href="https://codecov.io/gh/jonaskahn/relo"><img src="https://codecov.io/gh/jonaskahn/relo/branch/main/graph/badge.svg" alt="Coverage"></a>
-<a href="https://github.com/jonaskahn/relo/releases"><img src="https://img.shields.io/badge/next-0.1.8-brightgreen" alt="Version"></a>
+<a href="https://github.com/jonaskahn/relo/releases"><img src="https://img.shields.io/badge/next-0.1.9-brightgreen" alt="Version"></a>
 <a href="https://www.npmjs.com/package/@jonaskahn/relo"><img src="https://img.shields.io/npm/v/@jonaskahn/relo?label=npm%40latest" alt="npm latest"></a>
 <a href="https://www.npmjs.com/package/@jonaskahn/relo?activeTab=versions"><img src="https://img.shields.io/npm/v/@jonaskahn/relo/beta" alt="npm beta"></a>
 

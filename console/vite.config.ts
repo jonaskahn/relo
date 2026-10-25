@@ -1,3 +1,5 @@
+import adapter from '@sveltejs/adapter-static';
+import { vitePreprocess } from '@sveltejs/vite-plugin-svelte';
 import { sveltekit } from '@sveltejs/kit/vite';
 import tailwindcss from '@tailwindcss/vite';
 import { defineConfig } from 'vite';
@@ -7,7 +9,16 @@ import { defineConfig } from 'vite';
 const backend = process.env.RELO_BACKEND_URL ?? 'http://127.0.0.1:10101';
 
 export default defineConfig({
-	plugins: [tailwindcss(), sveltekit()],
+	plugins: [
+		tailwindcss(),
+		sveltekit({
+			preprocess: vitePreprocess(),
+			alias: { $lib: 'src/lib' },
+			// The console is a single-page application: the Go server owns the
+			// URLs, serves the shell for all of them, and the browser routes.
+			adapter: adapter({ fallback: 'index.html' })
+		})
+	],
 	build: {
 		// Rolldown warns whenever a plugin callback takes significant time,
 		// and SvelteKit's own compile phase always does on this console. The

@@ -56,7 +56,7 @@ for (let start = 0; start < ids.length; start += 12) {
 				available.push(id);
 				downloaded++;
 			} catch (error) {
-				console.error(`Logo ${id}: ${error.message}`);
+				console.error(`Logo ${id}: ${error instanceof Error ? error.message : String(error)}`);
 				missing++;
 			}
 		})

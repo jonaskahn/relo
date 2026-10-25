@@ -10,4 +10,7 @@ cd "$root/console"
 if [ ! -x node_modules/.bin/vite ]; then
   npm ci
 fi
+# SvelteKit generates .svelte-kit/tsconfig.json (and friends) during sync;
+# `vite build` needs them, and a clean checkout or `package-clean` removes them.
+npm run prepare
 npm run build
