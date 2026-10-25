@@ -3,11 +3,24 @@
 import { groupMembersOf } from '$lib/catalog';
 import type { Group, GroupMember, Model } from '$lib/types';
 
+import type { Lane } from '$lib/group-suggestions';
+
+/** The route editor's steps, in order, when creating a group. */
+export const ROUTE_STEPS_CREATE = ['basics', 'billing', 'members', 'review'] as const;
+
+/** The route editor's steps, in order, when editing an existing group. */
+export const ROUTE_STEPS_EDIT = ['basics', 'members', 'review'] as const;
+
 /** The route editor's steps, in order. */
-export const ROUTE_STEPS = ['basics', 'members', 'review'] as const;
+export const ROUTE_STEPS = ROUTE_STEPS_CREATE;
 
 /** One page of the route editor. */
-export type RouteStep = (typeof ROUTE_STEPS)[number];
+export type RouteStep = (typeof ROUTE_STEPS_CREATE)[number] | (typeof ROUTE_STEPS_EDIT)[number];
+
+/** The steps a given editor run walks, so the stepper and navigation read one source. */
+export function routeStepsFor(creating: boolean): readonly RouteStep[] {
+	return creating ? ROUTE_STEPS_CREATE : ROUTE_STEPS_EDIT;
+}
 
 /** A group as the editor holds it while it is being changed. */
 export interface RouteDraft {
@@ -21,6 +34,9 @@ export interface RouteDraft {
 	switchOn4xx: boolean;
 	switchOn5xx: boolean;
 	members: GroupMember[];
+	// lanes is the billing scope the Billing step chose. It is editor state only:
+	// it never reaches the daemon and never marks the draft dirty.
+	lanes: Lane[];
 }
 
 /** Builds a new group's draft. */
@@ -33,7 +49,8 @@ export function emptyRouteDraft(): RouteDraft {
 		listed: true,
 		switchOn4xx: true,
 		switchOn5xx: true,
-		members: []
+		members: [],
+		lanes: ['payg', 'plan', 'free']
 	};
 }
 
@@ -57,7 +74,8 @@ export function routeDraftFrom(group: Group): RouteDraft {
 			reason: member.reason,
 			serving_accounts: member.serving_accounts ?? 0,
 			active_accounts: member.active_accounts ?? 0
-		}))
+		})),
+		lanes: []
 	};
 }
 
