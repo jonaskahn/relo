@@ -1,17 +1,15 @@
 import { describe, expect, it } from 'vitest';
 
-import { modelOf, modelPrices, pricesOf, emptyPrices } from './provider-fixtures';
-import type { GroupMember, Model, Provider } from './types';
+import { modelOf } from './provider-fixtures';
+import type { GroupMember, Provider } from './types';
 import {
 	allowedByLanes,
 	familyKey,
 	groupSuggestions,
 	laneCounts,
 	modelsInLanes,
-	similarModels,
-	type Lane
+	similarModels
 } from './group-suggestions';
-import { billingLane } from './provider-plan';
 
 function provider(
 	id: string,
@@ -26,6 +24,7 @@ function provider(
 		available_formats: null,
 		variable_defs: null,
 		origin: 'template',
+		login_flows: [],
 		auth: 'api_key',
 		api_format: 'openai-chat',
 		api_formats: [],

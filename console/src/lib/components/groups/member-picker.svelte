@@ -4,7 +4,7 @@
 	import { api } from '$lib/api';
 	import { modelPrice, providerLabel } from '$lib/catalog';
 	import { allowedByLanes } from '$lib/group-suggestions';
-	import { billingLane } from '$lib/provider-plan';
+	import type { Lane } from '$lib/group-suggestions';
 	import BillingChip from '$lib/components/providers/billing-chip.svelte';
 	import type { GroupMember, Model, Provider } from '$lib/types';
 	import Button from '$lib/components/ui/button.svelte';
@@ -17,7 +17,7 @@
 		configured: Provider[];
 		providers: Provider[];
 		members: GroupMember[];
-		lanes?: import('$lib/group-suggestions').Lane[];
+		lanes?: Lane[];
 		onadd: (member: GroupMember) => void;
 		onlearn: (models: Model[]) => void;
 	}

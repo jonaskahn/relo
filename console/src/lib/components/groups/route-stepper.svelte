@@ -223,13 +223,7 @@
 			{#if step === 'basics'}
 				<StepBasics {draft} {creating} {problems} ondraft={patch} />
 			{:else if step === 'billing'}
-				<StepBilling
-					{draft}
-					{providers}
-					{configured}
-					ondraft={patch}
-					onskip={() => (step = 'members')}
-				/>
+				<StepBilling {draft} {configured} ondraft={patch} onskip={() => (step = 'members')} />
 			{:else if step === 'members'}
 				<StepMembers
 					{draft}
@@ -239,6 +233,7 @@
 					{problems}
 					{capabilities}
 					{creating}
+					ondraft={patch}
 					onmembers={setMembers}
 					onmove={moveMembers}
 					onlearn={learn}

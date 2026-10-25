@@ -1,20 +1,19 @@
 <script lang="ts">
 	import { t } from 'svelte-i18n';
-	import { billingLane } from '$lib/provider-plan';
 	import { laneCounts } from '$lib/group-suggestions';
-	import type { Provider, RouteDraft } from '$lib/types';
+	import type { Provider } from '$lib/types';
+	import type { RouteDraft } from '$lib/route-stepper';
 	import Button from '$lib/components/ui/button.svelte';
 	import Icon from '$lib/components/ui/icon.svelte';
 
 	interface Props {
 		draft: RouteDraft;
-		providers: Provider[];
 		configured: Provider[];
 		ondraft: (patch: Partial<RouteDraft>) => void;
 		onskip: () => void;
 	}
 
-	let { draft, providers, configured, ondraft, onskip }: Props = $props();
+	let { draft, configured, ondraft, onskip }: Props = $props();
 
 	const lanes = $derived(draft.lanes);
 	const counts = $derived(laneCounts(configured));
@@ -33,11 +32,13 @@
 			ondraft({ lanes: [] });
 			return;
 		}
-		const next = new Set(lanes.filter((entry) => entry !== 'manual'));
+		const next = new Set(
+			lanes.filter((entry: 'payg' | 'plan' | 'free' | 'manual') => entry !== 'manual')
+		);
 		if (next.has(lane)) next.delete(lane);
 		else next.add(lane);
-		if (next.size === 0) next.add('manual');
-		ondraft({ lanes: [...next] });
+		if (next.size === 0) ondraft({ lanes: [] });
+		else ondraft({ lanes: [...next] });
 	}
 </script>
 
@@ -112,7 +113,7 @@
 			onclick={() => toggleLane('manual')}
 		>
 			<div class="flex items-center gap-2">
-				<Icon name="hand" size={16} />
+				<Icon name="settings" size={16} />
 				<span class="text-sm font-semibold">{$t('ui.pages.groupsPage.laneManual')}</span>
 				<span class="ms-auto mono-data text-xs text-muted-foreground">{manualCount}</span>
 			</div>

@@ -2,7 +2,7 @@
 	import { untrack } from 'svelte';
 	import { t } from 'svelte-i18n';
 	import { modelPrice, moveMember, providerLabel } from '$lib/catalog';
-	import { similarModels, groupSuggestions, familyKey } from '$lib/group-suggestions';
+	import { similarModels, groupSuggestions } from '$lib/group-suggestions';
 	import BillingChip from '$lib/components/providers/billing-chip.svelte';
 	import {
 		displayMembers,
@@ -31,6 +31,7 @@
 		problems?: Record<string, string>;
 		capabilities: MemberCapabilities;
 		creating?: boolean;
+		ondraft: (patch: Partial<RouteDraft>) => void;
 		onmembers: (members: GroupMember[]) => void;
 		onmove: (from: number, to: number) => void;
 		onlearn: (models: Model[]) => void;
@@ -44,6 +45,7 @@
 		problems = {},
 		capabilities,
 		creating = false,
+		ondraft,
 		onmembers,
 		onmove,
 		onlearn
@@ -229,6 +231,7 @@
 					>
 					<button
 						type="button"
+						aria-pressed={draft.lanes.includes('payg')}
 						class="rounded-control border px-2 py-0.5 text-xs {draft.lanes.includes('payg')
 							? 'border-primary bg-accent-soft'
 							: 'border-border'}"
@@ -237,6 +240,7 @@
 					>
 					<button
 						type="button"
+						aria-pressed={draft.lanes.includes('plan')}
 						class="rounded-control border px-2 py-0.5 text-xs {draft.lanes.includes('plan')
 							? 'border-primary bg-accent-soft'
 							: 'border-border'}"
@@ -245,6 +249,7 @@
 					>
 					<button
 						type="button"
+						aria-pressed={draft.lanes.includes('free')}
 						class="rounded-control border px-2 py-0.5 text-xs {draft.lanes.includes('free')
 							? 'border-primary bg-accent-soft'
 							: 'border-border'}"
@@ -252,6 +257,7 @@
 					>
 					<button
 						type="button"
+						aria-pressed={draft.lanes.length === 0}
 						class="rounded-control border px-2 py-0.5 text-xs {draft.lanes.length === 0
 							? 'border-primary bg-accent-soft'
 							: 'border-border'}"
@@ -294,6 +300,7 @@
 									{#each group.models as model (model.provider_id + '/' + model.model_id)}
 										<button
 											type="button"
+											aria-pressed="false"
 											class="flex items-center gap-1.5 rounded-control border border-border bg-card px-2 py-1 text-xs hover:border-accent-line"
 											onclick={() => addOne(model)}
 										>
