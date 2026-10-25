@@ -174,7 +174,7 @@ describe('similarModels', () => {
 			provider('payg', 'openai', 'key')
 		];
 		const result = similarModels(others, seed, providers, ['free', 'payg', 'plan']);
-		expect(result.map((model) => model.model_id)).toEqual([
+		expect(result.models.map((model) => model.model_id)).toEqual([
 			'claude-sonnet-5-5',
 			'claude-sonnet-4-6'
 		]);
@@ -226,9 +226,9 @@ describe('similarModels', () => {
 			provider('payg', 'openai', 'key')
 		];
 		const members: GroupMember[] = [member({ provider_id: 'payg', model_id: 'claude-sonnet-5-5' })];
-		expect(similarModels(others, seed, providers, ['free', 'payg', 'plan'], members)).toHaveLength(
-			0
-		);
+		expect(
+			similarModels(others, seed, providers, ['free', 'payg', 'plan'], members).models
+		).toHaveLength(0);
 	});
 	it('does not offer a model that would conflict on tools', () => {
 		const seed = modelOf({
