@@ -1,7 +1,7 @@
 {
-  "generated": "2026-10-23T17:03:56Z",
+  "generated": "2026-10-25T03:54:32Z",
   "latest": "v0.1.7",
-  "latest_beta": "v0.1.8-beta.40.195517b1",
+  "latest_beta": "v0.1.8-beta.41.b98b34a2",
   "install": {
     "stable": {
       "script": "curl -fsSL https://relo.ifelse.one/install.sh | sh",
@@ -17,6 +17,86 @@
     }
   },
   "releases": [
+    {
+      "tag": "v0.1.8-beta.41.b98b34a2",
+      "version": "0.1.8-beta.41.b98b34a2",
+      "name": "v0.1.8-beta.41.b98b34a2",
+      "channel": "beta",
+      "draft": false,
+      "published_at": "2026-10-25T03:54:21Z",
+      "page": "https://github.com/jonaskahn/relo/releases/tag/v0.1.8-beta.41.b98b34a2",
+      "notes": "## What's Changed\n* Feat/deepseek web account by @jonaskahn in https://github.com/jonaskahn/relo/pull/68\n\n\n**Full Changelog**: https://github.com/jonaskahn/relo/compare/v0.1.8-beta.40.195517b1...v0.1.8-beta.41.b98b34a2",
+      "install": {
+        "script": "curl -fsSL https://relo.ifelse.one/install.sh | sh -s -- --version 0.1.8-beta.41.b98b34a2",
+        "powershell": "& ([scriptblock]::Create((irm https://relo.ifelse.one/install.ps1))) -Version 0.1.8-beta.41.b98b34a2",
+        "npm": "npm i -g @jonaskahn/relo@0.1.8-beta.41.b98b34a2"
+      },
+      "files": [
+        {
+          "name": "checksums.txt",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.1.8-beta.41.b98b34a2/checksums.txt",
+          "size": 684,
+          "os": "any",
+          "arch": "any",
+          "kind": "checksums",
+          "format": "txt"
+        },
+        {
+          "name": "relo-0.1.8-beta.41.b98b34a2-darwin-amd64.tar.gz",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.1.8-beta.41.b98b34a2/relo-0.1.8-beta.41.b98b34a2-darwin-amd64.tar.gz",
+          "size": 14249502,
+          "os": "macos",
+          "arch": "amd64",
+          "kind": "archive",
+          "format": "tar.gz"
+        },
+        {
+          "name": "relo-0.1.8-beta.41.b98b34a2-darwin-arm64.tar.gz",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.1.8-beta.41.b98b34a2/relo-0.1.8-beta.41.b98b34a2-darwin-arm64.tar.gz",
+          "size": 13833180,
+          "os": "macos",
+          "arch": "arm64",
+          "kind": "archive",
+          "format": "tar.gz"
+        },
+        {
+          "name": "relo-0.1.8-beta.41.b98b34a2-linux-amd64.tar.gz",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.1.8-beta.41.b98b34a2/relo-0.1.8-beta.41.b98b34a2-linux-amd64.tar.gz",
+          "size": 13941121,
+          "os": "linux",
+          "arch": "amd64",
+          "kind": "archive",
+          "format": "tar.gz"
+        },
+        {
+          "name": "relo-0.1.8-beta.41.b98b34a2-linux-arm64.tar.gz",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.1.8-beta.41.b98b34a2/relo-0.1.8-beta.41.b98b34a2-linux-arm64.tar.gz",
+          "size": 13187602,
+          "os": "linux",
+          "arch": "arm64",
+          "kind": "archive",
+          "format": "tar.gz"
+        },
+        {
+          "name": "relo-0.1.8-beta.41.b98b34a2-windows-amd64.tar.gz",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.1.8-beta.41.b98b34a2/relo-0.1.8-beta.41.b98b34a2-windows-amd64.tar.gz",
+          "size": 13884725,
+          "os": "windows",
+          "arch": "amd64",
+          "kind": "archive",
+          "format": "tar.gz"
+        },
+        {
+          "name": "relo-0.1.8-beta.41.b98b34a2-windows-arm64.tar.gz",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.1.8-beta.41.b98b34a2/relo-0.1.8-beta.41.b98b34a2-windows-arm64.tar.gz",
+          "size": 13032896,
+          "os": "windows",
+          "arch": "arm64",
+          "kind": "archive",
+          "format": "tar.gz"
+        }
+      ]
+    },
     {
       "tag": "v0.1.8-beta.40.195517b1",
       "version": "0.1.8-beta.40.195517b1",
