@@ -41,6 +41,14 @@ type sweepJob struct {
 	ended   time.Time
 	report  *sweepReport
 	failure string
+	now     func() time.Time
+}
+
+func (j *sweepJob) nowTime() time.Time {
+	if j.now != nil {
+		return j.now()
+	}
+	return time.Now()
 }
 
 func (j *sweepJob) start() bool {
@@ -50,7 +58,7 @@ func (j *sweepJob) start() bool {
 		return false
 	}
 	j.state = sweepWorking
-	j.started = time.Now()
+	j.started = j.nowTime()
 	j.ended = time.Time{}
 	j.report = nil
 	j.failure = ""
@@ -60,7 +68,7 @@ func (j *sweepJob) start() bool {
 func (j *sweepJob) finish(report activity.CleanupReport, err error) {
 	j.mu.Lock()
 	defer j.mu.Unlock()
-	j.ended = time.Now()
+	j.ended = j.nowTime()
 	if err != nil {
 		j.state = sweepFailed
 		j.failure = err.Error()
