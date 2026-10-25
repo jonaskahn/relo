@@ -4,8 +4,14 @@ import eslintConfigPrettier from 'eslint-config-prettier';
 import svelte from 'eslint-plugin-svelte';
 import globals from 'globals';
 import ts from 'typescript-eslint';
+import { vitePreprocess } from '@sveltejs/vite-plugin-svelte';
 
-import svelteConfig from './svelte.config.js';
+// SvelteKit 3 no longer reads `svelte.config.js`; config moved into
+// `vite.config.ts`. eslint-plugin-svelte still wants a Svelte config for
+// its parser, so reconstruct the minimal subset it needs here.
+const svelteConfig = {
+	preprocess: vitePreprocess()
+};
 
 export default defineConfig(
 	// Generated output and local caches carry no source rules.
