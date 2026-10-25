@@ -270,7 +270,7 @@
 						class="rounded-control border px-2 py-0.5 text-xs {draft.lanes.length === 0
 							? 'border-primary bg-accent-soft'
 							: 'border-border'}"
-						onclick={() => (draft.lanes = [])}>{$t('ui.pages.groupsPage.laneManual')}</button
+						onclick={() => ondraft({ lanes: [] })}>{$t('ui.pages.groupsPage.laneManual')}</button
 					>
 				</div>
 			{/if}
