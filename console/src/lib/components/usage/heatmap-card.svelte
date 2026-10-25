@@ -40,7 +40,7 @@
 	const weekdays = $derived(
 		Array.from({ length: 7 }, (_, day) =>
 			new Date(Date.UTC(2026, 8, 28 + day)).toLocaleDateString('en', {
- 				weekday: 'short',
+				weekday: 'short'
 			})
 		)
 	);
