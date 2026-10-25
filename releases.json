@@ -1,6 +1,6 @@
 {
-  "generated": "2026-10-25T03:54:32Z",
-  "latest": "v0.1.7",
+  "generated": "2026-10-25T05:24:10Z",
+  "latest": "v0.1.8",
   "latest_beta": "v0.1.8-beta.41.b98b34a2",
   "install": {
     "stable": {
@@ -17,6 +17,158 @@
     }
   },
   "releases": [
+    {
+      "tag": "v0.1.8",
+      "version": "0.1.8",
+      "name": "v0.1.8 - Vietnamese Beef Steak 🥩",
+      "channel": "stable",
+      "draft": false,
+      "published_at": "2026-10-25T05:23:59Z",
+      "page": "https://github.com/jonaskahn/relo/releases/tag/v0.1.8",
+      "notes": "## What's Changed\r\n* feat: make Command Code an API-key provider by @jonaskahn in https://github.com/jonaskahn/relo/pull/67\r\n* Feat/deepseek web account by @jonaskahn in https://github.com/jonaskahn/relo/pull/68\r\n\r\n\r\n**Full Changelog**: https://github.com/jonaskahn/relo/compare/v0.1.7...v0.1.8",
+      "install": {
+        "script": "curl -fsSL https://relo.ifelse.one/install.sh | sh -s -- --version 0.1.8",
+        "powershell": "& ([scriptblock]::Create((irm https://relo.ifelse.one/install.ps1))) -Version 0.1.8",
+        "npm": "npm i -g @jonaskahn/relo@0.1.8"
+      },
+      "files": [
+        {
+          "name": "checksums.txt",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.1.8/checksums.txt",
+          "size": 582,
+          "os": "any",
+          "arch": "any",
+          "kind": "checksums",
+          "format": "txt"
+        },
+        {
+          "name": "Relo-0.1.8-arm64.zip",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.1.8/Relo-0.1.8-arm64.zip",
+          "size": 15111407,
+          "os": "macos",
+          "arch": "arm64",
+          "kind": "app",
+          "format": "zip"
+        },
+        {
+          "name": "relo-0.1.8-darwin-amd64.tar.gz",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.1.8/relo-0.1.8-darwin-amd64.tar.gz",
+          "size": 14249417,
+          "os": "macos",
+          "arch": "amd64",
+          "kind": "archive",
+          "format": "tar.gz"
+        },
+        {
+          "name": "relo-0.1.8-darwin-arm64.tar.gz",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.1.8/relo-0.1.8-darwin-arm64.tar.gz",
+          "size": 13833138,
+          "os": "macos",
+          "arch": "arm64",
+          "kind": "archive",
+          "format": "tar.gz"
+        },
+        {
+          "name": "relo-0.1.8-linux-amd64.tar.gz",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.1.8/relo-0.1.8-linux-amd64.tar.gz",
+          "size": 13941156,
+          "os": "linux",
+          "arch": "amd64",
+          "kind": "archive",
+          "format": "tar.gz"
+        },
+        {
+          "name": "relo-0.1.8-linux-arm64.tar.gz",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.1.8/relo-0.1.8-linux-arm64.tar.gz",
+          "size": 13187504,
+          "os": "linux",
+          "arch": "arm64",
+          "kind": "archive",
+          "format": "tar.gz"
+        },
+        {
+          "name": "Relo-0.1.8-universal.zip",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.1.8/Relo-0.1.8-universal.zip",
+          "size": 29728026,
+          "os": "macos",
+          "arch": "universal",
+          "kind": "app",
+          "format": "zip"
+        },
+        {
+          "name": "relo-0.1.8-windows-amd64.tar.gz",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.1.8/relo-0.1.8-windows-amd64.tar.gz",
+          "size": 13884643,
+          "os": "windows",
+          "arch": "amd64",
+          "kind": "archive",
+          "format": "tar.gz"
+        },
+        {
+          "name": "relo-0.1.8-windows-arm64.tar.gz",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.1.8/relo-0.1.8-windows-arm64.tar.gz",
+          "size": 13032887,
+          "os": "windows",
+          "arch": "arm64",
+          "kind": "archive",
+          "format": "tar.gz"
+        },
+        {
+          "name": "Relo-Setup-0.1.8-amd64.deb",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.1.8/Relo-Setup-0.1.8-amd64.deb",
+          "size": 14203470,
+          "os": "linux",
+          "arch": "amd64",
+          "kind": "installer",
+          "format": "deb"
+        },
+        {
+          "name": "Relo-Setup-0.1.8-amd64.exe",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.1.8/Relo-Setup-0.1.8-amd64.exe",
+          "size": 10099010,
+          "os": "windows",
+          "arch": "amd64",
+          "kind": "installer",
+          "format": "exe"
+        },
+        {
+          "name": "Relo-Setup-0.1.8-amd64.rpm",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.1.8/Relo-Setup-0.1.8-amd64.rpm",
+          "size": 14170466,
+          "os": "linux",
+          "arch": "amd64",
+          "kind": "installer",
+          "format": "rpm"
+        },
+        {
+          "name": "Relo-Setup-0.1.8-arm64.deb",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.1.8/Relo-Setup-0.1.8-arm64.deb",
+          "size": 13523022,
+          "os": "linux",
+          "arch": "arm64",
+          "kind": "installer",
+          "format": "deb"
+        },
+        {
+          "name": "Relo-Setup-0.1.8-arm64.exe",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.1.8/Relo-Setup-0.1.8-arm64.exe",
+          "size": 9079095,
+          "os": "windows",
+          "arch": "arm64",
+          "kind": "installer",
+          "format": "exe"
+        },
+        {
+          "name": "Relo-Setup-0.1.8-arm64.rpm",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.1.8/Relo-Setup-0.1.8-arm64.rpm",
+          "size": 13462898,
+          "os": "linux",
+          "arch": "arm64",
+          "kind": "installer",
+          "format": "rpm"
+        }
+      ]
+    },
     {
       "tag": "v0.1.8-beta.41.b98b34a2",
       "version": "0.1.8-beta.41.b98b34a2",
