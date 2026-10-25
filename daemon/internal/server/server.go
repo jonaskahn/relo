@@ -264,7 +264,7 @@ func New(opts Options) *Server {
 		gate:         NewAccessKeyGate(opts.AccessKeys, opts.Clock, opts.Logger),
 		nativeClient: &http.Client{},
 		bookkeeping:  newBookkeeping(),
-		sweep:        sweepJob{state: sweepIdle},
+		sweep:        sweepJob{state: sweepIdle, now: opts.Clock.Now},
 		lifetime:     lifetime, cancel: cancel, persistence: persistence, cancelPersistence: cancelPersistence,
 		shutdownDone: make(chan struct{}),
 	}

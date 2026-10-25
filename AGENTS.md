@@ -15,6 +15,13 @@ its "Before you write code" table lists for the area you are touching.
 - Console work: `make ci-console`
 - Work touching both: run both targets; `make ci` is the full pre-push gate
 
+### Prefer Docker when a containerized path exists
+
+If the repository provides one — a compose file for tests, a `Dockerfile` test
+stage, or a `make *-docker` / `test-docker` target — run the tests that way
+first and quote its output. The local targets above are the fallback for when
+no containerized path exists; do not build one unless asked.
+
 ## Behavioral guidelines
 
 These favor caution over speed: be lazy about writing code, not about

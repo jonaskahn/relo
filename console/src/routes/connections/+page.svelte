@@ -26,6 +26,7 @@
 	import ProviderPane from '$lib/components/providers/provider-pane.svelte';
 	import ConnectionsOverview from '$lib/components/providers/connections-overview.svelte';
 	import ModelList from '$lib/components/providers/model-list.svelte';
+	import ScrollToTop from '$lib/components/ui/scroll-to-top.svelte';
 	import AddProviderStepper from '$lib/components/providers/add/add-provider-stepper.svelte';
 	import { API_FORMATS } from '$lib/catalog';
 	import {
@@ -541,3 +542,5 @@
 	ondiscarded={closeAddFlow}
 	onrefreshdev={refreshDev}
 />
+
+<ScrollToTop />

@@ -4,7 +4,7 @@
 
 [cli.root.short]
 description = "One-line summary of the relo command"
-other = "Lokale AI-proxy die credentials over meerdere accounts verdeelt"
+other = "Lokale AI-proxy die inloggegevens van meerdere accounts samenbrengt"
 
 [cli.root.home]
 description = "Usage of the --home flag"
@@ -48,7 +48,7 @@ other = "Aanvullende helponderwerpen:"
 
 [cli.usage.footer]
 description = "Closing hint of a help screen; {{.CommandPath}} is the command path and [command] --help stays literal"
-other = "Gebruik \"{{.CommandPath}} [command] --help\" voor meer info over een opdracht."
+other = "Gebruik \"{{.CommandPath}} [command] --help\" voor meer informatie over een opdracht."
 
 [cli.help.short]
 description = "One-line summary of relo help"
@@ -76,7 +76,7 @@ other = "Maak het aanvulscript voor {{.Shell}}"
 
 [cli.completion.no_descriptions]
 description = "Usage of the completion --no-descriptions flag"
-other = "schakel beschrijvingen bij aanvullen uit"
+other = "beschrijvingen bij aanvullen uitzetten"
 
 [cli.version.short]
 description = "One-line summary of relo version"
@@ -116,11 +116,11 @@ other = "Adres"
 
 [cli.daemon.status.data_plane]
 description = "Status field label for the port each client protocol answers on"
-other = "Data plane"
+other = "Dataplane"
 
 [cli.daemon.status.secret_mode]
 description = "Status field label"
-other = "Geheime modus"
+other = "Geheimenopslag"
 
 [cli.daemon.status.schema_version]
 description = "Status field label"
@@ -136,7 +136,7 @@ other = "{{.Count}} ({{.Active}} actief)"
 
 [cli.daemon.status.no_keys]
 description = "Warning under the status report when no client key is active"
-other = "Geen actieve clientsleutel. De data plane weigert elke aanvraag."
+other = "Geen actieve clientsleutel. Het dataplane weigert elke aanvraag."
 
 [cli.daemon.run.short]
 description = "One-line summary of relo daemon run"
@@ -288,7 +288,7 @@ other = "ongeldige aanvraagbody: er werd één JSON-object verwacht"
 
 [api.callback.heading]
 description = "Title of the page a browser lands on after a provider redirect"
-other = "Het inloggen afronden"
+other = "De aanmelding afronden"
 
 [api.callback.summary]
 description = "Summary of the callback page while the authorization is exchanged"
@@ -308,7 +308,7 @@ other = "Niet verbonden"
 
 [api.callback.steps_label]
 description = "Accessible label of the progress list on the callback page"
-other = "Inlogvoortgang"
+other = "Voortgang van de aanmelding"
 
 [api.callback.step_authorized]
 description = "First step of a login: the provider authorized the request"
@@ -328,23 +328,23 @@ other = "Verbonden"
 
 [api.callback.connected_body]
 description = "Summary of the callback page for a login that finished"
-other = "Relo heeft het account opgeslagen en routeert aanvragen erdoorheen."
+other = "Relo heeft het account opgeslagen en stuurt aanvragen erdoorheen."
 
 [api.callback.failed_title]
 description = "Title of the callback page for a login that did not finish"
-other = "Het inloggen is niet afgerond"
+other = "De aanmelding is niet afgerond"
 
 [api.callback.expired_title]
 description = "Title of the callback page for a login this process no longer tracks"
-other = "Deze login is niet meer open"
+other = "Deze aanmelding is niet meer actief"
 
 [api.callback.expired_body]
 description = "Summary of the callback page for a login this process no longer tracks"
-other = "Relo volgt deze login niet meer. Start de login opnieuw vanuit de console."
+other = "Relo volgt deze aanmelding niet meer. Start hem opnieuw vanuit de console."
 
 [api.callback.expired]
 description = "Refusal of a callback status poll for a login that is gone"
-other = "deze login is niet meer open"
+other = "deze aanmelding is niet meer actief"
 
 [api.callback.failure_denied]
 description = "Callback failure: the provider refused the authorization"
@@ -352,7 +352,7 @@ other = "De provider weigerde de autorisatie."
 
 [api.callback.failure_state]
 description = "Callback failure: the callback did not match the login Relo started"
-other = "De callback kwam niet overeen met de login die Relo startte, of die was al gebruikt."
+other = "De callback hoorde niet bij de aanmelding die Relo startte, of hij was al gebruikt."
 
 [api.callback.failure_timeout]
 description = "Callback failure: the provider did not answer in time"
@@ -384,7 +384,7 @@ other = "deze build heeft geen dashboard"
 
 [api.events.unknown]
 description = "Refusal of an event stream for a channel that does not exist"
-other = "er bestaat geen eventkanaal"
+other = "dat eventkanaal bestaat niet"
 
 [api.events.cannot_stream]
 description = "Refusal of an event stream over a listener that cannot stream"
@@ -396,7 +396,7 @@ other = "er zijn te veel eventstreams open"
 
 [api.inference.retired]
 description = "Refusal of an inference path that moved to the port of its protocol"
-other = "de inferencepoorten zijn verplaatst naar {{.BaseURL}}"
+other = "de inference-endpoints zijn verplaatst naar {{.BaseURL}}"
 
 [api.keys.invalid]
 description = "Refusal of an inference request with a key that does not authenticate"
@@ -424,11 +424,11 @@ other = "geen opgeslagen capture heeft die id"
 
 [api.oauth.unknown]
 description = "Refusal of a login operation that does not exist"
-other = "geen loginbewerking heeft die id"
+other = "geen aanmelding met dat id"
 
 [api.oauth.port_busy]
 description = "Refusal of a sign-in whose callback port another process holds"
-other = "{{process}} gebruikt poort {{port}}; sluit het af om je aan te melden"
+other = "{{process}} gebruikt poort {{port}}; beëindig het proces om in te loggen"
 
 [api.integration.action_in_progress]
 description = "Refusal of a second run of an action the first has not finished"
@@ -448,11 +448,11 @@ other = "de beheerservice is niet beschikbaar"
 
 [api.settings.retention.invalid]
 description = "Refusal of a retention budget below the floor the ledger keeps"
-other = "request details are kept for at least a {{.Min}}-day window; use 0 to keep everything"
+other = "aanvraagdetails worden minstens {{.Min}} dagen bewaard; gebruik 0 om alles te bewaren"
 
 [api.settings.sweep.busy]
 description = "Refusal of a maintenance sweep while another one is running"
-other = "a maintenance sweep is already running; wait for it to finish"
+other = "er loopt al een onderhoudsronde; wacht tot die klaar is"
 
 [api.account.status_required]
 description = "Refusal of an account update that named neither status nor priority"
@@ -472,7 +472,7 @@ other = "Server opnieuw starten"
 
 [tray.menu.force_restart]
 description = "Tray menu item that kills the daemon and starts it again"
-other = "Server hard herstarten"
+other = "Server geforceerd herstarten"
 
 [tray.menu.autostart]
 description = "Tray menu item that toggles the login item"
@@ -524,7 +524,7 @@ other = "De browser kon niet worden geopend"
 
 [tray.notify.autostart_failed]
 description = "Notification when the login item could not be changed"
-other = "Kon het login-item niet wijzigen"
+other = "Kon de instelling voor starten bij inloggen niet wijzigen"
 
 [tray.notify.language_failed]
 description = "Notification when a language choice could not be stored"
@@ -556,7 +556,7 @@ other = "het logbestand van de daemon is {{.Path}}"
 
 [cli.daemon.stop.short]
 description = "One-line summary of relo daemon stop"
-other = "de Relo-proxy stoppen die de lifecycle-opdrachten beheren"
+other = "de Relo-proxy stoppen die bij de lifecycle-opdrachten hoort"
 
 [cli.daemon.stop.stopped]
 description = "Confirmation after a stop"
@@ -584,7 +584,7 @@ other = "Relo draait op {{.Addr}}"
 
 [cli.daemon.status.no_keys_hint]
 description = "How to create the first client key"
-other = "Maak er een aan op de pagina Sleutels van de console."
+other = "Maak er een aan op de pagina Clientsleutels van de console."
 
 [api.daemon.not_headless]
 description = "Refusal of a stop request when this process is not a headless daemon"

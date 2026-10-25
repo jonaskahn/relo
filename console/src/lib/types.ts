@@ -1026,3 +1026,17 @@ export interface QuotaWindow {
 	readonly observed_at_ms: number;
 	readonly stale: boolean;
 }
+
+/** One part of a captured client turn. */
+export type CapturedPart =
+	| { kind: 'text'; text: string }
+	| { kind: 'tool_call'; id: string; name: string; arguments: string }
+	| { kind: 'tool_result'; callId: string; name: string; text: string }
+	| { kind: 'image' }
+	| { kind: 'thinking' };
+
+/** One turn of a captured exchange, including tool turns the tester cannot re-send. */
+export interface CapturedEntry {
+	role: 'user' | 'assistant' | 'tool' | 'system';
+	parts: CapturedPart[];
+}

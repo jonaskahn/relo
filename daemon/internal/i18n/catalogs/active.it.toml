@@ -107,7 +107,7 @@ other = "Versione"
 
 [cli.daemon.status.uptime]
 description = "Status field label"
-other = "Uptime"
+other = "Tempo attivo"
 
 [cli.daemon.status.address]
 description = "Status field label"
@@ -147,23 +147,23 @@ other = "sostituisce la porta di ascolto"
 
 [cli.autostart.short]
 description = "One-line summary of relo autostart"
-other = "Gestisci se Relo si avvia al login"
+other = "Gestisci se Relo si avvia all’accesso"
 
 [cli.autostart.enable.short]
 description = "One-line summary of relo autostart enable"
-other = "avvia l’app desktop e il daemon al login"
+other = "avvia l’app desktop e il daemon all’accesso"
 
 [cli.autostart.disable.short]
 description = "One-line summary of relo autostart disable"
-other = "rimuovi la registrazione dell’avvio al login"
+other = "rimuovi la registrazione dell’avvio all’accesso"
 
 [cli.autostart.added]
 description = "Confirmation after registering the login items"
-other = "relo si avvierà al login"
+other = "relo si avvierà all’accesso"
 
 [cli.autostart.removed]
 description = "Confirmation after removing the login items"
-other = "relo non si avvierà più al login"
+other = "relo non si avvierà più all’accesso"
 
 [language.auto]
 description = "The language choice that follows the system locale"
@@ -275,7 +275,7 @@ other = "la console non ha potuto avviare una sessione"
 
 [api.auth.session_missing]
 description = "Refusal of a management request without a live session"
-other = "la sessione della dashboard manca o è scaduta"
+other = "la sessione della console manca o è scaduta"
 
 [api.body.invalid]
 description = "Refusal of a body that does not parse, with the parser's detail"
@@ -379,7 +379,7 @@ other = "Apri la console"
 
 [api.dashboard.missing]
 description = "Refusal of a console request in a build without one"
-other = "questa build non ha dashboard"
+other = "questa build non ha console"
 
 [api.events.unknown]
 description = "Refusal of an event stream for a channel that does not exist"
@@ -447,11 +447,11 @@ other = "il servizio di gestione non è disponibile"
 
 [api.settings.retention.invalid]
 description = "Refusal of a retention budget below the floor the ledger keeps"
-other = "request details are kept for at least a {{.Min}}-day window; use 0 to keep everything"
+other = "i dettagli delle richieste restano almeno una finestra di {{.Min}} giorni; usa 0 per conservare tutto"
 
 [api.settings.sweep.busy]
 description = "Refusal of a maintenance sweep while another one is running"
-other = "a maintenance sweep is already running; wait for it to finish"
+other = "una pulizia è già in corso; attendi che finisca"
 
 [api.account.status_required]
 description = "Refusal of an account update that named neither status nor priority"
@@ -463,11 +463,11 @@ other = "Relo — proxy AI locale"
 
 [tray.menu.open_dashboard]
 description = "Tray menu item that opens the console in a browser"
-other = "Apri la dashboard"
+other = "Apri la panoramica"
 
 [tray.menu.restart]
 description = "Tray menu item that restarts the daemon"
-other = "Riavvia il server"
+other = "Riavvia il daemon"
 
 [tray.menu.force_restart]
 description = "Tray menu item that kills the daemon and starts it again"
@@ -475,7 +475,7 @@ other = "Forza il riavvio"
 
 [tray.menu.autostart]
 description = "Tray menu item that toggles the login item"
-other = "Avvia al login"
+other = "Avvia all’accesso"
 
 [tray.menu.language]
 description = "Tray submenu that chooses the language"
@@ -523,7 +523,7 @@ other = "Impossibile aprire il browser"
 
 [tray.notify.autostart_failed]
 description = "Notification when the login item could not be changed"
-other = "Impossibile modificare l’avvio al login"
+other = "Impossibile modificare l’avvio all’accesso"
 
 [tray.notify.language_failed]
 description = "Notification when a language choice could not be stored"
@@ -639,7 +639,7 @@ other = "elimina i dati di Relo (configurazione, credenziali, log)"
 
 [cli.uninstall.prepare]
 description = "Usage of the hidden uninstall --prepare flag"
-other = "ferma il servizio e disattiva l'avvio automatico, lasciando il programma al suo posto"
+other = "ferma il servizio e disattiva l’avvio automatico, lasciando il programma al suo posto"
 
 [cli.uninstall.ask_data]
 description = "The question an interactive uninstall asks about the Relo data"

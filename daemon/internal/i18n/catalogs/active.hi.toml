@@ -2,15 +2,15 @@
 
 [cli.root.short]
 description = "One-line summary of the relo command"
-other = "बहु-खाता credential pooling के साथ स्थानीय AI proxy"
+other = "बहु-खाता क्रेडेंशियल पूलिंग वाली स्थानीय AI प्रॉक्सी"
 
 [cli.root.home]
 description = "Usage of the --home flag"
-other = "state directory (डिफ़ॉल्ट $RELO_HOME, फिर ~/.relo)"
+other = "स्टेट डायरेक्टरी (डिफ़ॉल्ट $RELO_HOME, फिर ~/.relo)"
 
 [cli.root.lang]
 description = "Usage of the --lang flag"
-other = "इस run की भाषा (auto, या en, de, ja जैसा tag)"
+other = "इस रन के लिए भाषा (auto, या en, de, ja जैसा टैग)"
 
 [cli.usage.title]
 description = "Heading above the usage line of a help screen"
@@ -46,7 +46,7 @@ other = "अतिरिक्त सहायता विषय:"
 
 [cli.usage.footer]
 description = "Closing hint of a help screen; {{.CommandPath}} is the command path and [command] --help stays literal"
-other = "किसी कमांड के बारे में और जानने के लिए \"{{.CommandPath}} [command] --help\" का उपयोग करें।"
+other = "किसी कमांड के बारे में और जानने के लिए \"{{.CommandPath}} [command] --help\" चलाएँ।"
 
 [cli.help.short]
 description = "One-line summary of relo help"
@@ -82,15 +82,15 @@ other = "संस्करण और प्लेटफ़ॉर्म दि�
 
 [cli.daemon.short]
 description = "One-line summary of relo daemon"
-other = "daemon चलाएँ और प्रबंधित करें"
+other = "डेमॉन चलाएँ और सँभालें"
 
 [cli.daemon.status.short]
 description = "One-line summary of relo daemon status"
-other = "दिखाएँ कि daemon चल रहा है या नहीं"
+other = "दिखाएँ कि डेमॉन चल रहा है या नहीं"
 
 [cli.daemon.status.json]
 description = "Usage of the status --json flag"
-other = "report को JSON के रूप में दिखाएँ"
+other = "रिपोर्ट JSON के रूप में दिखाएँ"
 
 [cli.daemon.status.not_running]
 description = "What status prints when nothing answers on the listen port"
@@ -106,7 +106,7 @@ other = "संस्करण"
 
 [cli.daemon.status.uptime]
 description = "Status field label"
-other = "Uptime"
+other = "अपटाइम"
 
 [cli.daemon.status.address]
 description = "Status field label"
@@ -114,19 +114,19 @@ other = "पता"
 
 [cli.daemon.status.data_plane]
 description = "Status field label for the port each client protocol answers on"
-other = "Data plane"
+other = "डेटा प्लेन"
 
 [cli.daemon.status.secret_mode]
 description = "Status field label"
-other = "Secret mode"
+other = "सीक्रेट मोड"
 
 [cli.daemon.status.schema_version]
 description = "Status field label"
-other = "Schema संस्करण"
+other = "स्कीमा संस्करण"
 
 [cli.daemon.status.client_keys]
 description = "Status field label"
-other = "Client keys"
+other = "क्लाइंट कुंजियाँ"
 
 [cli.daemon.status.key_count]
 description = "How many client keys exist, and how many still authenticate"
@@ -134,35 +134,35 @@ other = "{{.Count}} ({{.Active}} सक्रिय)"
 
 [cli.daemon.status.no_keys]
 description = "Warning under the status report when no client key is active"
-other = "कोई सक्रिय client key नहीं है। data plane हर अनुरोध अस्वीकार कर देता है।"
+other = "कोई सक्रिय क्लाइंट कुंजी नहीं है। डेटा प्लेन हर अनुरोध ठुकरा देता है।"
 
 [cli.daemon.run.short]
 description = "One-line summary of relo daemon run"
-other = "Relo proxy को foreground में शुरू करें"
+other = "Relo प्रॉक्सी को फ़ोरग्राउंड में शुरू करें"
 
 [cli.daemon.run.port]
 description = "Usage of the daemon run --port flag"
-other = "listen port override करें"
+other = "लिसन पोर्ट बदलें"
 
 [cli.autostart.short]
 description = "One-line summary of relo autostart"
-other = "तय करें कि Relo login पर शुरू हो या नहीं"
+other = "तय करें कि Relo लॉगिन पर शुरू हो या नहीं"
 
 [cli.autostart.enable.short]
 description = "One-line summary of relo autostart enable"
-other = "login पर desktop ऐप और daemon शुरू करें"
+other = "लॉगिन पर डेस्कटॉप ऐप और डेमॉन शुरू करें"
 
 [cli.autostart.disable.short]
 description = "One-line summary of relo autostart disable"
-other = "start-at-login पंजीकरण हटाएँ"
+other = "लॉगिन पर शुरू होने का पंजीकरण हटाएँ"
 
 [cli.autostart.added]
 description = "Confirmation after registering the login items"
-other = "Relo login पर शुरू होगा"
+other = "Relo लॉगिन पर शुरू होगा"
 
 [cli.autostart.removed]
 description = "Confirmation after removing the login items"
-other = "Relo अब login पर शुरू नहीं होगा"
+other = "Relo अब लॉगिन पर शुरू नहीं होगा"
 
 [language.auto]
 description = "The language choice that follows the system locale"
@@ -247,23 +247,23 @@ other = "लॉगिन केवल इसी मशीन से किया
 
 [api.auth.invalid_token]
 description = "Sign-in refusal for a wrong admin token"
-other = "अमान्य admin token"
+other = "अमान्य एडमिन टोकन"
 
 [api.auth.session_failed]
 description = "Sign-in failure when no session could be started"
-other = "console session शुरू नहीं कर सका"
+other = "कंसोल सत्र शुरू नहीं कर सका"
 
 [api.auth.session_missing]
 description = "Refusal of a management request without a live session"
-other = "dashboard session नहीं मिला या समाप्त हो गया"
+other = "डैशबोर्ड सत्र नहीं मिला या समाप्त हो गया"
 
 [api.body.invalid]
 description = "Refusal of a body that does not parse, with the parser's detail"
-other = "अमान्य request body: {{.Detail}}"
+other = "अमान्य अनुरोध बॉडी: {{.Detail}}"
 
 [api.body.single_object]
 description = "Refusal of a body that carries more than one JSON object"
-other = "अमान्य request body: एक JSON object अपेक्षित था"
+other = "अमान्य अनुरोध बॉडी: एक JSON ऑब्जेक्ट अपेक्षित था"
 
 [api.callback.heading]
 description = "Title of the page a browser lands on after a provider redirect"
@@ -271,7 +271,7 @@ other = "लॉगिन पूरा हो रहा है"
 
 [api.callback.summary]
 description = "Summary of the callback page while the authorization is exchanged"
-other = "Relo के पास authorization है और वह खाता सहेज रहा है।"
+other = "Relo के पास प्राधिकरण आ गया है और वह खाता सहेज रहा है।"
 
 [api.callback.marker_working]
 description = "Status marker of a login that is still running"
@@ -291,11 +291,11 @@ other = "लॉगिन की प्रगति"
 
 [api.callback.step_authorized]
 description = "First step of a login: the provider authorized the request"
-other = "{{.Provider}} ने authorization दी"
+other = "{{.Provider}} ने प्राधिकरण दिया"
 
 [api.callback.step_exchanging]
 description = "Second step of a login: the authorization is traded for tokens"
-other = "authorization बदला जा रहा है"
+other = "प्राधिकरण बदला जा रहा है"
 
 [api.callback.step_stored]
 description = "Third step of a login: the account is stored"
@@ -315,31 +315,31 @@ other = "लॉगिन पूरा नहीं हुआ"
 
 [api.callback.expired_title]
 description = "Title of the callback page for a login this process no longer tracks"
-other = "यह लॉगिन अब समाप्त हो चुका है"
+other = "यह लॉगिन अब खुला नहीं है"
 
 [api.callback.expired_body]
 description = "Summary of the callback page for a login this process no longer tracks"
-other = "Relo अब इस लॉगिन को ट्रैक नहीं कर रहा। console से दोबारा शुरू करें।"
+other = "Relo अब इस लॉगिन पर नज़र नहीं रख रहा। कंसोल से दोबारा शुरू करें।"
 
 [api.callback.expired]
 description = "Refusal of a callback status poll for a login that is gone"
-other = "यह लॉगिन अब समाप्त हो चुका है"
+other = "यह लॉगिन अब खुला नहीं है"
 
 [api.callback.failure_denied]
 description = "Callback failure: the provider refused the authorization"
-other = "provider ने authorization देने से इनकार कर दिया।"
+other = "प्रदाता ने प्राधिकरण देने से इनकार कर दिया।"
 
 [api.callback.failure_state]
 description = "Callback failure: the callback did not match the login Relo started"
-other = "यह callback Relo के शुरू किए लॉगिन से मेल नहीं खाता, या पहले ही इस्तेमाल हो चुका है।"
+other = "यह कॉलबैक Relo के शुरू किए लॉगिन से मेल नहीं खाता, या पहले ही इस्तेमाल हो चुका है।"
 
 [api.callback.failure_timeout]
 description = "Callback failure: the provider did not answer in time"
-other = "provider ने समय पर जवाब नहीं दिया।"
+other = "प्रदाता ने समय पर जवाब नहीं दिया।"
 
 [api.callback.failure_exchange]
 description = "Callback failure: the provider would not exchange the authorization"
-other = "provider ने authorization को token में बदलने से इनकार कर दिया।"
+other = "प्रदाता ने प्राधिकरण को टोकन में बदलने से इनकार कर दिया।"
 
 [api.callback.account_label]
 description = "Label of the stored account on the callback page"
@@ -347,7 +347,7 @@ other = "खाता"
 
 [api.callback.close_hint]
 description = "What the callback page tells an operator once the login finished"
-other = "आप यह tab बंद कर सकते हैं।"
+other = "आप यह टैब बंद कर सकते हैं।"
 
 [api.callback.closing_in]
 description = "Countdown shown on the callback page before it closes itself"
@@ -355,107 +355,107 @@ other = "{{.Seconds}} सेकंड में बंद हो रहा ह�
 
 [api.callback.console_link]
 description = "Link from the callback page to the console page that lists accounts"
-other = "console खोलें"
+other = "कंसोल खोलें"
 
 [api.dashboard.missing]
 description = "Refusal of a console request in a build without one"
-other = "इस build में dashboard नहीं है"
+other = "इस बिल्ड में डैशबोर्ड नहीं है"
 
 [api.events.unknown]
 description = "Refusal of an event stream for a channel that does not exist"
-other = "ऐसा कोई event channel नहीं"
+other = "ऐसा कोई इवेंट चैनल नहीं"
 
 [api.events.cannot_stream]
 description = "Refusal of an event stream over a listener that cannot stream"
-other = "यह listener stream नहीं कर सकता"
+other = "यह लिसनर स्ट्रीम नहीं कर सकता"
 
 [api.events.too_many]
 description = "Refusal of an event stream when too many are already open"
-other = "बहुत सारे event stream खुले हैं"
+other = "बहुत सारी इवेंट स्ट्रीम खुली हैं"
 
 [api.inference.retired]
 description = "Refusal of an inference path that moved to the port of its protocol"
-other = "inference surface अब {{.BaseURL}} पर हैं"
+other = "इन्फ़रेंस एंडपॉइंट अब {{.BaseURL}} पर हैं"
 
 [api.keys.invalid]
 description = "Refusal of an inference request with a key that does not authenticate"
-other = "अमान्य API key"
+other = "अमान्य API कुंजी"
 
 [api.keys.missing_header]
 description = "Refusal of an inference request without a credential"
-other = "Authorization header नहीं है या अमान्य है"
+other = "Authorization हेडर नहीं है या अमान्य है"
 
 [api.keys.store_unavailable]
 description = "Refusal of an inference request when the key store is down"
-other = "API key store उपलब्ध नहीं है"
+other = "API कुंजी स्टोर उपलब्ध नहीं है"
 
 [api.logs.event_id_number]
 description = "Refusal of a log request whose event id is not a number"
-other = "event id संख्या होनी चाहिए"
+other = "इवेंट id संख्या होनी चाहिए"
 
 [api.logs.capture_id_number]
 description = "Refusal of a capture read whose capture id is not a number"
-other = "capture id संख्या होनी चाहिए"
+other = "कैप्चर id संख्या होनी चाहिए"
 
 [api.logs.capture_missing]
 description = "Refusal of a capture read that names no stored capture"
-other = "उस id वाला कोई capture सहेजा नहीं गया"
+other = "उस id वाला कोई कैप्चर सहेजा नहीं गया"
 
 [api.oauth.unknown]
 description = "Refusal of a login operation that does not exist"
-other = "उस id वाला कोई login operation नहीं"
+other = "उस id वाला कोई लॉगिन ऑपरेशन नहीं"
 
 [api.oauth.port_busy]
 description = "Refusal of a sign-in whose callback port another process holds"
-other = "{{process}} पोर्ट {{port}} का उपयोग कर रहा है; साइन इन करने के लिए इसे बंद करें"
+other = "{{process}} पोर्ट {{port}} पर है; लॉगिन करने के लिए इसे बंद करें"
 
 [api.integration.action_in_progress]
 description = "Refusal of a second run of an action the first has not finished"
-other = "यह क्रिया पहले से चल रही है; पूरा होने तक प्रतीक्षा करें"
+other = "यह काम पहले से चल रहा है; पूरा होने का इंतज़ार करें"
 
 [api.route.missing]
 description = "Refusal of a management path that matches no route"
-other = "कोई मेल खाता route नहीं"
+other = "कोई मेल खाता रूट नहीं"
 
 [api.route.unavailable]
 description = "Refusal of a management endpoint that is not implemented"
-other = "यह endpoint अभी उपलब्ध नहीं है"
+other = "यह एंडपॉइंट अभी उपलब्ध नहीं है"
 
 [api.service.unavailable]
 description = "Refusal of a management request when the service is missing"
-other = "management service उपलब्ध नहीं है"
+other = "मैनेजमेंट सेवा उपलब्ध नहीं है"
 
 [api.settings.retention.invalid]
 description = "Refusal of a retention budget below the floor the ledger keeps"
-other = "request details are kept for at least a {{.Min}}-day window; use 0 to keep everything"
+other = "अनुरोध विवरण कम से कम {{.Min}} दिन की विंडो रखे जाते हैं; सब कुछ रखने के लिए 0 दें"
 
 [api.settings.sweep.busy]
 description = "Refusal of a maintenance sweep while another one is running"
-other = "a maintenance sweep is already running; wait for it to finish"
+other = "सफ़ाई पहले से चल रही है; पूरा होने का इंतज़ार करें"
 
 [api.account.status_required]
 description = "Refusal of an account update that named neither status nor priority"
-other = "status या priority आवश्यक है"
+other = "स्थिति या प्राथमिकता ज़रूरी है"
 
 [tray.tooltip]
 description = "Tooltip of the tray icon"
-other = "Relo — स्थानीय AI proxy"
+other = "Relo — स्थानीय AI प्रॉक्सी"
 
 [tray.menu.open_dashboard]
 description = "Tray menu item that opens the console in a browser"
-other = "Dashboard खोलें"
+other = "डैशबोर्ड खोलें"
 
 [tray.menu.restart]
 description = "Tray menu item that restarts the daemon"
-other = "Server पुनःशुरू करें"
+other = "सर्वर पुनःशुरू करें"
 
 [tray.menu.force_restart]
 description = "Tray menu item that kills the daemon and starts it again"
-other = "Server बलपूर्वक पुनःशुरू करें"
+other = "सर्वर बलपूर्वक पुनःशुरू करें"
 
 [tray.menu.autostart]
 description = "Tray menu item that toggles the login item"
-other = "Login पर शुरू करें"
+other = "लॉगिन पर शुरू करें"
 
 [tray.menu.language]
 description = "Tray submenu that chooses the language"
@@ -487,7 +487,7 @@ other = "अनुरोध {{.Value}}"
 
 [tray.info.tokens]
 description = "Tray menu row that charts the last day of tokens"
-other = "Token {{.Value}}"
+other = "टोकन {{.Value}}"
 
 [tray.info.spend]
 description = "Tray menu row that charts the last day of spend"
@@ -499,11 +499,11 @@ other = "अज्ञात त्रुटि"
 
 [tray.notify.browser_failed]
 description = "Notification when no browser could be opened"
-other = "browser नहीं खुल सका"
+other = "ब्राउज़र नहीं खुल सका"
 
 [tray.notify.autostart_failed]
 description = "Notification when the login item could not be changed"
-other = "login item नहीं बदला जा सका"
+other = "लॉगिन आइटम नहीं बदला जा सका"
 
 [tray.notify.language_failed]
 description = "Notification when a language choice could not be stored"
@@ -511,11 +511,11 @@ other = "भाषा सहेजी नहीं जा सकी"
 
 [cli.daemon.start.short]
 description = "One-line summary of relo daemon start"
-other = "Relo proxy को background में शुरू करें"
+other = "Relo प्रॉक्सी को बैकग्राउंड में शुरू करें"
 
 [cli.daemon.start.port]
 description = "Usage of the start --port flag"
-other = "listen port override करें"
+other = "लिसन पोर्ट बदलें"
 
 [cli.daemon.start.started]
 description = "Confirmation after a start"
@@ -527,15 +527,15 @@ other = "Relo पहले से ही {{.Addr}} पर चल रहा ह�
 
 [cli.daemon.start.failed]
 description = "What start prints when the daemon never became healthy"
-other = "daemon शुरू नहीं हुआ: {{.Detail}}"
+other = "डेमॉन शुरू नहीं हुआ: {{.Detail}}"
 
 [cli.daemon.start.log]
 description = "Where a started daemon writes what it logs"
-other = "daemon log {{.Path}} पर है"
+other = "डेमॉन का लॉग {{.Path}} पर है"
 
 [cli.daemon.stop.short]
 description = "One-line summary of relo daemon stop"
-other = "जिस Relo proxy को lifecycle कमांड्स संभालती हैं, उसे रोकें"
+other = "जिस Relo प्रॉक्सी को लाइफ़साइकल कमांड सँभालते हैं, उसे रोकें"
 
 [cli.daemon.stop.stopped]
 description = "Confirmation after a stop"
@@ -547,15 +547,15 @@ other = "Relo नहीं चल रहा है"
 
 [cli.daemon.restart.short]
 description = "One-line summary of relo daemon restart"
-other = "Relo proxy पुनःशुरू करें"
+other = "Relo प्रॉक्सी पुनःशुरू करें"
 
 [cli.daemon.restart.port]
 description = "Usage of the restart --port flag"
-other = "listen port override करें"
+other = "लिसन पोर्ट बदलें"
 
 [cli.daemon.restart.force]
 description = "Usage of the restart --force flag"
-other = "चलती प्रक्रिया को खत्म करें और नया daemon शुरू करें"
+other = "चलती प्रक्रिया को खत्म करें और नया डेमॉन शुरू करें"
 
 [cli.daemon.restart.restarted]
 description = "Confirmation after a restart"
@@ -563,19 +563,19 @@ other = "Relo {{.Addr}} पर चल रहा है"
 
 [cli.daemon.status.no_keys_hint]
 description = "How to create the first client key"
-other = "इसे console के Keys पेज पर बनाएँ।"
+other = "इसे कंसोल के क्लाइंट कुंजियाँ पेज पर बनाएँ।"
 
 [api.daemon.not_headless]
 description = "Refusal of a stop request when this process is not a headless daemon"
-other = "यह process रोकने का अनुरोध स्वीकार नहीं करता"
+other = "यह प्रोसेस रोकने का अनुरोध स्वीकार नहीं करता"
 
 [api.daemon.instance_mismatch]
 description = "Refusal of a stop request naming another instance"
-other = "यह रोकने का अनुरोध दूसरे instance का नाम लेता है"
+other = "यह रोकने का अनुरोध किसी दूसरे इंस्टेंस का नाम लेता है"
 
 [tray.menu.version]
 description = "Tray menu version label"
-other = "वर्ज़न {{.Version}}"
+other = "संस्करण {{.Version}}"
 
 [tray.menu.update_version]
 description = "Tray menu update action"
@@ -603,7 +603,7 @@ other = "शुरू नहीं हो सका"
 
 [cli.daemon.stop.force]
 description = "Usage of the stop --force flag"
-other = "चल रही प्रक्रिया को समाप्त करें और Relo द्वारा सेवा दिए जाने वाले पोर्ट मुक्त करें"
+other = "चल रही प्रक्रिया को खत्म करें और Relo के पोर्ट खाली करें"
 
 [cli.uninstall.short]
 description = "One-line summary of relo uninstall"
@@ -619,7 +619,7 @@ other = "Relo डेटा हटाएँ (कॉन्फ़िगरेशन
 
 [cli.uninstall.prepare]
 description = "Usage of the hidden uninstall --prepare flag"
-other = "सेवा रोकें और स्वतः-प्रारंभ बंद करें, प्रोग्राम को वहीं रहने दें"
+other = "सेवा रोकें और ऑटोस्टार्ट बंद करें, प्रोग्राम को वहीं रहने दें"
 
 [cli.uninstall.ask_data]
 description = "The question an interactive uninstall asks about the Relo data"
@@ -651,7 +651,7 @@ other = "Relo हटाने के लिए यह चलाएँ: {{.Comman
 
 [cli.uninstall.channel]
 description = "The installation channel the uninstall detected"
-other = "पहचानी गई इंस्टॉल: {{.Channel}}"
+other = "पहचाना गया इंस्टॉल: {{.Channel}}"
 
 [cli.uninstall.command]
 description = "The exact program-removal command for the detected channel"
@@ -659,7 +659,7 @@ other = "प्रोग्राम हटाने के लिए: {{.Comman
 
 [cli.uninstall.verified]
 description = "Confirmation that a path is gone after removal"
-other = "हटाया गया सत्यापित: {{.Path}}"
+other = "हटना सत्यापित: {{.Path}}"
 
 [cli.uninstall.failed]
 description = "A path that survived the removal"
@@ -671,4 +671,4 @@ other = "Relo बंद होने के बाद Windows यह फ़ा�
 
 [tray.menu.quitting]
 description = "Tray quit action while final records are saved"
-other = "बंद करें — प्रक्रिया जारी है…"
+other = "बाहर निकलें — प्रक्रिया जारी है…"

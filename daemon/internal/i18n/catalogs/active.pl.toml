@@ -504,11 +504,11 @@ other = "usługa zarządzania jest niedostępna"
 
 [api.settings.retention.invalid]
 description = "Refusal of a retention budget below the floor the ledger keeps"
-other = "request details are kept for at least a {{.Min}}-day window; use 0 to keep everything"
+other = "szczegóły żądań są trzymane co najmniej {{.Min}} dni; użyj 0, żeby trzymać wszystko"
 
 [api.settings.sweep.busy]
 description = "Refusal of a maintenance sweep while another one is running"
-other = "a maintenance sweep is already running; wait for it to finish"
+other = "sprzątanie już trwa; poczekaj, aż się skończy"
 
 [api.account.status_required]
 description = "Refusal of an account update that named neither status nor priority"

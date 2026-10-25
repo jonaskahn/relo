@@ -689,6 +689,10 @@ const (
 	kimiTemplate        = "kimi"
 	claudeTemplate      = "claude"
 	devinTemplate       = "devin"
+	// deepSeekAccountTemplate serves a DeepSeek account grant on the DeepSeek
+	// Anthropic host. It shares that host with the DeepSeek API-key connection,
+	// so the template decides the prober before the host does.
+	deepSeekAccountTemplate = "deepseek-account"
 )
 
 func newQuotaWorker(db *sqlite.DB, models *catalog.Catalog, pools *account.Manager,
@@ -720,27 +724,34 @@ func quotaProbers(models *catalog.Catalog, clk clock.Clock) map[string]activity.
 		return probers
 	}
 	for _, host := range snapshot.Providers {
-		if wire.OpenCodeGo(host.BaseURL) {
-			probers[host.ID] = quota.NewOpenCodeGoProber(quota.ProberOptions{BaseURL: quotaProbeBase(host.BaseURL)})
-			continue
-		}
-		if prober, found := apiKeyBalanceProber(host.BaseURL); found {
-			probers[host.ID] = prober
-			continue
-		}
-		if quota.OpenRouterHost(host.BaseURL) {
-			probers[host.ID] = quota.NewOpenRouterProber(quota.SignInProberOptions{})
-			continue
-		}
-		if quota.ZAIHost(host.BaseURL) {
-			probers[host.ID] = quota.NewZAIProber(quota.SignInProberOptions{})
-			continue
-		}
-		if prober, found := templateQuotaProber(host.TemplateID, host.BaseURL, clk); found {
+		if prober, found := hostQuotaProber(host, clk); found {
 			probers[host.ID] = prober
 		}
 	}
 	return probers
+}
+
+// hostQuotaProber names the prober one connection's credential answers.
+func hostQuotaProber(host catalog.Provider, clk clock.Clock) (activity.QuotaProber, bool) {
+	if wire.OpenCodeGo(host.BaseURL) {
+		return quota.NewOpenCodeGoProber(quota.ProberOptions{BaseURL: quotaProbeBase(host.BaseURL)}), true
+	}
+	// The DeepSeek account shares its host with the DeepSeek API key, so the
+	// host alone would send an account grant to the key-balance endpoint. Its
+	// template is named here so the account prober answers instead.
+	if host.TemplateID == deepSeekAccountTemplate {
+		return quota.NewDeepSeekAccountProber(quota.ProberOptions{}), true
+	}
+	if prober, found := apiKeyBalanceProber(host.BaseURL); found {
+		return prober, true
+	}
+	if quota.OpenRouterHost(host.BaseURL) {
+		return quota.NewOpenRouterProber(quota.SignInProberOptions{}), true
+	}
+	if quota.ZAIHost(host.BaseURL) {
+		return quota.NewZAIProber(quota.SignInProberOptions{}), true
+	}
+	return templateQuotaProber(host.TemplateID, host.BaseURL, clk)
 }
 
 func templateQuotaProber(templateID, baseURL string, clk clock.Clock) (activity.QuotaProber, bool) {
@@ -794,6 +805,8 @@ func namedQuotaProber(providerID, baseURL string, clk clock.Clock) (activity.Quo
 		return quota.NewClaudeProber(quota.SignInProberOptions{}), true
 	case devinTemplate:
 		return quota.NewDevinProber(quota.SignInProberOptions{}), true
+	case deepSeekAccountTemplate:
+		return quota.NewDeepSeekAccountProber(quota.ProberOptions{}), true
 	default:
 		return nil, false
 	}

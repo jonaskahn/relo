@@ -14,6 +14,7 @@
 		type TemplateRow
 	} from '$lib/provider-sections';
 	import { isExperimentalConnection } from '$lib/provider-experimental';
+	import BillingChip from '$lib/components/providers/billing-chip.svelte';
 
 	// The provider picker is a radio list: choosing marks a row and the
 	// footer's Next advances, so a misread row never opens the form by itself.
@@ -116,6 +117,15 @@
 						aria-label={$t(SECTION_LABEL_KEY[group.section])}
 					>
 						{#each group.rows as row (row.id)}
+							{@const billingProvider = {
+								id: row.id,
+								template_id: row.id,
+								kind: row.template?.kind ?? '',
+								auth: row.template?.auth ?? '',
+								origin: row.template?.origin ?? '',
+								base_url: row.template?.default_base_url ?? '',
+								modelsdev_provider_id: row.template?.modelsdev_provider_id ?? ''
+							}}
 							{@const chosen = selected === row.id}
 							<button
 								type="button"
@@ -168,6 +178,7 @@
 										</span>
 									{/if}
 								</span>
+								<BillingChip provider={billingProvider} class="self-start" />
 								{#if chosen}
 									<span
 										class="flex size-5 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground"

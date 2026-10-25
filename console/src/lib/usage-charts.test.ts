@@ -111,7 +111,30 @@ describe('barRows', () => {
 	it('accepts every series the switch offers', () => {
 		for (const metric of CHART_METRICS) {
 			expect(() => barRows([row()], metric)).not.toThrow();
+			expect(() => formatChartValue(metricValueOf(row(), metric), metric)).not.toThrow();
 		}
+	});
+
+	it('draws no bar at all for a limit that allows none', () => {
+		const rows = [row({ Key: 'a', Requests: 10 })];
+		expect(barRows(rows, 'requests', 0)).toEqual([]);
+		expect(barRows(rows, 'requests', -1)).toEqual([]);
+		expect(barRows([], 'requests')).toEqual([]);
+	});
+
+	it('counts every token kind, cache included, and claims no latency for a quiet group', () => {
+		const busy = row({
+			Requests: 4,
+			DurationMs: 400,
+			InputTokens: 10,
+			OutputTokens: 20,
+			CacheReadTokens: 30,
+			CacheWriteTokens: 40
+		});
+		expect(metricValueOf(busy, 'tokens')).toBe(100);
+		expect(metricValueOf(busy, 'latency')).toBe(100);
+		expect(metricValueOf(row({ Requests: 0, DurationMs: 500 }), 'latency')).toBe(0);
+		expect(barRows([busy], 'tokens', 1)[0].share).toBe(100);
 	});
 });
 
@@ -296,6 +319,22 @@ describe('heatmapCells', () => {
 		expect(heatmapCells([{ key: 'soon', value: 3 }])).toEqual([]);
 		expect(heatmapCells([])).toEqual([]);
 	});
+
+	it('rejects a date the calendar does not have', () => {
+		// 2026-02-30 parses as a March date, so it is not a day the series names.
+		expect(heatmapCells([{ key: '2026-02-30', value: 3 }])).toEqual([]);
+		expect(heatmapCells([{ key: '2026-13-01', value: 3 }])).toEqual([]);
+	});
+
+	it('keeps a quiet day in the calendar and floors a negative one at zero', () => {
+		const weeks = heatmapCells([
+			{ key: '2026-09-28', value: 0 },
+			{ key: '2026-09-29', value: -5 }
+		]);
+		expect(weeks).toHaveLength(1);
+		expect(weeks[0][0]).toMatchObject({ value: 0, level: 0 });
+		expect(weeks[0][1]).toMatchObject({ value: 0, level: 0 });
+	});
 });
 
 describe('heatLevel', () => {
@@ -362,10 +401,9 @@ describe('barGeom', () => {
 describe('shortDay', () => {
 	it('names a day the way a chart axis reads it', () => {
 		expect(shortDay('2026-09-03')).toBe(
-			new Date('2026-09-03T00:00:00Z').toLocaleDateString(undefined, {
+			new Date('2026-09-03T00:00:00Z').toLocaleDateString('en', {
 				month: 'short',
-				day: 'numeric',
-				timeZone: 'UTC'
+				day: 'numeric'
 			})
 		);
 	});

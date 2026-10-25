@@ -80,11 +80,11 @@ other = "Показать версию и платформу"
 
 [cli.daemon.short]
 description = "One-line summary of relo daemon"
-other = "Запустить службу и управлять ей"
+other = "Запустить демон и управлять им"
 
 [cli.daemon.status.short]
 description = "One-line summary of relo daemon status"
-other = "Показать, работает ли служба"
+other = "Показать, работает ли демон"
 
 [cli.daemon.status.json]
 description = "Usage of the status --json flag"
@@ -112,7 +112,7 @@ other = "Адрес"
 
 [cli.daemon.status.data_plane]
 description = "Status field label for the port each client protocol answers on"
-other = "Прокси"
+other = "Плоскость данных"
 
 [cli.daemon.status.secret_mode]
 description = "Status field label"
@@ -132,7 +132,7 @@ other = "{{.Count}} (активно: {{.Active}})"
 
 [cli.daemon.status.no_keys]
 description = "Warning under the status report when no client key is active"
-other = "Нет активного клиентского ключа. Прокси отклоняет все запросы."
+other = "Нет активного клиентского ключа. Плоскость данных отклоняет все запросы к моделям."
 
 [cli.daemon.run.short]
 description = "One-line summary of relo daemon run"
@@ -148,7 +148,7 @@ other = "Управлять запуском Relo при входе"
 
 [cli.autostart.enable.short]
 description = "One-line summary of relo autostart enable"
-other = "запускать десктопное приложение и службу при входе"
+other = "запускать десктопное приложение и демон при входе"
 
 [cli.autostart.disable.short]
 description = "One-line summary of relo autostart disable"
@@ -392,7 +392,7 @@ other = "открыто слишком много потоков событий"
 
 [api.inference.retired]
 description = "Refusal of an inference path that moved to the port of its protocol"
-other = "эндпоинты инференса переехали на {{.BaseURL}}"
+other = "вызовы моделей переехали на {{.BaseURL}}"
 
 [api.keys.invalid]
 description = "Refusal of an inference request with a key that does not authenticate"
@@ -424,11 +424,11 @@ other = "нет операции входа с таким идентификат
 
 [api.oauth.port_busy]
 description = "Refusal of a sign-in whose callback port another process holds"
-other = "{{process}} занимает порт {{port}}; завершите его, чтобы войти"
+other = "{{process}} занимает порт {{port}}; заверши его, чтобы войти"
 
 [api.integration.action_in_progress]
 description = "Refusal of a second run of an action the first has not finished"
-other = "это действие уже выполняется; дождитесь завершения"
+other = "это действие уже выполняется; дождись, пока оно закончится"
 
 [api.route.missing]
 description = "Refusal of a management path that matches no route"
@@ -444,11 +444,11 @@ other = "служба управления недоступна"
 
 [api.settings.retention.invalid]
 description = "Refusal of a retention budget below the floor the ledger keeps"
-other = "request details are kept for at least a {{.Min}}-day window; use 0 to keep everything"
+other = "детали запросов хранятся минимум {{.Min}} дней; поставь 0, чтобы хранить всё"
 
 [api.settings.sweep.busy]
 description = "Refusal of a maintenance sweep while another one is running"
-other = "a maintenance sweep is already running; wait for it to finish"
+other = "очистка уже идёт; дождись, пока она закончится"
 
 [api.account.status_required]
 description = "Refusal of an account update that named neither status nor priority"
@@ -464,7 +464,7 @@ other = "Открыть панель"
 
 [tray.menu.restart]
 description = "Tray menu item that restarts the daemon"
-other = "Перезапустить сервер"
+other = "Перезапустить демон"
 
 [tray.menu.force_restart]
 description = "Tray menu item that kills the daemon and starts it again"
@@ -544,11 +544,11 @@ other = "Relo уже работает на {{.Addr}}"
 
 [cli.daemon.start.failed]
 description = "What start prints when the daemon never became healthy"
-other = "служба не запустилась: {{.Detail}}"
+other = "демон не запустился: {{.Detail}}"
 
 [cli.daemon.start.log]
 description = "Where a started daemon writes what it logs"
-other = "журнал службы — {{.Path}}"
+other = "журнал демона — {{.Path}}"
 
 [cli.daemon.stop.short]
 description = "One-line summary of relo daemon stop"
@@ -572,7 +572,7 @@ other = "переопределить порт прослушивания"
 
 [cli.daemon.restart.force]
 description = "Usage of the restart --force flag"
-other = "завершить работающий процесс и запустить новую службу"
+other = "завершить работающий процесс и запустить новый демон"
 
 [cli.daemon.restart.restarted]
 description = "Confirmation after a restart"
@@ -644,11 +644,11 @@ other = "Удалить данные Relo (конфигурация, учётн�
 
 [cli.uninstall.kept]
 description = "What an uninstall reports when the Relo data stays"
-other = "Ваши данные Relo находятся в {{.Home}}"
+other = "Твои данные Relo лежат в {{.Home}}"
 
 [cli.uninstall.wiped]
 description = "What an uninstall reports after the Relo data is removed"
-other = "Ваши данные Relo удалены"
+other = "Твои данные Relo удалены"
 
 [cli.uninstall.removing]
 description = "What an uninstall says as it hands the program to its installer"
@@ -656,15 +656,15 @@ other = "Удаление Relo…"
 
 [cli.uninstall.manual]
 description = "What an uninstall says when nothing on the machine removes Relo"
-other = "удалите программу Relo вручную"
+other = "удали программу Relo вручную"
 
 [cli.uninstall.trash]
 description = "What an uninstall says when the macOS app bundle could not be deleted"
-other = "переместите {{.Bundle}} в корзину"
+other = "перемести {{.Bundle}} в корзину"
 
 [cli.uninstall.run]
 description = "The command to run when a removal could not be started"
-other = "выполните это, чтобы завершить удаление Relo: {{.Command}}"
+other = "выполни это, чтобы завершить удаление Relo: {{.Command}}"
 
 [cli.uninstall.channel]
 description = "The installation channel the uninstall detected"
@@ -672,7 +672,7 @@ other = "Обнаружена установка: {{.Channel}}"
 
 [cli.uninstall.command]
 description = "The exact program-removal command for the detected channel"
-other = "Удалите программу командой: {{.Command}}"
+other = "Удали программу командой: {{.Command}}"
 
 [cli.uninstall.verified]
 description = "Confirmation that a path is gone after removal"

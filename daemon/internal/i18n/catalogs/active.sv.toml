@@ -4,11 +4,11 @@
 
 [cli.root.short]
 description = "One-line summary of the relo command"
-other = "Lokal AI-proxy med poolning av inloggningsuppgifter för flera konton"
+other = "Lokal AI-proxy som delar inloggningsuppgifter mellan flera konton"
 
 [cli.root.home]
 description = "Usage of the --home flag"
-other = "statekatalog (standard $RELO_HOME, annars ~/.relo)"
+other = "tillståndskatalog (standard $RELO_HOME, annars ~/.relo)"
 
 [cli.root.lang]
 description = "Usage of the --lang flag"
@@ -64,19 +64,19 @@ other = "hjälp för {{.Name}}"
 
 [cli.completion.short]
 description = "One-line summary of relo completion"
-other = "Skapa skriptet för automatisk komplettering för angivet skal"
+other = "Skapa autokompletteringsskriptet för det angivna skalet"
 
 [cli.completion.long]
 description = "Long description of relo completion; {{.Name}} is the program name"
-other = "Skapa skriptet för automatisk komplettering av {{.Name}} för angivet skal.\nHjälpen för varje underkommando visar hur du använder det skapade skriptet."
+other = "Skapa autokompletteringsskriptet för {{.Name}} för det angivna skalet.\nHjälpen för varje underkommando visar hur du använder det skapade skriptet."
 
 [cli.completion.shell]
 description = "One-line summary of relo completion for one shell; {{.Shell}} is the shell name"
-other = "Skapa skriptet för automatisk komplettering för {{.Shell}}"
+other = "Skapa autokompletteringsskriptet för {{.Shell}}"
 
 [cli.completion.no_descriptions]
 description = "Usage of the completion --no-descriptions flag"
-other = "stäng av beskrivningar vid komplettering"
+other = "stäng av beskrivningarna i kompletteringen"
 
 [cli.version.short]
 description = "One-line summary of relo version"
@@ -116,11 +116,11 @@ other = "Adress"
 
 [cli.daemon.status.data_plane]
 description = "Status field label for the port each client protocol answers on"
-other = "Data plane"
+other = "Dataplan"
 
 [cli.daemon.status.secret_mode]
 description = "Status field label"
-other = "Hemligt läge"
+other = "Hemlighetsläge"
 
 [cli.daemon.status.schema_version]
 description = "Status field label"
@@ -136,7 +136,7 @@ other = "{{.Count}} ({{.Active}} aktiva)"
 
 [cli.daemon.status.no_keys]
 description = "Warning under the status report when no client key is active"
-other = "Ingen aktiv klientnyckel. Proxyn nekar varje begäran."
+other = "Ingen aktiv klientnyckel. Proxyn nekar varje förfrågan."
 
 [cli.daemon.run.short]
 description = "One-line summary of relo daemon run"
@@ -280,11 +280,11 @@ other = "konsolsessionen saknas eller har gått ut"
 
 [api.body.invalid]
 description = "Refusal of a body that does not parse, with the parser's detail"
-other = "ogiltig begäransdata: {{.Detail}}"
+other = "ogiltigt innehåll i förfrågan: {{.Detail}}"
 
 [api.body.single_object]
 description = "Refusal of a body that carries more than one JSON object"
-other = "ogiltig begäransdata: ett JSON-objekt förväntades"
+other = "ogiltigt innehåll i förfrågan: ett JSON-objekt förväntades"
 
 [api.callback.heading]
 description = "Title of the page a browser lands on after a provider redirect"
@@ -292,7 +292,7 @@ other = "Slutför inloggningen"
 
 [api.callback.summary]
 description = "Summary of the callback page while the authorization is exchanged"
-other = "Relo har auktoriseringen och lagrar kontot."
+other = "Relo har auktoriseringen och sparar kontot."
 
 [api.callback.marker_working]
 description = "Status marker of a login that is still running"
@@ -320,7 +320,7 @@ other = "Utbyter auktoriseringen"
 
 [api.callback.step_stored]
 description = "Third step of a login: the account is stored"
-other = "Kontot har lagrats"
+other = "Kontot har sparats"
 
 [api.callback.connected_title]
 description = "Title of the callback page for a login that finished"
@@ -328,7 +328,7 @@ other = "Ansluten"
 
 [api.callback.connected_body]
 description = "Summary of the callback page for a login that finished"
-other = "Relo har lagrat kontot och routar begäranden genom det."
+other = "Relo har sparat kontot och routar förfrågningar genom det."
 
 [api.callback.failed_title]
 description = "Title of the callback page for a login that did not finish"
@@ -380,7 +380,7 @@ other = "Öppna konsolen"
 
 [api.dashboard.missing]
 description = "Refusal of a console request in a build without one"
-other = "den här builden har ingen konsol"
+other = "den här versionen har ingen konsol"
 
 [api.events.unknown]
 description = "Refusal of an event stream for a channel that does not exist"
@@ -388,7 +388,7 @@ other = "ingen sådan händelsekanal"
 
 [api.events.cannot_stream]
 description = "Refusal of an event stream over a listener that cannot stream"
-other = "denna lyssnare kan inte strömma"
+other = "den här lyssnaren kan inte strömma"
 
 [api.events.too_many]
 description = "Refusal of an event stream when too many are already open"
@@ -404,7 +404,7 @@ other = "ogiltig API-nyckel"
 
 [api.keys.missing_header]
 description = "Refusal of an inference request without a credential"
-other = "Authorization-header saknas eller är ogiltig"
+other = "Authorization-rubriken saknas eller är ogiltig"
 
 [api.keys.store_unavailable]
 description = "Refusal of an inference request when the key store is down"
@@ -416,11 +416,11 @@ other = "händelse-id:t måste vara ett nummer"
 
 [api.logs.capture_id_number]
 description = "Refusal of a capture read whose capture id is not a number"
-other = "capture-id:t måste vara ett nummer"
+other = "fångst-id:t måste vara ett nummer"
 
 [api.logs.capture_missing]
 description = "Refusal of a capture read that names no stored capture"
-other = "ingen lagrad capture har det id:t"
+other = "ingen lagrad fångst har det id:t"
 
 [api.oauth.unknown]
 description = "Refusal of a login operation that does not exist"
@@ -440,7 +440,7 @@ other = "ingen matchande rutt"
 
 [api.route.unavailable]
 description = "Refusal of a management endpoint that is not implemented"
-other = "denna slutpunkt är inte ännu tillgänglig"
+other = "den här slutpunkten finns inte än"
 
 [api.service.unavailable]
 description = "Refusal of a management request when the service is missing"
@@ -448,11 +448,11 @@ other = "hanteringstjänsten är inte tillgänglig"
 
 [api.settings.retention.invalid]
 description = "Refusal of a retention budget below the floor the ledger keeps"
-other = "request details are kept for at least a {{.Min}}-day window; use 0 to keep everything"
+other = "förfrågningsinformation sparas i minst {{.Min}} dagar; använd 0 för att behålla allt"
 
 [api.settings.sweep.busy]
 description = "Refusal of a maintenance sweep while another one is running"
-other = "a maintenance sweep is already running; wait for it to finish"
+other = "en underhållskörning pågår redan; vänta tills den är klar"
 
 [api.account.status_required]
 description = "Refusal of an account update that named neither status nor priority"
@@ -468,11 +468,11 @@ other = "Öppna konsolen"
 
 [tray.menu.restart]
 description = "Tray menu item that restarts the daemon"
-other = "Starta om servern"
+other = "Starta om daemonen"
 
 [tray.menu.force_restart]
 description = "Tray menu item that kills the daemon and starts it again"
-other = "Tvinga omstart av servern"
+other = "Tvinga omstart av daemonen"
 
 [tray.menu.autostart]
 description = "Tray menu item that toggles the login item"
@@ -504,7 +504,7 @@ other = "Misslyckades · {{.Detail}}"
 
 [tray.info.requests]
 description = "Tray menu row that charts the last day of requests"
-other = "Begäranden {{.Value}}"
+other = "Förfrågningar {{.Value}}"
 
 [tray.info.tokens]
 description = "Tray menu row that charts the last day of tokens"
@@ -556,7 +556,7 @@ other = "daemonloggen finns i {{.Path}}"
 
 [cli.daemon.stop.short]
 description = "One-line summary of relo daemon stop"
-other = "Stoppa den Relo-proxy som livscykelkommandona äger"
+other = "Stoppa Relo-proxyn som livscykelkommandona äger"
 
 [cli.daemon.stop.stopped]
 description = "Confirmation after a stop"
@@ -576,7 +576,7 @@ other = "åsidosätt lyssningsporten"
 
 [cli.daemon.restart.force]
 description = "Usage of the restart --force flag"
-other = "döda den körande processen och starta en ny daemon"
+other = "avsluta den körande processen och starta en ny daemon"
 
 [cli.daemon.restart.restarted]
 description = "Confirmation after a restart"
@@ -588,7 +588,7 @@ other = "Skapa en på sidan för nycklar i konsolen."
 
 [api.daemon.not_headless]
 description = "Refusal of a stop request when this process is not a headless daemon"
-other = "denna process tar inte emot en stoppförfrågan"
+other = "den här processen tar inte emot en stoppförfrågan"
 
 [api.daemon.instance_mismatch]
 description = "Refusal of a stop request naming another instance"
@@ -624,7 +624,7 @@ other = "Kunde inte starta"
 
 [cli.daemon.stop.force]
 description = "Usage of the stop --force flag"
-other = "avsluta den körande processen och släpp portarna som Relo betjänar"
+other = "avsluta den körande processen och frigör portarna som Relo använder"
 
 [cli.uninstall.short]
 description = "One-line summary of relo uninstall"

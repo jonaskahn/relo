@@ -227,6 +227,7 @@
       "optional": "Optional",
       "back": "Back",
       "reveal": "Show value",
+      "scrollToTop": "Scroll to top",
       "hide": "Hide value",
       "timeAgo": "{value} ago",
       "requestFailed": "the request failed with {status}",
@@ -479,7 +480,9 @@
           "filters": "Connection filters",
           "filterOption": "{label} ({count})",
           "tagFree": "Free",
-          "tagExperimental": "Experimental"
+          "tagExperimental": "Experimental",
+          "tagPayAsYouGo": "Pay as you go",
+          "tagPaidPlan": "Paid plan"
         },
         "status": {
           "ready": "Ready",
@@ -930,6 +933,7 @@
           "title": "Review",
           "providerId": "Provider id",
           "label": "Label",
+          "billing": "Billing",
           "summary": "{listing} from the provider, {manual} typed by hand, {priced} priced.",
           "turnAllOn": "Turn all on",
           "turnAllOff": "Turn all off",
@@ -1214,6 +1218,8 @@
         "attempt": "Attempt",
         "exchangeAgentTitle": "Agent exchange",
         "traceBadge": "Full trace",
+        "impersonate": "Impersonate",
+        "impersonateHint": "Send this request again from the Chat tester",
         "exchangeProviderTitle": "Provider exchange",
         "captureAgentRequest": "Agent request",
         "captureAgentResponse": "Agent response",
@@ -1779,6 +1785,9 @@
         "retry": "Retry",
         "failed": "The request did not reach a provider.",
         "interrupted": "The request was interrupted before it finished.",
+        "replaySeeded": "Seeded from request #{id}. Press Send to run it again.",
+        "replayDropped": "Not replayed: {parts}. The tester carries text only.",
+        "replayFailed": "That request could not be replayed. It may predate the traffic log, or its body could not be read.",
         "noText": "(the model returned no text)",
         "noProviders": "No connection configured yet. Add one on the Connections page first.",
         "noModels": "This connection lists no enabled model.",
@@ -1792,7 +1801,10 @@
         "statusFailed": "Failed",
         "locked": "Locked",
         "searchThreads": "Search conversations",
-        "searchNoMatch": "No conversation matches this search."
+        "searchNoMatch": "No conversation matches this search.",
+        "toolCall": "Tool call",
+        "toolResult": "Tool result",
+        "replayShownOnly": "Shown from the capture, not re-sent."
       }
     },
     "settings": {

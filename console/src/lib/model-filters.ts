@@ -111,20 +111,18 @@ export function modelCounts(models: Model[]): ModelCounts {
 	return counts;
 }
 
-// These routers list paid and free variants of the same model, so the
-// connection pane offers a paid/free filter and bulk toggle. OpenCode Go
-// is a different product and is not in the set.
-const PAID_FREE_TEMPLATES = new Set([
-	'opencode',
-	'openrouter',
-	'orcarouter',
-	'orcarouter-oauth',
-	'teamorouter'
-]);
-
-/** Reports whether a provider's catalogue prices its models. */
-export function supportsPaidFree(templateId: string): boolean {
-	return PAID_FREE_TEMPLATES.has(templateId);
+/** Reports whether a roster holds both a paid and a free model, which is the only case in which a
+ *  paid/free split tells an operator something. Derived from the model ids rather than a
+ *  template list, because not every provider publishes free models and the ones that do name them. */
+export function splitsPaidFree(models: Model[]): boolean {
+	let paid = false;
+	let free = false;
+	for (const model of models) {
+		if (isFreeModel(model.model_id)) free = true;
+		else paid = true;
+		if (paid && free) return true;
+	}
+	return false;
 }
 
 // A free model names “free” as its own token in the id: :free, -free,

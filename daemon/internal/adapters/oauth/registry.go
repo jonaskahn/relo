@@ -83,5 +83,6 @@ func DefaultRegistry(options ...Option) *Registry {
 	registry.RegisterFlow(providerCommandCode, func() OAuthFlow { return NewCommandCodeFlow(options...) })
 	registry.RegisterFlow(providerQwen, func() OAuthFlow { return NewQwenFlow(options...) })
 	registry.RegisterFlow(providerIFlow, func() OAuthFlow { return NewIFlowFlow(options...) })
+	registry.RegisterFlow(providerDeepSeekAccount, func() OAuthFlow { return NewDeepSeekAccountFlow(options...) })
 	return registry
 }

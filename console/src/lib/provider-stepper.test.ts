@@ -211,11 +211,71 @@ describe('the add stepper', () => {
 		expect(validateConnect('custom', bad, null)['custom.id']).toBe(
 			'ui.pages.providersPage.add.idInvalid'
 		);
+		// A custom endpoint with no dialect cannot be probed, because the probe
+		// has no shape to speak.
+		const noFormat = stateOf({
+			custom: {
+				...emptyStepperState().custom,
+				id: 'lab',
+				label: 'Lab',
+				baseURL: 'https://x',
+				apiFormat: ''
+			}
+		});
+		expect(Object.keys(validateConnect('custom', noFormat, null))).toEqual(['custom.apiFormat']);
 	});
 
 	test('a local preset needs an address', () => {
 		expect(Object.keys(validateConnect('local', stateOf(), templateOf({ kind: 'local' })))).toEqual(
 			['baseURL']
+		);
+		// LiteLLM is local but still keyed, so its key is required too.
+		expect(
+			Object.keys(
+				validateConnect(
+					'local',
+					stateOf({ baseURL: 'http://127.0.0.1:4000', templateId: 'litellm' }),
+					templateOf({ id: 'litellm', kind: 'local' })
+				)
+			)
+		).toEqual(['credential.secret']);
+		expect(
+			validateConnect(
+				'local',
+				stateOf({
+					baseURL: 'http://127.0.0.1:4000',
+					templateId: 'litellm',
+					credential: { ...emptyStepperState().credential, secret: 'sk-1' }
+				}),
+				templateOf({ id: 'litellm', kind: 'local' })
+			)
+		).toEqual({});
+	});
+
+	test('a sign-in needs the flow a template offers', () => {
+		expect(validateConnect('signin', stateOf(), signInTemplate())).toEqual({
+			loginFlow: 'ui.pages.providersPage.verify.fieldRequired'
+		});
+		expect(validateConnect('signin', stateOf({ loginFlow: 'claude' }), signInTemplate())).toEqual(
+			{}
+		);
+		// A template that offers no flow has nothing to choose.
+		expect(validateConnect('signin', stateOf(), templateOf({ login_methods: [] }))).toEqual({});
+	});
+
+	test('a provider with no credential still needs the variables its template marks', () => {
+		const template = templateOf({
+			auth: 'none',
+			variables: [
+				{ name: 'endpoint', label: 'Endpoint', placeholder: 'e', required: true },
+				{ name: 'nickname', label: 'Nickname', placeholder: 'n', required: false }
+			]
+		});
+		expect(Object.keys(validateConnect('none', stateOf(), template))).toEqual([
+			'variables.endpoint'
+		]);
+		expect(validateConnect('none', stateOf({ variables: { endpoint: 'e' } }), template)).toEqual(
+			{}
 		);
 	});
 
@@ -445,6 +505,7 @@ describe('the add stepper', () => {
 		expect(isDirty(stateOf({ baseURL: 'https://proxy.example' }))).toBe(true);
 		expect(isDirty(stateOf({ headers: { 'x-team': 'core' } }))).toBe(true);
 		expect(isDirty(stateOf({ variables: { region: 'eu' } }))).toBe(true);
+		expect(isDirty(stateOf({ label: 'OpenAI' }))).toBe(true);
 		expect(isDirty(stateOf({ custom: { ...emptyStepperState().custom, label: 'Lab' } }))).toBe(
 			true
 		);

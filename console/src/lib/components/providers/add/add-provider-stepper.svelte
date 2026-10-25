@@ -505,6 +505,14 @@
 				isAddKey={draft.path === 'addKey'}
 				targetLabel={template?.label ?? ''}
 				templateId={template?.id ?? ''}
+				billing={{
+					template_id: template?.id ?? '',
+					kind: template?.kind ?? '',
+					auth: template?.auth ?? '',
+					origin: template?.origin ?? '',
+					base_url: draft.baseURL,
+					modelsdev_provider_id: template?.modelsdev_provider_id ?? ''
+				}}
 				onchange={(change) => {
 					if (change.providerId !== undefined) reviewId = change.providerId;
 					if (change.label !== undefined) reviewLabel = change.label;

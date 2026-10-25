@@ -55,6 +55,13 @@ Status pill: Ready, Near limit, Limit reached, Sign in again, Paused, derived fr
 A card at its limit wears a full `color-mix(in srgb,var(--danger) 30%,var(--line))` border. Status is never colour
 alone: every pill keeps its icon or word.
 
+A connection also wears one **billing chip** from a single classification: **Free** for the keyless lanes, **Paid plan**
+for a subscription (a sign-in account, an OpenCode/Kilo plan, or any `token-plan`, `coding-plan`, `code-plan`, or
+`step-plan` identifier and the DashScope coding hosts), and **Pay as you go** for an API key or cloud credential. The
+same chip, drawn by one component, appears on the grid card, the sidebar row, the pane header, the add flow's provider
+list and Review step; on the grid card it expands to its word on hover. Because it is the same predicate the usage
+report reads, a connection's chip and its spend bucket never disagree.
+
 ## Connection pane
 
 Header: 46px logo tile, name, and (640px and up) the status word with its refresh age, e.g. `Ready (Refreshed 54
@@ -73,10 +80,11 @@ banner stay.
 
 ### Models tab
 
-Toolbar, one row that wraps: the bulk-actions menu (turn the shown models on or off, set one context window
-across the connection, set a capability across the connection). Search and the one filter menu (category, price
+Toolbar, one row that wraps: the bulk-actions menu (turn the shown models on or off, and — once the connection lists
+both paid and free models — turn all paid or all free on or off). Search and the one filter menu (category, price
 paid/free, status, Unpriced / Overridden / Unavailable with an active-dimension badge and Clear filters) sit in the
-pane toolbar beside Back. Active filters mark their control with `--accent-soft`.
+pane toolbar beside Back. The paid/free items appear only when the connection's roster holds both, since not every
+provider publishes free models. Active filters mark their control with `--accent-soft`.
 
 **Model row-card** (no table, no row lines — each model is its own container, `--surface`, full 1px `--line`,
 `--radius-card`, gap 8px between rows):

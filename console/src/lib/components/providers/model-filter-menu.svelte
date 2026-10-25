@@ -3,6 +3,8 @@
 	import { DropdownMenu } from 'bits-ui';
 	import MenuPanel from '$lib/components/ui/menu-panel.svelte';
 	import Icon, { type IconName } from '$lib/components/ui/icon.svelte';
+	import { buttonVariants } from '$lib/components/ui/button.svelte';
+	import { cn } from '$lib/utils';
 	import {
 		EMPTY_MODEL_FILTERS,
 		MODEL_CATEGORY_OPTIONS,
@@ -94,10 +96,11 @@
 
 <DropdownMenu.Root>
 	<DropdownMenu.Trigger
-		class="relative inline-flex size-control shrink-0 items-center justify-center rounded-md border border-border text-muted-foreground hover:border-border-strong hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring data-[state=open]:border-border-strong data-[state=open]:text-foreground {activeDims >
-		0
-			? 'border-accent-line bg-accent-soft text-accent-ink'
-			: ''}"
+		class={cn(
+			buttonVariants({ variant: 'outline', size: 'icon' }),
+			'text-muted-foreground hover:text-foreground',
+			activeDims > 0 && 'border-accent-line bg-accent-soft text-accent-ink'
+		)}
 		aria-label={$t('ui.pages.providersPage.models.toolbarFilters')}
 		title={$t('ui.pages.providersPage.models.toolbarFilters')}
 	>

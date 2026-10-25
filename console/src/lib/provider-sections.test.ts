@@ -13,6 +13,7 @@ import {
 	suggestLabel,
 	suggestProviderId,
 	templateHintKey,
+	templateHintValue,
 	visibleTemplateRows
 } from './provider-sections';
 import { providerOf, signInTemplate, templateOf } from './provider-fixtures';
@@ -139,6 +140,69 @@ describe('provider sections', () => {
 		expect(templateHintKey(templateOf({ id: 'amazon-bedrock-2', kind: 'cloud' }))).toBe(
 			'ui.pages.providersPage.add.credentialCloud'
 		);
+		expect(templateHintKey(templateOf({ id: 'azure-openai', kind: 'cloud' }))).toBe(
+			'ui.pages.providersPage.add.credentialAzure'
+		);
+		expect(templateHintKey(templateOf({ id: 'google-vertex', kind: 'cloud' }))).toBe(
+			'ui.pages.providersPage.add.credentialVertex'
+		);
+	});
+
+	test('names the credentials a key row takes', () => {
+		expect(templateHintKey(templateOf({ id: 'openai' }))).toBe(
+			'ui.pages.providersPage.add.hintKey'
+		);
+	});
+
+	test('names a local row by the address it listens on', () => {
+		expect(
+			templateHintKey(
+				templateOf({
+					id: 'ollama',
+					kind: 'local',
+					default_base_url: 'http://127.0.0.1:11434'
+				})
+			)
+		).toBe('');
+		expect(
+			templateHintValue(
+				templateOf({
+					id: 'ollama',
+					kind: 'local',
+					available_formats: [],
+					default_base_url: 'http://127.0.0.1:11434'
+				})
+			)
+		).toBe('http://127.0.0.1:11434');
+		// A local row with a format choice names the address that choice listens on.
+		expect(
+			templateHintValue(
+				templateOf({
+					id: 'ollama',
+					kind: 'local',
+					default_format: 'openai-chat',
+					default_base_url: 'http://unused',
+					available_formats: [
+						{
+							format: 'openai-chat',
+							label: 'OpenAI',
+							default_base_url: 'http://127.0.0.1:11434/v1',
+							key_header: 'bearer',
+							models_format: 'openai'
+						}
+					]
+				})
+			)
+		).toBe('http://127.0.0.1:11434/v1');
+		// Only a local row shows an address as its hint value.
+		expect(templateHintValue(templateOf({ id: 'openai' }))).toBe('');
+	});
+
+	test('counts a quiet section as no rows', () => {
+		const rows = buildTemplateRows([templateOf({ id: 'openai' })], new Set());
+		expect(rows.account).toEqual([]);
+		expect(rows.cloud).toEqual([]);
+		expect(countTemplateRows(rows)).toBe(2);
 	});
 
 	test('adds a badge for a template that already has a provider', () => {

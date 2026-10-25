@@ -367,7 +367,7 @@ export function barGeom(
 export function shortDay(key: string): string {
 	const date = new Date(key + 'T00:00:00Z');
 	if (Number.isNaN(date.getTime())) return key;
-	return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric', timeZone: 'UTC' });
+	return date.toLocaleDateString('en', { month: 'short', day: 'numeric' });
 }
 
 function dayMs(key: string): number | null {
