@@ -74,7 +74,9 @@
 		loading = true;
 		failed = '';
 		try {
-			const params = new URLSearchParams({ limit: '100' });
+			// limit=0 is the daemon's "no page cap". The lane filter runs here,
+			// after the read, so a capped page would drop whole connections.
+			const params = new URLSearchParams({ limit: '0' });
 			if (provider !== '') params.set('provider', provider);
 			if (search.trim() !== '') params.set('q', search.trim());
 			const data = await api<{ items: Model[] }>('/models?' + params);
@@ -141,7 +143,7 @@
 			{$t('ui.pages.groupsPage.noMatchingModels')}
 		</p>
 	{:else}
-		{#each visible.slice(0, 100) as model (model.provider_id + '/' + model.model_id)}
+		{#each visible as model (model.provider_id + '/' + model.model_id)}
 			<div class="flex items-center justify-between gap-2 rounded-lg px-2.5 py-1.5 hover:bg-card">
 				<div class="flex min-w-0 items-center gap-2.5">
 					<ProviderLogo
