@@ -79,21 +79,21 @@ export function familyKey(model: Model): string {
  *  same category, on a connection the chosen lanes allow, enabled and routable,
  *  with at least one serving account. Already-member models and the seed
  *  itself are excluded. Results are newest-first, then cheapest. */
+export interface SimilarModels {
+	models: Model[];
+	conflicts: number;
+}
+
 export function similarModels(
 	all: readonly Model[],
 	seed: Model,
 	providers: readonly Provider[],
 	lanes: readonly Lane[],
 	existingMembers: readonly GroupMember[] = []
-): Model[] {
+): SimilarModels {
 	const providerMap = new Map(providers.map((provider) => [provider.id, provider]));
 	const existingKeys = new Set(
 		existingMembers.map((member) => member.provider_id + '/' + member.model_id)
-	);
-	const existingKeysForAuto = new Set(
-		existingMembers
-			.filter((member) => member.provider_id === '' && member.model_id === seed.model_id)
-			.map(() => '')
 	);
 	const seedTools = seed.capabilities.tools;
 	const existingTools = existingMembers.map((member) => {
@@ -106,6 +106,7 @@ export function similarModels(
 	const seedCategory = seed.category;
 	const results: Model[] = [];
 	const seen = new Set<string>();
+	let conflicts = 0;
 	for (const model of all) {
 		if (model.provider_id === seed.provider_id && model.model_id === seed.model_id) continue;
 		if (!model.enabled) continue;
@@ -119,14 +120,13 @@ export function similarModels(
 		const key = model.provider_id + '/' + model.model_id;
 		if (seen.has(key)) continue;
 		if (existingKeys.has(key)) continue;
-		if (existingKeysForAuto.size > 0 && model.model_id === seed.model_id) continue;
 		const tools = model.capabilities.tools;
-		if (seedTools !== null && tools !== null && seedTools !== tools) {
-			// tools conflict with the seed itself
-			continue;
-		}
-		if (existingTools.some((value) => value !== null && tools !== null && value !== tools)) {
-			// would introduce a tools conflict with an already-chosen member
+		const conflictsWithSeed = seedTools !== null && tools !== null && seedTools !== tools;
+		const conflictsWithMember = existingTools.some(
+			(value) => value !== null && tools !== null && value !== tools
+		);
+		if (conflictsWithSeed || conflictsWithMember) {
+			conflicts++;
 			continue;
 		}
 		seen.add(key);
@@ -139,7 +139,7 @@ export function similarModels(
 		const priceRight = right.prices.effective.input ?? Number.POSITIVE_INFINITY;
 		return priceLeft - priceRight;
 	});
-	return results;
+	return { models: results, conflicts };
 }
 
 /** Groups similar-model suggestions by family, preserving the order they were

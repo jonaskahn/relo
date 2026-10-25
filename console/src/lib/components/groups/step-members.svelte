@@ -82,23 +82,32 @@
 					.filter((model): model is Model => Boolean(model))
 			: []
 	);
-	const suggestionCandidates = $derived(
-		creating
-			? suggestionSeeds.flatMap((seed) =>
-					similarModels(Object.values(meta), seed, providers, draft.lanes, draft.members)
-				)
-			: []
-	);
-	const suggestionKeys = $derived(
-		new Set(suggestionCandidates.map((m) => m.provider_id + '/' + m.model_id))
-	);
-	const suggestions = $derived(
-		creating
-			? Object.values(meta).filter((m) => suggestionKeys.has(m.provider_id + '/' + m.model_id))
-			: []
-	);
+	const suggestionReport = $derived.by(() => {
+		if (!creating) return { models: [] as Model[], conflicts: 0 };
+		const models: Model[] = [];
+		const seen = new Set<string>();
+		let conflicts = 0;
+		for (const seed of suggestionSeeds) {
+			const report = similarModels(
+				Object.values(meta),
+				seed,
+				providers,
+				draft.lanes,
+				draft.members
+			);
+			conflicts += report.conflicts;
+			for (const model of report.models) {
+				const key = model.provider_id + '/' + model.model_id;
+				if (seen.has(key)) continue;
+				seen.add(key);
+				models.push(model);
+			}
+		}
+		return { models, conflicts };
+	});
+	const suggestions = $derived(suggestionReport.models);
 	const suggestionGroups = $derived(groupSuggestions(suggestions));
-	const conflictCount = $derived(0);
+	const conflictCount = $derived(suggestionReport.conflicts);
 
 	function addOne(model: Model) {
 		if (

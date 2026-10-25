@@ -195,7 +195,7 @@ describe('similarModels', () => {
 			})
 		];
 		const providers = [provider('plan', 'claude', 'signin'), provider('free', 'opencode-free')];
-		expect(similarModels(others, seed, providers, ['payg'])).toHaveLength(0);
+		expect(similarModels(others, seed, providers, ['payg']).models).toHaveLength(0);
 	});
 	it('skips disabled, unroutable and already-member models', () => {
 		const seed = modelOf({
@@ -248,7 +248,10 @@ describe('similarModels', () => {
 			})
 		];
 		const providers = [provider('plan', 'claude', 'signin'), provider('free', 'opencode-free')];
-		expect(similarModels(others, seed, providers, ['free', 'plan'])).toHaveLength(0);
+		expect(similarModels(others, seed, providers, ['free', 'plan'])).toMatchObject({
+			models: [],
+			conflicts: 1
+		});
 	});
 });
 
