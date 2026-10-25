@@ -100,4 +100,32 @@ describe('effective model details', () => {
 		expect(effectiveDetailValue(model, details, 'category')).toBe('reasoning');
 		expect(effectiveDetailValue(model, details, 'max_output')).toBe(16384);
 	});
+
+	test('reads a sourced value the source layer leaves silent from the next layer down', () => {
+		const model = modelOf({ name: 'Resolved name' });
+		const base = rowDetails(model);
+		const details: ModelDetails = {
+			...base,
+			override: { ...base.override, family: 'override-family' },
+			provider: { ...base.provider, category: 'chat' },
+			// The API says the override decided, but carries no family, which a
+			// stale read does. The panel still has to show something.
+			effective_source: { family: 'override', category: 'modelsdev' }
+		};
+		expect(effectiveDetailValue(model, details, 'family')).toBe('override-family');
+		// Named a source whose layer is silent, the value falls through to the row
+		// rather than reading as blank.
+		expect(effectiveDetailValue(model, details, 'category')).toBe('chat');
+	});
+
+	test('falls back to the resolved row when every layer is silent', () => {
+		const model = modelOf({ name: 'Resolved name', family: 'gpt' });
+		const base = rowDetails(model);
+		const details: ModelDetails = {
+			...base,
+			effective_source: { name: 'provider', family: 'modelsdev' }
+		};
+		expect(effectiveDetailValue(model, details, 'name')).toBe('Resolved name');
+		expect(effectiveDetailValue(model, details, 'family')).toBe('gpt');
+	});
 });
