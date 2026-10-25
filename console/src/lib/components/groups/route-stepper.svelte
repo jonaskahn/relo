@@ -9,16 +9,17 @@
 	import Icon from '$lib/components/ui/icon.svelte';
 	import RouteStepHeader from './route-step-header.svelte';
 	import StepBasics from './step-basics.svelte';
+	import StepBilling from './step-billing.svelte';
 	import StepMembers from './step-members.svelte';
 	import StepPreview from './step-preview.svelte';
 	import {
-		ROUTE_STEPS,
 		eligibleMemberCount,
 		emptyRouteDraft,
 		memberCapabilities,
 		routeDraftFrom,
 		routeSaveBody,
 		routeSnapshot,
+		routeStepsFor,
 		validateBasics,
 		validateMembers,
 		type RouteDraft,
@@ -37,6 +38,7 @@
 
 	let draft = $state<RouteDraft>(emptyRouteDraft());
 	let meta = $state<Record<string, Model>>({});
+	let modelsLoaded = $state(false);
 	let problems = $state<Record<string, string>>({});
 	let failure = $state('');
 	let saving = $state(false);
@@ -44,6 +46,7 @@
 	let snapshot = $state('');
 	let step = $state<RouteStep>('basics');
 	const creating = $derived(editing === null);
+	const steps = $derived(routeStepsFor(creating));
 	const dirty = $derived(JSON.stringify(routeSnapshot(draft)) !== snapshot);
 	const eligible = $derived(eligibleMemberCount(draft.members));
 	const capabilities = $derived(memberCapabilities(draft, meta));
@@ -51,11 +54,15 @@
 	$effect(() => {
 		if (open) reset();
 	});
+	$effect(() => {
+		if (open && step === 'members' && !modelsLoaded) void loadAllModels();
+	});
 
 	function reset() {
 		const next = editing === null ? emptyRouteDraft() : routeDraftFrom(editing);
 		draft = next;
 		meta = {};
+		modelsLoaded = false;
 		problems = {};
 		failure = '';
 		saving = false;
@@ -98,17 +105,29 @@
 		);
 	}
 
+	async function loadAllModels() {
+		if (modelsLoaded) return;
+		modelsLoaded = true;
+		try {
+			const data = await api<{ items: Model[] }>('/models?configured=true&limit=0');
+			learn(data.items ?? []);
+		} catch {
+			modelsLoaded = false;
+		}
+	}
+
 	function go(target: RouteStep) {
 		step = target;
 	}
 
 	function back() {
-		const index = ROUTE_STEPS.indexOf(step);
+		const list = steps;
+		const index = list.indexOf(step);
 		if (index <= 0) {
 			requestClose();
 			return;
 		}
-		step = ROUTE_STEPS[index - 1];
+		step = list[index - 1];
 	}
 
 	function advance() {
@@ -118,6 +137,10 @@
 				document.getElementById('route-id')?.focus();
 				return;
 			}
+			step = creating ? 'billing' : 'members';
+			return;
+		}
+		if (step === 'billing') {
 			step = 'members';
 			return;
 		}
@@ -191,7 +214,7 @@
 	}}
 >
 	<div class="flex min-h-0 flex-1 flex-col">
-		<RouteStepHeader {step} onjump={go} />
+		<RouteStepHeader {steps} {step} onjump={go} />
 		<div
 			class={step === 'members'
 				? 'flex min-h-0 flex-1 flex-col overflow-hidden px-4 pb-5 sm:px-7'
@@ -199,6 +222,14 @@
 		>
 			{#if step === 'basics'}
 				<StepBasics {draft} {creating} {problems} ondraft={patch} />
+			{:else if step === 'billing'}
+				<StepBilling
+					{draft}
+					{providers}
+					{configured}
+					ondraft={patch}
+					onskip={() => (step = 'members')}
+				/>
 			{:else if step === 'members'}
 				<StepMembers
 					{draft}
@@ -207,6 +238,7 @@
 					{meta}
 					{problems}
 					{capabilities}
+					{creating}
 					onmembers={setMembers}
 					onmove={moveMembers}
 					onlearn={learn}

@@ -2,6 +2,8 @@
 	import { untrack } from 'svelte';
 	import { t } from 'svelte-i18n';
 	import { modelPrice, moveMember, providerLabel } from '$lib/catalog';
+	import { similarModels, groupSuggestions, familyKey } from '$lib/group-suggestions';
+	import BillingChip from '$lib/components/providers/billing-chip.svelte';
 	import {
 		displayMembers,
 		memberKind,
@@ -28,6 +30,7 @@
 		meta: Record<string, Model>;
 		problems?: Record<string, string>;
 		capabilities: MemberCapabilities;
+		creating?: boolean;
 		onmembers: (members: GroupMember[]) => void;
 		onmove: (from: number, to: number) => void;
 		onlearn: (models: Model[]) => void;
@@ -40,6 +43,7 @@
 		meta,
 		problems = {},
 		capabilities,
+		creating = false,
 		onmembers,
 		onmove,
 		onlearn
@@ -60,7 +64,80 @@
 		onMove: (from, to) => onmove(from, to),
 		disabled: () => !manual
 	};
+	function toggleLane(lane: 'payg' | 'plan' | 'free') {
+		const next = new Set(draft.lanes.filter((entry) => entry !== 'manual'));
+		if (next.has(lane)) next.delete(lane);
+		else next.add(lane);
+		ondraft({ lanes: [...next] });
+	}
+
 	const shown = $derived(displayMembers(draft, meta));
+
+	const suggestionSeeds = $derived(
+		creating
+			? draft.members
+					.map((member) => meta[member.provider_id + '/' + member.model_id])
+					.filter((model): model is Model => Boolean(model))
+			: []
+	);
+	const suggestionCandidates = $derived(
+		creating
+			? suggestionSeeds.flatMap((seed) =>
+					similarModels(Object.values(meta), seed, providers, draft.lanes, draft.members)
+				)
+			: []
+	);
+	const suggestionKeys = $derived(
+		new Set(suggestionCandidates.map((m) => m.provider_id + '/' + m.model_id))
+	);
+	const suggestions = $derived(
+		creating
+			? Object.values(meta).filter((m) => suggestionKeys.has(m.provider_id + '/' + m.model_id))
+			: []
+	);
+	const suggestionGroups = $derived(groupSuggestions(suggestions));
+	const conflictCount = $derived(0);
+
+	function addOne(model: Model) {
+		if (
+			draft.members.some(
+				(m) => m.provider_id === model.provider_id && m.model_id === model.model_id
+			)
+		)
+			return;
+		onmembers([
+			...draft.members,
+			{
+				provider_id: model.provider_id,
+				model_id: model.model_id,
+				kind: 'model',
+				weight: 1,
+				enabled: true,
+				eligible: model.routable,
+				serving_accounts: model.serving_accounts ?? 0,
+				active_accounts: model.active_accounts ?? 0
+			}
+		]);
+	}
+
+	function addAll(models: Model[]) {
+		const existing = new Set(draft.members.map((m) => m.provider_id + '/' + m.model_id));
+		const toAdd = models.filter((m) => !existing.has(m.provider_id + '/' + m.model_id));
+		if (toAdd.length === 0) return;
+		onmembers([
+			...draft.members,
+			...toAdd.map((model) => ({
+				provider_id: model.provider_id,
+				model_id: model.model_id,
+				kind: 'model' as const,
+				weight: 1,
+				enabled: true,
+				eligible: model.routable,
+				serving_accounts: model.serving_accounts ?? 0,
+				active_accounts: model.active_accounts ?? 0
+			}))
+		]);
+	}
 	const noteKey = $derived(
 		draft.strategy === 'cheapest'
 			? 'ui.pages.groupsPage.autoNote.cheapest'
@@ -135,6 +212,7 @@
 				{configured}
 				{providers}
 				members={draft.members}
+				lanes={draft.lanes}
 				onadd={(member) => onmembers([...draft.members, member])}
 				{onlearn}
 			/>
@@ -145,6 +223,42 @@
 				? 'flex'
 				: 'hidden'} min-h-0 flex-1 flex-col gap-2.5 rounded-panel bg-background p-4 md:flex"
 		>
+			{#if creating}
+				<div class="flex shrink-0 flex-wrap items-center gap-2">
+					<span class="text-xs text-muted-foreground">{$t('ui.pages.groupsPage.billingScope')}</span
+					>
+					<button
+						type="button"
+						class="rounded-control border px-2 py-0.5 text-xs {draft.lanes.includes('payg')
+							? 'border-primary bg-accent-soft'
+							: 'border-border'}"
+						onclick={() => toggleLane('payg')}
+						>{$t('ui.pages.providersPage.list.tagPayAsYouGo')}</button
+					>
+					<button
+						type="button"
+						class="rounded-control border px-2 py-0.5 text-xs {draft.lanes.includes('plan')
+							? 'border-primary bg-accent-soft'
+							: 'border-border'}"
+						onclick={() => toggleLane('plan')}
+						>{$t('ui.pages.providersPage.list.tagPaidPlan')}</button
+					>
+					<button
+						type="button"
+						class="rounded-control border px-2 py-0.5 text-xs {draft.lanes.includes('free')
+							? 'border-primary bg-accent-soft'
+							: 'border-border'}"
+						onclick={() => toggleLane('free')}>{$t('ui.pages.providersPage.list.tagFree')}</button
+					>
+					<button
+						type="button"
+						class="rounded-control border px-2 py-0.5 text-xs {draft.lanes.length === 0
+							? 'border-primary bg-accent-soft'
+							: 'border-border'}"
+						onclick={() => (draft.lanes = [])}>{$t('ui.pages.groupsPage.laneManual')}</button
+					>
+				</div>
+			{/if}
 			<div class="flex shrink-0 items-center justify-between gap-2">
 				<span class="field-label">{$t('ui.pages.groupsPage.membersLabel')}</span>
 				<span class="mono-data text-xs text-muted-foreground">{draft.members.length}</span>
@@ -156,6 +270,52 @@
 					{$t('ui.pages.groupsPage.noMembers')}
 				</p>
 			{:else}
+				{#if creating && suggestions.length > 0}
+					<div class="shrink-0 rounded-panel border border-accent-line bg-accent-soft p-3">
+						<div class="mb-2 flex items-center justify-between gap-2">
+							<span class="text-xs font-semibold text-accent-ink"
+								>{$t('ui.pages.groupsPage.suggestTitle')}</span
+							>
+							<span class="text-xs text-muted-foreground"
+								>{$t('ui.pages.groupsPage.suggestHint')}</span
+							>
+						</div>
+						{#each suggestionGroups as group (group.family)}
+							<div class="mb-2">
+								<div class="mb-1 flex items-center justify-between gap-2">
+									<span class="text-xs font-semibold">{group.family}</span>
+									<Button variant="ghost" size="sm" onclick={() => addAll(group.models)}>
+										{$t('ui.pages.groupsPage.suggestAddAll', {
+											values: { count: group.models.length }
+										})}
+									</Button>
+								</div>
+								<div class="flex flex-wrap gap-1.5">
+									{#each group.models as model (model.provider_id + '/' + model.model_id)}
+										<button
+											type="button"
+											class="flex items-center gap-1.5 rounded-control border border-border bg-card px-2 py-1 text-xs hover:border-accent-line"
+											onclick={() => addOne(model)}
+										>
+											<ProviderLogo
+												id={model.provider_id}
+												label={providerLabel(providers, model.provider_id)}
+												size="xs"
+											/>
+											<span class="truncate">{model.name || model.model_id}</span>
+											<BillingChip provider={providers.find((p) => p.id === model.provider_id)!} />
+										</button>
+									{/each}
+								</div>
+							</div>
+						{/each}
+						{#if conflictCount > 0}
+							<p class="text-xs text-muted-foreground">
+								{$t('ui.pages.groupsPage.suggestConflict', { values: { count: conflictCount } })}
+							</p>
+						{/if}
+					</div>
+				{/if}
 				<div class="min-h-0 flex-1 overflow-y-auto">
 					{#if noteKey}
 						<p

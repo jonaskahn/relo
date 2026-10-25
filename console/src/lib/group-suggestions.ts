@@ -160,7 +160,9 @@ export function groupSuggestions(models: readonly Model[]): { family: string; mo
 }
 
 /** Reports how many configured connections fall in each billing lane. */
-export function connectionCountsByLane(providers: readonly Provider[]): Record<BillingLane, number> {
+export function connectionCountsByLane(
+	providers: readonly Provider[]
+): Record<BillingLane, number> {
 	const counts: Record<BillingLane, number> = { free: 0, plan: 0, payg: 0, local: 0 };
 	for (const provider of providers) counts[billingLane(provider)]++;
 	return counts;

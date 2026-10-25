@@ -13,7 +13,11 @@ import {
 } from './group-suggestions';
 import { billingLane } from './provider-plan';
 
-function provider(id: string, templateId: string, kind: 'signin' | 'key' | 'cloud' | 'local' = 'key'): Provider {
+function provider(
+	id: string,
+	templateId: string,
+	kind: 'signin' | 'key' | 'cloud' | 'local' = 'key'
+): Provider {
 	return {
 		id,
 		template_id: templateId,
@@ -48,7 +52,16 @@ function provider(id: string, templateId: string, kind: 'signin' | 'key' | 'clou
 		rank: 0,
 		pool_strategy: '',
 		configured: true,
-		counts: { models: 1, enabled_models: 1, available_models: 1, unpriced_models: 0, accounts: 1, active_accounts: 1, paused_accounts: 0, reauth_accounts: 0 },
+		counts: {
+			models: 1,
+			enabled_models: 1,
+			available_models: 1,
+			unpriced_models: 0,
+			accounts: 1,
+			active_accounts: 1,
+			paused_accounts: 0,
+			reauth_accounts: 0
+		},
 		created_at_ms: 0,
 		updated_at_ms: 0
 	};
@@ -67,10 +80,14 @@ function member(overrides: Partial<GroupMember> = {}): GroupMember {
 
 describe('familyKey', () => {
 	it('prefers the models.dev family', () => {
-		expect(familyKey(modelOf({ family: 'claude-sonnet', model_id: 'claude-sonnet-5@default' }))).toBe('claude-sonnet');
+		expect(
+			familyKey(modelOf({ family: 'claude-sonnet', model_id: 'claude-sonnet-5@default' }))
+		).toBe('claude-sonnet');
 	});
 	it('strips versions, dates and vendor prefix without a family', () => {
-		expect(familyKey(modelOf({ family: '', model_id: 'anthropic/claude-sonnet-4-6@20250805' }))).toBe('claude-sonnet');
+		expect(
+			familyKey(modelOf({ family: '', model_id: 'anthropic/claude-sonnet-4-6@20250805' }))
+		).toBe('claude-sonnet');
 		expect(familyKey(modelOf({ family: '', model_id: 'claude-sonnet-5' }))).toBe('claude-sonnet');
 	});
 	it('keeps tier words so mini and pro do not collapse together', () => {
@@ -99,7 +116,11 @@ describe('allowedByLanes', () => {
 
 describe('laneCounts', () => {
 	it('counts connections by their billing lane', () => {
-		const providers = [provider('a', 'opencode-free'), provider('b', 'claude', 'signin'), provider('c', 'openai', 'key')];
+		const providers = [
+			provider('a', 'opencode-free'),
+			provider('b', 'claude', 'signin'),
+			provider('c', 'openai', 'key')
+		];
 		const counts = laneCounts(providers);
 		expect(counts.free).toBe(1);
 		expect(counts.plan).toBe(1);
@@ -124,37 +145,108 @@ describe('modelsInLanes', () => {
 
 describe('similarModels', () => {
 	it('finds same-family models on other connections, newest first', () => {
-		const seed = modelOf({ provider_id: 'plan', model_id: 'claude-sonnet-5', family: 'claude-sonnet', release_date: '2025-01-01' });
+		const seed = modelOf({
+			provider_id: 'plan',
+			model_id: 'claude-sonnet-5',
+			family: 'claude-sonnet',
+			release_date: '2025-01-01'
+		});
 		const others = [
-			modelOf({ provider_id: 'free', model_id: 'claude-sonnet-4-6', family: 'claude-sonnet', release_date: '2025-02-02', routable: true, serving_accounts: 1 }),
-			modelOf({ provider_id: 'payg', model_id: 'claude-sonnet-5-5', family: 'claude-sonnet', release_date: '2025-03-03', routable: true, serving_accounts: 1 })
+			modelOf({
+				provider_id: 'free',
+				model_id: 'claude-sonnet-4-6',
+				family: 'claude-sonnet',
+				release_date: '2025-02-02',
+				routable: true,
+				serving_accounts: 1
+			}),
+			modelOf({
+				provider_id: 'payg',
+				model_id: 'claude-sonnet-5-5',
+				family: 'claude-sonnet',
+				release_date: '2025-03-03',
+				routable: true,
+				serving_accounts: 1
+			})
 		];
-		const providers = [provider('plan', 'claude', 'signin'), provider('free', 'opencode-free'), provider('payg', 'openai', 'key')];
+		const providers = [
+			provider('plan', 'claude', 'signin'),
+			provider('free', 'opencode-free'),
+			provider('payg', 'openai', 'key')
+		];
 		const result = similarModels(others, seed, providers, ['free', 'payg', 'plan']);
-		expect(result.map((model) => model.model_id)).toEqual(['claude-sonnet-5-5', 'claude-sonnet-4-6']);
+		expect(result.map((model) => model.model_id)).toEqual([
+			'claude-sonnet-5-5',
+			'claude-sonnet-4-6'
+		]);
 	});
 	it('respects the chosen lanes', () => {
-		const seed = modelOf({ provider_id: 'plan', model_id: 'claude-sonnet-5', family: 'claude-sonnet' });
+		const seed = modelOf({
+			provider_id: 'plan',
+			model_id: 'claude-sonnet-5',
+			family: 'claude-sonnet'
+		});
 		const others = [
-			modelOf({ provider_id: 'free', model_id: 'claude-sonnet-4-6', family: 'claude-sonnet', routable: true, serving_accounts: 1 })
+			modelOf({
+				provider_id: 'free',
+				model_id: 'claude-sonnet-4-6',
+				family: 'claude-sonnet',
+				routable: true,
+				serving_accounts: 1
+			})
 		];
 		const providers = [provider('plan', 'claude', 'signin'), provider('free', 'opencode-free')];
 		expect(similarModels(others, seed, providers, ['payg'])).toHaveLength(0);
 	});
 	it('skips disabled, unroutable and already-member models', () => {
-		const seed = modelOf({ provider_id: 'plan', model_id: 'claude-sonnet-5', family: 'claude-sonnet' });
+		const seed = modelOf({
+			provider_id: 'plan',
+			model_id: 'claude-sonnet-5',
+			family: 'claude-sonnet'
+		});
 		const others = [
-			modelOf({ provider_id: 'free', model_id: 'claude-sonnet-4-6', family: 'claude-sonnet', enabled: false, routable: true, serving_accounts: 1 }),
-			modelOf({ provider_id: 'payg', model_id: 'claude-sonnet-5-5', family: 'claude-sonnet', routable: false, serving_accounts: 1 })
+			modelOf({
+				provider_id: 'free',
+				model_id: 'claude-sonnet-4-6',
+				family: 'claude-sonnet',
+				enabled: false,
+				routable: true,
+				serving_accounts: 1
+			}),
+			modelOf({
+				provider_id: 'payg',
+				model_id: 'claude-sonnet-5-5',
+				family: 'claude-sonnet',
+				routable: false,
+				serving_accounts: 1
+			})
 		];
-		const providers = [provider('plan', 'claude', 'signin'), provider('free', 'opencode-free'), provider('payg', 'openai', 'key')];
+		const providers = [
+			provider('plan', 'claude', 'signin'),
+			provider('free', 'opencode-free'),
+			provider('payg', 'openai', 'key')
+		];
 		const members: GroupMember[] = [member({ provider_id: 'payg', model_id: 'claude-sonnet-5-5' })];
-		expect(similarModels(others, seed, providers, ['free', 'payg', 'plan'], members)).toHaveLength(0);
+		expect(similarModels(others, seed, providers, ['free', 'payg', 'plan'], members)).toHaveLength(
+			0
+		);
 	});
 	it('does not offer a model that would conflict on tools', () => {
-		const seed = modelOf({ provider_id: 'plan', model_id: 'claude-sonnet-5', family: 'claude-sonnet', capabilities: { tools: true, reasoning: null, vision: null } });
+		const seed = modelOf({
+			provider_id: 'plan',
+			model_id: 'claude-sonnet-5',
+			family: 'claude-sonnet',
+			capabilities: { tools: true, reasoning: null, vision: null }
+		});
 		const others = [
-			modelOf({ provider_id: 'free', model_id: 'claude-sonnet-4-6', family: 'claude-sonnet', capabilities: { tools: false, reasoning: null, vision: null }, routable: true, serving_accounts: 1 })
+			modelOf({
+				provider_id: 'free',
+				model_id: 'claude-sonnet-4-6',
+				family: 'claude-sonnet',
+				capabilities: { tools: false, reasoning: null, vision: null },
+				routable: true,
+				serving_accounts: 1
+			})
 		];
 		const providers = [provider('plan', 'claude', 'signin'), provider('free', 'opencode-free')];
 		expect(similarModels(others, seed, providers, ['free', 'plan'])).toHaveLength(0);

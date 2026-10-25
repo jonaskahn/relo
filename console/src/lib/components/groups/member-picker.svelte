@@ -3,6 +3,9 @@
 	import { t } from 'svelte-i18n';
 	import { api } from '$lib/api';
 	import { modelPrice, providerLabel } from '$lib/catalog';
+	import { allowedByLanes } from '$lib/group-suggestions';
+	import { billingLane } from '$lib/provider-plan';
+	import BillingChip from '$lib/components/providers/billing-chip.svelte';
 	import type { GroupMember, Model, Provider } from '$lib/types';
 	import Button from '$lib/components/ui/button.svelte';
 	import Input from '$lib/components/ui/input.svelte';
@@ -14,11 +17,12 @@
 		configured: Provider[];
 		providers: Provider[];
 		members: GroupMember[];
+		lanes?: import('$lib/group-suggestions').Lane[];
 		onadd: (member: GroupMember) => void;
 		onlearn: (models: Model[]) => void;
 	}
 
-	let { configured, providers, members, onadd, onlearn }: Props = $props();
+	let { configured, providers, members, lanes = [], onadd, onlearn }: Props = $props();
 
 	// The picker reads models on its own, so a route being built never waits
 	// on a connection it has not added a member from yet.
@@ -31,7 +35,13 @@
 	let searchTimer: ReturnType<typeof setTimeout> | undefined;
 	let requestSeq = 0;
 
-	const visible = $derived(onOnly ? models.filter((model) => model.enabled) : models);
+	const providerMap = $derived(new Map(providers.map((provider) => [provider.id, provider])));
+	const visible = $derived(
+		(onOnly ? models.filter((model) => model.enabled) : models).filter((model) => {
+			const provider = providerMap.get(model.provider_id);
+			return provider ? allowedByLanes(provider, lanes) : true;
+		})
+	);
 
 	onMount(() => void load());
 	onDestroy(() => {
@@ -147,6 +157,9 @@
 					</div>
 				</div>
 				<div class="flex shrink-0 items-center gap-2">
+					{#if providerMap.get(model.provider_id)}
+						<BillingChip provider={providerMap.get(model.provider_id)!} />
+					{/if}
 					<span class="mono-data text-muted-foreground">{modelPrice(model)}</span>
 					<Button
 						variant={isMember(model) ? 'secondary' : 'outline'}
