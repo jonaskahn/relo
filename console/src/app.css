@@ -108,8 +108,9 @@
 	   actually renders, edge and float together. */
 	--ring-field: rgb(20 20 30 / 0.12);
 	--ring-field-hover: rgb(20 20 30 / 0.2);
-	--field-shadow: var(--field-float), 0 0 0 1px var(--ring-field);
-	--field-shadow-hover: var(--field-float), 0 0 0 1px var(--ring-field-hover);
+	--field-edge: 0 0 0 1px transparent;
+	--field-shadow: var(--field-float), var(--field-edge);
+	--field-shadow-hover: var(--field-float), var(--field-edge);
 	/* A control sits on the surface that holds it, so a card or a popover
 	   retunes the fill under its own controls to stay a step away from its
 	   own background. */
@@ -122,9 +123,8 @@
 	/* Disabled is flat, muted and striped: a shadow-less, patterned control
 	   is legible as unavailable at a glance, in either theme, without
 	   depending on opacity or on the pointer being over it. */
-	--disabled-bg: #e3e4e9;
-	--disabled-ink: #9a9aa6;
-	--disabled-stripe: rgb(0 0 0 / 0.05);
+	--disabled-bg: color-mix(in srgb, var(--ink) 4%, var(--surface));
+	--disabled-ink: color-mix(in srgb, var(--ink) 42%, var(--surface));
 	/* Legacy aliases: pages still read these until their own migration. */
 	--radius: 0.5rem;
 	--background: var(--canvas);
@@ -254,9 +254,8 @@
 		inset 0 1px 0 rgb(255 255 255 / 0.1), 0 1px 1px rgb(0 0 0 / 0.5), 0 6px 14px -6px rgb(0 0 0 / 0.75);
 	--ring-field: rgb(255 255 255 / 0.14);
 	--ring-field-hover: rgb(255 255 255 / 0.24);
-	--disabled-bg: #1c1c22;
-	--disabled-ink: #5f5f6b;
-	--disabled-stripe: rgb(255 255 255 / 0.07);
+	--disabled-bg: color-mix(in srgb, var(--ink) 5%, var(--surface));
+	--disabled-ink: color-mix(in srgb, var(--ink) 40%, var(--surface));
 }
 
 ::view-transition-old(root),
@@ -476,18 +475,29 @@ html[data-theme-dir='sunset']::view-transition-new(root) {
 			--border-strong: rgba(0, 0, 0, 0.5);
 			--ring-field: rgb(0 0 0 / 0.32);
 			--ring-field-hover: rgb(0 0 0 / 0.45);
+			--field-edge: 0 0 0 1px var(--ring-field);
 			--float-1: 0 1px 2px rgb(20 20 30 / 0.1);
 			--field-float: 0 1px 2px rgb(20 20 30 / 0.12), 0 4px 12px -5px rgb(20 20 30 / 0.3);
 			--float-2: 0 1px 2px rgb(20 20 30 / 0.12), 0 6px 16px -8px rgb(20 20 30 / 0.34);
 			--float-2-hover: 0 2px 3px rgb(20 20 30 / 0.14), 0 10px 22px -8px rgb(20 20 30 / 0.4);
-			--disabled-stripe: rgb(0 0 0 / 0.12);
+
 		}
 		.dark {
 			--border: rgba(255, 255, 255, 0.22);
 			--border-strong: rgba(255, 255, 255, 0.4);
 			--ring-field: rgb(255 255 255 / 0.32);
 			--ring-field-hover: rgb(255 255 255 / 0.45);
-			--disabled-stripe: rgb(255 255 255 / 0.14);
+			--field-edge: 0 0 0 1px var(--ring-field);
+
+		}
+		button:disabled,
+		input:disabled,
+		select:disabled,
+		textarea:disabled,
+		[aria-disabled='true'],
+		[data-disabled] {
+			outline: 1px dashed var(--ring-field);
+			outline-offset: -1px;
 		}
 	}
 }
@@ -1336,11 +1346,6 @@ label:has(> input:disabled),
 [aria-disabled='true'],
 [data-disabled] {
 	background-color: var(--disabled-bg);
-	background-image: repeating-linear-gradient(
-		135deg,
-		var(--disabled-stripe) 0 1px,
-		transparent 1px 5px
-	);
 	box-shadow: none;
 	color: var(--disabled-ink);
 	cursor: not-allowed;
@@ -1370,6 +1375,14 @@ textarea:not([disabled]):hover,
 select:not(:disabled):hover {
 	background: var(--control-bg-hover);
 	box-shadow: var(--field-shadow-hover);
+}
+/* Fields keep no border, so focus is the only cue that an operator can type.
+   The ring lives here because this unlayered block beats the layered
+   :focus-visible rule above. */
+input:not([type='checkbox'], [type='radio'], [type='range']):not([disabled]):focus-visible,
+textarea:not([disabled]):focus-visible,
+select:not(:disabled):focus-visible {
+	box-shadow: var(--field-float), 0 0 0 2px var(--ring);
 }
 /* Read-only is flat and sunken: the same recessed fill a pane panel uses, so
    it never reads as the lifted, ringed control beside it. The cursor stays
