@@ -130,7 +130,7 @@
 		{:else}
 			{#if locked}
 				<p
-					class="flex items-start gap-2 rounded-panel border border-line bg-surface px-3 py-2.5 text-xs leading-relaxed text-muted-foreground"
+					class="flex items-start gap-2 rounded-panel bg-surface shadow-float-1 px-3 py-2.5 text-xs leading-relaxed text-muted-foreground"
 				>
 					<Icon name="lock" size={13} class="mt-0.5 shrink-0" />
 					{$t('ui.pages.chatPage.lockedHint')}
@@ -221,7 +221,7 @@
 					id="chat-system"
 					rows="5"
 					disabled={locked}
-					class="min-h-24 w-full resize-y rounded-control border border-line bg-surface px-3 py-2 text-sm text-ink outline-none disabled:cursor-not-allowed disabled:opacity-60"
+					class="min-h-24 w-full resize-y rounded-control bg-control px-3 py-2 text-sm text-ink shadow-field outline-none transition-[background-color,box-shadow] hover:bg-control-hover hover:shadow-field-hover focus-visible:ring-[3px] focus-visible:ring-ring/50"
 					value={settings.system}
 					oninput={(event) => change({ system: event.currentTarget.value })}></textarea>
 			</Field>

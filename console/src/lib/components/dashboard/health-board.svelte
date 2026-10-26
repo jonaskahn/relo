@@ -88,7 +88,7 @@
 						href={'/connections?provider=' +
 							encodeURIComponent(card.account.provider_id) +
 							'&tab=accounts'}
-						class="flex min-w-0 flex-col gap-3 rounded-panel border border-line bg-surface p-3 transition-[border-color,box-shadow] duration-150 hover:border-accent-border hover:shadow-[var(--shadow-hover)]"
+						class="flex min-w-0 flex-col gap-3 rounded-panel bg-surface shadow-float-1 p-3 transition-[box-shadow] duration-150 hover:shadow-[var(--shadow-hover)]"
 					>
 						<div class="flex min-w-0 items-center gap-2.5">
 							{#if card.provider}<ProviderLogo

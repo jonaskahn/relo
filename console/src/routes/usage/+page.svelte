@@ -1140,7 +1140,7 @@
 				<ul class="mt-2 space-y-1">
 					{#each draft as id, index (id)}
 						<li
-							class="flex items-center gap-2 rounded-md border border-line bg-surface px-2 py-1.5"
+							class="flex items-center gap-2 rounded-md bg-surface shadow-float-1 px-2 py-1.5"
 						>
 							<span class="flex-1 truncate text-sm">{$t(metricLabelKey(id))}</span>
 							<Button

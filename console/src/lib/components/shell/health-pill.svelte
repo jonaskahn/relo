@@ -61,7 +61,7 @@
 	// turns it into the button that opens the manage dialog, which is the
 	// next action it offers.
 	const pill =
-		'inline-flex h-control items-center gap-2 rounded-control border border-line bg-surface px-3 text-[0.8125rem] font-medium text-ink';
+		'inline-flex h-control items-center gap-2 rounded-control bg-surface shadow-float-1 px-3 text-[0.8125rem] font-medium text-ink';
 </script>
 
 {#if up === false}

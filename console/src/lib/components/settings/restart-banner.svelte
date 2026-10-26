@@ -38,7 +38,7 @@
 </script>
 
 <div
-	class="flex flex-wrap items-start gap-x-4 gap-y-3 rounded-panel border border-warn/35 bg-warn/10 p-[var(--card-pad)]"
+	class="flex flex-wrap items-start gap-x-4 gap-y-3 rounded-panel bg-warn/10 shadow-float-1 p-[var(--card-pad)]"
 >
 	<Icon name="alert-triangle" size={18} class="mt-0.5 shrink-0 text-warn" />
 	<div class="min-w-[16rem] flex-1">

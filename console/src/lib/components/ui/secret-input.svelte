@@ -29,7 +29,7 @@
 	/>
 	<button
 		type="button"
-		class="absolute right-1 top-1/2 flex h-control w-8 -translate-y-1/2 items-center justify-center rounded-control text-muted-foreground outline-none transition-colors hover:text-ink focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50"
+		class="absolute right-1 top-1/2 flex h-control w-8 -translate-y-1/2 items-center justify-center rounded-control text-muted-foreground outline-none transition-colors hover:text-ink focus-visible:ring-2 focus-visible:ring-ring"
 		aria-label={revealed ? $t('ui.common.hide') : $t('ui.common.reveal')}
 		aria-pressed={revealed}
 		{disabled}

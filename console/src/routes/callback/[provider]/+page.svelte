@@ -210,7 +210,7 @@
 	<main class="flex min-h-dvh items-center justify-center bg-canvas px-4 py-8">
 		<div
 			in:pageMotion
-			class="w-full max-w-md rounded-card border border-line bg-surface p-6 shadow-1"
+			class="w-full max-w-md rounded-card bg-surface shadow-float-1 p-6 shadow-1"
 		>
 			<div class="flex items-center gap-2.5">
 				<LogoMark class="size-6 text-accent-strong" />

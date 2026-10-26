@@ -59,14 +59,14 @@
 			<span class="text-sm font-medium">{$t('ui.pages.providersPage.add.customTitle')}</span>
 		{/if}
 		{#if kind === 'signin'}
-			<span class="rounded border border-border px-1.5 py-0.5 text-[0.65rem] text-muted-foreground">
+			<span class="rounded bg-sunken px-1.5 py-0.5 text-[0.65rem] text-muted-foreground">
 				{$t('ui.pages.providersPage.accounts.kindSignin')}
 			</span>
 		{/if}
 	</div>
 
 	{#if addKey && targetChoices.length > 0}
-		<div class="flex flex-col gap-2 rounded-lg border border-border p-3">
+		<div class="flex flex-col gap-2 rounded-lg shadow-float-1 p-3">
 			<label class="flex items-start gap-2 text-sm">
 				<input
 					type="radio"
@@ -90,7 +90,7 @@
 			</label>
 			{#if targetChoices.length > 1}
 				<select
-					class="h-9 rounded-md border border-border bg-transparent px-2 text-sm"
+					class="h-control rounded-control bg-control px-2 text-sm text-ink shadow-field outline-none transition-[background-color,box-shadow] hover:bg-control-hover hover:shadow-field-hover focus-visible:ring-[3px] focus-visible:ring-ring/50"
 					aria-label={$t('ui.pages.providersPage.add.targetProvider')}
 					value={draft.targetProviderId}
 					onchange={(event) => ondraft({ targetProviderId: event.currentTarget.value })}

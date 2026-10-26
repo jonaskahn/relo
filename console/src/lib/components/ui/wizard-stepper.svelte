@@ -32,11 +32,11 @@
 			onclick={() => done && onjump(entry)}
 		>
 			<span
-				class="flex size-6.5 shrink-0 items-center justify-center rounded-full border-[1.5px] text-xs font-semibold {isCurrent
-					? 'border-primary bg-primary text-primary-foreground'
+				class="flex size-6.5 shrink-0 items-center justify-center rounded-round bg-sunken text-xs font-semibold shadow-float-1 {isCurrent
+					? 'bg-primary text-primary-foreground'
 					: done
-						? 'border-primary bg-accent-soft text-accent-ink'
-						: 'border-border text-muted-foreground/60'}"
+						? 'bg-accent-soft text-accent-ink'
+						: 'text-muted-foreground/60'}"
 			>
 				{#if done}
 					<Icon name="check" size={13} />

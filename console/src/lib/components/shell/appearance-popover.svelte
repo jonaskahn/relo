@@ -125,7 +125,7 @@
 						}}
 					>
 						<Select.Trigger
-							class="flex h-control w-full items-center justify-between gap-2 rounded-control border border-line bg-surface px-3 text-sm text-ink outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:pointer-events-none disabled:opacity-50"
+							class="flex h-control w-full items-center justify-between gap-2 rounded-control bg-control px-3 text-sm text-ink shadow-field outline-none transition-[background-color,box-shadow] hover:bg-control-hover hover:shadow-field-hover focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:cursor-not-allowed"
 							aria-label={$t('ui.topbar.language')}
 						>
 							<span class="truncate">

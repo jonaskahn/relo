@@ -64,7 +64,7 @@
 	const selectedProvider = $derived(selectedModel ? providerOf(selectedModel) : '');
 </script>
 
-<div class="flex min-w-0 flex-col gap-3 rounded-lg border border-border bg-sunken p-4">
+<div class="flex min-w-0 flex-col gap-3 rounded-lg bg-sunken p-4">
 	<div class="min-w-0">
 		<h3 class="text-sm font-semibold">{$t('ui.pages.integrationsPage.testTitle')}</h3>
 		<p class="text-xs text-muted-foreground">{$t('ui.pages.integrationsPage.testHint')}</p>

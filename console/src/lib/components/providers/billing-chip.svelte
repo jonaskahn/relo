@@ -61,10 +61,10 @@
 	// plan as the product it was bought as, and a key as the neutral default.
 	const tone = $derived(
 		free
-			? 'border-ok/40 bg-ok/10 text-ok'
+			? 'bg-ok/10 text-ok'
 			: paidPlan
-				? 'border-primary/40 bg-primary/10 text-primary'
-				: 'border-border bg-muted text-muted-foreground'
+				? 'bg-primary/10 text-primary'
+				: 'bg-muted text-muted-foreground'
 	);
 
 	let pointed = $state(false);
@@ -74,7 +74,7 @@
 {#if free || paidPlan || payg}
 	<span
 		{...{ [chip.mark]: true }}
-		class="badge shrink-0 border {tone} {extra}"
+		class="badge shrink-0 {tone} {extra}"
 		aria-label={chip.label}
 		role="img"
 		onmouseenter={() => (pointed = true)}

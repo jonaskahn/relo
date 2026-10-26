@@ -299,7 +299,7 @@
 					{#if experimental}
 						<span
 							data-experimental-chip
-							class="badge shrink-0 border border-border text-muted-foreground"
+							class="badge shrink-0 bg-sunken text-muted-foreground"
 						>
 							{$t('ui.pages.providersPage.list.tagExperimental')}
 						</span>

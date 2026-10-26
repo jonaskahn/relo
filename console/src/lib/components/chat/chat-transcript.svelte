@@ -138,7 +138,7 @@
 					{/if}
 				{:else if turn.result.status === 'failed'}
 					<div
-						class="flex items-start gap-2 rounded-panel border border-danger/30 bg-danger/5 px-3 py-2.5 text-sm text-danger"
+						class="flex items-start gap-2 rounded-panel bg-danger/5 shadow-float-1 px-3 py-2.5 text-sm text-danger"
 						role="alert"
 					>
 						<Icon name="circle-alert" size={15} class="mt-0.5 shrink-0" />

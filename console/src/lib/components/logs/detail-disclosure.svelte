@@ -17,7 +17,7 @@
 	let { open = false, title, children }: Props = $props();
 </script>
 
-<details {open} class="group rounded-lg border border-border">
+<details {open} class="group rounded-lg bg-surface shadow-float-1">
 	<summary
 		class="flex cursor-pointer select-none items-center gap-2 px-4 py-3 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
 	>

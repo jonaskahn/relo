@@ -189,7 +189,7 @@
 	}
 </script>
 
-<div class="flex flex-col gap-3 rounded-lg border border-border p-3">
+<div class="flex flex-col gap-3 rounded-lg shadow-float-1 p-3">
 	{#if methods.length > 1 && !running}
 		<div class="flex flex-col gap-1">
 			<span class="text-xs text-muted-foreground"
@@ -251,7 +251,7 @@
 			{#if operation?.device_code}
 				<div class="flex flex-wrap items-center gap-2">
 					<code
-						class="rounded-md border border-border px-3 py-1.5 font-mono text-lg tracking-widest"
+						class="rounded-md bg-surface shadow-float-1 px-3 py-1.5 font-mono text-lg tracking-widest"
 						>{operation.device_code}</code
 					>
 					<Button variant="outline" size="sm" onclick={copy}>

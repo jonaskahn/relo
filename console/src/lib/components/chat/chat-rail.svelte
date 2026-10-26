@@ -165,7 +165,7 @@
 			<DropdownMenu.Portal>
 				<MenuPanel align="end" class="z-50 min-w-44 surface-pop p-1">
 					<DropdownMenu.Item
-						class="flex min-h-control items-center gap-2 rounded-control px-2 py-1.5 text-sm text-danger outline-none data-highlighted:bg-hover disabled:pointer-events-none disabled:opacity-50"
+						class="flex min-h-control items-center gap-2 rounded-control px-2 py-1.5 text-sm text-danger outline-none data-highlighted:bg-hover"
 						disabled={threads.length === 0}
 						onSelect={askClear}
 					>
@@ -232,7 +232,7 @@
 									<input
 										{@attach focusRename}
 										bind:value={titleDraft}
-										class="my-1 ml-1 h-control min-w-0 flex-1 rounded-control border border-line bg-surface px-2 text-sm text-ink outline-none"
+										class="my-1 ml-1 h-control min-w-0 flex-1 rounded-control bg-surface shadow-float-1 px-2 text-sm text-ink outline-none"
 										aria-label={$t('ui.pages.chatPage.rename')}
 										onkeydown={(event) => onRenameKeydown(event, thread.id)}
 										onblur={() => commitRename(thread.id)}

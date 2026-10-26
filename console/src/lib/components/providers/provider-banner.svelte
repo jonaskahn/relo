@@ -61,7 +61,7 @@
 			<button
 				type="button"
 				aria-expanded="false"
-				class="inline-flex min-h-control shrink-0 cursor-pointer items-center gap-1.5 rounded-control border border-warn/40 px-2.5 text-xs font-medium text-warn transition-colors hover:bg-warn/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+				class="inline-flex min-h-control shrink-0 cursor-pointer items-center gap-1.5 rounded-control bg-warn/10 px-2.5 text-xs font-medium text-warn transition-colors hover:bg-warn/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
 				onclick={() => onaction(status.name)}
 			>
 				<Icon name={actionIcon} size={14} />

@@ -472,7 +472,7 @@
 <div class="page-frame page-stack pt-6">
 	{#if activityFailed}
 		<div
-			class="flex items-center justify-between gap-3 rounded-card border border-danger/30 bg-danger/5 px-4 py-3 text-sm"
+			class="flex items-center justify-between gap-3 rounded-card bg-danger/5 shadow-float-1 px-4 py-3 text-sm"
 			role="alert"
 		>
 			<span class="flex min-w-0 items-center gap-2 text-danger">

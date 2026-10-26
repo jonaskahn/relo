@@ -48,7 +48,7 @@
 		</p>
 		<div class="flex items-center gap-2">
 			<code
-				class="mono-data min-w-0 flex-1 truncate rounded-lg border border-border bg-sunken px-3 py-2 text-xs"
+				class="mono-data min-w-0 flex-1 truncate rounded-lg bg-sunken px-3 py-2 text-xs"
 				>{token}</code
 			>
 			<Button variant="outline" onclick={oncopy}>
@@ -58,7 +58,7 @@
 		</div>
 		{#if snippet}
 			<pre
-				class="mono-data overflow-x-auto rounded-lg border border-border bg-sunken p-3 text-xs">{snippet}</pre>
+				class="mono-data overflow-x-auto rounded-lg bg-sunken p-3 text-xs">{snippet}</pre>
 		{/if}
 		{#if warnings.length > 0}
 			<div class="space-y-1 text-xs text-warn" role="status">

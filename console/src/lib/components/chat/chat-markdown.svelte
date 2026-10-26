@@ -94,7 +94,7 @@
 		{:else if node.kind === 'divider'}
 			<hr class="h-px border-0 bg-line" />
 		{:else if node.kind === 'table'}
-			<div class="overflow-x-auto rounded-panel border border-line">
+			<div class="overflow-x-auto rounded-panel bg-surface shadow-float-1">
 				<table class="w-full border-collapse text-sm">
 					<thead class="bg-sunken">
 						<tr>

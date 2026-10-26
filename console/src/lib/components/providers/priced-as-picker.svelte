@@ -68,7 +68,7 @@
 	}
 </script>
 
-<div class="flex flex-col gap-2 rounded-lg border border-border p-3">
+<div class="flex flex-col gap-2 rounded-lg shadow-float-1 p-3">
 	<div class="flex flex-wrap items-center gap-2 text-xs">
 		<Icon name="tag" size={14} class="text-muted-foreground" />
 		<span class="text-muted-foreground">{$t('ui.pages.providersPage.models.pricedAs')}</span>
@@ -106,7 +106,7 @@
 	{/if}
 
 	{#if hits.length > 0}
-		<div class="max-h-56 overflow-y-auto rounded-md border border-border">
+		<div class="max-h-56 overflow-y-auto rounded-md bg-surface shadow-float-1">
 			{#each hits as hit (hit.ref)}
 				<button
 					type="button"

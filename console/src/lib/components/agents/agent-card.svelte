@@ -113,7 +113,7 @@
 					<div class="flex min-w-0 items-center gap-1.5">
 						<CardTitle class="truncate text-sm">{labelOf(agent)}</CardTitle>
 						{#if versionsChip}
-							<span class="badge shrink-0 border-line bg-sunken text-muted-foreground">
+							<span class="badge shrink-0 bg-sunken text-muted-foreground">
 								{versionsChip}
 							</span>
 						{/if}
@@ -127,7 +127,7 @@
 			<div class="flex shrink-0 flex-col items-end gap-1.5">
 				<div class="flex flex-wrap items-center justify-end gap-1.5">
 					{#if agent.id === 'codex' && contextOn(agent)}
-						<span class="badge border-accent-line bg-accent-soft text-accent-ink">1M</span>
+						<span class="badge bg-accent-soft text-accent-ink">1M</span>
 					{/if}
 					<span
 						class={cn(
@@ -135,8 +135,8 @@
 							// Coverage is a fact about Relo, so the untested clients read as a
 							// neutral tag rather than a warning.
 							isTested(agent)
-								? 'border-accent-line bg-accent-soft text-accent-ink'
-								: 'border-line bg-sunken text-muted-foreground'
+								? 'bg-accent-soft text-accent-ink ring-1 ring-accent-border'
+								: 'bg-sunken text-muted-foreground'
 						)}
 					>
 						{$t(

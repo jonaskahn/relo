@@ -99,7 +99,7 @@
 		class={cn(
 			buttonVariants({ variant: 'outline', size: 'icon' }),
 			'text-muted-foreground hover:text-foreground',
-			activeDims > 0 && 'border-accent-line bg-accent-soft text-accent-ink'
+			activeDims > 0 && 'bg-accent-soft text-accent-ink ring-1 ring-accent-border'
 		)}
 		aria-label={$t('ui.pages.providersPage.models.toolbarFilters')}
 		title={$t('ui.pages.providersPage.models.toolbarFilters')}

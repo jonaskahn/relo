@@ -7,6 +7,8 @@
 	import CenteredModal from '$lib/components/ui/centered-modal.svelte';
 	import ConfirmDialog from '$lib/components/ui/confirm-dialog.svelte';
 	import Button from '$lib/components/ui/button.svelte';
+	import { buttonVariants } from '$lib/components/ui/button.svelte';
+	import { cn } from '$lib/utils';
 	import Field from '$lib/components/ui/field.svelte';
 	import Input from '$lib/components/ui/input.svelte';
 	import Select from '$lib/components/ui/select.svelte';
@@ -514,7 +516,7 @@
 					<div class="flex flex-wrap gap-2">
 						{#each capabilityFields as field (field.key)}
 							{#if effectiveDetailValue(shown ?? model, layers, field.key) === true}
-								<span class="badge border border-border px-2 py-1 text-xs"
+								<span class="badge bg-sunken px-2 py-1 text-xs"
 									>{$t(field.labelKey)}</span
 								>
 							{/if}
@@ -538,7 +540,7 @@
 					<div class="flex flex-wrap items-center gap-2">
 						<h3 class="section-heading">{$t('ui.pages.providersPage.models.pricing')}</h3>
 						{#if headingSource}
-							<span class="badge border border-border font-sans text-muted-foreground">
+							<span class="badge bg-sunken font-sans text-muted-foreground">
 								{$t(SOURCE_LABEL_KEY[headingSource])}
 							</span>
 						{/if}
@@ -576,7 +578,7 @@
 					<div class="flex flex-wrap items-center gap-2">
 						<h3 class="section-heading">{$t('ui.pages.providersPage.models.overrides')}</h3>
 						{#if overrideEntries.length > 0}
-							<span class="badge border border-border text-muted-foreground">
+							<span class="badge bg-sunken text-muted-foreground">
 								{$t('ui.pages.providersPage.models.chipOverridden')}
 							</span>
 						{/if}
@@ -617,7 +619,10 @@
 				<div class="flex flex-wrap items-center gap-2 text-xs">
 					<DropdownMenu.Root>
 						<DropdownMenu.Trigger
-							class="relative inline-flex size-control shrink-0 items-center justify-center rounded-control border border-line text-muted-foreground hover:border-line-strong hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring data-[state=open]:border-line-strong data-[state=open]:text-ink"
+							class={cn(
+								buttonVariants({ variant: 'outline', size: 'icon' }),
+								'relative text-muted-foreground hover:text-ink data-[state=open]:text-ink'
+							)}
 							aria-label={$t('ui.pages.providersPage.models.groups')}
 							title={$t('ui.pages.providersPage.models.groups')}
 						>
@@ -859,16 +864,16 @@
 							: '—'}
 					</span>
 					{#if shown && isPriced(shown.prices)}
-						<span class="badge border border-border text-muted-foreground">
+						<span class="badge bg-sunken text-muted-foreground">
 							{$t(PRICE_TAG_KEY[priceTag(shown.prices)])}
 						</span>
 					{:else}
-						<span class="badge border border-warn/40 text-warn">
+						<span class="badge bg-warn/10 text-warn">
 							{$t('ui.pages.providersPage.models.tagUnpriced')}
 						</span>
 					{/if}
 					{#if shown?.overridden}
-						<span class="badge border border-border text-muted-foreground">
+						<span class="badge bg-sunken text-muted-foreground">
 							{$t('ui.pages.providersPage.models.chipOverridden')}
 						</span>
 					{/if}

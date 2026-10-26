@@ -47,7 +47,7 @@
 		{id}
 		aria-label={ariaLabel}
 		class={cn(
-			'border-line focus-visible:border-ring focus-visible:ring-ring/50 relative flex h-control w-full min-w-0 items-center rounded-control border bg-surface py-1 pr-7 pl-3 text-left text-sm shadow-1 outline-none transition-[color,box-shadow] disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 focus-visible:ring-[3px]',
+			'focus-visible:ring-ring/50 relative flex h-control w-full min-w-0 items-center rounded-control bg-control py-1 pr-7 pl-3 text-left text-sm text-ink shadow-field outline-none transition-[background-color,box-shadow] disabled:cursor-not-allowed focus-visible:ring-[3px] hover:bg-control-hover hover:shadow-field-hover',
 			className
 		)}
 	>
@@ -63,7 +63,7 @@
 
 	<Select.Portal>
 		<Select.Content
-			class="z-50 w-[var(--bits-select-trigger-width)] rounded-popover border border-line bg-raised p-1 shadow-3 outline-none"
+			class="z-50 w-[var(--bits-select-trigger-width)] rounded-popover bg-raised p-1 shadow-pop outline-none"
 			sideOffset={4}
 		>
 			{#snippet child({ props, wrapperProps, open })}
@@ -78,7 +78,7 @@
 										class={cn(
 											'relative flex cursor-default items-center gap-2 rounded-control px-2.5 py-1.5 text-left text-sm outline-none select-none',
 											'data-[highlighted]:bg-accent-50 data-[highlighted]:text-accent-ink',
-											'data-[disabled]:pointer-events-none data-[disabled]:opacity-50'
+											'data-[disabled]:cursor-not-allowed'
 										)}
 									>
 										{#snippet child({ props: itemProps, selected: isSelected })}

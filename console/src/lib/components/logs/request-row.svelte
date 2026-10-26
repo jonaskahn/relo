@@ -50,7 +50,7 @@
 	aria-label={$t('ui.common.openCard', {
 		values: { name: row.Model + ' ' + formatTimestamp(row.TimestampMs) }
 	})}
-	class="grid w-full items-center gap-x-3.5 border border-transparent px-5 py-2.5 text-left hover:bg-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring max-sm:mx-0 max-sm:mb-2.5 max-sm:grid-cols-[minmax(0,1fr)_auto] max-sm:gap-y-1 max-sm:rounded-card max-sm:border-line max-sm:bg-surface max-sm:px-4 max-sm:py-3.5 sm:min-h-14 {cols}"
+	class="grid w-full items-center gap-x-3.5 px-5 py-2.5 text-left hover:bg-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring max-sm:mx-0 max-sm:mb-2.5 max-sm:grid-cols-[minmax(0,1fr)_auto] max-sm:gap-y-1 max-sm:rounded-card max-sm:bg-surface max-sm:px-4 max-sm:py-3.5 max-sm:shadow-float-1 sm:min-h-14 {cols}"
 >
 	<span
 		class="mono-data order-3 text-xs text-muted-foreground max-sm:self-center sm:order-none sm:text-[0.8125rem]"

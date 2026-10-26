@@ -686,7 +686,7 @@
 <div {@attach trackDock} class="relative flex h-full min-h-0 gap-4 overflow-hidden bg-canvas p-4">
 	{#snippet railPane()}
 		<div
-			class="flex h-full w-full shrink-0 flex-col overflow-hidden rounded-card border border-line bg-sunken"
+			class="flex h-full w-full shrink-0 flex-col overflow-hidden rounded-card bg-sunken"
 		>
 			<ChatRail
 				bind:this={railPanel}
@@ -706,7 +706,7 @@
 
 	{#snippet targetPane()}
 		<div
-			class="flex h-full w-full shrink-0 flex-col overflow-hidden rounded-card border border-line bg-sunken"
+			class="flex h-full w-full shrink-0 flex-col overflow-hidden rounded-card bg-sunken"
 		>
 			<ChatSettingsPanel
 				bind:this={target}
@@ -749,7 +749,7 @@
 	{/if}
 
 	<div
-		class="flex min-w-0 flex-1 flex-col overflow-hidden rounded-card border border-line bg-sunken"
+		class="flex min-w-0 flex-1 flex-col overflow-hidden rounded-card bg-sunken"
 		inert={!wide && (railOpen || targetOpen)}
 	>
 		<header class="flex h-14 shrink-0 items-center gap-2 px-4">
@@ -796,7 +796,7 @@
 			<div class="mx-auto w-full max-w-3xl shrink-0 space-y-2 px-4 pb-3">
 				{#if catalogFailed !== ''}
 					<p
-						class="flex items-start gap-2 rounded-card border border-danger/30 bg-danger/5 px-4 py-3 text-sm text-danger"
+						class="flex items-start gap-2 rounded-card bg-danger/5 shadow-float-1 px-4 py-3 text-sm text-danger"
 						role="alert"
 					>
 						<Icon name="circle-alert" size={15} class="mt-0.5 shrink-0" />
@@ -807,7 +807,7 @@
 				{/if}
 				{#if replayOf !== ''}
 					<div
-						class="flex flex-wrap items-start gap-2 rounded-card border border-warn/40 bg-warn/10 px-4 py-3 text-sm text-warn"
+						class="flex flex-wrap items-start gap-2 rounded-card bg-warn/10 shadow-float-1 px-4 py-3 text-sm text-warn"
 					>
 						<Icon name="alert-triangle" size={15} class="mt-0.5 shrink-0" />
 						<div class="min-w-0 flex-1 space-y-1">
@@ -824,7 +824,7 @@
 				{/if}
 				{#if replayFailed}
 					<p
-						class="flex items-start gap-2 rounded-card border border-warn/40 bg-warn/10 px-4 py-3 text-sm text-warn"
+						class="flex items-start gap-2 rounded-card bg-warn/10 shadow-float-1 px-4 py-3 text-sm text-warn"
 						role="alert"
 					>
 						<Icon name="alert-triangle" size={15} class="mt-0.5 shrink-0" />
@@ -833,7 +833,7 @@
 				{/if}
 				{#if notice !== ''}
 					<div
-						class="flex flex-wrap items-center gap-3 rounded-card border border-warn/40 bg-warn/10 px-4 py-3 text-sm text-warn"
+						class="flex flex-wrap items-center gap-3 rounded-card bg-warn/10 shadow-float-1 px-4 py-3 text-sm text-warn"
 					>
 						<Icon name="alert-triangle" size={15} class="shrink-0" />
 						<p class="min-w-0 flex-1">

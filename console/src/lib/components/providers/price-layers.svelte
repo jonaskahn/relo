@@ -37,7 +37,7 @@
 		<span class="text-xs font-medium">{$t('ui.pages.providersPage.models.priceTable')}</span>
 		<span class="inline-flex items-center gap-1.5 text-[0.7rem] text-muted-foreground">
 			{$t('ui.pages.providersPage.models.columnEffective')}:
-			<span class="rounded border border-border px-1.5 py-0.5 font-mono"
+			<span class="rounded bg-sunken px-1.5 py-0.5 font-mono"
 				>{$t(PRICE_TAG_KEY[tag])}</span
 			>
 		</span>

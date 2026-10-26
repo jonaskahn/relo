@@ -86,7 +86,7 @@
 		<div class="flex flex-col gap-4">
 			<!-- The one-time notice is a banner, not a stripe: a full tinted
 			     border, a tinted fill and a leading icon tile. -->
-			<div class="flex items-start gap-3 rounded-card border border-warn/40 bg-warn/10 px-4 py-3">
+			<div class="flex items-start gap-3 rounded-card bg-warn/10 shadow-float-1 px-4 py-3">
 				<span
 					class="flex size-[30px] shrink-0 items-center justify-center rounded-panel bg-warn/15 text-warn"
 				>
@@ -94,7 +94,7 @@
 				</span>
 				<p class="text-sm text-warn">{$t('ui.pages.keysPage.revealOnce')}</p>
 			</div>
-			<div class="rounded-panel border border-line bg-sunken px-3 py-2.5">
+			<div class="rounded-panel bg-sunken px-3 py-2.5">
 				<code class="mono-data block break-all text-sm">{issued.token}</code>
 			</div>
 			<div class="flex flex-col gap-2">
@@ -109,10 +109,10 @@
 				/>
 				{#if snippet}
 					<pre
-						class="mono-data overflow-x-auto rounded-panel border border-line bg-sunken p-3 text-xs">{snippet.code}</pre>
+						class="mono-data overflow-x-auto rounded-panel bg-sunken p-3 text-xs">{snippet.code}</pre>
 					<div class="grid gap-2 sm:grid-cols-2">
 						<div
-							class="flex items-center justify-between gap-2 rounded-panel border border-line px-3 py-2"
+							class="flex items-center justify-between gap-2 rounded-panel bg-surface shadow-float-1 px-3 py-2"
 						>
 							<span class="text-xs text-muted-foreground">{$t('ui.pages.keysPage.baseUrl')}</span>
 							<span class="mono-data truncate"
@@ -122,7 +122,7 @@
 							>
 						</div>
 						<div
-							class="flex items-center justify-between gap-2 rounded-panel border border-line px-3 py-2"
+							class="flex items-center justify-between gap-2 rounded-panel bg-surface shadow-float-1 px-3 py-2"
 						>
 							<span class="text-xs text-muted-foreground">{$t('ui.pages.keysPage.apiKey')}</span>
 							<span class="mono-data truncate">{issued.token.slice(0, 8)}…</span>

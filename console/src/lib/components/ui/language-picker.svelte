@@ -49,7 +49,7 @@
 		layout === 'page'
 			? 'flex flex-wrap gap-2'
 			: 'grid max-h-56 grid-cols-5 gap-2 overflow-y-auto pr-0.5',
-		disabled && 'pointer-events-none opacity-60'
+		disabled && 'pointer-events-none'
 	)}
 	role="radiogroup"
 	aria-label={$t(layout === 'page' ? 'ui.settings.language.label' : 'ui.topbar.language')}
@@ -68,11 +68,11 @@
 			{disabled}
 			onkeydown={onKeydown}
 			class={cn(
-				'relative border-2 transition-colors focus-visible:z-10 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none disabled:cursor-not-allowed',
+				'relative transition-[background-color,box-shadow] focus-visible:z-10 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none',
 				layout === 'page'
 					? 'flex w-[4.75rem] flex-col items-center gap-1.5 rounded-lg px-1 py-1.5'
 					: 'flex size-11 items-center justify-center rounded-lg',
-				selected ? 'border-foreground bg-muted' : 'border-transparent hover:bg-muted'
+				selected ? 'bg-muted ring-2 ring-foreground' : 'hover:bg-hover'
 			)}
 			onclick={() => onselect?.(code)}
 		>

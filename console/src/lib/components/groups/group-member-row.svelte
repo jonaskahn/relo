@@ -41,7 +41,7 @@
 	<span class="mono-data w-4 shrink-0 text-muted-foreground">{position}</span>
 	{#if bare}
 		<span
-			class="badge shrink-0 border border-accent/40 text-accent-ink"
+			class="badge shrink-0 bg-accent-soft text-accent-ink"
 			title={$t('ui.pages.groupsPage.autoHint')}
 		>
 			{$t('ui.pages.groupsPage.autoBadge')}
@@ -56,11 +56,11 @@
 		</span>
 	</div>
 	{#if !member.enabled}
-		<span class="badge shrink-0 border border-border text-muted-foreground">
+		<span class="badge shrink-0 bg-sunken text-muted-foreground">
 			{$t('ui.pages.groupsPage.chipDisabled')}
 		</span>
 	{:else if !member.eligible && member.reason}
-		<span class="badge shrink-0 border border-warn/40 bg-warn/10 text-warn">
+		<span class="badge shrink-0 bg-warn/10 text-warn">
 			<Icon name="alert-triangle" size={11} />
 			{member.reason}
 		</span>

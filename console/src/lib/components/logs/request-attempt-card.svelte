@@ -20,7 +20,7 @@
 	let { requestId, attempt, request, response, loading = false }: Props = $props();
 </script>
 
-<div class="border-border space-y-2 rounded-lg border p-3">
+<div class="space-y-2 rounded-lg bg-surface p-3 shadow-float-1">
 	<div class="flex items-center justify-between gap-3">
 		<div class="min-w-0">
 			<p class="text-sm font-medium">

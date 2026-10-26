@@ -53,8 +53,8 @@
 			class="flex flex-col gap-2 rounded-panel border p-4 text-left transition-colors {hasLane(
 				'payg'
 			)
-				? 'border-primary bg-accent-soft'
-				: 'border-border hover:border-accent-line'}"
+				? 'bg-accent-soft ring-1 ring-accent-border'
+				: 'hover:bg-control-hover'}"
 			aria-pressed={hasLane('payg')}
 			disabled={paygCount === 0}
 			onclick={() => toggleLane('payg')}
@@ -71,8 +71,8 @@
 			class="flex flex-col gap-2 rounded-panel border p-4 text-left transition-colors {hasLane(
 				'plan'
 			)
-				? 'border-primary bg-accent-soft'
-				: 'border-border hover:border-accent-line'}"
+				? 'bg-accent-soft ring-1 ring-accent-border'
+				: 'hover:bg-control-hover'}"
 			aria-pressed={hasLane('plan')}
 			disabled={planCount === 0}
 			onclick={() => toggleLane('plan')}
@@ -89,8 +89,8 @@
 			class="flex flex-col gap-2 rounded-panel border p-4 text-left transition-colors {hasLane(
 				'free'
 			)
-				? 'border-primary bg-accent-soft'
-				: 'border-border hover:border-accent-line'}"
+				? 'bg-accent-soft ring-1 ring-accent-border'
+				: 'hover:bg-control-hover'}"
 			aria-pressed={hasLane('free')}
 			disabled={freeCount === 0}
 			onclick={() => toggleLane('free')}
@@ -107,8 +107,8 @@
 			class="flex flex-col gap-2 rounded-panel border p-4 text-left transition-colors {hasLane(
 				'manual'
 			)
-				? 'border-primary bg-accent-soft'
-				: 'border-border hover:border-accent-line'}"
+				? 'bg-accent-soft ring-1 ring-accent-border'
+				: 'hover:bg-control-hover'}"
 			aria-pressed={hasLane('manual')}
 			onclick={() => toggleLane('manual')}
 		>

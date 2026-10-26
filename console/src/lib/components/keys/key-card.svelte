@@ -63,7 +63,7 @@
 				>
 					{accessKey.client || $t('ui.status.kind.' + accessKey.kind)}
 					{#if accessKey.owner}
-						<span class="badge border border-line text-muted-foreground">
+						<span class="badge bg-sunken text-muted-foreground">
 							{$t('ui.pages.keysPage.owned')}
 						</span>
 					{/if}

@@ -32,10 +32,10 @@
 			type="button"
 			{disabled}
 			aria-pressed={value === option.format}
-			class="flex flex-col gap-1 rounded-xl border px-3 py-2 text-left text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-60 {value ===
+			class="flex flex-col gap-1 rounded-xl bg-control px-3 py-2 text-left text-sm shadow-float-1 transition-[background-color,box-shadow] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed {value ===
 			option.format
-				? 'border-accent bg-accent-soft'
-				: 'border-border hover:border-border-strong'}"
+				? 'bg-accent-soft ring-1 ring-accent-border'
+				: 'hover:bg-control-hover'}"
 			onclick={() => onchange(option)}
 		>
 			<span class="font-mono text-xs font-medium">{option.format}</span>

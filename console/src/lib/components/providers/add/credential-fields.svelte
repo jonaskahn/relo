@@ -171,12 +171,12 @@
 		>
 			<textarea
 				id="connect-service-account"
-				class="min-h-32 rounded-md border border-border bg-transparent p-2 font-mono text-xs"
+				class="min-h-32 w-full resize-y rounded-control bg-control p-2 font-mono text-xs text-ink shadow-field outline-none transition-[background-color,box-shadow] hover:bg-control-hover hover:shadow-field-hover focus-visible:ring-[3px] focus-visible:ring-ring/50"
 				placeholder={$t('ui.pages.providersPage.add.serviceAccountPaste')}
 				value={draft.credential.serviceAccount}
 				oninput={(event) => patch({ serviceAccount: event.currentTarget.value })}></textarea>
 			<label
-				class="inline-flex h-control w-fit cursor-pointer items-center gap-1.5 rounded-md border border-border px-3 text-xs font-medium hover:border-border-strong"
+				class="inline-flex h-control w-fit cursor-pointer items-center gap-1.5 rounded-control bg-control px-3 text-xs font-medium text-ink shadow-float-2 transition-[background-color,box-shadow] hover:bg-control-hover hover:shadow-float-2-hover"
 			>
 				<Icon name="external-link" size={14} />
 				{$t('ui.pages.providersPage.add.serviceAccountFile')}

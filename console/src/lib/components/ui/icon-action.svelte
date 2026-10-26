@@ -61,7 +61,7 @@
 	<Tooltip.Root>
 		{#if disabled}
 			<Tooltip.Trigger
-				class={cn(classes, 'cursor-not-allowed opacity-60')}
+				class={cn(classes, 'cursor-not-allowed')}
 				data-slot="button"
 				aria-label={label}
 				aria-disabled="true"

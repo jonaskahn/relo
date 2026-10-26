@@ -528,7 +528,7 @@
 				{#if selectedRow}
 					{#if selectedRow.custom}
 						<span
-							class="flex size-6 shrink-0 items-center justify-center rounded-lg border border-border text-muted-foreground"
+							class="flex size-6 shrink-0 items-center justify-center rounded-lg bg-surface shadow-float-1 text-muted-foreground"
 						>
 							<Icon name="settings" size={14} />
 						</span>

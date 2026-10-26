@@ -6,6 +6,8 @@
 	import { isCardOpenClick } from '$lib/card-target';
 	import { Switch } from 'bits-ui';
 	import Icon from '$lib/components/ui/icon.svelte';
+	import { buttonVariants } from '$lib/components/ui/button.svelte';
+	import { cn } from '$lib/utils';
 	import ProviderLogo from '$lib/components/ui/provider-logo.svelte';
 	import { isPriced } from '$lib/model-filters';
 	import CapabilityPicker from './capability-picker.svelte';
@@ -108,7 +110,7 @@
 				<ProviderLogo id={model.provider_id} label={providerLabel || model.provider_id} size="sm" />
 			{/if}
 			{#if model.cloned_from}
-				<span class="badge border border-border text-muted-foreground">
+				<span class="badge bg-sunken text-muted-foreground">
 					<Icon name="copy-plus" size={11} />
 					{$t('ui.pages.providersPage.modelsTable.tagCloneOf', {
 						values: { id: model.cloned_from }
@@ -116,24 +118,24 @@
 				</span>
 			{/if}
 			{#if upstreamDiffers}
-				<span class="badge border border-border font-mono text-muted-foreground">
+				<span class="badge bg-sunken font-mono text-muted-foreground">
 					{$t('ui.pages.providersPage.modelsTable.tagUpstream', {
 						values: { id: model.upstream_model_id }
 					})}
 				</span>
 			{/if}
 			{#if model.status === 'deprecated'}
-				<span class="badge border border-warn/40 text-warn">
+				<span class="badge bg-warn/10 text-warn">
 					{$t('ui.pages.providersPage.models.tagDeprecated')}
 				</span>
 			{/if}
 			{#if model.available === false}
-				<span class="badge border border-border text-muted-foreground">
+				<span class="badge bg-sunken text-muted-foreground">
 					{$t('ui.pages.providersPage.models.tagUnavailable')}
 				</span>
 			{/if}
 			{#if partialCoverage}
-				<span class="badge border border-border text-muted-foreground">
+				<span class="badge bg-sunken text-muted-foreground">
 					{$t('ui.pages.providersPage.models.coverage', {
 						values: {
 							serving: servingAccounts,
@@ -143,7 +145,7 @@
 				</span>
 			{/if}
 			{#if !priced}
-				<span class="badge border border-warn/40 text-warn">
+				<span class="badge bg-warn/10 text-warn">
 					{$t('ui.pages.providersPage.models.tagUnpriced')}
 				</span>
 			{/if}
@@ -183,7 +185,10 @@
 	<div class="flex shrink-0 items-center gap-0.5" data-row-menu>
 		<DropdownMenu.Root>
 			<DropdownMenu.Trigger
-				class="inline-flex size-control shrink-0 items-center justify-center rounded-control border border-line text-muted-foreground hover:border-line-strong hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring data-[state=open]:border-line-strong data-[state=open]:text-ink"
+				class={cn(
+					buttonVariants({ variant: 'outline', size: 'icon' }),
+					'text-muted-foreground hover:text-ink data-[state=open]:text-ink'
+				)}
 				aria-label={$t('ui.pages.providersPage.models.actions')}
 				title={$t('ui.pages.providersPage.models.actions')}
 			>

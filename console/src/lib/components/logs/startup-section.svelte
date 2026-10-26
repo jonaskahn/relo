@@ -99,7 +99,7 @@
 			{$t('ui.pages.logsPage.startupEmpty')}
 		</div>
 	{:else}
-		<div class="overflow-hidden rounded-card border border-line bg-surface">
+		<div class="overflow-hidden rounded-card bg-surface shadow-float-1">
 			{#each entries as entry (entry.name)}
 				{@const transcript = transcripts[entry.name]}
 				<details

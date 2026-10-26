@@ -38,7 +38,7 @@
 </script>
 
 <details
-	class="group px-5 py-2.5 {plain ? '' : 'rounded-panel border border-line bg-surface px-3.5'}"
+	class="group px-5 py-2.5 {plain ? '' : 'rounded-panel bg-surface shadow-float-1 px-3.5'}"
 >
 	<summary
 		class="flex cursor-pointer list-none items-baseline gap-2.5 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring [&::-webkit-details-marker]:hidden"

@@ -54,7 +54,7 @@
 						{#snippet child({ props: { type: _type, tabindex: _tabindex, ...rest } })}
 							<code
 								{...rest}
-								class="mono-data flex h-control min-w-0 flex-1 items-center truncate rounded-lg border border-border bg-sunken px-2.5 text-xs"
+								class="mono-data flex h-control min-w-0 flex-1 items-center truncate rounded-lg bg-sunken px-2.5 text-xs"
 							>
 								{visible ? token : hint}
 							</code>

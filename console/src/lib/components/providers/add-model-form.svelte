@@ -41,7 +41,7 @@
 </script>
 
 <form
-	class="flex flex-wrap items-end gap-2 rounded-lg border border-border p-3"
+	class="flex flex-wrap items-end gap-2 rounded-lg shadow-float-1 p-3"
 	onsubmit={(event) => {
 		event.preventDefault();
 		void submit();

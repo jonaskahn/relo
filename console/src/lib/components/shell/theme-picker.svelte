@@ -61,15 +61,15 @@
 			tabindex={choice === current ? 0 : -1}
 			onkeydown={onKeydown}
 			class={cn(
-				'flex min-w-0 flex-col rounded-panel border-2 text-left transition-colors focus-visible:z-10 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none',
+				'flex min-w-0 flex-col rounded-panel text-left transition-[background-color,box-shadow] focus-visible:z-10 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none',
 				layout === 'page' ? 'gap-2 p-1.5' : 'gap-1.5 p-1.5',
-				selected ? 'border-ink bg-canvas' : 'border-transparent hover:bg-hover'
+				selected ? 'bg-canvas ring-2 ring-ink' : 'hover:bg-hover'
 			)}
 			onclick={() => consoleState.setTheme(choice)}
 		>
 			<span
 				class={cn(
-					'relative block overflow-hidden rounded-control border border-line',
+					'relative block overflow-hidden rounded-control shadow-float-1 ring-1 ring-field',
 					layout === 'page' ? 'h-14' : 'h-[54px]'
 				)}
 				aria-hidden="true"

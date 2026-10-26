@@ -198,7 +198,7 @@
 			{$t('ui.pages.logsPage.daemonEmpty')}
 		</div>
 	{:else}
-		<div class="overflow-hidden rounded-card border border-line bg-surface">
+		<div class="overflow-hidden rounded-card bg-surface shadow-float-1">
 			{#each groups as group (group.key)}
 				{#if group.count === 1}
 					<ProcessLine line={group.lines[0]} plain />

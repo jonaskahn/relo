@@ -2,6 +2,8 @@
 	import { t } from 'svelte-i18n';
 
 	import Icon, { type IconName } from '$lib/components/ui/icon.svelte';
+	import { buttonVariants } from '$lib/components/ui/button.svelte';
+	import { cn } from '$lib/utils';
 	import Input from '$lib/components/ui/input.svelte';
 	import Select from '$lib/components/ui/select.svelte';
 	import { formatTokensExact } from '$lib/format';
@@ -231,7 +233,10 @@
 				>
 					<button
 						type="button"
-						class="hidden size-control items-center justify-center rounded-control border border-line text-muted-foreground hover:bg-hover hover:text-ink lg:flex"
+						class={cn(
+							buttonVariants({ variant: 'ghost', size: 'icon' }),
+							'hidden text-muted-foreground hover:text-ink lg:flex'
+						)}
 						aria-expanded={open}
 						aria-controls={'usage-detail-' + entry.key}
 						aria-label={open
@@ -321,7 +326,10 @@
 
 					<button
 						type="button"
-						class="flex h-control items-center justify-center gap-1.5 rounded-control border border-line text-sm text-muted-foreground hover:bg-hover hover:text-ink lg:hidden"
+						class={cn(
+							buttonVariants({ variant: 'outline', size: 'sm' }),
+							'text-muted-foreground hover:text-ink lg:hidden'
+						)}
 						aria-expanded={open}
 						aria-controls={'usage-detail-' + entry.key}
 						onclick={() => onexpand(entry.key)}
@@ -338,7 +346,7 @@
 				{#if open}
 					<dl
 						id={'usage-detail-' + entry.key}
-						class="grid grid-cols-2 gap-x-6 gap-y-3 border border-line bg-sunken p-4 text-sm lg:grid-cols-4"
+						class="grid grid-cols-2 gap-x-6 gap-y-3 bg-sunken p-4 text-sm lg:grid-cols-4"
 					>
 						<div>
 							<dt class="text-xs text-muted-foreground">
@@ -401,7 +409,7 @@
 			</p>
 			<button
 				type="button"
-				class="h-control rounded-control border border-line bg-surface px-3 text-sm font-medium text-ink hover:bg-hover"
+				class="h-control rounded-control bg-surface shadow-float-1 px-3 text-sm font-medium text-ink hover:bg-hover"
 				data-plain
 				onclick={ontoggleall}
 			>

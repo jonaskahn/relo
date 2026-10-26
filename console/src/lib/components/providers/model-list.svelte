@@ -5,6 +5,8 @@
 	import type { Model } from '$lib/types';
 	import { api } from '$lib/api';
 	import Button from '$lib/components/ui/button.svelte';
+	import { buttonVariants } from '$lib/components/ui/button.svelte';
+	import { cn } from '$lib/utils';
 	import Input from '$lib/components/ui/input.svelte';
 	import { DropdownMenu } from 'bits-ui';
 	import MenuPanel from '$lib/components/ui/menu-panel.svelte';
@@ -112,8 +114,10 @@
 		)
 	]);
 
-	const menuIconTrigger =
-		'relative inline-flex size-control shrink-0 items-center justify-center rounded-md border border-border text-muted-foreground hover:border-border-strong hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring data-[state=open]:border-border-strong data-[state=open]:text-foreground';
+	const menuIconTrigger = cn(
+		buttonVariants({ variant: 'outline', size: 'icon' }),
+		'text-muted-foreground hover:text-foreground data-[state=open]:text-foreground'
+	);
 
 	const connectionBulk = $derived(providerId !== '' && providerModelIDs.length > 0);
 	// The context-window and capability bulk menus stay off; the on/off menu is

@@ -66,8 +66,8 @@
 					aria-checked={draft.strategy === option}
 					class="flex w-full flex-col gap-2.5 rounded-panel border p-3.5 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring {draft.strategy ===
 					option
-						? 'border-primary bg-accent-soft ring-[3px] ring-accent-line'
-						: 'border-border hover:border-accent-line'}"
+						? 'bg-accent-soft ring-2 ring-accent-border'
+						: 'hover:bg-control-hover'}"
 					onclick={() => ondraft({ strategy: option })}
 				>
 					<span
@@ -92,7 +92,7 @@
 	<OrderingFlow name={draft.id.trim()} strategy={draft.strategy} />
 
 	<div class="grid gap-2.5 md:grid-cols-2">
-		<div class="rounded-panel border border-border p-4">
+		<div class="rounded-panel shadow-float-1 p-4">
 			<FieldSwitch
 				id="route-enabled"
 				checked={draft.enabled}
@@ -101,7 +101,7 @@
 				onCheckedChange={(checked) => ondraft({ enabled: checked })}
 			/>
 		</div>
-		<div class="rounded-panel border border-border p-4">
+		<div class="rounded-panel shadow-float-1 p-4">
 			<FieldSwitch
 				id="route-listed"
 				checked={draft.listed}
@@ -110,7 +110,7 @@
 				onCheckedChange={(checked) => ondraft({ listed: checked })}
 			/>
 		</div>
-		<div class="rounded-panel border border-border p-4">
+		<div class="rounded-panel shadow-float-1 p-4">
 			<FieldSwitch
 				id="route-switch-on-4xx"
 				checked={draft.switchOn4xx}
@@ -119,7 +119,7 @@
 				onCheckedChange={(checked) => ondraft({ switchOn4xx: checked })}
 			/>
 		</div>
-		<div class="rounded-panel border border-border p-4">
+		<div class="rounded-panel shadow-float-1 p-4">
 			<FieldSwitch
 				id="route-switch-on-5xx"
 				checked={draft.switchOn5xx}

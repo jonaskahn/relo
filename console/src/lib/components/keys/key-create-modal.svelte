@@ -131,9 +131,9 @@
 						data-plain
 						role="radio"
 						aria-checked={chosen}
-						class="flex min-w-0 items-center gap-2.5 rounded-panel border p-3 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring {chosen
-							? 'border-accent bg-accent-soft shadow-[0_0_0_3px_var(--accent-100)]'
-							: 'border-line hover:border-line-strong'}"
+						class="flex min-w-0 items-center gap-2.5 rounded-panel bg-control p-3 text-left shadow-float-1 transition-[background-color,box-shadow] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring {chosen
+							? 'bg-accent-soft ring-2 ring-accent-border'
+							: 'hover:bg-control-hover'}"
 						onclick={() => (clientId = option.id)}
 					>
 						<span

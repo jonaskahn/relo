@@ -137,10 +137,10 @@
 	};
 
 	const cardTone: Record<string, string> = {
-		pass: 'border-border bg-surface',
-		fail: 'border-danger/40 bg-danger/5',
-		warn: 'border-warn/40 bg-warn/5',
-		skip: 'border-border bg-surface'
+		pass: 'bg-surface shadow-float-1',
+		fail: 'bg-danger/5',
+		warn: 'bg-warn/5',
+		skip: 'bg-surface shadow-float-1'
 	};
 
 	const textTone: Record<string, string> = {

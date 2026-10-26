@@ -22,7 +22,9 @@
 	   chooses, one control height. Legacy names below alias these so pages
 	   that have not migrated yet keep rendering. */
 	color-scheme: light;
-	--canvas: #f5f5f7;
+	/* The canvas sits a clear step below white, so a card reads as raised
+	   from tone alone and a border is not what separates them. */
+	--canvas: #eceef2;
 	--surface: #ffffff;
 	--raised: #ffffff;
 	--sunken: #f5f5f7;
@@ -88,6 +90,37 @@
 	/* A sliding edge lifts with a whisper: tiny offset, long feather, a
 	   fraction of the elevation alpha. */
 	--shadow-edge: 2px 0 24px -6px color-mix(in srgb, var(--shadow) 55%, transparent);
+	/* Two float levels stand in for borders. A control an operator types in
+	   or selects from sits at float-1 (fields, tabs, chips): it is a touch
+	   above the surface it rests on. A control they press sits at float-2
+	   (every button): clearly the most detached thing in its row. The dark
+	   theme cannot show a drop shadow on near-black, so it carries the same
+	   float with an inset top highlight instead. */
+	--float-1: 0 1px 2px rgb(20 20 30 / 0.06), 0 3px 10px -6px rgb(20 20 30 / 0.18);
+	--float-2: 0 1px 2px rgb(20 20 30 / 0.07), 0 6px 16px -8px rgb(20 20 30 / 0.26);
+	--float-2-hover: 0 2px 3px rgb(20 20 30 / 0.08), 0 10px 22px -8px rgb(20 20 30 / 0.3);
+	--float-2-press: 0 1px 2px rgb(20 20 30 / 0.1);
+	/* The edge every control that can take text or a selection wears. It is
+	   a ring, not a border: the design keeps borders off controls so a
+	   control reads by how far it floats. --field-shadow is the pair a field
+	   actually renders, edge and float together. */
+	--ring-field: rgb(20 20 30 / 0.12);
+	--ring-field-hover: rgb(20 20 30 / 0.2);
+	--field-shadow: var(--float-1), 0 0 0 1px var(--ring-field);
+	--field-shadow-hover: var(--float-1), 0 0 0 1px var(--ring-field-hover);
+	/* A control sits on the surface that holds it, so a card or a popover
+	   retunes the fill under its own controls to stay a step away from its
+	   own background. */
+	--control-bg: color-mix(in srgb, var(--ink) 6%, var(--canvas));
+	/* Hover always mixes off the control's own fill, so a host that retunes
+	   --control-bg gets the matching hover for free. */
+	--control-bg-hover: color-mix(in srgb, var(--ink) 5%, var(--control-bg));
+	/* Disabled is flat, muted and striped: a shadow-less, patterned control
+	   is legible as unavailable at a glance, in either theme, without
+	   depending on opacity or on the pointer being over it. */
+	--disabled-bg: #e3e4e9;
+	--disabled-ink: #9a9aa6;
+	--disabled-stripe: rgb(0 0 0 / 0.05);
 	/* Legacy aliases: pages still read these until their own migration. */
 	--radius: 0.5rem;
 	--background: var(--canvas);
@@ -172,8 +205,8 @@
 :root[data-theme='dark'] {
 	color-scheme: dark;
 	--canvas: #0a0a0a;
-	--surface: #111113;
-	--raised: #1a1a1d;
+	--surface: #17171b;
+	--raised: #212126;
 	--sunken: #0a0a0a;
 	--ink: #f2f2f5;
 	--muted: #a3a3b0;
@@ -201,6 +234,21 @@
 	--node-ring: rgba(255, 255, 255, 0.1);
 	--flow-idle: rgba(255, 255, 255, 0.05);
 	--glow-active: color-mix(in srgb, var(--accent) 18%, transparent);
+	/* A drop shadow cannot lift a control off near-black. Dark mode carries
+	   the same two float levels with a whisper of light along the top edge
+	   and a tight dark contact shadow below it. */
+	--float-1:
+		inset 0 1px 0 rgb(255 255 255 / 0.07), 0 1px 1px rgb(0 0 0 / 0.5), 0 4px 12px -6px rgb(0 0 0 / 0.7);
+	--float-2:
+		inset 0 1px 0 rgb(255 255 255 / 0.09), 0 1px 2px rgb(0 0 0 / 0.55), 0 8px 20px -8px rgb(0 0 0 / 0.75);
+	--float-2-hover:
+		inset 0 1px 0 rgb(255 255 255 / 0.11), 0 2px 4px rgb(0 0 0 / 0.6), 0 12px 26px -10px rgb(0 0 0 / 0.8);
+	--float-2-press: inset 0 1px 0 rgb(255 255 255 / 0.09), 0 1px 2px rgb(0 0 0 / 0.55);
+	--ring-field: rgb(255 255 255 / 0.14);
+	--ring-field-hover: rgb(255 255 255 / 0.24);
+	--disabled-bg: #1c1c22;
+	--disabled-ink: #5f5f6b;
+	--disabled-stripe: rgb(255 255 255 / 0.07);
 }
 
 ::view-transition-old(root),
@@ -256,11 +304,13 @@ html[data-theme-dir='sunset']::view-transition-new(root) {
 	--radius-xl: var(--radius);
 	--radius-2xl: var(--radius);
 	--radius-3xl: var(--radius);
-	/* The 3.0 radius steps: controls 10, panels 12, cards 16, popovers 18. */
+	/* The 3.0 radius steps: controls 10, panels 12, cards 16, popovers 18.
+	   A button showing nothing but an icon wears the pill. */
 	--radius-control: 0.625rem;
 	--radius-panel: 0.75rem;
 	--radius-card: 1rem;
 	--radius-popover: 1.125rem;
+	--radius-round: 9999px;
 	/* One height for every control the operator types in or presses, so a
 	   row of an input, a select and a button lines up. */
 	--height-control: var(--control-h);
@@ -269,6 +319,12 @@ html[data-theme-dir='sunset']::view-transition-new(root) {
 	--shadow-pop: var(--shadow-pop);
 	--shadow-modal: var(--shadow-modal);
 	--shadow-edge: var(--shadow-edge);
+	--shadow-float-1: var(--float-1);
+	--shadow-float-2: var(--float-2);
+	--shadow-float-2-hover: var(--float-2-hover);
+	--shadow-float-2-press: var(--float-2-press);
+	--shadow-field: var(--field-shadow);
+	--shadow-field-hover: var(--field-shadow-hover);
 	--font-sans: system-ui, -apple-system, 'Segoe UI', sans-serif;
 	--font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 	--color-background: var(--background);
@@ -305,11 +361,17 @@ html[data-theme-dir='sunset']::view-transition-new(root) {
 	--color-canvas: var(--canvas);
 	--color-raised: var(--raised);
 	--color-sunken: var(--sunken);
+	--color-control: var(--control-bg);
+	--color-control-hover: var(--control-bg-hover);
 	--color-ink: var(--ink);
 	--color-faint: var(--faint);
 	--color-line: var(--line);
 	--color-line-strong: var(--line-strong);
 	--color-hover: var(--hover);
+	--color-ring-field: var(--ring-field);
+	--color-ring-field-hover: var(--ring-field-hover);
+	--color-disabled-bg: var(--disabled-bg);
+	--color-disabled-ink: var(--disabled-ink);
 	--color-ok: var(--ok);
 	--color-danger: var(--danger);
 	--color-on-accent: var(--on-accent);
@@ -354,6 +416,10 @@ html[data-theme-dir='sunset']::view-transition-new(root) {
 	:disabled {
 		cursor: not-allowed;
 	}
+	/* The field edge, the disabled look and the read-only look all live in an
+	   unlayered block near the end of this file: they have to beat the
+	   utilities that set a control's fill and text colour, and only an
+	   unlayered rule can. */
 	/* A coarse pointer is any touch surface, so a phone, a tablet and a
 	   touchscreen laptop all get the larger control and the 16px input font
 	   that keeps a mobile browser from zooming on focus. */
@@ -399,10 +465,19 @@ html[data-theme-dir='sunset']::view-transition-new(root) {
 		:root {
 			--border: rgba(0, 0, 0, 0.28);
 			--border-strong: rgba(0, 0, 0, 0.5);
+			--ring-field: rgb(0 0 0 / 0.32);
+			--ring-field-hover: rgb(0 0 0 / 0.45);
+			--float-1: 0 1px 2px rgb(20 20 30 / 0.1);
+			--float-2: 0 1px 2px rgb(20 20 30 / 0.12), 0 6px 16px -8px rgb(20 20 30 / 0.34);
+			--float-2-hover: 0 2px 3px rgb(20 20 30 / 0.14), 0 10px 22px -8px rgb(20 20 30 / 0.4);
+			--disabled-stripe: rgb(0 0 0 / 0.12);
 		}
 		.dark {
 			--border: rgba(255, 255, 255, 0.22);
 			--border-strong: rgba(255, 255, 255, 0.4);
+			--ring-field: rgb(255 255 255 / 0.32);
+			--ring-field-hover: rgb(255 255 255 / 0.45);
+			--disabled-stripe: rgb(255 255 255 / 0.14);
 		}
 	}
 }
@@ -466,16 +541,23 @@ html[data-theme-dir='sunset']::view-transition-new(root) {
 	:lang(hi) .page-title {
 		letter-spacing: 0;
 	}
+	/* section-surface is every card: a raised fill floating at float-1, with
+	   no border. A control placed on it retunes --control-bg, so an input or
+	   a button inside a card never shares the card's own tone. */
 	.section-surface {
-		border: 1px solid var(--line);
+		/* The mix runs toward the theme's ink, so the same expression steps
+		   down off a white card and up off a dark one. */
+		--control-bg: color-mix(in srgb, var(--ink) 6%, var(--surface));
 		border-radius: var(--radius-card);
 		background: var(--surface);
+		box-shadow: var(--float-1);
 	}
 	/* surface-pop is the level-3 look for a popover, menu or select list:
-	   raised fill, full hairline border, popover radius and shadow. */
+	   raised fill, popover radius and shadow. Its controls sit a step above
+	   it, so it retunes their fill too. */
 	.surface-pop {
+		--control-bg: color-mix(in srgb, var(--ink) 6%, var(--raised));
 		background: var(--raised);
-		border: 1px solid var(--line);
 		border-radius: var(--radius-popover);
 		box-shadow: var(--shadow-pop);
 		color: var(--ink);
@@ -538,7 +620,7 @@ html[data-theme-dir='sunset']::view-transition-new(root) {
 		border-collapse: collapse;
 	}
 	.data-surface tbody tr {
-		border-top: 1px solid var(--border);
+		box-shadow: inset 0 1px 0 var(--line);
 	}
 	.data-surface tbody tr:hover {
 		background: var(--muted);
@@ -616,22 +698,31 @@ html[data-theme-dir='sunset']::view-transition-new(root) {
 		gap: 1rem;
 	}
 	/* The switch primitive renders a bare button, so the track and thumb are
-	   drawn here and the whole control keeps the accent when checked. */
+	   drawn here. The track floats at float-1 like every other control, so
+	   the off state is a grey control with an edge and the on state is the
+	   accent: neither reads as a border. */
 	[role='switch'] {
 		position: relative;
 		flex-shrink: 0;
 		width: 2.25rem;
 		height: 1.25rem;
-		border-radius: 999px;
-		border: 1px solid var(--border-strong);
-		background: var(--secondary);
+		border-radius: var(--radius-round);
+		background: var(--control-bg);
+		box-shadow:
+			var(--float-1),
+			0 0 0 1px var(--ring-field);
 		transition:
 			background-color 0.15s,
-			border-color 0.15s;
+			box-shadow 0.15s;
+	}
+	[role='switch']:hover {
+		box-shadow:
+			var(--float-1),
+			0 0 0 1px var(--ring-field-hover);
 	}
 	[role='switch'][aria-checked='true'] {
-		border-color: var(--accent-600);
 		background: var(--accent-600);
+		box-shadow: var(--float-1);
 	}
 	[role='switch']::after {
 		content: '';
@@ -649,10 +740,6 @@ html[data-theme-dir='sunset']::view-transition-new(root) {
 	[role='switch'][aria-checked='true']::after {
 		left: calc(100% - 1.125rem);
 	}
-	[role='switch']:disabled {
-		opacity: 0.5;
-		cursor: not-allowed;
-	}
 	@media (pointer: coarse) {
 		[role='switch'] {
 			touch-action: manipulation;
@@ -666,10 +753,9 @@ html[data-theme-dir='sunset']::view-transition-new(root) {
 	/* modal-footer holds a dialog's actions. On a sheet the buttons stack
 	   full-width with the primary action on top and clear the home indicator. */
 	/* tab-track is the one capsule every segmented choice and tab strip
-	   shares: a card-like surface with the button radius, a full hairline
-	   border, a redesigned shadow, and a thumb that slides under the active
-	   segment. The strip scrolls instead of wrapping, so six tabs stay
-	   reachable on a phone. */
+	   shares: a control surface that floats at float-1 with no border, and a
+	   thumb that slides under the active segment. The strip scrolls instead
+	   of wrapping, so six tabs stay reachable on a phone. */
 	.tab-track {
 		position: relative;
 		display: inline-flex;
@@ -679,12 +765,9 @@ html[data-theme-dir='sunset']::view-transition-new(root) {
 		height: var(--control-h);
 		overflow-x: auto;
 		overflow-y: hidden;
-		border: 1px solid var(--line);
 		border-radius: var(--radius-control);
-		background: var(--surface);
-		box-shadow:
-			var(--shadow-1),
-			0 8px 20px -16px var(--shadow);
+		background: var(--control-bg);
+		box-shadow: var(--float-1);
 		padding: 3px;
 		scrollbar-width: none;
 	}
@@ -697,10 +780,9 @@ html[data-theme-dir='sunset']::view-transition-new(root) {
 		bottom: 3px;
 		left: 0;
 		width: 0;
-		border: 1px solid var(--accent-border);
 		border-radius: calc(var(--radius-control) - 3px);
 		background: var(--accent-50);
-		box-shadow: var(--shadow-1);
+		box-shadow: var(--float-1);
 		pointer-events: none;
 	}
 	.tab-seg {
@@ -711,7 +793,6 @@ html[data-theme-dir='sunset']::view-transition-new(root) {
 		align-items: center;
 		gap: 0.375rem;
 		height: 100%;
-		border: 1px solid transparent;
 		border-radius: calc(var(--radius-control) - 3px);
 		padding-inline: 0.625rem;
 		font-size: 0.8125rem;
@@ -1027,7 +1108,7 @@ html[data-theme-dir='sunset']::view-transition-new(root) {
 		padding: 1.25rem 0;
 	}
 	.settings-rows > .settings-row + .settings-row {
-		border-top: 1px solid var(--border);
+		box-shadow: inset 0 1px 0 var(--line);
 	}
 	/* settings-field is every row of a settings page card: the label and its
 	   hint share the left third, the control or the value the two thirds right
@@ -1103,7 +1184,7 @@ html[data-theme-dir='sunset']::view-transition-new(root) {
 		padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
 		background: color-mix(in srgb, var(--background) 82%, transparent);
 		backdrop-filter: blur(20px) saturate(180%);
-		border-top: 1px solid var(--border);
+		box-shadow: inset 0 1px 0 var(--line);
 		animation: settings-savebar-in 180ms ease;
 	}
 	@keyframes settings-savebar-in {
@@ -1183,33 +1264,33 @@ html[data-theme-dir='sunset']::view-transition-new(root) {
 }
 
 /* The card hover and press live outside every layer on purpose: the card
-   shell wears `border-line` and `shadow-1` utilities, and only an unlayered
-   rule can take the border and the shadow from them. Every card in the
-   console carries .section-surface, so a new one inherits the standard: the
-   border and the shadow change, the card never lifts. Surfaces that are not
-   cards (a band, a form panel, a skeleton) opt out with .flat-surface, and
-   .empty-panel is never a card. */
+   shell wears `shadow-float-1` and only an unlayered rule can take it away.
+   Every card in the console carries .section-surface, so a new one inherits
+   the standard: the shadow and a faint accent ring change, the card never
+   lifts. Surfaces that are not cards (a band, a form panel, a skeleton) opt
+   out with .flat-surface, and .empty-panel is never a card. */
 .section-surface {
-	transition:
-		border-color 150ms ease,
-		box-shadow 150ms ease;
+	transition: box-shadow 150ms ease;
 }
 .section-surface:hover:not(:is(.flat-surface, .empty-panel)) {
-	border-color: var(--accent-border);
-	box-shadow: var(--shadow-hover);
+	box-shadow:
+		0 0 0 1px var(--accent-border),
+		var(--shadow-hover);
 }
-/* A card that carries a state border keeps it on hover: the state is a fact,
-   the hover is only an affordance. */
+/* A card that carries a state keeps it on hover: the state is a fact, the
+   hover is only an affordance. A danger ring is a shadow here because the
+   card has no border to tint. */
 .section-surface.card-limit,
 .section-surface.card-limit:hover {
-	border-color: color-mix(in srgb, var(--danger) 30%, var(--line));
+	box-shadow:
+		0 0 0 1px color-mix(in srgb, var(--danger) 34%, transparent),
+		var(--float-1);
 }
 /* Press: a clickable card settles under the finger, unless the press began
    on a control inside it, which keeps its own feedback. */
 .card-press {
 	cursor: pointer;
 	transition:
-		border-color 150ms ease,
 		box-shadow 150ms ease,
 		transform 80ms ease;
 }
@@ -1220,6 +1301,75 @@ html[data-theme-dir='sunset']::view-transition-new(root) {
 .card-press:has(a:active),
 .card-press:has(input:active) {
 	transform: none;
+}
+
+/* Disabled is a look, not a fade, and it lives outside every layer for the
+   same reason the card rules do: the fill and the text colour it replaces
+   are utilities, and only an unlayered rule can take them. One rule covers
+   every control, however the caller reached the state — :disabled, the
+   aria-disabled of a bits-ui trigger, or its data-disabled.
+
+   The stripe is what says unavailable without colour, so it survives a
+   colour-blind read and a grayscale screenshot. Opacity would read as "a
+   normal control, dim" and would push the label below contrast with it. The
+   pointer stays live because a pointer-events-none would swallow the
+   not-allowed cursor and any tooltip explaining why; the attribute is what
+   blocks the action. */
+button:disabled,
+input:disabled,
+select:disabled,
+textarea:disabled,
+label:has(> input:disabled),
+[role='switch']:disabled,
+[role='radio']:disabled,
+[role='tab']:disabled,
+[aria-disabled='true'],
+[data-disabled] {
+	background-color: var(--disabled-bg);
+	background-image: repeating-linear-gradient(
+		135deg,
+		var(--disabled-stripe) 0 1px,
+		transparent 1px 5px
+	);
+	box-shadow: none;
+	color: var(--disabled-ink);
+	cursor: not-allowed;
+	opacity: 1;
+}
+/* A disabled primary button must not keep its accent fill: a faded accent
+   reads as a normal accent to a tired eye. */
+button[aria-disabled='true'],
+[data-disabled] {
+	pointer-events: auto;
+}
+
+/* An editable control is the one thing in the console that keeps no border,
+   so it carries a ring instead. The ring is what tells an operator "this
+   takes text" apart from the flat, sunken read-only field beside it. */
+input:not([type='checkbox'], [type='radio'], [type='range']):not([disabled]),
+textarea:not([disabled]),
+select:not(:disabled) {
+	background: var(--control-bg);
+	box-shadow: var(--field-shadow);
+	transition:
+		background-color 150ms ease,
+		box-shadow 150ms ease;
+}
+input:not([type='checkbox'], [type='radio'], [type='range']):not([disabled]):hover,
+textarea:not([disabled]):hover,
+select:not(:disabled):hover {
+	background: var(--control-bg-hover);
+	box-shadow: var(--field-shadow-hover);
+}
+/* Read-only is flat and sunken: the same recessed fill a pane panel uses, so
+   it never reads as the lifted, ringed control beside it. The cursor stays
+   default, because a read-only value can still be selected and copied. */
+input[readonly],
+textarea[readonly],
+[aria-readonly='true'] {
+	background: var(--sunken);
+	box-shadow: none;
+	cursor: default;
 }
 
 @utility mono-data {

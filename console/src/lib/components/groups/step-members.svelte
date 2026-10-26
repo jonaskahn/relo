@@ -242,8 +242,8 @@
 						type="button"
 						aria-pressed={draft.lanes.includes('payg')}
 						class="rounded-control border px-2 py-0.5 text-xs {draft.lanes.includes('payg')
-							? 'border-primary bg-accent-soft'
-							: 'border-border'}"
+							? 'bg-accent-soft ring-1 ring-accent-border'
+							: 'hover:bg-control-hover'}"
 						onclick={() => toggleLane('payg')}
 						>{$t('ui.pages.providersPage.list.tagPayAsYouGo')}</button
 					>
@@ -251,8 +251,8 @@
 						type="button"
 						aria-pressed={draft.lanes.includes('plan')}
 						class="rounded-control border px-2 py-0.5 text-xs {draft.lanes.includes('plan')
-							? 'border-primary bg-accent-soft'
-							: 'border-border'}"
+							? 'bg-accent-soft ring-1 ring-accent-border'
+							: 'hover:bg-control-hover'}"
 						onclick={() => toggleLane('plan')}
 						>{$t('ui.pages.providersPage.list.tagPaidPlan')}</button
 					>
@@ -260,16 +260,16 @@
 						type="button"
 						aria-pressed={draft.lanes.includes('free')}
 						class="rounded-control border px-2 py-0.5 text-xs {draft.lanes.includes('free')
-							? 'border-primary bg-accent-soft'
-							: 'border-border'}"
+							? 'bg-accent-soft ring-1 ring-accent-border'
+							: 'hover:bg-control-hover'}"
 						onclick={() => toggleLane('free')}>{$t('ui.pages.providersPage.list.tagFree')}</button
 					>
 					<button
 						type="button"
 						aria-pressed={draft.lanes.length === 0}
 						class="rounded-control border px-2 py-0.5 text-xs {draft.lanes.length === 0
-							? 'border-primary bg-accent-soft'
-							: 'border-border'}"
+							? 'bg-accent-soft ring-1 ring-accent-border'
+							: 'hover:bg-control-hover'}"
 						onclick={() => ondraft({ lanes: [] })}>{$t('ui.pages.groupsPage.laneManual')}</button
 					>
 				</div>
@@ -286,7 +286,7 @@
 				</p>
 			{:else}
 				{#if creating && suggestions.length > 0}
-					<div class="shrink-0 rounded-panel border border-accent-line bg-accent-soft p-3">
+					<div class="shrink-0 rounded-panel bg-accent-soft ring-1 ring-accent-border p-3">
 						<div class="mb-2 flex items-center justify-between gap-2">
 							<span class="text-xs font-semibold text-accent-ink"
 								>{$t('ui.pages.groupsPage.suggestTitle')}</span
@@ -310,7 +310,7 @@
 										<button
 											type="button"
 											aria-pressed="false"
-											class="flex items-center gap-1.5 rounded-control border border-border bg-card px-2 py-1 text-xs hover:border-accent-line"
+											class="flex items-center gap-1.5 rounded-control bg-card shadow-float-1 px-2 py-1 text-xs"
 											onclick={() => addOne(model)}
 										>
 											<ProviderLogo
@@ -335,7 +335,7 @@
 				<div class="min-h-0 flex-1 overflow-y-auto">
 					{#if noteKey}
 						<p
-							class="mb-2.5 rounded-lg border border-border bg-card p-2.5 text-xs text-muted-foreground"
+							class="mb-2.5 rounded-lg bg-card shadow-float-1 p-2.5 text-xs text-muted-foreground"
 						>
 							{$t(noteKey)}
 						</p>
@@ -346,7 +346,7 @@
 							{@const standing = memberStanding(member)}
 							<li
 								data-sortable-row
-								class="flex flex-col gap-2.5 rounded-panel border border-border bg-card p-3 {member.enabled
+								class="flex flex-col gap-2.5 rounded-panel bg-card shadow-float-1 p-3 {member.enabled
 									? ''
 									: 'opacity-[0.55]'}"
 							>
@@ -369,7 +369,7 @@
 									{/if}
 									{#if memberKind(member) === 'auto'}
 										<span
-											class="flex size-6 shrink-0 items-center justify-center rounded-lg border border-accent-line bg-accent-soft text-[0.6rem] font-semibold text-accent-ink"
+											class="flex size-6 shrink-0 items-center justify-center rounded-lg bg-accent-soft ring-1 ring-accent-border text-[0.6rem] font-semibold text-accent-ink"
 											title={$t('ui.pages.groupsPage.autoHint')}
 										>
 											{$t('ui.pages.groupsPage.autoBadge')}
@@ -403,7 +403,7 @@
 										</span>
 									{/if}
 									{#if standing === 'ineligible'}
-										<span class="badge border border-warn/40 bg-warn/10 text-warn">
+										<span class="badge bg-warn/10 text-warn">
 											<Icon name="alert-triangle" size={11} />
 											{member.reason || $t('ui.pages.groupsPage.coverageNone')}
 										</span>
@@ -460,7 +460,7 @@
 			{/if}
 			{#if capabilities.reasoningMixed}
 				<p
-					class="flex shrink-0 items-center gap-2 rounded-lg border border-warn/40 bg-warn/10 p-3 text-sm text-warn"
+					class="flex shrink-0 items-center gap-2 rounded-lg bg-warn/10 shadow-float-1 p-3 text-sm text-warn"
 					role="status"
 				>
 					<Icon name="alert-triangle" size={14} />{$t('ui.pages.groupsPage.warnReasoning')}
@@ -468,7 +468,7 @@
 			{/if}
 			{#if capabilities.visionMixed}
 				<p
-					class="flex shrink-0 items-center gap-2 rounded-lg border border-warn/40 bg-warn/10 p-3 text-sm text-warn"
+					class="flex shrink-0 items-center gap-2 rounded-lg bg-warn/10 shadow-float-1 p-3 text-sm text-warn"
 					role="status"
 				>
 					<Icon name="alert-triangle" size={14} />{$t('ui.pages.groupsPage.warnVision')}
