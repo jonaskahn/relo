@@ -36,12 +36,7 @@
 	import ChatTranscript from '$lib/components/chat/chat-transcript.svelte';
 	import Icon from '$lib/components/ui/icon.svelte';
 	import Button from '$lib/components/ui/button.svelte';
-	import {
-		drawerEnter,
-		drawerLeave,
-		sideDrawerLeave,
-		sideDrawerMotion
-	} from '$lib/modal-motion';
+	import { edgeDrawerEnter, edgeDrawerLeave } from '$lib/modal-motion';
 	import { navDrawer } from '$lib/nav-drawer.svelte';
 	import { cn } from '$lib/utils';
 	import { seedFromCapture, settingsOfSeed, surfaceOfURL, threadOfSeed } from '$lib/log-replay';
@@ -771,8 +766,8 @@
 	{:else if railOpen}
 		<aside
 			class="absolute inset-y-3 left-3 z-30 flex w-[min(20rem,calc(100vw-2rem))] shrink-0 shadow-[var(--shadow-modal)]"
-			in:drawerEnter
-			out:drawerLeave
+			in:edgeDrawerEnter={{ side: 'start' }}
+			out:edgeDrawerLeave={{ side: 'start' }}
 		>
 			{@render railPane()}
 		</aside>
@@ -1022,8 +1017,8 @@
 	{:else if targetOpen}
 		<aside
 			class="absolute inset-y-3 right-3 z-30 flex w-[min(20rem,calc(100vw-2rem))] shrink-0 shadow-[var(--shadow-modal)]"
-			in:sideDrawerMotion
-			out:sideDrawerLeave
+			in:edgeDrawerEnter={{ side: 'end' }}
+			out:edgeDrawerLeave={{ side: 'end' }}
 		>
 			{@render targetPane()}
 		</aside>
