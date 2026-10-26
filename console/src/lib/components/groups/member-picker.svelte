@@ -24,16 +24,23 @@
 
 	let { configured, providers, members, lanes = [], onadd, onlearn }: Props = $props();
 
+	// A page of rows: the list paints this many and asks for the next page as
+	// its foot scrolls into view, so a large catalogue never paints all at once.
+	const PAGE = 40;
+
 	// The picker reads models on its own, so a route being built never waits
 	// on a connection it has not added a member from yet.
 	let provider = $state('');
 	let search = $state('');
 	let onOnly = $state(true);
 	let models = $state<Model[]>([]);
+	let shown = $state(PAGE);
+	let pane = $state<HTMLElement | null>(null);
 	let loading = $state(false);
 	let failed = $state('');
 	let searchTimer: ReturnType<typeof setTimeout> | undefined;
 	let requestSeq = 0;
+	let windowKey = '';
 
 	const providerMap = $derived(new Map(providers.map((provider) => [provider.id, provider])));
 	const visible = $derived(
@@ -42,6 +49,41 @@
 			return provider ? allowedByLanes(provider, lanes) : true;
 		})
 	);
+	const windowed = $derived(visible.slice(0, shown));
+	const hasMore = $derived(shown < visible.length);
+
+	// A new connection, search, lane set, or read starts the list at its first
+	// page and back at the top: a window grown on the old filter would open the
+	// new one part-way down.
+	const filterKey = $derived([provider, search, onOnly, lanes.join(','), models.length].join('|'));
+	$effect(() => {
+		if (filterKey === windowKey) return;
+		windowKey = filterKey;
+		shown = PAGE;
+		pane?.scrollTo({ top: 0 });
+	});
+
+	// The sentinel asks for the next page while the foot stays in view, so a
+	// pane taller than one page fills itself. Its root is the pane, not the
+	// window, because the list is what scrolls.
+	function watchMore(node: HTMLElement) {
+		$effect(() => {
+			void shown;
+			if (!hasMore || pane === null) return;
+			const observer = new IntersectionObserver(
+				(entries) => {
+					if (entries.some((entry) => entry.isIntersecting)) more();
+				},
+				{ root: pane, rootMargin: '0px 0px 120px 0px' }
+			);
+			observer.observe(node);
+			return () => observer.disconnect();
+		});
+	}
+
+	function more() {
+		shown = Math.min(shown + PAGE, visible.length);
+	}
 
 	onMount(() => void load());
 	onDestroy(() => {
@@ -131,7 +173,7 @@
 	<span>{$t('ui.common.model')}</span>
 	<span>{$t('ui.pages.groupsPage.priceLegend')}</span>
 </div>
-<div class="flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto">
+<div bind:this={pane} class="flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto">
 	{#if loading}
 		<p class="text-sm text-muted-foreground">{$t('ui.common.loading')}</p>
 	{:else if failed}
@@ -143,7 +185,7 @@
 			{$t('ui.pages.groupsPage.noMatchingModels')}
 		</p>
 	{:else}
-		{#each visible as model (model.provider_id + '/' + model.model_id)}
+		{#each windowed as model (model.provider_id + '/' + model.model_id)}
 			<div class="flex items-center justify-between gap-2 rounded-lg px-2.5 py-1.5 hover:bg-card">
 				<div class="flex min-w-0 items-center gap-2.5">
 					<ProviderLogo
@@ -175,5 +217,14 @@
 				</div>
 			</div>
 		{/each}
+		{#if hasMore}
+			<div use:watchMore class="flex shrink-0 justify-center py-1">
+				<Button variant="ghost" size="sm" onclick={more}>
+					{$t('ui.pages.groupsPage.scrollForMore', {
+						values: { shown: windowed.length, total: visible.length }
+					})}
+				</Button>
+			</div>
+		{/if}
 	{/if}
 </div>
