@@ -32,7 +32,7 @@
 			onclick={() => done && onjump(entry)}
 		>
 			<span
-				class="flex size-6.5 shrink-0 items-center justify-center rounded-round bg-sunken text-xs font-semibold shadow-float-1 {isCurrent
+				class="flex size-[1.625rem] shrink-0 items-center justify-center rounded-round bg-sunken text-xs font-semibold shadow-float-1 {isCurrent
 					? 'bg-primary text-primary-foreground'
 					: done
 						? 'bg-accent-soft text-accent-ink'
