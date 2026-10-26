@@ -399,7 +399,7 @@
 
 <svelte:head><title>{$t('ui.pages.providersPage.header.title')} · Relo</title></svelte:head>
 
-<div class="flex min-h-full flex-col bg-background">
+<div class="flex min-h-full flex-col">
 	<PageHeader
 		title="ui.pages.providersPage.header.title"
 		description="ui.pages.providersPage.header.subtitle"

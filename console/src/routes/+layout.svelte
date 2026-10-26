@@ -30,7 +30,7 @@
 	let sessionUnavailable = $state(false);
 	// scrolled follows the main scroll region, so the top bar can separate
 	// itself from content that moved under it.
-	let scrolled = $state(false);
+
 	const isSignInPage = $derived(page.url.pathname === '/login');
 	// A callback page is where a browser lands after a provider redirect. That
 	// browser carries no session, and asking for one would send it to the
@@ -132,10 +132,9 @@
 			<Sidebar />
 		{/if}
 		<div class="flex min-w-0 flex-1 flex-col overflow-hidden">
-			{#if !errored}<Topbar {scrolled} />{/if}
+			{#if !errored}<Topbar />{/if}
 			<main
-				class={!errored && workspace ? 'min-h-0 flex-1 overflow-hidden' : 'flex-1 overflow-y-auto'}
-				onscroll={(event) => (scrolled = event.currentTarget.scrollTop > 0)}
+				class={!errored && workspace ? 'min-h-0 flex-1 overflow-hidden rounded-t-control bg-stage' : 'flex-1 overflow-y-auto rounded-t-control bg-stage'}
 			>
 				{#if errored}
 					{@render children()}

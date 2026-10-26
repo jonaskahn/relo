@@ -683,7 +683,7 @@
      where the panes are docked and nothing is being dismissed. -->
 <svelte:window onkeydown={onKeydown} />
 
-<div {@attach trackDock} class="relative flex h-full min-h-0 gap-4 overflow-hidden bg-canvas p-4">
+<div {@attach trackDock} class="relative flex h-full min-h-0 gap-4 overflow-hidden bg-transparent p-4">
 	{#snippet railPane()}
 		<div
 			class="flex h-full w-full shrink-0 flex-col overflow-hidden rounded-card bg-sunken"
