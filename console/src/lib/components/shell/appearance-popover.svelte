@@ -125,7 +125,7 @@
 						}}
 					>
 						<Select.Trigger
-							class="flex h-control w-full items-center justify-between gap-2 rounded-control border border-line bg-surface px-3 text-sm text-ink outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:pointer-events-none disabled:opacity-50"
+							class="flex h-control w-full items-center justify-between gap-2 rounded-control bg-control px-3 text-sm text-ink shadow-field outline-none transition-[background-color,box-shadow] hover:bg-control-hover hover:shadow-field-hover focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:cursor-not-allowed"
 							aria-label={$t('ui.topbar.language')}
 						>
 							<span class="truncate">
@@ -135,7 +135,7 @@
 						</Select.Trigger>
 						<Select.Portal>
 							<Select.Content
-								class="surface-pop z-50 w-[min(320px,calc(100vw-2rem))] overflow-hidden p-1"
+								class="surface-pop z-50 w-(--bits-select-anchor-width) min-w-0 overflow-hidden p-1"
 								sideOffset={6}
 							>
 								<Select.Viewport class="max-h-72 overflow-y-auto">
@@ -143,7 +143,7 @@
 										<Select.Item
 											value={code}
 											label={languageOptionLabel(code, $t('ui.settings.language.auto'))}
-											class="flex min-h-control cursor-pointer items-center rounded-control px-2.5 text-sm text-ink outline-none data-highlighted:bg-hover"
+											class="flex min-h-control cursor-pointer items-center rounded-control px-2.5 text-sm text-ink outline-none"
 										>
 											{languageOptionLabel(code, $t('ui.settings.language.auto'))}
 										</Select.Item>

@@ -13,14 +13,6 @@
 	import MenuPanel from '$lib/components/ui/menu-panel.svelte';
 	import { cn } from '$lib/utils';
 
-	// scrolled is the shell telling the bar its content moved under it, so the
-	// bar can add the one shadow that separates it from the page.
-	interface Props {
-		scrolled?: boolean;
-	}
-
-	let { scrolled = false }: Props = $props();
-
 	const titleKey = $derived.by(() => {
 		const p = page.url.pathname;
 		if (p === '/') return 'ui.pages.dashboard.title';
@@ -51,8 +43,7 @@
 
 <header
 	class={cn(
-		'chrome sticky top-0 z-30 flex h-[60px] shrink-0 items-center gap-3 px-[var(--gutter)] transition-shadow',
-		scrolled && 'shadow-[0_8px_24px_-12px_var(--shadow)]'
+		'chrome sticky top-0 z-30 flex h-[60px] shrink-0 items-center gap-3 rounded-b-control px-[var(--gutter)]'
 	)}
 >
 	<Button
@@ -94,14 +85,14 @@
 		<DropdownMenu.Portal>
 			<MenuPanel align="end" class="surface-pop z-50 min-w-44 p-1">
 				<DropdownMenu.Item
-					class="flex min-h-control cursor-pointer items-center gap-2 rounded-control px-2.5 py-1.5 text-sm outline-none data-highlighted:bg-hover"
+					class="flex min-h-control cursor-pointer items-center gap-2 rounded-control px-2.5 py-1.5 text-sm outline-none"
 					onSelect={() => goto('/keys?create=1')}
 				>
 					<Icon name="key" size={15} />
 					{$t('ui.topbar.quickAddKey')}
 				</DropdownMenu.Item>
 				<DropdownMenu.Item
-					class="flex min-h-control cursor-pointer items-center gap-2 rounded-control px-2.5 py-1.5 text-sm outline-none data-highlighted:bg-hover"
+					class="flex min-h-control cursor-pointer items-center gap-2 rounded-control px-2.5 py-1.5 text-sm outline-none"
 					onSelect={() => goto(addConnectionHref(page.url.pathname, page.url.search))}
 				>
 					<Icon name="plug-connected" size={15} />

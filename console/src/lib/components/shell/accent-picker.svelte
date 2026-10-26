@@ -59,10 +59,10 @@
 						: 'flex size-11 items-center justify-center rounded-panel',
 					layout === 'page'
 						? selected
-							? 'border-ink bg-canvas'
+							? 'border-accent-border bg-accent-soft'
 							: 'border-transparent hover:bg-hover'
 						: selected
-							? 'shadow-[0_0_0_3px_var(--surface),0_0_0_5px_var(--ink)]'
+							? 'bg-accent-soft ring-1 ring-accent-border'
 							: 'hover:bg-hover'
 				)}
 				onclick={() => consoleState.setAccent(accent)}

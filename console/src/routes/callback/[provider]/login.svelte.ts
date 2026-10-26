@@ -31,7 +31,7 @@ export const readMs = 1200;
  *  rows needs enough frames for a cell to flicker through, and below ~600ms it
  *  reads as a wipe rather than as the page coming apart. It runs once, on the
  *  way out, and it is the longest moment on the page. */
-export const windMs = 3000;
+export const windMs = 2000;
 
 /** The state a login starts in, before the first poll answers. */
 export function initialState(): CallbackState {

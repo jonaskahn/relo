@@ -302,16 +302,14 @@
 		{#snippet kindBadge(account: Account)}
 			{#if account.kind === 'oauth'}
 				<span
-					class="inline-flex items-center rounded border border-border px-1.5 py-1 text-muted-foreground"
+					class="inline-flex items-center rounded bg-sunken px-1.5 py-1 text-muted-foreground"
 					title={$t('ui.pages.providersPage.accounts.kindSigninLabel')}
 				>
 					<Icon name="lock" size={13} />
 					<span class="sr-only">{$t('ui.pages.providersPage.accounts.kindSigninLabel')}</span>
 				</span>
 			{:else}
-				<span
-					class="rounded border border-border px-1.5 py-0.5 text-[0.65rem] text-muted-foreground"
-				>
+				<span class="rounded bg-sunken px-1.5 py-0.5 text-[0.65rem] text-muted-foreground">
 					{$t(kindKeys[account.kind] ?? 'ui.pages.providersPage.accounts.kindKey')}
 				</span>
 			{/if}

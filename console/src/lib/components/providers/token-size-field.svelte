@@ -3,6 +3,8 @@
 	import Icon from '$lib/components/ui/icon.svelte';
 	import Input from '$lib/components/ui/input.svelte';
 	import Field from '$lib/components/ui/field.svelte';
+	import { buttonVariants } from '$lib/components/ui/button.svelte';
+	import { cn } from '$lib/utils';
 	import { Popover } from 'bits-ui';
 	import PopoverPanel from '$lib/components/ui/popover-panel.svelte';
 	import {
@@ -54,7 +56,10 @@
 				<Popover.Root bind:open>
 					<Popover.Trigger
 						type="button"
-						class="inline-flex size-control shrink-0 items-center justify-center rounded-md border border-border text-muted-foreground hover:border-border-strong hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+						class={cn(
+							buttonVariants({ variant: 'outline', size: 'icon' }),
+							'text-muted-foreground hover:text-ink'
+						)}
 						aria-label={editLabel}
 					>
 						<Icon name="pencil" size={14} />
@@ -78,9 +83,9 @@
 									<button
 										type="button"
 										data-plain
-										class="badge border border-border font-mono text-muted-foreground hover:border-border-strong hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring active:scale-[0.98] motion-reduce:transform-none {value.trim() ===
+										class="badge bg-sunken font-mono text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring active:scale-[0.98] motion-reduce:transform-none {value.trim() ===
 										contextLabel(preset)
-											? 'border-accent bg-accent-soft text-foreground'
+											? 'bg-accent-soft text-foreground ring-1 ring-accent-border'
 											: ''}"
 										aria-label={$t('ui.pages.providersPage.context.quickSet', {
 											values: { value: contextLabel(preset) }

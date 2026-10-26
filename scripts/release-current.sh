@@ -77,7 +77,7 @@ fi
 git checkout -b "$newbranch"
 files=""
 for file in Makefile daemon/internal/cli/root.go console/package.json \
-  console/package-lock.json packaging/npm/package.json README.md; do
+  packaging/npm/package.json README.md; do
   if [ -f "$file" ]; then
     files="$files $file"
   fi

@@ -86,7 +86,7 @@
 						aria-label={$t(action.labelKey)}
 						title={$t(action.labelKey)}
 						class={cn(
-							'rounded-full',
+							'rounded-panel',
 							action.off
 								? 'size-16 text-destructive hover:border-destructive/40 hover:bg-destructive/10 hover:text-destructive'
 								: 'size-14 text-muted-foreground hover:text-foreground'

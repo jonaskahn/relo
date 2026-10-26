@@ -73,7 +73,7 @@
 				{#each agent.files as file (file.kind)}
 					{@const state = fileState(file)}
 					<li
-						class="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-border px-2.5 py-1.5"
+						class="flex flex-wrap items-center justify-between gap-2 rounded-lg bg-surface shadow-float-1 px-2.5 py-1.5"
 					>
 						<Tooltip.Provider delayDuration={250} disableHoverableContent>
 							<Tooltip.Root>
@@ -124,7 +124,7 @@
 		<p class="text-xs text-muted-foreground">{$t('ui.pages.integrationsPage.previewHint')}</p>
 		<ul class="flex flex-col gap-2">
 			{#each preview as plan (plan.kind)}
-				<li class="rounded-lg border border-border px-2.5 py-2">
+				<li class="rounded-lg bg-surface shadow-float-1 px-2.5 py-2">
 					<div class="flex flex-wrap items-center justify-between gap-2">
 						<span class="mono-data min-w-0 truncate text-xs">{plan.path}</span>
 						{#if plan.refused}

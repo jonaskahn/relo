@@ -157,20 +157,17 @@
 							values: { eligible: eligibleMembers(group), total: members.length }
 						})}
 						{#if !group.enabled}
-							<span class="badge border border-border text-muted-foreground">
+							<span class="badge bg-sunken text-muted-foreground">
 								{$t('ui.pages.groupsPage.chipDisabled')}
 							</span>
 						{/if}
 						{#if !group.listed}
-							<span class="badge border border-border text-muted-foreground">
+							<span class="badge bg-sunken text-muted-foreground">
 								{$t('ui.pages.groupsPage.chipUnlisted')}
 							</span>
 						{/if}
 						{#each group.capability_warnings ?? [] as warning (warning)}
-							<span
-								class="badge border border-warn/40 bg-warn/10 text-warn"
-								title={$t(capabilityWarningText(warning))}
-							>
+							<span class="badge bg-warn/10 text-warn" title={$t(capabilityWarningText(warning))}>
 								<Icon name="alert-triangle" size={11} />
 								{$t(capabilityWarningChip(warning))}
 							</span>
@@ -218,7 +215,9 @@
 					{:else}
 						<ol class="mt-2 flex flex-col gap-2">
 							{#each candidates as candidate, index (candidate.provider_id + '/' + candidate.model_id)}
-								<li class="flex items-center gap-2 rounded-panel border border-line px-2.5 py-1.5">
+								<li
+									class="flex items-center gap-2 rounded-panel bg-surface shadow-float-1 px-2.5 py-1.5"
+								>
 									<span class="mono-data w-4 shrink-0 text-muted-foreground">{index + 1}</span>
 									<ProviderLogo
 										id={candidate.provider_id}
@@ -287,7 +286,7 @@
 						{$t('ui.pages.groupsPage.noMembers')}
 					</p>
 				{:else}
-					<ul class="mt-2 overflow-hidden rounded-lg border border-border">
+					<ul class="mt-2 overflow-hidden rounded-lg bg-surface shadow-float-1">
 						{#each members as member, index (member.provider_id + '/' + member.model_id)}
 							<GroupMemberRow
 								{member}

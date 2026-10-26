@@ -113,13 +113,13 @@
 			data-provider-row="__all__"
 			aria-current={allModelsSelected ? 'true' : undefined}
 			onkeydown={onKeydown}
-			class="mb-4 flex w-full items-center gap-2.5 rounded-lg border px-3 py-3 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring {allModelsSelected
-				? 'border-accent bg-accent-soft'
-				: 'border-border bg-card hover:border-border-strong'}"
+			class="mb-4 flex w-full items-center gap-2.5 rounded-lg bg-card px-3 py-3 text-left shadow-float-1 transition-[background-color,box-shadow] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring {allModelsSelected
+				? 'bg-accent-soft ring-1 ring-accent-border'
+				: 'hover:bg-control-hover'}"
 			onclick={onselectAll}
 		>
 			<span
-				class="flex size-9 shrink-0 items-center justify-center rounded-lg border border-border text-muted-foreground"
+				class="flex size-9 shrink-0 items-center justify-center rounded-lg bg-surface shadow-float-1 text-muted-foreground"
 			>
 				<Icon name="layers" size={16} />
 			</span>

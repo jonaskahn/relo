@@ -227,6 +227,40 @@ export function sideDrawerMotion(_node: HTMLElement): TransitionConfig {
 	};
 }
 
+/** Slides the same drawer in from either edge, so a trailing pane moves as the
+ *  leading one does and only its direction differs. Reduced motion is a fade. */
+export function edgeDrawerEnter(
+	node: HTMLElement,
+	params: { side?: 'start' | 'end' } = {}
+): TransitionConfig {
+	if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+		return { duration: 140, css: (t) => `opacity: ${t}` };
+	}
+	const sign = params.side === 'end' ? 1 : -1;
+	return {
+		duration: 220,
+		easing: drawerOut,
+		css: (t) => `transform: translateX(${(1 - t) * 100 * sign}%)`
+	};
+}
+
+/** Slides an edge drawer back out. Out is a touch quicker than in, as the nav drawer's is. */
+export function edgeDrawerLeave(
+	node: HTMLElement,
+	params: { side?: 'start' | 'end' } = {}
+): TransitionConfig {
+	void node;
+	if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+		return { duration: 140, css: (t) => `opacity: ${t}` };
+	}
+	const sign = params.side === 'end' ? 1 : -1;
+	return {
+		duration: 180,
+		easing: drawerOut,
+		css: (t) => `transform: translateX(${(1 - t) * 100 * sign}%)`
+	};
+}
+
 /** Slides the trailing-edge drawer back out. A phone sheet drops down; reduced motion fades. */
 export function sideDrawerLeave(_node: HTMLElement): TransitionConfig {
 	if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {

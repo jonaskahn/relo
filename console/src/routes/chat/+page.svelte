@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { onMount, tick } from 'svelte';
 	import { t } from 'svelte-i18n';
-	import { fade, fly, slide } from 'svelte/transition';
+	import { fade } from 'svelte/transition';
 	import { replaceState } from '$app/navigation';
 	import { page } from '$app/state';
 
@@ -36,7 +36,9 @@
 	import ChatTranscript from '$lib/components/chat/chat-transcript.svelte';
 	import Icon from '$lib/components/ui/icon.svelte';
 	import Button from '$lib/components/ui/button.svelte';
+	import { edgeDrawerEnter, edgeDrawerLeave } from '$lib/modal-motion';
 	import { navDrawer } from '$lib/nav-drawer.svelte';
+	import { cn } from '$lib/utils';
 	import { seedFromCapture, settingsOfSeed, surfaceOfURL, threadOfSeed } from '$lib/log-replay';
 	import type { Group, Model, Provider, UsageCapture } from '$lib/types';
 
@@ -247,6 +249,16 @@
 		};
 		docked.addEventListener('change', follow);
 		return () => docked.removeEventListener('change', follow);
+	}
+
+	// A pane settles before focus moves into it: handing the caret to a
+	// control inside a pane that is still resizing makes the browser chase the
+	// element with scroll-into-view on every frame. tick() alone puts focus on
+	// the first frame of the motion, so this waits the motion out instead.
+	async function afterPaneMotion(run: () => void) {
+		await tick();
+		await new Promise((resolve) => setTimeout(resolve, paneMs));
+		run();
 	}
 
 	// The newest line stays in view when a turn is added or finishes. The
@@ -603,23 +615,23 @@
 			const opening = !railDocked;
 			railDocked = opening;
 			saveLayout();
-			void tick().then(() => (opening ? railPanel?.focusClose() : railToggle?.focus()));
+			void afterPaneMotion(() => (opening ? railPanel?.focusClose() : railToggle?.focus()));
 			return;
 		}
 		targetOpen = false;
 		railOpen = true;
-		void tick().then(() => railPanel?.focusClose());
+		void afterPaneMotion(() => railPanel?.focusClose());
 	}
 
 	function closeRail() {
 		if (wide) {
 			railDocked = false;
 			saveLayout();
-			void tick().then(() => railToggle?.focus());
+			void afterPaneMotion(() => railToggle?.focus());
 			return;
 		}
 		railOpen = false;
-		void tick().then(() => railToggle?.focus());
+		void afterPaneMotion(() => railToggle?.focus());
 	}
 
 	function toggleTarget() {
@@ -627,23 +639,23 @@
 			const opening = !targetDocked;
 			targetDocked = opening;
 			saveLayout();
-			void tick().then(() => (opening ? target?.focusTarget() : targetToggle?.focus()));
+			void afterPaneMotion(() => (opening ? target?.focusTarget() : targetToggle?.focus()));
 			return;
 		}
 		railOpen = false;
 		targetOpen = true;
-		void tick().then(() => target?.focusTarget());
+		void afterPaneMotion(() => target?.focusTarget());
 	}
 
 	function closeTarget() {
 		if (wide) {
 			targetDocked = false;
 			saveLayout();
-			void tick().then(() => targetToggle?.focus());
+			void afterPaneMotion(() => targetToggle?.focus());
 			return;
 		}
 		targetOpen = false;
-		void tick().then(() => targetToggle?.focus());
+		void afterPaneMotion(() => targetToggle?.focus());
 	}
 
 	// The header names the target, so pressing it opens the pane that changes
@@ -654,7 +666,7 @@
 				targetDocked = true;
 				saveLayout();
 			}
-			void tick().then(() => target?.focusTarget());
+			void afterPaneMotion(() => target?.focusTarget());
 			return;
 		}
 		railOpen = false;
@@ -683,11 +695,12 @@
      where the panes are docked and nothing is being dismissed. -->
 <svelte:window onkeydown={onKeydown} />
 
-<div {@attach trackDock} class="relative flex h-full min-h-0 gap-4 overflow-hidden bg-canvas p-4">
+<div
+	{@attach trackDock}
+	class="relative flex h-full min-h-0 gap-4 overflow-hidden bg-transparent p-4"
+>
 	{#snippet railPane()}
-		<div
-			class="flex h-full w-full shrink-0 flex-col overflow-hidden rounded-card border border-line bg-sunken"
-		>
+		<div class="flex h-full w-full shrink-0 flex-col overflow-hidden rounded-card bg-sunken">
 			<ChatRail
 				bind:this={railPanel}
 				threads={rail}
@@ -705,9 +718,7 @@
 	{/snippet}
 
 	{#snippet targetPane()}
-		<div
-			class="flex h-full w-full shrink-0 flex-col overflow-hidden rounded-card border border-line bg-sunken"
-		>
+		<div class="flex h-full w-full shrink-0 flex-col overflow-hidden rounded-card bg-sunken">
 			<ChatSettingsPanel
 				bind:this={target}
 				{settings}
@@ -735,21 +746,34 @@
 		></button>
 	{/if}
 
-	{#if wide && railDocked}
-		<aside class="flex h-full w-72 shrink-0" transition:slide={{ axis: 'x', duration: paneMs }}>
+	{#if wide}
+		<!-- The docked rail keeps its place in the row and eases its own width,
+		     so a list that scrolls never re-solves its layout in script. It
+		     stays mounted while closed: reopening must not rebuild the threads.
+		     The grid track goes to zero with it, or the row gap would keep a
+		     gutter where the closed pane used to be. -->
+		<aside
+			class={cn(
+				'flex h-full shrink-0 overflow-hidden transition-[width] duration-200 ease-out motion-reduce:transition-none',
+				railDocked ? 'w-72' : 'w-0'
+			)}
+			inert={!railDocked}
+			aria-hidden={!railDocked}
+		>
 			{@render railPane()}
 		</aside>
-	{:else if !wide && railOpen}
+	{:else if railOpen}
 		<aside
 			class="absolute inset-y-3 left-3 z-30 flex w-[min(20rem,calc(100vw-2rem))] shrink-0 shadow-[var(--shadow-modal)]"
-			transition:fly={{ x: -340, duration: paneMs }}
+			in:edgeDrawerEnter={{ side: 'start' }}
+			out:edgeDrawerLeave={{ side: 'start' }}
 		>
 			{@render railPane()}
 		</aside>
 	{/if}
 
 	<div
-		class="flex min-w-0 flex-1 flex-col overflow-hidden rounded-card border border-line bg-sunken"
+		class="flex min-w-0 flex-1 flex-col overflow-hidden rounded-card bg-sunken"
 		inert={!wide && (railOpen || targetOpen)}
 	>
 		<header class="flex h-14 shrink-0 items-center gap-2 px-4">
@@ -796,7 +820,7 @@
 			<div class="mx-auto w-full max-w-3xl shrink-0 space-y-2 px-4 pb-3">
 				{#if catalogFailed !== ''}
 					<p
-						class="flex items-start gap-2 rounded-card border border-danger/30 bg-danger/5 px-4 py-3 text-sm text-danger"
+						class="flex items-start gap-2 rounded-card bg-danger/5 shadow-float-1 px-4 py-3 text-sm text-danger"
 						role="alert"
 					>
 						<Icon name="circle-alert" size={15} class="mt-0.5 shrink-0" />
@@ -807,7 +831,7 @@
 				{/if}
 				{#if replayOf !== ''}
 					<div
-						class="flex flex-wrap items-start gap-2 rounded-card border border-warn/40 bg-warn/10 px-4 py-3 text-sm text-warn"
+						class="flex flex-wrap items-start gap-2 rounded-card bg-warn/10 shadow-float-1 px-4 py-3 text-sm text-warn"
 					>
 						<Icon name="alert-triangle" size={15} class="mt-0.5 shrink-0" />
 						<div class="min-w-0 flex-1 space-y-1">
@@ -824,7 +848,7 @@
 				{/if}
 				{#if replayFailed}
 					<p
-						class="flex items-start gap-2 rounded-card border border-warn/40 bg-warn/10 px-4 py-3 text-sm text-warn"
+						class="flex items-start gap-2 rounded-card bg-warn/10 shadow-float-1 px-4 py-3 text-sm text-warn"
 						role="alert"
 					>
 						<Icon name="alert-triangle" size={15} class="mt-0.5 shrink-0" />
@@ -833,7 +857,7 @@
 				{/if}
 				{#if notice !== ''}
 					<div
-						class="flex flex-wrap items-center gap-3 rounded-card border border-warn/40 bg-warn/10 px-4 py-3 text-sm text-warn"
+						class="flex flex-wrap items-center gap-3 rounded-card bg-warn/10 shadow-float-1 px-4 py-3 text-sm text-warn"
 					>
 						<Icon name="alert-triangle" size={15} class="shrink-0" />
 						<p class="min-w-0 flex-1">
@@ -978,14 +1002,22 @@
 
 	<!-- The target this conversation is tested with. Docked beside the answer
 	     on a wide screen, and a sheet sliding over it everywhere else. -->
-	{#if wide && targetDocked}
-		<aside class="flex h-full w-80 shrink-0" transition:slide={{ axis: 'x', duration: paneMs }}>
+	{#if wide}
+		<aside
+			class={cn(
+				'flex h-full shrink-0 overflow-hidden transition-[width] duration-200 ease-out motion-reduce:transition-none',
+				targetDocked ? 'w-80' : 'w-0'
+			)}
+			inert={!targetDocked}
+			aria-hidden={!targetDocked}
+		>
 			{@render targetPane()}
 		</aside>
-	{:else if !wide && targetOpen}
+	{:else if targetOpen}
 		<aside
 			class="absolute inset-y-3 right-3 z-30 flex w-[min(20rem,calc(100vw-2rem))] shrink-0 shadow-[var(--shadow-modal)]"
-			transition:fly={{ x: 340, duration: paneMs }}
+			in:edgeDrawerEnter={{ side: 'end' }}
+			out:edgeDrawerLeave={{ side: 'end' }}
 		>
 			{@render targetPane()}
 		</aside>

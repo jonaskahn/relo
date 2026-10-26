@@ -135,7 +135,7 @@
 			{#each sections as section (section.href)}
 				<a
 					href={section.href}
-					class="inline-flex h-control items-center rounded-control border border-line bg-surface px-3 text-sm font-medium text-muted-foreground transition-colors hover:border-line-strong hover:text-ink"
+					class="inline-flex h-control items-center rounded-control bg-surface shadow-float-1 px-3 text-sm font-medium text-muted-foreground transition-colors hover:text-ink"
 					>{section.label}</a
 				>
 			{/each}

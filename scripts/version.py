@@ -13,7 +13,6 @@ check with a TAG asserts the files equal that tag as well as each other. bump
 rewrites every declaration in place and prints the new value.
 """
 
-import json
 import re
 import sys
 from pathlib import Path
@@ -28,33 +27,16 @@ DECLARATIONS = [
     ("daemon/internal/cli/root.go", r'^\tversion = "(.+)"$', "go"),
     ("console/package.json", r'^\t"version": "(.+)",$', "json"),
     ('packaging/npm/package.json', r'^\t"version": "(.+)",$', "json"),
-    ("console/package-lock.json", None, "json-lock"),
-    ("README.md", r"badge/next-([^)]+)-brightgreen", "readme-badge"),
 ]
 
 SEMVER = re.compile(r"^(\d+)\.(\d+)\.(\d+)(?:-(.+))?$")
-
-# The lockfile keeps the project version twice: in the root object and in
-# packages[""]. Both sit above the first dependency entry, so only the text
-# before the first dependency name is a declaration.
-LOCKFILE_HEAD = re.compile(r'^\t\t\t"version": '"(.+)"',$', re.MULTILINE)
-
-
-def lockfile_head(text):
-    """Returns the text holding only the lockfile project version."""
-    first_dependency = re.search(r'^\t\t\t\t"[a-z@]', text, re.MULTILINE)
-    return text[: first_dependency.start()] if first_dependency else text
 
 
 def read(path, pattern):
     """Returns the first capture of pattern in path, or None when absent."""
     if not path.exists():
         return None
-    text = path.read_text()
-    if pattern is None:
-        match = re.search(r'^\t\t\t"version": "(.+)",$', lockfile_head(text), re.MULTILINE)
-    else:
-        match = re.search(pattern, text, re.MULTILINE)
+    match = re.search(pattern, path.read_text(), re.MULTILINE)
     return match.group(1) if match else None
 
 
@@ -133,22 +115,10 @@ def write(path, pattern, style, version):
     """Replaces the version in one file, keeping its existing formatting."""
     text = path.read_text()
 
-    if style == "json-lock":
-        # Rewrite only the project version, never a dependency pin that
-        # shares the key.
-        head = lockfile_head(text)
-        tail = text[len(head):]
-        head = re.sub(r'^\t\t\t"version": ".+",$', f'\t\t\t"version": "{version}",', head, flags=re.MULTILINE)
-        # The root object copy is one tab deep.
-        head = re.sub(r'^\t"version": ".+",$', f'\t"version": "{version}",', head, flags=re.MULTILINE)
-        path.write_text(head + tail)
-        return
-
     replacement = {
         "makefile": f"VERSION ?= {version}",
         "go": f'\tversion = "{version}"',
         "json": f'\t"version": "{version}",',
-        "readme-badge": f"badge/next-{version}-brightgreen",
     }[style]
     path.write_text(re.sub(pattern, replacement, text, count=1, flags=re.MULTILINE))
 

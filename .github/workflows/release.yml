@@ -49,7 +49,7 @@ jobs:
         with:
           node-version: 22
           cache: npm
-          cache-dependency-path: console/package-lock.json
+          cache-dependency-path: console/package.json
 
       - name: Build all platforms
         run: |
@@ -102,7 +102,7 @@ jobs:
         with:
           node-version: 22
           cache: npm
-          cache-dependency-path: console/package-lock.json
+          cache-dependency-path: console/package.json
 
       - name: Import Developer ID certificate
         env:
@@ -159,7 +159,7 @@ jobs:
         with:
           node-version: 22
           cache: npm
-          cache-dependency-path: console/package-lock.json
+          cache-dependency-path: console/package.json
 
       - name: Download binaries
         uses: actions/download-artifact@v5
@@ -202,7 +202,7 @@ jobs:
         with:
           node-version: 22
           cache: npm
-          cache-dependency-path: console/package-lock.json
+          cache-dependency-path: console/package.json
 
       - name: Install NSIS
         run: sudo apt-get update && sudo apt-get install -y nsis

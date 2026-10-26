@@ -240,23 +240,27 @@
 			bind:filter={statusFilter}
 			search={searchQ}
 			onsearch={(next) => onSearch(next)}
-		>
-			<option value="all">
-				{$t('ui.pages.keysPage.filterOption', {
-					values: { label: $t('ui.pages.keysPage.filterAll'), count: counts.all }
-				})}
-			</option>
-			<option value="active">
-				{$t('ui.pages.keysPage.filterOption', {
-					values: { label: $t('ui.pages.keysPage.filterActive'), count: counts.active }
-				})}
-			</option>
-			<option value="inactive">
-				{$t('ui.pages.keysPage.filterOption', {
-					values: { label: $t('ui.pages.keysPage.filterInactive'), count: counts.inactive }
-				})}
-			</option>
-		</FilterSearch>
+			options={[
+				{
+					value: 'all',
+					label: $t('ui.pages.keysPage.filterOption', {
+						values: { label: $t('ui.pages.keysPage.filterAll'), count: counts.all }
+					})
+				},
+				{
+					value: 'active',
+					label: $t('ui.pages.keysPage.filterOption', {
+						values: { label: $t('ui.pages.keysPage.filterActive'), count: counts.active }
+					})
+				},
+				{
+					value: 'inactive',
+					label: $t('ui.pages.keysPage.filterOption', {
+						values: { label: $t('ui.pages.keysPage.filterInactive'), count: counts.inactive }
+					})
+				}
+			]}
+		/>
 		<div class="ml-auto flex flex-wrap items-center gap-2">
 			{#if selectedExpired.length > 0}
 				<Button variant="destructive" onclick={() => (deleteSelectedOpen = true)}>

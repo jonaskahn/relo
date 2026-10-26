@@ -6,7 +6,7 @@
 	import Button from '$lib/components/ui/button.svelte';
 	import Field from '$lib/components/ui/field.svelte';
 	import Input from '$lib/components/ui/input.svelte';
-	import NativeSelect from '$lib/components/ui/native-select.svelte';
+	import Select from '$lib/components/ui/select.svelte';
 	import { cn } from '$lib/utils';
 	import { contextLabelOf, filterModels, providerOf, providersOf } from '$lib/integration-models';
 	import type { IntegrationChat, IntegrationModel, IntegrationView } from '$lib/types';
@@ -64,7 +64,7 @@
 	const selectedProvider = $derived(selectedModel ? providerOf(selectedModel) : '');
 </script>
 
-<div class="flex min-w-0 flex-col gap-3 rounded-lg border border-border bg-sunken p-4">
+<div class="flex min-w-0 flex-col gap-3 rounded-lg bg-sunken p-4">
 	<div class="min-w-0">
 		<h3 class="text-sm font-semibold">{$t('ui.pages.integrationsPage.testTitle')}</h3>
 		<p class="text-xs text-muted-foreground">{$t('ui.pages.integrationsPage.testHint')}</p>
@@ -100,31 +100,27 @@
 				/>
 			</Field>
 			<Field id="integration-model-provider" label={$t('ui.pages.integrationsPage.testProvider')}>
-				<NativeSelect
+				<Select
 					id="integration-model-provider"
 					value={provider}
-					onchange={(event) => onprovider(event.currentTarget.value)}
-				>
-					<option value="">{$t('ui.pages.integrationsPage.testAll')}</option>
-					{#each modelProviders as name (name)}
-						<option value={name}>{name}</option>
-					{/each}
-				</NativeSelect>
+					onValueChange={(next) => onprovider(next)}
+					options={[
+						{ value: '', label: $t('ui.pages.integrationsPage.testAll') },
+						...modelProviders.map((name) => ({ value: name, label: name }))
+					]}
+				/>
 			</Field>
 		</div>
 		{#if visibleModels.length === 0}
 			<p class="text-xs text-muted-foreground">{$t('ui.pages.integrationsPage.testNoMatch')}</p>
 		{/if}
 		<Field id="integration-test-model" label={$t('ui.pages.integrationsPage.testModel')}>
-			<NativeSelect
+			<Select
 				id="integration-test-model"
 				value={selected}
-				onchange={(event) => onselect(event.currentTarget.value)}
-			>
-				{#each visibleModels as model (model.id)}
-					<option value={model.id}>{model.name || model.id}</option>
-				{/each}
-			</NativeSelect>
+				onValueChange={(next) => onselect(next)}
+				options={visibleModels.map((model) => ({ value: model.id, label: model.name || model.id }))}
+			/>
 		</Field>
 		{#if selectedContext}
 			<p class="text-xs text-muted-foreground">

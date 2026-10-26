@@ -13,7 +13,8 @@ Three or four steps in a row under the modal header: circle (26px) plus label, c
 Current: `--accent` fill, `--on-accent` number. Done: `--accent-50` fill, accent check, clickable to go back. Upcoming:
 `--line` circle, `--faint` label, disabled. Below 640px only the current label shows. The numbers are real order, so
 numbered markers are correct here.
-Add connection steps: Provider, Connect, Verify, Review. Group editor: Name it, Pick members, Preview.
+Add connection steps: Provider, Connect, Verify, Review. Group editor (new): Name it, Billing, Pick members,
+Preview. Group editor (edit): Name it, Pick members, Preview.
 
 ## Provider picker (Add connection)
 
@@ -44,11 +45,26 @@ under Connect"), never success.
    cheapest prices rising, fastest times rising. The sample nodes are illustrative; label them "Member A/B/C".
 4. Two toggle cards: Enabled, Listed.
 
+## Step "Billing" (new group only)
+
+Four toggle cards in a two-column grid: **Pay as you go**, **Paid plan**, **Free plan**, **Manual**. Each card carries
+its lane icon, its name and the number of configured connections in that lane. Default: the three lanes on, Manual off.
+The lanes are multi-select; choosing Manual clears them, choosing any lane clears Manual, and turning all three off
+falls back to Manual so the picker is never empty. A card with no connection in its lane is disabled and says so in
+words, not colour alone. Footer: `Next` and a secondary `Skip, choose manually` that jumps straight to Pick members
+with no filter. The choice lives only in the editor; it never reaches the daemon.
+
 ## Step "Pick members"
 
 Two `--sunken` panes, gap 16: **Add models** (left) and **Members** (right, scrolls). The left pane holds a connection
 select, an "On only" chip and search above a list that scrolls on its own, with a legend "Price per 1M tokens, in /
-out". Added models show a disabled "Added" button with a check.
+out". Added models show a disabled "Added" button with a check. The list paints its first 40 rows, loads the next 40 as
+its foot scrolls into view, and a muted line under them names how many of the matches are on screen.
+
+When the group is new, a **billing scope** chip row sits above the Members list and mirrors the Billing step; each
+model row also carries its lane chip. **Similar models** sit above the member list: one heading per family, newest
+first, each row a chip with logo, name, lane chip and price, plus `Add all (n)` per family. A model whose tools
+setting would conflict with the group is left out and one line says how many.
 
 **Member row** (white card on the pane, `--radius-xl`, padding 12):
 

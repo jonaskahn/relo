@@ -67,6 +67,21 @@ Thumbs.db
 .impeccable/
 .claude/
 
+# Dependency lock files (never committed). Go keeps go.sum: it is a
+# checksum manifest the toolchain requires, not a package-manager lock.
+package-lock.json
+npm-shrinkwrap.json
+yarn.lock
+pnpm-lock.yaml
+bun.lock
+bun.lockb
+deno.lock
+Pipfile.lock
+poetry.lock
+uv.lock
+composer.lock
+Gemfile.lock
+
 # Logs
 *.log
 npm-debug.log*

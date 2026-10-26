@@ -2,8 +2,10 @@
 	import { t } from 'svelte-i18n';
 
 	import Icon, { type IconName } from '$lib/components/ui/icon.svelte';
+	import { buttonVariants } from '$lib/components/ui/button.svelte';
+	import { cn } from '$lib/utils';
 	import Input from '$lib/components/ui/input.svelte';
-	import NativeSelect from '$lib/components/ui/native-select.svelte';
+	import Select from '$lib/components/ui/select.svelte';
 	import { formatTokensExact } from '$lib/format';
 	import {
 		averageText,
@@ -149,24 +151,25 @@
 	</div>
 	<div class="w-52 sm:hidden">
 		<label class="sr-only" for="usage-sort">{$t('ui.pages.usagePage.sortBy')}</label>
-		<NativeSelect
+		<Select
 			id="usage-sort"
 			value={sortValue}
-			onchange={(event) => onchoosesort(sortChoice(event.currentTarget.value))}
-		>
-			<option value="name:asc">{$t('ui.pages.usagePage.sortName')}</option>
-			<option value="name:desc">{$t('ui.pages.usagePage.sortNameDesc')}</option>
-			<option value="requests:desc">{$t('ui.pages.usagePage.sortRequests')}</option>
-			<option value="requests:asc">{$t('ui.pages.usagePage.sortRequestsAsc')}</option>
-			<option value="errors:desc">{$t('ui.pages.usagePage.sortErrors')}</option>
-			<option value="errors:asc">{$t('ui.pages.usagePage.sortErrorsAsc')}</option>
-			<option value="tokens:desc">{$t('ui.pages.usagePage.sortTokens')}</option>
-			<option value="tokens:asc">{$t('ui.pages.usagePage.sortTokensAsc')}</option>
-			<option value="latency:desc">{$t('ui.pages.usagePage.sortLatency')}</option>
-			<option value="latency:asc">{$t('ui.pages.usagePage.sortLatencyAsc')}</option>
-			<option value="spend:desc">{$t('ui.pages.usagePage.sortSpend')}</option>
-			<option value="spend:asc">{$t('ui.pages.usagePage.sortSpendAsc')}</option>
-		</NativeSelect>
+			onValueChange={(next) => onchoosesort(sortChoice(next))}
+			options={[
+				{ value: 'name:asc', label: $t('ui.pages.usagePage.sortName') },
+				{ value: 'name:desc', label: $t('ui.pages.usagePage.sortNameDesc') },
+				{ value: 'requests:desc', label: $t('ui.pages.usagePage.sortRequests') },
+				{ value: 'requests:asc', label: $t('ui.pages.usagePage.sortRequestsAsc') },
+				{ value: 'errors:desc', label: $t('ui.pages.usagePage.sortErrors') },
+				{ value: 'errors:asc', label: $t('ui.pages.usagePage.sortErrorsAsc') },
+				{ value: 'tokens:desc', label: $t('ui.pages.usagePage.sortTokens') },
+				{ value: 'tokens:asc', label: $t('ui.pages.usagePage.sortTokensAsc') },
+				{ value: 'latency:desc', label: $t('ui.pages.usagePage.sortLatency') },
+				{ value: 'latency:asc', label: $t('ui.pages.usagePage.sortLatencyAsc') },
+				{ value: 'spend:desc', label: $t('ui.pages.usagePage.sortSpend') },
+				{ value: 'spend:asc', label: $t('ui.pages.usagePage.sortSpendAsc') }
+			]}
+		/>
 	</div>
 </div>
 
@@ -230,7 +233,10 @@
 				>
 					<button
 						type="button"
-						class="hidden size-control items-center justify-center rounded-control border border-line text-muted-foreground hover:bg-hover hover:text-ink lg:flex"
+						class={cn(
+							buttonVariants({ variant: 'ghost', size: 'icon' }),
+							'hidden text-muted-foreground hover:text-ink lg:flex'
+						)}
 						aria-expanded={open}
 						aria-controls={'usage-detail-' + entry.key}
 						aria-label={open
@@ -320,7 +326,10 @@
 
 					<button
 						type="button"
-						class="flex h-control items-center justify-center gap-1.5 rounded-control border border-line text-sm text-muted-foreground hover:bg-hover hover:text-ink lg:hidden"
+						class={cn(
+							buttonVariants({ variant: 'outline', size: 'sm' }),
+							'text-muted-foreground hover:text-ink lg:hidden'
+						)}
 						aria-expanded={open}
 						aria-controls={'usage-detail-' + entry.key}
 						onclick={() => onexpand(entry.key)}
@@ -337,7 +346,7 @@
 				{#if open}
 					<dl
 						id={'usage-detail-' + entry.key}
-						class="grid grid-cols-2 gap-x-6 gap-y-3 border border-line bg-sunken p-4 text-sm lg:grid-cols-4"
+						class="grid grid-cols-2 gap-x-6 gap-y-3 bg-sunken p-4 text-sm lg:grid-cols-4"
 					>
 						<div>
 							<dt class="text-xs text-muted-foreground">
@@ -400,7 +409,7 @@
 			</p>
 			<button
 				type="button"
-				class="h-control rounded-control border border-line bg-surface px-3 text-sm font-medium text-ink hover:bg-hover"
+				class="h-control rounded-control bg-surface shadow-float-1 px-3 text-sm font-medium text-ink hover:bg-hover"
 				data-plain
 				onclick={ontoggleall}
 			>

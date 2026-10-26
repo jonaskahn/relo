@@ -12,4 +12,3 @@ node_modules/
 # Lockfiles: npm owns their shape.
 package-lock.json
 pnpm-lock.yaml
-pnpm-workspace.yaml

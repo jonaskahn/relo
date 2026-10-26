@@ -24,14 +24,14 @@
 	aria-pressed={selected}
 	aria-label={label}
 	class={cn(
-		'inline-flex size-7 shrink-0 items-center justify-center rounded-full border font-mono text-xs tabular-nums transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+		'inline-flex size-7 shrink-0 items-center justify-center rounded-round bg-sunken font-mono text-xs tabular-nums text-muted-foreground shadow-float-1 transition-[background-color,box-shadow,color] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring hover:bg-control-hover hover:text-foreground',
 		warn
 			? selected
-				? 'border-amber-600 bg-amber-500/15 font-semibold text-amber-800 dark:border-amber-400 dark:text-amber-300'
-				: 'border-amber-600 text-amber-700 hover:border-amber-700 hover:text-amber-800 dark:border-amber-400 dark:text-amber-400'
+				? 'bg-amber-500/15 font-semibold text-amber-800 dark:text-amber-300'
+				: 'text-amber-700 hover:text-amber-800 dark:text-amber-400'
 			: selected
-				? 'border-accent-line bg-accent-soft font-semibold text-accent-ink'
-				: 'border-border text-muted-foreground hover:border-border-strong hover:text-foreground'
+				? 'bg-accent-soft font-semibold text-accent-ink'
+				: ''
 	)}
 	{onclick}
 >

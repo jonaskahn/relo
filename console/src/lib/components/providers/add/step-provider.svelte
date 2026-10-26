@@ -133,16 +133,16 @@
 								role="radio"
 								aria-checked={chosen}
 								disabled={row.disabledReason !== ''}
-								class="flex items-center gap-3 rounded-xl border px-4 py-3 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-60 {chosen
-									? 'border-accent bg-accent-soft'
+								class="flex items-center gap-3 rounded-xl bg-control px-4 py-3 text-left shadow-float-1 transition-[background-color,box-shadow] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring {chosen
+									? 'bg-accent-soft ring-1 ring-accent-border'
 									: row.custom
-										? 'border-dashed border-border hover:border-border-strong'
-										: 'border-border hover:border-border-strong'}"
+										? 'border-[1.5px] border-dashed border-line-strong'
+										: 'hover:bg-control-hover'}"
 								onclick={() => onpick(row)}
 							>
 								{#if row.custom}
 									<span
-										class="flex size-9 shrink-0 items-center justify-center rounded-xl border border-border text-muted-foreground"
+										class="flex size-9 shrink-0 items-center justify-center rounded-xl bg-sunken text-muted-foreground shadow-float-1"
 									>
 										<Icon name="plus" size={16} />
 									</span>
@@ -155,14 +155,14 @@
 										{#if isExperimentalConnection(row.id)}
 											<span
 												data-experimental-chip
-												class="badge shrink-0 border border-border text-muted-foreground"
+												class="badge shrink-0 bg-sunken text-muted-foreground"
 											>
 												{$t('ui.pages.providersPage.list.tagExperimental')}
 											</span>
 										{/if}
 										{#if row.added}
 											<span
-												class="shrink-0 rounded border border-border px-1.5 py-0.5 text-[0.6rem] text-muted-foreground"
+												class="shrink-0 rounded bg-sunken px-1.5 py-0.5 text-[0.6rem] text-muted-foreground"
 											>
 												{$t('ui.pages.providersPage.add.added')}
 											</span>
@@ -178,15 +178,19 @@
 										</span>
 									{/if}
 								</span>
-								<BillingChip provider={billingProvider} class="self-start" />
 								{#if chosen}
 									<span
+										data-check
+										data-checkbox
+										data-selected
+										data-selected-check
 										class="flex size-5 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground"
 										aria-hidden="true"
 									>
 										<Icon name="check" size={13} />
 									</span>
 								{/if}
+								<BillingChip provider={billingProvider} class="self-start" />
 							</button>
 						{/each}
 					</div>

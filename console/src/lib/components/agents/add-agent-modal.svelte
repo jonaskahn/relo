@@ -280,8 +280,8 @@
 								aria-checked={chosen}
 								title={agent.summary || labelOf(agent)}
 								class="flex min-h-28 w-full min-w-0 flex-col items-center justify-center gap-2 rounded-card border px-3 py-4 text-center transition-colors hover:bg-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring {chosen
-									? 'border-accent-border bg-accent-soft'
-									: 'border-line bg-surface'}"
+									? 'bg-accent-soft ring-1 ring-accent-border'
+									: 'bg-surface shadow-float-1'}"
 								onclick={() => pick(agent)}
 							>
 								<span class="relative shrink-0">
@@ -329,7 +329,7 @@
 				{#if selected.id === 'opencode'}
 					<!-- The generations this client understands. V2 is the one Relo
 				     writes; V1 stays visible so an older setup is still named. -->
-					<div class="flex flex-col gap-1 rounded-panel border border-line bg-surface px-3 py-2">
+					<div class="flex flex-col gap-1 rounded-panel bg-surface shadow-float-1 px-3 py-2">
 						<p class="text-sm font-medium">
 							{$t('ui.pages.integrationsPage.openCodeVersionsTitle')}
 						</p>
@@ -350,7 +350,7 @@
 					</div>
 				{/if}
 				{#if refusal === 'foreign_key' && !selected.enabled}
-					<div class="rounded-panel border border-warn/40 bg-warn/5 px-3 py-2.5">
+					<div class="rounded-panel bg-warn/5 shadow-float-1 px-3 py-2.5">
 						<p class="text-sm text-ink">{$t('ui.pages.integrationsPage.overwriteBody')}</p>
 					</div>
 				{:else if refusalKey && !selected.enabled}

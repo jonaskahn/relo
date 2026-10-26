@@ -167,7 +167,7 @@
 	}
 </script>
 
-<div class="rounded-lg border border-border">
+<div class="rounded-lg bg-surface shadow-float-1">
 	<div class="flex items-center gap-2 px-3 py-2">
 		<button
 			type="button"

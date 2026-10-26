@@ -136,7 +136,7 @@ describe("the page's wait before it leaves", () => {
 		// left to say. What follows it is the one stretch in which the operator
 		// can read it, and then the page comes apart. The three are asserted
 		// together because together they are the whole of the page's life.
-		expect(readMs + windMs).toBe(4200);
+		expect(readMs + windMs).toBe(3200);
 	});
 
 	it('dissolves slowly enough that the edge reads as pixels rather than a wipe', () => {

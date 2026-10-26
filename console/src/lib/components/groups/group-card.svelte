@@ -141,7 +141,7 @@
 				<span class="flex flex-wrap gap-1">
 					{#each chips as chip (chip.id)}
 						<span
-							class="badge border border-line text-muted-foreground {chip.id === 'context'
+							class="badge bg-sunken text-muted-foreground {chip.id === 'context'
 								? 'mono-data'
 								: ''}"
 							title={$t(chip.tooltipKey)}
@@ -182,7 +182,7 @@
 				{#each pills as pill (pill.id)}
 					<span
 						class="badge {pill.warn
-							? 'border border-warn/40 bg-warn/10 text-warn'
+							? 'bg-warn/10 shadow-float-1 text-warn'
 							: 'bg-sunken text-muted-foreground'}"
 						title={pill.tip === '' ? undefined : pill.tip}
 					>
@@ -251,7 +251,7 @@
 					>
 						<ProviderLogo id={logoId(count.providerId)} {label} size="sm" round />
 						<span
-							class="absolute -right-1 -bottom-1 flex h-4 min-w-4 items-center justify-center rounded-full border border-line bg-surface px-1 text-[0.65rem] leading-none font-medium tabular-nums text-ink"
+							class="absolute -right-1 -bottom-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-surface shadow-float-1 px-1 text-[0.65rem] leading-none font-medium tabular-nums text-ink"
 							aria-hidden="true"
 						>
 							{count.count}
@@ -266,7 +266,7 @@
 						})}
 					>
 						<span
-							class="flex size-9 shrink-0 items-center justify-center rounded-full border border-line bg-surface text-muted-foreground"
+							class="flex size-9 shrink-0 items-center justify-center rounded-full bg-surface shadow-float-1 text-muted-foreground"
 							aria-hidden="true"
 						>
 							<Icon name="dots" size={18} />

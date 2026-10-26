@@ -10,7 +10,7 @@
 	import Input from '$lib/components/ui/input.svelte';
 	import SecretInput from '$lib/components/ui/secret-input.svelte';
 	import Field from '$lib/components/ui/field.svelte';
-	import NativeSelect from '$lib/components/ui/native-select.svelte';
+	import Select from '$lib/components/ui/select.svelte';
 	import Icon from '$lib/components/ui/icon.svelte';
 	import ProviderLogo from '$lib/components/ui/provider-logo.svelte';
 	import FormatCards from '../format-cards.svelte';
@@ -59,14 +59,14 @@
 			<span class="text-sm font-medium">{$t('ui.pages.providersPage.add.customTitle')}</span>
 		{/if}
 		{#if kind === 'signin'}
-			<span class="rounded border border-border px-1.5 py-0.5 text-[0.65rem] text-muted-foreground">
+			<span class="rounded bg-sunken px-1.5 py-0.5 text-[0.65rem] text-muted-foreground">
 				{$t('ui.pages.providersPage.accounts.kindSignin')}
 			</span>
 		{/if}
 	</div>
 
 	{#if addKey && targetChoices.length > 0}
-		<div class="flex flex-col gap-2 rounded-lg border border-border p-3">
+		<div class="flex flex-col gap-2 rounded-lg shadow-float-1 p-3">
 			<label class="flex items-start gap-2 text-sm">
 				<input
 					type="radio"
@@ -89,16 +89,16 @@
 				</span>
 			</label>
 			{#if targetChoices.length > 1}
-				<select
-					class="h-9 rounded-md border border-border bg-transparent px-2 text-sm"
-					aria-label={$t('ui.pages.providersPage.add.targetProvider')}
+				<Select
+					class="min-w-0"
 					value={draft.targetProviderId}
-					onchange={(event) => ondraft({ targetProviderId: event.currentTarget.value })}
-				>
-					{#each targetChoices as choice (choice.id)}
-						<option value={choice.id}>{choice.label} · {choice.id}</option>
-					{/each}
-				</select>
+					ariaLabel={$t('ui.pages.providersPage.add.targetProvider')}
+					options={targetChoices.map((choice) => ({
+						value: choice.id,
+						label: `${choice.label} · ${choice.id}`
+					}))}
+					onValueChange={(next) => ondraft({ targetProviderId: next })}
+				/>
 			{/if}
 			<label class="flex items-start gap-2 text-sm">
 				<input
@@ -235,28 +235,26 @@
 				/>
 			</Field>
 			<Field id="custom-models-format" label={$t('ui.pages.providersPage.add.modelsFormat')}>
-				<NativeSelect
+				<Select
 					id="custom-models-format"
 					value={draft.custom.modelsFormat}
-					onchange={(event) =>
-						ondraft({ custom: { ...draft.custom, modelsFormat: event.currentTarget.value } })}
-				>
-					{#each ['openai', 'anthropic', 'gemini', 'bedrock', 'kiro', 'none'] as option (option)}
-						<option value={option}>{option}</option>
-					{/each}
-				</NativeSelect>
+					onValueChange={(next) => ondraft({ custom: { ...draft.custom, modelsFormat: next } })}
+					options={['openai', 'anthropic', 'gemini', 'bedrock', 'kiro', 'none'].map((option) => ({
+						value: option,
+						label: option
+					}))}
+				/>
 			</Field>
 			<Field id="custom-key-header" label={$t('ui.pages.providersPage.add.keyHeader')}>
-				<NativeSelect
+				<Select
 					id="custom-key-header"
 					value={draft.custom.keyHeader}
-					onchange={(event) =>
-						ondraft({ custom: { ...draft.custom, keyHeader: event.currentTarget.value } })}
-				>
-					{#each ['bearer', 'x-api-key', 'x-goog-api-key', 'api-key', 'none'] as option (option)}
-						<option value={option}>{option}</option>
-					{/each}
-				</NativeSelect>
+					onValueChange={(next) => ondraft({ custom: { ...draft.custom, keyHeader: next } })}
+					options={['bearer', 'x-api-key', 'x-goog-api-key', 'api-key', 'none'].map((option) => ({
+						value: option,
+						label: option
+					}))}
+				/>
 			</Field>
 			<Field
 				id="custom-base-url"

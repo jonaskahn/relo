@@ -30,7 +30,7 @@ it but never deletes `~/.mitmproxy` CA files.
 $ ./scripts/build-console.sh
 ```
 
-Builds the Svelte console into `console/build` (`npm ci` first if needed).
+Builds the Svelte console into `console/build` (`npm install` first if needed).
 
 ### sync-assets.sh (`make sync-assets`)
 

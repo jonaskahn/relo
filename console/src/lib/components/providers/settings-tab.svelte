@@ -17,7 +17,7 @@
 	import Input from '$lib/components/ui/input.svelte';
 	import Field from '$lib/components/ui/field.svelte';
 	import FieldSwitch from '$lib/components/ui/field-switch.svelte';
-	import NativeSelect from '$lib/components/ui/native-select.svelte';
+	import Select from '$lib/components/ui/select.svelte';
 	import SignInSettingsSection from './sign-in-settings-section.svelte';
 	import FormatCards from './format-cards.svelte';
 	import HeadersEditor from './headers-editor.svelte';
@@ -268,11 +268,15 @@
 					description={proxyDescription}
 				/>
 				<Field id="settings-strategy" label={$t('ui.pages.providersPage.settings.poolStrategy')}>
-					<NativeSelect id="settings-strategy" class="max-sm:h-11" bind:value={draft.poolStrategy}>
-						{#each strategies as strategy (strategy)}
-							<option value={strategy}>{strategyName(strategy)}</option>
-						{/each}
-					</NativeSelect>
+					<Select
+						id="settings-strategy"
+						class="max-sm:h-11"
+						bind:value={draft.poolStrategy}
+						options={strategies.map((strategy) => ({
+							value: strategy,
+							label: strategyName(strategy)
+						}))}
+					/>
 				</Field>
 				<FieldSwitch
 					id="settings-switch-on-4xx"
@@ -404,15 +408,15 @@
 						{#each provider.variable_defs ?? [] as variable (variable.name)}
 							<Field id={'settings-var-' + variable.name} label={variable.label || variable.name}>
 								{#if (variable.options ?? []).length > 0}
-									<NativeSelect
+									<Select
 										id={'settings-var-' + variable.name}
 										class="max-sm:h-11"
 										bind:value={draft.variables[variable.name]}
-									>
-										{#each variable.options ?? [] as option (option)}
-											<option value={option}>{option}</option>
-										{/each}
-									</NativeSelect>
+										options={(variable.options ?? []).map((option) => ({
+											value: option,
+											label: option
+										}))}
+									/>
 								{:else}
 									<Input
 										id={'settings-var-' + variable.name}
@@ -431,13 +435,18 @@
 						label={$t('ui.pages.providersPage.settings.keyHeader')}
 						hint={$t('ui.pages.providersPage.settings.keyHeaderHint')}
 					>
-						<NativeSelect id="settings-key-header" class="max-sm:h-11" bind:value={draft.keyHeader}>
-							<option value="bearer">bearer</option>
-							<option value="x-api-key">x-api-key</option>
-							<option value="x-goog-api-key">x-goog-api-key</option>
-							<option value="api-key">api-key</option>
-							<option value="none">none</option>
-						</NativeSelect>
+						<Select
+							id="settings-key-header"
+							class="max-sm:h-11"
+							bind:value={draft.keyHeader}
+							options={[
+								{ value: 'bearer', label: 'bearer' },
+								{ value: 'x-api-key', label: 'x-api-key' },
+								{ value: 'x-goog-api-key', label: 'x-goog-api-key' },
+								{ value: 'api-key', label: 'api-key' },
+								{ value: 'none', label: 'none' }
+							]}
+						/>
 					</Field>
 				{/if}
 				<div class="flex flex-col gap-1">

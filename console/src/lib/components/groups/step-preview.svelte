@@ -58,7 +58,7 @@
 	{/if}
 	{#if capabilities.reasoningMixed}
 		<p
-			class="flex items-center gap-2 rounded-lg border border-warn/40 bg-warn/10 p-3 text-sm text-warn"
+			class="flex items-center gap-2 rounded-lg bg-warn/10 shadow-float-1 p-3 text-sm text-warn"
 			role="status"
 		>
 			<Icon name="alert-triangle" size={14} />{$t('ui.pages.groupsPage.warnReasoning')}
@@ -66,7 +66,7 @@
 	{/if}
 	{#if capabilities.visionMixed}
 		<p
-			class="flex items-center gap-2 rounded-lg border border-warn/40 bg-warn/10 p-3 text-sm text-warn"
+			class="flex items-center gap-2 rounded-lg bg-warn/10 shadow-float-1 p-3 text-sm text-warn"
 			role="status"
 		>
 			<Icon name="alert-triangle" size={14} />{$t('ui.pages.groupsPage.warnVision')}
@@ -74,7 +74,7 @@
 	{/if}
 
 	<div class="grid gap-6 lg:grid-cols-[minmax(0,5fr)_minmax(0,6fr)]">
-		<div class="self-start rounded-panel border border-border p-4.5">
+		<div class="self-start rounded-panel shadow-float-1 p-4.5">
 			<dl class="grid gap-3.5 text-sm">
 				<div class="min-w-0">
 					<dt class="text-xs text-muted-foreground">{$t('ui.pages.groupsPage.id')}</dt>
@@ -153,12 +153,12 @@
 							<div
 								class="mb-2.5 flex min-w-0 flex-1 items-center gap-3 rounded-panel border p-3 {position ===
 								0
-									? 'border-primary bg-accent-soft'
-									: 'border-border'}"
+									? 'bg-accent-soft ring-1 ring-accent-border'
+									: 'hover:bg-control-hover'}"
 							>
 								{#if memberKind(member) === 'auto'}
 									<span
-										class="flex size-6 shrink-0 items-center justify-center rounded-lg border border-accent-line bg-accent-soft text-[0.6rem] font-semibold text-accent-ink"
+										class="flex size-6 shrink-0 items-center justify-center rounded-lg bg-accent-soft ring-1 ring-accent-border text-[0.6rem] font-semibold text-accent-ink"
 										title={$t('ui.pages.groupsPage.autoHint')}
 									>
 										{$t('ui.pages.groupsPage.autoBadge')}
@@ -192,10 +192,10 @@
 			{#if skipped.length > 0}
 				<div class="mt-1 flex flex-col gap-2 opacity-[0.55]">
 					{#each skipped as member (member.provider_id + '/' + member.model_id)}
-						<div class="flex min-w-0 items-center gap-3 rounded-panel border border-border p-3">
+						<div class="flex min-w-0 items-center gap-3 rounded-panel shadow-float-1 p-3">
 							{#if memberKind(member) === 'auto'}
 								<span
-									class="flex size-6 shrink-0 items-center justify-center rounded-lg border border-accent-line bg-accent-soft text-[0.6rem] font-semibold text-accent-ink"
+									class="flex size-6 shrink-0 items-center justify-center rounded-lg bg-accent-soft ring-1 ring-accent-border text-[0.6rem] font-semibold text-accent-ink"
 									title={$t('ui.pages.groupsPage.autoHint')}
 								>
 									{$t('ui.pages.groupsPage.autoBadge')}
@@ -216,7 +216,7 @@
 										: member.provider_id + '/' + member.model_id}
 								</span>
 							</div>
-							<span class="badge shrink-0 border border-border text-muted-foreground"
+							<span class="badge shrink-0 bg-sunken text-muted-foreground"
 								>{skipReason(member)}</span
 							>
 						</div>

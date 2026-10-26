@@ -211,9 +211,7 @@
 					</div>
 				</div>
 				{#if accessKey.owner}
-					<p
-						class="rounded-panel border border-line bg-sunken px-3 py-2 text-xs text-muted-foreground"
-					>
+					<p class="rounded-panel bg-sunken px-3 py-2 text-xs text-muted-foreground">
 						{$t('ui.pages.keysPage.ownedHint')}
 					</p>
 				{/if}

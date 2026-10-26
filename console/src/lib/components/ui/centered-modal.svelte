@@ -222,37 +222,35 @@
 						{/if}
 						<!-- Sticky header, no rule against the body; the header band
 						     and the spacing separate the rows. -->
+						<!-- Two rows, always: the title with the close button on the
+						     right, then the description across the full width under it. -->
 						<div
 							role="presentation"
-							class={cn(
-								'flex shrink-0 items-start justify-between gap-3 bg-surface px-5 py-4 max-sm:px-4',
-								placement === 'drawer' && 'items-center',
-								chrome.header
-							)}
+							class={cn('shrink-0 bg-surface px-5 pt-4 pb-4 max-sm:px-4', chrome.header)}
 							onpointerdown={onSheetPointerDown}
 						>
-							<div class="min-w-0 flex-1">
-								<div class="flex items-center gap-2">
+							<div class="flex items-center justify-between gap-3">
+								<div class="flex min-w-0 flex-1 items-center gap-2">
 									<Dialog.Title
-										class={cn('text-[1.125rem] font-semibold leading-snug', chrome.title)}
+										class={cn('truncate text-[1.125rem] font-semibold leading-snug', chrome.title)}
 										>{title}</Dialog.Title
 									>
 									{@render titleAside?.()}
 								</div>
-								{#if description}
-									<Dialog.Description class="mt-0.5 truncate text-sm text-muted-foreground"
-										>{description}</Dialog.Description
+								{@render headerNav?.()}
+								{#if dismissible}
+									<Dialog.Close
+										class="flex size-control shrink-0 items-center justify-center rounded-control text-muted-foreground transition-colors hover:bg-hover hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+										aria-label={$t('ui.common.close')}
 									>
+										<Icon name="x" size={16} />
+									</Dialog.Close>
 								{/if}
 							</div>
-							{@render headerNav?.()}
-							{#if dismissible}
-								<Dialog.Close
-									class="flex size-8 shrink-0 items-center justify-center rounded-control text-muted-foreground transition-colors hover:bg-hover hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-									aria-label={$t('ui.common.close')}
+							{#if description}
+								<Dialog.Description class="mt-1 text-sm text-muted-foreground"
+									>{description}</Dialog.Description
 								>
-									<Icon name="x" size={16} />
-								</Dialog.Close>
 							{/if}
 						</div>
 

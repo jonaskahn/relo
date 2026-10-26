@@ -46,9 +46,9 @@
 </script>
 
 <div
-	class="flex items-center gap-2 rounded-lg border px-2 py-2 transition-[border-color,background-color] duration-150 {selected
-		? 'border-accent bg-accent-soft'
-		: 'border-transparent hover:border-border hover:bg-surface'}"
+	class="flex items-center gap-2 rounded-lg bg-card px-2 py-2 shadow-float-1 transition-[background-color,box-shadow] duration-150 {selected
+		? 'bg-accent-soft ring-1 ring-accent-border'
+		: 'hover:bg-control-hover'}"
 >
 	<button
 		type="button"
@@ -59,7 +59,7 @@
 		onkeydown={onrowkey}
 	>
 		<span class="flex items-center gap-2.5">
-			<span class={provider.enabled ? '' : 'opacity-50'}>
+			<span class={provider.enabled ? '' : 'opacity-60'}>
 				<ProviderLogo id={provider.template_id || provider.id} label={provider.label} size="sm" />
 			</span>
 			<span class="min-w-0 flex-1">
@@ -87,7 +87,7 @@
 			<span aria-hidden="true">·</span>
 			<span>{accountsOn}</span>
 			{#if provider.counts.unpriced_models > 0}
-				<span class="badge border border-border font-sans">
+				<span class="badge bg-sunken font-sans">
 					<Icon name="tag" size={11} />
 					{$t('ui.pages.providersPage.list.unpriced', {
 						values: { count: provider.counts.unpriced_models }

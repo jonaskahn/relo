@@ -9,7 +9,7 @@
 <div
 	data-slot="card"
 	class={cn(
-		'bg-surface text-card-foreground flex flex-col gap-6 rounded-card border border-line py-6 shadow-1',
+		'bg-surface text-card-foreground flex flex-col gap-6 rounded-card py-6 shadow-float-1',
 		className
 	)}
 	{...rest}

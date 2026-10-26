@@ -24,7 +24,7 @@
 			type="button"
 			disabled={!done}
 			aria-current={isCurrent ? 'step' : undefined}
-			class="flex items-center gap-2.5 rounded-control px-0.5 py-0.5 text-left transition-colors focus-visible:outline-none disabled:cursor-default {isCurrent
+			class="flex items-center gap-2.5 rounded-control px-2 py-1 text-left transition-colors focus-visible:outline-none disabled:cursor-default {isCurrent
 				? 'text-ink'
 				: done
 					? 'text-ink hover:text-accent-ink'
@@ -32,11 +32,11 @@
 			onclick={() => done && onjump(entry)}
 		>
 			<span
-				class="flex size-6.5 shrink-0 items-center justify-center rounded-full border-[1.5px] text-xs font-semibold {isCurrent
-					? 'border-primary bg-primary text-primary-foreground'
+				class="flex size-[1.625rem] shrink-0 items-center justify-center text-xs font-semibold {isCurrent
+					? 'font-bold text-accent-ink'
 					: done
-						? 'border-primary bg-accent-soft text-accent-ink'
-						: 'border-border text-muted-foreground/60'}"
+						? 'text-accent'
+						: 'text-faint'}"
 			>
 				{#if done}
 					<Icon name="check" size={13} />

@@ -172,16 +172,16 @@
 							)}
 						</span>
 						{#if !model.enabled}
-							<span class="badge shrink-0 border border-warn/40 text-warn">
+							<span class="badge shrink-0 bg-warn/10 text-warn">
 								{$t('ui.pages.providersPage.models.tagDeprecated')}
 							</span>
 						{/if}
 						{#if model.prices.effective.input === null && model.prices.effective.output === null}
-							<span class="badge shrink-0 border border-warn/40 text-warn">
+							<span class="badge shrink-0 bg-warn/10 text-warn">
 								{$t('ui.pages.providersPage.models.tagUnpriced')}
 							</span>
 						{/if}
-						<span class="badge shrink-0 border border-border text-muted-foreground">
+						<span class="badge shrink-0 bg-sunken text-muted-foreground">
 							{$t(sourceKeys[model.source] ?? 'ui.pages.providersPage.review.sourceManual')}
 						</span>
 					</label>

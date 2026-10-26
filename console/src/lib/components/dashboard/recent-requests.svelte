@@ -64,7 +64,7 @@
 			{#each rows as row (row.ID)}
 				<a
 					href={'/logs?request=' + row.ID}
-					class="log-row-grid rounded-panel border border-line bg-surface px-3.5 py-2 transition-[border-color,box-shadow,background-color] duration-150 hover:border-accent-border hover:bg-hover hover:shadow-[var(--shadow-hover)]"
+					class="log-row-grid rounded-panel bg-surface shadow-float-1 px-3.5 py-2 transition-[box-shadow,background-color] duration-150 hover:bg-hover hover:shadow-[var(--shadow-hover)]"
 				>
 					<span class="flex min-w-0 items-center gap-1.5">
 						<Icon

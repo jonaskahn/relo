@@ -32,6 +32,12 @@ describe('button rendering', () => {
 		}
 	});
 
+	it('renders icon buttons as squares, not pills', () => {
+		const html = markup({ variant: 'ghost', size: 'icon' });
+		expect(html).toContain('rounded-control');
+		expect(html).not.toContain('rounded-round');
+	});
+
 	it('renders exactly one control for every shape it is given', () => {
 		for (const props of [
 			{},

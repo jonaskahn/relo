@@ -55,7 +55,7 @@
 <div class="flex shrink-0 flex-col items-start gap-0.5">
 	<span class="text-[0.65rem] text-faint">{label}</span>
 	<span
-		class="inline-flex shrink-0 items-center gap-0.5 {disabled ? 'opacity-60' : ''}"
+		class="inline-flex shrink-0 items-center gap-0.5 {disabled ? 'text-disabled-ink' : ''}"
 		role="img"
 		aria-label={label + ': ' + stateLabel}
 	>
@@ -76,8 +76,8 @@
 		<Popover.Trigger
 			{disabled}
 			class={cn(
-				'inline-flex size-6 shrink-0 items-center justify-center rounded-md text-faint transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
-				disabled ? 'cursor-not-allowed opacity-60' : 'hover:bg-muted hover:text-ink'
+				'inline-flex size-6 shrink-0 items-center justify-center rounded-control-sm text-faint transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+				disabled ? 'cursor-not-allowed' : 'hover:bg-hover hover:text-ink'
 			)}
 			aria-label={$t('ui.pages.providersPage.modelsTable.capabilityEdit', {
 				values: { name: label }
@@ -99,7 +99,7 @@
 						disabled={busy}
 						class={cn(
 							'flex w-full items-center rounded-md px-2 py-1.5 text-left text-xs hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
-							selected && 'bg-accent-soft text-foreground'
+							selected && 'bg-accent-soft text-foreground ring-1 ring-accent-border'
 						)}
 						onclick={() => void save(choice.value)}
 					>

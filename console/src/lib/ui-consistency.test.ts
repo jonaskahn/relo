@@ -26,6 +26,7 @@ const SVELTE_FILES = files(SRC);
 // or pill corners. ui/ primitives are exempt because they define the system.
 const ELEMENT_CLASS = /<(button|a|input|select|textarea)[^>]*?class="([^"]*)"/g;
 const TRIGGER_CLASS = /<(Popover|DropdownMenu|Tooltip|Dialog)[.]Trigger[^>]*?class="([^"]*)"/g;
+const BUTTON_CLASS = /<Button[^>]*?class="([^"]*)"/g;
 
 const FORBIDDEN_TOKENS = [
 	'h-7',
@@ -65,10 +66,10 @@ describe('control consistency', () => {
 			const inUi = path.includes(join(SRC, 'lib', 'components', 'ui'));
 			if (inUi) continue;
 			const text = readFileSync(path, 'utf8');
-			for (const regex of [ELEMENT_CLASS, TRIGGER_CLASS]) {
+			for (const regex of [ELEMENT_CLASS, TRIGGER_CLASS, BUTTON_CLASS]) {
 				regex.lastIndex = 0;
 				for (const match of text.matchAll(regex)) {
-					const classes = match[2];
+					const classes = match[1] ?? match[2];
 					const found = forbiddenToken(classes);
 					expect(found === '', path + ' uses ' + found + ' on: ' + classes).toBe(true);
 				}
@@ -92,6 +93,33 @@ describe('control consistency', () => {
 			}
 		}
 		expect(seen).toBeGreaterThan(10);
+	});
+
+	it('leaves the menu item highlight to the one app.css rule', () => {
+		for (const path of SVELTE_FILES) {
+			const text = readFileSync(path, 'utf8');
+			expect(
+				!text.includes('data-highlighted:bg-hover'),
+				path + ' styles its own menu item highlight'
+			).toBe(true);
+		}
+	});
+
+	it('draws every selected state with a 1px accent ring', () => {
+		for (const path of SVELTE_FILES) {
+			const text = readFileSync(path, 'utf8');
+			expect(!text.includes('ring-2 ring-'), path + ' uses a 2px selection ring').toBe(true);
+		}
+	});
+
+	it('uses the bits-ui anchor-width variable for select popups', () => {
+		for (const path of SVELTE_FILES) {
+			const text = readFileSync(path, 'utf8');
+			expect(
+				!text.includes('bits-select-trigger-width'),
+				path + ' references the undefined bits-select-trigger-width variable'
+			).toBe(true);
+		}
 	});
 
 	it('keeps every block tag braced, so a branch is never read as text', () => {

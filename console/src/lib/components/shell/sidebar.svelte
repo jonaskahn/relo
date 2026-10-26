@@ -203,8 +203,8 @@
 							railEase,
 							compact ? 'justify-center rounded-control px-0' : 'gap-2.5 rounded-control px-2.5',
 							isActive(link.href)
-								? 'bg-accent-soft text-accent-ink shadow-[0_4px_14px_var(--accent-glow)]'
-								: 'text-muted-foreground hover:bg-hover hover:text-ink'
+								? 'bg-[var(--nav-active)] text-accent-ink'
+								: 'text-muted-foreground hover:bg-[var(--nav-hover)] hover:text-ink'
 						)}
 						aria-current={isActive(link.href) ? 'page' : undefined}
 						title={compact ? $t(link.shortLabelKey ?? link.labelKey) : undefined}
@@ -290,7 +290,7 @@
 		aria-label={$t('ui.sidebar.console')}
 		tabindex="-1"
 		class={cn(
-			'chrome fixed inset-y-0 left-0 z-40 flex shrink-0 flex-col overflow-hidden shadow-edge transition-[transform,width]',
+			'chrome fixed inset-y-0 left-0 z-40 flex shrink-0 flex-col overflow-hidden transition-[transform,width]',
 			railEase,
 			compact ? 'w-16' : 'w-[224px]'
 		)}
@@ -308,7 +308,7 @@
 		aria-modal="true"
 		aria-label={$t('ui.sidebar.console')}
 		tabindex="-1"
-		class="chrome fixed inset-y-0 left-0 z-40 flex w-[224px] shrink-0 flex-col overflow-hidden shadow-edge"
+		class="chrome fixed inset-y-0 left-0 z-40 flex w-[224px] shrink-0 flex-col overflow-hidden"
 		style={dragging ? 'transform: translateX(' + dragX + 'px); transition: none;' : ''}
 		in:drawerEnter
 		out:drawerLeave={{ startX: () => releaseX }}

@@ -95,7 +95,7 @@
 		<div class="flex min-w-0 flex-1 flex-col gap-1.5 md:min-w-46">
 			{#each nodes as node (node.label + node.meta)}
 				<div
-					class="flex items-center justify-between gap-3 rounded-control border border-border bg-card px-2.5 py-1.5 text-xs {node.dim ===
+					class="flex items-center justify-between gap-3 rounded-control bg-card shadow-float-1 px-2.5 py-1.5 text-xs {node.dim ===
 					1
 						? 'opacity-[0.55]'
 						: node.dim === 2

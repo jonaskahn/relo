@@ -11,7 +11,7 @@
 	import Button from '$lib/components/ui/button.svelte';
 	import Field from '$lib/components/ui/field.svelte';
 	import Input from '$lib/components/ui/input.svelte';
-	import NativeSelect from '$lib/components/ui/native-select.svelte';
+	import Select from '$lib/components/ui/select.svelte';
 	import Segmented from '$lib/components/ui/segmented.svelte';
 	import type { Group, Model, Provider } from '$lib/types';
 
@@ -130,7 +130,7 @@
 		{:else}
 			{#if locked}
 				<p
-					class="flex items-start gap-2 rounded-panel border border-line bg-surface px-3 py-2.5 text-xs leading-relaxed text-muted-foreground"
+					class="flex items-start gap-2 rounded-panel bg-surface shadow-float-1 px-3 py-2.5 text-xs leading-relaxed text-muted-foreground"
 				>
 					<Icon name="lock" size={13} class="mt-0.5 shrink-0" />
 					{$t('ui.pages.chatPage.lockedHint')}
@@ -160,66 +160,58 @@
 					/>
 				</Field>
 				<Field id="chat-format" label={$t('ui.pages.chatPage.format')}>
-					<NativeSelect
+					<Select
 						id="chat-format"
 						value={settings.format}
 						disabled={locked}
-						onchange={(event) => {
-							const { value } = event.currentTarget;
-							if (isChatFormat(value)) change({ format: value });
+						onValueChange={(next) => {
+							if (isChatFormat(next)) change({ format: next });
 						}}
-					>
-						<option value="openai-chat">{$t('ui.pages.chatPage.formatChat')}</option>
-						<option value="openai-responses">{$t('ui.pages.chatPage.formatResponses')}</option>
-						<option value="anthropic">{$t('ui.pages.chatPage.formatMessages')}</option>
-					</NativeSelect>
+						options={[
+							{ value: 'openai-chat', label: $t('ui.pages.chatPage.formatChat') },
+							{ value: 'openai-responses', label: $t('ui.pages.chatPage.formatResponses') },
+							{ value: 'anthropic', label: $t('ui.pages.chatPage.formatMessages') }
+						]}
+					/>
 				</Field>
 			{/if}
 
 			<div class="space-y-4" bind:this={targetGroup}>
 				{#if usesRoute}
 					<Field id="chat-route" label={$t('ui.pages.chatPage.route')}>
-						<NativeSelect
+						<Select
 							id="chat-route"
 							value={settings.routeId}
 							disabled={locked || routes.length === 0}
-							onchange={(event) => change({ routeId: event.currentTarget.value })}
-						>
-							{#if routes.length === 0}
-								<option value="">{$t('ui.pages.chatPage.noRoutes')}</option>
-							{/if}
-							{#each routes as route (route.id)}
-								<option value={route.id}>{route.label || route.id}</option>
-							{/each}
-						</NativeSelect>
+							onValueChange={(next) => change({ routeId: next })}
+							options={routes.length === 0
+								? [{ value: '', label: $t('ui.pages.chatPage.noRoutes') }]
+								: routes.map((route) => ({ value: route.id, label: route.label || route.id }))}
+						/>
 					</Field>
 				{:else}
 					<Field id="chat-provider" label={$t('ui.pages.chatPage.provider')}>
-						<NativeSelect
+						<Select
 							id="chat-provider"
 							value={settings.providerId}
 							disabled={locked}
-							onchange={(event) => change({ providerId: event.currentTarget.value })}
-						>
-							{#each providers as provider (provider.id)}
-								<option value={provider.id}>{provider.label}</option>
-							{/each}
-						</NativeSelect>
+							onValueChange={(next) => change({ providerId: next })}
+							options={providers.map((provider) => ({ value: provider.id, label: provider.label }))}
+						/>
 					</Field>
 					<Field id="chat-model" label={$t('ui.pages.chatPage.model')}>
-						<NativeSelect
+						<Select
 							id="chat-model"
 							value={settings.modelId}
 							disabled={locked || enabledModels.length === 0}
-							onchange={(event) => change({ modelId: event.currentTarget.value })}
-						>
-							{#if enabledModels.length === 0}
-								<option value="">{$t('ui.pages.chatPage.noModels')}</option>
-							{/if}
-							{#each enabledModels as model (model.model_id)}
-								<option value={model.model_id}>{model.name || model.model_id}</option>
-							{/each}
-						</NativeSelect>
+							onValueChange={(next) => change({ modelId: next })}
+							options={enabledModels.length === 0
+								? [{ value: '', label: $t('ui.pages.chatPage.noModels') }]
+								: enabledModels.map((model) => ({
+										value: model.model_id,
+										label: model.name || model.model_id
+									}))}
+						/>
 					</Field>
 				{/if}
 			</div>
@@ -229,7 +221,7 @@
 					id="chat-system"
 					rows="5"
 					disabled={locked}
-					class="min-h-24 w-full resize-y rounded-control border border-line bg-surface px-3 py-2 text-sm text-ink outline-none disabled:cursor-not-allowed disabled:opacity-60"
+					class="min-h-24 w-full resize-y rounded-control bg-control px-3 py-2 text-sm text-ink shadow-field outline-none transition-[background-color,box-shadow] hover:bg-control-hover hover:shadow-field-hover focus-visible:ring-[3px] focus-visible:ring-ring/50"
 					value={settings.system}
 					oninput={(event) => change({ system: event.currentTarget.value })}></textarea>
 			</Field>

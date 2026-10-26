@@ -399,7 +399,7 @@
 
 <svelte:head><title>{$t('ui.pages.providersPage.header.title')} · Relo</title></svelte:head>
 
-<div class="flex min-h-full flex-col bg-background">
+<div class="flex min-h-full flex-col">
 	<PageHeader
 		title="ui.pages.providersPage.header.title"
 		description="ui.pages.providersPage.header.subtitle"
@@ -407,7 +407,7 @@
 		{#snippet titleSuffix()}
 			{#if view === 'models' && paneOpen}
 				<span
-					class="shrink-0 rounded-full border border-border px-2 py-0.5 font-mono text-xs text-muted-foreground max-sm:hidden"
+					class="shrink-0 rounded-full bg-sunken px-2 py-0.5 font-mono text-xs text-muted-foreground max-sm:hidden"
 				>
 					{$t('ui.pages.providersPage.list.modelCount', { values: { count: allTotal } })}
 				</span>
@@ -434,7 +434,7 @@
 		{#if loading && providers.length === 0}
 			<div class="flex flex-col gap-3">
 				{#each [0, 1, 2, 3] as row (row)}
-					<div class="h-16 animate-pulse rounded-xl border border-border bg-muted/40"></div>
+					<div class="h-16 animate-pulse rounded-xl bg-muted/40 shadow-float-1"></div>
 				{/each}
 			</div>
 		{:else if providers.length === 0 && view === 'provider'}
@@ -490,7 +490,7 @@
 								{#snippet toolbarTitle()}
 									<div class="flex min-w-0 items-center justify-center gap-2 sm:hidden">
 										<span
-											class="shrink-0 rounded-full border border-border px-2 py-0.5 font-mono text-xs text-muted-foreground"
+											class="shrink-0 rounded-full bg-sunken px-2 py-0.5 font-mono text-xs text-muted-foreground"
 										>
 											{$t('ui.pages.providersPage.list.modelCount', {
 												values: { count: allTotal }

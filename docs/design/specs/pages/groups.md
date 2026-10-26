@@ -42,5 +42,6 @@ then opens the confirmation.
 
 ## Editor (`xl`)
 
-The same three-step sheet for new and existing groups, and the same for **New group** and **Edit group**: Name it, Pick
-members, Preview. Details: `wizard-and-pickers`. Save group is the final primary; the toast says "Saved group <name>".
+A new group walks four steps — Name it, Billing, Pick members, Preview — while an existing group keeps the
+three-step sheet (Name it, Pick members, Preview). Details: `wizard-and-pickers`. Save group is the final primary;
+the toast says "Saved group <name>".

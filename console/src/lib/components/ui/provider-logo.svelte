@@ -29,7 +29,7 @@
 </script>
 
 <span
-	class="flex shrink-0 items-center justify-center border border-border bg-card text-sm font-semibold text-muted-foreground {box[
+	class="flex shrink-0 items-center justify-center bg-card shadow-float-1 text-sm font-semibold text-muted-foreground {box[
 		size
 	]} {radius}"
 	aria-hidden="true"

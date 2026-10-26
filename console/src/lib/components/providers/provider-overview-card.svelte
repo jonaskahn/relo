@@ -120,7 +120,7 @@
 >
 	<div class="flex min-w-0 flex-col">
 		<div class="flex items-start gap-2 px-4">
-			<span class={provider.enabled ? '' : 'opacity-50'}>
+			<span class={provider.enabled ? '' : 'opacity-60'}>
 				<ProviderLogo id={provider.template_id || provider.id} label={provider.label} />
 			</span>
 			<button
@@ -135,10 +135,7 @@
 					<span class="truncate">{provider.label}</span>
 					<BillingChip {provider} hover />
 					{#if experimental}
-						<span
-							data-experimental-chip
-							class="badge shrink-0 border border-border text-muted-foreground"
-						>
+						<span data-experimental-chip class="badge shrink-0 bg-sunken text-muted-foreground">
 							{$t('ui.pages.providersPage.list.tagExperimental')}
 						</span>
 					{/if}
@@ -193,7 +190,7 @@
 				<button
 					type="button"
 					data-plain
-					class="badge ms-auto shrink-0 border border-warn/40 text-warn hover:bg-warn/10"
+					class="badge ms-auto shrink-0 bg-warn/10 text-warn hover:bg-warn/10"
 					onclick={() => onunpriced?.(provider.id)}
 				>
 					<Icon name="tag" size={11} />

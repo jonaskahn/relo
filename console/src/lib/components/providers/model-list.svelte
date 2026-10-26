@@ -5,6 +5,8 @@
 	import type { Model } from '$lib/types';
 	import { api } from '$lib/api';
 	import Button from '$lib/components/ui/button.svelte';
+	import { buttonVariants } from '$lib/components/ui/button.svelte';
+	import { cn } from '$lib/utils';
 	import Input from '$lib/components/ui/input.svelte';
 	import { DropdownMenu } from 'bits-ui';
 	import MenuPanel from '$lib/components/ui/menu-panel.svelte';
@@ -112,8 +114,10 @@
 		)
 	]);
 
-	const menuIconTrigger =
-		'relative inline-flex size-control shrink-0 items-center justify-center rounded-md border border-border text-muted-foreground hover:border-border-strong hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring data-[state=open]:border-border-strong data-[state=open]:text-foreground';
+	const menuIconTrigger = cn(
+		buttonVariants({ variant: 'outline', size: 'icon' }),
+		'text-muted-foreground hover:text-foreground data-[state=open]:text-foreground'
+	);
 
 	const connectionBulk = $derived(providerId !== '' && providerModelIDs.length > 0);
 	// The context-window and capability bulk menus stay off; the on/off menu is
@@ -336,7 +340,7 @@
 							</DropdownMenu.Trigger>
 							<MenuPanel class="z-50 min-w-44 surface-pop p-1" align="end">
 								<DropdownMenu.Item
-									class="flex min-h-control cursor-pointer items-center gap-2 rounded-control px-2 py-1.5 text-sm outline-none data-highlighted:bg-hover"
+									class="flex min-h-control cursor-pointer items-center gap-2 rounded-control px-2 py-1.5 text-sm outline-none"
 									disabled={working}
 									onSelect={() => void setContextForAll(null)}
 								>
@@ -346,7 +350,7 @@
 								<DropdownMenu.Separator class="my-1 h-px bg-border" />
 								{#each CONTEXT_PRESETS as preset (preset)}
 									<DropdownMenu.Item
-										class="flex min-h-control cursor-pointer items-center rounded-control px-2 py-1.5 font-mono text-sm outline-none data-highlighted:bg-hover"
+										class="flex min-h-control cursor-pointer items-center rounded-control px-2 py-1.5 font-mono text-sm outline-none"
 										disabled={working}
 										onSelect={() => void setContextForAll(preset)}
 									>
@@ -370,7 +374,7 @@
 								</DropdownMenu.Trigger>
 								<MenuPanel class="z-50 min-w-36 surface-pop p-1" align="end">
 									<DropdownMenu.Item
-										class="flex min-h-control cursor-pointer items-center gap-2 rounded-control px-2 py-1.5 text-sm outline-none data-highlighted:bg-hover"
+										class="flex min-h-control cursor-pointer items-center gap-2 rounded-control px-2 py-1.5 text-sm outline-none"
 										disabled={working}
 										onSelect={() => void setCapabilityForAll(capability.field, null)}
 									>
@@ -378,7 +382,7 @@
 										{$t('ui.pages.providersPage.modelsTable.capabilityDefault')}
 									</DropdownMenu.Item>
 									<DropdownMenu.Item
-										class="flex min-h-control cursor-pointer items-center gap-2 rounded-control px-2 py-1.5 text-sm outline-none data-highlighted:bg-hover"
+										class="flex min-h-control cursor-pointer items-center gap-2 rounded-control px-2 py-1.5 text-sm outline-none"
 										disabled={working}
 										onSelect={() => void setCapabilityForAll(capability.field, true)}
 									>
@@ -386,7 +390,7 @@
 										{$t('ui.pages.providersPage.modelsTable.capabilityOn')}
 									</DropdownMenu.Item>
 									<DropdownMenu.Item
-										class="flex min-h-control cursor-pointer items-center gap-2 rounded-control px-2 py-1.5 text-sm outline-none data-highlighted:bg-hover"
+										class="flex min-h-control cursor-pointer items-center gap-2 rounded-control px-2 py-1.5 text-sm outline-none"
 										disabled={working}
 										onSelect={() => void setCapabilityForAll(capability.field, false)}
 									>

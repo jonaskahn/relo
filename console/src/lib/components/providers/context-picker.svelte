@@ -95,7 +95,11 @@
 <div class="flex flex-col items-start gap-0.5">
 	<!-- A fixed box, so a long custom size cannot widen the column, with the
 	     mark's own character reserved so the value never moves. -->
-	<span class="inline-flex shrink-0 items-center font-mono text-xs {disabled ? 'opacity-60' : ''}">
+	<span
+		class="inline-flex shrink-0 items-center font-mono text-xs {disabled
+			? 'text-disabled-ink'
+			: ''}"
+	>
 		<span class="w-[7ch] min-w-0 truncate" title={label}>{label}</span>
 		<span
 			class="w-[1ch] shrink-0 text-center font-semibold text-accent-strong"
@@ -107,8 +111,8 @@
 		<Popover.Trigger
 			{disabled}
 			class={cn(
-				'inline-flex size-6 shrink-0 items-center justify-center rounded-md text-faint transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
-				disabled ? 'cursor-not-allowed opacity-60' : 'hover:bg-muted hover:text-ink'
+				'inline-flex size-6 shrink-0 items-center justify-center rounded-control-sm text-faint transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+				disabled ? 'cursor-not-allowed' : 'hover:bg-hover hover:text-ink'
 			)}
 			aria-label={$t(editKey, { values: { value: label } })}
 			title={$t(editKey, { values: { value: label } })}
@@ -135,7 +139,7 @@
 					data-plain
 					disabled={busy}
 					class="flex w-full items-center justify-between gap-2 rounded-md px-2 py-1.5 text-left text-xs hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring {!custom
-						? 'bg-accent-soft text-foreground'
+						? 'bg-accent-soft text-foreground ring-1 ring-accent-border'
 						: ''}"
 					onclick={() => void save(null)}
 				>
@@ -154,9 +158,9 @@
 							type="button"
 							data-plain
 							disabled={busy}
-							class="badge border border-border font-mono text-muted-foreground hover:border-border-strong hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring {layers.override ===
+							class="badge bg-sunken font-mono text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring {layers.override ===
 							preset
-								? 'border-accent bg-accent-soft text-foreground'
+								? 'bg-accent-soft text-foreground ring-1 ring-accent-border'
 								: ''}"
 							aria-label={$t(quickKey, {
 								values: { value: contextLabel(preset) }

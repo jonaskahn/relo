@@ -3,7 +3,7 @@
 
 	import Field from '$lib/components/ui/field.svelte';
 	import FilterPanel from '$lib/components/ui/filter-panel.svelte';
-	import NativeSelect from '$lib/components/ui/native-select.svelte';
+	import Select from '$lib/components/ui/select.svelte';
 	import { FILTER_PANEL_KEYS } from '$lib/filter-panel';
 	import { CLIENT_OPTIONS } from '$lib/client-setup';
 	import { isRequestOrigin, isRequestStatus, type RequestFilters } from '$lib/process-logs';
@@ -33,67 +33,64 @@
 
 <FilterPanel storageKey={FILTER_PANEL_KEYS.logs} columns={3} bind:open>
 	<Field id="log-provider" label={$t('ui.pages.logsPage.columnProvider')}>
-		<NativeSelect
+		<Select
 			id="log-provider"
 			value={filters.provider}
-			onchange={(event) => onfilters({ provider: event.currentTarget.value })}
-		>
-			<option value="">{$t('ui.pages.logsPage.filterAll')}</option>
-			{#each providers as provider (provider.id)}
-				<option value={provider.id}>{provider.label}</option>
-			{/each}
-		</NativeSelect>
+			onValueChange={(next) => onfilters({ provider: next })}
+			options={[
+				{ value: '', label: $t('ui.pages.logsPage.filterAll') },
+				...providers.map((provider) => ({ value: provider.id, label: provider.label }))
+			]}
+		/>
 	</Field>
 	<Field id="log-status" label={$t('ui.pages.logsPage.filterStatus')}>
-		<NativeSelect
+		<Select
 			id="log-status"
 			value={filters.status}
-			onchange={(event) => {
-				const { value } = event.currentTarget;
-				if (isRequestStatus(value)) onfilters({ status: value });
+			onValueChange={(next) => {
+				if (isRequestStatus(next)) onfilters({ status: next });
 			}}
-		>
-			<option value="any">{$t('ui.pages.logsPage.filterAny')}</option>
-			<option value="ok">{$t('ui.pages.logsPage.filterOk')}</option>
-			<option value="error">{$t('ui.pages.logsPage.filterError')}</option>
-		</NativeSelect>
+			options={[
+				{ value: 'any', label: $t('ui.pages.logsPage.filterAny') },
+				{ value: 'ok', label: $t('ui.pages.logsPage.filterOk') },
+				{ value: 'error', label: $t('ui.pages.logsPage.filterError') }
+			]}
+		/>
 	</Field>
 	<Field id="log-origin" label={$t('ui.pages.logsPage.filterOrigin')}>
-		<NativeSelect
+		<Select
 			id="log-origin"
 			value={filters.origin}
-			onchange={(event) => {
-				const { value } = event.currentTarget;
-				if (isRequestOrigin(value)) onfilters({ origin: value });
+			onValueChange={(next) => {
+				if (isRequestOrigin(next)) onfilters({ origin: next });
 			}}
-		>
-			<option value="any">{$t('ui.pages.logsPage.filterAllOrigins')}</option>
-			<option value="internal">{$t('ui.pages.logsPage.originInternal')}</option>
-			<option value="external">{$t('ui.pages.logsPage.originExternal')}</option>
-		</NativeSelect>
+			options={[
+				{ value: 'any', label: $t('ui.pages.logsPage.filterAllOrigins') },
+				{ value: 'internal', label: $t('ui.pages.logsPage.originInternal') },
+				{ value: 'external', label: $t('ui.pages.logsPage.originExternal') }
+			]}
+		/>
 	</Field>
 	<Field id="log-client" label={$t('ui.pages.logsPage.filterClient')}>
-		<NativeSelect
+		<Select
 			id="log-client"
 			value={filters.client}
-			onchange={(event) => onfilters({ client: event.currentTarget.value })}
-		>
-			<option value="">{$t('ui.pages.logsPage.filterAllClients')}</option>
-			{#each clientOptions as option (option.id)}
-				<option value={option.id}>{option.label}</option>
-			{/each}
-		</NativeSelect>
+			onValueChange={(next) => onfilters({ client: next })}
+			options={[
+				{ value: '', label: $t('ui.pages.logsPage.filterAllClients') },
+				...clientOptions.map((option) => ({ value: option.id, label: option.label }))
+			]}
+		/>
 	</Field>
 	<Field id="log-key" label={$t('ui.pages.logsPage.filterAccessKey')}>
-		<NativeSelect
+		<Select
 			id="log-key"
 			value={filters.key}
-			onchange={(event) => onfilters({ key: event.currentTarget.value })}
-		>
-			<option value="">{$t('ui.pages.logsPage.filterAllKeys')}</option>
-			{#each keys as key (key.id)}
-				<option value={key.id}>{key.name}</option>
-			{/each}
-		</NativeSelect>
+			onValueChange={(next) => onfilters({ key: next })}
+			options={[
+				{ value: '', label: $t('ui.pages.logsPage.filterAllKeys') },
+				...keys.map((key) => ({ value: key.id, label: key.name }))
+			]}
+		/>
 	</Field>
 </FilterPanel>

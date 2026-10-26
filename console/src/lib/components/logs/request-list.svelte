@@ -98,7 +98,7 @@
 </script>
 
 <div
-	class="overflow-hidden rounded-card border border-line bg-surface max-sm:border-transparent max-sm:bg-transparent"
+	class="overflow-hidden rounded-card bg-surface shadow-float-1 max-sm:bg-transparent max-sm:shadow-none"
 	role="table"
 	aria-label={$t('ui.pages.logsPage.tabAgent')}
 >
