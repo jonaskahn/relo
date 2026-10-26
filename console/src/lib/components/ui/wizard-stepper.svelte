@@ -24,7 +24,7 @@
 			type="button"
 			disabled={!done}
 			aria-current={isCurrent ? 'step' : undefined}
-			class="flex items-center gap-2.5 rounded-control px-0.5 py-0.5 text-left transition-colors focus-visible:outline-none disabled:cursor-default {isCurrent
+			class="flex items-center gap-2.5 rounded-control px-2 py-1 text-left transition-colors focus-visible:outline-none disabled:cursor-default {isCurrent
 				? 'text-ink'
 				: done
 					? 'text-ink hover:text-accent-ink'
