@@ -2,7 +2,7 @@ name: Bump version
 
 # A release is only the current version until the repository says the next one,
 # so the next cycle's betas have to descend from a version above it. This opens
-# the bump as a pull request: the maintainer sees the six declarations that
+# the bump as a pull request: the maintainer sees the four declarations that
 # move, and merging it is what starts the next line. Nothing is committed to
 # main directly, because a merge is the event that publishes a beta. The branch
 # is never force-pushed: a re-run resumes the branch a previous run pushed and
@@ -55,7 +55,7 @@ jobs:
           # no-op when the previous run already committed it there.
           ./scripts/version.py bump "$next" >/dev/null
           git add Makefile daemon/internal/cli/root.go console/package.json \
-            console/package-lock.json packaging/npm/package.json README.md
+            packaging/npm/package.json README.md
           # A re-run whose bump is already committed has nothing to add.
           if git diff --cached --quiet; then
             echo "bump to $next already committed"
@@ -84,10 +84,10 @@ jobs:
             --head "$BRANCH" \
             --title "chore: bump to $VERSION" \
             --body "$TAG_NAME is released. Every declared version moves to $VERSION,
-            README badge included, so the next betas are $VERSION-beta.* and
-            sort above the release they descend from.
+            so the next betas are $VERSION-beta.* and sort above the release
+            they descend from.
 
-            \`./scripts/version.py check\` reads the six declarations; this PR is
+            \`./scripts/version.py check\` reads the four declarations; this PR is
             its own diff." || {
             echo "::error::gh pr create failed. Enable Settings > Actions > General > Workflow permissions > 'Allow GitHub Actions to create and approve pull requests', then re-run this job." >&2
             exit 1
