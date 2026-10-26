@@ -21,7 +21,7 @@
 	const paygCount = $derived(counts.payg);
 	const planCount = $derived(counts.plan);
 	const freeCount = $derived(counts.free);
-	const manualCount = $derived(configured.length);
+	const manualCount = $derived(counts.manual);
 
 	function hasLane(lane: 'payg' | 'plan' | 'free' | 'manual'): boolean {
 		return lanes.includes(lane);
