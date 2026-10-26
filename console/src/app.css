@@ -1246,3 +1246,9 @@ html[data-theme-dir='sunset']::view-transition-new(root) {
 	backdrop-filter: blur(20px) saturate(180%);
 	-webkit-backdrop-filter: blur(20px) saturate(180%);
 }
+
+/* Native checkboxes and radios keep their OS shape but take the app accent. */
+input[type='checkbox'],
+input[type='radio'] {
+	accent-color: var(--accent);
+}
