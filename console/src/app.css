@@ -109,9 +109,9 @@
 	   actually renders, edge and float together. */
 	--ring-field: rgb(20 20 30 / 0.12);
 	--ring-field-hover: rgb(20 20 30 / 0.2);
-	--field-edge: 0 0 0 1px transparent;
+	--field-edge: 0 0 0 1px var(--accent-100);
 	--field-shadow: var(--field-float), var(--field-edge);
-	--field-shadow-hover: var(--field-float), var(--field-edge);
+	--field-shadow-hover: var(--field-float), 0 0 0 1px var(--accent-200);
 	/* A control sits on the surface that holds it, so a card or a popover
 	   retunes the fill under its own controls to stay a step away from its
 	   own background. */
