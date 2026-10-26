@@ -290,7 +290,7 @@
 		aria-label={$t('ui.sidebar.console')}
 		tabindex="-1"
 		class={cn(
-			'chrome fixed inset-y-0 left-0 z-40 flex shrink-0 flex-col overflow-hidden shadow-edge transition-[transform,width]',
+			'chrome fixed inset-y-0 left-0 z-40 flex shrink-0 flex-col overflow-hidden transition-[transform,width]',
 			railEase,
 			compact ? 'w-16' : 'w-[224px]'
 		)}
@@ -308,7 +308,7 @@
 		aria-modal="true"
 		aria-label={$t('ui.sidebar.console')}
 		tabindex="-1"
-		class="chrome fixed inset-y-0 left-0 z-40 flex w-[224px] shrink-0 flex-col overflow-hidden shadow-edge"
+		class="chrome fixed inset-y-0 left-0 z-40 flex w-[224px] shrink-0 flex-col overflow-hidden"
 		style={dragging ? 'transform: translateX(' + dragX + 'px); transition: none;' : ''}
 		in:drawerEnter
 		out:drawerLeave={{ startX: () => releaseX }}

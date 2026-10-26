@@ -25,6 +25,7 @@
 	/* The canvas sits a clear step below white, so a card reads as raised
 	   from tone alone and a border is not what separates them. */
 	--canvas: #eceef2;
+	--stage: color-mix(in srgb, var(--surface) 40%, var(--canvas));
 	--surface: #ffffff;
 	--raised: #ffffff;
 	--sunken: #f5f5f7;
@@ -38,7 +39,7 @@
 	--ok: #19774e;
 	--warn: #9b5800;
 	--danger: #bd342a;
-	--chrome: rgb(245 245 247 / 0.82);
+	--chrome: rgb(236 238 242 / 0.82);
 	--scrim: rgb(10 10 14 / 0.55);
 	/* Theme previews show both themes at once, so they read fixed mini
 	   values rather than the live tokens. */
@@ -90,7 +91,7 @@
 	--shadow-modal: 0 24px 60px var(--shadow);
 	/* A sliding edge lifts with a whisper: tiny offset, long feather, a
 	   fraction of the elevation alpha. */
-	--shadow-edge: 2px 0 24px -6px color-mix(in srgb, var(--shadow) 55%, transparent);
+
 	/* Two float levels stand in for borders. A control an operator types in
 	   or selects from sits at float-1 (fields, tabs, chips): it is a touch
 	   above the surface it rests on. A control they press sits at float-2
@@ -209,6 +210,7 @@
 :root[data-theme='dark'] {
 	color-scheme: dark;
 	--canvas: #0a0a0a;
+	--stage: color-mix(in srgb, var(--surface) 45%, var(--canvas));
 	--surface: #17171b;
 	--raised: #212126;
 	--sunken: #0a0a0a;
@@ -326,7 +328,7 @@ html[data-theme-dir='sunset']::view-transition-new(root) {
 	--shadow-hover: var(--shadow-hover);
 	--shadow-pop: var(--shadow-pop);
 	--shadow-modal: var(--shadow-modal);
-	--shadow-edge: var(--shadow-edge);
+
 	--shadow-float-1: var(--float-1);
 	--shadow-float-2: var(--float-2);
 	--shadow-float-2-hover: var(--float-2-hover);
@@ -367,6 +369,7 @@ html[data-theme-dir='sunset']::view-transition-new(root) {
 	--color-accent-ink: var(--accent-ink);
 	/* 3.0 names, so migrated surfaces never read a legacy alias. */
 	--color-canvas: var(--canvas);
+	--color-stage: var(--stage);
 	--color-raised: var(--raised);
 	--color-sunken: var(--sunken);
 	--color-control: var(--control-bg);
