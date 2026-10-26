@@ -113,7 +113,17 @@ func (e *Executor) failBidirectional(run *bidirectionalRun, events []inference.E
 			Credential: att.exchange.CredentialLabel, HeaderLatency: att.latency,
 		}, runErr
 	}
-	result, err := e.fail(att, refusalStatus(runErr), "upstream_unavailable", fmt.Errorf("%w: %v", ErrUpstreamFailed, runErr))
+	status := refusalStatus(runErr)
+	cause := fmt.Errorf("%w: %v", ErrUpstreamFailed, runErr)
+	code := "upstream_unavailable"
+	if errors.Is(runErr, wire.ErrUnsupportedFeature) || errors.Is(runErr, wire.ErrInvalidRequest) {
+		// A refusal the codec decided before dispatch is the caller's to fix,
+		// not a network fault: wrapping it as an upstream failure misnames a
+		// local verdict and sends the caller looking at the wrong end.
+		cause = runErr
+		code = "bad_request"
+	}
+	result, err := e.fail(att, status, code, cause)
 	result.RefreshSettled = att.state.refreshSettled
 	return result, err
 }
