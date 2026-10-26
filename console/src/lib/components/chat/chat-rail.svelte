@@ -165,7 +165,7 @@
 			<DropdownMenu.Portal>
 				<MenuPanel align="end" class="z-50 min-w-44 surface-pop p-1">
 					<DropdownMenu.Item
-						class="flex min-h-control items-center gap-2 rounded-control px-2 py-1.5 text-sm text-danger outline-none data-highlighted:bg-hover"
+						class="flex min-h-control items-center gap-2 rounded-control px-2 py-1.5 text-sm text-danger outline-none"
 						disabled={threads.length === 0}
 						onSelect={askClear}
 					>
@@ -232,7 +232,7 @@
 									<input
 										{@attach focusRename}
 										bind:value={titleDraft}
-										class="my-1 ml-1 h-control min-w-0 flex-1 rounded-control bg-surface shadow-float-1 px-2 text-sm text-ink outline-none"
+										class="my-1 ml-1 h-control min-w-0 flex-1 rounded-control bg-control shadow-field px-2 text-sm text-ink outline-none"
 										aria-label={$t('ui.pages.chatPage.rename')}
 										onkeydown={(event) => onRenameKeydown(event, thread.id)}
 										onblur={() => commitRename(thread.id)}
@@ -283,14 +283,14 @@
 													{onCloseAutoFocus}
 												>
 													<DropdownMenu.Item
-														class="flex min-h-control items-center gap-2 rounded-control px-2 py-1.5 text-sm outline-none data-highlighted:bg-hover"
+														class="flex min-h-control items-center gap-2 rounded-control px-2 py-1.5 text-sm outline-none"
 														onSelect={() => startRename(thread)}
 													>
 														<Icon name="pencil" size={14} />
 														{$t('ui.pages.chatPage.rename')}
 													</DropdownMenu.Item>
 													<DropdownMenu.Item
-														class="flex min-h-control items-center gap-2 rounded-control px-2 py-1.5 text-sm text-danger outline-none data-highlighted:bg-hover"
+														class="flex min-h-control items-center gap-2 rounded-control px-2 py-1.5 text-sm text-danger outline-none"
 														onSelect={() => askDelete(thread.id)}
 													>
 														<Icon name="trash" size={14} />

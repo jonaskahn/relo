@@ -644,7 +644,7 @@
 							{:else}
 								{#each groupRefs as group (group)}
 									<DropdownMenu.Item
-										class="flex min-h-control cursor-pointer items-center rounded-control px-2 py-1.5 font-mono text-sm outline-none data-highlighted:bg-hover"
+										class="flex min-h-control cursor-pointer items-center rounded-control px-2 py-1.5 font-mono text-sm outline-none"
 										onSelect={() => goto('/groups')}
 									>
 										{group}

@@ -412,7 +412,7 @@
 						</DropdownMenu.Trigger>
 						<MenuPanel class="z-50 min-w-56 surface-pop p-1" align="end">
 							<DropdownMenu.Item
-								class="flex min-h-control cursor-pointer items-center gap-2 rounded-control px-2 py-1.5 text-sm outline-none data-highlighted:bg-hover"
+								class="flex min-h-control cursor-pointer items-center gap-2 rounded-control px-2 py-1.5 text-sm outline-none"
 								disabled={bulkWorking || visibleModels.length === 0}
 								onSelect={() =>
 									void bulkApply(
@@ -426,7 +426,7 @@
 								})}
 							</DropdownMenu.Item>
 							<DropdownMenu.Item
-								class="flex min-h-control cursor-pointer items-center gap-2 rounded-control px-2 py-1.5 text-sm outline-none data-highlighted:bg-hover"
+								class="flex min-h-control cursor-pointer items-center gap-2 rounded-control px-2 py-1.5 text-sm outline-none"
 								disabled={bulkWorking || visibleModels.length === 0}
 								onSelect={() =>
 									void bulkApply(
@@ -442,7 +442,7 @@
 							{#if bulkPaidIds.length > 0 && bulkFreeIds.length > 0}
 								<DropdownMenu.Separator class="my-1 h-px bg-border" />
 								<DropdownMenu.Item
-									class="flex min-h-control cursor-pointer items-center gap-2 rounded-control px-2 py-1.5 text-sm outline-none data-highlighted:bg-hover"
+									class="flex min-h-control cursor-pointer items-center gap-2 rounded-control px-2 py-1.5 text-sm outline-none"
 									disabled={bulkWorking || bulkPaidIds.length === 0}
 									onSelect={() => void bulkApply(bulkPaidIds, true)}
 								>
@@ -452,7 +452,7 @@
 									})}
 								</DropdownMenu.Item>
 								<DropdownMenu.Item
-									class="flex min-h-control cursor-pointer items-center gap-2 rounded-control px-2 py-1.5 text-sm outline-none data-highlighted:bg-hover"
+									class="flex min-h-control cursor-pointer items-center gap-2 rounded-control px-2 py-1.5 text-sm outline-none"
 									disabled={bulkWorking || bulkPaidIds.length === 0}
 									onSelect={() => void bulkApply(bulkPaidIds, false)}
 								>
@@ -462,7 +462,7 @@
 									})}
 								</DropdownMenu.Item>
 								<DropdownMenu.Item
-									class="flex min-h-control cursor-pointer items-center gap-2 rounded-control px-2 py-1.5 text-sm outline-none data-highlighted:bg-hover"
+									class="flex min-h-control cursor-pointer items-center gap-2 rounded-control px-2 py-1.5 text-sm outline-none"
 									disabled={bulkWorking || bulkFreeIds.length === 0}
 									onSelect={() => void bulkApply(bulkFreeIds, true)}
 								>
@@ -472,7 +472,7 @@
 									})}
 								</DropdownMenu.Item>
 								<DropdownMenu.Item
-									class="flex min-h-control cursor-pointer items-center gap-2 rounded-control px-2 py-1.5 text-sm outline-none data-highlighted:bg-hover"
+									class="flex min-h-control cursor-pointer items-center gap-2 rounded-control px-2 py-1.5 text-sm outline-none"
 									disabled={bulkWorking || bulkFreeIds.length === 0}
 									onSelect={() => void bulkApply(bulkFreeIds, false)}
 								>

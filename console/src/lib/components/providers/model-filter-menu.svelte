@@ -89,7 +89,7 @@
 	}
 
 	const itemClass =
-		'flex min-h-control cursor-pointer items-center gap-2 rounded-control px-2 py-1.5 text-sm outline-none data-highlighted:bg-hover';
+		'flex min-h-control cursor-pointer items-center gap-2 rounded-control px-2 py-1.5 text-sm outline-none';
 	const sectionLabel =
 		'px-2 pt-2 pb-0.5 text-[0.7rem] font-semibold tracking-wide text-muted-foreground';
 </script>

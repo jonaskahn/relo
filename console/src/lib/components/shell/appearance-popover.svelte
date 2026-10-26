@@ -143,7 +143,7 @@
 										<Select.Item
 											value={code}
 											label={languageOptionLabel(code, $t('ui.settings.language.auto'))}
-											class="flex min-h-control cursor-pointer items-center rounded-control px-2.5 text-sm text-ink outline-none data-highlighted:bg-accent-100 data-highlighted:text-accent-ink"
+											class="flex min-h-control cursor-pointer items-center rounded-control px-2.5 text-sm text-ink outline-none"
 										>
 											{languageOptionLabel(code, $t('ui.settings.language.auto'))}
 										</Select.Item>

@@ -1361,6 +1361,26 @@ button[aria-disabled='true'],
 	pointer-events: auto;
 }
 
+/* One highlight for every menu and select item, whichever way the pointer or
+   the keyboard reached it: the accent takes the row, never a neutral gray. The
+   popup primitives mark both mouse and key highlight with data-highlighted,
+   so this rule is the whole rule; items do not carry their own. */
+[role='menuitem']:not([data-disabled]),
+[role='menuitemcheckbox']:not([data-disabled]),
+[role='menuitemradio']:not([data-disabled]),
+[role='option']:not([data-disabled]) {
+	transition:
+		background-color 150ms ease,
+		color 150ms ease;
+}
+[role='menuitem'][data-highlighted]:not([data-disabled]),
+[role='menuitemcheckbox'][data-highlighted]:not([data-disabled]),
+[role='menuitemradio'][data-highlighted]:not([data-disabled]),
+[role='option'][data-highlighted]:not([data-disabled]) {
+	background: var(--accent-100);
+	color: var(--accent-ink);
+}
+
 /* An editable control is the one thing in the console that keeps no border,
    so it carries a ring instead. The ring is what tells an operator "this
    takes text" apart from the flat, sunken read-only field beside it. */

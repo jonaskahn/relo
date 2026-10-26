@@ -196,14 +196,14 @@
 			</DropdownMenu.Trigger>
 			<MenuPanel class="z-50 min-w-52 surface-pop p-1" align="end">
 				<DropdownMenu.Item
-					class="flex min-h-control cursor-pointer items-center gap-2 rounded-control px-2 py-1.5 text-sm outline-none data-highlighted:bg-hover"
+					class="flex min-h-control cursor-pointer items-center gap-2 rounded-control px-2 py-1.5 text-sm outline-none"
 					onSelect={() => onopen(model)}
 				>
 					<Icon name="eye" size={14} />
 					{$t('ui.pages.providersPage.modelsTable.view')}
 				</DropdownMenu.Item>
 				<DropdownMenu.Item
-					class="flex min-h-control cursor-pointer items-center gap-2 rounded-control px-2 py-1.5 text-sm outline-none data-highlighted:bg-hover"
+					class="flex min-h-control cursor-pointer items-center gap-2 rounded-control px-2 py-1.5 text-sm outline-none"
 					onSelect={() => onedit(model)}
 				>
 					<Icon name="pencil" size={14} />
@@ -211,7 +211,7 @@
 				</DropdownMenu.Item>
 				{#if onclone}
 					<DropdownMenu.Item
-						class="flex min-h-control cursor-pointer items-center gap-2 rounded-control px-2 py-1.5 text-sm outline-none data-highlighted:bg-hover"
+						class="flex min-h-control cursor-pointer items-center gap-2 rounded-control px-2 py-1.5 text-sm outline-none"
 						onSelect={() => onclone(model)}
 					>
 						<Icon name="copy-plus" size={14} />

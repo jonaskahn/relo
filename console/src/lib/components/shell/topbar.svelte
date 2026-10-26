@@ -87,14 +87,14 @@
 		<DropdownMenu.Portal>
 			<MenuPanel align="end" class="surface-pop z-50 min-w-44 p-1">
 				<DropdownMenu.Item
-					class="flex min-h-control cursor-pointer items-center gap-2 rounded-control px-2.5 py-1.5 text-sm outline-none data-highlighted:bg-hover"
+					class="flex min-h-control cursor-pointer items-center gap-2 rounded-control px-2.5 py-1.5 text-sm outline-none"
 					onSelect={() => goto('/keys?create=1')}
 				>
 					<Icon name="key" size={15} />
 					{$t('ui.topbar.quickAddKey')}
 				</DropdownMenu.Item>
 				<DropdownMenu.Item
-					class="flex min-h-control cursor-pointer items-center gap-2 rounded-control px-2.5 py-1.5 text-sm outline-none data-highlighted:bg-hover"
+					class="flex min-h-control cursor-pointer items-center gap-2 rounded-control px-2.5 py-1.5 text-sm outline-none"
 					onSelect={() => goto(addConnectionHref(page.url.pathname, page.url.search))}
 				>
 					<Icon name="plug-connected" size={15} />
