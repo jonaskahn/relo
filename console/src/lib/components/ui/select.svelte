@@ -47,19 +47,23 @@
 		{id}
 		aria-label={ariaLabel}
 		class={cn(
-			'border-line focus-visible:border-ring focus-visible:ring-ring/50 flex h-control w-full min-w-0 items-center justify-between gap-2 rounded-control border bg-surface py-1 pr-8 pl-3 text-left text-sm shadow-1 outline-none transition-[color,box-shadow] disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 focus-visible:ring-[3px]',
+			'border-line focus-visible:border-ring focus-visible:ring-ring/50 relative flex h-control w-full min-w-0 items-center rounded-control border bg-surface py-1 pr-7 pl-3 text-left text-sm shadow-1 outline-none transition-[color,box-shadow] disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 focus-visible:ring-[3px]',
 			className
 		)}
 	>
-		<span class={cn('truncate', !selected && 'text-muted-foreground')}>
+		<span class={cn('block w-full truncate', !selected && 'text-muted-foreground')}>
 			{selected?.label ?? placeholder ?? ''}
 		</span>
-		<Icon name="chevron-down" size={14} class="shrink-0 text-muted-foreground" />
+		<Icon
+			name="chevron-down"
+			size={14}
+			class="pointer-events-none absolute right-2 text-muted-foreground"
+		/>
 	</Select.Trigger>
 
 	<Select.Portal>
 		<Select.Content
-			class="z-50 min-w-[var(--bits-select-trigger-width)] rounded-popover border border-line bg-raised p-1 shadow-3 outline-none"
+			class="z-50 w-[var(--bits-select-trigger-width)] rounded-popover border border-line bg-raised p-1 shadow-3 outline-none"
 			sideOffset={4}
 		>
 			{#snippet child({ props, wrapperProps, open })}
@@ -72,7 +76,7 @@
 										value={option.value}
 										disabled={option.disabled}
 										class={cn(
-											'relative flex cursor-default items-center gap-2 rounded-control px-2.5 py-1.5 text-sm outline-none select-none',
+											'relative flex cursor-default items-center gap-2 rounded-control px-2.5 py-1.5 text-left text-sm outline-none select-none',
 											'data-[highlighted]:bg-accent-50 data-[highlighted]:text-accent-ink',
 											'data-[disabled]:pointer-events-none data-[disabled]:opacity-50'
 										)}
