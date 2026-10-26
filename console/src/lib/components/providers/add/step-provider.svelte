@@ -178,15 +178,19 @@
 										</span>
 									{/if}
 								</span>
-								<BillingChip provider={billingProvider} class="self-start" />
 								{#if chosen}
 									<span
+										data-check
+										data-checkbox
+										data-selected
+										data-selected-check
 										class="flex size-5 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground"
 										aria-hidden="true"
 									>
 										<Icon name="check" size={13} />
 									</span>
 								{/if}
+								<BillingChip provider={billingProvider} class="self-start" />
 							</button>
 						{/each}
 					</div>
