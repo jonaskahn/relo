@@ -57,6 +57,36 @@
 		return $t(row.hintKey);
 	}
 
+	// A section heading keeps its rounded top corners where it sits in the
+	// list, and squares them off the moment it pins against the top of the
+	// pane: a rounded corner pinned flush to the edge reads as a gap. The
+	// group's top is the heading's resting place, because sticky does not
+	// move layout, so a heading pushed below it is stuck. The capture flag
+	// catches the pane's scroll, which does not bubble.
+	function flattenWhenStuck(node: HTMLElement) {
+		const group = node.parentElement;
+		// Filtering moves a heading without a scroll, and only the list the
+		// heading lives in resizes when that happens.
+		const list = group?.parentElement ?? null;
+		if (group === null || list === null) return;
+		const update = () => {
+			const stuck = node.getBoundingClientRect().top - group.getBoundingClientRect().top > 0.5;
+			if (stuck) node.setAttribute('data-stuck', 'true');
+			else node.removeAttribute('data-stuck');
+		};
+		const resized = new ResizeObserver(update);
+		resized.observe(list);
+		const controller = new AbortController();
+		const listen = { capture: true, passive: true, signal: controller.signal };
+		window.addEventListener('scroll', update, listen);
+		window.addEventListener('resize', update, listen);
+		update();
+		return () => {
+			controller.abort();
+			resized.disconnect();
+		};
+	}
+
 	// A key row shows the format it speaks and how many models the catalog
 	// knows for it, which is the size hint an operator compares rows by. The
 	// count is the catalog's, not the provider's: what a connection serves is
@@ -97,7 +127,8 @@
 			{#each groups as group (group.section)}
 				<div class="flex flex-col gap-1.5">
 					<div
-						class="sticky top-0 z-10 flex flex-wrap items-baseline gap-2 bg-popover/95 py-1 backdrop-blur"
+						{@attach flattenWhenStuck}
+						class="min-h-10 sticky top-0 z-10 flex flex-wrap items-baseline gap-2 rounded-lg bg-popover/95 px-2 py-2 backdrop-blur data-[stuck=true]:rounded-t-none"
 					>
 						<span class="text-[0.8125rem] font-semibold text-muted-foreground">
 							{$t(SECTION_LABEL_KEY[group.section])}
