@@ -95,6 +95,23 @@ describe('control consistency', () => {
 		expect(seen).toBeGreaterThan(10);
 	});
 
+	it('leaves the menu item highlight to the one app.css rule', () => {
+		for (const path of SVELTE_FILES) {
+			const text = readFileSync(path, 'utf8');
+			expect(
+				!text.includes('data-highlighted:bg-hover'),
+				path + ' styles its own menu item highlight'
+			).toBe(true);
+		}
+	});
+
+	it('draws every selected state with a 1px accent ring', () => {
+		for (const path of SVELTE_FILES) {
+			const text = readFileSync(path, 'utf8');
+			expect(!text.includes('ring-2 ring-'), path + ' uses a 2px selection ring').toBe(true);
+		}
+	});
+
 	it('uses the bits-ui anchor-width variable for select popups', () => {
 		for (const path of SVELTE_FILES) {
 			const text = readFileSync(path, 'utf8');
