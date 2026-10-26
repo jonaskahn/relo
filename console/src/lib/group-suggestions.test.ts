@@ -118,13 +118,26 @@ describe('laneCounts', () => {
 		const providers = [
 			provider('a', 'opencode-free'),
 			provider('b', 'claude', 'signin'),
-			provider('c', 'openai', 'key')
+			provider('c', 'openai', 'key'),
+			provider('d', 'ollama', 'local')
 		];
 		const counts = laneCounts(providers);
 		expect(counts.free).toBe(1);
 		expect(counts.plan).toBe(1);
 		expect(counts.payg).toBe(1);
-		expect(counts.manual).toBe(3);
+		expect(counts.manual).toBe(1);
+	});
+
+	it('adds up to the connections it was given', () => {
+		const providers = [
+			provider('a', 'opencode-free'),
+			provider('b', 'claude', 'signin'),
+			provider('c', 'openai', 'key'),
+			provider('d', 'ollama', 'local'),
+			provider('e', 'lm-studio', 'local')
+		];
+		const counts = laneCounts(providers);
+		expect(counts.free + counts.plan + counts.payg + counts.manual).toBe(providers.length);
 	});
 });
 

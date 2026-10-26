@@ -5,14 +5,16 @@
 // The lanes and the similarity rule both live here, beside their tests, so
 // the picker and the Billing step read one implementation instead of two.
 import type { GroupMember, Model, Provider } from '$lib/types';
-import { billingLane, type BillingLane } from '$lib/provider-plan';
+import { billingLane } from '$lib/provider-plan';
 
 /** The billing lanes a group may be drawn from. `manual` means "no filter":
  *  every connection, including local endpoints. */
 export const LANES = ['payg', 'plan', 'free', 'manual'] as const;
 export type Lane = (typeof LANES)[number];
 
-/** Reports how many connections belong to each lane among the given providers. */
+/** Reports how many connections belong to each lane among the given providers.
+ *  `manual` counts the local endpoints the three money lanes leave out, so the
+ *  four numbers add up to the connections the step was given. */
 export interface LaneCounts {
 	payg: number;
 	plan: number;
@@ -25,9 +27,9 @@ export function laneCounts(providers: readonly Provider[]): LaneCounts {
 	const counts: LaneCounts = { payg: 0, plan: 0, free: 0, manual: 0 };
 	for (const provider of providers) {
 		const lane = billingLane(provider);
-		if (lane === 'payg' || lane === 'plan' || lane === 'free') counts[lane]++;
+		if (lane === 'local') counts.manual++;
+		else counts[lane]++;
 	}
-	counts.manual = providers.length;
 	return counts;
 }
 
@@ -158,14 +160,3 @@ export function groupSuggestions(models: readonly Model[]): { family: string; mo
 	}
 	return groups;
 }
-
-/** Reports how many configured connections fall in each billing lane. */
-export function connectionCountsByLane(
-	providers: readonly Provider[]
-): Record<BillingLane, number> {
-	const counts: Record<BillingLane, number> = { free: 0, plan: 0, payg: 0, local: 0 };
-	for (const provider of providers) counts[billingLane(provider)]++;
-	return counts;
-}
-
-export type { BillingLane };
