@@ -184,7 +184,7 @@
       "accountLabel": "Account",
       "enjoyTitle": "Enjoy",
       "enjoyBody": "Relo is connected to {account}.",
-      "enjoyRetry": "Try again",
+      "enjoyRetry": "Try again later",
       "closeHint": "You can close this tab."
     },
     "common": {

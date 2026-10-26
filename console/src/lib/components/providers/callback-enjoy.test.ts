@@ -25,12 +25,12 @@ describe('the panel a settled login ends on', () => {
 		expect(body).toContain('Enjoy');
 		expect(body).toContain('me@example.com');
 		// The retry line is the opposite outcome, so it must not appear here.
-		expect(body).not.toContain('Try again');
+		expect(body).not.toContain('Try again later');
 	});
 
 	it('says what to do when it did not work', () => {
 		const body = markup({ ok: false, account: '' });
-		expect(body).toContain('Try again');
+		expect(body).toContain('Try again later');
 		expect(body).toContain('again');
 	});
 

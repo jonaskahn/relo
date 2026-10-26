@@ -184,7 +184,7 @@
       "accountLabel": "账号",
       "enjoyTitle": "请享用",
       "enjoyBody": "Relo 已连接到 {account}。",
-      "enjoyRetry": "再试一次",
+      "enjoyRetry": "稍后重试",
       "closeHint": "你可以关闭此标签页。"
     },
     "common": {
