@@ -58,7 +58,8 @@ with no filter. The choice lives only in the editor; it never reaches the daemon
 
 Two `--sunken` panes, gap 16: **Add models** (left) and **Members** (right, scrolls). The left pane holds a connection
 select, an "On only" chip and search above a list that scrolls on its own, with a legend "Price per 1M tokens, in /
-out". Added models show a disabled "Added" button with a check.
+out". Added models show a disabled "Added" button with a check. The list paints its first 40 rows, loads the next 40 as
+its foot scrolls into view, and a muted line under them names how many of the matches are on screen.
 
 When the group is new, a **billing scope** chip row sits above the Members list and mirrors the Billing step; each
 model row also carries its lane chip. **Similar models** sit above the member list: one heading per family, newest
