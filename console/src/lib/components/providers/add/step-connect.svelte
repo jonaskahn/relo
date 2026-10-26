@@ -10,7 +10,7 @@
 	import Input from '$lib/components/ui/input.svelte';
 	import SecretInput from '$lib/components/ui/secret-input.svelte';
 	import Field from '$lib/components/ui/field.svelte';
-	import NativeSelect from '$lib/components/ui/native-select.svelte';
+	import Select from '$lib/components/ui/select.svelte';
 	import Icon from '$lib/components/ui/icon.svelte';
 	import ProviderLogo from '$lib/components/ui/provider-logo.svelte';
 	import FormatCards from '../format-cards.svelte';
@@ -235,28 +235,26 @@
 				/>
 			</Field>
 			<Field id="custom-models-format" label={$t('ui.pages.providersPage.add.modelsFormat')}>
-				<NativeSelect
+				<Select
 					id="custom-models-format"
 					value={draft.custom.modelsFormat}
-					onchange={(event) =>
-						ondraft({ custom: { ...draft.custom, modelsFormat: event.currentTarget.value } })}
-				>
-					{#each ['openai', 'anthropic', 'gemini', 'bedrock', 'kiro', 'none'] as option (option)}
-						<option value={option}>{option}</option>
-					{/each}
-				</NativeSelect>
+					onValueChange={(next) => ondraft({ custom: { ...draft.custom, modelsFormat: next } })}
+					options={['openai', 'anthropic', 'gemini', 'bedrock', 'kiro', 'none'].map((option) => ({
+						value: option,
+						label: option
+					}))}
+				/>
 			</Field>
 			<Field id="custom-key-header" label={$t('ui.pages.providersPage.add.keyHeader')}>
-				<NativeSelect
+				<Select
 					id="custom-key-header"
 					value={draft.custom.keyHeader}
-					onchange={(event) =>
-						ondraft({ custom: { ...draft.custom, keyHeader: event.currentTarget.value } })}
-				>
-					{#each ['bearer', 'x-api-key', 'x-goog-api-key', 'api-key', 'none'] as option (option)}
-						<option value={option}>{option}</option>
-					{/each}
-				</NativeSelect>
+					onValueChange={(next) => ondraft({ custom: { ...draft.custom, keyHeader: next } })}
+					options={['bearer', 'x-api-key', 'x-goog-api-key', 'api-key', 'none'].map((option) => ({
+						value: option,
+						label: option
+					}))}
+				/>
 			</Field>
 			<Field
 				id="custom-base-url"

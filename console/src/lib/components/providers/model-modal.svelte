@@ -9,7 +9,7 @@
 	import Button from '$lib/components/ui/button.svelte';
 	import Field from '$lib/components/ui/field.svelte';
 	import Input from '$lib/components/ui/input.svelte';
-	import NativeSelect from '$lib/components/ui/native-select.svelte';
+	import Select from '$lib/components/ui/select.svelte';
 	import { DropdownMenu } from 'bits-ui';
 	import MenuPanel from '$lib/components/ui/menu-panel.svelte';
 	import { Switch } from 'bits-ui';
@@ -697,12 +697,14 @@
 								id="model-category"
 								label={$t('ui.pages.providersPage.models.overrideCategory')}
 							>
-								<NativeSelect id="model-category" bind:value={draft.category}>
-									<option value="">{$t('ui.pages.providersPage.models.overrideUnset')}</option>
-									{#each categories as category (category)}
-										<option value={category}>{category}</option>
-									{/each}
-								</NativeSelect>
+								<Select
+									id="model-category"
+									bind:value={draft.category}
+									options={[
+										{ value: '', label: $t('ui.pages.providersPage.models.overrideUnset') },
+										...categories.map((category) => ({ value: category, label: category }))
+									]}
+								/>
 							</Field>
 							<Field
 								id="model-description"
@@ -822,14 +824,15 @@
 									id={'model-cap-' + field.key}
 									label={$t('ui.pages.providersPage.models.' + field.labelKey)}
 								>
-									<NativeSelect
+									<Select
 										id={'model-cap-' + field.key}
 										bind:value={draft[field.key as 'tools' | 'reasoning' | 'vision']}
-									>
-										<option value="">{$t('ui.pages.providersPage.models.overrideUnset')}</option>
-										<option value="yes">{$t('ui.pages.providersPage.models.overrideYes')}</option>
-										<option value="no">{$t('ui.pages.providersPage.models.overrideNo')}</option>
-									</NativeSelect>
+										options={[
+											{ value: '', label: $t('ui.pages.providersPage.models.overrideUnset') },
+											{ value: 'yes', label: $t('ui.pages.providersPage.models.overrideYes') },
+											{ value: 'no', label: $t('ui.pages.providersPage.models.overrideNo') }
+										]}
+									/>
 								</Field>
 							{/each}
 						</div>

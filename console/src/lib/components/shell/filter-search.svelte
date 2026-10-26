@@ -1,11 +1,10 @@
 <script lang="ts">
-	import type { Snippet } from 'svelte';
-
 	import { consoleState } from '$lib/console-state.svelte';
 	import { cardLayoutSlot } from '$lib/theme.svelte';
 	import Icon from '$lib/components/ui/icon.svelte';
 	import Input from '$lib/components/ui/input.svelte';
-	import NativeSelect from '$lib/components/ui/native-select.svelte';
+	import Select from '$lib/components/ui/select.svelte';
+	import type { SelectOption } from '$lib/components/ui/select.svelte';
 	import { cn } from '$lib/utils';
 
 	// FilterSearch is the filter select and search pair every card-grid page
@@ -20,11 +19,11 @@
 		filterLabel: string;
 		searchLabel: string;
 		searchPlaceholder: string;
-		filter?: unknown;
+		filter?: string;
 		search?: string;
 		onsearch?: (next: string) => void;
 		filterFullRowOnMobile?: boolean;
-		children?: Snippet;
+		options?: SelectOption[];
 	}
 
 	let {
@@ -36,7 +35,7 @@
 		search = $bindable(''),
 		onsearch,
 		filterFullRowOnMobile = false,
-		children
+		options = []
 	}: Props = $props();
 </script>
 
@@ -49,14 +48,13 @@
 		cardLayoutSlot(consoleState.settings.cardLayout)
 	)}
 >
-	<NativeSelect
+	<Select
 		id={filterId}
 		class={filterFullRowOnMobile ? 'min-w-0 max-sm:basis-full' : 'min-w-0 max-sm:flex-1'}
 		bind:value={filter}
-		aria-label={filterLabel}
-	>
-		{@render children?.()}
-	</NativeSelect>
+		ariaLabel={filterLabel}
+		{options}
+	/>
 	<div class="relative min-w-0 max-sm:order-first max-sm:basis-full">
 		<span
 			class="pointer-events-none absolute inset-y-0 start-2 flex items-center text-muted-foreground"

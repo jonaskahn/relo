@@ -6,7 +6,7 @@
 	import Button from '$lib/components/ui/button.svelte';
 	import Field from '$lib/components/ui/field.svelte';
 	import FilterPanel from '$lib/components/ui/filter-panel.svelte';
-	import NativeSelect from '$lib/components/ui/native-select.svelte';
+	import Select from '$lib/components/ui/select.svelte';
 	import Icon from '$lib/components/ui/icon.svelte';
 	import ProcessLine from '$lib/components/logs/process-line.svelte';
 	import { FILTER_PANEL_KEYS } from '$lib/filter-panel';
@@ -154,30 +154,29 @@
 	<div class="max-sm:hidden">
 		<FilterPanel storageKey={FILTER_PANEL_KEYS.logsDaemon} columns={3} bind:open={filtersOpen}>
 			<Field id="daemon-level" label={$t('ui.pages.logsPage.filterLevel')}>
-				<NativeSelect
+				<Select
 					id="daemon-level"
 					value={level}
-					onchange={(event) => {
-						const { value } = event.currentTarget;
-						if (isDaemonLevel(value)) onlevelchange?.(value);
+					onValueChange={(next) => {
+						if (isDaemonLevel(next)) onlevelchange?.(next);
 					}}
-				>
-					<option value="all">{$t('ui.pages.logsPage.levelAll')}</option>
-					<option value="warning">{$t('ui.pages.logsPage.levelWarnings')}</option>
-					<option value="error">{$t('ui.pages.logsPage.levelErrors')}</option>
-				</NativeSelect>
+					options={[
+						{ value: 'all', label: $t('ui.pages.logsPage.levelAll') },
+						{ value: 'warning', label: $t('ui.pages.logsPage.levelWarnings') },
+						{ value: 'error', label: $t('ui.pages.logsPage.levelErrors') }
+					]}
+				/>
 			</Field>
 			<Field id="daemon-requests" label={$t('ui.pages.logsPage.requestsLabel')}>
-				<NativeSelect
+				<Select
 					id="daemon-requests"
 					value={hideRequests ? 'hidden' : 'shown'}
-					onchange={(event) => {
-						onhiderequestschange?.(event.currentTarget.value !== 'shown');
-					}}
-				>
-					<option value="hidden">{$t('ui.pages.logsPage.requestsHidden')}</option>
-					<option value="shown">{$t('ui.pages.logsPage.requestsShown')}</option>
-				</NativeSelect>
+					onValueChange={(next) => onhiderequestschange?.(next !== 'shown')}
+					options={[
+						{ value: 'hidden', label: $t('ui.pages.logsPage.requestsHidden') },
+						{ value: 'shown', label: $t('ui.pages.logsPage.requestsShown') }
+					]}
+				/>
 			</Field>
 		</FilterPanel>
 	</div>

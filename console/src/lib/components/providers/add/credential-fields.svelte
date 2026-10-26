@@ -11,7 +11,7 @@
 	import Input from '$lib/components/ui/input.svelte';
 	import SecretInput from '$lib/components/ui/secret-input.svelte';
 	import Field from '$lib/components/ui/field.svelte';
-	import NativeSelect from '$lib/components/ui/native-select.svelte';
+	import Select from '$lib/components/ui/select.svelte';
 	import Button from '$lib/components/ui/button.svelte';
 	import Icon from '$lib/components/ui/icon.svelte';
 	import DeploymentsEditor from './deployments-editor.svelte';
@@ -60,15 +60,12 @@
 			error={problems['variables.' + variable.name] ?? ''}
 		>
 			{#if (variable.options ?? []).length > 0}
-				<NativeSelect
+				<Select
 					id={'connect-var-' + variable.name}
 					value={draft.variables[variable.name] ?? ''}
-					onchange={(event) => setVariable(variable.name, event.currentTarget.value)}
-				>
-					{#each variable.options ?? [] as option (option)}
-						<option value={option}>{option}</option>
-					{/each}
-				</NativeSelect>
+					onValueChange={(next) => setVariable(variable.name, next)}
+					options={(variable.options ?? []).map((option) => ({ value: option, label: option }))}
+				/>
 			{:else}
 				<Input
 					id={'connect-var-' + variable.name}

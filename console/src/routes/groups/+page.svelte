@@ -225,15 +225,13 @@
 			searchPlaceholder={$t('ui.pages.groupsPage.searchGroups')}
 			bind:filter={capability}
 			bind:search
-		>
-			{#each CAPABILITIES as option (option.value)}
-				<option value={option.value}>
-					{$t('ui.pages.groupsPage.filterOption', {
-						values: { label: $t(option.labelKey), count: optionCount(option.value) }
-					})}
-				</option>
-			{/each}
-		</FilterSearch>
+			options={CAPABILITIES.map((option) => ({
+				value: option.value,
+				label: $t('ui.pages.groupsPage.filterOption', {
+					values: { label: $t(option.labelKey), count: optionCount(option.value) }
+				})
+			}))}
+		/>
 		<div class="ml-auto hidden items-center sm:flex">
 			<CardLayoutToggle />
 		</div>

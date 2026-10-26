@@ -79,32 +79,36 @@
 			searchPlaceholder={$t('ui.pages.providersPage.list.search')}
 			bind:filter
 			bind:search={query}
-		>
-			<option value="all">
-				{$t('ui.pages.providersPage.list.filterOption', {
-					values: {
-						label: $t('ui.pages.providersPage.modelsTable.segmentAll'),
-						count: providers.length
-					}
-				})}
-			</option>
-			<option value="attention">
-				{$t('ui.pages.providersPage.list.filterOption', {
-					values: {
-						label: $t('ui.pages.providersPage.list.needsAttention'),
-						count: attentionItems.length
-					}
-				})}
-			</option>
-			<option value="unpriced">
-				{$t('ui.pages.providersPage.list.filterOption', {
-					values: {
-						label: $t('ui.pages.providersPage.models.chipUnpriced'),
-						count: unpricedConnections
-					}
-				})}
-			</option>
-		</FilterSearch>
+			options={[
+				{
+					value: 'all',
+					label: $t('ui.pages.providersPage.list.filterOption', {
+						values: {
+							label: $t('ui.pages.providersPage.modelsTable.segmentAll'),
+							count: providers.length
+						}
+					})
+				},
+				{
+					value: 'attention',
+					label: $t('ui.pages.providersPage.list.filterOption', {
+						values: {
+							label: $t('ui.pages.providersPage.list.needsAttention'),
+							count: attentionItems.length
+						}
+					})
+				},
+				{
+					value: 'unpriced',
+					label: $t('ui.pages.providersPage.list.filterOption', {
+						values: {
+							label: $t('ui.pages.providersPage.models.chipUnpriced'),
+							count: unpricedConnections
+						}
+					})
+				}
+			]}
+		/>
 		<AttentionStrip
 			variant="inline"
 			items={attentionItems}

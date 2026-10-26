@@ -9,7 +9,7 @@
 	import type { GroupMember, Model, Provider } from '$lib/types';
 	import Button from '$lib/components/ui/button.svelte';
 	import Input from '$lib/components/ui/input.svelte';
-	import NativeSelect from '$lib/components/ui/native-select.svelte';
+	import Select from '$lib/components/ui/select.svelte';
 	import Icon from '$lib/components/ui/icon.svelte';
 	import ProviderLogo from '$lib/components/ui/provider-logo.svelte';
 
@@ -141,20 +141,16 @@
 
 <span class="field-label shrink-0">{$t('ui.pages.groupsPage.addModels')}</span>
 <div class="flex shrink-0 flex-wrap items-center gap-2">
-	<NativeSelect
+	<Select
 		class="min-w-40 flex-1"
-		aria-label={$t('ui.pages.groupsPage.pickProvider')}
-		value={provider}
-		onchange={(event) => {
-			provider = event.currentTarget.value;
-			void load();
-		}}
-	>
-		<option value="">{$t('ui.pages.groupsPage.allConnections')}</option>
-		{#each configured as connection (connection.id)}
-			<option value={connection.id}>{connection.label}</option>
-		{/each}
-	</NativeSelect>
+		ariaLabel={$t('ui.pages.groupsPage.pickProvider')}
+		bind:value={provider}
+		onValueChange={() => void load()}
+		options={[
+			{ value: '', label: $t('ui.pages.groupsPage.allConnections') },
+			...configured.map((connection) => ({ value: connection.id, label: connection.label }))
+		]}
+	/>
 	<Button variant="chip" size="sm" aria-pressed={onOnly} onclick={() => (onOnly = !onOnly)}>
 		{$t('ui.pages.groupsPage.onOnly')}
 	</Button>

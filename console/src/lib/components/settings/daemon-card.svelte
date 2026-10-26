@@ -9,7 +9,7 @@
 	import SettingsSave from './settings-save.svelte';
 	import SettingsSwitch from './settings-switch.svelte';
 	import Input from '$lib/components/ui/input.svelte';
-	import NativeSelect from '$lib/components/ui/native-select.svelte';
+	import Select from '$lib/components/ui/select.svelte';
 	import { cloneDraft, draftDirty } from '$lib/settings-draft';
 	import type { SystemSettings } from '$lib/types';
 
@@ -72,18 +72,19 @@
 			label={$t('ui.settingsPage.logLevelLabel')}
 			hint={$t('ui.settingsPage.logLevelHint')}
 		>
-			<NativeSelect
+			<Select
 				id="log-level"
 				class="max-w-40 max-sm:h-11"
 				bind:value={draft.log_level}
 				disabled={saving}
-				aria-label={$t('ui.settingsPage.logLevelLabel')}
-			>
-				<option value="debug">debug</option>
-				<option value="info">info</option>
-				<option value="warn">warn</option>
-				<option value="error">error</option>
-			</NativeSelect>
+				ariaLabel={$t('ui.settingsPage.logLevelLabel')}
+				options={[
+					{ value: 'debug', label: 'debug' },
+					{ value: 'info', label: 'info' },
+					{ value: 'warn', label: 'warn' },
+					{ value: 'error', label: 'error' }
+				]}
+			/>
 		</SettingsRow>
 		<SettingsSwitch
 			id="log-traffic"

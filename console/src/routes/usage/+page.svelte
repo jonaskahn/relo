@@ -14,7 +14,7 @@
 	import FilterToggle from '$lib/components/ui/filter-toggle.svelte';
 	import IconAction from '$lib/components/ui/icon-action.svelte';
 	import Input from '$lib/components/ui/input.svelte';
-	import NativeSelect from '$lib/components/ui/native-select.svelte';
+	import Select from '$lib/components/ui/select.svelte';
 	import DonutCard from '$lib/components/usage/donut-card.svelte';
 	import GroupTable from '$lib/components/usage/group-table.svelte';
 	import HeatmapCard from '$lib/components/usage/heatmap-card.svelte';
@@ -812,21 +812,22 @@
 				<TabStrip tabs={stripTabs} value={tab} ariaLabel={$t('ui.pages.usagePage.groupBy')} />
 			</div>
 			<div class="toolbar-end">
-				<NativeSelect
+				<Select
 					id="usage-range"
-					aria-label={$t('ui.pages.usagePage.rangeLabel')}
+					ariaLabel={$t('ui.pages.usagePage.rangeLabel')}
 					class="w-40"
 					value={filters.range}
-					onchange={(event) => chooseRange(event.currentTarget.value)}
-				>
-					<option value="24h">{$t('ui.common.window24h')}</option>
-					<option value="today">{$t('ui.common.windowToday')}</option>
-					<option value="7">{$t('ui.pages.usagePage.range7')}</option>
-					<option value="30">{$t('ui.pages.usagePage.range30')}</option>
-					<option value="60">{$t('ui.common.window60d')}</option>
-					<option value="90">{$t('ui.common.window90d')}</option>
-					<option value="all">{$t('ui.pages.usagePage.rangeAll')}</option>
-				</NativeSelect>
+					onValueChange={(next) => chooseRange(next)}
+					options={[
+						{ value: '24h', label: $t('ui.common.window24h') },
+						{ value: 'today', label: $t('ui.common.windowToday') },
+						{ value: '7', label: $t('ui.pages.usagePage.range7') },
+						{ value: '30', label: $t('ui.pages.usagePage.range30') },
+						{ value: '60', label: $t('ui.common.window60d') },
+						{ value: '90', label: $t('ui.common.window90d') },
+						{ value: 'all', label: $t('ui.pages.usagePage.rangeAll') }
+					]}
+				/>
 				{#if tab === 'overview'}
 					<IconAction
 						icon="selector"
@@ -840,37 +841,35 @@
 
 		<FilterPanel storageKey={FILTER_PANEL_KEYS.usage} columns={4} bind:open={filtersOpen}>
 			<Field id="usage-provider" label={$t('ui.pages.usagePage.filterProvider')}>
-				<NativeSelect
+				<Select
 					id="usage-provider"
 					value={filters.provider}
-					onchange={(event) => chooseProvider(event.currentTarget.value)}
-				>
-					<option value="">{$t('ui.pages.usagePage.filterAll')}</option>
-					{#each providers as provider (provider.id)}
-						<option value={provider.id}>{provider.label || provider.id}</option>
-					{/each}
-				</NativeSelect>
+					onValueChange={(next) => chooseProvider(next)}
+					options={[
+						{ value: '', label: $t('ui.pages.usagePage.filterAll') },
+						...providers.map((provider) => ({
+							value: provider.id,
+							label: provider.label || provider.id
+						}))
+					]}
+				/>
 			</Field>
 			<Field id="usage-account" label={$t('ui.pages.usagePage.filterAccount')}>
-				<NativeSelect
+				<Select
 					id="usage-account"
 					value={filters.account}
-					onchange={(event) => {
-						filters.account = event.currentTarget.value;
+					onValueChange={(next) => {
+						filters.account = next;
 						void load();
 					}}
-				>
-					<option value="">{$t('ui.pages.usagePage.filterAll')}</option>
-					{#each accountOptions as account (account.id)}
-						<option value={account.id}
-							>{accountCaption(
-								account.id,
-								account.label,
-								providerLabelOf(account.provider_id)
-							)}</option
-						>
-					{/each}
-				</NativeSelect>
+					options={[
+						{ value: '', label: $t('ui.pages.usagePage.filterAll') },
+						...accountOptions.map((account) => ({
+							value: account.id,
+							label: accountCaption(account.id, account.label, providerLabelOf(account.provider_id))
+						}))
+					]}
+				/>
 			</Field>
 			<Field id="usage-model" label={$t('ui.pages.usagePage.filterModel')}>
 				<Input
@@ -881,46 +880,46 @@
 				/>
 			</Field>
 			<Field id="usage-client" label={$t('ui.pages.usagePage.filterClient')}>
-				<NativeSelect
+				<Select
 					id="usage-client"
 					value={filters.client}
-					onchange={(event) => {
-						filters.client = event.currentTarget.value;
+					onValueChange={(next) => {
+						filters.client = next;
 						void load();
 					}}
-				>
-					<option value="">{$t('ui.pages.usagePage.filterAll')}</option>
-					{#each clients as key (key.id)}
-						<option value={key.id}>{key.name || key.id}</option>
-					{/each}
-				</NativeSelect>
+					options={[
+						{ value: '', label: $t('ui.pages.usagePage.filterAll') },
+						...clients.map((key) => ({ value: key.id, label: key.name || key.id }))
+					]}
+				/>
 			</Field>
 			<Field id="usage-origin" label={$t('ui.pages.usagePage.filterOrigin')}>
-				<NativeSelect
+				<Select
 					id="usage-origin"
 					value={filters.origin}
-					onchange={(event) => {
-						const { value } = event.currentTarget;
-						if (!isUsageOrigin(value)) return;
-						filters.origin = value;
+					onValueChange={(next) => {
+						if (!isUsageOrigin(next)) return;
+						filters.origin = next;
 						void load();
 					}}
-				>
-					<option value="">{$t('ui.pages.usagePage.filterAll')}</option>
-					<option value="external">{$t('ui.pages.usagePage.originExternal')}</option>
-					<option value="internal">{$t('ui.pages.usagePage.originInternal')}</option>
-				</NativeSelect>
+					options={[
+						{ value: '', label: $t('ui.pages.usagePage.filterAll') },
+						{ value: 'external', label: $t('ui.pages.usagePage.originExternal') },
+						{ value: 'internal', label: $t('ui.pages.usagePage.originInternal') }
+					]}
+				/>
 			</Field>
 			<Field id="usage-status" label={$t('ui.pages.usagePage.filterStatus')}>
-				<NativeSelect
+				<Select
 					id="usage-status"
 					value={statusValue}
-					onchange={(event) => chooseStatus(statusChoice(event.currentTarget.value))}
-				>
-					<option value="">{$t('ui.pages.usagePage.filterAll')}</option>
-					<option value="2xx">{$t('ui.pages.usagePage.statusOk')}</option>
-					<option value="4xx,5xx">{$t('ui.pages.usagePage.statusError')}</option>
-				</NativeSelect>
+					onValueChange={(next) => chooseStatus(statusChoice(next))}
+					options={[
+						{ value: '', label: $t('ui.pages.usagePage.filterAll') },
+						{ value: '2xx', label: $t('ui.pages.usagePage.statusOk') },
+						{ value: '4xx,5xx', label: $t('ui.pages.usagePage.statusError') }
+					]}
+				/>
 			</Field>
 		</FilterPanel>
 
