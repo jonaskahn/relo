@@ -254,7 +254,7 @@
 							{/if}
 						</div>
 
-						<div class={cn('min-h-0 flex-1 overflow-y-auto px-5 py-4 max-sm:px-4', bodyClass)}>
+						<div class={cn('min-h-0 flex-1 overflow-y-auto px-5 pb-4 max-sm:px-4', bodyClass)}>
 							{@render children?.()}
 						</div>
 

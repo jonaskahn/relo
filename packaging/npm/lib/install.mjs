@@ -10,8 +10,8 @@
 // never waits on keys again.
 //
 // The binary always comes from a GitHub release: the one --relo-version names,
-// the one this package was published as when that is a prerelease, or the
-// latest release. Rerun this file by hand with the flag to install a specific
+// else the one this package was published as, so the binary and the shim stay
+// on one version. Rerun this file by hand with the flag to install a specific
 // release.
 import { spawnSync } from 'node:child_process';
 import { existsSync, readFileSync } from 'node:fs';
@@ -42,7 +42,7 @@ import {
 	warn
 } from './progress.mjs';
 import { target } from './platform.mjs';
-import { assets, checksumsUrl, prereleaseTag, selectBundle, tagFromArgs, url } from './release.mjs';
+import { assets, checksumsUrl, pinnedTag, selectBundle, tagFromArgs, url } from './release.mjs';
 import { extractBinary } from './archive.mjs';
 
 const packageRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
@@ -146,7 +146,7 @@ async function fromRelease(tag, asset, startedAt) {
 
 try {
 	const startedAt = Date.now();
-	const tag = tagFromArgs(process.argv.slice(2)) ?? prereleaseTag(publishedVersion);
+	const tag = tagFromArgs(process.argv.slice(2)) ?? pinnedTag(publishedVersion);
 	const asset = target();
 	const { version } = assets(tag);
 	await openScreen(LOGO, 'I N S T A L L E R', [

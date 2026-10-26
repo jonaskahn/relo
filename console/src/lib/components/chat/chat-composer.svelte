@@ -89,7 +89,7 @@
 </script>
 
 <div
-	class="section-surface flat-surface p-2 transition-[box-shadow] duration-150 focus-within:shadow-hover"
+	class="section-surface flat-surface p-2 transition-[box-shadow] duration-150 focus-within:shadow-hover py-2"
 >
 	<textarea
 		bind:this={field}
@@ -98,7 +98,7 @@
 		{placeholder}
 		{disabled}
 		title={$t('ui.pages.chatPage.composerHint')}
-		class="max-h-[12.5rem] min-h-[2.75rem] w-full resize-none bg-transparent px-2 py-2 text-[15px] leading-6 text-ink outline-none placeholder:text-faint focus-visible:shadow-none"
+		class="max-h-[12.5rem] min-h-[2.75rem] w-full resize-none bg-transparent px-2 py-2 text-[15px] leading-6 rounded-control text-ink outline-none placeholder:text-faint focus-visible:shadow-none"
 		oninput={grow}
 		{onkeydown}></textarea>
 	<div class="flex items-center gap-2 px-1 pb-1">
