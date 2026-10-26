@@ -22,9 +22,9 @@
 				default: 'h-control px-4 has-[>svg]:px-3',
 				sm: 'h-control gap-1.5 px-3 has-[>svg]:px-2.5',
 				lg: 'h-control px-5 has-[>svg]:px-4',
-				// A square showing only an icon wears the pill: a 10px corner on a
+				// An icon-only button is a square: a 10px corner on a
 				// 38px square reads as unfinished next to a round one.
-				icon: 'size-control rounded-round'
+				icon: 'size-control rounded-control'
 			}
 		},
 		defaultVariants: {

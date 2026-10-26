@@ -76,7 +76,7 @@
 		<Popover.Trigger
 			{disabled}
 			class={cn(
-				'inline-flex size-6 shrink-0 items-center justify-center rounded-round text-faint transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+				'inline-flex size-6 shrink-0 items-center justify-center rounded-control-sm text-faint transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
 				disabled ? 'cursor-not-allowed' : 'hover:bg-hover hover:text-ink'
 			)}
 			aria-label={$t('ui.pages.providersPage.modelsTable.capabilityEdit', {
