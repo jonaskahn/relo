@@ -21,15 +21,15 @@ export function tagFromArgs(argv = []) {
 	return null;
 }
 
-// prereleaseTag pins an install to the version this package was published as,
-// and only when that version is a prerelease. A beta published under the beta
-// dist-tag would otherwise resolve "latest" and install the stable binary,
-// which is not the build its caller asked for. A stable package keeps
-// following the latest release, so re-publishing an old stable version still
-// tracks the channel instead of pinning itself.
-export function prereleaseTag(published) {
-	const pinned = version(published);
-	return pinned && /^\d+\.\d+\.\d+-/.test(pinned) ? pinned : null;
+// pinnedTag pins an install to the version this package was published as. npm
+// does not forward the install spec -- `@v0.1.8`, `@beta`, `@latest` -- to
+// lifecycle scripts, so the installed package version is the only pin the
+// postinstall can see. The publish job checks every declaration against the
+// release tag first, so a published version always has a matching v<version>
+// release to download: following the package keeps the binary and the shim on
+// one version instead of installing the latest binary under an older package.
+export function pinnedTag(published) {
+	return version(published);
 }
 
 // assets resolves the download directory for one release. Without a tag it
