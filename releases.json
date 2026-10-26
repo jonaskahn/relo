@@ -1,7 +1,7 @@
 {
-  "generated": "2026-10-25T08:11:34Z",
+  "generated": "2026-10-26T07:59:53Z",
   "latest": "v0.1.8",
-  "latest_beta": "v0.1.9-beta.42.ec6ab53e",
+  "latest_beta": "v0.1.9-beta.43.2fcce6ff",
   "install": {
     "stable": {
       "script": "curl -fsSL https://relo.ifelse.one/install.sh | sh",
@@ -17,6 +17,86 @@
     }
   },
   "releases": [
+    {
+      "tag": "v0.1.9-beta.43.2fcce6ff",
+      "version": "0.1.9-beta.43.2fcce6ff",
+      "name": "v0.1.9-beta.43.2fcce6ff",
+      "channel": "beta",
+      "draft": false,
+      "published_at": "2026-10-26T07:59:42Z",
+      "page": "https://github.com/jonaskahn/relo/releases/tag/v0.1.9-beta.43.2fcce6ff",
+      "notes": "## What's Changed\n* Feat/group billing smart pick by @jonaskahn in https://github.com/jonaskahn/relo/pull/72\n\n\n**Full Changelog**: https://github.com/jonaskahn/relo/compare/v0.1.9-beta.42.ec6ab53e...v0.1.9-beta.43.2fcce6ff",
+      "install": {
+        "script": "curl -fsSL https://relo.ifelse.one/install.sh | sh -s -- --version 0.1.9-beta.43.2fcce6ff",
+        "powershell": "& ([scriptblock]::Create((irm https://relo.ifelse.one/install.ps1))) -Version 0.1.9-beta.43.2fcce6ff",
+        "npm": "npm i -g @jonaskahn/relo@0.1.9-beta.43.2fcce6ff"
+      },
+      "files": [
+        {
+          "name": "checksums.txt",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.1.9-beta.43.2fcce6ff/checksums.txt",
+          "size": 684,
+          "os": "any",
+          "arch": "any",
+          "kind": "checksums",
+          "format": "txt"
+        },
+        {
+          "name": "relo-0.1.9-beta.43.2fcce6ff-darwin-amd64.tar.gz",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.1.9-beta.43.2fcce6ff/relo-0.1.9-beta.43.2fcce6ff-darwin-amd64.tar.gz",
+          "size": 14260496,
+          "os": "macos",
+          "arch": "amd64",
+          "kind": "archive",
+          "format": "tar.gz"
+        },
+        {
+          "name": "relo-0.1.9-beta.43.2fcce6ff-darwin-arm64.tar.gz",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.1.9-beta.43.2fcce6ff/relo-0.1.9-beta.43.2fcce6ff-darwin-arm64.tar.gz",
+          "size": 13848179,
+          "os": "macos",
+          "arch": "arm64",
+          "kind": "archive",
+          "format": "tar.gz"
+        },
+        {
+          "name": "relo-0.1.9-beta.43.2fcce6ff-linux-amd64.tar.gz",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.1.9-beta.43.2fcce6ff/relo-0.1.9-beta.43.2fcce6ff-linux-amd64.tar.gz",
+          "size": 13959029,
+          "os": "linux",
+          "arch": "amd64",
+          "kind": "archive",
+          "format": "tar.gz"
+        },
+        {
+          "name": "relo-0.1.9-beta.43.2fcce6ff-linux-arm64.tar.gz",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.1.9-beta.43.2fcce6ff/relo-0.1.9-beta.43.2fcce6ff-linux-arm64.tar.gz",
+          "size": 13203425,
+          "os": "linux",
+          "arch": "arm64",
+          "kind": "archive",
+          "format": "tar.gz"
+        },
+        {
+          "name": "relo-0.1.9-beta.43.2fcce6ff-windows-amd64.tar.gz",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.1.9-beta.43.2fcce6ff/relo-0.1.9-beta.43.2fcce6ff-windows-amd64.tar.gz",
+          "size": 13899101,
+          "os": "windows",
+          "arch": "amd64",
+          "kind": "archive",
+          "format": "tar.gz"
+        },
+        {
+          "name": "relo-0.1.9-beta.43.2fcce6ff-windows-arm64.tar.gz",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.1.9-beta.43.2fcce6ff/relo-0.1.9-beta.43.2fcce6ff-windows-arm64.tar.gz",
+          "size": 13043280,
+          "os": "windows",
+          "arch": "arm64",
+          "kind": "archive",
+          "format": "tar.gz"
+        }
+      ]
+    },
     {
       "tag": "v0.1.9-beta.42.ec6ab53e",
       "version": "0.1.9-beta.42.ec6ab53e",
