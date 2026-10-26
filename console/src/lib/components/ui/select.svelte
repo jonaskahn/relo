@@ -77,7 +77,7 @@
 										disabled={option.disabled}
 										class={cn(
 											'relative flex cursor-default items-center gap-2 rounded-control px-2.5 py-1.5 text-left text-sm outline-none select-none',
-											'data-[highlighted]:bg-accent-50 data-[highlighted]:text-accent-ink',
+											'data-[highlighted]:bg-accent-50 data-[highlighted]:text-accent-ink hover:bg-accent-50 hover:text-accent-ink',
 											'data-[disabled]:cursor-not-allowed'
 										)}
 									>

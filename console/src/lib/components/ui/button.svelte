@@ -11,8 +11,8 @@
 				default:
 					'shadow-float-2 bg-primary text-primary-foreground hover:bg-accent-strong hover:shadow-float-2-hover',
 				destructive: 'shadow-float-2 bg-surface text-danger hover:bg-hover hover:shadow-float-2-hover',
-				outline: 'shadow-float-2 bg-surface text-ink ring-1 ring-accent-100 hover:bg-control-hover hover:ring-accent-200 hover:shadow-float-2-hover',
-				secondary: 'shadow-float-2 bg-surface text-ink ring-1 ring-accent-100 hover:bg-control-hover hover:ring-accent-200 hover:shadow-float-2-hover',
+				outline: 'shadow-float-2 bg-surface text-ink hover:bg-control-hover hover:shadow-float-2-hover',
+				secondary: 'shadow-float-2 bg-surface text-ink hover:bg-control-hover hover:shadow-float-2-hover',
 				// Ghost is the low-emphasis variant on purpose: flat, so it never
 				// competes with the floating controls beside it.
 				ghost: 'text-muted-foreground hover:bg-hover hover:text-ink',

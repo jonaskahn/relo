@@ -115,9 +115,9 @@
 	/* A control sits on the surface that holds it, so a card or a popover
 	   retunes the fill under its own controls to stay a step away from its
 	   own background. */
-	--control-mix: 2.5%;
-	--control-mix-card: 3%;
-	--control-bg: color-mix(in srgb, var(--ink) var(--control-mix), var(--surface));
+	--control-mix: 8%;
+	--control-mix-card: 10%;
+	--control-bg: color-mix(in oklab, var(--accent) var(--control-mix), var(--surface));
 	/* Hover always mixes off the control's own fill, so a host that retunes
 	   --control-bg gets the matching hover for free. */
 	--control-bg-hover: color-mix(in srgb, var(--ink) 4%, var(--control-bg));
@@ -233,8 +233,8 @@
 	--muted-bg: #1a1a1d;
 	--hover-var: #1a1a1d;
 	--input: rgba(255, 255, 255, 0.1);
-	--control-mix: 10%;
-	--control-mix-card: 9%;
+	--control-mix: 12%;
+	--control-mix-card: 14%;
 	--secondary: #1a1a1d;
 	--surface-elevated: #1a1a1d;
 	--destructive-foreground: #0a0a0a;
@@ -570,7 +570,7 @@ html[data-theme-dir='sunset']::view-transition-new(root) {
 	.section-surface {
 		/* The mix runs toward the theme's ink, so the same expression steps
 		   down off a white card and up off a dark one. */
-		--control-bg: color-mix(in srgb, var(--ink) var(--control-mix-card), var(--surface));
+		--control-bg: color-mix(in oklab, var(--accent) var(--control-mix-card), var(--surface));
 		border-radius: var(--radius-card);
 		background: var(--surface);
 		box-shadow: var(--float-1);
@@ -579,7 +579,7 @@ html[data-theme-dir='sunset']::view-transition-new(root) {
 	   raised fill, popover radius and shadow. Its controls sit a step above
 	   it, so it retunes their fill too. */
 	.surface-pop {
-		--control-bg: color-mix(in srgb, var(--ink) var(--control-mix-card), var(--raised));
+		--control-bg: color-mix(in oklab, var(--accent) var(--control-mix-card), var(--raised));
 		background: var(--raised);
 		border-radius: var(--radius-popover);
 		box-shadow: var(--shadow-pop);
