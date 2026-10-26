@@ -35,7 +35,12 @@ const (
 	mapEntryKey     = 1
 	mapEntryValue   = 2
 	mcpTextCase     = 1
+	mcpImageCase    = 2
 	mcpContentText  = 1
+	// The image case's payload: McpImageContent carries the raw bytes and
+	// the MIME type, each numbered from one inside that message.
+	mcpImageData = 1
+	mcpImageMime = 2
 )
 
 // Store is an attempt-owned blob store. Blob ids are the SHA-256 of their
@@ -106,13 +111,20 @@ func BuildHistory(req *inference.Request, tools *ToolMap) (History, []byte, erro
 	for _, id := range turns {
 		state.Bytes(stateTurns, id)
 	}
-	var action []byte
-	if active != nil {
-		action = buildUserAction(messageText(*active))
-	} else {
-		action = buildResumeAction()
+	action, err := buildAction(active)
+	if err != nil {
+		return History{}, nil, err
 	}
 	return History{State: state.BytesOut(), Rules: rules, Store: store}, action, nil
+}
+
+// buildAction encodes the trailing action: the active user message when the
+// request ends with one, a resume otherwise.
+func buildAction(active *inference.Message) ([]byte, error) {
+	if active == nil {
+		return buildResumeAction(), nil
+	}
+	return buildUserAction(*active)
 }
 
 // systemPromptBlobs stores one JSON blob per system prompt, so the state
@@ -254,9 +266,26 @@ func (b *rootPromptBuilder) replay(message inference.Message, index int) {
 }
 
 func (b *rootPromptBuilder) replayUser(message inference.Message) {
+	content := []any{}
 	if text := messageText(message); text != "" {
-		b.ids = append(b.ids, b.push(map[string]any{"role": "user", "content": []any{map[string]any{"type": "text", "text": text}}}))
+		content = append(content, map[string]any{"type": "text", "text": text})
 	}
+	for _, part := range message.Content {
+		if part.Type != inference.ContentTypeImage {
+			continue
+		}
+		mimeType, _, ok := splitDataURL(part.ImageURL)
+		if !ok {
+			continue
+		}
+		content = append(content, map[string]any{
+			"type": "image", "image": part.ImageURL, "mediaType": mimeType,
+		})
+	}
+	if len(content) == 0 {
+		return
+	}
+	b.ids = append(b.ids, b.push(map[string]any{"role": "user", "content": content}))
 }
 
 func (b *rootPromptBuilder) replayAssistant(message inference.Message, index int) {
@@ -408,7 +437,9 @@ func toolArgsOf(raw string) map[string]any {
 func buildTurns(req *inference.Request, tools *ToolMap, store *Store, cutoff int) ([][]byte, error) {
 	builder := &turnBuilder{messages: req.Messages, tools: tools, store: store, cutoff: cutoff}
 	for builder.index < cutoff && builder.index < len(builder.messages) {
-		builder.replayTurn()
+		if err := builder.replayTurn(); err != nil {
+			return nil, err
+		}
 	}
 	return builder.ids, nil
 }
@@ -424,13 +455,16 @@ type turnBuilder struct {
 	ids      [][]byte
 }
 
-func (b *turnBuilder) replayTurn() {
+func (b *turnBuilder) replayTurn() error {
 	message := b.messages[b.index]
 	if message.Role != inference.RoleUser || b.skippable(message) {
 		b.index++
-		return
+		return nil
 	}
-	userBlob := b.userBlob(message)
+	userBlob, err := b.userBlob(message)
+	if err != nil {
+		return err
+	}
 	b.index++
 	steps, calls, orphans := b.collectSteps()
 	steps = append(steps, turnCalls(b.messages, b.tools, calls)...)
@@ -447,17 +481,20 @@ func (b *turnBuilder) replayTurn() {
 	var wrapped cursor.Writer
 	wrapped.Message(1, turn.BytesOut())
 	b.ids = append(b.ids, b.store.Put(wrapped.BytesOut()))
+	return nil
 }
 
 func (b *turnBuilder) skippable(message inference.Message) bool {
 	return messageText(message) == "" && !messageHasImages(message)
 }
 
-func (b *turnBuilder) userBlob(message inference.Message) []byte {
-	var user cursor.Writer
-	user.String(userMessageText, messageText(message))
-	user.String(2, turnMessageID())
-	return b.store.Put(user.BytesOut())
+// userBlob stores the turn's user message: its text and any inline images.
+func (b *turnBuilder) userBlob(message inference.Message) ([]byte, error) {
+	user, err := buildUserMessage(message)
+	if err != nil {
+		return nil, err
+	}
+	return b.store.Put(user), nil
 }
 
 func (b *turnBuilder) collectSteps() ([][]byte, map[string]inference.ToolCall, []inference.Message) {
@@ -556,12 +593,29 @@ func toolCallStep(call inference.ToolCall, result inference.Message, paired bool
 }
 
 func buildHistoryResult(result inference.Message) []byte {
-	var text cursor.Writer
-	text.String(mcpContentText, toolResultText(result))
-	var item cursor.Writer
-	item.Message(mcpTextCase, text.BytesOut())
 	var success cursor.Writer
-	success.Message(1, item.BytesOut())
+	if text := toolResultText(result); text != "" {
+		var content cursor.Writer
+		content.String(mcpContentText, text)
+		var item cursor.Writer
+		item.Message(mcpTextCase, content.BytesOut())
+		success.Message(1, item.BytesOut())
+	}
+	for _, part := range result.Content {
+		if part.Type != inference.ContentTypeImage {
+			continue
+		}
+		mimeType, data, ok := splitDataURL(part.ImageURL)
+		if !ok {
+			continue
+		}
+		var content cursor.Writer
+		content.Bytes(mcpImageData, data)
+		content.String(mcpImageMime, mimeType)
+		var item cursor.Writer
+		item.Message(mcpImageCase, content.BytesOut())
+		success.Message(1, item.BytesOut())
+	}
 	var outcome cursor.Writer
 	outcome.Message(1, success.BytesOut())
 	return outcome.BytesOut()
