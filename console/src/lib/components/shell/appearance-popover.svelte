@@ -135,7 +135,7 @@
 						</Select.Trigger>
 						<Select.Portal>
 							<Select.Content
-								class="surface-pop z-50 w-[min(320px,calc(100vw-2rem))] overflow-hidden p-1"
+								class="surface-pop z-50 w-(--bits-select-anchor-width) min-w-0 overflow-hidden p-1"
 								sideOffset={6}
 							>
 								<Select.Viewport class="max-h-72 overflow-y-auto">

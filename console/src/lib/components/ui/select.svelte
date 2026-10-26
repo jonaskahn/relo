@@ -63,7 +63,7 @@
 
 	<Select.Portal>
 		<Select.Content
-			class="z-50 w-[var(--bits-select-trigger-width)] rounded-popover bg-raised p-1 shadow-pop outline-none"
+			class="z-50 w-(--bits-select-anchor-width) min-w-0 rounded-popover bg-raised p-1 shadow-pop outline-none"
 			sideOffset={4}
 		>
 			{#snippet child({ props, wrapperProps, open })}

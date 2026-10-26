@@ -89,16 +89,16 @@
 				</span>
 			</label>
 			{#if targetChoices.length > 1}
-				<select
-					class="h-control rounded-control bg-control px-2 text-sm text-ink shadow-field outline-none transition-[background-color,box-shadow] hover:bg-control-hover hover:shadow-field-hover focus-visible:ring-[3px] focus-visible:ring-ring/50"
-					aria-label={$t('ui.pages.providersPage.add.targetProvider')}
+				<Select
+					class="min-w-0"
 					value={draft.targetProviderId}
-					onchange={(event) => ondraft({ targetProviderId: event.currentTarget.value })}
-				>
-					{#each targetChoices as choice (choice.id)}
-						<option value={choice.id}>{choice.label} · {choice.id}</option>
-					{/each}
-				</select>
+					ariaLabel={$t('ui.pages.providersPage.add.targetProvider')}
+					options={targetChoices.map((choice) => ({
+						value: choice.id,
+						label: `${choice.label} · ${choice.id}`
+					}))}
+					onValueChange={(next) => ondraft({ targetProviderId: next })}
+				/>
 			{/if}
 			<label class="flex items-start gap-2 text-sm">
 				<input
