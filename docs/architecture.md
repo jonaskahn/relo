@@ -42,7 +42,7 @@ console/                      SvelteKit console
     lib/                       API client, state, view logic, components, i18n
     app.css app.html app.d.ts   theme tokens, HTML shell, app types
   static/                      fonts, provider logos, favicon, synced logo
-  package.json package-lock.json  npm dependencies and scripts
+  package.json                npm dependencies and scripts
   svelte.config.js vite.config.ts vitest.config.ts tsconfig.json
   eslint.config.js .prettierrc .prettierignore  lint and format rules
   components.json             UI component configuration

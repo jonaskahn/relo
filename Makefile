@@ -100,7 +100,7 @@ dev-backend: dev-setup
 
 ## console dev server
 dev-console:
-	cd $(CONSOLE) && ([ -d node_modules ] || npm ci) && RELO_BACKEND_URL=$(DEV_URL) npm run dev
+	cd $(CONSOLE) && ([ -d node_modules ] || npm install) && RELO_BACKEND_URL=$(DEV_URL) npm run dev
 
 # === check: format, vet, lint, tests, coverage ===
 
@@ -130,7 +130,7 @@ lint-backend:
 
 ## svelte-check, eslint, and prettier
 lint-console:
-	cd $(CONSOLE) && ([ -d node_modules ] || npm ci) && npm run check && npm run lint && npm run format:check
+	cd $(CONSOLE) && ([ -d node_modules ] || npm install) && npm run check && npm run lint && npm run format:check
 
 ## go mod tidy
 tidy:
@@ -145,7 +145,7 @@ test-backend:
 
 ## svelte-check, vitest, and the coverage floor
 test-console:
-	cd $(CONSOLE) && ([ -d node_modules ] || npm ci) && npm run check && npm run test:coverage
+	cd $(CONSOLE) && ([ -d node_modules ] || npm install) && npm run check && npm run test:coverage
 
 ## Go tests, race detector only
 test-race:
