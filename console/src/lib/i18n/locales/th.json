@@ -184,7 +184,7 @@
       "accountLabel": "บัญชี",
       "enjoyTitle": "สนุกกับการใช้งาน",
       "enjoyBody": "Relo เชื่อมต่อกับ {account} แล้ว",
-      "enjoyRetry": "ไม่สำเร็จ เริ่มการเข้าสู่ระบบใหม่จากคอนโซล",
+      "enjoyRetry": "ลองอีกครั้ง",
       "closeHint": "ปิดแท็บนี้ได้"
     },
     "common": {

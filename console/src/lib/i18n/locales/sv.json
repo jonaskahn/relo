@@ -184,7 +184,7 @@
       "accountLabel": "Konto",
       "enjoyTitle": "Njut",
       "enjoyBody": "Relo är anslutet till {account}.",
-      "enjoyRetry": "Det funkade inte. Starta inloggningen igen från konsolen.",
+      "enjoyRetry": "Försök igen",
       "closeHint": "Du kan stänga den här fliken."
     },
     "common": {

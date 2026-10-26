@@ -184,7 +184,7 @@
       "accountLabel": "Konto",
       "enjoyTitle": "Przyjemnie",
       "enjoyBody": "Relo połączono z {account}.",
-      "enjoyRetry": "To nie zadziałało. Rozpocznij logowanie ponownie w konsoli.",
+      "enjoyRetry": "Spróbuj ponownie",
       "closeHint": "Możesz zamknąć tę kartę."
     },
     "common": {

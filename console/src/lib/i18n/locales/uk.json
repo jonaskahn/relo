@@ -184,7 +184,7 @@
       "accountLabel": "Акаунт",
       "enjoyTitle": "Приємного користування",
       "enjoyBody": "Relo підключено до {account}.",
-      "enjoyRetry": "Не вийшло. Почни вхід знову з консолі.",
+      "enjoyRetry": "Спробувати знову",
       "closeHint": "Цю вкладку можна закрити."
     },
     "common": {

@@ -184,7 +184,7 @@
       "accountLabel": "खाता",
       "enjoyTitle": "आनंद लें",
       "enjoyBody": "Relo अब {account} से जुड़ा है।",
-      "enjoyRetry": "यह काम नहीं आया। कंसोल से लॉगिन फिर से शुरू करें।",
+      "enjoyRetry": "फिर से प्रयास करें",
       "closeHint": "आप यह टैब बंद कर सकते हैं।"
     },
     "common": {

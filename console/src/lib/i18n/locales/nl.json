@@ -184,7 +184,7 @@
       "accountLabel": "Account",
       "enjoyTitle": "Veel plezier",
       "enjoyBody": "Relo is verbonden met {account}.",
-      "enjoyRetry": "Dat werkte niet. Start het aanmelden opnieuw vanuit de console.",
+      "enjoyRetry": "Probeer opnieuw",
       "closeHint": "Je kunt dit tabblad sluiten."
     },
     "common": {

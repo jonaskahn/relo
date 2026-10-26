@@ -184,7 +184,7 @@
       "accountLabel": "Account",
       "enjoyTitle": "Buon divertimento",
       "enjoyBody": "Relo è connesso a {account}.",
-      "enjoyRetry": "Non ha funzionato. Riavvia l’accesso dalla console.",
+      "enjoyRetry": "Riprova",
       "closeHint": "Puoi chiudere questa scheda."
     },
     "common": {

@@ -184,7 +184,7 @@
       "accountLabel": "Cuenta",
       "enjoyTitle": "Disfruta",
       "enjoyBody": "Relo está conectado con {account}.",
-      "enjoyRetry": "Eso no funcionó. Inicia el inicio de sesión de nuevo desde la consola.",
+      "enjoyRetry": "Inténtalo de nuevo",
       "closeHint": "Puedes cerrar esta pestaña."
     },
     "common": {

@@ -184,7 +184,7 @@
       "accountLabel": "Tài khoản",
       "enjoyTitle": "Tận hưởng",
       "enjoyBody": "Relo đã kết nối với {account}.",
-      "enjoyRetry": "Không thành công. Hãy bắt đầu đăng nhập lại từ console.",
+      "enjoyRetry": "Thử lại",
       "closeHint": "Bạn có thể đóng thẻ này."
     },
     "common": {

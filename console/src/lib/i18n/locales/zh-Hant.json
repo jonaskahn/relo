@@ -184,7 +184,7 @@
       "accountLabel": "賬號",
       "enjoyTitle": "請享用",
       "enjoyBody": "Relo 已連線至 {account}。",
-      "enjoyRetry": "沒有成功。請從主控台重新開始登入。",
+      "enjoyRetry": "再試一次",
       "closeHint": "你可以關閉這個分頁。"
     },
     "common": {

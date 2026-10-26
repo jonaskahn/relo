@@ -184,7 +184,7 @@
       "accountLabel": "Účet",
       "enjoyTitle": "Užijvejte si",
       "enjoyBody": "Relo je připojen k {account}.",
-      "enjoyRetry": "To se nepovedlo. Spusťte přihlášení znovu z konzole.",
+      "enjoyRetry": "Zkus to znovu",
       "closeHint": "Tuto kartu můžete zavřít."
     },
     "common": {

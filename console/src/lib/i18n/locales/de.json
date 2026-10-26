@@ -184,7 +184,7 @@
       "accountLabel": "Konto",
       "enjoyTitle": "Viel Spaß",
       "enjoyBody": "Relo ist mit {account} verbunden.",
-      "enjoyRetry": "Das hat nicht geklappt. Starte die Anmeldung in der Konsole neu.",
+      "enjoyRetry": "Erneut versuchen",
       "closeHint": "Du kannst diesen Tab schließen."
     },
     "common": {

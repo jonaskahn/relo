@@ -184,7 +184,7 @@
       "accountLabel": "Compte",
       "enjoyTitle": "Profite",
       "enjoyBody": "Relo est connecté à {account}.",
-      "enjoyRetry": "Ça n’a pas marché. Relance la connexion depuis la console.",
+      "enjoyRetry": "Réessayer",
       "closeHint": "Tu peux fermer cet onglet."
     },
     "common": {

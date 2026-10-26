@@ -184,7 +184,7 @@
       "accountLabel": "アカウント",
       "enjoyTitle": "お渡しします",
       "enjoyBody": "Relo は {account} に接続されました。",
-      "enjoyRetry": "うまくいきませんでした。コンソールからサインインをやり直してください。",
+      "enjoyRetry": "もう一度試す",
       "closeHint": "このタブは閉じてもかまいません。"
     },
     "common": {

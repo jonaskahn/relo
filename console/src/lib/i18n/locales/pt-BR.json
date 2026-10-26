@@ -184,7 +184,7 @@
       "accountLabel": "Conta",
       "enjoyTitle": "Aproveite",
       "enjoyBody": "O Relo está conectado com {account}.",
-      "enjoyRetry": "Não funcionou. Inicie o login novamente pelo console.",
+      "enjoyRetry": "Tentar novamente",
       "closeHint": "Você pode fechar esta aba."
     },
     "common": {

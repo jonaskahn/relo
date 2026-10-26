@@ -184,7 +184,7 @@
       "accountLabel": "Hesap",
       "enjoyTitle": "Keyfini çıkar",
       "enjoyBody": "Relo {account} hesabına bağlandı.",
-      "enjoyRetry": "Bu işe yaramadı. Oturum açmayı konsoldan yeniden başlat.",
+      "enjoyRetry": "Tekrar dene",
       "closeHint": "Bu sekmeyi kapatabilirsin."
     },
     "common": {

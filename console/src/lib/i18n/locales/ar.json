@@ -184,7 +184,7 @@
       "accountLabel": "الحساب",
       "enjoyTitle": "استمتع",
       "enjoyBody": "Relo متصل بالحساب {account}.",
-      "enjoyRetry": "لم ينجح ذلك. ابدأ تسجيل الدخول مجددًا من الكونسول.",
+      "enjoyRetry": "جرّب مرة أخرى",
       "closeHint": "يمكنك إغلاق علامة التبويب هذه."
     },
     "common": {
