@@ -516,9 +516,7 @@
 					<div class="flex flex-wrap gap-2">
 						{#each capabilityFields as field (field.key)}
 							{#if effectiveDetailValue(shown ?? model, layers, field.key) === true}
-								<span class="badge bg-sunken px-2 py-1 text-xs"
-									>{$t(field.labelKey)}</span
-								>
+								<span class="badge bg-sunken px-2 py-1 text-xs">{$t(field.labelKey)}</span>
 							{/if}
 						{/each}
 					</div>

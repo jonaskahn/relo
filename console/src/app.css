@@ -255,14 +255,18 @@
 	   the same two float levels with a whisper of light along the top edge
 	   and a tight dark contact shadow below it. */
 	--float-1:
-		inset 0 1px 0 rgb(255 255 255 / 0.07), 0 1px 1px rgb(0 0 0 / 0.5), 0 4px 12px -6px rgb(0 0 0 / 0.7);
+		inset 0 1px 0 rgb(255 255 255 / 0.07), 0 1px 1px rgb(0 0 0 / 0.5),
+		0 4px 12px -6px rgb(0 0 0 / 0.7);
 	--float-2:
-		inset 0 1px 0 rgb(255 255 255 / 0.09), 0 1px 2px rgb(0 0 0 / 0.55), 0 8px 20px -8px rgb(0 0 0 / 0.75);
+		inset 0 1px 0 rgb(255 255 255 / 0.09), 0 1px 2px rgb(0 0 0 / 0.55),
+		0 8px 20px -8px rgb(0 0 0 / 0.75);
 	--float-2-hover:
-		inset 0 1px 0 rgb(255 255 255 / 0.11), 0 2px 4px rgb(0 0 0 / 0.6), 0 12px 26px -10px rgb(0 0 0 / 0.8);
+		inset 0 1px 0 rgb(255 255 255 / 0.11), 0 2px 4px rgb(0 0 0 / 0.6),
+		0 12px 26px -10px rgb(0 0 0 / 0.8);
 	--float-2-press: inset 0 1px 0 rgb(255 255 255 / 0.09), 0 1px 2px rgb(0 0 0 / 0.55);
 	--field-float:
-		inset 0 1px 0 rgb(255 255 255 / 0.1), 0 1px 1px rgb(0 0 0 / 0.5), 0 6px 14px -6px rgb(0 0 0 / 0.75);
+		inset 0 1px 0 rgb(255 255 255 / 0.1), 0 1px 1px rgb(0 0 0 / 0.5),
+		0 6px 14px -6px rgb(0 0 0 / 0.75);
 	--ring-field: rgb(255 255 255 / 0.14);
 	--ring-field-hover: rgb(255 255 255 / 0.24);
 	--disabled-bg: color-mix(in srgb, var(--ink) 5%, var(--surface));
@@ -492,7 +496,6 @@ html[data-theme-dir='sunset']::view-transition-new(root) {
 			--field-float: 0 1px 2px rgb(20 20 30 / 0.12), 0 4px 12px -5px rgb(20 20 30 / 0.3);
 			--float-2: 0 1px 2px rgb(20 20 30 / 0.12), 0 6px 16px -8px rgb(20 20 30 / 0.34);
 			--float-2-hover: 0 2px 3px rgb(20 20 30 / 0.14), 0 10px 22px -8px rgb(20 20 30 / 0.4);
-
 		}
 		.dark {
 			--border: rgba(255, 255, 255, 0.22);
@@ -500,7 +503,6 @@ html[data-theme-dir='sunset']::view-transition-new(root) {
 			--ring-field: rgb(255 255 255 / 0.32);
 			--ring-field-hover: rgb(255 255 255 / 0.45);
 			--field-edge: 0 0 0 1px var(--ring-field);
-
 		}
 		button:disabled,
 		input:disabled,
@@ -1414,7 +1416,9 @@ select:not(:disabled):hover {
 input:not([type='checkbox'], [type='radio'], [type='range']):not([disabled]):focus-visible,
 textarea:not([disabled]):focus-visible,
 select:not(:disabled):focus-visible {
-	box-shadow: var(--field-float), 0 0 0 2px var(--ring);
+	box-shadow:
+		var(--field-float),
+		0 0 0 2px var(--ring);
 }
 /* Read-only is flat and sunken: the same recessed fill a pane panel uses, so
    it never reads as the lifted, ringed control beside it. The cursor stays

@@ -309,9 +309,7 @@
 					<span class="sr-only">{$t('ui.pages.providersPage.accounts.kindSigninLabel')}</span>
 				</span>
 			{:else}
-				<span
-					class="rounded bg-sunken px-1.5 py-0.5 text-[0.65rem] text-muted-foreground"
-				>
+				<span class="rounded bg-sunken px-1.5 py-0.5 text-[0.65rem] text-muted-foreground">
 					{$t(kindKeys[account.kind] ?? 'ui.pages.providersPage.accounts.kindKey')}
 				</span>
 			{/if}

@@ -135,10 +135,7 @@
 					<span class="truncate">{provider.label}</span>
 					<BillingChip {provider} hover />
 					{#if experimental}
-						<span
-							data-experimental-chip
-							class="badge shrink-0 bg-sunken text-muted-foreground"
-						>
+						<span data-experimental-chip class="badge shrink-0 bg-sunken text-muted-foreground">
 							{$t('ui.pages.providersPage.list.tagExperimental')}
 						</span>
 					{/if}

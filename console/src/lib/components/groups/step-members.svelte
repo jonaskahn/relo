@@ -334,9 +334,7 @@
 				{/if}
 				<div class="min-h-0 flex-1 overflow-y-auto">
 					{#if noteKey}
-						<p
-							class="mb-2.5 rounded-lg bg-card shadow-float-1 p-2.5 text-xs text-muted-foreground"
-						>
+						<p class="mb-2.5 rounded-lg bg-card shadow-float-1 p-2.5 text-xs text-muted-foreground">
 							{$t(noteKey)}
 						</p>
 					{/if}

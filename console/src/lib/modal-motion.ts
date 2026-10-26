@@ -229,7 +229,10 @@ export function sideDrawerMotion(_node: HTMLElement): TransitionConfig {
 
 /** Slides the same drawer in from either edge, so a trailing pane moves as the
  *  leading one does and only its direction differs. Reduced motion is a fade. */
-export function edgeDrawerEnter(node: HTMLElement, params: { side?: 'start' | 'end' } = {}): TransitionConfig {
+export function edgeDrawerEnter(
+	node: HTMLElement,
+	params: { side?: 'start' | 'end' } = {}
+): TransitionConfig {
 	if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
 		return { duration: 140, css: (t) => `opacity: ${t}` };
 	}
@@ -242,7 +245,10 @@ export function edgeDrawerEnter(node: HTMLElement, params: { side?: 'start' | 'e
 }
 
 /** Slides an edge drawer back out. Out is a touch quicker than in, as the nav drawer's is. */
-export function edgeDrawerLeave(node: HTMLElement, params: { side?: 'start' | 'end' } = {}): TransitionConfig {
+export function edgeDrawerLeave(
+	node: HTMLElement,
+	params: { side?: 'start' | 'end' } = {}
+): TransitionConfig {
 	void node;
 	if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
 		return { duration: 140, css: (t) => `opacity: ${t}` };

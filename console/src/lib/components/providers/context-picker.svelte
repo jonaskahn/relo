@@ -95,7 +95,11 @@
 <div class="flex flex-col items-start gap-0.5">
 	<!-- A fixed box, so a long custom size cannot widen the column, with the
 	     mark's own character reserved so the value never moves. -->
-	<span class="inline-flex shrink-0 items-center font-mono text-xs {disabled ? 'text-disabled-ink' : ''}">
+	<span
+		class="inline-flex shrink-0 items-center font-mono text-xs {disabled
+			? 'text-disabled-ink'
+			: ''}"
+	>
 		<span class="w-[7ch] min-w-0 truncate" title={label}>{label}</span>
 		<span
 			class="w-[1ch] shrink-0 text-center font-semibold text-accent-strong"

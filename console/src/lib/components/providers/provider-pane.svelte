@@ -297,10 +297,7 @@
 				<h2 class="flex min-w-0 items-center gap-1.5 truncate text-base font-semibold">
 					<BillingChip {provider} />
 					{#if experimental}
-						<span
-							data-experimental-chip
-							class="badge shrink-0 bg-sunken text-muted-foreground"
-						>
+						<span data-experimental-chip class="badge shrink-0 bg-sunken text-muted-foreground">
 							{$t('ui.pages.providersPage.list.tagExperimental')}
 						</span>
 					{/if}

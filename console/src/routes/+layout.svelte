@@ -134,7 +134,9 @@
 		<div class="flex min-w-0 flex-1 flex-col overflow-hidden">
 			{#if !errored}<Topbar />{/if}
 			<main
-				class={!errored && workspace ? 'min-h-0 flex-1 overflow-hidden rounded-t-control bg-stage' : 'flex-1 overflow-y-auto rounded-t-control bg-stage'}
+				class={!errored && workspace
+					? 'min-h-0 flex-1 overflow-hidden rounded-t-control bg-stage'
+					: 'flex-1 overflow-y-auto rounded-t-control bg-stage'}
 			>
 				{#if errored}
 					{@render children()}

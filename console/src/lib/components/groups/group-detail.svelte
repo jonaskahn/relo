@@ -167,10 +167,7 @@
 							</span>
 						{/if}
 						{#each group.capability_warnings ?? [] as warning (warning)}
-							<span
-								class="badge bg-warn/10 text-warn"
-								title={$t(capabilityWarningText(warning))}
-							>
+							<span class="badge bg-warn/10 text-warn" title={$t(capabilityWarningText(warning))}>
 								<Icon name="alert-triangle" size={11} />
 								{$t(capabilityWarningChip(warning))}
 							</span>
@@ -218,7 +215,9 @@
 					{:else}
 						<ol class="mt-2 flex flex-col gap-2">
 							{#each candidates as candidate, index (candidate.provider_id + '/' + candidate.model_id)}
-								<li class="flex items-center gap-2 rounded-panel bg-surface shadow-float-1 px-2.5 py-1.5">
+								<li
+									class="flex items-center gap-2 rounded-panel bg-surface shadow-float-1 px-2.5 py-1.5"
+								>
 									<span class="mono-data w-4 shrink-0 text-muted-foreground">{index + 1}</span>
 									<ProviderLogo
 										id={candidate.provider_id}
