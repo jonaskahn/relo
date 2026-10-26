@@ -13,8 +13,6 @@
 	import MenuPanel from '$lib/components/ui/menu-panel.svelte';
 	import { cn } from '$lib/utils';
 
-	let {} = $props();
-
 	const titleKey = $derived.by(() => {
 		const p = page.url.pathname;
 		if (p === '/') return 'ui.pages.dashboard.title';
