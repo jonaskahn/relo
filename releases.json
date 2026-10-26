@@ -1,6 +1,6 @@
 {
-  "generated": "2026-10-26T07:59:53Z",
-  "latest": "v0.1.8",
+  "generated": "2026-10-26T10:49:44Z",
+  "latest": "v0.1.9",
   "latest_beta": "v0.1.9-beta.43.2fcce6ff",
   "install": {
     "stable": {
@@ -17,6 +17,158 @@
     }
   },
   "releases": [
+    {
+      "tag": "v0.1.9",
+      "version": "0.1.9",
+      "name": "v0.1.9 -  Kopiko 🍬",
+      "channel": "stable",
+      "draft": false,
+      "published_at": "2026-10-26T10:49:31Z",
+      "page": "https://github.com/jonaskahn/relo/releases/tag/v0.1.9",
+      "notes": "## What's Changed\r\n* Fix/sveltekit 3 dependabot by @jonaskahn in https://github.com/jonaskahn/relo/pull/71\r\n* Feat/group billing smart pick by @jonaskahn in https://github.com/jonaskahn/relo/pull/72\r\n\r\n\r\n**Full Changelog**: https://github.com/jonaskahn/relo/compare/v0.1.8...v0.1.9",
+      "install": {
+        "script": "curl -fsSL https://relo.ifelse.one/install.sh | sh -s -- --version 0.1.9",
+        "powershell": "& ([scriptblock]::Create((irm https://relo.ifelse.one/install.ps1))) -Version 0.1.9",
+        "npm": "npm i -g @jonaskahn/relo@0.1.9"
+      },
+      "files": [
+        {
+          "name": "checksums.txt",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.1.9/checksums.txt",
+          "size": 582,
+          "os": "any",
+          "arch": "any",
+          "kind": "checksums",
+          "format": "txt"
+        },
+        {
+          "name": "Relo-0.1.9-arm64.zip",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.1.9/Relo-0.1.9-arm64.zip",
+          "size": 15126466,
+          "os": "macos",
+          "arch": "arm64",
+          "kind": "app",
+          "format": "zip"
+        },
+        {
+          "name": "relo-0.1.9-darwin-amd64.tar.gz",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.1.9/relo-0.1.9-darwin-amd64.tar.gz",
+          "size": 14260512,
+          "os": "macos",
+          "arch": "amd64",
+          "kind": "archive",
+          "format": "tar.gz"
+        },
+        {
+          "name": "relo-0.1.9-darwin-arm64.tar.gz",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.1.9/relo-0.1.9-darwin-arm64.tar.gz",
+          "size": 13848160,
+          "os": "macos",
+          "arch": "arm64",
+          "kind": "archive",
+          "format": "tar.gz"
+        },
+        {
+          "name": "relo-0.1.9-linux-amd64.tar.gz",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.1.9/relo-0.1.9-linux-amd64.tar.gz",
+          "size": 13959028,
+          "os": "linux",
+          "arch": "amd64",
+          "kind": "archive",
+          "format": "tar.gz"
+        },
+        {
+          "name": "relo-0.1.9-linux-arm64.tar.gz",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.1.9/relo-0.1.9-linux-arm64.tar.gz",
+          "size": 13203435,
+          "os": "linux",
+          "arch": "arm64",
+          "kind": "archive",
+          "format": "tar.gz"
+        },
+        {
+          "name": "Relo-0.1.9-universal.zip",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.1.9/Relo-0.1.9-universal.zip",
+          "size": 29751929,
+          "os": "macos",
+          "arch": "universal",
+          "kind": "app",
+          "format": "zip"
+        },
+        {
+          "name": "relo-0.1.9-windows-amd64.tar.gz",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.1.9/relo-0.1.9-windows-amd64.tar.gz",
+          "size": 13899027,
+          "os": "windows",
+          "arch": "amd64",
+          "kind": "archive",
+          "format": "tar.gz"
+        },
+        {
+          "name": "relo-0.1.9-windows-arm64.tar.gz",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.1.9/relo-0.1.9-windows-arm64.tar.gz",
+          "size": 13043399,
+          "os": "windows",
+          "arch": "arm64",
+          "kind": "archive",
+          "format": "tar.gz"
+        },
+        {
+          "name": "Relo-Setup-0.1.9-amd64.deb",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.1.9/Relo-Setup-0.1.9-amd64.deb",
+          "size": 14220270,
+          "os": "linux",
+          "arch": "amd64",
+          "kind": "installer",
+          "format": "deb"
+        },
+        {
+          "name": "Relo-Setup-0.1.9-amd64.exe",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.1.9/Relo-Setup-0.1.9-amd64.exe",
+          "size": 10109724,
+          "os": "windows",
+          "arch": "amd64",
+          "kind": "installer",
+          "format": "exe"
+        },
+        {
+          "name": "Relo-Setup-0.1.9-amd64.rpm",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.1.9/Relo-Setup-0.1.9-amd64.rpm",
+          "size": 14183955,
+          "os": "linux",
+          "arch": "amd64",
+          "kind": "installer",
+          "format": "rpm"
+        },
+        {
+          "name": "Relo-Setup-0.1.9-arm64.deb",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.1.9/Relo-Setup-0.1.9-arm64.deb",
+          "size": 13535390,
+          "os": "linux",
+          "arch": "arm64",
+          "kind": "installer",
+          "format": "deb"
+        },
+        {
+          "name": "Relo-Setup-0.1.9-arm64.exe",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.1.9/Relo-Setup-0.1.9-arm64.exe",
+          "size": 9098170,
+          "os": "windows",
+          "arch": "arm64",
+          "kind": "installer",
+          "format": "exe"
+        },
+        {
+          "name": "Relo-Setup-0.1.9-arm64.rpm",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.1.9/Relo-Setup-0.1.9-arm64.rpm",
+          "size": 13473694,
+          "os": "linux",
+          "arch": "arm64",
+          "kind": "installer",
+          "format": "rpm"
+        }
+      ]
+    },
     {
       "tag": "v0.1.9-beta.43.2fcce6ff",
       "version": "0.1.9-beta.43.2fcce6ff",
