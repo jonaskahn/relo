@@ -13,13 +13,7 @@
 	import MenuPanel from '$lib/components/ui/menu-panel.svelte';
 	import { cn } from '$lib/utils';
 
-	// scrolled is the shell telling the bar its content moved under it, so the
-	// bar can add the one shadow that separates it from the page.
-	interface Props {
-		scrolled?: boolean;
-	}
-
-	let { scrolled = false }: Props = $props();
+	let {} = $props();
 
 	const titleKey = $derived.by(() => {
 		const p = page.url.pathname;
@@ -51,8 +45,7 @@
 
 <header
 	class={cn(
-		'chrome sticky top-0 z-30 flex h-[60px] shrink-0 items-center gap-3 px-[var(--gutter)] transition-shadow',
-		scrolled && 'shadow-[0_8px_24px_-12px_var(--shadow)]'
+		'chrome sticky top-0 z-30 flex h-[60px] shrink-0 items-center gap-3 rounded-b-control px-[var(--gutter)]'
 	)}
 >
 	<Button
