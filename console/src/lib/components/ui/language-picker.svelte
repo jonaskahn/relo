@@ -72,7 +72,7 @@
 				layout === 'page'
 					? 'flex w-[4.75rem] flex-col items-center gap-1.5 rounded-lg px-1 py-1.5'
 					: 'flex size-11 items-center justify-center rounded-lg',
-				selected ? 'bg-control' : 'hover:bg-hover'
+				selected ? 'bg-accent-soft ring-1 ring-accent-border' : 'hover:bg-hover'
 			)}
 			onclick={() => onselect?.(code)}
 		>

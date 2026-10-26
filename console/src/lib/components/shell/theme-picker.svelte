@@ -63,7 +63,7 @@
 			class={cn(
 				'flex min-w-0 flex-col rounded-panel text-left transition-[background-color,box-shadow] focus-visible:z-10 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none',
 				layout === 'page' ? 'gap-2 p-1.5' : 'gap-1.5 p-1.5',
-				selected ? 'bg-control' : 'hover:bg-hover'
+				selected ? 'bg-accent-soft ring-1 ring-accent-border' : 'hover:bg-hover'
 			)}
 			onclick={() => consoleState.setTheme(choice)}
 		>

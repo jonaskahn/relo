@@ -112,7 +112,7 @@
 					aria-pressed={applied === 'default'}
 					class="flex min-h-control items-center rounded-md px-2 py-1.5 text-left text-xs hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring {applied ===
 					'default'
-						? 'bg-accent-soft text-foreground'
+						? 'bg-accent-soft text-foreground ring-1 ring-accent-border'
 						: ''}"
 					onclick={() => pick('default')}
 				>
@@ -125,7 +125,7 @@
 						aria-pressed={applied === String(preset)}
 						class="flex min-h-control items-center rounded-md px-2 py-1.5 font-mono text-xs hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring {applied ===
 						String(preset)
-							? 'bg-accent-soft text-foreground'
+							? 'bg-accent-soft text-foreground ring-1 ring-accent-border'
 							: ''}"
 						onclick={() => pick(String(preset))}
 					>

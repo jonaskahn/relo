@@ -66,7 +66,7 @@
 					aria-checked={draft.strategy === option}
 					class="flex w-full flex-col gap-2.5 rounded-panel border p-3.5 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring {draft.strategy ===
 					option
-						? 'bg-accent-soft ring-2 ring-accent-border'
+						? 'bg-accent-soft ring-1 ring-accent-border'
 						: 'hover:bg-control-hover'}"
 					onclick={() => ondraft({ strategy: option })}
 				>

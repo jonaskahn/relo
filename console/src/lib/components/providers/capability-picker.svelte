@@ -99,7 +99,7 @@
 						disabled={busy}
 						class={cn(
 							'flex w-full items-center rounded-md px-2 py-1.5 text-left text-xs hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
-							selected && 'bg-accent-soft text-foreground'
+							selected && 'bg-accent-soft text-foreground ring-1 ring-accent-border'
 						)}
 						onclick={() => void save(choice.value)}
 					>

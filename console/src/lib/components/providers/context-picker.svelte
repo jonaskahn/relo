@@ -135,7 +135,7 @@
 					data-plain
 					disabled={busy}
 					class="flex w-full items-center justify-between gap-2 rounded-md px-2 py-1.5 text-left text-xs hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring {!custom
-						? 'bg-accent-soft text-foreground'
+						? 'bg-accent-soft text-foreground ring-1 ring-accent-border'
 						: ''}"
 					onclick={() => void save(null)}
 				>
