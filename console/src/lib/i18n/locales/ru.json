@@ -1477,6 +1477,7 @@
         "membersLabel": "Участники",
         "noMembers": "Пока нет участников.",
         "noMatchingModels": "Ни одна модель не подходит под этот поиск или фильтр.",
+        "scrollForMore": "Прокрутите, чтобы увидеть больше · {shown} из {total}",
         "memberEnabled": "Вкл",
         "addMember": "Добавить участника",
         "pickProvider": "Выбери подключение",

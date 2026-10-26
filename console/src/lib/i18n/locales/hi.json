@@ -1477,6 +1477,7 @@
         "membersLabel": "सदस्य",
         "noMembers": "अभी कोई सदस्य नहीं।",
         "noMatchingModels": "कोई भी मॉडल इस खोज या फ़िल्टर से मेल नहीं खाता।",
+        "scrollForMore": "और देखने के लिए स्क्रॉल करें · {total} में से {shown}",
         "memberEnabled": "चालू",
         "addMember": "सदस्य जोड़ें",
         "pickProvider": "एक कनेक्शन चुनें",

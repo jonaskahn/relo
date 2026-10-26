@@ -1477,6 +1477,7 @@
         "membersLabel": "Medlemmar",
         "noMembers": "Inga medlemmar än.",
         "noMatchingModels": "Inga modeller matchar den här sökningen eller det här filtret.",
+        "scrollForMore": "Skrolla för fler · {shown} av {total}",
         "memberEnabled": "På",
         "addMember": "Lägg till medlem",
         "pickProvider": "Välj en anslutning",

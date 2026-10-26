@@ -1477,6 +1477,7 @@
         "membersLabel": "Leden",
         "noMembers": "Nog geen leden.",
         "noMatchingModels": "Geen modellen komen overeen met deze zoekopdracht of dit filter.",
+        "scrollForMore": "Scroll voor meer · {shown} van {total}",
         "memberEnabled": "Aan",
         "addMember": "Lid toevoegen",
         "pickProvider": "Kies een verbinding",

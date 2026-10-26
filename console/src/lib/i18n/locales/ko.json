@@ -1477,6 +1477,7 @@
         "membersLabel": "멤버",
         "noMembers": "아직 멤버가 없어요.",
         "noMatchingModels": "이 검색이나 필터에 맞는 모델이 없어요.",
+        "scrollForMore": "스크롤해서 더 보기 · {total}개 중 {shown}개",
         "memberEnabled": "켜짐",
         "addMember": "멤버 추가",
         "pickProvider": "연결 선택",

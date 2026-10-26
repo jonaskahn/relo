@@ -1477,6 +1477,7 @@
         "membersLabel": "Členové",
         "noMembers": "Zatím žádní členové.",
         "noMatchingModels": "Tomuto hledání nebo filtru neodpovídá žádný model.",
+        "scrollForMore": "Posuňte pro další · {shown} z {total}",
         "memberEnabled": "Zap.",
         "addMember": "Přidat člena",
         "pickProvider": "Vybrat připojení",

@@ -1477,6 +1477,7 @@
         "membersLabel": "成員",
         "noMembers": "還沒有成員。",
         "noMatchingModels": "沒有符合搜尋或篩選條件的模型。",
+        "scrollForMore": "捲動載入更多 · {shown} / {total}",
         "memberEnabled": "開啟",
         "addMember": "新增成員",
         "pickProvider": "選擇連線",

@@ -1477,6 +1477,7 @@
         "membersLabel": "Учасники",
         "noMembers": "Поки що немає учасників.",
         "noMatchingModels": "Жодна модель не відповідає цьому пошуку або фільтру.",
+        "scrollForMore": "Прокрутіть, щоб побачити більше · {shown} з {total}",
         "memberEnabled": "Увімк",
         "addMember": "Додати учасника",
         "pickProvider": "Вибери підключення",

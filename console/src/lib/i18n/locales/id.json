@@ -1477,6 +1477,7 @@
         "membersLabel": "Anggota",
         "noMembers": "Belum ada anggota.",
         "noMatchingModels": "Tidak ada model yang cocok dengan penelusuran atau filter ini.",
+        "scrollForMore": "Gulir untuk lihat lainnya · {shown} dari {total}",
         "memberEnabled": "Aktif",
         "addMember": "Tambahkan anggota",
         "pickProvider": "Pilih koneksi",

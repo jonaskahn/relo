@@ -1477,6 +1477,7 @@
         "membersLabel": "Members",
         "noMembers": "No members yet.",
         "noMatchingModels": "No models match this search or filter.",
+        "scrollForMore": "Scroll for more · {shown} of {total}",
         "memberEnabled": "On",
         "addMember": "Add member",
         "pickProvider": "Pick a connection",

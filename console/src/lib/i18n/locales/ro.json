@@ -1477,6 +1477,7 @@
         "membersLabel": "Membri",
         "noMembers": "Niciun membru încă.",
         "noMatchingModels": "Niciun model nu corespunde acestei căutări sau filtru.",
+        "scrollForMore": "Derulează pentru mai multe · {shown} din {total}",
         "memberEnabled": "Pornit",
         "addMember": "Adăugați membru",
         "pickProvider": "Alegeți o conexiune",

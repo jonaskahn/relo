@@ -1477,6 +1477,7 @@
         "membersLabel": "الأعضاء",
         "noMembers": "لا يوجد أعضاء حتى الآن.",
         "noMatchingModels": "لا توجد نماذج تطابق هذا البحث أو عوامل التصفية.",
+        "scrollForMore": "مرّر للمزيد · {shown} من {total}",
         "memberEnabled": "مفعّل",
         "addMember": "إضافة عضو",
         "pickProvider": "اختر اتصالاً",

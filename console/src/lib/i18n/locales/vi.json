@@ -1477,6 +1477,7 @@
         "membersLabel": "Thành viên",
         "noMembers": "Chưa có thành viên nào",
         "noMatchingModels": "Không có mô hình nào phù hợp với tìm kiếm hoặc bộ lọc này.",
+        "scrollForMore": "Cuộn để xem thêm · {shown}/{total}",
         "memberEnabled": "Bật",
         "addMember": "Thêm thành viên",
         "pickProvider": "Chọn một kết nối",

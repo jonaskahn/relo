@@ -1477,6 +1477,7 @@
         "membersLabel": "สมาชิก",
         "noMembers": "ยังไม่มีสมาชิก",
         "noMatchingModels": "ไม่มีโมเดลตรงกับการค้นหาหรือตัวกรองนี้",
+        "scrollForMore": "เลื่อนเพื่อดูเพิ่ม · {shown} จาก {total}",
         "memberEnabled": "เปิด",
         "addMember": "เพิ่มสมาชิก",
         "pickProvider": "เลือกการเชื่อมต่อ",

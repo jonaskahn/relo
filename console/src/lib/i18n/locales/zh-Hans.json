@@ -1477,6 +1477,7 @@
         "membersLabel": "成员",
         "noMembers": "还没有成员。",
         "noMatchingModels": "没有符合搜索或筛选条件的模型。",
+        "scrollForMore": "滚动加载更多 · {shown} / {total}",
         "memberEnabled": "开",
         "addMember": "添加成员",
         "pickProvider": "选择连接",

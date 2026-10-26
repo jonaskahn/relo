@@ -1477,6 +1477,7 @@
         "membersLabel": "メンバー",
         "noMembers": "まだメンバーがありません。",
         "noMatchingModels": "この検索やフィルターに一致するモデルがありません。",
+        "scrollForMore": "スクロールでもっと見る · {total} 件中 {shown} 件",
         "memberEnabled": "オン",
         "addMember": "メンバーを追加",
         "pickProvider": "接続を選択",

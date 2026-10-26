@@ -1477,6 +1477,7 @@
         "membersLabel": "Miembros",
         "noMembers": "Aún no hay miembros.",
         "noMatchingModels": "Ningún modelo coincide con esta búsqueda o filtro.",
+        "scrollForMore": "Desliza para ver más · {shown} de {total}",
         "memberEnabled": "Activado",
         "addMember": "Añadir miembro",
         "pickProvider": "Elegir una conexión",

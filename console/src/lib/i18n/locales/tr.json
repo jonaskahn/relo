@@ -1477,6 +1477,7 @@
         "membersLabel": "Üyeler",
         "noMembers": "Henüz üye yok.",
         "noMatchingModels": "Bu arama veya filtreyle eşleşen model yok.",
+        "scrollForMore": "Daha fazlası için kaydır · {total} içinden {shown}",
         "memberEnabled": "Açık",
         "addMember": "Üye ekleyin",
         "pickProvider": "Bir bağlantı seçin",
