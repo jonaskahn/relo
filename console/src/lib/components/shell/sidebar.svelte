@@ -203,8 +203,8 @@
 							railEase,
 							compact ? 'justify-center rounded-control px-0' : 'gap-2.5 rounded-control px-2.5',
 							isActive(link.href)
-								? 'bg-accent-soft text-accent-ink shadow-[0_4px_14px_var(--accent-glow)]'
-								: 'text-muted-foreground hover:bg-hover hover:text-ink'
+								? 'bg-[var(--nav-active)] text-accent-ink'
+								: 'text-muted-foreground hover:bg-[var(--nav-hover)] hover:text-ink'
 						)}
 						aria-current={isActive(link.href) ? 'page' : undefined}
 						title={compact ? $t(link.shortLabelKey ?? link.labelKey) : undefined}

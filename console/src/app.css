@@ -35,6 +35,11 @@
 	--line: rgb(0 0 0 / 0.09);
 	--line-strong: rgb(0 0 0 / 0.16);
 	--hover: color-mix(in srgb, var(--ink) 4%, var(--surface));
+	/* The sidebar is chrome over the canvas, so its two nav states mix off the
+	   canvas: hover is a tint an operator can see, selected is the same tint a
+	   step further. Neither casts a shadow. */
+	--nav-hover: color-mix(in oklab, var(--accent) 8%, var(--canvas));
+	--nav-active: color-mix(in oklab, var(--accent) 16%, var(--canvas));
 	--shadow: rgb(20 20 40 / 0.1);
 	--ok: #19774e;
 	--warn: #9b5800;
@@ -232,6 +237,10 @@
 	--on-accent: #0a0a0a;
 	--muted-bg: #1a1a1d;
 	--hover-var: #1a1a1d;
+	/* Accent over near-black needs more of the colour to land at the same
+	   apparent step it takes over the light canvas. */
+	--nav-hover: color-mix(in oklab, var(--accent) 12%, var(--canvas));
+	--nav-active: color-mix(in oklab, var(--accent) 24%, var(--canvas));
 	--input: rgba(255, 255, 255, 0.1);
 	--control-mix: 10%;
 	--control-mix-card: 9%;

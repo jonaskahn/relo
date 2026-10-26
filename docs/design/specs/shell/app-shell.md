@@ -20,8 +20,8 @@ requires: [surfaces-borders, color]
 └───────────────────┘└──────────────────────────────────────────────────────────┘
 ```
 
-No lines between regions: the chrome tint against `--canvas`, plus a soft right-edge shadow on the rail
-(`8px 0 24px -12px var(--shadow)`), is the edge (see `surfaces-borders`).
+No lines and no shadow between regions: the chrome tint against `--canvas` is the edge, and the page content sits on
+its own lighter `--stage` (see `surfaces-borders`).
 
 ## Sidebar
 
@@ -30,8 +30,9 @@ No lines between regions: the chrome tint against `--canvas`, plus a soft right-
 - Below 1024px, or on a page that asks for the overlay, the menu opens over the content at full width from the top bar.
 - The mode lives in this browser and is switched from the top bar. On Chat a saved Full opens as Compact; the top bar
   can expand it for that visit.
-- Nav item: 38px high, `--radius`, icon plus label. Active = `--accent-50` fill, `--accent-ink` text and icon, lifted
-  with `0 4px 14px var(--accent-glow)`. Hover = `--hover`. No left bar.
+- Nav item: 38px high, `--radius`, icon plus label. Active = `--nav-active` fill with `--accent-ink` text and icon;
+  hover = `--nav-hover`. Both mix the accent over `--canvas`, so the rail reads the same in either theme, and neither
+  casts a shadow. No left bar.
 - Manage daemon: hover names it; click opens a compact dialog with three circular actions (restart, shut down, force
   restart). Sign-out sits under that row when login is on.
 
