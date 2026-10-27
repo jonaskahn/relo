@@ -6,7 +6,7 @@
 
 import { CLIENT_OPTIONS } from './client-setup';
 import { needsRepair, refusalCode, type SetupRefusal } from './integration-actions';
-import type { IntegrationView } from './types';
+import type { AgentReason, IntegrationView } from './types';
 
 /** The pill tone. It maps onto the shared status tones: pass, warn, fail, muted. */
 export type AgentTone = 'pass' | 'warn' | 'fail' | 'muted';
@@ -70,17 +70,24 @@ export function refusalOf(agent: IntegrationView): SetupRefusal {
 	return agent.enabled ? '' : refusalCode(agent.preview);
 }
 
-/** The facts a card reports under its key row, each already a decision about what is worth the
- *  operator's attention. */
-export type WarningCode = 'refused' | 'modelsStale' | 'restartNeeded';
+// REASON_CODES names every reason the daemon reports, so the console reads one
+// list rather than a branch per code it happens to remember.
+export const REASON_CODES = [
+	'models_changed',
+	'file_changed',
+	'file_missing',
+	'restart_catalog_newer'
+] as const;
 
-/** Every fact a card should warn about, in the order they show. */
-export function warningsOf(agent: IntegrationView): WarningCode[] {
-	const codes: WarningCode[] = [];
-	if (!agent.enabled && refusalOf(agent)) codes.push('refused');
-	if (agent.enabled && agent.models_stale) codes.push('modelsStale');
-	if (agent.enabled && agent.restart_needed) codes.push('restartNeeded');
-	return codes;
+/** The reason code the daemon reports, derived from the shipped list rather than an enum. */
+export type ReasonCode = (typeof REASON_CODES)[number];
+
+/** One sentence a card or the modal shows under its key row, with the placeholder values the
+ *  catalogue message fills in and, for a file fact, the path the sentence names. */
+export interface ReasonLine {
+	readonly key: string;
+	readonly values: Readonly<Record<string, string | number>>;
+	readonly path?: string;
 }
 
 /** The catalog key behind a status reading, so a surface renders the sentence from one catalogue
@@ -104,17 +111,74 @@ export function refusalDetailKey(code: SetupRefusal): string {
 	return name ? 'ui.pages.integrationsPage.' + name : '';
 }
 
-/** The sentences the card reports under its key row, in the order the card lists them. */
-export function warningKeys(agent: IntegrationView): string[] {
-	const refusal = refusalOf(agent);
-	const keys: string[] = [];
-	if (!agent.enabled && refusal) {
-		const detail = refusalDetailKey(refusal);
-		if (detail) keys.push(detail);
+/** The sentences one reason code expands to: a model change can name the models added and the
+ *  models removed in two sentences, because a language inflects each count on its own. */
+function reasonLinesFor(code: string, reason: AgentReason): ReasonLine[] {
+	switch (code) {
+		case 'file_changed':
+			return [fileLine('fileChanged', reason.path)];
+		case 'file_missing':
+			return [fileLine('fileMissing', reason.path)];
+		case 'models_changed':
+			return modelLines(reason);
+		case 'restart_catalog_newer':
+			return [{ key: 'ui.pages.integrationsPage.reason.restartCatalogNewer', values: {} }];
+		default:
+			return [];
 	}
-	if (agent.enabled && agent.models_stale) keys.push('ui.pages.integrationsPage.modelsChanged');
-	if (agent.enabled && agent.restart_needed) keys.push('ui.pages.integrationsPage.restartNeeded');
-	return keys;
+}
+
+/** One file sentence, carrying the whole path for the modal and the file's own name for the
+ *  card's one-line sentence. */
+function fileLine(name: 'fileChanged' | 'fileMissing', path: string | undefined): ReasonLine {
+	return {
+		key: 'ui.pages.integrationsPage.reason.' + name,
+		values: { file: fileNameOf(path) },
+		path
+	};
+}
+
+/** The last path segment, so a card sentence names the file rather than printing a full path. A
+ *  path with no separator reads as itself, and an absent one as an empty name. */
+export function fileNameOf(path: string | undefined): string {
+	if (!path) return '';
+	return path.split(/[/\\]/).pop() ?? path;
+}
+
+// modelLines names the model-list change with the counts Relo measured, or the
+// count-free sentence for a client whose file cannot be diffed.
+function modelLines(reason: AgentReason): ReasonLine[] {
+	const added = reason.added ?? 0;
+	const removed = reason.removed ?? 0;
+	if (added === 0 && removed === 0) {
+		return [{ key: 'ui.pages.integrationsPage.reason.modelsChangedBare', values: {} }];
+	}
+	const lines: ReasonLine[] = [];
+	if (added > 0) {
+		lines.push({
+			key: 'ui.pages.integrationsPage.reason.modelsChangedAdded',
+			values: { count: added }
+		});
+	}
+	if (removed > 0) {
+		lines.push({
+			key: 'ui.pages.integrationsPage.reason.modelsChangedRemoved',
+			values: { count: removed }
+		});
+	}
+	return lines;
+}
+
+/** The sentences a card reports under its key row and the modal repeats, in the order they show:
+ *  a set-up refusal first, then the reasons the daemon sent. */
+export function reasonLines(agent: IntegrationView): ReasonLine[] {
+	const refusal = refusalOf(agent);
+	if (!agent.enabled && refusal) {
+		const key = refusalDetailKey(refusal);
+		return key ? [{ key, values: {} }] : [];
+	}
+	if (!agent.enabled) return [];
+	return (agent.reasons ?? []).flatMap((reason) => reasonLinesFor(reason.code, reason));
 }
 
 // TESTED_IDS names the clients Relo has verified wiring for. The pill marks that
