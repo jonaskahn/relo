@@ -66,6 +66,8 @@ Thumbs.db
 .codegraph/
 .impeccable/
 .claude/
+.codex/
+RTK.md
 
 # Dependency lock files (never committed). Go keeps go.sum: it is a
 # checksum manifest the toolchain requires, not a package-manager lock.
