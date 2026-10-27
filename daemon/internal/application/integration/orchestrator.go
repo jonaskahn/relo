@@ -79,6 +79,10 @@ type IntegrationView struct {
 	// RestartNeeded is true when Codex's app-server started before Relo last
 	// wrote the catalog, so the picker still holds the old list.
 	RestartNeeded bool
+	// Reasons name why an enabled integration needs the operator, in the
+	// order the console lists them: files, models, then the restart. A
+	// healthy integration carries none.
+	Reasons []Reason
 	// EnvKey is the variable Relo publishes for this client, so the secret
 	// stays in Relo's key file rather than in the client's configuration.
 	EnvKey string
@@ -931,7 +935,7 @@ func (s *Service) describeIntegration(ctx context.Context, manager *Manager, age
 }
 
 func baseIntegrationView(s *Service, agent Agent, view View) IntegrationView {
-	return IntegrationView{
+	described := IntegrationView{
 		ID: agent.ID, Client: agent.Client, Summary: agent.Summary,
 		Protocol: agent.Protocol, BaseURL: s.paths.BaseURL(agent.Protocol),
 		ManagesFiles: agent.ManagesFiles,
@@ -942,6 +946,11 @@ func baseIntegrationView(s *Service, agent Agent, view View) IntegrationView {
 		),
 		EnvKey: agent.EnvKey,
 	}
+	described.Reasons = view.Reasons
+	if described.RestartNeeded {
+		described.Reasons = append(described.Reasons, Reason{Code: ReasonRestartCatalogNewer})
+	}
+	return described
 }
 
 func (s *Service) attachIntegrationKey(ctx context.Context, described IntegrationView, agent Agent) (IntegrationView, error) {
