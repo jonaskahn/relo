@@ -187,4 +187,31 @@ func TestConsoleAppearanceArrivesBeforePaint(t *testing.T) {
 	if !strings.Contains(body, `theme:"light",accent:"teal"`) {
 		t.Fatalf("new appearance was not served: %s", body)
 	}
+	if !strings.Contains(body, `dataset.accent="teal"`) {
+		t.Fatalf("preset accent was not painted: %s", body)
+	}
+}
+
+func TestCustomAccentPaintsItsOwnColourBeforePaint(t *testing.T) {
+	shell := fstest.MapFS{"index.html": {Data: []byte("<html><head></head><body></body></html>")}}
+	for _, tc := range []struct {
+		accent, ink string
+	}{
+		{accent: "#2f5fd0", ink: "#ffffff"},
+		{accent: "#d9961f", ink: "#17171c"},
+	} {
+		handler := dashboard.New(shell, dashboard.Options{
+			Appearance: func() (string, string) { return "light", tc.accent },
+		})
+		body := serve(handler, http.MethodGet, "/").Body.String()
+		for _, want := range []string{
+			`dataset.accent="custom"`,
+			`setProperty('--accent-custom',"` + tc.accent + `")`,
+			`setProperty('--custom-on-accent',"` + tc.ink + `")`,
+		} {
+			if !strings.Contains(body, want) {
+				t.Fatalf("custom accent %s: want %s in %s", tc.accent, want, body)
+			}
+		}
+	}
 }

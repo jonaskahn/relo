@@ -13,7 +13,9 @@ traffic log, log level, update feed), **Retention** (budget and cleanup), **Recl
 sweep), and **Console** (theme, accent, quota display, language). Each card is a level-1 surface with a
 title, a one-line description, and rows of label, helper text and control. Cards wear `flat-surface`: a form
 card is not interactive and does not react to hover. Appearance and language controls are the same components
-as `appearance-popover`. A jump row above the grid links to each card's heading. Loading keeps one centred
+as `appearance-popover`, in their page layout: the accent row is the 20-slot board, and its **Custom** slot opens
+the radar — a saturation/value square, a hue rail and a hex field — which saves and applies the colour the moment a
+drag ends or the field commits. A jump row above the grid links to each card's heading. Loading keeps one centred
 spinner in the frame; a failed load answers one card with the reason and a Retry action.
 
 ## Row anatomy

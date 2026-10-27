@@ -2,27 +2,48 @@
 // full/compact mode. Layout persists in localStorage; appearance comes
 // from the shared daemon config and is injected into the shell before paint.
 
+import { isHexColour, onAccent, type HexColour } from './color';
+
 /** The accents the appearance picker offers, in the order it lists them. */
 export const ACCENTS = [
-	'red',
-	'orange',
-	'amber',
-	'green',
-	'teal',
-	'cyan',
-	'blue',
-	'indigo',
-	'purple',
-	'rose'
+	'terracotta',
+	'persimmon',
+	'cherry-cola',
+	'clay-rose',
+	'saffron',
+	'mocha',
+	'moss',
+	'sage',
+	'pine',
+	'matcha',
+	'lagoon',
+	'ocean',
+	'cobalt',
+	'dusk-blue',
+	'midnight',
+	'lavender-haze',
+	'orchid',
+	'plum',
+	'graphite'
 ] as const;
 
-/** The theme accent the appearance picker offers. */
-export type Accent = (typeof ACCENTS)[number];
+/** One preset of the 2026 board. */
+export type PresetAccent = (typeof ACCENTS)[number];
+
+/** The accent in either shape the console applies: a preset id, or the colour
+ *  the radar picked. */
+export type Accent = PresetAccent | HexColour;
+
+/** The colour the board's 20th slot holds before an operator has picked one:
+ *  the accent older builds shipped as red, so a fresh console looks the way it
+ *  did before the 2026 board. */
+export const DEFAULT_ACCENT: HexColour = '#c8102e';
 
 /** Reports whether an accent name is one the picker still offers, so a choice saved before a
- *  rename is dropped instead of applied as a colour the stylesheet does not define. */
+ *  rename, or a value no surface writes, is dropped instead of applied as a colour nothing
+ *  derives from. */
 export function isAccent(value: string): value is Accent {
-	return ACCENTS.some((accent) => accent === value);
+	return ACCENTS.some((accent) => accent === value) || isHexColour(value);
 }
 
 /** How the shell resolves light and dark. */
@@ -79,6 +100,9 @@ export function cardLayoutSpan(layout: CardLayout): string {
 export interface ConsoleSettings {
 	theme: ThemeChoice;
 	accent: Accent;
+	/** The radar's colour, kept in this browser so the 20th slot still shows it while a
+	 *  preset is the accent on. */
+	customAccent: HexColour;
 	cardLayout: CardLayout;
 	sidebar: {
 		mode: SidebarMode;
@@ -90,7 +114,8 @@ const STORAGE_KEY = 'relo.console.v1';
 /** What a first visit starts with. */
 export const DEFAULT_SETTINGS: ConsoleSettings = {
 	theme: 'system',
-	accent: 'red',
+	accent: DEFAULT_ACCENT,
+	customAccent: DEFAULT_ACCENT,
 	cardLayout: 'vertical',
 	sidebar: {
 		mode: 'compact'
@@ -107,7 +132,12 @@ export function loadSettings(): ConsoleSettings {
 		// paint the same page differently.
 		defaults.theme = isThemeChoice(injected) ? injected : 'light';
 		const accent = storedAccent(window.__reloAppearance.accent);
-		if (accent) defaults.accent = accent;
+		if (accent) {
+			defaults.accent = accent;
+			// The daemon only answers with a colour when it is the one the radar picked,
+			// so it is also what the 20th slot should show.
+			if (isHexColour(accent)) defaults.customAccent = accent;
+		}
 	}
 	if (typeof localStorage === 'undefined') {
 		return defaults;
@@ -149,8 +179,6 @@ function storedSidebarMode(mode: string | undefined, docked: boolean | undefined
 }
 
 function storedAccent(accent: string | undefined): Accent | undefined {
-	if (accent === 'emerald') return 'green';
-	if (accent === 'violet') return 'purple';
 	if (accent === undefined) return undefined;
 	return isAccent(accent) ? accent : undefined;
 }
@@ -177,6 +205,12 @@ function mergeSettings(base: ConsoleSettings, patch: object): ConsoleSettings {
 			merged.sidebar = { mode: storedSidebarMode(mode, docked) };
 		}
 	}
+	if ('customAccent' in patch) {
+		const colour: unknown = patch.customAccent;
+		if (typeof colour === 'string' && isHexColour(colour)) {
+			merged.customAccent = colour;
+		}
+	}
 	return merged;
 }
 
@@ -187,7 +221,8 @@ export function saveSettings(settings: ConsoleSettings): void {
 		STORAGE_KEY,
 		JSON.stringify({
 			sidebar: settings.sidebar,
-			cardLayout: settings.cardLayout
+			cardLayout: settings.cardLayout,
+			customAccent: settings.customAccent
 		})
 	);
 }
@@ -230,16 +265,22 @@ export function applyTheme(theme: ThemeChoice): void {
 	void transition.finished.then(cleanup, cleanup);
 }
 
-/** Writes the accent onto the document. */
-export function applyAccent(accent: Accent): void {
+/** Writes the accent onto the document. A preset is the stylesheet rule its id names; the
+ *  radar's colour is the pair of custom properties that rule would have carried, so every
+ *  tint the scale derives follows without a rule of its own. */
+export function applyAccent(accent: Accent, custom: HexColour): void {
 	if (typeof document === 'undefined') return;
-	document.documentElement.setAttribute('data-accent', accent);
+	const root = document.documentElement;
+	const colour = isHexColour(accent) ? accent : custom;
+	root.dataset.accent = isHexColour(accent) ? 'custom' : accent;
+	root.style.setProperty('--accent-custom', colour);
+	root.style.setProperty('--custom-on-accent', onAccent(colour));
 }
 
 /** Writes every preference that has a document effect. */
 export function applySettings(settings: ConsoleSettings): void {
 	applyTheme(settings.theme);
-	applyAccent(settings.accent);
+	applyAccent(settings.accent, settings.customAccent);
 }
 
 /** resolveSystemTheme watches the OS preference while the operator's choice is "system", so a

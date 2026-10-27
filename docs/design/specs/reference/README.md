@@ -20,7 +20,7 @@ Differences from the spec:
 | Quota panel fits its data                    | Quota panel reserves four rows                    |
 | Grid and list toggle                         | Vertical and Horizontal layout control            |
 | Cards lift 2px on hover                      | Border and shadow only                            |
-| Purple default, one derived hex              | Red default, ten accents with `--on-accent`       |
+| Purple default, one derived hex              | 20 slots: 19 accents plus the radar's colour       |
 | White text on accent in dark theme           | Near-black on every accent in dark theme          |
 | Hard-coded status colours                    | `--ok`, `--warn`, `--danger`                      |
 | Pane demo opens the model modal on load      | The modal opens from a row, reading first         |

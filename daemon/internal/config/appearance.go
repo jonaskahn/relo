@@ -50,6 +50,7 @@ func decodeAppearance(data []byte) (UIConfig, error) {
 	if err := ValidateAppearance(file.UI.Theme, file.UI.Accent); err != nil {
 		return UIConfig{}, err
 	}
+	file.UI.Accent = normalizeAccent(file.UI.Accent)
 	if err := validateLanguage(file.UI.Language); err != nil {
 		return UIConfig{}, err
 	}
@@ -91,7 +92,7 @@ func applyAppearancePatch(current *UIConfig, patch AppearancePatch) {
 		current.Theme = *patch.Theme
 	}
 	if patch.Accent != nil {
-		current.Accent = *patch.Accent
+		current.Accent = normalizeAccent(*patch.Accent)
 	}
 }
 

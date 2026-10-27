@@ -67,27 +67,46 @@ components only ever read tokens, never hex values.
 
 ## Accents (`data-accent`)
 
-`:root` default is `red`. Bases other than red were sampled from the picker.
+The board has 20 slots: the 19 presets below, then the colour the radar picked. `data-accent` names a preset; the
+radar's slot is `custom`. `--accent-base` defaults to `#c8102e`, the accent earlier builds shipped as red, so a
+console that has chosen nothing looks unchanged.
 
-| id            | `--accent-base` | light `--on-accent` |
-|---------------|-----------------|---------------------|
-| red (default) | `#c8102e`       | `#fff`              |
-| orange        | `#d9622b`       | `#17171c`           |
-| amber         | `#cc7c2e`       | `#17171c`           |
-| green         | `#43946c`       | `#17171c`           |
-| teal          | `#439288`       | `#17171c`           |
-| cyan          | `#418fae`       | `#17171c`           |
-| blue          | `#3662e3`       | `#fff`              |
-| indigo        | `#4e46dc`       | `#fff`              |
-| purple        | `#743ee4`       | `#fff`              |
-| rose          | `#cf364c`       | `#fff`              |
+| id             | `--accent-base` | light `--on-accent` |
+|----------------|-----------------|---------------------|
+| terracotta     | `#c86343`       | `#17171c`           |
+| persimmon      | `#e8553a`       | `#17171c`           |
+| cherry-cola    | `#8c1c2c`       | `#fff`              |
+| clay-rose      | `#c47a7a`       | `#17171c`           |
+| saffron        | `#d9961f`       | `#17171c`           |
+| mocha          | `#a47864`       | `#17171c`           |
+| moss           | `#6a7e39`       | `#fff`              |
+| sage           | `#7a9a7e`       | `#17171c`           |
+| pine           | `#2f6f5a`       | `#fff`              |
+| matcha         | `#8fae5a`       | `#17171c`           |
+| lagoon         | `#268e8e`       | `#17171c`           |
+| ocean          | `#1f7a9a`       | `#fff`              |
+| cobalt         | `#2f5fd0`       | `#fff`              |
+| dusk-blue      | `#6f8fcf`       | `#17171c`           |
+| midnight       | `#2b3a67`       | `#fff`              |
+| lavender-haze  | `#8a7bd1`       | `#17171c`           |
+| orchid         | `#a964cb`       | `#17171c`           |
+| plum           | `#7a2f6b`       | `#fff`              |
+| graphite       | `#5b6270`       | `#fff`              |
 
 ```css
-[data-accent="orange"]{--accent-base:#d9622b;--on-accent:#17171c}  /* one block per row */
+[data-accent='terracotta'] { --accent-base: #c86343; --on-accent: #17171c; }  /* one block per preset */
+[data-accent='custom'] { --accent-base: var(--accent-custom); --on-accent: var(--custom-on-accent); }
 ```
 
-Light on-accent was chosen for 4.5:1 or better (white on orange/amber/green/teal/cyan is only 3.2–3.7). Dark theme lifts
-every accent and uses near-black text (5.7:1 or better).
+A preset paints from its own rule. The radar's colour has none of its own: `applyAccent` writes
+`--accent-custom` and `--custom-on-accent` on `<html>`, the daemon's pre-paint script writes the same two before
+the shell renders, and `[data-accent='custom']` picks them up. `--custom-on-accent` is the ink with the better WCAG
+contrast on that base — white or `#17171c` — so a colour no preset shipped still carries readable text.
+
+Every preset pair clears 4.5:1 on white. Dark theme lifts every accent and uses near-black text (5.7:1 or better).
+
+An accent id from before this board (`red`, `blue`, `emerald`, …) is read as the colour it painted, so an existing
+config keeps the operator's look in the radar's slot.
 
 ## Semantic colour
 

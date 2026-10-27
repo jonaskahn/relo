@@ -19,7 +19,7 @@ var (
 	ErrInvalidLogLevel         = errors.New("must be one of: debug, info, warn, error")
 	ErrInvalidLanguage         = errors.New("must be auto, or one of the languages Relo ships")
 	ErrInvalidTheme            = errors.New("must be system, light, or dark")
-	ErrInvalidAccent           = errors.New("must be a supported accent")
+	ErrInvalidAccent           = errors.New("must be a supported accent, or a #rrggbb colour")
 	ErrInvalidQuotaDisplay     = errors.New("must be used or remaining")
 	ErrInvalidURL              = errors.New("must be an http or https address")
 	ErrHomePerm                = errors.New("RELO_HOME directory must have mode 0700")
@@ -64,15 +64,13 @@ func ValidateAppearance(theme, accent string) error {
 	default:
 		return fmt.Errorf("ui.theme: %w", ErrInvalidTheme)
 	}
-	// The 2.4 emerald and violet stay accepted so a config written before the
-	// 3.0 accent set still starts; green and purple are their 3.0 names.
-	switch accent {
-	case "red", "orange", "amber", "green", "teal", "cyan", "blue", "indigo", "purple", "rose",
-		"emerald", "violet":
+	// An accent this build no longer ships is accepted and read back as the
+	// colour it painted, so a config written before the 2026 board starts
+	// and keeps the operator's look.
+	if isAccentValue(accent) {
 		return nil
-	default:
-		return fmt.Errorf("ui.accent: %w", ErrInvalidAccent)
 	}
+	return fmt.Errorf("ui.accent: %w", ErrInvalidAccent)
 }
 
 func validateAdmin(cfg *Config) error {

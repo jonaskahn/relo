@@ -22,7 +22,9 @@ func TestAppearancePreservesOtherConfig(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if got.Theme != theme || got.Accent != accent {
+	// The accent this build no longer ships is saved back as the colour it
+	// painted, which is the shape the console applies.
+	if got.Theme != theme || got.Accent != "#3662e3" {
 		t.Fatalf("appearance = %+v", got)
 	}
 	data, err := os.ReadFile(path)
@@ -38,7 +40,7 @@ func TestAppearancePreservesOtherConfig(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if loaded.Server.Port != 12345 || loaded.UI.Theme != theme || loaded.UI.Accent != accent {
+	if loaded.Server.Port != 12345 || loaded.UI.Theme != theme || loaded.UI.Accent != "#3662e3" {
 		t.Fatalf("config = %+v", loaded)
 	}
 	info, err := os.Stat(path)
@@ -53,7 +55,7 @@ func TestAppearancePreservesOtherConfig(t *testing.T) {
 func TestAppearanceDefaultsAndInvalidValues(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "config.toml")
 	got, err := config.ReadAppearance(path)
-	if err != nil || got.Theme != "system" || got.Accent != "red" {
+	if err != nil || got.Theme != "system" || got.Accent != "#c8102e" {
 		t.Fatalf("default = %+v, %v", got, err)
 	}
 	bad := "magenta"
@@ -69,11 +71,50 @@ func TestAppearanceDefaultsAndInvalidValues(t *testing.T) {
 	}
 }
 
-func TestAppearanceAcceptsCurrentAndLegacyAccentNames(t *testing.T) {
-	accents := []string{"red", "orange", "amber", "green", "teal", "cyan", "blue", "indigo", "purple", "rose", "emerald", "violet"}
+func TestAppearanceAcceptsEveryAccentTheBoardAndOlderConfigsCarry(t *testing.T) {
+	accents := []string{
+		"terracotta", "persimmon", "cherry-cola", "clay-rose", "saffron", "mocha",
+		"moss", "sage", "pine", "matcha",
+		"lagoon", "ocean", "cobalt", "dusk-blue", "midnight",
+		"lavender-haze", "orchid", "plum", "graphite",
+		"#c8102e", "#3662e3",
+		"red", "orange", "amber", "green", "teal", "cyan", "blue", "indigo", "purple", "rose",
+		"emerald", "violet",
+	}
 	for _, accent := range accents {
 		if err := config.ValidateAppearance("system", accent); err != nil {
 			t.Errorf("accent %q: %v", accent, err)
+		}
+	}
+	for _, accent := range []string{"magenta", "#12", "#c8102", "#c8102g", "terracottaish", ""} {
+		if err := config.ValidateAppearance("system", accent); err == nil {
+			t.Errorf("accent %q was accepted", accent)
+		}
+	}
+}
+
+func TestAppearanceReadsARetiredAccentAsTheColourItPainted(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "config.toml")
+	for accent, want := range map[string]string{
+		"red": "#c8102e", "emerald": "#43946c", "violet": "#743ee4", "blue": "#3662e3",
+	} {
+		source := "[ui]\ntheme = \"system\"\naccent = \"" + accent + "\"\n"
+		if err := os.WriteFile(path, []byte(source), 0o600); err != nil {
+			t.Fatal(err)
+		}
+		got, err := config.ReadAppearance(path)
+		if err != nil {
+			t.Fatalf("accent %q: %v", accent, err)
+		}
+		if got.Accent != want {
+			t.Errorf("accent %q read as %q, want %q", accent, got.Accent, want)
+		}
+		loaded, err := config.LoadOffline(filepath.Dir(path))
+		if err != nil {
+			t.Fatal(err)
+		}
+		if loaded.UI.Accent != want {
+			t.Errorf("loaded accent %q read as %q, want %q", accent, loaded.UI.Accent, want)
 		}
 	}
 }

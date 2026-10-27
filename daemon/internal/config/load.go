@@ -57,6 +57,9 @@ func decodeConfig(path string, data []byte, cfg *Config, logger *slog.Logger) (*
 		return nil, fmt.Errorf("parse config %s: %w", path, err)
 	}
 	normalizeUpstream(cfg)
+	// An accent id this build retired is read back as the colour it painted,
+	// so a config from before the 2026 board injects the look the operator had.
+	cfg.UI.Accent = normalizeAccent(cfg.UI.Accent)
 	// A metric this build retired is dropped on read, so an existing file
 	// keeps starting after the picker list changed.
 	if meta.IsDefined("ui", "usage", "overview_metrics") {

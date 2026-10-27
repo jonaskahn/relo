@@ -1,8 +1,8 @@
 ---
 name: "Relo — Spatial Control Surface"
 description: "Relo design system: neutral layered surfaces, translucent chrome, one selectable accent, full borders only."
-version: "3.2"
-updated: "2026-10-05"
+version: "3.3"
+updated: "2026-10-27"
 ---
 
 # Relo design system
