@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/BurntSushi/toml"
 	"github.com/jonaskahn/relo/internal/adapters/codingclients"
@@ -318,6 +319,31 @@ func TestSyncCodexCacheKeepsNativesAndDropsNamespacedRows(t *testing.T) {
 	}
 	if len(file.Models) != 1 || file.Models[0]["slug"] != "gpt-6-luna" {
 		t.Fatalf("stripped models = %v, want only the native row", file.Models)
+	}
+}
+
+// TestSyncCodexCacheSkipsAnIdenticalFile keeps a background refresh from
+// bumping the cache's mtime when the model list has not changed.
+func TestSyncCodexCacheSkipsAnIdenticalFile(t *testing.T) {
+	dir := t.TempDir()
+	models := []codingclients.ModelRef{{ID: "relo-opencode-go-flash", Name: "Flash", Connection: "OpenCode Go"}}
+	if err := codingclients.SyncCodexCache(dir, models); err != nil {
+		t.Fatalf("SyncCodexCache() error = %v", err)
+	}
+	path := filepath.Join(dir, "models_cache.json")
+	past := time.Now().Add(-time.Hour)
+	if err := os.Chtimes(path, past, past); err != nil {
+		t.Fatalf("age the cache: %v", err)
+	}
+	if err := codingclients.SyncCodexCache(dir, models); err != nil {
+		t.Fatalf("SyncCodexCache() again error = %v", err)
+	}
+	info, err := os.Stat(path)
+	if err != nil {
+		t.Fatalf("stat the cache: %v", err)
+	}
+	if info.ModTime().After(past.Add(time.Second)) {
+		t.Fatal("an unchanged models cache was rewritten")
 	}
 }
 

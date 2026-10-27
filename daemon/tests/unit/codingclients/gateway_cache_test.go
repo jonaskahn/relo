@@ -111,6 +111,10 @@ func TestWriteGatewayCacheLeavesAnUpToDateCacheAlone(t *testing.T) {
 		t.Fatalf("WriteGatewayCache() error = %v", err)
 	}
 	path := codingclients.GatewayCachePath(dir)
+	past := time.Now().Add(-time.Hour)
+	if err := os.Chtimes(path, past, past); err != nil {
+		t.Fatalf("age the cache: %v", err)
+	}
 	first, err := os.ReadFile(path)
 	if err != nil {
 		t.Fatalf("read the cache: %v", err)
@@ -126,6 +130,13 @@ func TestWriteGatewayCacheLeavesAnUpToDateCacheAlone(t *testing.T) {
 	}
 	if string(first) != string(second) {
 		t.Fatalf("cache rewritten: %s then %s", first, second)
+	}
+	info, err := os.Stat(path)
+	if err != nil {
+		t.Fatalf("stat the cache: %v", err)
+	}
+	if info.ModTime().After(past.Add(time.Second)) {
+		t.Fatal("an unchanged gateway cache was rewritten")
 	}
 	if err := codingclients.WriteGatewayCache(t.TempDir(), "  ", models); err != nil {
 		t.Fatalf("WriteGatewayCache(blank base) error = %v", err)
