@@ -1,6 +1,6 @@
 {
-  "generated": "2026-10-27T09:39:01Z",
-  "latest": "v0.1.11",
+  "generated": "2026-10-27T09:44:05Z",
+  "latest": "v0.1.12",
   "latest_beta": "v0.1.12-beta.48.9097618f",
   "install": {
     "stable": {
@@ -17,6 +17,158 @@
     }
   },
   "releases": [
+    {
+      "tag": "v0.1.12",
+      "version": "0.1.12",
+      "name": "v0.1.12 - Coconut Raisin Bread 🍇 ",
+      "channel": "stable",
+      "draft": false,
+      "published_at": "2026-10-27T09:43:54Z",
+      "page": "https://github.com/jonaskahn/relo/releases/tag/v0.1.12",
+      "notes": "## What's Changed\r\n* Fix/agent harness failures by @jonaskahn in https://github.com/jonaskahn/relo/pull/83\r\n* chore: bump to 0.1.12 by @github-actions[bot] in https://github.com/jonaskahn/relo/pull/82\r\n\r\n\r\n**Full Changelog**: https://github.com/jonaskahn/relo/compare/v0.1.11...v0.1.12",
+      "install": {
+        "script": "curl -fsSL https://relo.ifelse.one/install.sh | sh -s -- --version 0.1.12",
+        "powershell": "& ([scriptblock]::Create((irm https://relo.ifelse.one/install.ps1))) -Version 0.1.12",
+        "npm": "npm i -g @jonaskahn/relo@0.1.12"
+      },
+      "files": [
+        {
+          "name": "checksums.txt",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.1.12/checksums.txt",
+          "size": 588,
+          "os": "any",
+          "arch": "any",
+          "kind": "checksums",
+          "format": "txt"
+        },
+        {
+          "name": "Relo-0.1.12-arm64.zip",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.1.12/Relo-0.1.12-arm64.zip",
+          "size": 15162441,
+          "os": "macos",
+          "arch": "arm64",
+          "kind": "app",
+          "format": "zip"
+        },
+        {
+          "name": "relo-0.1.12-darwin-amd64.tar.gz",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.1.12/relo-0.1.12-darwin-amd64.tar.gz",
+          "size": 14291878,
+          "os": "macos",
+          "arch": "amd64",
+          "kind": "archive",
+          "format": "tar.gz"
+        },
+        {
+          "name": "relo-0.1.12-darwin-arm64.tar.gz",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.1.12/relo-0.1.12-darwin-arm64.tar.gz",
+          "size": 13884099,
+          "os": "macos",
+          "arch": "arm64",
+          "kind": "archive",
+          "format": "tar.gz"
+        },
+        {
+          "name": "relo-0.1.12-linux-amd64.tar.gz",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.1.12/relo-0.1.12-linux-amd64.tar.gz",
+          "size": 13987272,
+          "os": "linux",
+          "arch": "amd64",
+          "kind": "archive",
+          "format": "tar.gz"
+        },
+        {
+          "name": "relo-0.1.12-linux-arm64.tar.gz",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.1.12/relo-0.1.12-linux-arm64.tar.gz",
+          "size": 13231000,
+          "os": "linux",
+          "arch": "arm64",
+          "kind": "archive",
+          "format": "tar.gz"
+        },
+        {
+          "name": "Relo-0.1.12-universal.zip",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.1.12/Relo-0.1.12-universal.zip",
+          "size": 29817154,
+          "os": "macos",
+          "arch": "universal",
+          "kind": "app",
+          "format": "zip"
+        },
+        {
+          "name": "relo-0.1.12-windows-amd64.tar.gz",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.1.12/relo-0.1.12-windows-amd64.tar.gz",
+          "size": 13929491,
+          "os": "windows",
+          "arch": "amd64",
+          "kind": "archive",
+          "format": "tar.gz"
+        },
+        {
+          "name": "relo-0.1.12-windows-arm64.tar.gz",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.1.12/relo-0.1.12-windows-arm64.tar.gz",
+          "size": 13084925,
+          "os": "windows",
+          "arch": "arm64",
+          "kind": "archive",
+          "format": "tar.gz"
+        },
+        {
+          "name": "Relo-Setup-0.1.12-amd64.deb",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.1.12/Relo-Setup-0.1.12-amd64.deb",
+          "size": 14245806,
+          "os": "linux",
+          "arch": "amd64",
+          "kind": "installer",
+          "format": "deb"
+        },
+        {
+          "name": "Relo-Setup-0.1.12-amd64.exe",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.1.12/Relo-Setup-0.1.12-amd64.exe",
+          "size": 10136951,
+          "os": "windows",
+          "arch": "amd64",
+          "kind": "installer",
+          "format": "exe"
+        },
+        {
+          "name": "Relo-Setup-0.1.12-amd64.rpm",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.1.12/Relo-Setup-0.1.12-amd64.rpm",
+          "size": 14208123,
+          "os": "linux",
+          "arch": "amd64",
+          "kind": "installer",
+          "format": "rpm"
+        },
+        {
+          "name": "Relo-Setup-0.1.12-arm64.deb",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.1.12/Relo-Setup-0.1.12-arm64.deb",
+          "size": 13562074,
+          "os": "linux",
+          "arch": "arm64",
+          "kind": "installer",
+          "format": "deb"
+        },
+        {
+          "name": "Relo-Setup-0.1.12-arm64.exe",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.1.12/Relo-Setup-0.1.12-arm64.exe",
+          "size": 9122334,
+          "os": "windows",
+          "arch": "arm64",
+          "kind": "installer",
+          "format": "exe"
+        },
+        {
+          "name": "Relo-Setup-0.1.12-arm64.rpm",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.1.12/Relo-Setup-0.1.12-arm64.rpm",
+          "size": 13508952,
+          "os": "linux",
+          "arch": "arm64",
+          "kind": "installer",
+          "format": "rpm"
+        }
+      ]
+    },
     {
       "tag": "v0.1.12-beta.48.9097618f",
       "version": "0.1.12-beta.48.9097618f",
