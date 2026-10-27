@@ -60,7 +60,7 @@
 		{/if}
 		{#if warnings.length > 0}
 			<div class="space-y-1 text-xs text-warn" role="status">
-				{#each warnings as warning (warning.code)}
+				{#each warnings as warning, i (i)}
 					<p class="flex items-start gap-1.5">
 						<Icon name="alert-triangle" size={13} class="mt-px shrink-0" />
 						<span class="min-w-0">
@@ -84,7 +84,7 @@
 		<p class="text-sm text-muted-foreground">{copy}</p>
 		{#if warnings.length > 0}
 			<div class="w-full space-y-1 text-left text-xs text-warn" role="status">
-				{#each warnings as warning (warning.code)}
+				{#each warnings as warning, i (i)}
 					<p class="flex items-start gap-1.5">
 						<Icon name="alert-triangle" size={13} class="mt-px shrink-0" />
 						<span class="min-w-0">

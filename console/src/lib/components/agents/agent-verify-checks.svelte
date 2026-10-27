@@ -23,7 +23,7 @@
 </script>
 
 <ul class="flex flex-col gap-1.5">
-	{#each checks as check (check.name)}
+	{#each checks as check, i (i)}
 		<li class="flex items-start gap-2 rounded-panel px-3 py-2 {check.ok ? '' : 'bg-danger/5'}">
 			<Icon
 				name={check.ok ? 'circle-check' : 'circle-x'}
