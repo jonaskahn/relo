@@ -24,6 +24,17 @@ const (
 	StateError   = "error"
 )
 
+// The reasons one integration reports for needing the operator's attention.
+const (
+	ReasonModelsChanged = "models_changed"
+	ReasonFileChanged   = "file_changed"
+	ReasonFileMissing   = "file_missing"
+)
+
+// ReasonRestartCatalogNewer reports a managed client that started before Relo
+// last wrote its model catalog, so it still holds the previous list.
+const ReasonRestartCatalogNewer = "restart_catalog_newer"
+
 // The kinds of file one integration owns.
 const (
 	KindKey         = "key"
@@ -173,6 +184,16 @@ type FileView struct {
 	Snapshot string
 }
 
+// Reason names why an integration needs the operator, with the concrete
+// detail behind it: which file changed, or how the published model list moved.
+// Added and Removed are zero when the client's file cannot be diffed.
+type Reason struct {
+	Code    string
+	Path    string
+	Added   int
+	Removed int
+}
+
 // View is one integration as a console reads it. KeyHint and the token itself
 // belong to the caller, which owns the client keys.
 type View struct {
@@ -187,6 +208,9 @@ type View struct {
 	// from the one stored at setup, so the card can offer Repair without
 	// changing the stored state.
 	ModelsStale bool
+	// Reasons name why an enabled integration needs the operator, in the
+	// order the console lists them: files, then models.
+	Reasons []Reason
 	// Steps are what an operator does by hand for an agent Relo hands a key
 	// to rather than configuring.
 	Steps []string
@@ -436,7 +460,62 @@ func (m *Manager) Inspect(ctx context.Context, id string) (View, error) {
 		Files:       []FileView{},
 		Context1M:   agent.ID == "codex" && (!found || record.Context1M),
 	}
-	return m.inspectFiles(agent, files, view), nil
+	view = m.inspectFiles(agent, files, view)
+	if record.Enabled {
+		view.Reasons = m.attentionReasons(agent, record, files, view.Files)
+	}
+	return view, nil
+}
+
+// attentionReasons names why an enabled integration needs the operator, with
+// the concrete detail behind each: the file paths that changed, and how the
+// model list moved.
+func (m *Manager) attentionReasons(agent Agent, record Record, files []FileRecord, views []FileView) []Reason {
+	reasons := fileReasons(views)
+	if models := m.modelReason(agent, record, files); models != nil {
+		reasons = append(reasons, *models)
+	}
+	return reasons
+}
+
+// modelReason names the model-list change when Relo now publishes a different
+// set than the one the client's file carries.
+func (m *Manager) modelReason(agent Agent, record Record, files []FileRecord) *Reason {
+	if !m.modelsStale(agent, record, files) {
+		return nil
+	}
+	diff := m.modelDiff(agent)
+	return &Reason{Code: ReasonModelsChanged, Added: diff.Added, Removed: diff.Removed}
+}
+
+// modelDiff counts the published models missing from, or left over in, the
+// client's own model file. A client with no diffable file reports none, so the
+// sentence stays count-free.
+func (m *Manager) modelDiff(agent Agent) ModelDiff {
+	switch agent.ID {
+	case "codex":
+		models := m.modelsFor(agent)
+		return m.files.CodexCatalogDiff(m.files.CodexCatalogPath(m.paths.CodexConfig()), models)
+	case "claude-code":
+		models := m.modelsFor(agent)
+		return m.files.GatewayCacheDiff(m.paths.ClaudeConfigDir(), m.paths.BaseURL(agent.Protocol), models)
+	}
+	return ModelDiff{}
+}
+
+// fileReasons names every file Relo wrote that is now missing or was changed
+// after Relo wrote it.
+func fileReasons(files []FileView) []Reason {
+	reasons := make([]Reason, 0, len(files))
+	for _, file := range files {
+		switch {
+		case !file.Present:
+			reasons = append(reasons, Reason{Code: ReasonFileMissing, Path: file.Path})
+		case file.Drifted:
+			reasons = append(reasons, Reason{Code: ReasonFileChanged, Path: file.Path})
+		}
+	}
+	return reasons
 }
 
 func (m *Manager) inspectFiles(agent Agent, files []FileRecord, view View) View {
