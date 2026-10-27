@@ -105,6 +105,12 @@
 				run: () => consoleState.setAccent(accent)
 			});
 		}
+		list.push({
+			id: 'accent:custom',
+			label: $t('ui.palette.actionAccent') + ' · ' + $t('ui.accent.custom'),
+			group: $t('ui.palette.actions'),
+			run: () => consoleState.setAccent(consoleState.settings.customAccent)
+		});
 		return list;
 	});
 

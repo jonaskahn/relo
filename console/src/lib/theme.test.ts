@@ -1,6 +1,8 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
+	applyAccent,
 	applyTheme,
+	DEFAULT_ACCENT,
 	cardLayoutCard,
 	cardLayoutGrid,
 	cardLayoutSlot,
@@ -48,7 +50,7 @@ describe('shared appearance', () => {
 
 	it('uses the shell choice and removes old browser appearance values', () => {
 		const setItem = vi.fn();
-		vi.stubGlobal('window', { __reloAppearance: { theme: 'dark', accent: 'blue' } });
+		vi.stubGlobal('window', { __reloAppearance: { theme: 'dark', accent: 'cobalt' } });
 		vi.stubGlobal('localStorage', {
 			getItem: () =>
 				JSON.stringify({
@@ -60,7 +62,7 @@ describe('shared appearance', () => {
 		});
 		const settings = loadSettings();
 		expect(settings.theme).toBe('dark');
-		expect(settings.accent).toBe('blue');
+		expect(settings.accent).toBe('cobalt');
 		expect(settings.sidebar.mode).toBe('compact');
 		expect(settings.sidebar).not.toHaveProperty('docked');
 		expect(JSON.parse(setItem.mock.calls[0][1])).toEqual({
@@ -76,12 +78,27 @@ describe('shared appearance', () => {
 		expect(saved.sidebar).not.toHaveProperty('docked');
 	});
 
-	it('folds a 2.4 accent id onto the 3.0 set', () => {
+	it('takes a colour the daemon holds and drops one this build no longer ships', () => {
 		vi.stubGlobal('localStorage', undefined);
+		vi.stubGlobal('window', { __reloAppearance: { theme: 'light', accent: '#1f8a8a' } });
+		expect(loadSettings().accent).toBe('#1f8a8a');
+		expect(loadSettings().customAccent).toBe('#1f8a8a');
 		vi.stubGlobal('window', { __reloAppearance: { theme: 'light', accent: 'emerald' } });
-		expect(loadSettings().accent).toBe('green');
-		vi.stubGlobal('window', { __reloAppearance: { theme: 'light', accent: 'violet' } });
-		expect(loadSettings().accent).toBe('purple');
+		expect(loadSettings().accent).toBe(DEFAULT_ACCENT);
+	});
+
+	it('keeps a radar colour saved in this browser beside a preset accent', () => {
+		vi.stubGlobal('window', undefined);
+		vi.stubGlobal('localStorage', {
+			getItem: () => JSON.stringify({ customAccent: '#1f8a8a' }),
+			setItem: () => undefined
+		});
+		expect(loadSettings().customAccent).toBe('#1f8a8a');
+		vi.stubGlobal('localStorage', {
+			getItem: () => JSON.stringify({ customAccent: 'not a colour' }),
+			setItem: () => undefined
+		});
+		expect(loadSettings().customAccent).toBe(DEFAULT_ACCENT);
 	});
 
 	it('defaults card layout to vertical when the stored blob has none', () => {
@@ -179,8 +196,11 @@ describe('the guards over an appearance value', () => {
 	});
 
 	it('accepts only the accents the picker offers', () => {
-		expect(isAccent('rose')).toBe(true);
+		expect(isAccent('graphite')).toBe(true);
+		expect(isAccent('#c8102e')).toBe(true);
+		expect(isAccent('rose')).toBe(false);
 		expect(isAccent('emerald')).toBe(false);
+		expect(isAccent('#c8102')).toBe(false);
 		expect(isAccent('blue-ish')).toBe(false);
 	});
 
@@ -188,5 +208,39 @@ describe('the guards over an appearance value', () => {
 		expect(isCardLayout('vertical')).toBe(true);
 		expect(isCardLayout('horizontal')).toBe(true);
 		expect(isCardLayout('compact')).toBe(false);
+	});
+});
+
+describe('the accent the document wears', () => {
+	afterEach(() => vi.unstubAllGlobals());
+
+	function documentStub() {
+		const values = new Map<string, string>();
+		const root = {
+			dataset: {} as Record<string, string>,
+			style: { setProperty: (name: string, value: string) => values.set(name, value) }
+		};
+		vi.stubGlobal('document', { documentElement: root });
+		return { root, values };
+	}
+
+	it('paints a preset as the rule its id names and keeps the slot colour', () => {
+		const { root, values } = documentStub();
+
+		applyAccent('cobalt', '#d9961f');
+
+		expect(root.dataset.accent).toBe('cobalt');
+		expect(values.get('--accent-custom')).toBe('#d9961f');
+		expect(values.get('--custom-on-accent')).toBe('#17171c');
+	});
+
+	it('paints a radar colour as the custom properties and the ink it can carry', () => {
+		const { root, values } = documentStub();
+
+		applyAccent('#2f5fd0', '#2f5fd0');
+
+		expect(root.dataset.accent).toBe('custom');
+		expect(values.get('--accent-custom')).toBe('#2f5fd0');
+		expect(values.get('--custom-on-accent')).toBe('#ffffff');
 	});
 });

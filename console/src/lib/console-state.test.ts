@@ -10,7 +10,7 @@ const mocks = vi.hoisted(() => {
 	const element = {
 		classList: { toggle: () => undefined, contains: () => false },
 		dataset: {} as Record<string, string>,
-		setAttribute: () => undefined
+		style: { setProperty: () => undefined }
 	};
 	vi.stubGlobal('document', { documentElement: element });
 	vi.stubGlobal('window', {
@@ -94,7 +94,7 @@ describe('console state', () => {
 		);
 		const loading = consoleState.loadAppearance();
 		consoleState.setTheme('dark');
-		answer({ appearance: { theme: 'light', accent: 'red', quota_display: 'used' } });
+		answer({ appearance: { theme: 'light', accent: '#c8102e', quota_display: 'used' } });
 		await loading;
 
 		expect(consoleState.settings.theme).toBe('dark');
@@ -103,14 +103,14 @@ describe('console state', () => {
 	it('keeps the chosen theme and accent when the rest is reset', async () => {
 		apiMock.mockResolvedValue({});
 		await consoleState.setTheme('dark');
-		await consoleState.setAccent('teal');
+		await consoleState.setAccent('lagoon');
 		consoleState.setSidebar({ mode: 'full' });
 
 		consoleState.reset();
 
 		expect(consoleState.settings).toMatchObject({
 			theme: 'dark',
-			accent: 'teal',
+			accent: 'lagoon',
 			sidebar: { mode: 'compact' }
 		});
 	});
@@ -121,8 +121,28 @@ describe('console state', () => {
 		const stale = consoleState.appearanceRevision;
 		await consoleState.setTheme('light');
 
-		consoleState.useAppearance({ theme: 'dark', accent: 'red', quota_display: 'used' }, stale);
+		consoleState.useAppearance({ theme: 'dark', accent: '#c8102e', quota_display: 'used' }, stale);
 
 		expect(consoleState.settings.theme).toBe('light');
+	});
+
+	it('saves a radar colour as both the accent and the slot it came from', async () => {
+		apiMock.mockResolvedValue({});
+		await consoleState.setAccent('#1f8a8a');
+
+		expect(consoleState.settings.accent).toBe('#1f8a8a');
+		expect(consoleState.settings.customAccent).toBe('#1f8a8a');
+		expect(JSON.parse(apiMock.mock.calls[0][1].body)).toEqual({ accent: '#1f8a8a' });
+	});
+
+	it('keeps the radar colour in its slot while a preset is the accent', async () => {
+		apiMock.mockResolvedValue({});
+		await consoleState.setAccent('#1f8a8a');
+		await consoleState.setAccent('moss');
+
+		expect(consoleState.settings.accent).toBe('moss');
+		expect(consoleState.settings.customAccent).toBe('#1f8a8a');
+		const stored = JSON.parse(mocks.store.get('relo.console.v1') ?? '{}');
+		expect(stored.customAccent).toBe('#1f8a8a');
 	});
 });

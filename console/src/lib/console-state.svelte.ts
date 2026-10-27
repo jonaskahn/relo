@@ -5,6 +5,7 @@
 import { toast } from 'svelte-sonner';
 import { api } from './api';
 import { CARD_MORPH_MS, captureCardBoxes, playCardMorph } from './card-layout-motion';
+import { isHexColour } from './color';
 import type { QuotaDisplay } from './types';
 
 import {
@@ -53,7 +54,13 @@ function createConsoleState() {
 			settings = {
 				...settings,
 				theme: next.theme ?? settings.theme,
-				accent: next.accent ?? settings.accent
+				accent: next.accent ?? settings.accent,
+				// A colour is the radar's, so it is also what the 20th slot shows while
+				// a preset is the accent everyone else sees.
+				customAccent:
+					next.accent !== undefined && isHexColour(next.accent)
+						? next.accent
+						: settings.customAccent
 			};
 			applySettings(settings);
 		}
@@ -106,6 +113,11 @@ function createConsoleState() {
 			return saveAppearance({ theme });
 		},
 		setAccent(accent: Accent) {
+			if (isHexColour(accent)) {
+				// The slot's colour lives in this browser, so it is stored here before
+				// the accent itself is saved for every console.
+				commit({ ...settings, customAccent: accent });
+			}
 			return saveAppearance({ accent });
 		},
 		setQuotaDisplay(quota_display: QuotaDisplay) {
@@ -144,7 +156,8 @@ function createConsoleState() {
 			commit({
 				...structuredClone(DEFAULT_SETTINGS),
 				theme: settings.theme,
-				accent: settings.accent
+				accent: settings.accent,
+				customAccent: settings.customAccent
 			});
 		}
 	};

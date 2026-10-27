@@ -55,6 +55,9 @@
 	/* One accent base per choice; every tint derives from it. */
 	--accent-base: #c8102e;
 	--on-accent: #fff;
+	/* The 20th slot's colour, which the radar writes over. */
+	--accent-custom: #c8102e;
+	--custom-on-accent: #fff;
 	--shade: #000;
 	--mixbase: var(--surface);
 	--t50: 7%;
@@ -168,47 +171,111 @@
 		--gutter: 1rem;
 	}
 }
-/* Light bases and on-accent per choice. Dark theme lifts every accent and
-   uses near-black text, so the dark block comes after these. */
-[data-accent='red'] {
-	--accent-base: #c8102e;
-	--on-accent: #fff;
-}
-[data-accent='orange'] {
-	--accent-base: #d9622b;
+/* Light bases and on-accent per preset of the 2026 board; each pair clears
+   4.5:1 on white. Dark theme lifts every accent and uses near-black text, so
+   the dark block comes after these. */
+[data-accent='terracotta'] {
+	--accent-base: #c86343;
 	--on-accent: #17171c;
 }
-[data-accent='amber'] {
-	--accent-base: #cc7c2e;
+[data-accent='persimmon'] {
+	--accent-base: #e8553a;
 	--on-accent: #17171c;
 }
-[data-accent='green'] {
-	--accent-base: #43946c;
+[data-accent='cherry-cola'] {
+	--accent-base: #8c1c2c;
+	--on-accent: #fff;
+}
+[data-accent='clay-rose'] {
+	--accent-base: #c47a7a;
 	--on-accent: #17171c;
 }
-[data-accent='teal'] {
-	--accent-base: #439288;
+[data-accent='saffron'] {
+	--accent-base: #d9961f;
 	--on-accent: #17171c;
 }
-[data-accent='cyan'] {
-	--accent-base: #418fae;
+[data-accent='mocha'] {
+	--accent-base: #a47864;
 	--on-accent: #17171c;
 }
-[data-accent='blue'] {
-	--accent-base: #3662e3;
+[data-accent='moss'] {
+	--accent-base: #6a7e39;
 	--on-accent: #fff;
 }
-[data-accent='indigo'] {
-	--accent-base: #4e46dc;
+[data-accent='sage'] {
+	--accent-base: #7a9a7e;
+	--on-accent: #17171c;
+}
+[data-accent='pine'] {
+	--accent-base: #2f6f5a;
 	--on-accent: #fff;
 }
-[data-accent='purple'] {
-	--accent-base: #743ee4;
+[data-accent='matcha'] {
+	--accent-base: #8fae5a;
+	--on-accent: #17171c;
+}
+[data-accent='lagoon'] {
+	--accent-base: #268e8e;
+	--on-accent: #17171c;
+}
+[data-accent='ocean'] {
+	--accent-base: #1f7a9a;
 	--on-accent: #fff;
 }
-[data-accent='rose'] {
-	--accent-base: #cf364c;
+[data-accent='cobalt'] {
+	--accent-base: #2f5fd0;
 	--on-accent: #fff;
+}
+[data-accent='dusk-blue'] {
+	--accent-base: #6f8fcf;
+	--on-accent: #17171c;
+}
+[data-accent='midnight'] {
+	--accent-base: #2b3a67;
+	--on-accent: #fff;
+}
+[data-accent='lavender-haze'] {
+	--accent-base: #8a7bd1;
+	--on-accent: #17171c;
+}
+[data-accent='orchid'] {
+	--accent-base: #a964cb;
+	--on-accent: #17171c;
+}
+[data-accent='plum'] {
+	--accent-base: #7a2f6b;
+	--on-accent: #fff;
+}
+[data-accent='graphite'] {
+	--accent-base: #5b6270;
+	--on-accent: #fff;
+}
+/* The 20th slot: the colour the radar picked. The shell writes it before it
+   paints, so a custom accent has the same first paint a preset has. */
+[data-accent='custom'] {
+	--accent-base: var(--accent-custom);
+	--on-accent: var(--custom-on-accent);
+}
+
+/* The radar's spectrum lives here rather than in the component: all the
+   component writes is the hue its cursor sits on. */
+.radar-square {
+	--radar-spectrum:
+		linear-gradient(to top, rgb(0 0 0 / 0.92), rgb(0 0 0 / 0)),
+		linear-gradient(to right, rgb(255 255 255), rgb(255 255 255 / 0)), var(--radar-hue, #ff0000);
+	background: var(--radar-spectrum);
+}
+.radar-rail {
+	background: linear-gradient(
+		to right,
+		#ff0000,
+		#ffff00,
+		#00ff00,
+		#00ffff,
+		#0000ff,
+		#ff00ff,
+		#ff0000
+	);
 }
 
 .dark,

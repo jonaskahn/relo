@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import {
+	DEFAULT_ACCENT,
 	applyAccent,
 	applySettings,
 	loadSettings,
@@ -28,7 +29,7 @@ describe('loadSettings without storage', () => {
 		const settings = loadSettings();
 
 		expect(settings.theme).toBe('system');
-		expect(settings.accent).toBe('red');
+		expect(settings.accent).toBe(DEFAULT_ACCENT);
 		expect(settings.cardLayout).toBe('vertical');
 		expect(settings.sidebar).toEqual({ mode: 'compact' });
 	});
@@ -128,7 +129,7 @@ describe('saveSettings', () => {
 	it('stores the layout and not the appearance the config owns', () => {
 		const setItem = stubStorage(() => null);
 		const settings = loadSettings();
-		settings.accent = 'blue';
+		settings.accent = 'moss';
 		settings.theme = 'dark';
 
 		saveSettings(settings);
@@ -146,51 +147,57 @@ describe('saveSettings', () => {
 });
 
 describe('applyAccent', () => {
-	it('names the accent on the document element', () => {
-		const setAttribute = vi.fn();
-		vi.stubGlobal('document', { documentElement: { setAttribute } });
+	it('names a preset on the document element and writes the slot colour beside it', () => {
+		const values = new Map<string, string>();
+		const root = {
+			dataset: {} as Record<string, string>,
+			style: { setProperty: (name: string, value: string) => values.set(name, value) }
+		};
+		vi.stubGlobal('document', { documentElement: root });
 
-		applyAccent('green');
+		applyAccent('moss', '#1f8a8a');
 
-		expect(setAttribute).toHaveBeenCalledWith('data-accent', 'green');
+		expect(root.dataset.accent).toBe('moss');
+		expect(values.get('--accent-custom')).toBe('#1f8a8a');
 	});
 
 	it('does nothing where there is no document', () => {
 		vi.stubGlobal('document', undefined);
-		expect(() => applyAccent('blue')).not.toThrow();
+		expect(() => applyAccent('moss', DEFAULT_ACCENT)).not.toThrow();
 	});
 });
 
 describe('applySettings', () => {
 	it('applies the theme and the accent together', () => {
 		const classes = new Set<string>();
-		const attributes: Record<string, string> = {};
-		vi.stubGlobal('document', {
-			documentElement: {
-				dataset: {},
-				classList: {
-					contains: (name: string) => classes.has(name),
-					toggle: (name: string, force: boolean) => {
-						if (force) classes.add(name);
-						else classes.delete(name);
-					}
-				},
-				setAttribute: (name: string, value: string) => {
-					attributes[name] = value;
+		const values = new Map<string, string>();
+		const root = {
+			dataset: {} as Record<string, string>,
+			classList: {
+				contains: (name: string) => classes.has(name),
+				toggle: (name: string, force: boolean) => {
+					if (force) classes.add(name);
+					else classes.delete(name);
 				}
-			}
+			},
+			style: { setProperty: (name: string, value: string) => values.set(name, value) }
+		};
+		vi.stubGlobal('document', {
+			documentElement: root
 		});
 		vi.stubGlobal('window', { matchMedia: () => ({ matches: false }) });
 
 		applySettings({
 			theme: 'dark',
-			accent: 'teal',
+			accent: 'lagoon',
+			customAccent: '#1f8a8a',
 			cardLayout: 'vertical',
 			sidebar: loadSettings().sidebar
 		});
 
 		expect(classes.has('dark')).toBe(true);
-		expect(attributes['data-accent']).toBe('teal');
+		expect(root.dataset.accent).toBe('lagoon');
+		expect(values.get('--accent-custom')).toBe('#1f8a8a');
 	});
 });
 
