@@ -208,20 +208,15 @@ type IntegrationChat struct {
 }
 
 // Integrations returns every agent Relo knows, with the state of its wiring.
+// An agent the daemon cannot read carries that failure as its own state, so one
+// broken read never blanks the roster the console renders. When nothing can be
+// read there is no roster to give, and the read's own error comes back.
 func (s *Service) Integrations(ctx context.Context) ([]IntegrationView, error) {
 	manager, err := s.manager()
 	if err != nil {
 		return nil, err
 	}
-	views := make([]IntegrationView, 0, len(s.agents.Agents()))
-	for _, agent := range s.agents.Agents() {
-		view, err := s.describeIntegration(ctx, manager, agent)
-		if err != nil {
-			return nil, err
-		}
-		views = append(views, view)
-	}
-	return views, nil
+	return s.describeAgents(ctx, manager, s.agents.Agents())
 }
 
 // Integration returns one integration.
@@ -804,7 +799,20 @@ func integrationModelsOf(body []byte) []IntegrationModel {
 			ProviderID:    entry.ProviderID, SourceModelID: entry.SourceModelID,
 		})
 	}
-	return models
+	return uniqueModels(models)
+}
+
+func uniqueModels(models []IntegrationModel) []IntegrationModel {
+	seen := make(map[string]bool, len(models))
+	unique := make([]IntegrationModel, 0, len(models))
+	for _, model := range models {
+		if seen[model.ID] {
+			continue
+		}
+		seen[model.ID] = true
+		unique = append(unique, model)
+	}
+	return unique
 }
 
 type listingRow struct {
@@ -932,6 +940,46 @@ func (s *Service) describeIntegration(ctx context.Context, manager *Manager, age
 		described.Preview = planned
 	}
 	return s.attachIntegrationKey(ctx, described, agent)
+}
+
+func (s *Service) describeAgents(ctx context.Context, manager *Manager, agents []Agent) ([]IntegrationView, error) {
+	views := make([]IntegrationView, 0, len(agents))
+	var firstErr error
+	readable := 0
+	for _, agent := range agents {
+		view, err := s.describeIntegration(ctx, manager, agent)
+		if err == nil {
+			readable++
+		} else {
+			if firstErr == nil {
+				firstErr = err
+			}
+			if s.logger != nil {
+				s.logger.Error("describe an integration", "agent", agent.ID, "error", err)
+			}
+			view = failedIntegrationView(s, agent, err)
+		}
+		views = append(views, view)
+	}
+	// The console renders what the roster gives it, so one agent that cannot be
+	// read carries its failure instead of taking the others with it. Nothing
+	// readable means the read itself is broken, which stays an error.
+	if readable == 0 && firstErr != nil {
+		return nil, firstErr
+	}
+	return views, nil
+}
+
+func failedIntegrationView(s *Service, agent Agent, cause error) IntegrationView {
+	return IntegrationView{
+		ID: agent.ID, Client: agent.Client, Summary: agent.Summary,
+		Protocol: agent.Protocol, BaseURL: s.paths.BaseURL(agent.Protocol),
+		ManagesFiles: agent.ManagesFiles, EnvKey: agent.EnvKey,
+		// An entry that cannot be read stays set up and failed: a card offering a
+		// set-up would mint a new key over the one the daemon may already hold.
+		Enabled: true, State: StateError, LastError: cause.Error(),
+		Files: []FileView{}, Steps: s.integrationSteps(agent, nil),
+	}
 }
 
 func baseIntegrationView(s *Service, agent Agent, view View) IntegrationView {

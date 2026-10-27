@@ -187,6 +187,74 @@ func TestIntegrationsListsEveryAgent(t *testing.T) {
 	}
 }
 
+// refusingStore fails the file list of every agent it names, which is the read
+// each entry of the roster makes.
+type refusingStore struct {
+	appintegration.Store
+	refuse func(id string) bool
+}
+
+func (s refusingStore) Files(ctx context.Context, id string) ([]appintegration.FileRecord, error) {
+	if s.refuse(id) {
+		return nil, errInjected
+	}
+	return s.Store.Files(ctx, id)
+}
+
+// TestIntegrationsKeepsTheRosterWhenOneAgentCannotBeRead is the console's list
+// rule: the entry that failed carries its own reason, every other agent still
+// renders, and the one that failed stays set up so the console cannot offer a
+// set-up that would mint a second key over the one the daemon may hold.
+func TestIntegrationsKeepsTheRosterWhenOneAgentCannotBeRead(t *testing.T) {
+	h := newHarness(t)
+	settings := &config.Config{}
+	settings.Server.Bind = "127.0.0.1"
+	settings.Server.Port = 10101
+	store := refusingStore{
+		Store:  platform.NewIntegrationStore(h.db),
+		refuse: func(id string) bool { return id == "cursor" },
+	}
+	built := integrationUseCasesOver(t, h, settings, t.TempDir(), nil, store)
+
+	views, err := built.Integrations(context.Background())
+	if err != nil {
+		t.Fatalf("Integrations() error = %v, want the roster with the failure on one entry", err)
+	}
+	want := len(platform.NewAgentRegistry().Agents())
+	if len(views) != want {
+		t.Fatalf("integrations = %d entries, want %d", len(views), want)
+	}
+	byID := make(map[string]appintegration.IntegrationView, len(views))
+	for _, view := range views {
+		byID[view.ID] = view
+	}
+	cursor, found := byID["cursor"]
+	if !found {
+		t.Fatalf("integrations = %v, want cursor", byID)
+	}
+	if !cursor.Enabled || cursor.State != appintegration.StateError || cursor.LastError != errInjected.Error() {
+		t.Fatalf("cursor = %+v, want it set up and failed with the reason that stopped the read", cursor)
+	}
+	if codex := byID["codex"]; codex.State == appintegration.StateError {
+		t.Fatalf("codex = %+v, want the agent that read fine left alone", codex)
+	}
+}
+
+// TestIntegrationsFailsWhenNoAgentCanBeRead keeps a broken store visible: with
+// nothing readable there is no roster to hand over, so the refusal comes back.
+func TestIntegrationsFailsWhenNoAgentCanBeRead(t *testing.T) {
+	h := newHarness(t)
+	settings := &config.Config{}
+	settings.Server.Bind = "127.0.0.1"
+	settings.Server.Port = 10101
+	store := refusingStore{Store: platform.NewIntegrationStore(h.db), refuse: func(string) bool { return true }}
+	built := integrationUseCasesOver(t, h, settings, t.TempDir(), nil, store)
+
+	if _, err := built.Integrations(context.Background()); !errors.Is(err, errInjected) {
+		t.Fatalf("Integrations() error = %v, want the store that refused", err)
+	}
+}
+
 // TestRefreshAccountModelsStoresTheRoster covers the per-account read: the
 // account's own list is stored, and the connection's list takes it in.
 func TestRefreshAccountModelsStoresTheRoster(t *testing.T) {

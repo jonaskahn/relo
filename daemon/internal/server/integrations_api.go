@@ -15,6 +15,17 @@ type integrationsResponse struct {
 	Items []integrationViewResponse `json:"items"`
 }
 
+func (s *Server) writeIntegrationError(w http.ResponseWriter, r *http.Request, err error) {
+	status, code := serviceStatus(err)
+	// The body carries this reason to the browser and the request log carries
+	// the status alone, so an internal failure has nowhere else to land.
+	if status >= http.StatusInternalServerError {
+		s.opts.Logger.Error("integration request failed",
+			"method", r.Method, "path", r.URL.Path, "error", err)
+	}
+	writeError(w, status, code, err.Error())
+}
+
 func (s *Server) handleListIntegrations(w http.ResponseWriter, r *http.Request) {
 	manager, ok := s.integrationsOrUnavailable(w, r)
 	if !ok {
@@ -22,7 +33,7 @@ func (s *Server) handleListIntegrations(w http.ResponseWriter, r *http.Request) 
 	}
 	items, err := manager.Integrations(r.Context())
 	if err != nil {
-		writeServiceError(w, err)
+		s.writeIntegrationError(w, r, err)
 		return
 	}
 	writeJSON(w, http.StatusOK, integrationsResponse{Items: toIntegrationViewList(items)})
@@ -35,7 +46,7 @@ func (s *Server) handleGetIntegration(w http.ResponseWriter, r *http.Request) {
 	}
 	view, err := manager.Integration(r.Context(), r.PathValue("id"))
 	if err != nil {
-		writeServiceError(w, err)
+		s.writeIntegrationError(w, r, err)
 		return
 	}
 	writeJSON(w, http.StatusOK, toIntegrationViewResponse(view))
@@ -52,7 +63,7 @@ func (s *Server) handleGetIntegrationToken(w http.ResponseWriter, r *http.Reques
 	}
 	token, err := manager.IntegrationToken(r.Context(), r.PathValue("id"))
 	if err != nil {
-		writeServiceError(w, err)
+		s.writeIntegrationError(w, r, err)
 		return
 	}
 	writeJSON(w, http.StatusOK, integrationTokenResponse{Token: token})
@@ -85,7 +96,7 @@ func (s *Server) handleEnableIntegration(w http.ResponseWriter, r *http.Request)
 		result, err = manager.EnableIntegration(r.Context(), r.PathValue("id"), versions)
 	}
 	if err != nil {
-		writeServiceError(w, err)
+		s.writeIntegrationError(w, r, err)
 		return
 	}
 	writeJSON(w, http.StatusOK, toIntegrationResultResponse(result))
@@ -120,7 +131,7 @@ func (s *Server) handleDisableIntegration(w http.ResponseWriter, r *http.Request
 		return
 	}
 	if err := manager.DisableIntegration(r.Context(), r.PathValue("id"), request.Force); err != nil {
-		writeServiceError(w, err)
+		s.writeIntegrationError(w, r, err)
 		return
 	}
 	writeJSON(w, http.StatusOK, map[string]string{"status": "disabled"})
@@ -169,7 +180,7 @@ func (s *Server) handleRotateIntegration(w http.ResponseWriter, r *http.Request)
 	}
 	result, err := manager.RotateIntegrationKey(r.Context(), r.PathValue("id"))
 	if err != nil {
-		writeServiceError(w, err)
+		s.writeIntegrationError(w, r, err)
 		return
 	}
 	writeJSON(w, http.StatusOK, toIntegrationResultResponse(result))
@@ -182,7 +193,7 @@ func (s *Server) handleRestartIntegration(w http.ResponseWriter, r *http.Request
 	}
 	view, err := manager.RestartIntegration(r.Context(), r.PathValue("id"))
 	if err != nil {
-		writeServiceError(w, err)
+		s.writeIntegrationError(w, r, err)
 		return
 	}
 	writeJSON(w, http.StatusOK, toIntegrationResultResponse(appintegration.IntegrationResult{Integration: view}))
@@ -195,7 +206,7 @@ func (s *Server) handleReloadIntegration(w http.ResponseWriter, r *http.Request)
 	}
 	view, err := manager.ReloadIntegration(r.Context(), r.PathValue("id"))
 	if err != nil {
-		writeServiceError(w, err)
+		s.writeIntegrationError(w, r, err)
 		return
 	}
 	writeJSON(w, http.StatusOK, toIntegrationResultResponse(appintegration.IntegrationResult{Integration: view}))
@@ -226,7 +237,7 @@ func (s *Server) handleCodexContext(w http.ResponseWriter, r *http.Request) {
 	}
 	view, err := s.setCodexContext(r, manager, request)
 	if err != nil {
-		writeServiceError(w, err)
+		s.writeIntegrationError(w, r, err)
 		return
 	}
 	writeJSON(w, http.StatusOK, toIntegrationViewResponse(view))
@@ -260,7 +271,7 @@ func (s *Server) handleRepairIntegration(w http.ResponseWriter, r *http.Request)
 	}
 	result, err := manager.RepairIntegration(r.Context(), r.PathValue("id"))
 	if err != nil {
-		writeServiceError(w, err)
+		s.writeIntegrationError(w, r, err)
 		return
 	}
 	writeJSON(w, http.StatusOK, toIntegrationResultResponse(result))
@@ -272,7 +283,7 @@ func (s *Server) handleRestoreIntegration(w http.ResponseWriter, r *http.Request
 		return
 	}
 	if err := manager.RestoreIntegration(r.Context(), r.PathValue("id")); err != nil {
-		writeServiceError(w, err)
+		s.writeIntegrationError(w, r, err)
 		return
 	}
 	writeJSON(w, http.StatusOK, map[string]string{"status": "restored"})
@@ -285,7 +296,7 @@ func (s *Server) handleVerifyIntegration(w http.ResponseWriter, r *http.Request)
 	}
 	verify, err := manager.VerifyIntegration(r.Context(), r.PathValue("id"))
 	if err != nil {
-		writeServiceError(w, err)
+		s.writeIntegrationError(w, r, err)
 		return
 	}
 	writeJSON(w, http.StatusOK, toIntegrationVerifyResponse(verify))
@@ -298,7 +309,7 @@ func (s *Server) handleIntegrationModels(w http.ResponseWriter, r *http.Request)
 	}
 	models, err := manager.IntegrationModels(r.Context(), r.PathValue("id"))
 	if err != nil {
-		writeServiceError(w, err)
+		s.writeIntegrationError(w, r, err)
 		return
 	}
 	writeJSON(w, http.StatusOK, toIntegrationModelsResponse(models))
@@ -315,7 +326,7 @@ func (s *Server) handleIntegrationChatTurn(w http.ResponseWriter, r *http.Reques
 	}
 	answer, err := manager.IntegrationChat(r.Context(), r.PathValue("id"), toIntegrationChatQuery(request))
 	if err != nil {
-		writeServiceError(w, err)
+		s.writeIntegrationError(w, r, err)
 		return
 	}
 	writeJSON(w, http.StatusOK, toIntegrationChatResponse(answer))

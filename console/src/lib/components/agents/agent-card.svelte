@@ -167,7 +167,7 @@
 		</div>
 		{#if warnings.length > 0}
 			<div class="max-h-16 overflow-y-auto">
-				{#each warnings as warning (warning.key + ' ' + warning.copy)}
+				{#each warnings as warning, i (i)}
 					<p class="flex items-start gap-1.5 text-warn">
 						<Icon name="alert-triangle" size={13} class="mt-px shrink-0" />
 						{warning.copy}

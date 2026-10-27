@@ -82,6 +82,14 @@ describe('filterModels', () => {
 	it('leaves an unknown roster unfiltered', () => {
 		expect(filterModels(models, { query: '', provider: '', accountModels: [] })).toHaveLength(4);
 	});
+
+	it('keeps one entry per id, so a picker never gets a duplicate key', () => {
+		const repeated = [models[0], models[3], models[0]];
+		expect(filterModels(repeated, { query: '', provider: '' }).map((model) => model.id)).toEqual([
+			'relo-openai-gpt-5.5',
+			'reloc-smart'
+		]);
+	});
 });
 
 describe('contextLabelOf', () => {

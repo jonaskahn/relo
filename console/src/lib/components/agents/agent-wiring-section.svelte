@@ -73,7 +73,7 @@
 	<div class="space-y-2" role="status">
 		<h3 class="text-sm font-semibold">{$t('ui.pages.integrationsPage.reason.title')}</h3>
 		<ul class="flex flex-col gap-1.5">
-			{#each reasons as reason (reason.key + ' ' + (reason.path ?? ''))}
+			{#each reasons as reason, i (i)}
 				<li class="flex items-start gap-1.5 text-xs text-warn">
 					<Icon name="alert-triangle" size={13} class="mt-px shrink-0" />
 					<span class="min-w-0">
@@ -96,7 +96,7 @@
 			<p class="text-xs text-muted-foreground">{$t('ui.pages.integrationsPage.noFilesYet')}</p>
 		{:else}
 			<ul class="flex flex-col gap-1.5">
-				{#each agent.files as file (file.kind)}
+				{#each agent.files as file, i (i)}
 					{@const state = fileState(file)}
 					<li
 						class="flex flex-wrap items-center justify-between gap-2 rounded-lg bg-surface shadow-float-1 px-2.5 py-1.5"
@@ -132,7 +132,7 @@
 		<p class="text-xs text-muted-foreground">{$t('ui.pages.integrationsPage.stepsHint')}</p>
 		{#if steps.length > 0}
 			<ol class="list-decimal space-y-1 pl-5 text-xs text-muted-foreground">
-				{#each steps as step (step)}
+				{#each steps as step, i (i)}
 					<li class="mono-data whitespace-pre-wrap break-words">{step}</li>
 				{/each}
 			</ol>
@@ -149,7 +149,7 @@
 		<h3 class="text-sm font-semibold">{$t('ui.pages.integrationsPage.previewTitle')}</h3>
 		<p class="text-xs text-muted-foreground">{$t('ui.pages.integrationsPage.previewHint')}</p>
 		<ul class="flex flex-col gap-2">
-			{#each preview as plan (plan.kind)}
+			{#each preview as plan, i (i)}
 				<li class="rounded-lg bg-surface shadow-float-1 px-2.5 py-2">
 					<div class="flex flex-wrap items-center justify-between gap-2">
 						<span class="mono-data min-w-0 truncate text-xs">{plan.path}</span>

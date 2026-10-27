@@ -344,41 +344,38 @@ func (s *Server) decodeJSON(w http.ResponseWriter, r *http.Request, target any) 
 }
 
 func writeServiceError(w http.ResponseWriter, err error) {
-	var portBusy *PortBusyError
-	if errors.As(err, &portBusy) || errors.Is(err, ErrCallbackPortBusy) {
-		writeError(w, http.StatusConflict, "callback_port_busy", err.Error())
-		return
-	}
-	if errors.Is(err, appintegration.ErrActionInProgress) || errors.Is(err, activity.ErrRetentionBusy) {
-		writeError(w, http.StatusConflict, "action_in_progress", err.Error())
-		return
-	}
-	writeDomainError(w, err)
+	status, code := serviceStatus(err)
+	writeError(w, status, code, err.Error())
 }
 
-func writeDomainError(w http.ResponseWriter, err error) {
+func serviceStatus(err error) (int, string) {
+	var portBusy *PortBusyError
 	switch {
+	case errors.As(err, &portBusy) || errors.Is(err, ErrCallbackPortBusy):
+		return http.StatusConflict, "callback_port_busy"
+	case errors.Is(err, appintegration.ErrActionInProgress), errors.Is(err, activity.ErrRetentionBusy):
+		return http.StatusConflict, "action_in_progress"
 	case errors.Is(err, appaccount.ErrAccountNotFound), errors.Is(err, appcatalog.ErrProviderNotFound),
 		errors.Is(err, apptemplates.ErrNotFound),
 		errors.Is(err, appaccess.ErrNotFound), errors.Is(err, appcatalog.ErrModelNotFound),
 		errors.Is(err, appintegration.ErrUnknownIntegration), errors.Is(err, appstatus.ErrLogNotFound):
-		writeError(w, http.StatusNotFound, "not_found", err.Error())
+		return http.StatusNotFound, "not_found"
 	case errors.Is(err, appaccount.ErrNoSecretStore), errors.Is(err, catalog.ErrNoCatalog):
-		writeError(w, http.StatusServiceUnavailable, "service_unavailable", err.Error())
+		return http.StatusServiceUnavailable, "service_unavailable"
 	case errors.Is(err, appcatalog.ErrCatalogConflict), errors.Is(err, appaccount.ErrDuplicateAccount),
 		errors.Is(err, appcatalog.ErrListAuthoritative),
 		appintegration.RefusalCode(err) == appintegration.CodeForeignKey:
-		writeError(w, http.StatusConflict, "conflict", err.Error())
+		return http.StatusConflict, "conflict"
 	case errors.Is(err, appintegration.ErrRestoreBlocked):
-		writeError(w, http.StatusConflict, "restore_blocked", err.Error())
+		return http.StatusConflict, "restore_blocked"
 	case errors.Is(err, catalog.ErrListRejected), errors.Is(err, catalog.ErrListUnsupported):
-		writeError(w, http.StatusBadGateway, "upstream_unavailable", err.Error())
+		return http.StatusBadGateway, "upstream_unavailable"
 	case errors.Is(err, ErrNoLoginFlow):
-		writeError(w, http.StatusServiceUnavailable, "service_unavailable", err.Error())
+		return http.StatusServiceUnavailable, "service_unavailable"
 	case isClientError(err):
-		writeError(w, http.StatusBadRequest, "bad_request", err.Error())
+		return http.StatusBadRequest, "bad_request"
 	default:
-		writeError(w, http.StatusInternalServerError, "internal_error", err.Error())
+		return http.StatusInternalServerError, "internal_error"
 	}
 }
 

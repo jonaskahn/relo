@@ -155,7 +155,7 @@
 						$t('ui.pages.integrationsPage.testEmpty')}</pre>
 				{#if (answer.warnings ?? []).length > 0}
 					<div class="flex flex-wrap items-center gap-1.5" role="status">
-						{#each answer.warnings ?? [] as warning (warning)}
+						{#each answer.warnings ?? [] as warning, i (i)}
 							<StatusBadge kind="warn" label={warning} />
 						{/each}
 					</div>
