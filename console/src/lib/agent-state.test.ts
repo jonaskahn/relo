@@ -14,8 +14,7 @@ import {
 	stateCode,
 	stateKey,
 	stateTone,
-	warningsOf,
-	warningKeys
+	reasonLines
 } from './agent-state';
 import type { IntegrationView } from './types';
 
@@ -71,23 +70,7 @@ describe('the agent status reading', () => {
 			preview: [{ kind: 'config', path: '/x', refused: true, code: 'not_installed' }]
 		});
 		expect(refusalOf(agent)).toBe('');
-		expect(warningsOf(agent)).toEqual([]);
-	});
-});
-
-describe('the agent card warnings', () => {
-	it('reports every fact worth the operator attention, once', () => {
-		const agent = agentOf({ models_stale: true, restart_needed: true });
-		expect(warningsOf(agent)).toEqual(['modelsStale', 'restartNeeded']);
-		expect(warningsOf(agentOf({ enabled: false }))).toEqual([]);
-	});
-
-	it('reports a refusal only before the agent is wired', () => {
-		const agent = agentOf({
-			enabled: false,
-			preview: [{ kind: 'config', path: '/x', refused: true, code: 'relative_path' }]
-		});
-		expect(warningsOf(agent)).toEqual(['refused']);
+		expect(reasonLines(agent)).toEqual([]);
 	});
 });
 
@@ -109,19 +92,87 @@ describe('the sentences behind the readings', () => {
 		expect(refusalDetailKey('')).toBe('');
 	});
 
-	it('gives the card one catalogue sentence per fact it reports', () => {
+	it('keeps no warning once Relo wired the agent', () => {
+		expect(reasonLines(agentOf({ reasons: [] }))).toEqual([]);
+		expect(reasonLines(agentOf({ enabled: false }))).toEqual([]);
+	});
+});
+
+describe('the reasons the daemon reports', () => {
+	it('names each reason in the catalogue with its own detail', () => {
+		expect(
+			reasonLines(
+				agentOf({ reasons: [{ code: 'file_changed', path: '/home/op/.codex/relo-key.sh' }] })
+			)
+		).toEqual([
+			{
+				key: 'ui.pages.integrationsPage.reason.fileChanged',
+				values: { file: 'relo-key.sh' },
+				path: '/home/op/.codex/relo-key.sh'
+			}
+		]);
+		expect(
+			reasonLines(
+				agentOf({ reasons: [{ code: 'file_missing', path: '/home/op/.codex/relo-key.sh' }] })
+			)
+		).toEqual([
+			{
+				key: 'ui.pages.integrationsPage.reason.fileMissing',
+				values: { file: 'relo-key.sh' },
+				path: '/home/op/.codex/relo-key.sh'
+			}
+		]);
+		expect(reasonLines(agentOf({ reasons: [{ code: 'restart_catalog_newer' }] }))).toEqual([
+			{ key: 'ui.pages.integrationsPage.reason.restartCatalogNewer', values: {} }
+		]);
+	});
+
+	it('shows the model counts when the daemon measured them', () => {
+		expect(
+			reasonLines(agentOf({ reasons: [{ code: 'models_changed', added: 3, removed: 1 }] }))
+		).toEqual([
+			{
+				key: 'ui.pages.integrationsPage.reason.modelsChangedAdded',
+				values: { count: 3 }
+			},
+			{
+				key: 'ui.pages.integrationsPage.reason.modelsChangedRemoved',
+				values: { count: 1 }
+			}
+		]);
+		expect(reasonLines(agentOf({ reasons: [{ code: 'models_changed' }] }))).toEqual([
+			{ key: 'ui.pages.integrationsPage.reason.modelsChangedBare', values: {} }
+		]);
+		expect(
+			reasonLines(agentOf({ reasons: [{ code: 'models_changed', added: 2, removed: 0 }] })).map(
+				(line) => line.key
+			)
+		).toEqual(['ui.pages.integrationsPage.reason.modelsChangedAdded']);
+	});
+
+	it('keeps the order the daemon sent and drops a code it does not know', () => {
+		const agent = agentOf({
+			reasons: [
+				{ code: 'models_changed', added: 1, removed: 0 },
+				{ code: 'file_changed', path: '/x/y' },
+				{ code: 'something_new' }
+			]
+		});
+		expect(reasonLines(agent).map((line) => line.key)).toEqual([
+			'ui.pages.integrationsPage.reason.modelsChangedAdded',
+			'ui.pages.integrationsPage.reason.fileChanged'
+		]);
+	});
+
+	it('reports a refusal, never a reason, before the agent is wired', () => {
 		const agent = agentOf({
 			enabled: false,
-			models_stale: true,
-			restart_needed: true,
-			preview: [{ kind: 'config', path: '/x', refused: true, code: 'unrecognised' }]
+			reasons: [{ code: 'file_changed', path: '/x/y' }],
+			preview: [{ kind: 'config', path: '/x', refused: true, code: 'relative_path' }]
 		});
-		expect(warningKeys(agent)).toEqual(['ui.pages.integrationsPage.unrecognised']);
-		expect(warningKeys(agentOf({ models_stale: true, restart_needed: true }))).toEqual([
-			'ui.pages.integrationsPage.modelsChanged',
-			'ui.pages.integrationsPage.restartNeeded'
+		expect(reasonLines(agent)).toEqual([
+			{ key: 'ui.pages.integrationsPage.relativePath', values: {} }
 		]);
-		expect(warningKeys(agentOf())).toEqual([]);
 	});
 });
 

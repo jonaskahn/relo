@@ -51,8 +51,10 @@ never reorders a card an operator is looking at.
   marks Relo's verified wiring for that client, not whether this machine has it set up.
 - **Key row**: "Client key" in `--muted`, then the stored hint in `.mono-data`, or a dash when the agent has none.
 - **Warnings**: a `max-h-16 overflow-y-auto` box under the key row, one line per fact — a setup refusal (not installed,
-  relative path, unrecognised), "Model list changed", "Restart needed". Every line is `--warn` **with an icon and its
-  sentence**, never colour alone. An enabled agent with nothing to report shows no box, so the cards stay even.
+  relative path, unrecognised), or a reason the daemon sent: which file Relo wrote was changed or removed, how many
+  models Relo added or stopped listing, or that Codex started before Relo last wrote its model list. Every line is
+  `--warn` **with an icon and its sentence**, never colour alone. An enabled agent with nothing to report shows no
+  box, so the cards stay even.
 - **Status pill** under the head: Ready, Drifted, Error, Off, plus the refusal and restart words that outrank them.
 - **Action cluster**, `mt-auto`, under the body: not configured → **Set up** primary; configured → Manage, the Codex
   1M toggle, Reload where the client can reread its configuration, Restart where the client keeps its environment,
@@ -77,6 +79,8 @@ Two panes side by side, stacking under the dock breakpoint with the wiring first
 - **Managed files** (clients Relo configures): every file with its `.mono-data` path (truncated, tooltip carries the
   full path) and its state — present, drifted, missing. Drifted and missing pair `--warn`/`--danger` with an icon and a
   word. An agent with no file says "No files written yet".
+- **Why this needs attention** (shown when the agent has a reason): the same lines the card reports, each with the
+  whole file path the card truncates, above the managed-files list and beside the Repair or Restart primary.
 - **Manual setup steps** (clients Relo does not configure): the daemon's own numbered steps, `.mono-data`, wrapping. A
   client with no steps falls back to the two facts that matter — the base URL and the key hint.
 - **Write preview** (before a set-up, or while disabled): each planned file with its path and the fragment Relo would
