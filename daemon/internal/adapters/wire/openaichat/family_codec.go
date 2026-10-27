@@ -37,9 +37,12 @@ const (
 )
 
 // Codec speaks the Chat Completions wire. One codec serves every request;
-// each response gets its own stream decoder.
+// each response gets its own stream decoder. dialect is set only on the copy
+// Bind returns, so a decoder scoped to one connection knows a serving
+// template that renders calls as text.
 type Codec struct {
 	baseURL string
+	dialect string
 }
 
 var _ wire.CodecModule = (*Codec)(nil)
@@ -53,6 +56,17 @@ func NewCodec(baseURL string) *Codec {
 // Module returns the codec a caller without a base URL gets.
 func Module() wire.CodecModule {
 	return NewCodec(DefaultBaseURL)
+}
+
+// Bind returns a codec that remembers the connection's tool-call dialect for
+// the response decoder. Every other field passes through unchanged.
+func (c *Codec) Bind(req *inference.Request, opts wire.CodecOpts) wire.CodecModule {
+	if opts.ToolCallDialect == "" {
+		return c
+	}
+	bound := *c
+	bound.dialect = opts.ToolCallDialect
+	return &bound
 }
 
 // EncodeRequest builds the upstream chat completions request. The body

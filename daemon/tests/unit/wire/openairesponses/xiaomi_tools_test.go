@@ -18,12 +18,12 @@ func TestXiaomiFreeformTurnReplay(t *testing.T) {
 		"tools":[{"type":"custom","name":"exec","description":"run"}],
 		"input":[{"type":"message","role":"user","content":[{"type":"input_text","text":"go"}]}]}`)
 	inbound := openairesponses.NewInbound()
-	_, err := decodeInboundWith(inbound, body)
+	request, err := decodeInboundWith(inbound, body)
 	if err != nil {
 		t.Fatalf("DecodeRequest() error = %v", err)
 	}
 
-	codec := openaichat.NewCodec("")
+	codec := openaichat.NewCodec("").Bind(request, wire.CodecOpts{ToolCallDialect: "qwen-text"}).(wire.StreamCodec)
 	events := pushStream(t, codec.NewStreamDecoder(), "openai/xiaomi_mimo_exec_stream.txt")
 
 	var frames []wire.SSEEvent

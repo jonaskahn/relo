@@ -94,6 +94,10 @@ type Provider struct {
 	UpdatedAtMs         int64
 	// UseProxy sends this connection through the proxy configured in Settings.
 	UseProxy bool
+	// ToolCallDialect names a serving template that renders tool calls as
+	// text rather than structured deltas, which the chat decoder reads to
+	// recover the call. Empty for every provider that does not.
+	ToolCallDialect string
 	// TimeoutSeconds is this connection's own call wait in seconds; nil
 	// inherits the global value.
 	TimeoutSeconds *int
@@ -691,6 +695,7 @@ func finishProviderFrom(host *Provider, row ConnectionRecord, formats Formats) {
 	host.SwitchOn4xx = switchOn(row.SwitchOn4xx)
 	host.SwitchOn5xx = switchOn(row.SwitchOn5xx)
 	host.BaseURL, host.NeedsSetup = substitute(row.BaseURL, row.Variables)
+	host.ToolCallDialect = toolCallDialect(*host)
 	host.Routable = routableProvider(*host, formats)
 	host.UnroutableReason = unroutableReason(*host)
 }
@@ -847,6 +852,18 @@ func pickSource[T any](ov, pr, md *T) string {
 }
 
 var xiaomiThinkLevels = []string{"low", "medium", "high"}
+
+// ToolCallDialectText names a serving template that renders a tool call as
+// text (the Qwen / MiMo family) rather than through structured deltas. A chat
+// decoder reads it to recover the call instead of forwarding it as prose.
+const ToolCallDialectText = "qwen-text"
+
+func toolCallDialect(host Provider) string {
+	if xiaomiConnection(host) {
+		return ToolCallDialectText
+	}
+	return ""
+}
 
 func xiaomiEfforts(host Provider, reasoning *bool, efforts []string) []string {
 	if reasoning == nil || !*reasoning || !xiaomiConnection(host) {

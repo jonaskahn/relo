@@ -29,6 +29,10 @@ type streamDecoder struct {
 	// textTail holds a trailing partial tag, so a template that a delta split
 	// is not forwarded as prose before it is recognised.
 	textTail string
+	// dialect names the connection's serving template when it renders tool
+	// calls as text. Set, it makes the template markers an authoritative leak
+	// set instead of one guessed from the content shape.
+	dialect string
 	// inTemplate reports that content is inside a template call being
 	// suppressed rather than streamed.
 	inTemplate bool
@@ -76,7 +80,7 @@ const (
 
 // NewStreamDecoder returns a decoder for one upstream response.
 func (c *Codec) NewStreamDecoder() wire.StreamDecoder {
-	return &streamDecoder{pending: map[int]*inference.ToolCallDelta{}}
+	return &streamDecoder{pending: map[int]*inference.ToolCallDelta{}, dialect: c.dialect}
 }
 
 // Push translates one upstream frame into canonical events.
@@ -198,6 +202,18 @@ func (d *streamDecoder) textEvents(message *chatMessageBody) []inference.Event {
 	return events
 }
 
+// templateMarker reports text that carries any tag of the text-call family,
+// so a connection whose serving template is known to render calls this way
+// treats the markers as authoritative even when the content-shape parser did
+// not piece a full call together.
+func (d *streamDecoder) templateMarker(text string) bool {
+	if d.dialect == "" {
+		return false
+	}
+	return strings.Contains(text, templateCallOpen) ||
+		strings.Contains(text, templateFunctionOpen)
+}
+
 // contentEvents feeds assistant content through the template-call parser. A
 // call the serving template wrote as text is recovered and suppressed rather
 // than streamed as prose; everything around it becomes text as usual. A
@@ -249,6 +265,11 @@ func (d *streamDecoder) consumeTemplateBody(delta string, events []inference.Eve
 // trailing partial tag for the next delta.
 func (d *streamDecoder) flushPlain(delta string, events []inference.Event) []inference.Event {
 	hold := partialPrefix(delta, templateCallOpen)
+	// A connection known to render calls as text treats a bare function tag as
+	// the leak set's own: the call never arrived, so the turn has to fail over.
+	if d.templateMarker(delta) {
+		d.leakedToolCall = true
+	}
 	if flush := delta[:len(delta)-len(hold)]; flush != "" {
 		events = append(events, inference.Event{Kind: inference.EventTextDelta, Text: flush})
 	}
@@ -317,7 +338,7 @@ func partialPrefix(text, marker string) string {
 // keeping only the tail that a later delta could complete.
 func (d *streamDecoder) observeReasoning(delta string) {
 	window := d.reasoningTail + delta
-	if strings.Contains(window, leakedToolCallMarker) {
+	if strings.Contains(window, leakedToolCallMarker) || d.templateMarker(window) {
 		d.leakedToolCall = true
 	}
 	if len(window) > leakedToolCallTail {

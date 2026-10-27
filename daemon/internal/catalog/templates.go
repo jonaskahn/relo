@@ -83,7 +83,11 @@ type Template struct {
 	// max-output ceiling parameter, so the codec leaves it out rather than
 	// send a request the upstream would refuse.
 	RefusesMaxOutputTokens bool
-	Variables              []Variable
+	// ToolCallDialect names a serving template that renders tool calls as
+	// text rather than structured deltas. A chat decoder reads it to recover
+	// the call from the text instead of forwarding it as prose.
+	ToolCallDialect string
+	Variables       []Variable
 	// ModelsSource names how a connection fills its roster: "listing" for one
 	// whose provider publishes a list, "manual" for one that takes the ids an
 	// operator types. Nothing declares anything else; a stored row may still
