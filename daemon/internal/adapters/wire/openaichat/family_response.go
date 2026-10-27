@@ -26,6 +26,24 @@ type streamDecoder struct {
 	// leakedToolCall records template text that means the model formatted a
 	// call as prose.
 	leakedToolCall bool
+	// textTail holds a trailing partial tag, so a template that a delta split
+	// is not forwarded as prose before it is recognised.
+	textTail string
+	// inTemplate reports that content is inside a template call being
+	// suppressed rather than streamed.
+	inTemplate bool
+	// templateBuf accumulates the suppressed template call until its close.
+	templateBuf strings.Builder
+	// leakedCall is the call recovered from template text, if the turn wrote
+	// one. An empty structured call is repaired from it.
+	leakedCall *templateCall
+}
+
+// templateCall is a tool call the serving template wrote as text instead of
+// through structured tool_calls.
+type templateCall struct {
+	name string
+	body string
 }
 
 const (
@@ -46,6 +64,14 @@ const (
 	// two deltas, since where a chunk splits is the stream's choice, not the
 	// model's.
 	leakedToolCallTail = len(leakedToolCallMarker) - 1
+
+	// The Qwen / MiMo family renders a call as text: a <tool_call> wrapper
+	// with a <function=NAME>...</function> body closed by </parameter>.
+	templateCallOpen       = "<tool_call>"
+	templateCallClose      = "</tool_call>"
+	templateFunctionOpen   = "<function="
+	templateFunctionClose  = "</function>"
+	templateParameterClose = "</parameter>"
 )
 
 // NewStreamDecoder returns a decoder for one upstream response.
@@ -75,13 +101,32 @@ func (d *streamDecoder) Finish() ([]inference.Event, error) {
 		return nil, nil
 	}
 	d.terminated = true
-	events := d.leakedToolCallEvents()
+	events := d.flushText()
+	events = append(events, d.leakedToolCallEvents()...)
 	events = append(events, d.toolCallEnds()...)
 	terminal := inference.Event{
 		Kind:     inference.EventTerminal,
 		Terminal: &inference.TerminalInfo{Reason: d.terminalReason()},
 	}
 	return append(events, terminal), nil
+}
+
+// flushText releases text held for a possible template tag. A stream that
+// ended inside an unclosed template span is not a call the client can run, so
+// it is dropped and left to the leak guard to fail the turn over.
+func (d *streamDecoder) flushText() []inference.Event {
+	if d.inTemplate {
+		d.templateBuf.Reset()
+		d.inTemplate = false
+		d.leakedToolCall = true
+		return nil
+	}
+	if d.textTail == "" {
+		return nil
+	}
+	tail := d.textTail
+	d.textTail = ""
+	return []inference.Event{{Kind: inference.EventTextDelta, Text: tail}}
 }
 
 // leakedToolCallEvents refuses a turn that formatted its tool call as text.
@@ -144,13 +189,128 @@ func (d *streamDecoder) finishEvents(reason string) []inference.Event {
 func (d *streamDecoder) textEvents(message *chatMessageBody) []inference.Event {
 	var events []inference.Event
 	if message.Content != "" {
-		events = append(events, inference.Event{Kind: inference.EventTextDelta, Text: message.Content})
+		events = append(events, d.contentEvents(message.Content)...)
 	}
 	if reasoning := message.reasoningText(); reasoning != "" {
 		d.observeReasoning(reasoning)
 		events = append(events, inference.Event{Kind: inference.EventReasoningDelta, Text: reasoning})
 	}
 	return events
+}
+
+// contentEvents feeds assistant content through the template-call parser. A
+// call the serving template wrote as text is recovered and suppressed rather
+// than streamed as prose; everything around it becomes text as usual. A
+// partial tag at the end of a delta is held back until the next delta
+// completes or refutes it.
+func (d *streamDecoder) contentEvents(delta string) []inference.Event {
+	var events []inference.Event
+	if d.textTail != "" {
+		delta = d.textTail + delta
+		d.textTail = ""
+	}
+	for {
+		if d.inTemplate {
+			var consumed bool
+			events, delta, consumed = d.consumeTemplateBody(delta, events)
+			if !consumed {
+				return events
+			}
+			continue
+		}
+		openAt := strings.Index(delta, templateCallOpen)
+		if openAt < 0 {
+			return d.flushPlain(delta, events)
+		}
+		if before := delta[:openAt]; before != "" {
+			events = append(events, inference.Event{Kind: inference.EventTextDelta, Text: before})
+		}
+		d.inTemplate = true
+		d.templateBuf.Reset()
+		delta = delta[openAt+len(templateCallOpen):]
+	}
+}
+
+// consumeTemplateBody feeds one delta to an open template span. It reports
+// whether the span closed, in which case the caller keeps parsing what
+// followed.
+func (d *streamDecoder) consumeTemplateBody(delta string, events []inference.Event) ([]inference.Event, string, bool) {
+	closeAt := strings.Index(delta, templateCallClose)
+	if closeAt < 0 {
+		d.templateBuf.WriteString(delta)
+		return events, delta, false
+	}
+	d.templateBuf.WriteString(delta[:closeAt])
+	events = append(events, d.closeTemplate()...)
+	return events, delta[closeAt+len(templateCallClose):], true
+}
+
+// flushPlain forwards the text before a possible open tag, holding back a
+// trailing partial tag for the next delta.
+func (d *streamDecoder) flushPlain(delta string, events []inference.Event) []inference.Event {
+	hold := partialPrefix(delta, templateCallOpen)
+	if flush := delta[:len(delta)-len(hold)]; flush != "" {
+		events = append(events, inference.Event{Kind: inference.EventTextDelta, Text: flush})
+	}
+	d.textTail = delta[len(delta)-len(hold):]
+	return events
+}
+
+// closeTemplate ends a suppressed template span. A span that parses as a call
+// is recovered; anything else was prose and is forwarded unchanged.
+func (d *streamDecoder) closeTemplate() []inference.Event {
+	d.inTemplate = false
+	body := d.templateBuf.String()
+	d.templateBuf.Reset()
+	call, ok := parseTemplateCall(body)
+	if !ok {
+		return []inference.Event{{Kind: inference.EventTextDelta, Text: templateCallOpen + body + templateCallClose}}
+	}
+	d.leakedCall = call
+	d.leakedToolCall = true
+	return nil
+}
+
+// parseTemplateCall reads the Qwen / MiMo family literal
+// (<function=NAME>BODY</parameter>) into its call. It refuses a span without
+// both a name and a body, so prose that merely mentions the tags is not
+// mistaken for a call.
+func parseTemplateCall(body string) (*templateCall, bool) {
+	functionAt := strings.Index(body, templateFunctionOpen)
+	if functionAt < 0 {
+		return nil, false
+	}
+	rest := body[functionAt+len(templateFunctionOpen):]
+	nameEnd := strings.IndexAny(rest, ">\n")
+	if nameEnd <= 0 {
+		return nil, false
+	}
+	name := strings.TrimSpace(rest[:nameEnd])
+	afterName := strings.TrimPrefix(rest[nameEnd:], ">")
+	bodyEnd := strings.Index(afterName, templateParameterClose)
+	if bodyEnd < 0 {
+		closeAt := strings.Index(afterName, templateFunctionClose)
+		if closeAt < 0 {
+			return nil, false
+		}
+		bodyEnd = closeAt
+	}
+	callBody := afterName[:bodyEnd]
+	if name == "" || callBody == "" {
+		return nil, false
+	}
+	return &templateCall{name: name, body: callBody}, true
+}
+
+// partialPrefix returns the longest suffix of text that is a prefix of
+// marker, so a tag split across two deltas is never flushed early.
+func partialPrefix(text, marker string) string {
+	for size := min(len(text), len(marker)-1); size > 0; size-- {
+		if strings.HasPrefix(marker, text[len(text)-size:]) {
+			return text[len(text)-size:]
+		}
+	}
+	return ""
 }
 
 // observeReasoning reads one reasoning delta for the leaked call marker,
@@ -199,11 +359,52 @@ func (d *streamDecoder) toolCallEnds() []inference.Event {
 	}
 	events := make([]inference.Event, 0, len(d.order))
 	for _, index := range d.order {
-		events = append(events, inference.Event{Kind: inference.EventToolCallEnd, ToolCall: snapshot(d.pending[index])})
+		call := snapshot(d.pending[index])
+		d.repairArguments(call)
+		events = append(events, inference.Event{Kind: inference.EventToolCallEnd, ToolCall: call})
 	}
 	d.pending = map[int]*inference.ToolCallDelta{}
 	d.order = nil
 	return events
+}
+
+// repairArguments replaces an empty structured call's arguments with the body
+// the serving template wrote as text. Only a call whose name matches the
+// recovered one is repaired, and only when its own arguments are empty, so a
+// real call is never overwritten.
+func (d *streamDecoder) repairArguments(call *inference.ToolCallDelta) {
+	if d.leakedCall == nil || call.Name != d.leakedCall.name {
+		return
+	}
+	if !emptyArguments(call.Arguments) {
+		return
+	}
+	call.Arguments = customArguments(d.leakedCall.body)
+}
+
+// emptyArguments reports whether a call's accumulated arguments carry no
+// body: an empty string, or an object with no fields.
+func emptyArguments(arguments string) bool {
+	trimmed := strings.TrimSpace(arguments)
+	if trimmed == "" {
+		return true
+	}
+	var object map[string]any
+	if err := json.Unmarshal([]byte(trimmed), &object); err != nil {
+		return false
+	}
+	return len(object) == 0
+}
+
+// customArguments wraps a recovered freeform body the way the Responses
+// surface reads it back: the freeform input as a string field. The canonical
+// call carries this shape, and the responses inbound unwraps it unchanged.
+func customArguments(input string) string {
+	encoded, err := json.Marshal(map[string]string{"input": input})
+	if err != nil {
+		return "{}"
+	}
+	return string(encoded)
 }
 
 func snapshot(delta *inference.ToolCallDelta) *inference.ToolCallDelta {
