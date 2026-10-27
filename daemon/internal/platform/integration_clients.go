@@ -81,6 +81,11 @@ func clientModelRefs(models []appintegration.ModelRef) []codingclients.ModelRef 
 	return converted
 }
 
+// clientModelDiff carries a model diff across the adapter boundary.
+func clientModelDiff(diff codingclients.ModelsDiff) appintegration.ModelDiff {
+	return appintegration.ModelDiff{Added: diff.Added, Removed: diff.Removed}
+}
+
 // ClientPaths answers every location one integration reads or writes.
 type ClientPaths struct {
 	paths codingclients.Paths
@@ -254,6 +259,11 @@ func (ClientFiles) CodexCatalogLists(path string, models []appintegration.ModelR
 	return codingclients.CodexCatalogLists(path, clientModelRefs(models))
 }
 
+// CodexCatalogDiff counts how a catalog file's models differ from these.
+func (ClientFiles) CodexCatalogDiff(path string, models []appintegration.ModelRef) appintegration.ModelDiff {
+	return clientModelDiff(codingclients.CodexCatalogDiff(path, clientModelRefs(models)))
+}
+
 // CodexNeedsRestart reports whether the Codex app-server predates the catalog.
 func (ClientFiles) CodexNeedsRestart(codexHome, catalogPath string) bool {
 	return codingclients.CodexNeedsRestart(codexHome, catalogPath)
@@ -401,6 +411,11 @@ func (ClientFiles) WriteGatewayCache(configDir, baseURL string, models []appinte
 // GatewayCacheLists reports whether the model cache Claude Code's picker reads carries these models.
 func (ClientFiles) GatewayCacheLists(configDir, baseURL string, models []appintegration.ModelRef) bool {
 	return codingclients.GatewayCacheLists(configDir, baseURL, clientModelRefs(models))
+}
+
+// GatewayCacheDiff counts how that cache's models differ from these.
+func (ClientFiles) GatewayCacheDiff(configDir, baseURL string, models []appintegration.ModelRef) appintegration.ModelDiff {
+	return clientModelDiff(codingclients.GatewayCacheDiff(configDir, baseURL, clientModelRefs(models)))
 }
 
 // RemoveGatewayCache removes the model cache Claude Code's picker reads.

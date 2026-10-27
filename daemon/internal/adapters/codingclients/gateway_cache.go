@@ -51,27 +51,40 @@ func GatewayCacheLists(configDir, baseURL string, models []ModelRef) bool {
 	return samePickerNames(cached.Models, models)
 }
 
-func samePickerNames(listed []gatewayModel, models []ModelRef) bool {
-	wanted := make(map[string]string, len(models))
-	for _, model := range models {
-		if strings.TrimSpace(model.ID) == "" {
-			continue
-		}
-		wanted[gatewayPickerID(model)] = ConfigDisplayName(model)
+// GatewayCacheDiff counts how the picker cache differs from the models Relo
+// would publish. A missing cache, a cache for another gateway, or one that
+// does not parse counts every published model as added.
+func GatewayCacheDiff(configDir, baseURL string, models []ModelRef) ModelsDiff {
+	content, err := os.ReadFile(GatewayCachePath(configDir))
+	if err != nil {
+		return missingDiff(models)
 	}
+	var cached gatewayCache
+	if err := json.Unmarshal(content, &cached); err != nil {
+		return missingDiff(models)
+	}
+	if strings.TrimSuffix(strings.TrimSpace(cached.BaseURL), "/") != strings.TrimSuffix(strings.TrimSpace(baseURL), "/") {
+		return missingDiff(models)
+	}
+	return pickerNamesDiff(cached.Models, models)
+}
+
+// missingDiff counts every published model as added, for a cache that cannot
+// be read or does not belong to this gateway.
+func missingDiff(models []ModelRef) ModelsDiff {
+	return ModelsDiff{Added: len(wantedPickerNames(models))}
+}
+
+func samePickerNames(listed []gatewayModel, models []ModelRef) bool {
+	return pickerNamesDiff(listed, models).Empty()
+}
+
+func pickerNamesDiff(listed []gatewayModel, models []ModelRef) ModelsDiff {
 	got := make(map[string]string, len(listed))
 	for _, model := range listed {
 		got[model.ID] = model.DisplayName
 	}
-	if len(got) != len(wanted) {
-		return false
-	}
-	for id, name := range wanted {
-		if got[id] != name {
-			return false
-		}
-	}
-	return true
+	return diffNames(got, wantedPickerNames(models))
 }
 
 func gatewayPickerID(model ModelRef) string {
