@@ -313,3 +313,71 @@ func TestHistoryResultTextOnlyUnchanged(t *testing.T) {
 		t.Fatalf("text-only result = %x, want %x", got, want.BytesOut())
 	}
 }
+
+func remoteImagePart() inference.ContentPart {
+	return inference.ContentPart{Type: inference.ContentTypeImage, ImageURL: "https://example.com/a.png"}
+}
+
+// TestBuildUserMessageRefusesRemoteImage covers the encoder path a remote
+// address takes: it has no encoding on this wire, so the message is refused
+// rather than silently dropped.
+func TestBuildUserMessageRefusesRemoteImage(t *testing.T) {
+	_, err := buildUserMessage(inference.Message{Role: inference.RoleUser, Content: []inference.ContentPart{remoteImagePart()}})
+	if !isUnsupportedFeature(err) {
+		t.Fatalf("buildUserMessage() error = %v, want ErrUnsupportedFeature", err)
+	}
+}
+
+// TestBuildHistoryRefusesRemoteImageInActiveTurn covers the trailing-action
+// refusal: the active user message carries a remote image, so buildAction
+// propagates the encoder error out of BuildHistory.
+func TestBuildHistoryRefusesRemoteImageInActiveTurn(t *testing.T) {
+	request := &inference.Request{Model: "sonnet", Messages: []inference.Message{
+		{Role: inference.RoleUser, Content: []inference.ContentPart{{Type: inference.ContentTypeText, Text: "hi"}}},
+		{Role: inference.RoleUser, Content: []inference.ContentPart{remoteImagePart()}},
+	}}
+	tools, err := BuildToolMap(nil)
+	if err != nil {
+		t.Fatalf("BuildToolMap() error = %v", err)
+	}
+	if _, _, err := BuildHistory(request, tools); !isUnsupportedFeature(err) {
+		t.Fatalf("BuildHistory() error = %v, want the trailing remote image refused", err)
+	}
+}
+
+// TestBuildHistoryRefusesRemoteImageInPriorTurn covers the replayed-turn
+// path: a prior user turn with a remote image is skipped in the root prompt
+// and refused when its turn is stored, which BuildHistory propagates.
+func TestBuildHistoryRefusesRemoteImageInPriorTurn(t *testing.T) {
+	request := &inference.Request{Model: "sonnet", Messages: []inference.Message{
+		{Role: inference.RoleUser, Content: []inference.ContentPart{remoteImagePart()}},
+		{Role: inference.RoleUser, Content: []inference.ContentPart{{Type: inference.ContentTypeText, Text: "and now"}}},
+	}}
+	tools, err := BuildToolMap(nil)
+	if err != nil {
+		t.Fatalf("BuildToolMap() error = %v", err)
+	}
+	if _, _, err := BuildHistory(request, tools); !isUnsupportedFeature(err) {
+		t.Fatalf("BuildHistory() error = %v, want the replayed remote image refused", err)
+	}
+}
+
+// TestHistoryResultSkipsRemoteImage covers the tool-result path: a remote
+// image has no encoding, so it is skipped and the text item still encodes.
+func TestHistoryResultSkipsRemoteImage(t *testing.T) {
+	result := inference.Message{ToolCallID: "call-1", Content: []inference.ContentPart{
+		{Type: inference.ContentTypeText, Text: "screenshot"},
+		remoteImagePart(),
+	}}
+	fields, err := adapterscursor.Parse(buildHistoryResult(result))
+	if err != nil {
+		t.Fatalf("parse result: %v", err)
+	}
+	items := nestedAll(t, nestedOne(t, fields, 1), 1)
+	if len(items) != 1 {
+		t.Fatalf("items = %d, want only the text item", len(items))
+	}
+	if len(nestedAll(t, items[0], mcpTextCase)) != 1 {
+		t.Fatalf("text item = %+v, want the text content", items[0])
+	}
+}
