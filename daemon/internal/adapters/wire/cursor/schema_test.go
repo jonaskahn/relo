@@ -1,6 +1,7 @@
 package cursor
 
 import (
+	"strings"
 	"testing"
 
 	adapterscursor "github.com/jonaskahn/relo/internal/adapters/cursor"
@@ -23,6 +24,127 @@ const (
 type strictField struct {
 	wire  int
 	child string
+}
+
+// openCodeTools are the tools OpenCode declares in the failing Composer turn.
+// The request context and the MCP state both have to carry every one of them,
+// with the native collisions renamed and their schemas intact.
+var openCodeTools = []struct {
+	name   string
+	schema string
+}{
+	{"codegraph_codegraph_explore", `{"type":"object","properties":{"query":{"type":"string"}},"required":["query"]}`},
+	{"edit", `{"type":"object","properties":{"path":{"type":"string"},"oldString":{"type":"string"},"newString":{"type":"string"}},"required":["path","oldString","newString"]}`},
+	{"glob", `{"type":"object","properties":{"pattern":{"type":"string"}},"required":["pattern"]}`},
+	{"grep", `{"type":"object","properties":{"pattern":{"type":"string"},"path":{"type":"string"}},"required":["pattern"]}`},
+	{"question", `{"type":"object","properties":{"questions":{"type":"array","items":{"type":"object"}}}}`},
+	{"read", `{"type":"object","properties":{"path":{"type":"string"},"offset":{"type":"integer"},"limit":{"type":"integer"}},"required":["path"]}`},
+	{"shell", `{"type":"object","properties":{"command":{"type":"string"},"workdir":{"type":"string"},"timeout":{"type":"integer"}},"required":["command"]}`},
+	{"skill", `{"type":"object","properties":{"id":{"type":"string"}},"required":["id"]}`},
+	{"subagent", `{"type":"object","properties":{"agent":{"type":"string"},"description":{"type":"string"}}}`},
+	{"webfetch", `{"type":"object","properties":{"url":{"type":"string"},"format":{"type":"string"}},"required":["url"]}`},
+	{"websearch", `{"type":"object","properties":{"query":{"type":"string"}},"required":["query"]}`},
+	{"write", `{"type":"object","properties":{"path":{"type":"string"},"content":{"type":"string"}},"required":["path","content"]}`},
+	{"execute", `{"type":"object","properties":{"code":{"type":"string"}},"required":["code"]}`},
+}
+
+// TestRequestContextCarriesEveryDeclaredTool decodes the context answer the
+// server actually reads, not the builder's input: every declared tool, its
+// wire name, its canonical label, and its schema must survive the encoding.
+func TestRequestContextCarriesEveryDeclaredTool(t *testing.T) {
+	declared := make([]inference.Tool, 0, len(openCodeTools))
+	for _, tool := range openCodeTools {
+		declared = append(declared, inference.Tool{
+			Name: tool.name, Description: tool.name + " tool", Parameters: []byte(tool.schema),
+		})
+	}
+	tools, err := BuildToolMap(declared)
+	if err != nil {
+		t.Fatalf("BuildToolMap() error = %v", err)
+	}
+	for name, decoded := range map[string][][]adapterscursor.Field{
+		"request context": decodedContext(t, buildRequestContext(nil, tools.Defs())),
+		"mcp state":       decodedMCPState(t, buildMCPState(tools.Defs())),
+	} {
+		if len(decoded) != len(openCodeTools) {
+			t.Fatalf("%s carries %d tools, want %d", name, len(decoded), len(openCodeTools))
+		}
+	}
+	defs := decodedContext(t, buildRequestContext(nil, tools.Defs()))
+	for index, def := range defs {
+		want := openCodeTools[index]
+		wireName := adapterscursor.FirstString(def, defName)
+		if wireName != WireName(want.name) {
+			t.Fatalf("tool %d wire name = %q, want %q", index, wireName, WireName(want.name))
+		}
+		description := adapterscursor.FirstString(def, defDescription)
+		if !strings.Contains(description, "External client tool `"+want.name+"`") {
+			t.Fatalf("tool %q description = %q, want the canonical name", wireName, description)
+		}
+		schema := adapterscursor.FirstString(def, defSchema)
+		object, ok := decodeJSONValue([]byte(schema))
+		if !ok {
+			t.Fatalf("tool %q schema is not a proto Value", wireName)
+		}
+		fields, ok := object.(map[string]any)
+		if !ok || fields["type"] != "object" {
+			t.Fatalf("tool %q schema = %v, want an object schema", wireName, object)
+		}
+	}
+}
+
+func decodedContext(t *testing.T, payload []byte) [][]adapterscursor.Field {
+	t.Helper()
+	result := mustParseForTest(t, payload)
+	success, err := adapterscursor.Nested(result, 1)
+	if err != nil || len(success) != 1 {
+		t.Fatalf("context result = %v %v", success, err)
+	}
+	contexts, err := adapterscursor.Nested(success[0], 1)
+	if err != nil || len(contexts) != 1 {
+		t.Fatalf("context success = %v %v", contexts, err)
+	}
+	tools, err := adapterscursor.Nested(contexts[0], contextTools)
+	if err != nil {
+		t.Fatalf("context tools: %v", err)
+	}
+	return tools
+}
+
+func decodedMCPState(t *testing.T, payload []byte) [][]adapterscursor.Field {
+	t.Helper()
+	result := mustParseForTest(t, payload)
+	success, err := adapterscursor.Nested(result, mcpStateSuccess)
+	if err != nil || len(success) != 1 {
+		t.Fatalf("mcp state result = %v %v", success, err)
+	}
+	servers, err := adapterscursor.Nested(success[0], mcpStateServer)
+	if err != nil || len(servers) != 1 {
+		t.Fatalf("mcp state success = %v %v", servers, err)
+	}
+	tools, err := adapterscursor.Nested(servers[0], stateTools)
+	if err != nil {
+		t.Fatalf("mcp state tools: %v", err)
+	}
+	return tools
+}
+
+// TestRequestContextSteersAwayFromNativeTools pins the rule that makes the
+// model prefer the declared external tools over Cursor's native channel.
+func TestRequestContextSteersAwayFromNativeTools(t *testing.T) {
+	rules := buildSystemRules(&inference.Request{Messages: []inference.Message{{
+		Role: inference.RoleSystem, Content: []inference.ContentPart{{Type: inference.ContentTypeText, Text: "be brief"}},
+	}}})
+	found := ""
+	for _, rule := range rules {
+		fields := mustParseForTest(t, rule)
+		if content := adapterscursor.FirstString(fields, ruleContent); strings.Contains(content, "relo_") {
+			found = content
+		}
+	}
+	if !strings.Contains(found, "Native tool execution is unavailable") {
+		t.Fatalf("rules = %d, want the native-tool steering rule", len(rules))
+	}
 }
 
 var strictSchemas = map[string]map[int]strictField{
