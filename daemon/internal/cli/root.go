@@ -19,7 +19,7 @@ import (
 
 // version and commit are injected through -ldflags at build time.
 var (
-	version = "0.1.11"
+	version = "0.1.12"
 	commit  = "none"
 )
 
