@@ -1,9 +1,16 @@
 ---
 name: changelog
-description: Changes from 2.4 to 3.2.
+description: Changes from 2.4 to 3.3.
 ---
 
 # Changelog
+
+## 3.3
+
+| Area          | 3.2                                        | 3.3                                                                                                             |
+|---------------|--------------------------------------------|-----------------------------------------------------------------------------------------------------------------|
+| Accent set    | Ten accents, `red` default                  | 20 slots: 19 presets plus the radar's colour; an older id reads as the colour it painted                        |
+| Custom colour | Not possible                                | Radar in Settings → Appearance alone: saturation/value square, hue rail, hex field; a pick saves and applies at once |
 
 ## 3.2
 

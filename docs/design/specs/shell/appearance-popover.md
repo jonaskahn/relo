@@ -21,9 +21,12 @@ lines, an accent pill) above the label. System is split light and dark. Selected
 
 ## Accent
 
-Ten swatches in a 5×2 grid, 44px tiles, `--radius` 12px, `role="radiogroup"`. Selected: check icon in `--on-accent`,
-ring `0 0 0 3px var(--surface), 0 0 0 5px var(--ink)`. Each has an `aria-label` (Red, Orange, Amber, Green, Teal, Cyan,
-Blue, Indigo, Purple, Rose). Swatches show the light-theme base in both themes.
+Twenty slots in a 5×4 grid, 44px tiles, `--radius` 12px, `role="radiogroup"`: the 19 presets of the 2026 board in
+order, then **Custom**, the colour the radar picked. Selected: check icon in `--on-accent`, ring
+`0 0 0 3px var(--surface), 0 0 0 5px var(--ink)`. Each has an `aria-label` from `ui.accent.<slot>`. Slots show the
+light-theme base in both themes: `data-accent` on the button scopes a preset's rule, and `custom` scopes
+`--accent-custom`. Choosing Custom applies the saved colour here; the radar that picks it lives in Settings →
+Appearance alone, where the square and the rail fit.
 
 ## Language
 
@@ -34,7 +37,8 @@ list.
 
 ```ts
 document.documentElement.dataset.theme  = resolvedTheme;   // "light" | "dark"; System follows prefers-color-scheme
-document.documentElement.dataset.accent = accentId;        // red … rose; absent = red
+document.documentElement.dataset.accent = slot;            // terracotta … graphite, or custom
+document.documentElement.style.setProperty('--accent-custom', colour);        // the 20th slot, radar-picked
 document.documentElement.lang           = locale;
 ```
 
