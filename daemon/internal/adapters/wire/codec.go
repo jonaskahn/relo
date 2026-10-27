@@ -105,6 +105,10 @@ type CodecOpts struct {
 	// TemplateID is the connection template. A chat codec uses it when that
 	// template's API names thinking with its own fields.
 	TemplateID string
+	// ToolCallDialect names a serving template that renders tool calls as text
+	// rather than structured deltas, which a chat decoder uses to recover the
+	// call from that text. Empty leaves the decoder's content-shape detection.
+	ToolCallDialect string
 	// LongContext reports that the caller asked for the million-token entry,
 	// which the Claude subscription profile marks with its own beta.
 	LongContext bool

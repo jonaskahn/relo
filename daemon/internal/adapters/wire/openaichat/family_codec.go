@@ -26,15 +26,23 @@ const (
 	functionType        = "function"
 	imageURLPart        = "image_url"
 
+	// freeformToolSchema describes a code-body tool with a single string
+	// argument and no required list, which a serving template that mishandles
+	// a wrapped object schema can still call.
+	freeformToolSchema = `{"type":"object","properties":{"input":{"type":"string"}}}`
+
 	// DeepSeek rejects a tool-using thinking request that omits reasoning_content,
 	// and rejects an empty string, so a missing chain is replayed as one space.
 	deepSeekMissingReasoning = " "
 )
 
 // Codec speaks the Chat Completions wire. One codec serves every request;
-// each response gets its own stream decoder.
+// each response gets its own stream decoder. dialect is set only on the copy
+// Bind returns, so a decoder scoped to one connection knows a serving
+// template that renders calls as text.
 type Codec struct {
 	baseURL string
+	dialect string
 }
 
 var _ wire.CodecModule = (*Codec)(nil)
@@ -48,6 +56,17 @@ func NewCodec(baseURL string) *Codec {
 // Module returns the codec a caller without a base URL gets.
 func Module() wire.CodecModule {
 	return NewCodec(DefaultBaseURL)
+}
+
+// Bind returns a codec that remembers the connection's tool-call dialect for
+// the response decoder. Every other field passes through unchanged.
+func (c *Codec) Bind(req *inference.Request, opts wire.CodecOpts) wire.CodecModule {
+	if opts.ToolCallDialect == "" {
+		return c
+	}
+	bound := *c
+	bound.dialect = opts.ToolCallDialect
+	return &bound
 }
 
 // EncodeRequest builds the upstream chat completions request. The body
@@ -409,9 +428,13 @@ func encodeTools(tools []inference.Tool, model string) []chatTool {
 		entry := chatTool{Type: functionType}
 		entry.Function.Name = tool.Name
 		entry.Function.Description = tool.Description
-		entry.Function.Parameters = tool.Parameters
+		parameters := tool.Parameters
+		if tool.Freeform {
+			parameters = json.RawMessage(freeformToolSchema)
+		}
+		entry.Function.Parameters = parameters
 		if deepSeekModel(model) {
-			entry.Function.Parameters = dropNullBytePatterns(tool.Parameters)
+			entry.Function.Parameters = dropNullBytePatterns(parameters)
 		}
 		encoded = append(encoded, entry)
 	}

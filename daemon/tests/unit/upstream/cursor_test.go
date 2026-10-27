@@ -226,6 +226,14 @@ func TestExecuteBidirectional(t *testing.T) {
 		if result.Status != http.StatusBadRequest {
 			t.Fatalf("status = %d, want the caller's failure to fix", result.Status)
 		}
+		// A pre-flight refusal is the caller's to fix, not a network fault:
+		// reporting it as one misnames a local verdict.
+		if errors.Is(err, upstream.ErrUpstreamFailed) {
+			t.Fatalf("error = %v, want no upstream-failure wrapper on a local refusal", err)
+		}
+		if !errors.Is(err, wire.ErrUnsupportedFeature) {
+			t.Fatalf("error = %v, want the codec's refusal", err)
+		}
 	})
 
 	t.Run("an unauthorized turn refreshes once", func(t *testing.T) {

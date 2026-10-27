@@ -32,6 +32,7 @@ func decodeTools(tools []toolDef) ([]inference.Tool, map[string]bool) {
 			custom[tool.Name] = true
 			decoded = append(decoded, inference.Tool{
 				Name: tool.Name, Description: tool.Description, Parameters: json.RawMessage(customInputSchema),
+				Freeform: true,
 			})
 		}
 	}

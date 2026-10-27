@@ -4,6 +4,7 @@
 
 	import Icon from '$lib/components/ui/icon.svelte';
 	import { cn } from '$lib/utils';
+	import { reasonLines } from '$lib/agent-state';
 	import { refusalCode } from '$lib/integration-actions';
 	import type { IntegrationFile, IntegrationPlan, IntegrationView } from '$lib/types';
 
@@ -15,6 +16,12 @@
 	}
 
 	let { agent }: Props = $props();
+
+	// The same reasons the card reports, shown with their full sentences and, for
+	// a file fact, the whole path the card truncates.
+	const reasons = $derived(
+		reasonLines(agent).map((line) => ({ ...line, copy: $t(line.key, { values: line.values }) }))
+	);
 
 	// A missing file and a drifted one are both facts about the machine, never
 	// presented as healthy.
@@ -61,6 +68,25 @@
 
 	const preview = $derived(agent.preview ?? []);
 </script>
+
+{#if reasons.length > 0}
+	<div class="space-y-2" role="status">
+		<h3 class="text-sm font-semibold">{$t('ui.pages.integrationsPage.reason.title')}</h3>
+		<ul class="flex flex-col gap-1.5">
+			{#each reasons as reason (reason.key + ' ' + (reason.path ?? ''))}
+				<li class="flex items-start gap-1.5 text-xs text-warn">
+					<Icon name="alert-triangle" size={13} class="mt-px shrink-0" />
+					<span class="min-w-0">
+						{reason.copy}
+						{#if reason.path}
+							<span class="mono-data block break-all text-muted-foreground">{reason.path}</span>
+						{/if}
+					</span>
+				</li>
+			{/each}
+		</ul>
+	</div>
+{/if}
 
 {#if agent.manages_files}
 	<div class="space-y-2">

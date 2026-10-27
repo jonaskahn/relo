@@ -38,8 +38,12 @@ var strictSchemas = map[string]map[int]strictField{
 		1: {strictBytes, "userAction"}, 2: {strictBytes, "resume"},
 	},
 	"userAction": {1: {strictBytes, "userMsg"}},
-	"userMsg":    {1: {strictBytes, ""}, 2: {strictBytes, ""}},
-	"resume":     {},
+	"userMsg":    {1: {strictBytes, ""}, 2: {strictBytes, ""}, 3: {strictBytes, "userCtx"}},
+	"userCtx":    {1: {strictBytes, "selectedImage"}},
+	"selectedImage": {
+		2: {strictBytes, ""}, 7: {strictBytes, ""}, 8: {strictBytes, ""},
+	},
+	"resume": {},
 	"details": {
 		1: {strictBytes, ""}, 3: {strictBytes, ""}, 4: {strictBytes, ""},
 	},
@@ -69,8 +73,9 @@ var strictSchemas = map[string]map[int]strictField{
 	"mcpServer":       {1: {strictBytes, ""}, 2: {strictBytes, ""}, 5: {strictBytes, "tooldef"}},
 	"mcpResult":       {1: {strictBytes, "mcpSuccess"}},
 	"mcpSuccess":      {1: {strictBytes, "mcpItem"}},
-	"mcpItem":         {1: {strictBytes, "mcpText"}},
+	"mcpItem":         {1: {strictBytes, "mcpText"}, 2: {strictBytes, "mcpImage"}},
 	"mcpText":         {1: {strictBytes, ""}},
+	"mcpImage":        {1: {strictBytes, ""}, 2: {strictBytes, ""}},
 	"kv": {
 		1: {strictVarint, ""}, 2: {strictBytes, "kvget"}, 3: {strictBytes, "kvset"},
 	},

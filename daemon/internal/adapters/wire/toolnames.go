@@ -35,6 +35,17 @@ func (r restoredNames) NewStreamDecoder() StreamDecoder {
 	return restoredStream{StreamDecoder: r.CodecModule.NewStreamDecoder(), originals: r.originals}
 }
 
+// Bind forwards the attempt-scoped binding to the wrapped codec, so a codec
+// that remembers per-attempt state keeps its memory under the name-restoring
+// layer a shortened tool name adds.
+func (r restoredNames) Bind(req *inference.Request, opts CodecOpts) CodecModule {
+	binder, ok := r.CodecModule.(RequestBinder)
+	if !ok {
+		return r
+	}
+	return restoredNames{CodecModule: binder.Bind(req, opts), originals: r.originals}
+}
+
 var _ StreamDecoder = restoredStream{}
 
 type restoredStream struct {

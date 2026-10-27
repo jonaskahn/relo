@@ -132,30 +132,22 @@ func StripReloFromCodexCache(codexHome string) error {
 // published models. A missing file, an omitted model, or a leftover one Relo
 // no longer publishes does not.
 func CodexCatalogLists(path string, models []ModelRef) bool {
-	rows := readCodexRows(path)
+	return CodexCatalogDiff(path, models).Empty()
+}
+
+// CodexCatalogDiff counts how the models a catalog file lists differ from the
+// published ones. A missing or unreadable file lists none, so every published
+// model counts as added.
+func CodexCatalogDiff(path string, models []ModelRef) ModelsDiff {
 	listed := map[string]string{}
-	for _, row := range rows {
+	for _, row := range readCodexRows(path) {
 		slug, _ := row["slug"].(string)
 		name, _ := row["display_name"].(string)
 		if slug != "" {
 			listed[slug] = name
 		}
 	}
-	wanted := make(map[string]string, len(models))
-	for _, model := range models {
-		if id := strings.TrimSpace(model.ID); id != "" {
-			wanted[id] = ConfigDisplayName(model)
-		}
-	}
-	if len(listed) != len(wanted) {
-		return false
-	}
-	for id, name := range wanted {
-		if listed[id] != name {
-			return false
-		}
-	}
-	return true
+	return diffNames(listed, wantedCodexNames(models))
 }
 
 // PublishedCodexSlugs reads the slugs a catalog file lists. A file that is

@@ -535,6 +535,10 @@ export interface IntegrationView {
 	// restart_needed is true when Codex's app-server started before Relo
 	// last wrote the catalog, so the picker still holds the old list.
 	readonly restart_needed?: boolean;
+	// reasons say why Relo thinks this agent needs the operator, with the
+	// concrete detail behind each: which file changed, or how many models
+	// moved. The field is absent on a healthy agent.
+	readonly reasons?: readonly AgentReason[];
 	// env_key is the variable the client's own file reads, when that file
 	// names a reference rather than the secret.
 	readonly env_key?: string;
@@ -544,6 +548,16 @@ export interface IntegrationView {
 	// openCodeVersions names which generations hold Relo's provider in the
 	// OpenCode file: v1, v2, or v1+v2. Other agents omit it.
 	readonly openCodeVersions?: string;
+}
+
+/** One reason Relo reports for an agent needing the operator. The code names
+ *  the cause; path, added, and removed carry the detail the sentence fills in. */
+export interface AgentReason {
+	readonly code:
+		'models_changed' | 'file_changed' | 'file_missing' | 'restart_catalog_newer' | string;
+	readonly path?: string;
+	readonly added?: number;
+	readonly removed?: number;
 }
 
 /** The client key an agent was given, and the hint that identifies it. */

@@ -163,6 +163,8 @@ type ClientFiles interface {
 	StripReloFromCodexCache(codexHome string) error
 	// CodexCatalogLists reports whether the catalog file lists these models.
 	CodexCatalogLists(path string, models []ModelRef) bool
+	// CodexCatalogDiff counts how a catalog file's models differ from these.
+	CodexCatalogDiff(path string, models []ModelRef) ModelDiff
 	// CodexNeedsRestart reports whether the Codex app-server predates the catalog.
 	CodexNeedsRestart(codexHome, catalogPath string) bool
 	// CodexCatalogRows renders the model rows the Codex catalog file carries.
@@ -218,6 +220,8 @@ type ClientFiles interface {
 	WriteGatewayCache(configDir, baseURL string, models []ModelRef) error
 	// GatewayCacheLists reports whether that cache carries these models.
 	GatewayCacheLists(configDir, baseURL string, models []ModelRef) bool
+	// GatewayCacheDiff counts how that cache's models differ from these.
+	GatewayCacheDiff(configDir, baseURL string, models []ModelRef) ModelDiff
 	// RemoveGatewayCache removes the model cache Claude Code's picker reads.
 	RemoveGatewayCache(configDir, baseURL string) error
 	// GatewayCachePath answers the picker cache file in a configuration dir.
@@ -248,6 +252,20 @@ type ClientFiles interface {
 	Digest(content string) string
 	// ModelsDigest fingerprints the model list a file was written with.
 	ModelsDigest(models []ModelRef) string
+}
+
+// ModelDiff counts how the models one client file lists differ from the ones
+// Relo would write now. Added counts entries the file lacks or names
+// differently; Removed counts entries the file holds that Relo no longer
+// publishes.
+type ModelDiff struct {
+	Added   int
+	Removed int
+}
+
+// Empty reports a file that already carries the published models.
+func (d ModelDiff) Empty() bool {
+	return d.Added == 0 && d.Removed == 0
 }
 
 // FileRefusal carries a file-operation refusal across the port: the console

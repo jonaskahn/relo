@@ -17,7 +17,10 @@ func Validate(req *inference.Request, selection *wire.CursorRequest) error {
 	for _, message := range req.Messages {
 		for _, part := range message.Content {
 			if part.Type == inference.ContentTypeImage {
-				return fmt.Errorf("cursor has no image encoding: %w", wire.ErrUnsupportedFeature)
+				if _, _, ok := splitDataURL(part.ImageURL); !ok {
+					return fmt.Errorf("cursor takes inline image bytes, not %q: %w",
+						part.ImageURL, wire.ErrUnsupportedFeature)
+				}
 			}
 		}
 	}

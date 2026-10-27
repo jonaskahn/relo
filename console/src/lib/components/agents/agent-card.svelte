@@ -24,9 +24,9 @@
 		needsRepair,
 		openCodeVersionChip,
 		restartsClient,
+		reasonLines,
 		stateKey,
-		stateTone,
-		warningKeys
+		stateTone
 	} from '$lib/agent-state';
 	import { blocked, runningOn, type Running } from '$lib/agent-flow';
 	import type { IntegrationView } from '$lib/types';
@@ -62,7 +62,12 @@
 
 	// The sentences behind the warnings the card reports, so it renders one
 	// vocabulary of facts rather than a branch per condition.
-	const warnings = $derived(warningKeys(agent).map((key) => $t(key)));
+	const warnings = $derived(
+		reasonLines(agent).map((line) => ({
+			key: line.key,
+			copy: $t(line.key, { values: line.values })
+		}))
+	);
 	// The generations an OpenCode file carries; every other agent shows none.
 	const versionsChip = $derived(openCodeVersionChip(agent));
 </script>
@@ -162,10 +167,10 @@
 		</div>
 		{#if warnings.length > 0}
 			<div class="max-h-16 overflow-y-auto">
-				{#each warnings as copy (copy)}
+				{#each warnings as warning (warning.key + ' ' + warning.copy)}
 					<p class="flex items-start gap-1.5 text-warn">
 						<Icon name="alert-triangle" size={13} class="mt-px shrink-0" />
-						{copy}
+						{warning.copy}
 					</p>
 				{/each}
 			</div>
