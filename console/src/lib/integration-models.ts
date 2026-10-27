@@ -55,6 +55,8 @@ function matchesAccount(model: IntegrationModel, accountModelID: string): boolea
 export function filterModels(models: IntegrationModel[], filter: ModelFilter): IntegrationModel[] {
 	const query = filter.query.trim().toLowerCase();
 	const roster = filter.accountModels ?? null;
+	// A listing can repeat an id; the pickers key on it, so the first spelling wins.
+	const seen = new Set<string>();
 	return models.filter((model) => {
 		if (filter.provider && providerOf(model) !== filter.provider) return false;
 		if (roster && roster.length > 0 && !roster.some((id) => matchesAccount(model, id)))
@@ -63,6 +65,8 @@ export function filterModels(models: IntegrationModel[], filter: ModelFilter): I
 			const haystack = (model.id + ' ' + (model.name ?? '')).toLowerCase();
 			if (!haystack.includes(query)) return false;
 		}
+		if (seen.has(model.id)) return false;
+		seen.add(model.id);
 		return true;
 	});
 }

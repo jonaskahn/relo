@@ -799,7 +799,20 @@ func integrationModelsOf(body []byte) []IntegrationModel {
 			ProviderID:    entry.ProviderID, SourceModelID: entry.SourceModelID,
 		})
 	}
-	return models
+	return uniqueModels(models)
+}
+
+func uniqueModels(models []IntegrationModel) []IntegrationModel {
+	seen := make(map[string]bool, len(models))
+	unique := make([]IntegrationModel, 0, len(models))
+	for _, model := range models {
+		if seen[model.ID] {
+			continue
+		}
+		seen[model.ID] = true
+		unique = append(unique, model)
+	}
+	return unique
 }
 
 type listingRow struct {
