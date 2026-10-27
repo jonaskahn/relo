@@ -2,8 +2,19 @@
 package cursor
 
 import (
+	"encoding/base64"
+	"fmt"
+	"strings"
+
 	"github.com/jonaskahn/relo/internal/adapters/cursor"
 	"github.com/jonaskahn/relo/internal/adapters/wire"
+	"github.com/jonaskahn/relo/internal/inference"
+)
+
+// An inline image address: the only form the Cursor wire can carry.
+const (
+	dataURLPrefix = "data:"
+	dataURLBase64 = "base64"
 )
 
 // Field numbers verified against the pinned Cursor reference schemas.
@@ -31,9 +42,19 @@ const (
 	actionUserMessage = 1
 	actionResume      = 2
 	userMessageText   = 1
+	userMessageID     = 2
+	userSelectedCtx   = 3
 	// userActionMessage is the userMessage field of UserMessageAction: the
 	// action carries the wrapper, and the wrapper carries the message.
 	userActionMessage = 1
+
+	selectedCtxImages = 1
+
+	selectedImageUUID     = 2
+	selectedImageMimeType = 7
+	// selectedImageData is the data case of SelectedImage's dataOrBlobId
+	// oneof, which carries the raw decoded bytes.
+	selectedImageData = 8
 
 	execIDField = 1
 	execExecID  = 15
@@ -138,18 +159,87 @@ func buildRunRequest(state, action []byte, selection *wire.CursorRequest) []byte
 	return client.BytesOut()
 }
 
+// buildUserMessage encodes a canonical message as the Cursor UserMessage its
+// action and turn blobs both carry: the text, and each inline image it holds
+// as a selected image. A remote image address has no encoding on this wire,
+// so it is refused rather than silently dropped.
+func buildUserMessage(message inference.Message) ([]byte, error) {
+	var user cursor.Writer
+	user.String(userMessageText, messageText(message))
+	user.String(userMessageID, turnMessageID())
+	images, err := selectedImages(message)
+	if err != nil {
+		return nil, err
+	}
+	if len(images) > 0 {
+		var context cursor.Writer
+		for _, image := range images {
+			context.Message(selectedCtxImages, image)
+		}
+		user.Message(userSelectedCtx, context.BytesOut())
+	}
+	return user.BytesOut(), nil
+}
+
+// selectedImages encodes each inline image of one message as a SelectedImage.
+func selectedImages(message inference.Message) ([][]byte, error) {
+	var images [][]byte
+	for _, part := range message.Content {
+		if part.Type != inference.ContentTypeImage {
+			continue
+		}
+		mimeType, data, ok := splitDataURL(part.ImageURL)
+		if !ok {
+			return nil, fmt.Errorf("%w: cursor takes inline image bytes, not %q",
+				wire.ErrUnsupportedFeature, part.ImageURL)
+		}
+		var image cursor.Writer
+		image.String(selectedImageUUID, turnMessageID())
+		image.String(selectedImageMimeType, mimeType)
+		// data is a oneof case, so an empty payload still has to be present
+		// on the wire; Writer.Bytes would drop it.
+		image.Present(selectedImageData, data)
+		images = append(images, image.BytesOut())
+	}
+	return images, nil
+}
+
+// splitDataURL reads an inline image address into its MIME type and decoded
+// bytes. A remote address has no encoding on this wire.
+func splitDataURL(address string) (string, []byte, bool) {
+	remainder, found := strings.CutPrefix(address, dataURLPrefix)
+	if !found {
+		return "", nil, false
+	}
+	header, payload, found := strings.Cut(remainder, ",")
+	if !found {
+		return "", nil, false
+	}
+	mimeType, encoding, found := strings.Cut(header, ";")
+	if !found || encoding != dataURLBase64 || mimeType == "" {
+		return "", nil, false
+	}
+	data, err := base64.StdEncoding.DecodeString(payload)
+	if err != nil {
+		return "", nil, false
+	}
+	return mimeType, data, true
+}
+
 // buildUserAction encodes a user-message conversation action. The text
 // rides three levels down: the action holds the user-message action, which
 // holds the user message, which holds the text. Fewer levels put the text
 // where a length prefix belongs, and the upstream cannot parse the turn.
-func buildUserAction(text string) []byte {
-	var user cursor.Writer
-	user.String(userMessageText, text)
+func buildUserAction(message inference.Message) ([]byte, error) {
+	user, err := buildUserMessage(message)
+	if err != nil {
+		return nil, err
+	}
 	var userAction cursor.Writer
-	userAction.Message(userActionMessage, user.BytesOut())
+	userAction.Message(userActionMessage, user)
 	var action cursor.Writer
 	action.Message(actionUserMessage, userAction.BytesOut())
-	return action.BytesOut()
+	return action.BytesOut(), nil
 }
 
 // buildResumeAction encodes an empty resume conversation action.

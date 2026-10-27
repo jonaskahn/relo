@@ -106,6 +106,7 @@ type integrationViewResponse struct {
 	UpdatedAtMs   int64                   `json:"updated_at_ms,omitempty"`
 	ModelsStale   bool                    `json:"models_stale,omitempty"`
 	RestartNeeded bool                    `json:"restart_needed,omitempty"`
+	Reasons       []integrationReason     `json:"reasons,omitempty"`
 	EnvKey        string                  `json:"env_key,omitempty"`
 	Context1M     *bool                   `json:"context_1m,omitempty"`
 	// OpenCodeVersions names which generations hold Relo's provider in the
@@ -125,7 +126,29 @@ func toIntegrationViewResponse(view appintegration.IntegrationView) integrationV
 		UpdatedAtMs: view.UpdatedAtMs, ModelsStale: view.ModelsStale,
 		RestartNeeded: view.RestartNeeded, EnvKey: view.EnvKey,
 		Context1M: view.Context1M, OpenCodeVersions: view.OpenCodeVersions,
+		Reasons: toIntegrationReasons(view.Reasons),
 	}
+}
+
+type integrationReason struct {
+	Code    string `json:"code"`
+	Path    string `json:"path,omitempty"`
+	Added   int    `json:"added,omitempty"`
+	Removed int    `json:"removed,omitempty"`
+}
+
+func toIntegrationReasons(reasons []appintegration.Reason) []integrationReason {
+	if reasons == nil {
+		return nil
+	}
+	listed := make([]integrationReason, 0, len(reasons))
+	for _, reason := range reasons {
+		listed = append(listed, integrationReason{
+			Code: reason.Code, Path: reason.Path,
+			Added: reason.Added, Removed: reason.Removed,
+		})
+	}
+	return listed
 }
 
 func toIntegrationViewList(views []appintegration.IntegrationView) []integrationViewResponse {

@@ -89,6 +89,47 @@ func TestXiaomiModelsOnlyOfferThreeThinkLevels(t *testing.T) {
 	}
 }
 
+// TestXiaomiConnectionsNameTheTextToolDialect pins the per-connection signal a
+// chat decoder reads to recover a call the serving template rendered as text.
+// Only Xiaomi connections carry it, because only their template does.
+func TestXiaomiConnectionsNameTheTextToolDialect(t *testing.T) {
+	ctx := context.Background()
+	db := testkit.OpenTestDB(t)
+	repo := sqlite.NewCatalogRepo(db)
+
+	providers := []sqlite.ProviderRow{
+		{ID: "xiaomi", Origin: "template", Label: "Xiaomi", Auth: "api_key", BaseURL: "https://api.xiaomimimo.com/v1"},
+		{ID: "xiaomi-token-plan-sgp", Origin: "template", Label: "Xiaomi Token Plan", Auth: "api_key"},
+		{ID: "mimo-custom", Origin: "custom", Label: "MiMo", Auth: "api_key", BaseURL: "https://token-plan-ams.xiaomimimo.com/v1"},
+		{ID: "openai", Origin: "template", Label: "OpenAI", Auth: "api_key", BaseURL: "https://api.openai.com/v1"},
+	}
+	for _, provider := range providers {
+		if err := repo.SaveProvider(ctx, provider); err != nil {
+			t.Fatalf("SaveProvider(%s) error = %v", provider.ID, err)
+		}
+	}
+
+	built := catalog.New(sqlite.NewCatalogReader(db), nil, formats.New())
+	if err := built.Reload(ctx); err != nil {
+		t.Fatalf("Reload() error = %v", err)
+	}
+	snap, found := built.Snapshot()
+	if !found {
+		t.Fatal("Reload() stored no snapshot")
+	}
+
+	for _, id := range []string{"xiaomi", "xiaomi-token-plan-sgp", "mimo-custom"} {
+		host, ok := snap.Provider(id)
+		if !ok || host.ToolCallDialect != catalog.ToolCallDialectText {
+			t.Fatalf("%s dialect = %q, want %q", id, host.ToolCallDialect, catalog.ToolCallDialectText)
+		}
+	}
+	other, ok := snap.Provider("openai")
+	if !ok || other.ToolCallDialect != "" {
+		t.Fatalf("openai dialect = %q, want empty", other.ToolCallDialect)
+	}
+}
+
 func sameEfforts(got, want []string) bool {
 	if len(got) != len(want) {
 		return false
