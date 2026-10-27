@@ -330,6 +330,42 @@ func TestCodexRestartNeededWhenTheDaemonIsOlderThanTheCatalog(t *testing.T) {
 	}
 }
 
+// TestRefreshCodexCatalogKeepsTheRestartFlagAcrossRefreshes is the ticker
+// regression: a background refresh must not move the catalog's mtime, so an
+// operator who has not yet restarted Codex keeps seeing the same reason.
+func TestRefreshCodexCatalogKeepsTheRestartFlagAcrossRefreshes(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("a Windows Signal(0) cannot prove a pid is alive")
+	}
+	home := t.TempDir()
+	codexHome := filepath.Join(home, ".codex")
+	t.Setenv("CODEX_HOME", codexHome)
+	_, built := integrationService(t)
+	ctx := context.Background()
+	if _, err := built.EnableIntegration(ctx, "codex", ""); err != nil {
+		t.Fatalf("EnableIntegration() error = %v", err)
+	}
+	writeCodexDaemonPid(t, codexHome, os.Getpid(), time.Now().Add(-time.Hour).Unix())
+	for i := 0; i < 2; i++ {
+		built.RefreshCodexCatalog(ctx)
+		view, err := built.Integration(ctx, "codex")
+		if err != nil {
+			t.Fatalf("Integration() error = %v", err)
+		}
+		if !view.RestartNeeded {
+			t.Fatalf("refresh %d cleared restart_needed before Codex restarted", i+1)
+		}
+	}
+	writeCodexDaemonPid(t, codexHome, os.Getpid(), time.Now().Add(time.Hour).Unix())
+	view, err := built.Integration(ctx, "codex")
+	if err != nil {
+		t.Fatalf("Integration() error = %v", err)
+	}
+	if view.RestartNeeded {
+		t.Fatal("restart_needed survived a real Codex restart")
+	}
+}
+
 // TestRestartIntegrationOnlyRestartsCodex keeps the console from offering a
 // restart on a client Relo has no process for.
 func TestRestartIntegrationOnlyRestartsCodex(t *testing.T) {
