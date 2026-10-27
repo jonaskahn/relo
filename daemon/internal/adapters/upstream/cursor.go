@@ -3,6 +3,7 @@ package upstream
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
@@ -101,11 +102,7 @@ func (e *Executor) failBidirectional(run *bidirectionalRun, events []inference.E
 	att, started, collector, tracker := run.attempt, run.started, run.collector, run.tracker
 	collector.observeAll(events)
 	if tracker != nil && (tracker.writeErr != nil || run.wrote) {
-		result := bidirectionalStreamResult(att, started, collector, tracker)
-		if tracker.writeErr != nil {
-			return result, fmt.Errorf("%w: %v", ErrRelayFailed, tracker.writeErr)
-		}
-		return result, runErr
+		return failStartedStream(bidirectionalStreamResult(att, started, collector, tracker), att.exchange.Inbound, tracker, runErr)
 	}
 	if errors.Is(runErr, context.Canceled) {
 		return Result{
@@ -132,6 +129,47 @@ func (e *Executor) failBidirectional(run *bidirectionalRun, events []inference.E
 	// a conversation that only the next request can leave.
 	result.RotateWire = rotate
 	return result, err
+}
+
+// failStartedStream closes a duplex stream the client already read from. The
+// client needs a frame it can parse: a bare Go error leaves it waiting for a
+// terminal frame that never arrives.
+func failStartedStream(result Result, inbound wire.InboundCodec, tracker *streamWriter, runErr error) (Result, error) {
+	if tracker.writeErr != nil {
+		return result, fmt.Errorf("%w: %v", ErrRelayFailed, tracker.writeErr)
+	}
+	if errors.Is(runErr, context.Canceled) {
+		// The caller went away: there is no stream left to close.
+		result.Status = StatusClientAborted
+		return result, runErr
+	}
+	writeStreamFailure(tracker, inbound, runErr)
+	if tracker.writeErr != nil {
+		return result, fmt.Errorf("%w: %v", ErrRelayFailed, tracker.writeErr)
+	}
+	return result, runErr
+}
+
+// writeStreamFailure renders one failure as the frames the client's surface
+// expects at the end of a stream it already started.
+func writeStreamFailure(writer *streamWriter, inbound wire.InboundCodec, cause error) {
+	encoder, ok := inbound.(wire.ErrorEncoder)
+	if !ok {
+		_ = sse.WriteEvents(writer, []wire.SSEEvent{{
+			Name: "error",
+			Data: fmt.Sprintf(`{"error":"stream_error","message":%s}`, mustQuote(cause.Error())),
+		}})
+		return
+	}
+	_ = sse.WriteEvents(writer, encoder.EncodeError(cause))
+}
+
+func mustQuote(value string) string {
+	encoded, err := json.Marshal(value)
+	if err != nil {
+		return `"stream error"`
+	}
+	return string(encoded)
 }
 
 // refusalStatus answers what a failed turn means to the caller. A refusal
