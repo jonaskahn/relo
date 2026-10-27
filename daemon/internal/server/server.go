@@ -225,6 +225,9 @@ type Server struct {
 	bookkeeping *bookkeeping
 	// sweep is the maintenance sweep the console can start and read.
 	sweep sweepJob
+	// cursorWires tracks the wire conversation generation of each Cursor
+	// conversation, which a native handoff has to advance.
+	cursorWires cursorWire
 
 	// dashboardMu guards the attached console, which is set after the server
 	// exists. It is a lock of its own because the routes are built while the

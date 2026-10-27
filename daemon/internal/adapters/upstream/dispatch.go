@@ -93,6 +93,10 @@ type Exchange struct {
 	// executor calls it once, before anything is written to the client, and
 	// resends with what it returns.
 	OnUnauthorized func(ctx context.Context) (catalog.Authorization, error)
+	// OnHandoff reports that a duplex codec handed a native execution to the
+	// calling client. The upstream conversation still holds that pending call,
+	// so the next request has to rebuild it under a fresh wire id.
+	OnHandoff func()
 }
 
 // Policy is how one connection asked the relay to fail over.
@@ -172,6 +176,10 @@ type Result struct {
 	// RefreshSettled reports that a 401 was already handled by OnUnauthorized
 	// failing, so the caller must not treat the status as a fresh refusal.
 	RefreshSettled bool
+	// RotateWire reports a refusal that may only belong to the reused wire
+	// conversation, such as Cursor's failed_precondition on a rebuilt state.
+	// The next request for this conversation belongs on a fresh wire id.
+	RotateWire bool
 }
 
 // Executor sends canonical requests upstream and relays their responses.

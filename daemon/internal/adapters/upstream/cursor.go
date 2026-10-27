@@ -82,7 +82,7 @@ func (e *Executor) converse(ctx context.Context, att attempt, codec wire.Bidirec
 	for attempt := 0; attempt < 2; attempt++ {
 		events, err := codec.RunBidirectional(ctx, wire.BidirectionalCall{
 			Client: e.client, Request: att.exchange.Request, Opts: att.exchange.Options, Emit: emit,
-			Record: recordCursorFrame(att),
+			Record: recordCursorFrame(att), Handoff: att.exchange.OnHandoff,
 		})
 		if !errors.Is(err, cursor.ErrUnauthorized) || att.exchange.OnUnauthorized == nil || attempt == 1 {
 			return events, err
@@ -114,6 +114,7 @@ func (e *Executor) failBidirectional(run *bidirectionalRun, events []inference.E
 		}, runErr
 	}
 	status := refusalStatus(runErr)
+	rotate := refusalRotatesWire(runErr)
 	cause := fmt.Errorf("%w: %v", ErrUpstreamFailed, runErr)
 	code := "upstream_unavailable"
 	if errors.Is(runErr, wire.ErrUnsupportedFeature) || errors.Is(runErr, wire.ErrInvalidRequest) {
@@ -125,6 +126,11 @@ func (e *Executor) failBidirectional(run *bidirectionalRun, events []inference.E
 	}
 	result, err := e.fail(att, status, code, cause)
 	result.RefreshSettled = att.state.refreshSettled
+	// The request is sound; the conversation it was replayed into is not. The
+	// next request rebuilds on a fresh wire id, which is the resume Phase 4
+	// describes; retrying this one would spend the walk's account allowance on
+	// a conversation that only the next request can leave.
+	result.RotateWire = rotate
 	return result, err
 }
 
@@ -146,6 +152,15 @@ func refusalStatus(runErr error) int {
 		return http.StatusBadRequest
 	}
 	return http.StatusBadGateway
+}
+
+// refusalRotatesWire reports a refusal that may belong to the reused wire
+// conversation rather than the request. Cursor answers failed_precondition
+// when a rebuilt state does not match what the conversation already holds, so
+// the next request belongs on a fresh conversation.
+func refusalRotatesWire(runErr error) bool {
+	var refusal cursorproto.EndStream
+	return errors.As(runErr, &refusal) && refusal.Name == "failed_precondition"
 }
 
 func bidirectionalStreamResult(att attempt, started time.Time, collector *usageCollector, tracker *streamWriter) Result {

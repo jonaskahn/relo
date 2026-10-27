@@ -242,6 +242,10 @@ type BidirectionalCall struct {
 	Opts    CodecOpts
 	Emit    func([]inference.Event)
 	Record  func(frame []byte)
+	// Handoff reports that the codec handed a native execution to the
+	// calling client. The upstream conversation keeps a pending native call,
+	// so the next request belongs on a fresh upstream conversation.
+	Handoff func()
 }
 
 // BidirectionalCodec is a CodecModule that converses over one duplex

@@ -203,6 +203,10 @@ func (s *Server) buildAttemptExchange(spec attemptSpec, module wire.CodecModule,
 		}
 	}
 	exchange.CallWait = s.callWait(host)
+	if candidate.Model.APIFormat == catalog.FormatCursorAgent {
+		anchor, providerID, credentialID := s.conversationAnchor(outcome, spec.request), candidate.ProviderID, authorized.CredentialID
+		exchange.OnHandoff = func() { s.cursorWires.rotate(providerID, credentialID, anchor) }
+	}
 	return exchange, nil
 }
 

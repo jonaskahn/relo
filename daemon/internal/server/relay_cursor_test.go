@@ -184,3 +184,50 @@ func TestCursorConversationID(t *testing.T) {
 		t.Fatalf("conversation = %q, want a UUID", first)
 	}
 }
+
+// TestCursorWireIDRotatesAfterHandoff pins the resume path: the client keeps
+// one anchor, but each native handoff moves the wire conversation on, because
+// the old one still records an execution awaiting an in-stream result.
+func TestCursorWireIDRotatesAfterHandoff(t *testing.T) {
+	server := &Server{}
+	first := server.cursorWireID("cursor", "cred-a", "session-1")
+	if again := server.cursorWireID("cursor", "cred-a", "session-1"); again != first {
+		t.Fatalf("wire id = %q, want stability before a handoff", again)
+	}
+	server.cursorWires.rotate("cursor", "cred-a", "session-1")
+	second := server.cursorWireID("cursor", "cred-a", "session-1")
+	if second == first {
+		t.Fatal("wire id did not rotate after the handoff")
+	}
+	if len(second) != 36 || second[14] != '4' {
+		t.Fatalf("wire id = %q, want a UUID", second)
+	}
+	if other := server.cursorWireID("cursor", "cred-a", "session-2"); other == second || other == first {
+		t.Fatal("conversations share a wire id")
+	}
+}
+
+// TestCursorRotateWireMovesTheNextRequest covers Cursor's failed_precondition
+// on a reused conversation: the request is sound, so the next request for the
+// same client conversation belongs on a fresh wire id.
+func TestCursorRotateWireMovesTheNextRequest(t *testing.T) {
+	server := &Server{}
+	request := httptest.NewRequest(http.MethodPost, "/", nil)
+	request.Header.Set("session-id", "session-1")
+	outcome := &requestOutcome{requestID: "req-1"}
+	driver := &sendDriver{s: server, r: request, outcome: outcome}
+	failed := failedAttempt{
+		candidate: routing.Candidate{ProviderID: "cursor"},
+		result:    Result{CredentialID: "cred-a", RotateWire: true},
+	}
+	before := server.cursorWireID("cursor", "cred-a", "session-1")
+	driver.rotateWire(failed)
+	if after := server.cursorWireID("cursor", "cred-a", "session-1"); after == before {
+		t.Fatal("the retry stayed on the refused wire conversation")
+	}
+	unchanged := server.cursorWireID("cursor", "cred-a", "session-1")
+	driver.rotateWire(failedAttempt{result: Result{CredentialID: "cred-a"}})
+	if again := server.cursorWireID("cursor", "cred-a", "session-1"); again != unchanged {
+		t.Fatal("an ordinary refusal rotated the wire conversation")
+	}
+}

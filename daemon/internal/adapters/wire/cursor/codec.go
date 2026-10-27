@@ -96,6 +96,7 @@ func (c *Codec) RunBidirectional(ctx context.Context, call wire.BidirectionalCal
 		Selection: call.Opts.Cursor,
 		Emit:      call.Emit,
 		Record:    call.Record,
+		Handoff:   call.Handoff,
 		// The connection template states the dialect has no max-output
 		// ceiling to send, mirroring the single-shot refusal the same flag
 		// already governs.

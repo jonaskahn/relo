@@ -69,6 +69,7 @@ func relayExchange(exchange server.Exchange) upstream.Exchange {
 			SwitchOn5xx: exchange.Policy.SwitchOn5xx,
 		},
 		OnUnauthorized: exchange.OnUnauthorized,
+		OnHandoff:      exchange.OnHandoff,
 	}
 }
 
@@ -81,7 +82,7 @@ func relayResult(result upstream.Result) server.Result {
 		Wrote: result.Wrote, ModelAccess: result.ModelAccess,
 		ZeroTokens: result.ZeroTokens, RetryAfter: result.RetryAfter,
 		RelayedBody: result.RelayedBody, RateLimits: result.RateLimits,
-		RefreshSettled: result.RefreshSettled,
+		RefreshSettled: result.RefreshSettled, RotateWire: result.RotateWire,
 	}
 	if result.Capture != nil {
 		capture := *result.Capture

@@ -49,7 +49,7 @@ func (s *Server) matchCursorAccount(ctx context.Context, spec *attemptSpec, trie
 		return nil, false, err
 	}
 	if selected, ok := catalog.SelectCursorVariant(configs, candidate.ModelID, effort); ok {
-		return cursorRequestOf(s.conversationAnchor(outcome, spec.request), spec, selected), true, nil
+		return s.cursorRequestOf(s.conversationAnchor(outcome, spec.request), spec, selected), true, nil
 	}
 	if !s.excludeCursorAccount(spec, tried) {
 		return nil, false, cursorSelectionError(candidate, effort)
@@ -103,18 +103,30 @@ func (s *Server) excludeCursorAccount(spec *attemptSpec, tried map[string][]stri
 	return true
 }
 
-func cursorRequestOf(anchor string, spec *attemptSpec, selected catalog.CursorVariant) *wire.CursorRequest {
+func (s *Server) cursorRequestOf(anchor string, spec *attemptSpec, selected catalog.CursorVariant) *wire.CursorRequest {
 	params := make([]wire.CursorParam, 0, len(selected.Params))
 	for _, param := range selected.Params {
 		params = append(params, wire.CursorParam{ID: param.ID, Value: param.Value})
 	}
 	return &wire.CursorRequest{
-		ConversationID: cursorConversationID(spec.candidate.ProviderID, spec.authorized.CredentialID, anchor),
+		ConversationID: s.cursorWireID(spec.candidate.ProviderID, spec.authorized.CredentialID, anchor),
 		ModelID:        selected.ModelID,
 		DetailsID:      selected.DetailsID,
 		MaxMode:        selected.MaxMode,
 		Params:         params,
 	}
+}
+
+// cursorWireID derives the wire conversation id for the attempt. Each native
+// handoff bumps the conversation's generation, because the old wire
+// conversation still records a native execution awaiting an in-stream result
+// while the next request replays that result as external history.
+func (s *Server) cursorWireID(providerID, credentialID, anchor string) string {
+	generation := 0
+	if s != nil {
+		generation = s.cursorWires.generation(providerID, credentialID, anchor)
+	}
+	return cursorConversationID(providerID, credentialID, anchor+generationSuffix(generation))
 }
 
 // cursorConversationID derives the stable upstream conversation id from the
