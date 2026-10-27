@@ -2,6 +2,8 @@ package cursor
 
 import (
 	"context"
+	"errors"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -60,5 +62,39 @@ func TestRunReleasesStreamAfterTurn(t *testing.T) {
 	case <-released:
 	case <-time.After(3 * time.Second):
 		t.Fatal("the stream stayed open after the turn ended")
+	}
+}
+
+func TestRunSendsHeartbeats(t *testing.T) {
+	server := startStreamServer(t, func(w http.ResponseWriter, r *http.Request) {
+		reader := beginTurn(w, r)
+		payload, _, err := reader.Next()
+		if err != nil {
+			return
+		}
+		fields, err := adapterscursor.Parse(payload)
+		if err != nil || len(fields) != 1 || fields[0].Number != clientHeartbeat {
+			return
+		}
+		flushFrame(w, serverUpdate(14, turnEndedPayload()))
+		_, _ = io.Copy(io.Discard, r.Body)
+	})
+	runner := newStreamRunner(server)
+	runner.HeartbeatEvery = 10 * time.Millisecond
+	if _, err := runner.Run(context.Background()); err != nil {
+		t.Fatalf("a turn that waits for a heartbeat should finish: %v", err)
+	}
+}
+
+func TestRunFailsWhenStreamGoesSilent(t *testing.T) {
+	server := startStreamServer(t, func(w http.ResponseWriter, r *http.Request) {
+		beginTurn(w, r)
+		<-r.Context().Done()
+	})
+	runner := newStreamRunner(server)
+	runner.IdleTimeout = 100 * time.Millisecond
+	_, err := runner.Run(context.Background())
+	if !errors.Is(err, ErrIdle) {
+		t.Fatalf("error = %v, want ErrIdle", err)
 	}
 }

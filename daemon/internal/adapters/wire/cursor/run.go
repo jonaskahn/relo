@@ -9,10 +9,19 @@ import (
 	"io"
 	"net/http"
 	"strings"
+	"sync/atomic"
+	"time"
 
 	"github.com/jonaskahn/relo/internal/adapters/cursor"
 	"github.com/jonaskahn/relo/internal/adapters/wire"
 	"github.com/jonaskahn/relo/internal/inference"
+)
+
+// Defaults for a turn's liveness: the reference client pings every five
+// seconds, and a stream silent past the idle bound is dead, not thinking.
+const (
+	defaultHeartbeatEvery = 5 * time.Second
+	defaultIdleTimeout    = 120 * time.Second
 )
 
 // Run errors name why a Cursor turn failed.
@@ -20,6 +29,7 @@ var (
 	ErrUnauthorized    = errors.New("cursor refused the credentials")
 	ErrUnsupportedExec = errors.New("cursor asked for an execution Relo cannot answer")
 	ErrNoTurnEnd       = errors.New("cursor ended the stream without finishing the turn")
+	ErrIdle            = errors.New("cursor sent nothing within the idle limit")
 	ErrInteraction     = errors.New("cursor asked for an interaction Relo cannot answer")
 )
 
@@ -36,10 +46,15 @@ type Runner struct {
 	// refusing it, for an upstream whose dialect states no ceiling to send.
 	RefusesMaxOutputTokens bool
 	ConnectError           func(status int, body []byte) *inference.ErrorInfo
+	// HeartbeatEvery and IdleTimeout default to the values above when zero.
+	HeartbeatEvery time.Duration
+	IdleTimeout    time.Duration
 }
 
 // Run converses until the turn ends and returns every canonical event.
 func (r *Runner) Run(ctx context.Context) ([]inference.Event, error) {
+	ctx, cancel := context.WithCancel(ctx)
+	defer cancel()
 	tools, history, action, err := r.prepare()
 	if err != nil {
 		return nil, err
@@ -52,6 +67,8 @@ func (r *Runner) Run(ctx context.Context) ([]inference.Event, error) {
 	if err != nil {
 		return nil, err
 	}
+	// An unclosed body leaves the stream live upstream, so the next request
+	// on this conversation queues behind it forever.
 	defer func() { _ = response.Body.Close() }()
 	if err := r.checkStreamStatus(response); err != nil {
 		_ = writer.Close()
@@ -62,9 +79,50 @@ func (r *Runner) Run(ctx context.Context) ([]inference.Event, error) {
 		_, err := writer.Write(cursor.Frame(payload))
 		return err
 	}
+	var idled atomic.Bool
+	watchdog := time.AfterFunc(orDefault(r.IdleTimeout, defaultIdleTimeout), func() {
+		idled.Store(true)
+		cancel()
+	})
+	defer watchdog.Stop()
+	conversation.touch = func() { watchdog.Reset(orDefault(r.IdleTimeout, defaultIdleTimeout)) }
+	stopBeats := r.heartbeat(conversation.write)
 	runErr := conversation.converse(ctx, reader)
+	stopBeats()
 	_ = writer.Close()
+	if idled.Load() && runErr != nil {
+		runErr = ErrIdle
+	}
 	return conversation.finish(runErr, streamRefusal(reader, response))
+}
+
+func orDefault(value, fallback time.Duration) time.Duration {
+	if value > 0 {
+		return value
+	}
+	return fallback
+}
+
+// heartbeat pings the server until the returned stop is called. The pipe
+// serializes whole writes, so pings never interleave with replies.
+func (r *Runner) heartbeat(write func([]byte) error) (stop func()) {
+	done := make(chan struct{})
+	go func() {
+		ticker := time.NewTicker(orDefault(r.HeartbeatEvery, defaultHeartbeatEvery))
+		defer ticker.Stop()
+		for {
+			select {
+			case <-done:
+				return
+			case <-ticker.C:
+				if write(buildHeartbeat()) != nil {
+					return
+				}
+			}
+		}
+	}()
+	// A ping blocked on a stalled stream ends when Run closes the writer.
+	return func() { close(done) }
 }
 
 // streamRefusal reads why a stream that ended without finishing its turn was
@@ -204,6 +262,7 @@ type conversation struct {
 	history   History
 	emit      func([]inference.Event)
 	write     func([]byte) error
+	touch     func()
 	events    []inference.Event
 	calls     map[string]bool
 	callIndex int
@@ -238,6 +297,9 @@ func (c *conversation) converse(ctx context.Context, reader *cursor.FrameReader)
 		payload, ended, err := reader.Next()
 		if err != nil {
 			return err
+		}
+		if c.touch != nil {
+			c.touch()
 		}
 		if ended {
 			return nil

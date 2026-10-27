@@ -22,6 +22,7 @@ const (
 	clientRunRequest  = 1
 	clientExecMessage = 2
 	clientKVMessage   = 3
+	clientHeartbeat   = 7
 
 	runConversationState = 1
 	runAction            = 2
@@ -372,6 +373,14 @@ func buildMCPHandoff() []byte {
 	var result cursor.Writer
 	result.Message(mcpSuccessCase, success.BytesOut())
 	return result.BytesOut()
+}
+
+// buildHeartbeat encodes the keepalive the reference client sends every few
+// seconds while a turn runs.
+func buildHeartbeat() []byte {
+	var heartbeat cursor.Writer
+	heartbeat.Empty(clientHeartbeat)
+	return heartbeat.BytesOut()
 }
 
 // buildMCPNotFound encodes the unknown-tool answer naming the tools the
