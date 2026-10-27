@@ -52,7 +52,7 @@ func (r *Runner) Run(ctx context.Context) ([]inference.Event, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer func() { _ = response.Body.Close }()
+	defer func() { _ = response.Body.Close() }()
 	if err := r.checkStreamStatus(response); err != nil {
 		_ = writer.Close()
 		return nil, err
