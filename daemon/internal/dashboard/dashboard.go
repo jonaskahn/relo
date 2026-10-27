@@ -121,8 +121,16 @@ func (c *console) shellFor() []byte {
 
 func injectAppearance(shell []byte, theme, accent string) []byte {
 	quotedTheme, quotedAccent := strconv.Quote(theme), strconv.Quote(accent)
+	paint := "document.documentElement.dataset.accent=" + strconv.Quote(accentSelector(accent)) + ";"
+	if isCustomAccent(accent) {
+		// A colour the radar picked has no stylesheet rule of its own, so the
+		// shell paints the two custom properties the accent scale derives from.
+		paint += "document.documentElement.style.setProperty('--accent-custom'," + quotedAccent +
+			");document.documentElement.style.setProperty('--custom-on-accent'," +
+			strconv.Quote(accentOn(accent)) + ");"
+	}
 	script := []byte("<script>window.__reloAppearance={theme:" + quotedTheme + ",accent:" + quotedAccent +
-		"};document.documentElement.dataset.accent=" + quotedAccent +
+		"};" + paint +
 		";if(" + quotedTheme + "==='dark'||(" + quotedTheme + "==='system'&&matchMedia('(prefers-color-scheme: dark)').matches))document.documentElement.classList.add('dark');</script>")
 	at := bytes.Index(shell, []byte(headClose))
 	if at < 0 {

@@ -175,16 +175,6 @@ var callbackDocument = `<!doctype html>
 }
 /* The page renders the default accent and follows the operating system theme:
    the redirect carries no session to read the operator's choice with. */
-[data-accent='red'] { --accent-base: #c8102e; --on-accent: #fff; }
-[data-accent='orange'] { --accent-base: #d9622b; --on-accent: #17171c; }
-[data-accent='amber'] { --accent-base: #cc7c2e; --on-accent: #17171c; }
-[data-accent='green'] { --accent-base: #43946c; --on-accent: #17171c; }
-[data-accent='teal'] { --accent-base: #439288; --on-accent: #17171c; }
-[data-accent='cyan'] { --accent-base: #418fae; --on-accent: #17171c; }
-[data-accent='blue'] { --accent-base: #3662e3; --on-accent: #fff; }
-[data-accent='indigo'] { --accent-base: #4e46dc; --on-accent: #fff; }
-[data-accent='purple'] { --accent-base: #743ee4; --on-accent: #fff; }
-[data-accent='rose'] { --accent-base: #cf364c; --on-accent: #fff; }
 @media (prefers-color-scheme: dark) {
   :root {
     --canvas: #0a0a0a; --surface: #111113; --raised: #1a1a1d; --sunken: #0a0a0a;

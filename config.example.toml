@@ -60,7 +60,10 @@
 [ui]
   language = "auto"   # auto or a shipped tag (en, de, zh-Hans, zh-Hant, fr, es, it, pt-BR, nl, sv, pl, cs, ro, ru, uk, ja, ko, hi, id, ar, vi, th, tr); the --lang flag overrides it for one run
   theme = "system"    # system, light, or dark; the console adopts changes at once
-  accent = "red"      # red, orange, amber, emerald, teal, cyan, blue, indigo, violet, rose
+  accent = "#c8102e"  # a #rrggbb colour the radar picked, or a preset id from the board:
+                      # terracotta, persimmon, cherry-cola, clay-rose, saffron, mocha, moss, sage,
+                      # pine, matcha, lagoon, ocean, cobalt, dusk-blue, midnight, lavender-haze,
+                      # orchid, plum, graphite
 
   # The cards the usage overview shows, in order. Pick between 6 and 10 of:
   # requests, successes, errors, success_rate, error_rate, attempts, retried,

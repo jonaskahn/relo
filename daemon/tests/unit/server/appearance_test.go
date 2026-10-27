@@ -43,13 +43,22 @@ func TestAppearanceAndLanguagePatchesAreIsolated(t *testing.T) {
 		t.Fatal(err)
 	}
 	if settings.Language != "auto" || settings.Retention.UsageDays != 7 || settings.Retention.MaxEvents != 42 ||
-		settings.Appearance.Theme != "dark" || settings.Appearance.Accent != "blue" ||
+		settings.Appearance.Theme != "dark" || settings.Appearance.Accent != "#3662e3" ||
 		settings.Appearance.QuotaDisplay != "remaining" {
 		t.Fatalf("settings = %+v", settings)
+	}
+	// A colour the radar picked saves and reads back in one shape.
+	chosen = h.management(http.MethodPatch, "/api/v1/settings/appearance", adminToken, strings.NewReader(`{"accent":"#1f8a8a"}`))
+	if chosen.Code != http.StatusOK || !strings.Contains(chosen.Body.String(), `"accent":"#1f8a8a"`) {
+		t.Fatalf("custom accent: %d %s", chosen.Code, chosen.Body.String())
 	}
 	invalid := h.management(http.MethodPatch, "/api/v1/settings/appearance", adminToken, strings.NewReader(`{"accent":"magenta"}`))
 	if invalid.Code != http.StatusBadRequest {
 		t.Fatalf("invalid accent: %d %s", invalid.Code, invalid.Body.String())
+	}
+	invalid = h.management(http.MethodPatch, "/api/v1/settings/appearance", adminToken, strings.NewReader(`{"accent":"#12"}`))
+	if invalid.Code != http.StatusBadRequest {
+		t.Fatalf("truncated colour: %d %s", invalid.Code, invalid.Body.String())
 	}
 	badQuota := h.management(http.MethodPatch, "/api/v1/settings/appearance", adminToken, strings.NewReader(`{"quota_display":"left"}`))
 	if badQuota.Code != http.StatusBadRequest {

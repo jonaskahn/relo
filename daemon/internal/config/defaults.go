@@ -10,14 +10,16 @@ import (
 // Shipped defaults are the startup baseline a fresh home runs on: the
 // loopback listener, log level, index source, and update feed.
 const (
-	DefaultServerBind      = "127.0.0.1"
-	DefaultServerPort      = 10101
-	DefaultLogLevel        = "info"
-	DefaultModelsDevURL    = "https://models.dev/api.json"
-	DefaultReloHome        = ".relo"
-	DefaultUILanguage      = i18n.Auto
-	DefaultUITheme         = "system"
-	DefaultUIAccent        = "red"
+	DefaultServerBind   = "127.0.0.1"
+	DefaultServerPort   = 10101
+	DefaultLogLevel     = "info"
+	DefaultModelsDevURL = "https://models.dev/api.json"
+	DefaultReloHome     = ".relo"
+	DefaultUILanguage   = i18n.Auto
+	DefaultUITheme      = "system"
+	// The radar's default colour, kept from the accent older builds shipped
+	// as red so a fresh home looks the way it did before the 2026 board.
+	DefaultUIAccent        = "#c8102e"
 	DefaultUpdatesURL      = "https://jonaskahn.github.io/relo/appcast.xml"
 	DefaultUpdatesDownload = "https://github.com/jonaskahn/relo/releases/latest"
 	ReloHomeEnv            = "RELO_HOME"
