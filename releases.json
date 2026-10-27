@@ -1,5 +1,5 @@
 {
-  "generated": "2026-10-27T07:37:11Z",
+  "generated": "2026-10-27T07:37:25Z",
   "latest": "v0.1.11",
   "latest_beta": "v0.1.11-beta.47.98173d4d",
   "install": {
@@ -20,7 +20,7 @@
     {
       "tag": "v0.1.11",
       "version": "0.1.11",
-      "name": "v0.1.11 - Hi Coffee ☕️",
+      "name": "v0.1.11 - 2 Coffee ☕️",
       "channel": "stable",
       "draft": false,
       "published_at": "2026-10-27T07:37:01Z",
