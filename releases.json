@@ -1,7 +1,7 @@
 {
-  "generated": "2026-10-27T06:40:23Z",
+  "generated": "2026-10-27T07:18:23Z",
   "latest": "v0.1.10",
-  "latest_beta": "v0.1.11-beta.46.f329c029",
+  "latest_beta": "v0.1.11-beta.47.98173d4d",
   "install": {
     "stable": {
       "script": "curl -fsSL https://relo.ifelse.one/install.sh | sh",
@@ -17,6 +17,86 @@
     }
   },
   "releases": [
+    {
+      "tag": "v0.1.11-beta.47.98173d4d",
+      "version": "0.1.11-beta.47.98173d4d",
+      "name": "v0.1.11-beta.47.98173d4d",
+      "channel": "beta",
+      "draft": false,
+      "published_at": "2026-10-27T07:18:11Z",
+      "page": "https://github.com/jonaskahn/relo/releases/tag/v0.1.11-beta.47.98173d4d",
+      "notes": "## What's Changed\n* Fix/agent notices restart flag by @jonaskahn in https://github.com/jonaskahn/relo/pull/80\n\n\n**Full Changelog**: https://github.com/jonaskahn/relo/compare/v0.1.11-beta.46.f329c029...v0.1.11-beta.47.98173d4d",
+      "install": {
+        "script": "curl -fsSL https://relo.ifelse.one/install.sh | sh -s -- --version 0.1.11-beta.47.98173d4d",
+        "powershell": "& ([scriptblock]::Create((irm https://relo.ifelse.one/install.ps1))) -Version 0.1.11-beta.47.98173d4d",
+        "npm": "npm i -g @jonaskahn/relo@0.1.11-beta.47.98173d4d"
+      },
+      "files": [
+        {
+          "name": "checksums.txt",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.1.11-beta.47.98173d4d/checksums.txt",
+          "size": 690,
+          "os": "any",
+          "arch": "any",
+          "kind": "checksums",
+          "format": "txt"
+        },
+        {
+          "name": "relo-0.1.11-beta.47.98173d4d-darwin-amd64.tar.gz",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.1.11-beta.47.98173d4d/relo-0.1.11-beta.47.98173d4d-darwin-amd64.tar.gz",
+          "size": 14289649,
+          "os": "macos",
+          "arch": "amd64",
+          "kind": "archive",
+          "format": "tar.gz"
+        },
+        {
+          "name": "relo-0.1.11-beta.47.98173d4d-darwin-arm64.tar.gz",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.1.11-beta.47.98173d4d/relo-0.1.11-beta.47.98173d4d-darwin-arm64.tar.gz",
+          "size": 13883693,
+          "os": "macos",
+          "arch": "arm64",
+          "kind": "archive",
+          "format": "tar.gz"
+        },
+        {
+          "name": "relo-0.1.11-beta.47.98173d4d-linux-amd64.tar.gz",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.1.11-beta.47.98173d4d/relo-0.1.11-beta.47.98173d4d-linux-amd64.tar.gz",
+          "size": 13985745,
+          "os": "linux",
+          "arch": "amd64",
+          "kind": "archive",
+          "format": "tar.gz"
+        },
+        {
+          "name": "relo-0.1.11-beta.47.98173d4d-linux-arm64.tar.gz",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.1.11-beta.47.98173d4d/relo-0.1.11-beta.47.98173d4d-linux-arm64.tar.gz",
+          "size": 13228590,
+          "os": "linux",
+          "arch": "arm64",
+          "kind": "archive",
+          "format": "tar.gz"
+        },
+        {
+          "name": "relo-0.1.11-beta.47.98173d4d-windows-amd64.tar.gz",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.1.11-beta.47.98173d4d/relo-0.1.11-beta.47.98173d4d-windows-amd64.tar.gz",
+          "size": 13927767,
+          "os": "windows",
+          "arch": "amd64",
+          "kind": "archive",
+          "format": "tar.gz"
+        },
+        {
+          "name": "relo-0.1.11-beta.47.98173d4d-windows-arm64.tar.gz",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.1.11-beta.47.98173d4d/relo-0.1.11-beta.47.98173d4d-windows-arm64.tar.gz",
+          "size": 13081971,
+          "os": "windows",
+          "arch": "arm64",
+          "kind": "archive",
+          "format": "tar.gz"
+        }
+      ]
+    },
     {
       "tag": "v0.1.11-beta.46.f329c029",
       "version": "0.1.11-beta.46.f329c029",
