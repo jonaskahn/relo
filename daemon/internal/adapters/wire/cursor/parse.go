@@ -126,12 +126,18 @@ func mustParse(raw []byte) []cursor.Field {
 
 func execKindOf(fields []cursor.Field) int {
 	for _, field := range fields {
-		if field.Wire != 2 || field.Number == execIDField || field.Number == execExecID {
+		if !isExecVariant(field) {
 			continue
 		}
 		return field.Number
 	}
 	return 0
+}
+
+// isExecVariant reports whether a field carries the exec's oneof case rather
+// than its envelope: the ids and the optional trace context ride beside it.
+func isExecVariant(field cursor.Field) bool {
+	return field.Wire == 2 && field.Number != execIDField && field.Number != execExecID && field.Number != execSpanContext
 }
 
 func execNumericID(fields []cursor.Field) uint32 {
@@ -144,7 +150,7 @@ func execStringID(fields []cursor.Field) string {
 
 func parseExec(fields []cursor.Field) []cursor.Field {
 	for _, field := range fields {
-		if field.Wire != 2 || field.Number == execIDField || field.Number == execExecID {
+		if !isExecVariant(field) {
 			continue
 		}
 		return mustParse(field.Raw)

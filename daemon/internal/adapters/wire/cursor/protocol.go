@@ -59,6 +59,8 @@ const (
 
 	execIDField = 1
 	execExecID  = 15
+	// execSpanContext is the optional trace context beside the exec variant.
+	execSpanContext = 19
 
 	execContext  = 10
 	execMCPState = 36

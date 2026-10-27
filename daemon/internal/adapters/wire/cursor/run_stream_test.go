@@ -98,3 +98,24 @@ func TestRunFailsWhenStreamGoesSilent(t *testing.T) {
 		t.Fatalf("error = %v, want ErrIdle", err)
 	}
 }
+
+// Cursor may attach a trace context to an exec; it is not the exec's variant.
+func TestRunIgnoresExecTraceContext(t *testing.T) {
+	server := startStreamServer(t, func(w http.ResponseWriter, r *http.Request) {
+		reader := beginTurn(w, r)
+		var message adapterscursor.Writer
+		message.Uint32(1, 1)
+		message.String(15, "exec-1")
+		message.Message(execSpanContext, []byte{0x0a, 0x01, 0x61})
+		message.Empty(execContext)
+		var envelope adapterscursor.Writer
+		envelope.Message(2, message.BytesOut())
+		flushFrame(w, envelope.BytesOut())
+		_, _, _ = reader.Next()
+		flushFrame(w, serverUpdate(14, turnEndedPayload()))
+		_, _ = io.Copy(io.Discard, r.Body)
+	})
+	if _, err := newStreamRunner(server).Run(context.Background()); err != nil {
+		t.Fatalf("a traced exec should be answered by its variant: %v", err)
+	}
+}
