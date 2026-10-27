@@ -94,6 +94,11 @@ type Tool struct {
 	Name        string          `json:"name"`
 	Description string          `json:"description"`
 	Parameters  json.RawMessage `json:"parameters"`
+	// Freeform marks a tool whose body is a code string rather than a JSON
+	// object, such as Codex's exec. A chat encoder describes it with a single
+	// string argument so a template that mishandles an object schema still
+	// emits a structured call.
+	Freeform bool `json:"freeform,omitempty"`
 }
 
 // ToolCall is one model-initiated tool invocation, arguments included.

@@ -26,6 +26,11 @@ const (
 	functionType        = "function"
 	imageURLPart        = "image_url"
 
+	// freeformToolSchema describes a code-body tool with a single string
+	// argument and no required list, which a serving template that mishandles
+	// a wrapped object schema can still call.
+	freeformToolSchema = `{"type":"object","properties":{"input":{"type":"string"}}}`
+
 	// DeepSeek rejects a tool-using thinking request that omits reasoning_content,
 	// and rejects an empty string, so a missing chain is replayed as one space.
 	deepSeekMissingReasoning = " "
@@ -409,9 +414,13 @@ func encodeTools(tools []inference.Tool, model string) []chatTool {
 		entry := chatTool{Type: functionType}
 		entry.Function.Name = tool.Name
 		entry.Function.Description = tool.Description
-		entry.Function.Parameters = tool.Parameters
+		parameters := tool.Parameters
+		if tool.Freeform {
+			parameters = json.RawMessage(freeformToolSchema)
+		}
+		entry.Function.Parameters = parameters
 		if deepSeekModel(model) {
-			entry.Function.Parameters = dropNullBytePatterns(tool.Parameters)
+			entry.Function.Parameters = dropNullBytePatterns(parameters)
 		}
 		encoded = append(encoded, entry)
 	}
