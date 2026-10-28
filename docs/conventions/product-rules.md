@@ -41,6 +41,8 @@ and a manual completion only where all of those are silent. A manual capability 
 supersede a known definition, and stored legacy completions remain visible but inactive.
 Context capacity, maximum input, and maximum output stay exact and separate; a display label
 may round, but routing, admission, listings, and wire requests use the authoritative count.
+An oversized client output budget is clamped silently to the provider's output ceiling and
+the context left after the prompt; only a prompt that cannot fit at all is refused.
 
 **A provider's own model list decides its models.** A connection serves the ids its model list
 publishes and nothing else: a catalog entry for a model the provider does not list never

@@ -225,7 +225,7 @@ func (s *Server) buildAttemptExchange(spec attemptSpec, module wire.CodecModule,
 		ProviderID: candidate.ProviderID, Codec: wire.RestoreToolNames(module, originals),
 		CaptureLimit:   s.captureLimit(),
 		RequiresStream: templated && template.RequiresStream,
-		Options:        s.attemptCodecOptions(spec, extra, template, templated),
+		Options:        s.attemptCodecOptions(spec, request, extra, template, templated),
 		Request:        request,
 		Inbound:        spec.inbound, Surface: outcome.surface, RequestID: outcome.requestID,
 		CredentialLabel: authorized.Label, Final: final,
@@ -329,7 +329,7 @@ func (s *Server) freeLaneSession(lane string) string {
 }
 
 // nolint:funlen
-func (s *Server) attemptCodecOptions(spec attemptSpec, extra map[string]string, template catalog.Template, templated bool) wire.CodecOpts {
+func (s *Server) attemptCodecOptions(spec attemptSpec, request *inference.Request, extra map[string]string, template catalog.Template, templated bool) wire.CodecOpts {
 	candidate, outcome, host, authorized := spec.candidate, spec.outcome, spec.host, spec.authorized
 	anchor := s.conversationAnchor(outcome, spec.request)
 	return wire.CodecOpts{
@@ -359,23 +359,23 @@ func (s *Server) attemptCodecOptions(spec attemptSpec, extra map[string]string, 
 		LongContext:            outcome.longContext,
 		NativeMillion:          outcome.nativeMillion,
 		UpstreamModel:          candidate.Model.UpstreamID,
-		PromptTokens:           s.attemptPromptTokens(outcome, candidate.Model, templated && template.RefusesMaxOutputTokens),
+		PromptTokens:           s.attemptPromptTokens(request, candidate.Model, templated && template.RefusesMaxOutputTokens),
 		Cursor:                 spec.cursor,
 		Antigravity:            spec.antigravity,
 	}
 }
 
-func (s *Server) attemptPromptTokens(outcome *requestOutcome, model catalog.Model, refusesOutput bool) int64 {
-	if outcome == nil || outcome.request == nil {
+func (s *Server) attemptPromptTokens(request *inference.Request, model catalog.Model, refusesOutput bool) int64 {
+	if request == nil {
 		return 0
 	}
-	reserved := outcome.request.MaxTokens
+	reserved := request.MaxTokens
 	if refusesOutput {
 		reserved = 0
 	} else if model.MaxOutput != nil && *model.MaxOutput > 0 {
 		reserved = int(*model.MaxOutput)
 	}
-	return int64(s.estimateRequestTokens(outcome.request) + max(reserved, 0))
+	return int64(s.estimateRequestTokens(request) + max(reserved, 0))
 }
 
 // nativeBody returns the client's own body when the attempt speaks the client's
