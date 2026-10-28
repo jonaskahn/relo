@@ -139,7 +139,7 @@ func turnMessageID() string {
 }
 
 // buildMCPArgs encodes the McpArgs of one history tool call under its wire
-// name, with arguments split into per-value JSON bytes.
+// name, with each argument carried as a google.protobuf.Value.
 func buildMCPArgs(call inference.ToolCall, tools *ToolMap) []byte {
 	name := call.Name
 	if tools != nil {
@@ -152,7 +152,7 @@ func buildMCPArgs(call inference.ToolCall, tools *ToolMap) []byte {
 	for key, value := range splitArgsJSON(call.Arguments) {
 		var entry cursor.Writer
 		entry.String(mapEntryKey, key)
-		entry.Bytes(mapEntryValue, value)
+		entry.Bytes(mapEntryValue, encodeJSONValue(value))
 		args.Message(mcpArgValues, entry.BytesOut())
 	}
 	args.String(mcpArgCallID, normalizeToolCallID(call.ID))
@@ -161,8 +161,8 @@ func buildMCPArgs(call inference.ToolCall, tools *ToolMap) []byte {
 	return args.BytesOut()
 }
 
-func splitArgsJSON(raw string) map[string][]byte {
-	out := map[string][]byte{}
+func splitArgsJSON(raw string) map[string]any {
+	out := map[string]any{}
 	if strings.TrimSpace(raw) == "" {
 		return out
 	}
@@ -171,11 +171,7 @@ func splitArgsJSON(raw string) map[string][]byte {
 		return out
 	}
 	for key, value := range object {
-		encoded, err := json.Marshal(value)
-		if err != nil {
-			continue
-		}
-		out[key] = encoded
+		out[key] = value
 	}
 	return out
 }

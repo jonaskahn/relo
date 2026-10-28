@@ -574,20 +574,18 @@ func toolCallStep(call inference.ToolCall, result inference.Message, paired bool
 		var completed cursor.Writer
 		completed.Message(mcpArgsField, args)
 		completed.Message(mcpResultField, buildHistoryResult(result))
-		var mcp cursor.Writer
-		mcp.Message(toolCallMCP, completed.BytesOut())
 		var tool cursor.Writer
 		tool.String(toolCallIDField, normalizeToolCallID(call.ID))
-		tool.Message(toolCallMCP, mcp.BytesOut())
+		tool.Message(toolCallMCP, completed.BytesOut())
 		var step cursor.Writer
 		step.Message(stepToolCall, tool.BytesOut())
 		return step.BytesOut()
 	}
-	var mcp cursor.Writer
-	mcp.Message(mcpArgsField, args)
+	var pending cursor.Writer
+	pending.Message(mcpArgsField, args)
 	var tool cursor.Writer
 	tool.String(toolCallIDField, normalizeToolCallID(call.ID))
-	tool.Message(toolCallMCP, mcp.BytesOut())
+	tool.Message(toolCallMCP, pending.BytesOut())
 	var step cursor.Writer
 	step.Message(stepToolCall, tool.BytesOut())
 	return step.BytesOut()
