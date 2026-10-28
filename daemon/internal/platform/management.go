@@ -141,12 +141,13 @@ func (w *managementWiring) services() {
 
 func (w *managementWiring) newManagementCatalog(edges *AccountEdges) *appcatalog.Service {
 	refreshClaude := w.managementRefresher()
+	seed, _ := modelsdev.EmbeddedSeed()
 	catalogSvc := appcatalog.New(appcatalog.Options{
 		Store: sqlite.NewCatalogRepo(w.db), Catalog: w.models, Pools: w.pools,
 		Entries: w.credRepo, Accounts: w.accounts, Secrets: NewQuietSecrets(w.secrets),
 		Credentials: w.credentials, Direct: upstream.Direct,
 		Discover:  discovery.New(NewHTTPClient()),
-		ModelsDev: modelsdev.NewDirectory(filepath.Join(w.home, "cache"), w.cfg.Catalog.ModelsDevURL, nil),
+		ModelsDev: modelsdev.NewDirectoryWithSeed(filepath.Join(w.home, "cache"), w.cfg.Catalog.ModelsDevURL, nil, seed),
 		Templates: TemplateRegistry{},
 		TemplatePrefixes: func(ctx context.Context, templateID string) ([]string, bool) {
 			prefixes, found, err := w.templateSettings.Prefixes(ctx, templateID)

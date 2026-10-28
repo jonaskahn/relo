@@ -20,6 +20,7 @@ DEV_URL  ?= http://127.0.0.1:$(DEV_PORT)
 
 .PHONY: help \
 	build build-console build-backend build-all \
+	seed seed-latest \
 	sync-assets sync-console icons icons-check \
 	run \
 	dev-setup dev-backend dev-console \
@@ -51,11 +52,11 @@ build-console: sync-assets
 	./scripts/build-console.sh
 
 ## compile the daemon
-build-backend:
+build-backend: seed
 	cd $(BACKEND) && CGO_ENABLED=0 go build -trimpath -ldflags "$(LDFLAGS)" -o ../$(BINARY) ./cmd/relo
 
 ## one binary per platform
-build-all: build-console sync-console
+build-all: seed build-console sync-console
 	@mkdir -p dist
 	@for platform in $(PLATFORMS); do \
 		os=$${platform%/*}; arch=$${platform#*/}; ext=""; \
@@ -114,14 +115,14 @@ fmt-check:
 	if [ -n "$$unformatted" ]; then echo "gofmt needed on:"; echo "$$unformatted"; exit 1; fi
 
 ## go vet
-vet:
+vet: seed
 	cd $(BACKEND) && go vet ./...
 
 ## lint the Go and the console code
 lint: lint-backend lint-console
 
 ## golangci-lint
-lint-backend:
+lint-backend: seed
 	@cd $(BACKEND) && if command -v golangci-lint >/dev/null 2>&1; then \
 		golangci-lint run; \
 	else \
@@ -140,7 +141,7 @@ tidy:
 test: test-backend test-console
 
 ## Go tests with the race detector
-test-backend:
+test-backend: seed
 	cd $(BACKEND) && CGO_ENABLED=1 go test -race -count=1 ./...
 
 ## svelte-check, vitest, and the coverage floor
@@ -148,11 +149,11 @@ test-console:
 	cd $(CONSOLE) && ([ -d node_modules ] || npm install) && npm run check && npm run test:coverage
 
 ## Go tests, race detector only
-test-race:
+test-race: seed
 	cd $(BACKEND) && go test -race ./...
 
 ## per-package coverage gate
-cover:
+cover: seed
 	./scripts/check-coverage.sh
 
 # === ci: the gate before a push; packaging needs nfpm and stays out of ci ===
@@ -161,7 +162,7 @@ cover:
 ci: ci-backend ci-console ci-assets ci-coverage ci-cross-build
 
 ## deps, build, fmt, vet, lint, tests
-ci-backend:
+ci-backend: seed
 	cd $(BACKEND) && go mod verify && go build ./...
 	$(MAKE) fmt-check vet lint-backend test-backend
 
@@ -186,23 +187,23 @@ ci-package-linux: package-linux
 package-clean: clean
 
 ## .deb and .rpm for the Relo desktop app
-package-linux: build-console sync-console
+package-linux: seed build-console sync-console
 	./scripts/package-linux.sh
 
 ## the macOS bundle
-package-macos: build-console sync-console
+package-macos: seed build-console sync-console
 	MACOS_MIN_VERSION=$(MACOS_MIN_VERSION) BUILD=$(BUILD) ./scripts/package-macos.sh
 	MACOS_MIN_VERSION=$(MACOS_MIN_VERSION) ./scripts/check-macos-target.sh
 
 ## the Windows installer (Relo-Setup)
-package-windows: build-console sync-console
+package-windows: seed build-console sync-console
 	./scripts/package-windows.sh
 
 ## every platform package, plus the npm daemon binaries
 package-all: package-clean build-all package-windows package-macos package-linux
 
 ## build the package binaries only, into dist/.pkgcache (OS=darwin ARCH=arm64 to narrow)
-package-binary: build-console sync-console
+package-binary: seed build-console sync-console
 	./scripts/package-binary.sh
 
 ## the installer's own tests
@@ -244,6 +245,17 @@ update-secrets:
 ## remove every derived artifact
 clean:
 	@rm -f $(BINARY) $(BINARY).exe
+	@rm -f $(BACKEND)/internal/adapters/modelsdev/seeddata/modelsdev.json.gz
 	@rm -rf dist
 	@rm -rf $(CONSOLE)/build $(CONSOLE)/.svelte-kit
 	@find $(BACKEND)/internal/dashboard/dist -mindepth 1 -not -name .gitkeep -delete
+
+# === seed: the models.dev dataset embedded in release artifacts ===
+
+## download the models.dev build seed when the existing one is missing or invalid
+seed:
+	cd $(BACKEND) && go run ./tools/modelsdevseed
+
+## download the models.dev build seed unconditionally, for beta and release artifacts
+seed-latest:
+	cd $(BACKEND) && go run ./tools/modelsdevseed -force

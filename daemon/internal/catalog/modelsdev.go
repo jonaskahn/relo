@@ -21,6 +21,20 @@ const (
 	ModelsDevDefaultURL = "https://models.dev/api.json"
 )
 
+// ModelsDevOrigin names the local or live source a models.dev copy came
+// from. It stays inside the daemon: the management API reports freshness,
+// not which of these produced it.
+type ModelsDevOrigin string
+
+const (
+	// ModelsDevOriginNetwork names a copy read from the live dataset.
+	ModelsDevOriginNetwork ModelsDevOrigin = "network"
+	// ModelsDevOriginCache names a validated copy saved under the state directory.
+	ModelsDevOriginCache ModelsDevOrigin = "cache"
+	// ModelsDevOriginSeed names the dataset embedded at build time.
+	ModelsDevOriginSeed ModelsDevOrigin = "seed"
+)
+
 // ModelsDevState reports the freshness of the models.dev data a surface
 // reads, so a console can show an age without waiting on a network.
 type ModelsDevState struct {
@@ -34,6 +48,7 @@ type ModelsDevState struct {
 	ModelsCount     int
 	LastAttemptAtMs int64
 	LastError       string
+	Origin          ModelsDevOrigin
 }
 
 // ModelsDevIndex is the parsed models.dev dataset: every provider it

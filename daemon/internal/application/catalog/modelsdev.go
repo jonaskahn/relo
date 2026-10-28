@@ -152,6 +152,11 @@ func (s *Service) ModelsDevState(ctx context.Context) (catalog.ModelsDevState, e
 }
 
 func mergeModelsDevRow(state catalog.ModelsDevState, row catalog.ModelsDevStateRecord) catalog.ModelsDevState {
+	if state.Available && state.Origin == catalog.ModelsDevOriginSeed {
+		// The embedded seed is the copy being read, so its own build time and
+		// freshness stand rather than a row left by an earlier process.
+		return state
+	}
 	if row.FetchedAtMs > state.FetchedAtMs {
 		state.FetchedAtMs = row.FetchedAtMs
 	}
@@ -168,7 +173,11 @@ func mergeModelsDevRow(state catalog.ModelsDevState, row catalog.ModelsDevStateR
 		state.ProvidersCount = row.ProvidersCount
 		state.ModelsCount = row.ModelsCount
 	}
-	state.Stale = row.LastError != ""
+	if !state.Available {
+		state.Stale = false
+	} else if state.Origin == catalog.ModelsDevOriginCache && row.LastError != "" {
+		state.Stale = true
+	}
 	return state
 }
 
