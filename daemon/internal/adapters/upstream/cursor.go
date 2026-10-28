@@ -157,18 +157,17 @@ func writeStreamFailure(writer *streamWriter, inbound wire.InboundCodec, cause e
 	if !ok {
 		_ = sse.WriteEvents(writer, []wire.SSEEvent{{
 			Name: "error",
-			Data: fmt.Sprintf(`{"error":"stream_error","message":%s}`, mustQuote(cause.Error())),
+			Data: fmt.Sprintf(`{"error":"stream_error","message":%s}`, quoted(cause.Error())),
 		}})
 		return
 	}
 	_ = sse.WriteEvents(writer, encoder.EncodeError(cause))
 }
 
-func mustQuote(value string) string {
-	encoded, err := json.Marshal(value)
-	if err != nil {
-		return `"stream error"`
-	}
+// quoted renders one failure as the JSON string the generic frame carries.
+// Encoding a string cannot fail, so there is no fallback to fall back to.
+func quoted(value string) string {
+	encoded, _ := json.Marshal(value)
 	return string(encoded)
 }
 
