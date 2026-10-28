@@ -266,6 +266,15 @@ func TestParseNativeToolCallRefusesWhatItCannotRead(t *testing.T) {
 		}
 	})
 
+	t.Run("a known variant without arguments is not a call", func(t *testing.T) {
+		var call adapterscursor.Writer
+		call.String(callIDField, "call-1")
+		call.Empty(callShell)
+		if _, ok, err := ParseNativeToolCall(call.BytesOut()); ok || err != nil {
+			t.Fatalf("ParseNativeToolCall() = %v %v, want neither a call nor an error", ok, err)
+		}
+	})
+
 	// A read update names its own argument message, whose offset and limit
 	// are numbered differently from the execution channel's read.
 	t.Run("a read update carries its own offset and limit", func(t *testing.T) {
