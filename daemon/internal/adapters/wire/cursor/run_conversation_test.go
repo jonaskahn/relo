@@ -75,10 +75,11 @@ func TestHeartbeatStopsWhenAsked(t *testing.T) {
 }
 
 // nativeToolCallFrame frames one ToolCall carrying a native variant, the shape
-// an update nests: the variant field's own payload is the variant's arguments.
+// an update nests: the variant field carries the message that holds the
+// variant's arguments.
 func nativeToolCallFrame(callID string, variant int, args []byte) []byte {
 	var call adapterscursor.Writer
-	call.Bytes(variant, args)
+	call.Bytes(variant, toolCallArgs(args))
 	call.String(callIDField, callID)
 	return call.BytesOut()
 }
