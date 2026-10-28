@@ -77,7 +77,39 @@ func (r *Runner) Run(ctx context.Context) ([]inference.Event, error) {
 		// ended the run, so its stream is not read again.
 		return turn.conversation.finish(runErr, nil)
 	}
-	return turn.conversation.finish(runErr, streamRefusal(turn.reader, turn.response))
+	return turn.conversation.finish(runErr, turn.conversation.refusal(streamRefusal(turn.reader, turn.response)))
+}
+
+// refusal names why the turn was refused. A conversation Cursor refuses
+// because its state does not match what it already holds is the one failure
+// the replayed state explains, so the refusal carries a summary of what was
+// replayed.
+func (c *conversation) refusal(err error) error {
+	if err == nil {
+		return nil
+	}
+	var refusal cursor.EndStream
+	if !errors.As(err, &refusal) || refusal.Name != "failed_precondition" {
+		return err
+	}
+	return fmt.Errorf("%w: %s", err, c.replaySummary())
+}
+
+// replaySummary describes the state a refused turn replayed: its size, the
+// blobs it references, and the tool calls it carried. It names no prompt
+// text, only what the state is made of.
+func (c *conversation) replaySummary() string {
+	ids := make([]string, 0, len(c.calls))
+	for id := range c.calls {
+		ids = append(ids, id)
+	}
+	sortStrings(ids)
+	blobs := 0
+	if c.history.Store != nil {
+		blobs = len(c.history.Store.blobs)
+	}
+	return fmt.Sprintf("replayed state: %d bytes, %d blobs, calls %v",
+		len(c.history.State), blobs, ids)
 }
 
 // turn is one live duplex stream: the conversation, its body and response,

@@ -416,6 +416,34 @@ func TestRunReportsATrailerRefusal(t *testing.T) {
 	}
 }
 
+// TestRunSummarizesARefusedReplay covers the refusal that names a state the
+// conversation already holds. The summary says what the turn replayed, so a
+// rejected state can be read without the blobs that carried it.
+func TestRunSummarizesARefusedReplay(t *testing.T) {
+	server := newFixtureServer(t, func(s *fixtureServer, w http.ResponseWriter, reader *adapterscursor.FrameReader) {
+		_ = parseClientMessage(t, s.next(reader))
+		s.writeEnd(w, []byte(`{"error":{"code":"failed_precondition","message":"Error"}}`))
+	})
+	codec := NewCodec(server.server.URL)
+	_, err := codec.RunBidirectional(context.Background(), wire.BidirectionalCall{
+		Client: h2Client(server.server.Client()), Request: testRequest(), Opts: wire.CodecOpts{
+			BaseURL: server.server.URL, CredentialRef: "token", Cursor: testSelection(),
+		},
+	})
+	if err == nil {
+		t.Fatal("RunBidirectional() succeeded on a refused stream")
+	}
+	if !strings.Contains(err.Error(), "replayed state:") {
+		t.Fatalf("RunBidirectional() error = %v, want the replay summary", err)
+	}
+	// The refusal still classifies as itself, so the next request rotates
+	// onto a fresh wire conversation.
+	var refusal adapterscursor.EndStream
+	if !errors.As(err, &refusal) || refusal.Name != "failed_precondition" {
+		t.Fatalf("RunBidirectional() error = %v, want the refusal itself", err)
+	}
+}
+
 func TestRunToolHandoff(t *testing.T) {
 	server := newFixtureServer(t, func(s *fixtureServer, w http.ResponseWriter, reader *adapterscursor.FrameReader) {
 		_ = parseClientMessage(t, s.next(reader))
