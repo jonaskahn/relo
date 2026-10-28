@@ -346,13 +346,20 @@ func (s *Server) decodeJSON(w http.ResponseWriter, r *http.Request, target any) 
 func writeServiceError(w http.ResponseWriter, err error) {
 	var readOnly *appcatalog.CapabilityReadOnlyError
 	if errors.As(err, &readOnly) {
-		writeErrorData(w, http.StatusConflict, "capability_read_only", err.Error(), map[string]any{
-			"field": readOnly.Field, "source": readOnly.Source,
-		})
+		writeCapabilityReadOnlyError(w, err, readOnly)
 		return
 	}
 	status, code := serviceStatus(err)
 	writeError(w, status, code, err.Error())
+}
+
+func writeCapabilityReadOnlyError(w http.ResponseWriter, err error, readOnly *appcatalog.CapabilityReadOnlyError) {
+	writeErrorBody(w, http.StatusConflict, errorBody{
+		Code: "capability_read_only", Message: err.Error(),
+		Data: map[string]any{
+			"field": readOnly.Field, "source": readOnly.Source,
+		},
+	})
 }
 
 func serviceStatus(err error) (int, string) {

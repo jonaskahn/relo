@@ -74,14 +74,19 @@ func (s *Service) AccountContext(ctx context.Context, credentialID string) (Acco
 			}
 		}
 	}
-	return s.accountContextOf(snapshot, entry.ID, entry.ProviderID, overrides, factsByModel), nil
+	return s.accountContextOf(snapshot, entry.ID, entry.ProviderID, accountContextSources{overrides: overrides, discovered: factsByModel}), nil
 }
 
-func (s *Service) accountContextOf(snapshot *catalog.Snapshot, credentialID, providerID string, overrides map[string]*int64, discovered map[string]catalog.AccountFactsRecord) AccountContext {
+type accountContextSources struct {
+	overrides  map[string]*int64
+	discovered map[string]catalog.AccountFactsRecord
+}
+
+func (s *Service) accountContextOf(snapshot *catalog.Snapshot, credentialID, providerID string, sources accountContextSources) AccountContext {
 	described := AccountContext{CredentialID: credentialID, ProviderID: providerID, Models: []AccountContextModel{}}
 	for _, model := range snapshot.Models(providerID) {
-		override := overrides[model.ID]
-		effective := effectiveAccountModel(model, override, discovered[model.ID])
+		override := sources.overrides[model.ID]
+		effective := effectiveAccountModel(model, override, sources.discovered[model.ID])
 		described.Models = append(described.Models, AccountContextModel{
 			ModelID: model.ID, Effective: effective.ContextWindow, Override: override,
 			Inherited: model.ContextWindow, MaxInput: effective.MaxInput,
@@ -113,6 +118,7 @@ func effectiveAccountModel(model catalog.Model, manual *int64, discovered catalo
 }
 
 // SetAccountModelsContext writes one context window on every named model of one account.
+// nolint:funlen
 func (s *Service) SetAccountModelsContext(ctx context.Context, credentialID string, modelIDs []string, value *int64) (AccountContextWrite, error) {
 	if value != nil && (*value < 1 || *value > maxContextWindow) {
 		return AccountContextWrite{}, fmt.Errorf("context_window must be between 1 and %d: %w", maxContextWindow, ErrInvalidCatalogRow)
@@ -128,31 +134,13 @@ func (s *Service) SetAccountModelsContext(ctx context.Context, credentialID stri
 	write := AccountContextWrite{Applied: []string{}, Skipped: []AccountContextSkip{}}
 	now := time.Now().UnixMilli()
 	for _, modelID := range modelIDs {
-		model, found := snapshot.Model(entry.ProviderID, modelID)
-		if !found {
-			write.Skipped = append(write.Skipped, AccountContextSkip{ModelID: modelID, Reason: "the connection does not hold this model"})
-			continue
+		reason, err := s.accountContextSkipReason(ctx, accountContextWriteInput{snapshot: snapshot, entry: entry, modelID: modelID, value: value})
+		if err != nil {
+			return AccountContextWrite{}, err
 		}
-		if value != nil && model.ContextWindow != nil && model.FactSources.ContextWindow != "override" {
-			write.Skipped = append(write.Skipped, AccountContextSkip{ModelID: modelID, Reason: "context_window is defined by " + model.FactSources.ContextWindow})
+		if reason != "" {
+			write.Skipped = append(write.Skipped, AccountContextSkip{ModelID: modelID, Reason: reason})
 			continue
-		}
-		if value != nil && s.facts != nil {
-			capabilities, err := s.facts.ListCapabilities(ctx, entry.ID)
-			if err != nil {
-				return AccountContextWrite{}, err
-			}
-			known := false
-			for _, fact := range capabilities {
-				if fact.ModelID == modelID && fact.Source != "manual" && fact.ContextWindow != nil {
-					known = true
-					break
-				}
-			}
-			if known {
-				write.Skipped = append(write.Skipped, AccountContextSkip{ModelID: modelID, Reason: "context_window is defined by the account roster"})
-				continue
-			}
 		}
 		if err := s.facts.Save(ctx, pool.ContextFact{
 			CredentialID: entry.ID, ProviderID: entry.ProviderID, ModelID: modelID,
@@ -171,6 +159,39 @@ func (s *Service) SetAccountModelsContext(ctx context.Context, credentialID stri
 		s.afterChange(ctx)
 	}
 	return write, nil
+}
+
+type accountContextWriteInput struct {
+	snapshot *catalog.Snapshot
+	entry    pool.PoolEntry
+	modelID  string
+	value    *int64
+}
+
+func (s *Service) accountContextSkipReason(ctx context.Context, in accountContextWriteInput) (string, error) {
+	model, found := in.snapshot.Model(in.entry.ProviderID, in.modelID)
+	if !found {
+		return "the connection does not hold this model", nil
+	}
+	if in.value == nil {
+		return "", nil
+	}
+	if model.ContextWindow != nil && model.FactSources.ContextWindow != "override" {
+		return "context_window is defined by " + model.FactSources.ContextWindow, nil
+	}
+	if s.facts == nil {
+		return "", nil
+	}
+	capabilities, err := s.facts.ListCapabilities(ctx, in.entry.ID)
+	if err != nil {
+		return "", err
+	}
+	for _, fact := range capabilities {
+		if fact.ModelID == in.modelID && fact.Source != "manual" && fact.ContextWindow != nil {
+			return "context_window is defined by the account roster", nil
+		}
+	}
+	return "", nil
 }
 
 func (s *Service) accountServes(credentialID string, model catalog.Model) bool {

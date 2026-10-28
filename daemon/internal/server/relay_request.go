@@ -210,9 +210,9 @@ func (s *Server) droppedCeilingWarning(spec attemptSpec) string {
 	return "the model ignores the max-output ceiling"
 }
 
+// nolint:funlen
 func (s *Server) buildAttemptExchange(spec attemptSpec, module wire.CodecModule, final bool) (Exchange, error) {
-	candidate, outcome, host, authorized := spec.candidate, spec.outcome, spec.host, spec.authorized
-	template, templated := s.connectionTemplate(host)
+	template, templated := s.connectionTemplate(spec.host)
 	extra, err := s.attemptHeaders(spec, template, templated)
 	if err != nil {
 		return Exchange{}, err
@@ -221,16 +221,42 @@ func (s *Server) buildAttemptExchange(spec attemptSpec, module wire.CodecModule,
 	if err := s.validateOutboundRequest(spec, request); err != nil {
 		return Exchange{}, err
 	}
-	exchange := Exchange{
-		ProviderID: candidate.ProviderID, Codec: wire.RestoreToolNames(module, originals),
+	exchange := s.attemptExchange(spec, attemptExchangeInputs{
+		module: module, final: final, request: request, originals: originals, extra: extra,
+		template: template, templated: templated,
+	})
+	s.attachAttemptHooks(&exchange, spec)
+	return exchange, nil
+}
+
+type attemptExchangeInputs struct {
+	module    wire.CodecModule
+	final     bool
+	request   *inference.Request
+	originals map[string]string
+	extra     map[string]string
+	template  catalog.Template
+	templated bool
+}
+
+func (s *Server) attemptExchange(spec attemptSpec, in attemptExchangeInputs) Exchange {
+	candidate, outcome, host, authorized := spec.candidate, spec.outcome, spec.host, spec.authorized
+	return Exchange{
+		ProviderID: candidate.ProviderID, Codec: wire.RestoreToolNames(in.module, in.originals),
 		CaptureLimit:   s.captureLimit(),
-		RequiresStream: templated && template.RequiresStream,
-		Options:        s.attemptCodecOptions(spec, request, extra, template, templated),
-		Request:        request,
-		Inbound:        spec.inbound, Surface: outcome.surface, RequestID: outcome.requestID,
-		CredentialLabel: authorized.Label, Final: final,
+		RequiresStream: in.templated && in.template.RequiresStream,
+		Options: s.attemptCodecOptions(spec, attemptCodecInputs{
+			request: in.request, extra: in.extra, template: in.template, templated: in.templated,
+		}),
+		Request: in.request,
+		Inbound: spec.inbound, Surface: outcome.surface, RequestID: outcome.requestID,
+		CredentialLabel: authorized.Label, Final: in.final,
 		Policy: connectionPolicy(host),
 	}
+}
+
+func (s *Server) attachAttemptHooks(exchange *Exchange, spec attemptSpec) {
+	candidate, outcome, host, authorized := spec.candidate, spec.outcome, spec.host, spec.authorized
 	if host.Auth == catalog.AuthOAuth && authorized.CredentialID != "" {
 		providerID, credentialID, rejected := candidate.ProviderID, authorized.CredentialID, authorized.Token
 		exchange.OnUnauthorized = func(ctx context.Context) (catalog.Authorization, error) {
@@ -242,7 +268,6 @@ func (s *Server) buildAttemptExchange(spec attemptSpec, module wire.CodecModule,
 		anchor, providerID, credentialID := s.conversationAnchor(outcome, spec.request), candidate.ProviderID, authorized.CredentialID
 		exchange.OnHandoff = func() { s.cursorWires.rotate(providerID, credentialID, anchor) }
 	}
-	return exchange, nil
 }
 
 func (s *Server) attemptHeaders(spec attemptSpec, template catalog.Template, templated bool) (map[string]string, error) {
@@ -328,8 +353,15 @@ func (s *Server) freeLaneSession(lane string) string {
 	return session
 }
 
+type attemptCodecInputs struct {
+	request   *inference.Request
+	extra     map[string]string
+	template  catalog.Template
+	templated bool
+}
+
 // nolint:funlen
-func (s *Server) attemptCodecOptions(spec attemptSpec, request *inference.Request, extra map[string]string, template catalog.Template, templated bool) wire.CodecOpts {
+func (s *Server) attemptCodecOptions(spec attemptSpec, in attemptCodecInputs) wire.CodecOpts {
 	candidate, outcome, host, authorized := spec.candidate, spec.outcome, spec.host, spec.authorized
 	anchor := s.conversationAnchor(outcome, spec.request)
 	return wire.CodecOpts{
@@ -346,8 +378,8 @@ func (s *Server) attemptCodecOptions(spec attemptSpec, request *inference.Reques
 		NativeBody:             s.nativeBody(outcome, candidate),
 		RequestID:              outcome.requestID,
 		SessionAnchor:          anchor,
-		ExtraHeaders:           extra,
-		RefusesMaxOutputTokens: templated && template.RefusesMaxOutputTokens,
+		ExtraHeaders:           in.extra,
+		RefusesMaxOutputTokens: in.templated && in.template.RefusesMaxOutputTokens,
 		MaxOutput:              candidate.Model.MaxOutput,
 		ReasoningEfforts:       candidate.Model.ReasoningEfforts,
 		ReasoningToggle:        candidate.Model.ReasoningToggle,
@@ -359,7 +391,7 @@ func (s *Server) attemptCodecOptions(spec attemptSpec, request *inference.Reques
 		LongContext:            outcome.longContext,
 		NativeMillion:          outcome.nativeMillion,
 		UpstreamModel:          candidate.Model.UpstreamID,
-		PromptTokens:           s.attemptPromptTokens(request, candidate.Model, templated && template.RefusesMaxOutputTokens),
+		PromptTokens:           s.attemptPromptTokens(in.request, candidate.Model, in.templated && in.template.RefusesMaxOutputTokens),
 		Cursor:                 spec.cursor,
 		Antigravity:            spec.antigravity,
 	}
@@ -587,6 +619,7 @@ func endpointBase(candidate routing.Candidate, authorized catalog.Authorization)
 // each shortened tool again on the answer. The signed-out Zen lane corrects
 // everything its gateway refuses; a paid OpenCode lane shares only the
 // gateway's tool-name limit, so its request stays otherwise whole.
+// nolint:funlen
 func (s *Server) modelRequest(spec attemptSpec, template catalog.Template, templated bool) (*inference.Request, map[string]string) {
 	copied := modelRequest(spec.outcome.request, spec.candidate.Model.UpstreamID)
 	// A client that names no output ceiling leaves the upstream gateway its
@@ -634,6 +667,7 @@ func (s *Server) modelRequest(spec attemptSpec, template catalog.Template, templ
 
 // validateOutboundRequest rejects a request the selected account explicitly
 // cannot serve. It never drops tools, images, or reasoning to make a turn fit.
+// nolint:funlen
 func (s *Server) validateOutboundRequest(spec attemptSpec, request *inference.Request) error {
 	if request == nil {
 		return nil

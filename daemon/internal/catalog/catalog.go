@@ -931,15 +931,6 @@ func xiaomiProviderID(id string) bool {
 	return id == "xiaomi" || strings.HasPrefix(id, "xiaomi-token-plan")
 }
 
-func pickEfforts(ov, pr, md []string) []string {
-	for _, values := range [][]string{ov, pr, md} {
-		if values != nil {
-			return values
-		}
-	}
-	return nil
-}
-
 func overridden(ov FactsRecord, m ModelRecord) bool {
 	if m.Match == "manual" {
 		return true
@@ -1002,30 +993,8 @@ func pickString(vals ...any) string {
 	return ""
 }
 
-func boolValue(value *bool) bool {
-	return value != nil && *value
-}
-
 func switchOn(value *bool) bool {
 	return value == nil || *value
-}
-
-func pickInt64(vals ...*int64) *int64 {
-	for _, v := range vals {
-		if v != nil {
-			return v
-		}
-	}
-	return nil
-}
-
-func pickBool(vals ...*bool) *bool {
-	for _, v := range vals {
-		if v != nil {
-			return v
-		}
-	}
-	return nil
 }
 
 func sortedProviders(index map[string]Provider) []Provider {

@@ -677,7 +677,13 @@ func baseModelView(model catalog.Model) Model {
 	}
 }
 
+// nolint:funlen
 func describeModelLayers(described *Model, model catalog.Model) {
+	describeModelWindows(described, model)
+	describeModelCapabilities(described, model)
+}
+
+func describeModelWindows(described *Model, model catalog.Model) {
 	described.ContextSource = model.FactSources.ContextWindow
 	described.MaxOutputSource = model.FactSources.MaxOutput
 	described.ContextLayers = ContextLayers{
@@ -690,6 +696,9 @@ func describeModelLayers(described *Model, model catalog.Model) {
 		Provider:  model.FactsProvider.MaxOutput,
 		ModelsDev: model.FactsModelsDev.MaxOutput,
 	}
+}
+
+func describeModelCapabilities(described *Model, model catalog.Model) {
 	described.Capabilities = Capabilities{
 		Tools:     model.SupportsTools,
 		Reasoning: model.SupportsReasoning,

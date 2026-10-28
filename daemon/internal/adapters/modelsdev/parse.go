@@ -428,11 +428,6 @@ func hasModality(modalities []string, wanted string) bool {
 	return false
 }
 
-func boolPtr(b bool) *bool {
-	val := b
-	return &val
-}
-
 func effortLadder(reasoning bool, options []rawReasoningOpt) []string {
 	if !reasoning || options == nil {
 		return nil

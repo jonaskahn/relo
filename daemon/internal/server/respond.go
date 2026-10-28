@@ -27,11 +27,11 @@ func writeJSON(w http.ResponseWriter, status int, payload any) {
 }
 
 func writeError(w http.ResponseWriter, status int, code, message string) {
-	writeJSON(w, status, errorResponse{Error: errorBody{Code: code, Message: message}})
+	writeErrorBody(w, status, errorBody{Code: code, Message: message})
 }
 
-func writeErrorData(w http.ResponseWriter, status int, code, message string, data map[string]any) {
-	writeJSON(w, status, errorResponse{Error: errorBody{Code: code, Message: message, Data: data}})
+func writeErrorBody(w http.ResponseWriter, status int, body errorBody) {
+	writeJSON(w, status, errorResponse{Error: body})
 }
 
 type refusal struct {

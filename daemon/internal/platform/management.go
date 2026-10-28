@@ -146,6 +146,7 @@ func (w *managementWiring) services() {
 	edges.Catalog = w.catalogSvc
 }
 
+// nolint:funlen
 func (w *managementWiring) newManagementCatalog(edges *AccountEdges) *appcatalog.Service {
 	refreshClaude := w.refreshClaude
 	if refreshClaude == nil {

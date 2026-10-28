@@ -11,6 +11,7 @@ import (
 	"github.com/jonaskahn/relo/internal/inference"
 )
 
+// nolint:funlen
 func (s *Server) handleListModels(protocol string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		snapshot, found := s.opts.Catalog.Snapshot()
@@ -21,46 +22,59 @@ func (s *Server) handleListModels(protocol string) http.HandlerFunc {
 			})
 			return
 		}
-		profile := strings.ToLower(strings.TrimSpace(r.URL.Query().Get("profile")))
-		anthropic := protocol == inference.ProtocolAnthropic || s.isAnthropicRequest(r)
-		if profile == "anthropic" && protocol != inference.ProtocolAnthropic {
-			writeError(w, http.StatusBadRequest, "incompatible_profile", "the anthropic profile requires the Anthropic protocol")
-			return
-		}
-		if profile != "" && anthropic && profile != "anthropic" {
-			writeError(w, http.StatusBadRequest, "incompatible_profile", "the Anthropic protocol does not serve the "+profile+" profile")
-			return
-		}
-		if anthropicProfile(profile, anthropic) {
-			listed := listedModels(snapshot, listView{advertised: s.advertisedContexts(r.Context()), stripClaude: true})
-			writeJSON(w, http.StatusOK, anthropicModelList(listed))
-			return
-		}
-		if profile == "" && wireClientKind(r) == "codex" {
-			profile = "codex"
-		}
-		if profile != "" && profile != "openai" && profile != "codex" {
-			writeError(w, http.StatusBadRequest, "unknown_profile", "unknown model-list profile")
-			return
-		}
-		if profile == "codex" {
-			rows := []map[string]any{}
-			if s.opts.Integrations != nil {
-				rows = s.opts.Integrations.CodexCatalogRows()
-			}
-			attributeCodexRows(rows, listedModels(snapshot, listView{}))
-			writeJSON(w, http.StatusOK, map[string]any{"models": rows})
-			return
-		}
-		writeJSON(w, http.StatusOK, openAIModelList(listedModels(snapshot, listView{})))
+		s.serveModelList(w, r, snapshot, protocol)
 	}
 }
 
-func anthropicProfile(profile string, anthropic bool) bool {
-	if anthropic {
-		return true
+func (s *Server) serveModelList(w http.ResponseWriter, r *http.Request, snapshot *catalog.Snapshot, protocol string) {
+	profile, anthropic, ok := s.modelListProfile(w, r, protocol)
+	if !ok {
+		return
 	}
-	return profile == "anthropic"
+	if anthropic {
+		listed := listedModels(snapshot, listView{advertised: s.advertisedContexts(r.Context()), stripClaude: true})
+		writeJSON(w, http.StatusOK, anthropicModelList(listed))
+		return
+	}
+	if profile == "codex" {
+		s.writeCodexModelList(w, snapshot)
+		return
+	}
+	writeJSON(w, http.StatusOK, openAIModelList(listedModels(snapshot, listView{})))
+}
+
+func (s *Server) writeCodexModelList(w http.ResponseWriter, snapshot *catalog.Snapshot) {
+	rows := []map[string]any{}
+	if s.opts.Integrations != nil {
+		rows = s.opts.Integrations.CodexCatalogRows()
+	}
+	attributeCodexRows(rows, listedModels(snapshot, listView{}))
+	writeJSON(w, http.StatusOK, map[string]any{"models": rows})
+}
+
+func (s *Server) modelListProfile(w http.ResponseWriter, r *http.Request, protocol string) (string, bool, bool) {
+	profile := strings.ToLower(strings.TrimSpace(r.URL.Query().Get("profile")))
+	protocolAnthropic := protocol == inference.ProtocolAnthropic
+	anthropic := protocolAnthropic || s.isAnthropicRequest(r)
+	if profile == "anthropic" && !protocolAnthropic {
+		writeError(w, http.StatusBadRequest, "incompatible_profile", "the anthropic profile requires the Anthropic protocol")
+		return "", false, false
+	}
+	if profile != "" && anthropic && profile != "anthropic" {
+		writeError(w, http.StatusBadRequest, "incompatible_profile", "the Anthropic protocol does not serve the "+profile+" profile")
+		return "", false, false
+	}
+	if anthropic {
+		return profile, true, true
+	}
+	if profile == "" && wireClientKind(r) == "codex" {
+		profile = "codex"
+	}
+	if profile != "" && profile != "openai" && profile != "codex" {
+		writeError(w, http.StatusBadRequest, "unknown_profile", "unknown model-list profile")
+		return "", false, false
+	}
+	return profile, false, true
 }
 
 func wireClientKind(r *http.Request) string {
@@ -276,35 +290,6 @@ func (s *Server) advertisedContexts(ctx context.Context) map[string]*int64 {
 		return nil
 	}
 	return accounts.AdvertisedContexts(ctx)
-}
-
-func groupSmaller(snapshot *catalog.Snapshot, group catalog.Group, pick func(catalog.Model) *int64) *int64 {
-	var smallest *int64
-	for _, model := range routableMembers(snapshot, group) {
-		value := pick(model)
-		if value == nil {
-			continue
-		}
-		if smallest == nil || *value < *smallest {
-			smallest = value
-		}
-	}
-	return smallest
-}
-
-func routableMembers(snapshot *catalog.Snapshot, group catalog.Group) []catalog.Model {
-	members := make([]catalog.Model, 0, len(group.Members))
-	for _, member := range group.Members {
-		if !member.Enabled {
-			continue
-		}
-		model, found := snapshot.Model(member.ProviderID, member.ModelID)
-		if !found || snapshot.SkipReason(model, catalog.Requirements{}) != "" {
-			continue
-		}
-		members = append(members, model)
-	}
-	return members
 }
 
 func anthropicModelList(entries []listedModel) map[string]any {

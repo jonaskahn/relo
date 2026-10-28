@@ -165,7 +165,11 @@ func applyReasoningFamily(res *CapabilityResolution, layers []namedCapabilityLay
 	if chosen < 0 {
 		return
 	}
-	layer := layers[chosen]
+	applyReasoningLayer(res, layers[chosen])
+}
+
+// nolint:funlen
+func applyReasoningLayer(res *CapabilityResolution, layer namedCapabilityLayer) {
 	source := layer.name
 	res.Sources.Reasoning = source
 	if layer.facts.SupportsReasoning != nil {
@@ -335,39 +339,49 @@ func indexAdvertisedModels(snapshot *Snapshot, facts []AccountFactsRecord) {
 	if !ok || len(facts) == 0 {
 		return
 	}
-	byCredential := make(map[string]map[key][]AccountFactsRecord)
-	for _, fact := range facts {
-		if byCredential[fact.CredentialID] == nil {
-			byCredential[fact.CredentialID] = make(map[key][]AccountFactsRecord)
-		}
-		key := key{providerID: fact.ProviderID, modelID: fact.ModelID}
-		byCredential[fact.CredentialID][key] = append(byCredential[fact.CredentialID][key], fact)
-	}
+	byCredential := groupAccountFacts(facts)
 	for _, host := range snapshot.Providers {
 		credentials := append([]string(nil), roster.ActiveCredentials(host.ID)...)
 		if len(credentials) == 0 {
 			continue
 		}
 		for _, model := range snapshot.byProviderM[host.ID] {
-			effective := make([]Model, 0, len(credentials))
-			for _, credentialID := range credentials {
-				if !roster.AccountCanServe(credentialID, modelIDsOf(model)) {
-					continue
-				}
-				combined := CombineAccountFacts(byCredential[credentialID][key{providerID: model.ProviderID, modelID: model.ID}], model)
-				if combined == nil {
-					effective = append(effective, model)
-					continue
-				}
-				effective = append(effective, ApplyAccountCapabilities(model, *combined))
+			if advertised, ok := advertisedModelForAccounts(roster, credentials, byCredential, model); ok {
+				snapshot.advertised[key{providerID: model.ProviderID, modelID: model.ID}] = advertised
 			}
-			if len(effective) == 0 {
-				continue
-			}
-			advertised := conservativeModel(model, effective)
-			snapshot.advertised[key{providerID: model.ProviderID, modelID: model.ID}] = advertised
 		}
 	}
+}
+
+func groupAccountFacts(facts []AccountFactsRecord) map[string]map[key][]AccountFactsRecord {
+	byCredential := make(map[string]map[key][]AccountFactsRecord)
+	for _, fact := range facts {
+		if byCredential[fact.CredentialID] == nil {
+			byCredential[fact.CredentialID] = make(map[key][]AccountFactsRecord)
+		}
+		k := key{providerID: fact.ProviderID, modelID: fact.ModelID}
+		byCredential[fact.CredentialID][k] = append(byCredential[fact.CredentialID][k], fact)
+	}
+	return byCredential
+}
+
+func advertisedModelForAccounts(roster AccountRoster, credentials []string, facts map[string]map[key][]AccountFactsRecord, model Model) (Model, bool) {
+	effective := make([]Model, 0, len(credentials))
+	for _, credentialID := range credentials {
+		if !roster.AccountCanServe(credentialID, modelIDsOf(model)) {
+			continue
+		}
+		combined := CombineAccountFacts(facts[credentialID][key{providerID: model.ProviderID, modelID: model.ID}], model)
+		if combined == nil {
+			effective = append(effective, model)
+			continue
+		}
+		effective = append(effective, ApplyAccountCapabilities(model, *combined))
+	}
+	if len(effective) == 0 {
+		return Model{}, false
+	}
+	return conservativeModel(model, effective), true
 }
 
 // CombineAccountFacts folds one credential's discovered rows and manual

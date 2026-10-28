@@ -27,6 +27,21 @@ func rebaseNativeBody(raw []byte, model string, metadata *metadataDef, override 
 	if !ok || !hasMessages(members) {
 		return nil, false
 	}
+	rebuilt, written := rewriteNativeMembers(members, model, metadata, override)
+	if !written {
+		rebuilt = append(rebuilt, member{key: "model", value: modelValue(model)})
+	}
+	if override.EnforceThinking && override.Thinking != nil && !hasMember(rebuilt, "thinking") {
+		rebuilt = append(rebuilt, member{key: "thinking", value: thinkingValue(override.Thinking)})
+	}
+	encoded, err := encodeMembers(rebuilt)
+	if err != nil {
+		return nil, false
+	}
+	return encoded, true
+}
+
+func rewriteNativeMembers(members []member, model string, metadata *metadataDef, override nativeOverride) ([]member, bool) {
 	target := modelValue(model)
 	rebuilt := make([]member, 0, len(members)+1)
 	written := false
@@ -56,17 +71,7 @@ func rebaseNativeBody(raw []byte, model string, metadata *metadataDef, override 
 		}
 		rebuilt = append(rebuilt, current)
 	}
-	if !written {
-		rebuilt = append(rebuilt, member{key: "model", value: target})
-	}
-	if override.EnforceThinking && override.Thinking != nil && !hasMember(rebuilt, "thinking") {
-		rebuilt = append(rebuilt, member{key: "thinking", value: thinkingValue(override.Thinking)})
-	}
-	encoded, err := encodeMembers(rebuilt)
-	if err != nil {
-		return nil, false
-	}
-	return encoded, true
+	return rebuilt, written
 }
 
 func hasMember(members []member, name string) bool {
