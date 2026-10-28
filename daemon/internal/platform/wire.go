@@ -220,12 +220,13 @@ func (w *wiring) services() {
 }
 
 func (w *wiring) newCatalogService(edges *AccountEdges, accounts *appaccount.Service) *appcatalog.Service {
+	seed, _ := modelsdev.EmbeddedSeed()
 	return appcatalog.New(appcatalog.Options{
 		Store: sqlite.NewCatalogRepo(w.db), Catalog: w.models, Pools: w.built.pools,
 		Entries: w.credRepo, Accounts: accounts, Secrets: NewQuietSecrets(w.built.secrets),
 		Credentials: w.built.credentials, Direct: upstream.Direct,
 		Discover:  discovery.New(NewHTTPClient()),
-		ModelsDev: modelsdev.NewDirectory(filepath.Join(w.options.Home, "cache"), w.cfg.Catalog.ModelsDevURL, nil),
+		ModelsDev: modelsdev.NewDirectoryWithSeed(filepath.Join(w.options.Home, "cache"), w.cfg.Catalog.ModelsDevURL, nil, seed),
 		Templates: TemplateRegistry{},
 		TemplatePrefixes: func(ctx context.Context, templateID string) ([]string, bool) {
 			prefixes, found, err := w.templateSettings.Prefixes(ctx, templateID)

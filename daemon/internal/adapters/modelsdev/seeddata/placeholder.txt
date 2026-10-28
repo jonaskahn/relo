@@ -1,0 +1,4 @@
+This file keeps //go:embed seeddata/* compilable in a clean checkout.
+
+`make seed` writes modelsdev.json.gz beside it. The generated dataset is
+ignored by git; it exists only in release artifacts and local builds.

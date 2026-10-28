@@ -1,4 +1,4 @@
-// models.dev directory: cached downloads of the dataset.
+// models.dev directory: network-first reads with a local build seed and cache.
 package modelsdev
 
 import (
@@ -30,96 +30,138 @@ const (
 	DefaultURL      = catalog.ModelsDevDefaultURL
 )
 
-const fetchBackoff = 5 * time.Minute
+const (
+	fetchBackoff    = 5 * time.Minute
+	fetchRevalidate = time.Minute
+)
 
 // State reports the current status of models.dev data.
 type State = catalog.ModelsDevState
 
 // Directory manages fetching, caching, and serving models.dev catalog data.
 type Directory struct {
-	mu           sync.RWMutex
-	cacheFile    string
-	sourceURL    string
-	httpClient   *http.Client
+	mu         sync.RWMutex
+	cacheFile  string
+	sourceURL  string
+	httpClient *http.Client
+	seed       Seed
+
+	// seedIndex is decompressed on the first read that needs a local copy.
+	seedIndex  *Index
+	seedLoaded bool
+
 	index        *Index
 	etag         string
 	lastModified string
-	fetchedAtMs  int64
-	lastError    string
-	// failedAt is when the last live fetch failed, which starts the backoff,
-	// and cached holds the saved copy parsed for readers that never fetch.
+	lastFetchErr error
+	lastSuccess  time.Time
+	// failedAt starts the backoff after a live fetch fails, and cached holds
+	// the saved copy parsed for readers that never fetch.
 	failedAt      time.Time
 	cached        *Index
 	cachedModTime time.Time
+	// now is the clock tests pin; production uses time.Now.
+	now func() time.Time
 }
 
-// NewDirectory creates a new models.dev Directory.
+// NewDirectory creates a seedless models.dev Directory. A caller that wants
+// the embedded build seed passes it to NewDirectoryWithSeed.
 func NewDirectory(cacheDir, sourceURL string, client *http.Client) *Directory {
+	return NewDirectoryWithSeed(cacheDir, sourceURL, client, Seed{})
+}
+
+// NewDirectoryWithSeed creates a Directory that falls back to seed. A seed is
+// used only for the official source; a custom catalog URL never receives the
+// embedded copy.
+func NewDirectoryWithSeed(cacheDir, sourceURL string, client *http.Client, seed Seed) *Directory {
 	if sourceURL == "" {
 		sourceURL = DefaultURL
 	}
 	if client == nil {
 		client = &http.Client{Timeout: 5 * time.Second}
 	}
-	cacheFile := filepath.Join(cacheDir, "modelsdev.json")
-	return &Directory{
-		cacheFile:  cacheFile,
+	dir := &Directory{
+		cacheFile:  filepath.Join(cacheDir, "modelsdev.json"),
 		sourceURL:  sourceURL,
 		httpClient: client,
+		now:        time.Now,
 	}
+	if sourceURL == DefaultURL && len(seed.Gzip) > 0 {
+		dir.seed = seed
+	}
+	return dir
 }
 
-// Get returns the loaded index, fetching online or using the cache.
+// Get returns the loaded index, fetching online before using a local copy.
 func (d *Directory) Get(ctx context.Context, mode Mode) (*Index, error) {
 	d.mu.Lock()
 	defer d.mu.Unlock()
 
-	if cached, ok := d.serveMemoryLocked(mode); ok {
-		return cached, nil
+	if cached, err, ok := d.serveMemoryLocked(mode); ok {
+		return cached, err
 	}
-	nowMs := time.Now().UnixMilli()
+	now := d.nowTime()
+	nowMs := now.UnixMilli()
 
-	data, revalidated, fetchErr := d.fetchDatasetLocked(ctx, mode, nowMs)
-	if revalidated {
-		return d.index, nil
+	result, err := d.fetchDatasetLocked(ctx, mode)
+	if err != nil {
+		return d.recordFetchFailureLocked(err, now, nowMs)
 	}
-	if len(data) == 0 {
-		return d.staleDatasetLocked(data, fetchErr, nowMs)
+	if result.notModified {
+		return d.acceptNotModifiedLocked(now, nowMs)
 	}
-	return d.parseDatasetLocked(data, fetchErr, false, nowMs)
+	return d.acceptDatasetLocked(result, now, nowMs)
 }
 
-func (d *Directory) serveMemoryLocked(mode Mode) (*Index, bool) {
-	// If already in memory and not forced and not stale, return it
-	if d.index != nil && mode != ModeForce && !d.index.State.Stale {
-		return d.index, true
+func (d *Directory) nowTime() time.Time {
+	if d.now != nil {
+		return d.now()
 	}
+	return time.Now()
+}
 
+func (d *Directory) serveMemoryLocked(mode Mode) (*Index, error, bool) {
+	if mode == ModeForce {
+		return nil, nil, false
+	}
 	// A live fetch that just failed is left alone until the backoff passes, so
 	// a network that is down costs one attempt every few minutes and the copy
 	// already held answers in the meantime.
-	if mode != ModeForce && !d.failedAt.IsZero() && time.Since(d.failedAt) < fetchBackoff {
+	if !d.failedAt.IsZero() && d.nowTime().Sub(d.failedAt) < fetchBackoff {
 		if d.index != nil {
-			return d.index, true
-		}
-		if cached, err := d.loadFileLocked(); err == nil && cached != nil {
-			return cached, true
+			if d.index.State.Available {
+				return d.index, nil, true
+			}
+			return d.index, d.lastFetchErr, true
 		}
 	}
-	return nil, false
+	// A successful read is asked again at most once a minute; until then the
+	// copy this process holds answers without touching the network.
+	if d.index != nil && d.index.State.Available && !d.index.State.Stale &&
+		!d.lastSuccess.IsZero() && d.nowTime().Sub(d.lastSuccess) < fetchRevalidate {
+		return d.index, nil, true
+	}
+	return nil, nil, false
 }
 
-func (d *Directory) fetchDatasetLocked(ctx context.Context, mode Mode, nowMs int64) ([]byte, bool, error) {
+type fetchResult struct {
+	body         []byte
+	notModified  bool
+	etag         string
+	lastModified string
+}
+
+func (d *Directory) fetchDatasetLocked(ctx context.Context, mode Mode) (fetchResult, error) {
 	req, err := d.newDatasetRequest(ctx, mode)
 	if err != nil {
-		return nil, false, err
+		return fetchResult{}, err
 	}
 	resp, err := d.httpClient.Do(req)
 	if err != nil {
-		return nil, false, err
+		return fetchResult{}, err
 	}
 	defer func() { _ = resp.Body.Close() }()
-	return d.receiveDataset(resp, nowMs)
+	return receiveDataset(resp)
 }
 
 func (d *Directory) newDatasetRequest(ctx context.Context, mode Mode) (*http.Request, error) {
@@ -137,53 +179,78 @@ func (d *Directory) newDatasetRequest(ctx context.Context, mode Mode) (*http.Req
 	return req, nil
 }
 
-func (d *Directory) receiveDataset(resp *http.Response, nowMs int64) ([]byte, bool, error) {
-	if resp.StatusCode == http.StatusNotModified && d.index != nil {
-		d.index.State.LastAttemptAtMs = nowMs
-		d.index.State.LastError = ""
-		d.failedAt = time.Time{}
-		return nil, true, nil
+func receiveDataset(resp *http.Response) (fetchResult, error) {
+	if resp.StatusCode == http.StatusNotModified {
+		return fetchResult{notModified: true}, nil
 	}
 	if resp.StatusCode != http.StatusOK {
-		return nil, false, fmt.Errorf("%w %d", ErrFetchStatus, resp.StatusCode)
+		return fetchResult{}, fmt.Errorf("%w %d", ErrFetchStatus, resp.StatusCode)
 	}
-	body, err := io.ReadAll(io.LimitReader(resp.Body, 16<<20))
+	body, err := io.ReadAll(io.LimitReader(resp.Body, maxDatasetBytes+1))
 	if err != nil {
-		return nil, false, err
+		return fetchResult{}, err
 	}
-	d.failedAt = time.Time{}
-	d.forgetFileLocked()
-	d.etag = resp.Header.Get("ETag")
-	d.lastModified = resp.Header.Get("Last-Modified")
-	d.fetchedAtMs = nowMs
-	_ = d.saveCache(body)
-	return body, false, nil
+	if len(body) > maxDatasetBytes {
+		return fetchResult{}, fmt.Errorf("models.dev dataset exceeds %d bytes", maxDatasetBytes)
+	}
+	return fetchResult{
+		body: body, etag: resp.Header.Get("ETag"),
+		lastModified: resp.Header.Get("Last-Modified"),
+	}, nil
 }
 
-func (d *Directory) staleDatasetLocked(data []byte, fetchErr error, nowMs int64) (*Index, error) {
-	stale := false
-	if len(data) == 0 {
-		cachedData, err := os.ReadFile(d.cacheFile)
-		if err == nil && len(cachedData) > 0 {
-			data = cachedData
-			stale = true
-		}
+func (d *Directory) acceptNotModifiedLocked(now time.Time, nowMs int64) (*Index, error) {
+	if d.index == nil || !d.index.State.Available {
+		return d.recordFetchFailureLocked(
+			fmt.Errorf("models.dev answered %d without a local copy", http.StatusNotModified), now, nowMs)
 	}
+	d.index.State.LastAttemptAtMs = nowMs
+	d.index.State.LastError = ""
+	d.lastFetchErr = nil
+	d.lastSuccess = now
+	d.failedAt = time.Time{}
+	return d.index, nil
+}
 
-	if len(data) > 0 {
-		return d.parseDatasetLocked(data, fetchErr, stale, nowMs)
+func (d *Directory) acceptDatasetLocked(result fetchResult, now time.Time, nowMs int64) (*Index, error) {
+	idx, err := parseDataset(result.body)
+	if err != nil {
+		return d.recordFetchFailureLocked(fmt.Errorf("parse models.dev data: %w", err), now, nowMs)
 	}
-	errMsg := ""
-	if fetchErr != nil {
-		errMsg = fetchErr.Error()
+	d.etag = result.etag
+	d.lastModified = result.lastModified
+	d.failedAt = time.Time{}
+	d.lastFetchErr = nil
+	d.lastSuccess = now
+	d.forgetFileLocked()
+	idx.State = d.networkState(idx, nowMs)
+	d.index = idx
+	_ = d.saveCache(result.body)
+	return idx, nil
+}
+
+func (d *Directory) recordFetchFailureLocked(fetchErr error, now time.Time, nowMs int64) (*Index, error) {
+	d.failedAt = now
+	d.lastFetchErr = fetchErr
+	errMsg := fetchErr.Error()
+
+	local, _ := d.chooseLocalLocked()
+	if local != nil {
+		local.idx.State = d.localState(local, nowMs, errMsg)
+		d.index = local.idx
+		return d.index, fetchErr
 	}
-	if fetchErr != nil {
-		d.failedAt = time.Now()
+	if d.index != nil && d.index.State.Available {
+		// The copy this process fetched could not be saved, so it is still
+		// the best local answer even though no file holds it.
+		d.index.State.LastAttemptAtMs = nowMs
+		d.index.State.LastError = errMsg
+		d.index.State.Stale = d.index.State.Origin != catalog.ModelsDevOriginSeed
+		return d.index, fetchErr
 	}
-	d.lastError = errMsg
-	emptyIndex := d.emptyDatasetLocked(nowMs, errMsg)
-	d.index = emptyIndex
-	return emptyIndex, fetchErr
+	empty := d.emptyDatasetLocked(nowMs, errMsg)
+	d.index = empty
+	return empty, fetchErr
 }
 
 func (d *Directory) emptyDatasetLocked(nowMs int64, errMsg string) *Index {
@@ -199,47 +266,57 @@ func (d *Directory) emptyDatasetLocked(nowMs int64, errMsg string) *Index {
 	}
 }
 
-func (d *Directory) parseDatasetLocked(data []byte, fetchErr error, stale bool, nowMs int64) (*Index, error) {
-	idx, err := parseIndex(data)
-	if err != nil {
-		d.lastError = err.Error()
-		return nil, fmt.Errorf("parse models.dev data: %w", err)
-	}
-
-	errStr := ""
-	if fetchErr != nil {
-		errStr = fetchErr.Error()
-	}
-
-	idx.State = State{
+func (d *Directory) networkState(idx *Index, nowMs int64) State {
+	return State{
 		SourceURL:       d.sourceURL,
-		FetchedAtMs:     d.fetchedAtMs,
-		Stale:           stale,
+		FetchedAtMs:     nowMs,
 		Available:       true,
-		ETag:            d.etag,
-		LastModified:    d.lastModified,
 		ProvidersCount:  len(idx.Providers),
 		ModelsCount:     idx.TotalModels(),
 		LastAttemptAtMs: nowMs,
-		LastError:       errStr,
+		Origin:          catalog.ModelsDevOriginNetwork,
+		ETag:            d.etag,
+		LastModified:    d.lastModified,
 	}
-
-	d.index = idx
-	d.lastError = errStr
-	return idx, fetchErr
 }
 
-// CurrentState returns the current State.
+func (d *Directory) localState(copy *localCopy, nowMs int64, errMsg string) State {
+	lastAttempt := nowMs
+	if errMsg == "" {
+		lastAttempt = copy.at.UnixMilli()
+	}
+	return State{
+		SourceURL:       d.sourceURL,
+		FetchedAtMs:     copy.at.UnixMilli(),
+		Stale:           copy.origin == catalog.ModelsDevOriginCache && errMsg != "",
+		Available:       true,
+		ProvidersCount:  len(copy.idx.Providers),
+		ModelsCount:     copy.idx.TotalModels(),
+		LastAttemptAtMs: lastAttempt,
+		LastError:       errMsg,
+		Origin:          copy.origin,
+	}
+}
+
+// CurrentState reports the copy this process holds, loading the local copy
+// when it has not been read yet. It never asks the network.
 func (d *Directory) CurrentState() State {
-	d.mu.RLock()
-	defer d.mu.RUnlock()
+	d.mu.Lock()
+	defer d.mu.Unlock()
 	if d.index != nil {
 		return d.index.State
 	}
-	return State{
-		SourceURL: d.sourceURL,
-		Available: false,
+	local, err := d.chooseLocalLocked()
+	if local != nil {
+		local.idx.State = d.localState(local, 0, "")
+		d.index = local.idx
+		return d.index.State
 	}
+	state := State{SourceURL: d.sourceURL, Available: false}
+	if err != nil {
+		state.LastError = err.Error()
+	}
+	return state
 }
 
 func (d *Directory) saveCache(data []byte) error {
@@ -254,45 +331,83 @@ func (d *Directory) saveCache(data []byte) error {
 	return os.Rename(tmpFile, d.cacheFile)
 }
 
-// Cached returns the copy this process already holds or the one saved on
-// disk, and never asks the network for it. A caller that has to answer now
-// uses this; a caller that wants the newest data uses Get.
+// Cached returns the copy this process already holds or the local copy on
+// disk, and never asks the network for it.
 func (d *Directory) Cached() (*Index, error) {
 	d.mu.Lock()
 	defer d.mu.Unlock()
-	if d.index != nil && d.index.State.Available && !d.index.State.Stale {
+	if d.index != nil && d.index.State.Available {
 		return d.index, nil
 	}
-	return d.loadFileLocked()
+	local, err := d.chooseLocalLocked()
+	if local == nil {
+		return nil, err
+	}
+	local.idx.State = d.localState(local, 0, "")
+	d.index = local.idx
+	return d.index, nil
 }
 
-func (d *Directory) loadFileLocked() (*Index, error) {
+type localCopy struct {
+	idx    *Index
+	origin catalog.ModelsDevOrigin
+	at     time.Time
+}
+
+// chooseLocalLocked applies one precedence rule: a valid cache at least as new
+// as the seed wins, otherwise the seed answers, and a corrupt cache falls back
+// to the seed.
+func (d *Directory) chooseLocalLocked() (*localCopy, error) {
+	cache, cacheErr := d.loadCacheLocked()
+	seed := d.seedCopyLocked()
+	if cache != nil && (seed == nil || !cache.at.Before(seed.at)) {
+		return cache, nil
+	}
+	if seed != nil {
+		return seed, nil
+	}
+	return nil, cacheErr
+}
+
+func (d *Directory) loadCacheLocked() (*localCopy, error) {
 	info, err := os.Stat(d.cacheFile)
 	if err != nil {
 		return nil, nil
 	}
 	if d.cached != nil && info.ModTime().Equal(d.cachedModTime) {
-		return d.cached, nil
+		return &localCopy{idx: d.cached, origin: catalog.ModelsDevOriginCache, at: info.ModTime()}, nil
 	}
 	data, err := os.ReadFile(d.cacheFile)
 	if err != nil || len(data) == 0 {
 		return nil, nil
 	}
-	idx, err := parseIndex(data)
+	idx, err := parseDataset(data)
 	if err != nil {
 		return nil, fmt.Errorf("parse models.dev data: %w", err)
 	}
-	idx.State = State{
-		SourceURL:       d.sourceURL,
-		FetchedAtMs:     info.ModTime().UnixMilli(),
-		Available:       true,
-		ProvidersCount:  len(idx.Providers),
-		ModelsCount:     idx.TotalModels(),
-		LastAttemptAtMs: info.ModTime().UnixMilli(),
-	}
 	d.cached = idx
 	d.cachedModTime = info.ModTime()
-	return idx, nil
+	return &localCopy{idx: idx, origin: catalog.ModelsDevOriginCache, at: info.ModTime()}, nil
+}
+
+func (d *Directory) seedCopyLocked() *localCopy {
+	if d.seedLoaded {
+		if d.seedIndex == nil {
+			return nil
+		}
+		return &localCopy{idx: d.seedIndex, origin: catalog.ModelsDevOriginSeed, at: d.seed.FetchedAt}
+	}
+	d.seedLoaded = true
+	data, err := decompressSeed(d.seed)
+	if err != nil {
+		return nil
+	}
+	idx, err := parseDataset(data)
+	if err != nil {
+		return nil
+	}
+	d.seedIndex = idx
+	return &localCopy{idx: idx, origin: catalog.ModelsDevOriginSeed, at: d.seed.FetchedAt}
 }
 
 func (d *Directory) forgetFileLocked() {
