@@ -201,6 +201,32 @@ func TestBuildHistoryEncodesToolArgumentsAsProtoValues(t *testing.T) {
 	}
 }
 
+// TestBuildHistoryReplaysAnUnansweredToolCall covers the assistant call whose
+// result has not arrived yet: the replay still carries the call and its args.
+func TestBuildHistoryReplaysAnUnansweredToolCall(t *testing.T) {
+	request := &inference.Request{Model: "sonnet", Messages: []inference.Message{
+		{Role: inference.RoleUser, Content: []inference.ContentPart{{Type: inference.ContentTypeText, Text: "read foo"}}},
+		{Role: inference.RoleAssistant, ToolCalls: []inference.ToolCall{{ID: "call-1", Name: "read", Arguments: `{"path":"foo"}`}}},
+		{Role: inference.RoleUser, Content: []inference.ContentPart{{Type: inference.ContentTypeText, Text: "thanks"}}},
+	}}
+	tools, err := BuildToolMap([]inference.Tool{{Name: "read", Parameters: []byte(`{"type":"object"}`)}})
+	if err != nil {
+		t.Fatalf("BuildToolMap() error = %v", err)
+	}
+	history, _, err := BuildHistory(request, tools)
+	if err != nil {
+		t.Fatalf("BuildHistory() error = %v", err)
+	}
+	call := replayedToolCall(t, history)
+	if call.ToolCallID != "call-1" || call.ToolName != WireName("read") {
+		t.Fatalf("call = %+v, want the unanswered read call", call)
+	}
+	path, ok := decodeJSONValue(call.Args["path"])
+	if !ok || path != "foo" {
+		t.Fatalf("path = %#v %v, want the replayed argument", path, ok)
+	}
+}
+
 func replayedToolCall(t *testing.T, history History) MCPCall {
 	t.Helper()
 	state, err := adapterscursor.Parse(history.State)
