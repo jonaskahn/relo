@@ -204,6 +204,15 @@ func ParseEndStream(payload []byte) (EndStream, bool) {
 		Message: envelope.Error.Message,
 		Status:  http.StatusBadGateway,
 	}
+	if !ok {
+		// Without a service-enum detail, the Connect code is all there is.
+		// It still names whether the request was rejected (the caller's to
+		// fix) or the service failed (worth another account), so a refused
+		// turn is not retried against every account of the connection.
+		if status, known := connectStatus[envelope.Error.Code]; known {
+			refusal.Status = status
+		}
+	}
 	if ok {
 		refusal.Code = detail.code
 		refusal.Name = errorName(detail.code)
@@ -218,6 +227,22 @@ func ParseEndStream(payload []byte) (EndStream, bool) {
 		refusal.Status = http.StatusServiceUnavailable
 	}
 	return refusal, true
+}
+
+// connectStatus maps a Connect error code onto the status it means to a
+// caller. Only the codes that decide whether a retry can help are listed.
+var connectStatus = map[string]int{
+	"invalid_argument":    http.StatusBadRequest,
+	"failed_precondition": http.StatusBadRequest,
+	"out_of_range":        http.StatusBadRequest,
+	"unimplemented":       http.StatusBadRequest,
+	"unauthenticated":     http.StatusUnauthorized,
+	"permission_denied":   http.StatusForbidden,
+	"not_found":           http.StatusNotFound,
+	"resource_exhausted":  http.StatusTooManyRequests,
+	"internal":            http.StatusInternalServerError,
+	"unavailable":         http.StatusServiceUnavailable,
+	"deadline_exceeded":   http.StatusGatewayTimeout,
 }
 
 // errorDetail decodes the service's own error enum out of the frame's binary

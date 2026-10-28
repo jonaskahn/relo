@@ -167,6 +167,7 @@ func buildSystemRules(req *inference.Request) [][]byte {
 			index++
 		}
 	}
+	rules = append(rules, buildRule(systemRulePath(index), externalToolRule))
 	return rules
 }
 

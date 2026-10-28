@@ -112,6 +112,10 @@ type Exchange struct {
 	// once, before anything is written to the client, and resends with what
 	// it returns.
 	OnUnauthorized func(ctx context.Context) (catalog.Authorization, error)
+	// OnHandoff reports that the attempt handed a native execution to the
+	// calling client, which leaves the upstream conversation holding a pending
+	// call the next request cannot continue.
+	OnHandoff func()
 }
 
 // Result reports how one attempt ended, for logging, routing feedback, and
@@ -162,4 +166,7 @@ type Result struct {
 	// RefreshSettled reports that a 401 was already handled by OnUnauthorized
 	// failing, so the caller must not treat the status as a fresh refusal.
 	RefreshSettled bool
+	// RotateWire reports a refusal that may only belong to the reused
+	// upstream conversation, so the next request rebuilds on a fresh one.
+	RotateWire bool
 }

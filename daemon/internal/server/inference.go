@@ -361,6 +361,7 @@ type failedAttempt struct {
 
 func (d *sendDriver) handleAttemptFailure(failed failedAttempt, err error) walkAction {
 	d.last = err
+	d.rotateWire(failed)
 	if !failed.result.Retryable {
 		d.recordSpentAccount(failed.candidate, failed.allowance, failed.result)
 		return d.answerUnretryable(failed)
@@ -379,6 +380,21 @@ func (d *sendDriver) handleAttemptFailure(failed failedAttempt, err error) walkA
 		return walkContinue
 	}
 	return d.leaveAccount(failed)
+}
+
+// rotateWire moves one refused conversation onto the next wire generation, so
+// the next request rebuilds it. Cursor answers failed_precondition when a
+// rebuilt state does not match what the conversation already holds; the same
+// canonical history on a fresh conversation is what serves it.
+func (d *sendDriver) rotateWire(failed failedAttempt) {
+	if !failed.result.RotateWire {
+		return
+	}
+	credential := failed.result.CredentialID
+	if credential == "" {
+		credential = credentialKeyOf(failed.result)
+	}
+	d.s.cursorWires.rotate(failed.candidate.ProviderID, credential, d.s.conversationAnchor(d.outcome, d.r))
 }
 
 // retriesAccount reports whether the failed account is asked again. A failure

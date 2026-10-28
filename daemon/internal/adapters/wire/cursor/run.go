@@ -9,10 +9,19 @@ import (
 	"io"
 	"net/http"
 	"strings"
+	"sync/atomic"
+	"time"
 
 	"github.com/jonaskahn/relo/internal/adapters/cursor"
 	"github.com/jonaskahn/relo/internal/adapters/wire"
 	"github.com/jonaskahn/relo/internal/inference"
+)
+
+// Defaults for a turn's liveness: the reference client pings every five
+// seconds, and a stream silent past the idle bound is dead, not thinking.
+const (
+	defaultHeartbeatEvery = 5 * time.Second
+	defaultIdleTimeout    = 120 * time.Second
 )
 
 // Run errors name why a Cursor turn failed.
@@ -20,6 +29,7 @@ var (
 	ErrUnauthorized    = errors.New("cursor refused the credentials")
 	ErrUnsupportedExec = errors.New("cursor asked for an execution Relo cannot answer")
 	ErrNoTurnEnd       = errors.New("cursor ended the stream without finishing the turn")
+	ErrIdle            = errors.New("cursor sent nothing within the idle limit")
 	ErrInteraction     = errors.New("cursor asked for an interaction Relo cannot answer")
 )
 
@@ -36,10 +46,54 @@ type Runner struct {
 	// refusing it, for an upstream whose dialect states no ceiling to send.
 	RefusesMaxOutputTokens bool
 	ConnectError           func(status int, body []byte) *inference.ErrorInfo
+	// Handoff reports that this turn handed a native execution to the calling
+	// client, which means the upstream conversation holds a pending call the
+	// next request cannot continue.
+	Handoff func()
+	// HeartbeatEvery and IdleTimeout default to the values above when zero.
+	HeartbeatEvery time.Duration
+	IdleTimeout    time.Duration
 }
 
 // Run converses until the turn ends and returns every canonical event.
 func (r *Runner) Run(ctx context.Context) ([]inference.Event, error) {
+	ctx, cancel := context.WithCancel(ctx)
+	defer cancel()
+	turn, err := r.beginTurn(ctx, cancel)
+	if err != nil {
+		return nil, err
+	}
+	defer func() { _ = turn.response.Body.Close() }()
+	runErr := turn.converse(ctx)
+	if turn.idled.Load() && runErr != nil {
+		runErr = ErrIdle
+	}
+	if turn.conversation.externalHandoff {
+		if r.Handoff != nil {
+			r.Handoff()
+		}
+		// A handoff is not a failure and does not depend on how the server
+		// ended the run, so its stream is not read again.
+		return turn.conversation.finish(runErr, nil)
+	}
+	return turn.conversation.finish(runErr, streamRefusal(turn.reader, turn.response))
+}
+
+// turn is one live duplex stream: the conversation, its body and response,
+// and the liveness watchdog that bounds silence.
+type turn struct {
+	conversation *conversation
+	reader       *cursor.FrameReader
+	writer       *io.PipeWriter
+	response     *http.Response
+	idled        atomic.Bool
+	watchdog     *time.Timer
+	stopBeats    func()
+}
+
+// beginTurn prepares and opens one duplex stream. cancel is the run's own
+// cancellation, which the idle watchdog fires when the stream goes silent.
+func (r *Runner) beginTurn(ctx context.Context, cancel context.CancelFunc) (*turn, error) {
 	tools, history, action, err := r.prepare()
 	if err != nil {
 		return nil, err
@@ -52,7 +106,6 @@ func (r *Runner) Run(ctx context.Context) ([]inference.Event, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer func() { _ = response.Body.Close }()
 	if err := r.checkStreamStatus(response); err != nil {
 		_ = writer.Close()
 		return nil, err
@@ -62,9 +115,82 @@ func (r *Runner) Run(ctx context.Context) ([]inference.Event, error) {
 		_, err := writer.Write(cursor.Frame(payload))
 		return err
 	}
-	runErr := conversation.converse(ctx, reader)
-	_ = writer.Close()
-	return conversation.finish(runErr, streamRefusal(reader, response))
+	turn := &turn{conversation: conversation, reader: reader, writer: writer, response: response}
+	watchdog := time.AfterFunc(orDefault(r.IdleTimeout, defaultIdleTimeout), func() {
+		turn.idled.Store(true)
+		cancel()
+	})
+	turn.watchdog = watchdog
+	conversation.touch = func() { watchdog.Reset(orDefault(r.IdleTimeout, defaultIdleTimeout)) }
+	turn.stopBeats = r.heartbeat(conversation.write)
+	return turn, nil
+}
+
+// converse runs the turn to completion and releases the stream. The request
+// body is closed here so the upstream never queues the next turn behind this
+// one; an unclosed body leaves the run live forever.
+func (t *turn) converse(ctx context.Context) error {
+	runErr := t.conversation.converse(ctx, t.reader)
+	t.stopBeats()
+	t.watchdog.Stop()
+	_ = t.writer.Close()
+	if t.conversation.externalHandoff {
+		// The handoff answer has to reach the server before the caller's
+		// cancel tears the request down, or the transport resets the stream
+		// and Cursor keeps waiting on an execution Relo already answered.
+		awaitStreamEnd(t.reader, time.Second)
+	}
+	return runErr
+}
+
+// awaitStreamEnd reads until the server ends the stream or the grace runs
+// out. Only a handoff turn calls it, and it answers nothing further.
+func awaitStreamEnd(reader *cursor.FrameReader, grace time.Duration) {
+	if reader == nil {
+		return
+	}
+	done := make(chan struct{})
+	go func() {
+		defer close(done)
+		for {
+			if _, ended, err := reader.Next(); ended || err != nil {
+				return
+			}
+		}
+	}()
+	select {
+	case <-done:
+	case <-time.After(grace):
+	}
+}
+
+func orDefault(value, fallback time.Duration) time.Duration {
+	if value > 0 {
+		return value
+	}
+	return fallback
+}
+
+// heartbeat pings the server until the returned stop is called. The pipe
+// serializes whole writes, so pings never interleave with replies.
+func (r *Runner) heartbeat(write func([]byte) error) (stop func()) {
+	done := make(chan struct{})
+	go func() {
+		ticker := time.NewTicker(orDefault(r.HeartbeatEvery, defaultHeartbeatEvery))
+		defer ticker.Stop()
+		for {
+			select {
+			case <-done:
+				return
+			case <-ticker.C:
+				if write(buildHeartbeat()) != nil {
+					return
+				}
+			}
+		}
+	}()
+	// A ping blocked on a stalled stream ends when Run closes the writer.
+	return func() { close(done) }
 }
 
 // streamRefusal reads why a stream that ended without finishing its turn was
@@ -204,6 +330,7 @@ type conversation struct {
 	history   History
 	emit      func([]inference.Event)
 	write     func([]byte) error
+	touch     func()
 	events    []inference.Event
 	calls     map[string]bool
 	callIndex int
@@ -212,6 +339,10 @@ type conversation struct {
 	usedUsage bool
 	toolUse   bool
 	turnDone  bool
+	// externalHandoff reports that a native execution was handed to the
+	// calling client. The turn is over for Relo even though Cursor never sent
+	// turnEnded: the result arrives in the client's next request.
+	externalHandoff bool
 }
 
 func newConversation(tools *ToolMap, history History, emit func([]inference.Event)) *conversation {
@@ -239,6 +370,9 @@ func (c *conversation) converse(ctx context.Context, reader *cursor.FrameReader)
 		if err != nil {
 			return err
 		}
+		if c.touch != nil {
+			c.touch()
+		}
 		if ended {
 			return nil
 		}
@@ -246,6 +380,9 @@ func (c *conversation) converse(ctx context.Context, reader *cursor.FrameReader)
 			return err
 		}
 		if c.turnDone {
+			return nil
+		}
+		if c.externalHandoff {
 			return nil
 		}
 	}
@@ -340,12 +477,44 @@ func (c *conversation) handleToolUpdate(message ServerMessage) error {
 	}
 	call, found, err := ParseToolCall(mustEncode(calls[0]))
 	if err != nil || !found {
-		return err
+		if err != nil {
+			return err
+		}
+		return c.handleNativeToolUpdate(mustEncode(calls[0]), callID)
 	}
 	if call.ToolCallID == "" {
 		call.ToolCallID = callID
 	}
 	return c.emitMCPCall(call, 0, "", false)
+}
+
+// handleNativeToolUpdate publishes a native call announced as an update. It
+// never answers on the exec channel: the execution frame that follows is what
+// the server waits on, and only that frame moves the work to the client.
+func (c *conversation) handleNativeToolUpdate(payload []byte, callID string) error {
+	call, found, err := ParseNativeToolCall(payload)
+	if err != nil || !found {
+		return err
+	}
+	call.callID = firstNonEmpty(call.callID, callID)
+	tool, declared := c.resolveNativeCall(call)
+	if !declared {
+		return nil
+	}
+	id := c.nativeCallID(call)
+	if c.calls[id] {
+		return nil
+	}
+	c.calls[id] = true
+	c.toolUse = true
+	arguments := nativeArgsJSON(call.arguments(tool.Name))
+	c.publish(
+		inference.Event{Kind: inference.EventToolCallStart, ToolCall: &inference.ToolCallDelta{Index: c.callIndex, ID: id, Name: tool.Name}},
+		inference.Event{Kind: inference.EventToolCallDelta, ToolCall: &inference.ToolCallDelta{Index: c.callIndex, ID: id, Arguments: arguments}},
+		inference.Event{Kind: inference.EventToolCallEnd, ToolCall: &inference.ToolCallDelta{Index: c.callIndex, ID: id}},
+	)
+	c.callIndex++
+	return nil
 }
 
 func mustEncode(fields []cursor.Field) []byte {
@@ -381,6 +550,26 @@ func (c *conversation) handlePartialUpdate(message ServerMessage) error {
 	}
 	c.emitPartialCall(callID, name, delta)
 	return nil
+}
+
+// resolveNativeCall finds the declared tool a native execution maps onto, in
+// the order the caller's own tool list prefers it.
+func (c *conversation) resolveNativeCall(call nativeCall) (inference.Tool, bool) {
+	for _, name := range call.candidates {
+		if tool, found := c.tools.Canonical(WireName(name)); found {
+			return tool, true
+		}
+	}
+	return inference.Tool{}, false
+}
+
+// nativeCallID derives the stable id one native execution is emitted under,
+// so an update and its execution frame become one canonical call.
+func (c *conversation) nativeCallID(call nativeCall) string {
+	if call.callID != "" {
+		return normalizeToolCallID(call.callID)
+	}
+	return normalizeToolCallID("native-" + itoa(c.callIndex))
 }
 
 // emitMCPCall publishes one declared tool call for external execution.
@@ -461,12 +650,46 @@ func (c *conversation) handleExec(message ServerMessage) error {
 	case 11:
 		return c.handleMCPExec(message)
 	default:
+		if call, ok := translateNativeExec(message); ok {
+			return c.handleNativeExec(call, message.ExecNumericID, message.ExecID)
+		}
 		field, result := buildNativeRejection(message.ExecKind)
 		if field == 0 {
 			return fmt.Errorf("%w: exec variant %d", ErrUnsupportedExec, message.ExecKind)
 		}
 		return c.reply(buildClientExec(message.ExecNumericID, message.ExecID, field, result))
 	}
+}
+
+// handleNativeExec hands a native execution to the calling client. A declared
+// tool becomes a canonical tool call and the turn ends; an undeclared one is
+// refused in the variant the server is waiting on, so the model can pick a
+// declared tool instead.
+func (c *conversation) handleNativeExec(call nativeCall, numericID uint32, execID string) error {
+	tool, declared := c.resolveNativeCall(call)
+	if !declared {
+		field, result := buildNativeRejection(call.variant)
+		if field == 0 {
+			return fmt.Errorf("%w: exec variant %d", ErrUnsupportedExec, call.variant)
+		}
+		return c.reply(buildClientExec(numericID, execID, field, result))
+	}
+	call.callID = firstNonEmpty(call.callID, execID)
+	id := c.nativeCallID(call)
+	if !c.calls[id] {
+		c.calls[id] = true
+		c.toolUse = true
+		arguments := nativeArgsJSON(call.arguments(tool.Name))
+		c.publish(
+			inference.Event{Kind: inference.EventToolCallStart, ToolCall: &inference.ToolCallDelta{Index: c.callIndex, ID: id, Name: tool.Name}},
+			inference.Event{Kind: inference.EventToolCallDelta, ToolCall: &inference.ToolCallDelta{Index: c.callIndex, ID: id, Arguments: arguments}},
+			inference.Event{Kind: inference.EventToolCallEnd, ToolCall: &inference.ToolCallDelta{Index: c.callIndex, ID: id}},
+		)
+		c.callIndex++
+	}
+	c.externalHandoff = true
+	field, result := buildNativeHandoff(call)
+	return c.reply(buildClientExec(numericID, execID, field, result))
 }
 
 func (c *conversation) handleMCPExec(message ServerMessage) error {
@@ -529,6 +752,9 @@ func (c *conversation) reply(payload []byte) error {
 // refusal the server sent explains a stream that stopped without finishing, so
 // it is reported instead of the bare fact that the turn ended early.
 func (c *conversation) finish(runErr, refusal error) ([]inference.Event, error) {
+	if c.externalHandoff {
+		return c.finishHandoff()
+	}
 	if runErr != nil {
 		if c.turnDone {
 			return c.events, nil
@@ -541,16 +767,30 @@ func (c *conversation) finish(runErr, refusal error) ([]inference.Event, error) 
 		}
 		return c.events, ErrNoTurnEnd
 	}
-	if c.usedUsage {
-		c.publish(inference.Event{Kind: inference.EventUsage, Usage: &inference.UsageReport{
-			InputTokens: c.usage.InputTokens, OutputTokens: c.usage.OutputTokens,
-			CacheReadTokens: c.usage.CacheReadTokens, CacheWriteTokens: c.usage.CacheWriteTokens,
-		}})
-	}
+	c.publishUsage()
 	reason := inference.EventReasonStop
 	if c.toolUse {
 		reason = inference.EventReasonToolUse
 	}
 	c.publish(inference.Event{Kind: inference.EventTerminal, Terminal: &inference.TerminalInfo{Reason: reason}})
 	return c.events, nil
+}
+
+// finishHandoff ends a turn whose work moved to the calling client: the usage
+// Cursor supplied, then tool_use. It is not an upstream failure, so the run
+// error the stream teardown produced is not reported.
+func (c *conversation) finishHandoff() ([]inference.Event, error) {
+	c.publishUsage()
+	c.publish(inference.Event{Kind: inference.EventTerminal, Terminal: &inference.TerminalInfo{Reason: inference.EventReasonToolUse}})
+	return c.events, nil
+}
+
+func (c *conversation) publishUsage() {
+	if !c.usedUsage {
+		return
+	}
+	c.publish(inference.Event{Kind: inference.EventUsage, Usage: &inference.UsageReport{
+		InputTokens: c.usage.InputTokens, OutputTokens: c.usage.OutputTokens,
+		CacheReadTokens: c.usage.CacheReadTokens, CacheWriteTokens: c.usage.CacheWriteTokens,
+	}})
 }

@@ -86,6 +86,127 @@ func cursorTextEvents() []inference.Event {
 }
 
 func TestExecuteBidirectional(t *testing.T) {
+	t.Run("partial output followed by a failure still terminates the stream", func(t *testing.T) {
+		codec := &cursorStubCodec{
+			events: []inference.Event{{Kind: inference.EventTextDelta, Text: "partial"}},
+			err:    errors.New("cursor sent nothing within the idle limit"),
+		}
+		recorder := httptest.NewRecorder()
+		exchange := cursorExchange(codec, true)
+		exchange.Final = true
+		result, err := newExecutor(t).Execute(context.Background(), exchange, recorder)
+		if err == nil {
+			t.Fatal("Execute() succeeded on a failed stream")
+		}
+		if !result.Wrote {
+			t.Fatalf("result = %+v, want the partial answer reported as written", result)
+		}
+		body := recorder.Body.String()
+		if !strings.Contains(body, "partial") {
+			t.Fatalf("body = %q, want the partial answer", body)
+		}
+		if !strings.Contains(body, "idle limit") {
+			t.Fatalf("body = %q, want the failure named to the client", body)
+		}
+		if !strings.Contains(body, "data: [DONE]") {
+			t.Fatalf("body = %q, want a terminal sentinel after the failure", body)
+		}
+	})
+
+	t.Run("a handoff turn is a successful tool-use answer", func(t *testing.T) {
+		codec := &cursorStubCodec{events: []inference.Event{
+			{Kind: inference.EventToolCallStart, ToolCall: &inference.ToolCallDelta{Index: 0, ID: "call-1", Name: "bash"}},
+			{Kind: inference.EventToolCallDelta, ToolCall: &inference.ToolCallDelta{Index: 0, ID: "call-1", Arguments: `{"command":"ls"}`}},
+			{Kind: inference.EventToolCallEnd, ToolCall: &inference.ToolCallDelta{Index: 0, ID: "call-1"}},
+			{Kind: inference.EventTerminal, Terminal: &inference.TerminalInfo{Reason: inference.EventReasonToolUse}},
+		}}
+		recorder := httptest.NewRecorder()
+		result, err := newExecutor(t).Execute(context.Background(), cursorExchange(codec, true), recorder)
+		if err != nil {
+			t.Fatalf("Execute() error = %v, want the handoff served", err)
+		}
+		if result.Status != http.StatusOK || result.Status == http.StatusBadGateway {
+			t.Fatalf("result = %+v, want a 200 handoff", result)
+		}
+		body := recorder.Body.String()
+		if !strings.Contains(body, `"tool_calls"`) || !strings.Contains(body, "[DONE]") {
+			t.Fatalf("body = %q, want the tool call and the sentinel", body)
+		}
+		if !strings.Contains(body, `"finish_reason":"tool_calls"`) {
+			t.Fatalf("body = %q, want a tool_calls finish reason", body)
+		}
+	})
+
+	t.Run("an abandoned stream writes nothing more", func(t *testing.T) {
+		codec := &cursorStubCodec{
+			events: []inference.Event{{Kind: inference.EventTextDelta, Text: "partial"}},
+			err:    context.Canceled,
+		}
+		recorder := httptest.NewRecorder()
+		result, err := newExecutor(t).Execute(context.Background(), cursorExchange(codec, true), recorder)
+		if !errors.Is(err, context.Canceled) {
+			t.Fatalf("Execute() error = %v, want the cancellation", err)
+		}
+		if result.Status != upstream.StatusClientAborted {
+			t.Fatalf("result = %+v, want the aborted status", result)
+		}
+		body := recorder.Body.String()
+		if !strings.Contains(body, "partial") || strings.Contains(body, "stream_error") {
+			t.Fatalf("body = %q, want the partial answer and no error frame for a gone client", body)
+		}
+	})
+
+	t.Run("a malformed stream terminates the client stream", func(t *testing.T) {
+		codec := &cursorStubCodec{
+			events: []inference.Event{{Kind: inference.EventTextDelta, Text: "partial"}},
+			err:    fmt.Errorf("cursor sent a frame Relo cannot parse: %w", wire.ErrMalformedEvent),
+		}
+		recorder := httptest.NewRecorder()
+		exchange := cursorExchange(codec, true)
+		exchange.Final = true
+		if _, err := newExecutor(t).Execute(context.Background(), exchange, recorder); err == nil {
+			t.Fatal("Execute() succeeded on a malformed stream")
+		}
+		body := recorder.Body.String()
+		if !strings.Contains(body, "cannot parse") || !strings.Contains(body, "[DONE]") {
+			t.Fatalf("body = %q, want a terminal error frame", body)
+		}
+	})
+
+	t.Run("an unsupported execution terminates the client stream", func(t *testing.T) {
+		codec := &cursorStubCodec{
+			events: []inference.Event{{Kind: inference.EventTextDelta, Text: "partial"}},
+			err:    cursor.ErrUnsupportedExec,
+		}
+		recorder := httptest.NewRecorder()
+		exchange := cursorExchange(codec, true)
+		exchange.Final = true
+		if _, err := newExecutor(t).Execute(context.Background(), exchange, recorder); err == nil {
+			t.Fatal("Execute() succeeded on an unsupported execution")
+		}
+		body := recorder.Body.String()
+		if !strings.Contains(body, "cannot answer") || !strings.Contains(body, "data: [DONE]") {
+			t.Fatalf("body = %q, want a terminal error frame", body)
+		}
+	})
+
+	t.Run("an idle turn terminates the client stream", func(t *testing.T) {
+		codec := &cursorStubCodec{
+			events: []inference.Event{{Kind: inference.EventTextDelta, Text: "partial"}},
+			err:    cursor.ErrIdle,
+		}
+		recorder := httptest.NewRecorder()
+		exchange := cursorExchange(codec, true)
+		exchange.Final = true
+		if _, err := newExecutor(t).Execute(context.Background(), exchange, recorder); err == nil {
+			t.Fatal("Execute() succeeded on an idle turn")
+		}
+		body := recorder.Body.String()
+		if !strings.Contains(body, "idle limit") || !strings.Contains(body, "data: [DONE]") {
+			t.Fatalf("body = %q, want a terminal error frame", body)
+		}
+	})
+
 	t.Run("a complete turn answers with one body", func(t *testing.T) {
 		codec := &cursorStubCodec{events: cursorTextEvents()}
 		recorder := httptest.NewRecorder()

@@ -3,6 +3,7 @@ package upstream
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
@@ -82,7 +83,7 @@ func (e *Executor) converse(ctx context.Context, att attempt, codec wire.Bidirec
 	for attempt := 0; attempt < 2; attempt++ {
 		events, err := codec.RunBidirectional(ctx, wire.BidirectionalCall{
 			Client: e.client, Request: att.exchange.Request, Opts: att.exchange.Options, Emit: emit,
-			Record: recordCursorFrame(att),
+			Record: recordCursorFrame(att), Handoff: att.exchange.OnHandoff,
 		})
 		if !errors.Is(err, cursor.ErrUnauthorized) || att.exchange.OnUnauthorized == nil || attempt == 1 {
 			return events, err
@@ -101,11 +102,7 @@ func (e *Executor) failBidirectional(run *bidirectionalRun, events []inference.E
 	att, started, collector, tracker := run.attempt, run.started, run.collector, run.tracker
 	collector.observeAll(events)
 	if tracker != nil && (tracker.writeErr != nil || run.wrote) {
-		result := bidirectionalStreamResult(att, started, collector, tracker)
-		if tracker.writeErr != nil {
-			return result, fmt.Errorf("%w: %v", ErrRelayFailed, tracker.writeErr)
-		}
-		return result, runErr
+		return failStartedStream(bidirectionalStreamResult(att, started, collector, tracker), att.exchange.Inbound, tracker, runErr)
 	}
 	if errors.Is(runErr, context.Canceled) {
 		return Result{
@@ -114,6 +111,7 @@ func (e *Executor) failBidirectional(run *bidirectionalRun, events []inference.E
 		}, runErr
 	}
 	status := refusalStatus(runErr)
+	rotate := refusalRotatesWire(runErr)
 	cause := fmt.Errorf("%w: %v", ErrUpstreamFailed, runErr)
 	code := "upstream_unavailable"
 	if errors.Is(runErr, wire.ErrUnsupportedFeature) || errors.Is(runErr, wire.ErrInvalidRequest) {
@@ -125,7 +123,52 @@ func (e *Executor) failBidirectional(run *bidirectionalRun, events []inference.E
 	}
 	result, err := e.fail(att, status, code, cause)
 	result.RefreshSettled = att.state.refreshSettled
+	// The request is sound; the conversation it was replayed into is not. The
+	// next request rebuilds on a fresh wire id, which is the resume Phase 4
+	// describes; retrying this one would spend the walk's account allowance on
+	// a conversation that only the next request can leave.
+	result.RotateWire = rotate
 	return result, err
+}
+
+// failStartedStream closes a duplex stream the client already read from. The
+// client needs a frame it can parse: a bare Go error leaves it waiting for a
+// terminal frame that never arrives.
+func failStartedStream(result Result, inbound wire.InboundCodec, tracker *streamWriter, runErr error) (Result, error) {
+	if tracker.writeErr != nil {
+		return result, fmt.Errorf("%w: %v", ErrRelayFailed, tracker.writeErr)
+	}
+	if errors.Is(runErr, context.Canceled) {
+		// The caller went away: there is no stream left to close.
+		result.Status = StatusClientAborted
+		return result, runErr
+	}
+	writeStreamFailure(tracker, inbound, runErr)
+	if tracker.writeErr != nil {
+		return result, fmt.Errorf("%w: %v", ErrRelayFailed, tracker.writeErr)
+	}
+	return result, runErr
+}
+
+// writeStreamFailure renders one failure as the frames the client's surface
+// expects at the end of a stream it already started.
+func writeStreamFailure(writer *streamWriter, inbound wire.InboundCodec, cause error) {
+	encoder, ok := inbound.(wire.ErrorEncoder)
+	if !ok {
+		_ = sse.WriteEvents(writer, []wire.SSEEvent{{
+			Name: "error",
+			Data: fmt.Sprintf(`{"error":"stream_error","message":%s}`, quoted(cause.Error())),
+		}})
+		return
+	}
+	_ = sse.WriteEvents(writer, encoder.EncodeError(cause))
+}
+
+// quoted renders one failure as the JSON string the generic frame carries.
+// Encoding a string cannot fail, so there is no fallback to fall back to.
+func quoted(value string) string {
+	encoded, _ := json.Marshal(value)
+	return string(encoded)
 }
 
 // refusalStatus answers what a failed turn means to the caller. A refusal
@@ -146,6 +189,15 @@ func refusalStatus(runErr error) int {
 		return http.StatusBadRequest
 	}
 	return http.StatusBadGateway
+}
+
+// refusalRotatesWire reports a refusal that may belong to the reused wire
+// conversation rather than the request. Cursor answers failed_precondition
+// when a rebuilt state does not match what the conversation already holds, so
+// the next request belongs on a fresh conversation.
+func refusalRotatesWire(runErr error) bool {
+	var refusal cursorproto.EndStream
+	return errors.As(runErr, &refusal) && refusal.Name == "failed_precondition"
 }
 
 func bidirectionalStreamResult(att attempt, started time.Time, collector *usageCollector, tracker *streamWriter) Result {

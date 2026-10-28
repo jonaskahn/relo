@@ -22,6 +22,7 @@ const (
 	clientRunRequest  = 1
 	clientExecMessage = 2
 	clientKVMessage   = 3
+	clientHeartbeat   = 7
 
 	runConversationState = 1
 	runAction            = 2
@@ -58,6 +59,8 @@ const (
 
 	execIDField = 1
 	execExecID  = 15
+	// execSpanContext is the optional trace context beside the exec variant.
+	execSpanContext = 19
 
 	execContext  = 10
 	execMCPState = 36
@@ -125,6 +128,11 @@ const RejectionReason = "Relo does not execute tools on the daemon: the calling 
 // HandoffText acknowledges a declared tool call Cursor must not retry. The
 // result arrives in the caller's next request.
 const HandoffText = "Tool call received and handed off to the external client for execution. Do not retry or call it again; end the turn. The result will be provided in the next request."
+
+// externalToolRule steers the model to the declared tools instead of the
+// native execution channel, which the daemon cannot serve in-stream.
+const externalToolRule = "Native tool execution is unavailable on this connection: never run a native shell, read, write, or edit tool. " +
+	"Tools prefixed with relo_ are executed for you by the calling client, so use those whenever they are declared."
 
 // buildRunRequest encodes the initial AgentClientMessage carrying the run
 // request.
@@ -265,14 +273,26 @@ func buildRule(path, content string) []byte {
 func buildToolDef(wireName, canonical, description, schema string) []byte {
 	var def cursor.Writer
 	def.String(defName, wireName)
-	def.String(defDescription, description)
+	def.String(defDescription, toolDescription(canonical, description))
 	// inputSchema is a google.protobuf.Value on the wire, so the JSON text
 	// has to be encoded rather than copied into the field.
 	def.Bytes(defSchema, encodeSchemaValue([]byte(schema)))
 	def.String(defProvider, providerIdentifier)
 	def.String(defToolName, wireName)
-	_ = canonical
 	return def.BytesOut()
+}
+
+// toolDescription names the canonical tool beside the declaration, so the
+// model knows which external tool a prefixed wire name refers to.
+func toolDescription(canonical, description string) string {
+	if canonical == "" {
+		return description
+	}
+	label := "External client tool `" + canonical + "`."
+	if strings.TrimSpace(description) == "" {
+		return label
+	}
+	return label + " " + description
 }
 
 // buildRequestContext encodes the request context carrying rules and tools.
@@ -372,6 +392,14 @@ func buildMCPHandoff() []byte {
 	var result cursor.Writer
 	result.Message(mcpSuccessCase, success.BytesOut())
 	return result.BytesOut()
+}
+
+// buildHeartbeat encodes the keepalive the reference client sends every few
+// seconds while a turn runs.
+func buildHeartbeat() []byte {
+	var heartbeat cursor.Writer
+	heartbeat.Empty(clientHeartbeat)
+	return heartbeat.BytesOut()
 }
 
 // buildMCPNotFound encodes the unknown-tool answer naming the tools the

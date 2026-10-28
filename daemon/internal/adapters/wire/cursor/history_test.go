@@ -33,8 +33,10 @@ func TestBuildHistoryReplaysTools(t *testing.T) {
 	if err != nil {
 		t.Fatalf("BuildHistory() error = %v", err)
 	}
-	if len(history.Rules) != 1 {
-		t.Fatalf("rules = %d, want the system prompt", len(history.Rules))
+	// The caller's system prompt plus the rule steering the model away from
+	// native execution, which the daemon cannot serve in-stream.
+	if len(history.Rules) != 2 {
+		t.Fatalf("rules = %d, want the system prompt and the steering rule", len(history.Rules))
 	}
 	fields, err := adapterscursor.Parse(action)
 	if err != nil {

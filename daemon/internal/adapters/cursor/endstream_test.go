@@ -109,6 +109,25 @@ func TestEndStreamRetryableFlag(t *testing.T) {
 	}
 }
 
+// TestEndStreamNamesARejectedRequest covers the shape with no service detail:
+// the Connect code alone still says the request was rejected, so the turn is
+// not retried account by account as a transient fault.
+func TestEndStreamNamesARejectedRequest(t *testing.T) {
+	frame, err := json.Marshal(map[string]any{"error": map[string]any{
+		"code": "failed_precondition", "message": "Error",
+	}})
+	if err != nil {
+		t.Fatalf("json.Marshal() error = %v", err)
+	}
+	refusal, ok := ParseEndStream(frame)
+	if !ok {
+		t.Fatal("ParseEndStream() missed the refusal")
+	}
+	if refusal.Status != http.StatusBadRequest || refusal.Retryable {
+		t.Fatalf("refusal = %+v, want a rejection the caller has to fix", refusal)
+	}
+}
+
 // TestTrailerRefusal covers the second shape the same verdict arrives in: a
 // proxy or an HTTP/1 fallback that only carries the gRPC status.
 func TestTrailerRefusal(t *testing.T) {
