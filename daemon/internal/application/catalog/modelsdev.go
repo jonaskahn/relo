@@ -261,7 +261,13 @@ func modelsDevStateRow(s *Service, ctx context.Context, idx *catalog.ModelsDevIn
 }
 
 func carriesModelsDevFacts(model catalog.Model) bool {
-	if model.FactsModelsDev != (catalog.Facts{}) {
+	facts := model.FactsModelsDev
+	if facts.Name != nil || facts.Description != nil || facts.Family != nil || facts.Category != nil ||
+		facts.ContextWindow != nil || facts.MaxInput != nil || facts.MaxOutput != nil ||
+		facts.Tools != nil || facts.Reasoning != nil || facts.Vision != nil ||
+		facts.ReasoningEfforts != nil || facts.ReasoningToggle != nil || facts.ReasoningBudget != nil ||
+		facts.ReasoningBudgetMin != nil || facts.ReasoningBudgetMax != nil ||
+		facts.Status != nil || facts.ReleaseDate != nil {
 		return true
 	}
 	return model.PricesModelsDev.Known()

@@ -22,6 +22,7 @@ type Listed struct {
 	ID            string
 	Name          string
 	ContextWindow *int64
+	MaxInput      *int64
 	MaxOutput     *int64
 	Prices        *Prices
 	// Format is the wire format this model answers on when the listing states
@@ -41,7 +42,10 @@ type Listed struct {
 	ReasoningEfforts []string
 	// ReasoningToggle reports that the listing stated an on/off thinking
 	// switch. Nil means the listing said nothing about a toggle.
-	ReasoningToggle *bool
+	ReasoningToggle    *bool
+	ReasoningBudget    *bool
+	ReasoningBudgetMin *int64
+	ReasoningBudgetMax *int64
 	// RequestConfigs carries the exact per-account request tuples behind one
 	// grouped model. Nil on providers whose listing needs no exact tuple.
 	RequestConfigs []ModelRequestConfig

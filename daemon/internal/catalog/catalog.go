@@ -128,35 +128,45 @@ type PriceSource struct {
 // can show which layer a value came from. A nil field is a layer that is
 // silent about that value rather than one that clears it.
 type Facts struct {
-	Name          *string
-	Description   *string
-	Family        *string
-	Category      *string
-	ContextWindow *int64
-	MaxInput      *int64
-	MaxOutput     *int64
-	Tools         *bool
-	Reasoning     *bool
-	Vision        *bool
-	Status        *string
-	ReleaseDate   *string
+	Name               *string
+	Description        *string
+	Family             *string
+	Category           *string
+	ContextWindow      *int64
+	MaxInput           *int64
+	MaxOutput          *int64
+	Tools              *bool
+	Reasoning          *bool
+	Vision             *bool
+	ReasoningEfforts   []string
+	ReasoningToggle    *bool
+	ReasoningBudget    *bool
+	ReasoningBudgetMin *int64
+	ReasoningBudgetMax *int64
+	Status             *string
+	ReleaseDate        *string
 }
 
 // FactSource names the layer each resolved detail came from, the way
 // PriceSource does for rates.
 type FactSource struct {
-	Name          string
-	Description   string
-	Family        string
-	Category      string
-	ContextWindow string
-	MaxInput      string
-	MaxOutput     string
-	Tools         string
-	Reasoning     string
-	Vision        string
-	Status        string
-	ReleaseDate   string
+	Name               string
+	Description        string
+	Family             string
+	Category           string
+	ContextWindow      string
+	MaxInput           string
+	MaxOutput          string
+	Tools              string
+	Reasoning          string
+	ReasoningEfforts   string
+	ReasoningToggle    string
+	ReasoningBudget    string
+	ReasoningBudgetMin string
+	ReasoningBudgetMax string
+	Vision             string
+	Status             string
+	ReleaseDate        string
 }
 
 // Model is one served model with its resolved facts: identity, windows,
@@ -193,23 +203,25 @@ type Model struct {
 	ReasoningEfforts []string
 	// ReasoningToggle reports that the resolved model can turn thinking on
 	// or off without an effort name.
-	ReasoningToggle bool
+	ReasoningToggle      bool
+	ReasoningToggleKnown bool
 	// ReasoningBudget reports that the resolved model takes a token budget.
 	// The bounds are nil when the model stated a budget without a limit.
-	ReasoningBudget    bool
-	ReasoningBudgetMin *int64
-	ReasoningBudgetMax *int64
-	Status             string
-	ReleaseDate        string
-	Prices             Prices
-	PricesOverride     Prices
-	PricesProvider     Prices
-	PricesModelsDev    Prices
-	PriceSources       PriceSource
-	FactsOverride      Facts
-	FactsProvider      Facts
-	FactsModelsDev     Facts
-	FactSources        FactSource
+	ReasoningBudget      bool
+	ReasoningBudgetKnown bool
+	ReasoningBudgetMin   *int64
+	ReasoningBudgetMax   *int64
+	Status               string
+	ReleaseDate          string
+	Prices               Prices
+	PricesOverride       Prices
+	PricesProvider       Prices
+	PricesModelsDev      Prices
+	PriceSources         PriceSource
+	FactsOverride        Facts
+	FactsProvider        Facts
+	FactsModelsDev       Facts
+	FactSources          FactSource
 	// Overridden reports whether an operator changed anything about the
 	// model, which is what the console lists under its overrides.
 	Overridden       bool
@@ -277,9 +289,13 @@ type key struct {
 // Snapshot is the resolved catalog routing reads without touching storage:
 // connections, models, and routes with the indexes that answer lookups.
 type Snapshot struct {
-	Providers   []Provider
-	Groups      []Group
-	accounts    Accounts
+	Providers []Provider
+	Groups    []Group
+	accounts  Accounts
+	// advertised holds the conservative capability view shared by every
+	// enabled account behind a model. A missing entry means no account facts
+	// narrowed the shared definition.
+	advertised  map[key]Model
 	byProvider  map[string]Provider
 	byModelKey  map[key]Model
 	byModelID   map[string][]Model
@@ -407,7 +423,14 @@ func (c *Catalog) build(ctx context.Context) (*Snapshot, error) {
 	if err != nil {
 		return nil, fmt.Errorf("read groups: %w", err)
 	}
-	return newSnapshot(snapshotInputs{providers: providers, models: models, facts: facts, groups: groups, accounts: c.accounts, formats: c.formats})
+	var accountFacts []AccountFactsRecord
+	if reader, ok := c.reader.(AccountCapabilityReader); ok {
+		accountFacts, err = reader.ListAccountCapabilities(ctx)
+		if err != nil {
+			return nil, fmt.Errorf("read account capabilities: %w", err)
+		}
+	}
+	return newSnapshot(snapshotInputs{providers: providers, models: models, facts: facts, groups: groups, accounts: c.accounts, formats: c.formats, accountFacts: accountFacts})
 }
 
 func indexSnapshotProviders(snapshot *Snapshot, providers []ConnectionRecord, accounts Accounts, formats Formats) {
@@ -442,12 +465,13 @@ func indexSnapshotModels(snapshot *Snapshot, models []ModelRecord, facts []Facts
 }
 
 type snapshotInputs struct {
-	providers []ConnectionRecord
-	models    []ModelRecord
-	facts     []FactsRecord
-	groups    []RouteRecord
-	accounts  Accounts
-	formats   Formats
+	providers    []ConnectionRecord
+	models       []ModelRecord
+	facts        []FactsRecord
+	groups       []RouteRecord
+	accounts     Accounts
+	formats      Formats
+	accountFacts []AccountFactsRecord
 }
 
 func newSnapshot(in snapshotInputs) (*Snapshot, error) {
@@ -457,6 +481,7 @@ func newSnapshot(in snapshotInputs) (*Snapshot, error) {
 	indexSnapshotProviders(snapshot, providers, accounts, formats)
 
 	indexSnapshotModels(snapshot, models, facts, formats)
+	indexAdvertisedModels(snapshot, in.accountFacts)
 
 	snapshot.Providers = sortedProviders(snapshot.byProvider)
 	snapshot.Groups = sortedGroups(groups)
@@ -480,6 +505,7 @@ func newSnapshot(in snapshotInputs) (*Snapshot, error) {
 func emptySnapshot(providers []ConnectionRecord, models []ModelRecord, groups []RouteRecord, accounts Accounts) (*Snapshot, map[string]string) {
 	snapshot := &Snapshot{
 		accounts:    accounts,
+		advertised:  make(map[key]Model),
 		byProvider:  make(map[string]Provider, len(providers)),
 		byModelKey:  make(map[key]Model, len(models)),
 		byModelID:   make(map[string][]Model),
@@ -751,27 +777,35 @@ func resolveModelEndpoint(m ModelRecord, host Provider) (APIFormat, string) {
 }
 
 func resolveModelWindows(res *Model, ov, pr, md FactsRecord) {
-	res.ContextWindow = RoundContextWindow(pickInt64(ov.ContextWindow, pr.ContextWindow, md.ContextWindow))
-	res.MaxInput = RoundContextWindow(pickInt64(ov.MaxInput, pr.MaxInput, md.MaxInput))
-	res.MaxOutput = pickInt64(ov.MaxOutput, pr.MaxOutput, md.MaxOutput)
-	if res.MaxOutput == nil {
-		// Every layer stayed silent on the output ceiling, so the resolved
-		// one is the default. FactSources.MaxOutput still reads empty, which
-		// is how the dam keeps pass-through for models a layer described.
-		ceiling := DefaultMaxOutput
-		res.MaxOutput = &ceiling
-	}
+	resolution := ResolveCapabilities(CapabilityInputs{Provider: pr, ModelsDev: md, Manual: ov})
+	res.ContextWindow = resolution.ContextWindow
+	res.MaxInput = resolution.MaxInput
+	res.MaxOutput = resolution.MaxOutput
+	res.FactSources.ContextWindow = resolution.Sources.ContextWindow
+	res.FactSources.MaxInput = resolution.Sources.MaxInput
+	res.FactSources.MaxOutput = resolution.Sources.MaxOutput
 }
 
 func resolveModelCapabilities(res *Model, host Provider, ov, pr, md FactsRecord) {
-	res.SupportsTools = pickBool(ov.SupportsTools, pr.SupportsTools, md.SupportsTools)
-	res.SupportsReasoning = pickBool(ov.SupportsReasoning, pr.SupportsReasoning, md.SupportsReasoning)
-	res.SupportsVision = pickBool(ov.SupportsVision, pr.SupportsVision, md.SupportsVision)
-	res.ReasoningEfforts = xiaomiEfforts(host, res.SupportsReasoning, pickEfforts(ov.ReasoningEfforts, pr.ReasoningEfforts, md.ReasoningEfforts))
-	res.ReasoningToggle = boolValue(pickBool(ov.ReasoningToggle, pr.ReasoningToggle, md.ReasoningToggle))
-	res.ReasoningBudget = boolValue(pickBool(ov.ReasoningBudget, pr.ReasoningBudget, md.ReasoningBudget))
-	res.ReasoningBudgetMin = pickInt64(ov.ReasoningBudgetMin, pr.ReasoningBudgetMin, md.ReasoningBudgetMin)
-	res.ReasoningBudgetMax = pickInt64(ov.ReasoningBudgetMax, pr.ReasoningBudgetMax, md.ReasoningBudgetMax)
+	resolution := ResolveCapabilities(CapabilityInputs{Provider: pr, ModelsDev: md, Manual: ov})
+	res.SupportsTools = resolution.SupportsTools
+	res.SupportsReasoning = resolution.SupportsReasoning
+	res.SupportsVision = resolution.SupportsVision
+	res.ReasoningEfforts = xiaomiEfforts(host, res.SupportsReasoning, resolution.ReasoningEfforts)
+	res.ReasoningToggle = valueOfBool(resolution.ReasoningToggle)
+	res.ReasoningToggleKnown = resolution.ReasoningToggle != nil
+	res.ReasoningBudget = valueOfBool(resolution.ReasoningBudget)
+	res.ReasoningBudgetKnown = resolution.ReasoningBudget != nil
+	res.ReasoningBudgetMin = resolution.ReasoningBudgetMin
+	res.ReasoningBudgetMax = resolution.ReasoningBudgetMax
+	res.FactSources.Tools = resolution.Sources.Tools
+	res.FactSources.Reasoning = resolution.Sources.Reasoning
+	res.FactSources.ReasoningEfforts = resolution.Sources.ReasoningEfforts
+	res.FactSources.ReasoningToggle = resolution.Sources.ReasoningToggle
+	res.FactSources.ReasoningBudget = resolution.Sources.ReasoningBudget
+	res.FactSources.ReasoningBudgetMin = resolution.Sources.ReasoningBudgetMin
+	res.FactSources.ReasoningBudgetMax = resolution.Sources.ReasoningBudgetMax
+	res.FactSources.Vision = resolution.Sources.Vision
 	if host.ModelsFormat == ModelsAntigravity && ClaudeAntigravityPassthrough(res.ID) {
 		// Claude reaches the wire under its own id with no thinking, so a
 		// ladder inherited from the model index or an operator override
@@ -780,7 +814,9 @@ func resolveModelCapabilities(res *Model, host Provider, ov, pr, md FactsRecord)
 		res.SupportsReasoning = &no
 		res.ReasoningEfforts = []string{}
 		res.ReasoningToggle = false
+		res.ReasoningToggleKnown = true
 		res.ReasoningBudget = false
+		res.ReasoningBudgetKnown = true
 		res.ReasoningBudgetMin = nil
 		res.ReasoningBudgetMax = nil
 	}
@@ -817,24 +853,33 @@ func factsOf(f FactsRecord) Facts {
 		Name: f.Name, Description: f.Description, Family: f.Family, Category: f.Category,
 		ContextWindow: f.ContextWindow, MaxInput: f.MaxInput, MaxOutput: f.MaxOutput,
 		Tools: f.SupportsTools, Reasoning: f.SupportsReasoning, Vision: f.SupportsVision,
+		ReasoningEfforts: cloneEfforts(f.ReasoningEfforts),
+		ReasoningToggle:  f.ReasoningToggle, ReasoningBudget: f.ReasoningBudget,
+		ReasoningBudgetMin: f.ReasoningBudgetMin, ReasoningBudgetMax: f.ReasoningBudgetMax,
 		Status: f.Status, ReleaseDate: f.ReleaseDate,
 	}
 }
 
 func factSources(ov, pr, md FactsRecord) FactSource {
+	capabilities := ResolveCapabilities(CapabilityInputs{Provider: pr, ModelsDev: md, Manual: ov})
 	return FactSource{
-		Name:          pickSource(ov.Name, pr.Name, md.Name),
-		Description:   pickSource(ov.Description, pr.Description, md.Description),
-		Family:        pickSource(ov.Family, pr.Family, md.Family),
-		Category:      pickSource(ov.Category, pr.Category, md.Category),
-		ContextWindow: pickSource(ov.ContextWindow, pr.ContextWindow, md.ContextWindow),
-		MaxInput:      pickSource(ov.MaxInput, pr.MaxInput, md.MaxInput),
-		MaxOutput:     pickSource(ov.MaxOutput, pr.MaxOutput, md.MaxOutput),
-		Tools:         pickSource(ov.SupportsTools, pr.SupportsTools, md.SupportsTools),
-		Reasoning:     pickSource(ov.SupportsReasoning, pr.SupportsReasoning, md.SupportsReasoning),
-		Vision:        pickSource(ov.SupportsVision, pr.SupportsVision, md.SupportsVision),
-		Status:        pickSource(ov.Status, pr.Status, md.Status),
-		ReleaseDate:   pickSource(ov.ReleaseDate, pr.ReleaseDate, md.ReleaseDate),
+		Name:               pickSource(ov.Name, pr.Name, md.Name),
+		Description:        pickSource(ov.Description, pr.Description, md.Description),
+		Family:             pickSource(ov.Family, pr.Family, md.Family),
+		Category:           pickSource(ov.Category, pr.Category, md.Category),
+		ContextWindow:      capabilities.Sources.ContextWindow,
+		MaxInput:           capabilities.Sources.MaxInput,
+		MaxOutput:          capabilities.Sources.MaxOutput,
+		Tools:              capabilities.Sources.Tools,
+		Reasoning:          capabilities.Sources.Reasoning,
+		ReasoningEfforts:   capabilities.Sources.ReasoningEfforts,
+		ReasoningToggle:    capabilities.Sources.ReasoningToggle,
+		ReasoningBudget:    capabilities.Sources.ReasoningBudget,
+		ReasoningBudgetMin: capabilities.Sources.ReasoningBudgetMin,
+		ReasoningBudgetMax: capabilities.Sources.ReasoningBudgetMax,
+		Vision:             capabilities.Sources.Vision,
+		Status:             pickSource(ov.Status, pr.Status, md.Status),
+		ReleaseDate:        pickSource(ov.ReleaseDate, pr.ReleaseDate, md.ReleaseDate),
 	}
 }
 

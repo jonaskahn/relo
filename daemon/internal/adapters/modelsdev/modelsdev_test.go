@@ -124,8 +124,8 @@ func TestTokenCountsKeepASuffixAsThousands(t *testing.T) {
 	if model.ContextWindow == nil || *model.ContextWindow != 200_000 {
 		t.Fatalf("context = %v, want 200000", model.ContextWindow)
 	}
-	if model.MaxInput == nil || *model.MaxInput != 262_000 {
-		t.Fatalf("max input = %v, want 262000", model.MaxInput)
+	if model.MaxInput == nil || *model.MaxInput != 262_144 {
+		t.Fatalf("max input = %v, want 262144", model.MaxInput)
 	}
 	if model.MaxOutput == nil || *model.MaxOutput != 16_000 {
 		t.Fatalf("max output = %v, want the limit output 16000, not the sibling 1.5M", model.MaxOutput)
@@ -182,6 +182,29 @@ func TestEffortLadder(t *testing.T) {
 			t.Fatalf("ReasoningEfforts = %v, want nil", model.ReasoningEfforts)
 		}
 	})
+}
+
+func TestParsePreservesMissingAndExplicitCapabilityPresence(t *testing.T) {
+	idx, err := parseIndex([]byte(`{
+		"openai": {"id":"openai","models":{
+			"missing": {"id":"missing"},
+			"explicit": {"id":"explicit","tool_call":false,"reasoning":false,"modalities":{"input":["text"]}}
+		}}
+	}`))
+	if err != nil {
+		t.Fatalf("parseIndex() error = %v", err)
+	}
+	missing := idx.Providers["openai"].Models["missing"]
+	if missing.SupportsTools != nil || missing.SupportsReasoning != nil || missing.SupportsVision != nil {
+		t.Fatalf("missing = %+v, want unknown capabilities rather than manufactured false", missing)
+	}
+	explicit := idx.Providers["openai"].Models["explicit"]
+	if explicit.SupportsTools == nil || *explicit.SupportsTools || explicit.SupportsReasoning == nil || *explicit.SupportsReasoning {
+		t.Fatalf("explicit = %+v, want explicit false preserved", explicit)
+	}
+	if explicit.SupportsVision == nil || *explicit.SupportsVision {
+		t.Fatalf("vision = %v, want false from the explicit text-only modality list", explicit.SupportsVision)
+	}
 }
 
 func TestDirectory(t *testing.T) {

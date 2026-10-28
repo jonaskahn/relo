@@ -34,9 +34,13 @@ invalid and `make seed-latest` forces a fresh one; the generated
 `daemon/internal/adapters/modelsdev/seeddata/modelsdev.json.gz` is ignored by git, and a
 direct `go build` or `go test` without it still compiles, fetches, and caches normally.
 Beta and release jobs run `make seed-latest` before compiling, so a download or validation
-failure stops the job before artifacts exist. Every model field resolves as user override,
-then the provider, then models.dev, so a rate the operator set by hand is never overwritten
-by a price update.
+failure stops the job before artifacts exist. Pricing still resolves as user override,
+then the provider, then models.dev. Protected capabilities use provider authority instead:
+the selected account's discovered facts, then the connection definition, then models.dev,
+and a manual completion only where all of those are silent. A manual capability can never
+supersede a known definition, and stored legacy completions remain visible but inactive.
+Context capacity, maximum input, and maximum output stay exact and separate; a display label
+may round, but routing, admission, listings, and wire requests use the authoritative count.
 
 **A provider's own model list decides its models.** A connection serves the ids its model list
 publishes and nothing else: a catalog entry for a model the provider does not list never

@@ -93,9 +93,9 @@ type rawModelEntry struct {
 	Family           string            `json:"family"`
 	Status           string            `json:"status"`
 	ReleaseDate      string            `json:"release_date"`
-	Reasoning        bool              `json:"reasoning"`
+	Reasoning        *bool             `json:"reasoning"`
 	ReasoningOptions []rawReasoningOpt `json:"reasoning_options"`
-	ToolCall         bool              `json:"tool_call"`
+	ToolCall         *bool             `json:"tool_call"`
 	Attachment       bool              `json:"attachment"`
 	Input            []string          `json:"input"`
 	Output           []string          `json:"output"`
@@ -157,7 +157,7 @@ func (s *statedTokens) UnmarshalJSON(data []byte) error {
 		}
 		count = int64(math.Round(asFloat))
 	}
-	s.n = catalog.RoundContextWindow(&count)
+	s.n = &count
 	return nil
 }
 
@@ -218,29 +218,47 @@ func parseSnapshotIndex(snaps []rawSnapshotProvider) *Index {
 
 func parseRawModel(fallbackID string, rm rawModelEntry) Model {
 	id := firstNonEmpty(rm.ID, fallbackID)
+	reasoning := rm.Reasoning != nil && *rm.Reasoning
+	inputs, outputs := rawModelInputs(rm), rawModelOutputs(rm)
 	model := Model{
 		ID:                 id,
 		Name:               firstNonEmpty(rm.Name, id),
 		Description:        rm.Description,
 		Family:             rm.Family,
-		Category:           guessCategory(id, rm.Family, rm.Reasoning, rawModelInputs(rm), rawModelOutputs(rm)),
+		Category:           guessCategory(id, rm.Family, reasoning, inputs, outputs),
 		ContextWindow:      rawContextWindow(rm),
 		MaxInput:           rawMaxInput(rm),
 		MaxOutput:          rawMaxOutput(rm),
-		SupportsTools:      boolPtr(rm.ToolCall),
-		SupportsReasoning:  boolPtr(rm.Reasoning),
-		ReasoningEfforts:   effortLadder(rm.Reasoning, rm.ReasoningOptions),
-		ReasoningToggle:    reasoningToggle(rm.Reasoning, rm.ReasoningOptions),
-		ReasoningBudget:    reasoningBudget(rm.Reasoning, rm.ReasoningOptions),
-		ReasoningBudgetMin: reasoningBound(rm.Reasoning, rm.ReasoningOptions, true),
-		ReasoningBudgetMax: reasoningBound(rm.Reasoning, rm.ReasoningOptions, false),
-		SupportsVision:     boolPtr(hasModality(rawModelInputs(rm), "image")),
+		SupportsTools:      cloneBool(rm.ToolCall),
+		SupportsReasoning:  cloneBool(rm.Reasoning),
+		ReasoningEfforts:   effortLadder(reasoning, rm.ReasoningOptions),
+		ReasoningToggle:    reasoningToggle(reasoning, rm.ReasoningOptions),
+		ReasoningBudget:    reasoningBudget(reasoning, rm.ReasoningOptions),
+		ReasoningBudgetMin: reasoningBound(reasoning, rm.ReasoningOptions, true),
+		ReasoningBudgetMax: reasoningBound(reasoning, rm.ReasoningOptions, false),
+		SupportsVision:     modalitySupport(inputs),
 		Status:             normalizeStatus(rm.Status),
 		ReleaseDate:        rm.ReleaseDate,
 		Prices:             parsePrices(rm.Cost),
 	}
 	attachModelVia(&model, rm)
 	return model
+}
+
+func modalitySupport(inputs []string) *bool {
+	if inputs == nil {
+		return nil
+	}
+	vision := hasModality(inputs, "image")
+	return &vision
+}
+
+func cloneBool(value *bool) *bool {
+	if value == nil {
+		return nil
+	}
+	copy := *value
+	return &copy
 }
 
 func rawModelInputs(rm rawModelEntry) []string {
