@@ -468,7 +468,9 @@ func (b *turnBuilder) replayTurn() error {
 	}
 	b.index++
 	steps, calls, orphans := b.collectSteps()
-	steps = append(steps, turnCalls(b.messages, b.tools, calls)...)
+	for _, step := range turnCalls(b.messages, b.tools, calls) {
+		steps = append(steps, b.store.Put(step))
+	}
 	for _, orphan := range orphans {
 		if text := toolResultText(orphan); text != "" {
 			steps = append(steps, assistantStep(b.store, text))

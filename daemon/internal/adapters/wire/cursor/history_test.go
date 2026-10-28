@@ -227,7 +227,11 @@ func replayedToolCall(t *testing.T, history History) MCPCall {
 		if field.Number != turnSteps || field.Wire != 2 {
 			continue
 		}
-		step, err := adapterscursor.Parse(field.Raw)
+		stepBlob, found := history.Store.Get(field.Raw)
+		if !found {
+			t.Fatalf("step blob %x missing: steps must be blob ids", field.Raw)
+		}
+		step, err := adapterscursor.Parse(stepBlob)
 		if err != nil {
 			t.Fatalf("parse step: %v", err)
 		}
