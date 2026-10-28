@@ -169,27 +169,32 @@ func ParseNativeToolCall(payload []byte) (nativeCall, bool, error) {
 		if !known {
 			continue
 		}
-		// A tool call update carries the variant's own message, whose args
-		// field holds the arguments. Reading the variant message as the
-		// arguments themselves puts the whole message into the command.
-		variantFields, err := cursor.Parse(field.Raw)
-		if err != nil {
-			return nativeCall{}, false, err
-		}
-		args, err := cursor.Nested(variantFields, toolCallArgsField)
-		if err != nil {
-			return nativeCall{}, false, err
-		}
-		if len(args) == 0 {
-			return nativeCall{}, false, nil
-		}
-		spec := nativeSpecs[variant]
-		if variant == execRead {
-			spec = nativeReadToolCallSpec
-		}
-		return translateNativeSpec(spec, variant, args[0], callID), true, nil
+		return parseNativeToolCallVariant(variant, field.Raw, callID)
 	}
 	return nativeCall{}, false, nil
+}
+
+// parseNativeToolCallVariant decodes one variant of a tool call update. The
+// update carries the variant's own message, whose args field holds the
+// arguments: reading the variant message as the arguments themselves puts
+// the whole message into the command.
+func parseNativeToolCallVariant(variant int, raw []byte, callID string) (nativeCall, bool, error) {
+	variantFields, err := cursor.Parse(raw)
+	if err != nil {
+		return nativeCall{}, false, err
+	}
+	args, err := cursor.Nested(variantFields, toolCallArgsField)
+	if err != nil {
+		return nativeCall{}, false, err
+	}
+	if len(args) == 0 {
+		return nativeCall{}, false, nil
+	}
+	spec := nativeSpecs[variant]
+	if variant == execRead {
+		spec = nativeReadToolCallSpec
+	}
+	return translateNativeSpec(spec, variant, args[0], callID), true, nil
 }
 
 func toolCallVariant(number int) (int, bool) {

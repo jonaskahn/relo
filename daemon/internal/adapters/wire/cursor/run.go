@@ -230,13 +230,6 @@ func (c *conversation) observeUsage(payload []byte) bool {
 	return true
 }
 
-// addOutputTokens adds to the turn's output estimate.
-func (c *conversation) addOutputTokens(tokens int) {
-	c.usageLock.Lock()
-	defer c.usageLock.Unlock()
-	c.output += tokens
-}
-
 func orDefault(value, fallback time.Duration) time.Duration {
 	if value > 0 {
 		return value
@@ -513,7 +506,7 @@ func (c *conversation) handleUpdate(message ServerMessage) error {
 			c.publish(inference.Event{Kind: inference.EventReasoningDelta, Text: text})
 		}
 	case updateTokenDelta:
-		c.output += int(cursor.Uint(message.Update, tokenDeltaTokens))
+		c.addOutputTokens(int(cursor.Uint(message.Update, tokenDeltaTokens)))
 	case updateTurnEnded:
 		c.applyTurnEnded(message.Update)
 	case updateToolStarted, updateToolCompleted:
@@ -560,6 +553,14 @@ func optionalInt(fields []cursor.Field, number int) int64 {
 		}
 	}
 	return 0
+}
+
+// addOutputTokens adds to the turn's output estimate. The drain that follows
+// a handoff reads the same estimate, so the count is taken under the lock.
+func (c *conversation) addOutputTokens(tokens int) {
+	c.usageLock.Lock()
+	defer c.usageLock.Unlock()
+	c.output += tokens
 }
 
 func (c *conversation) handleToolUpdate(message ServerMessage) error {
