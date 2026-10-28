@@ -241,6 +241,16 @@ func (r *Runner) checkStreamStatus(response *http.Response) error {
 }
 
 func (r *Runner) openStream(ctx context.Context, initial []byte) (*cursor.FrameReader, *io.PipeWriter, *http.Response, error) {
+	reader, writer, response, err := r.openStreamOnce(ctx, initial)
+	if err == nil || ctx.Err() != nil || !errors.Is(err, io.ErrClosedPipe) {
+		return reader, writer, response, err
+	}
+	// A pooled connection can close under the non-rewindable pipe body before
+	// any response arrives; one fresh request is the only way to resend it.
+	return r.openStreamOnce(ctx, initial)
+}
+
+func (r *Runner) openStreamOnce(ctx context.Context, initial []byte) (*cursor.FrameReader, *io.PipeWriter, *http.Response, error) {
 	request, writer, err := streamRequest(ctx, r.BaseURL, r.Token)
 	if err != nil {
 		return nil, nil, nil, err
