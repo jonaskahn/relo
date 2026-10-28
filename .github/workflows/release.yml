@@ -51,6 +51,9 @@ jobs:
           cache: npm
           cache-dependency-path: console/package.json
 
+      - name: Download the models.dev build seed
+        run: make seed-latest
+
       - name: Build all platforms
         run: |
           make build-all VERSION=${{ github.ref_name }}
@@ -103,6 +106,9 @@ jobs:
           node-version: 22
           cache: npm
           cache-dependency-path: console/package.json
+
+      - name: Download the models.dev build seed
+        run: make seed-latest
 
       - name: Import Developer ID certificate
         env:
@@ -161,6 +167,9 @@ jobs:
           cache: npm
           cache-dependency-path: console/package.json
 
+      - name: Download the models.dev build seed
+        run: make seed-latest
+
       - name: Download binaries
         uses: actions/download-artifact@v5
         with:
@@ -203,6 +212,9 @@ jobs:
           node-version: 22
           cache: npm
           cache-dependency-path: console/package.json
+
+      - name: Download the models.dev build seed
+        run: make seed-latest
 
       - name: Install NSIS
         run: sudo apt-get update && sudo apt-get install -y nsis
