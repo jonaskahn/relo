@@ -8,6 +8,15 @@ export const SOURCE_LABEL_KEY: Record<string, string> = {
 	modelsdev: 'ui.pages.providersPage.models.priceModelsDev'
 };
 
+/** Names the layer a protected capability came from, with the account scope
+ *  kept distinct from the connection definition. */
+export const CAPABILITY_SOURCE_LABEL_KEY: Record<string, string> = {
+	account: 'ui.pages.providersPage.models.sourceAccount',
+	provider: 'ui.pages.providersPage.models.sourceProvider',
+	modelsdev: 'ui.pages.providersPage.models.sourceModelsDev',
+	override: 'ui.pages.providersPage.models.sourceManual'
+};
+
 // The models.dev catalog prices a whole family at once, so a model the
 // provider did not price itself names that one source for both rates. The
 // pricing heading says it once instead of printing it under every number.

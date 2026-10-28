@@ -669,7 +669,15 @@
           "editLimits": "Grenzen",
           "editCapabilities": "Fähigkeiten",
           "overrides": "Overrides",
-          "overridesNone": "Keine Overrides — das Modell folgt dem Anbieter, dann models.dev."
+          "overridesNone": "Keine Overrides — das Modell folgt dem Anbieter, dann models.dev.",
+          "sourceAccount": "Vom Konto definiert",
+          "sourceProvider": "Von der Verbindung definiert",
+          "sourceModelsDev": "Von models.dev definiert",
+          "sourceManual": "Manuelle Ergänzung",
+          "sourceManualInactive": "Gespeicherter manueller Wert (inaktiv)",
+          "notProvided": "Nicht angegeben",
+          "readOnlyCapability": "Von {source} definiert; dieser Wert kann nicht bearbeitet werden.",
+          "exactValue": "{label} ({exact} Tokens)"
         },
         "accounts": {
           "title": "Konten",

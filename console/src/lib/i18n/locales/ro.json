@@ -669,7 +669,15 @@
           "editLimits": "Limite",
           "editCapabilities": "Capabilități",
           "overrides": "Suprascrieri",
-          "overridesNone": "Fără suprascrieri — modelul urmează furnizorul, apoi models.dev."
+          "overridesNone": "Fără suprascrieri — modelul urmează furnizorul, apoi models.dev.",
+          "sourceAccount": "Definit de cont",
+          "sourceProvider": "Definit de conexiune",
+          "sourceModelsDev": "Definit de models.dev",
+          "sourceManual": "Completare manuală",
+          "sourceManualInactive": "Valoare manuală stocată (inactivă)",
+          "notProvided": "Nefurnizat",
+          "readOnlyCapability": "Definit de {source}; această valoare nu poate fi editată.",
+          "exactValue": "{label} ({exact} tokenuri)"
         },
         "accounts": {
           "title": "Conturi",

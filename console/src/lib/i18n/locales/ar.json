@@ -669,7 +669,15 @@
           "editLimits": "الحدود",
           "editCapabilities": "الإمكانات",
           "overrides": "التجاوزات",
-          "overridesNone": "لا توجد تجاوزات — يتبع النموذج المزوّد ثم models.dev."
+          "overridesNone": "لا توجد تجاوزات — يتبع النموذج المزوّد ثم models.dev.",
+          "sourceAccount": "محددة بواسطة الحساب",
+          "sourceProvider": "محددة بواسطة الاتصال",
+          "sourceModelsDev": "محددة بواسطة models.dev",
+          "sourceManual": "إكمال يدوي",
+          "sourceManualInactive": "قيمة يدوية مخزنة (غير مفعّلة)",
+          "notProvided": "غير متوفر",
+          "readOnlyCapability": "محددة بواسطة {source}؛ لا يمكن تعديل هذه القيمة.",
+          "exactValue": "{label} ({exact} رمزًا)"
         },
         "accounts": {
           "title": "الحسابات",

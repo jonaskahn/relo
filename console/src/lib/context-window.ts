@@ -61,6 +61,7 @@ export function parseContextInput(raw: string): ContextParse {
 
 /** Names the layer an effective context window came from. */
 export const CONTEXT_SOURCE_KEY: Record<string, string> = {
+	account: 'ui.pages.providersPage.models.sourceAccount',
 	override: 'ui.pages.providersPage.context.sourceYou',
 	provider: 'ui.pages.providersPage.context.sourceProvider',
 	modelsdev: 'ui.pages.providersPage.context.sourceModelsDev',

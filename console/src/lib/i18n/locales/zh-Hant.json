@@ -669,7 +669,15 @@
           "editLimits": "限制",
           "editCapabilities": "能力",
           "overrides": "覆寫",
-          "overridesNone": "還沒有覆寫 — 這個模型依序沿用供應商與 models.dev 的值。"
+          "overridesNone": "還沒有覆寫 — 這個模型依序沿用供應商與 models.dev 的值。",
+          "sourceAccount": "由帳戶定義",
+          "sourceProvider": "由連線定義",
+          "sourceModelsDev": "由 models.dev 定義",
+          "sourceManual": "手動補充",
+          "sourceManualInactive": "已儲存的手動值（未啟用）",
+          "notProvided": "未提供",
+          "readOnlyCapability": "由 {source} 定義；無法編輯此值。",
+          "exactValue": "{label}（{exact} 個 token）"
         },
         "accounts": {
           "title": "賬號",

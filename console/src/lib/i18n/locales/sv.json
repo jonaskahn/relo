@@ -669,7 +669,15 @@
           "editLimits": "Gränser",
           "editCapabilities": "Förmågor",
           "overrides": "Åsidosättningar",
-          "overridesNone": "Inga åsidosättningar — modellen följer leverantören och sedan models.dev."
+          "overridesNone": "Inga åsidosättningar — modellen följer leverantören och sedan models.dev.",
+          "sourceAccount": "Definierat av kontot",
+          "sourceProvider": "Definierat av anslutningen",
+          "sourceModelsDev": "Definierat av models.dev",
+          "sourceManual": "Manuell komplettering",
+          "sourceManualInactive": "Sparat manuellt värde (inaktivt)",
+          "notProvided": "Ej angivet",
+          "readOnlyCapability": "Definierat av {source}; det här värdet kan inte redigeras.",
+          "exactValue": "{label} ({exact} tokens)"
         },
         "accounts": {
           "title": "Konton",

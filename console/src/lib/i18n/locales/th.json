@@ -669,7 +669,15 @@
           "editLimits": "ขีดจำกัด",
           "editCapabilities": "ความสามารถ",
           "overrides": "การแทนที่",
-          "overridesNone": "ไม่มีการแทนที่ — โมเดลเป็นไปตามผู้ให้บริการ แล้วจึง models.dev"
+          "overridesNone": "ไม่มีการแทนที่ — โมเดลเป็นไปตามผู้ให้บริการ แล้วจึง models.dev",
+          "sourceAccount": "กำหนดโดยบัญชี",
+          "sourceProvider": "กำหนดโดยการเชื่อมต่อ",
+          "sourceModelsDev": "กำหนดโดย models.dev",
+          "sourceManual": "การกรอกด้วยตนเอง",
+          "sourceManualInactive": "ค่าที่กรอกด้วยตนเองที่บันทึกไว้ (ไม่ได้ใช้งาน)",
+          "notProvided": "ไม่ได้ระบุ",
+          "readOnlyCapability": "กำหนดโดย {source} จึงแก้ไขค่านี้ไม่ได้",
+          "exactValue": "{label} ({exact} โทเค็น)"
         },
         "accounts": {
           "title": "บัญชี",

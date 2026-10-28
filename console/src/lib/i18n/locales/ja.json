@@ -669,7 +669,15 @@
           "editLimits": "上限",
           "editCapabilities": "機能",
           "overrides": "上書き",
-          "overridesNone": "上書きはありません — このモデルはプロバイダー、次に models.dev に従います。"
+          "overridesNone": "上書きはありません — このモデルはプロバイダー、次に models.dev に従います。",
+          "sourceAccount": "アカウントで定義",
+          "sourceProvider": "接続で定義",
+          "sourceModelsDev": "models.dev で定義",
+          "sourceManual": "手動入力",
+          "sourceManualInactive": "保存済みの手動値（無効）",
+          "notProvided": "未提供",
+          "readOnlyCapability": "{source} により定義されているため、この値は編集できません。",
+          "exactValue": "{label}（{exact} トークン）"
         },
         "accounts": {
           "title": "アカウント",

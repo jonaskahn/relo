@@ -669,7 +669,15 @@
           "editLimits": "Limites",
           "editCapabilities": "Capacidades",
           "overrides": "Substituições",
-          "overridesNone": "Sem substituições — o modelo segue o provedor e depois o models.dev."
+          "overridesNone": "Sem substituições — o modelo segue o provedor e depois o models.dev.",
+          "sourceAccount": "Definido pela conta",
+          "sourceProvider": "Definido pela conexão",
+          "sourceModelsDev": "Definido pelo models.dev",
+          "sourceManual": "Preenchimento manual",
+          "sourceManualInactive": "Valor manual armazenado (inativo)",
+          "notProvided": "Não fornecido",
+          "readOnlyCapability": "Definido por {source}; este valor não pode ser editado.",
+          "exactValue": "{label} ({exact} tokens)"
         },
         "accounts": {
           "title": "Contas",

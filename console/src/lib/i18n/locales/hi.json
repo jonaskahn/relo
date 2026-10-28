@@ -669,7 +669,15 @@
           "editLimits": "सीमाएँ",
           "editCapabilities": "क्षमताएँ",
           "overrides": "ओवरराइड",
-          "overridesNone": "कोई ओवरराइड नहीं — यह मॉडल प्रदाता का पालन करता है, फिर models.dev का।"
+          "overridesNone": "कोई ओवरराइड नहीं — यह मॉडल प्रदाता का पालन करता है, फिर models.dev का।",
+          "sourceAccount": "खाते द्वारा परिभाषित",
+          "sourceProvider": "कनेक्शन द्वारा परिभाषित",
+          "sourceModelsDev": "models.dev द्वारा परिभाषित",
+          "sourceManual": "मैन्युअल पूर्णता",
+          "sourceManualInactive": "संग्रहीत मैन्युअल मान (निष्क्रिय)",
+          "notProvided": "प्रदान नहीं किया गया",
+          "readOnlyCapability": "{source} द्वारा परिभाषित; यह मान संपादित नहीं किया जा सकता।",
+          "exactValue": "{label} ({exact} टोकन)"
         },
         "accounts": {
           "title": "खाते",

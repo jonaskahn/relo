@@ -669,7 +669,15 @@
           "editLimits": "한도",
           "editCapabilities": "기능",
           "overrides": "오버라이드",
-          "overridesNone": "오버라이드 없음 — 이 모델은 제공업체, 그다음 models.dev를 따라요."
+          "overridesNone": "오버라이드 없음 — 이 모델은 제공업체, 그다음 models.dev를 따라요.",
+          "sourceAccount": "계정에서 정의됨",
+          "sourceProvider": "연결에서 정의됨",
+          "sourceModelsDev": "models.dev에서 정의됨",
+          "sourceManual": "수동 완성",
+          "sourceManualInactive": "저장된 수동 값(비활성)",
+          "notProvided": "제공되지 않음",
+          "readOnlyCapability": "{source}에서 정의되어 이 값을 편집할 수 없습니다.",
+          "exactValue": "{label} ({exact} 토큰)"
         },
         "accounts": {
           "title": "계정",

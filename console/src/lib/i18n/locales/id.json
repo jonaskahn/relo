@@ -669,7 +669,15 @@
           "editLimits": "Batas",
           "editCapabilities": "Kemampuan",
           "overrides": "Override",
-          "overridesNone": "Tidak ada override — model mengikuti penyedia, lalu models.dev."
+          "overridesNone": "Tidak ada override — model mengikuti penyedia, lalu models.dev.",
+          "sourceAccount": "Ditetapkan oleh akun",
+          "sourceProvider": "Ditetapkan oleh koneksi",
+          "sourceModelsDev": "Ditetapkan oleh models.dev",
+          "sourceManual": "Pelengkapan manual",
+          "sourceManualInactive": "Nilai manual tersimpan (tidak aktif)",
+          "notProvided": "Tidak tersedia",
+          "readOnlyCapability": "Ditetapkan oleh {source}; nilai ini tidak dapat diedit.",
+          "exactValue": "{label} ({exact} token)"
         },
         "accounts": {
           "title": "Akun",

@@ -669,7 +669,15 @@
           "editLimits": "Limity",
           "editCapabilities": "Możliwości",
           "overrides": "Nadpisania",
-          "overridesNone": "Brak nadpisań — model podąża za dostawcą, a następnie models.dev."
+          "overridesNone": "Brak nadpisań — model podąża za dostawcą, a następnie models.dev.",
+          "sourceAccount": "Zdefiniowane przez konto",
+          "sourceProvider": "Zdefiniowane przez połączenie",
+          "sourceModelsDev": "Zdefiniowane przez models.dev",
+          "sourceManual": "Uzupełnienie ręczne",
+          "sourceManualInactive": "Zapisana wartość ręczna (nieaktywna)",
+          "notProvided": "Nie podano",
+          "readOnlyCapability": "Zdefiniowane przez {source}; tej wartości nie można edytować.",
+          "exactValue": "{label} ({exact} tokenów)"
         },
         "accounts": {
           "title": "Konta",

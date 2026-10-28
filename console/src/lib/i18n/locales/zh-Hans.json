@@ -669,7 +669,15 @@
           "editLimits": "限制",
           "editCapabilities": "能力",
           "overrides": "覆盖项",
-          "overridesNone": "暂无覆盖项，该模型依次遵循提供商和 models.dev。"
+          "overridesNone": "暂无覆盖项，该模型依次遵循提供商和 models.dev。",
+          "sourceAccount": "由账户定义",
+          "sourceProvider": "由连接定义",
+          "sourceModelsDev": "由 models.dev 定义",
+          "sourceManual": "手动补充",
+          "sourceManualInactive": "已保存的手动值（未启用）",
+          "notProvided": "未提供",
+          "readOnlyCapability": "由 {source} 定义；无法编辑此值。",
+          "exactValue": "{label}（{exact} 个 token）"
         },
         "accounts": {
           "title": "账号",
