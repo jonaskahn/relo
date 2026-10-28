@@ -2,6 +2,7 @@ package service_test
 
 import (
 	"context"
+	"errors"
 	"testing"
 
 	"github.com/jonaskahn/relo/internal/adapters/sqlite"
@@ -237,5 +238,41 @@ func TestAccountContextSkipsAContextTheRosterAlreadyDefines(t *testing.T) {
 	}
 	if len(write.Applied) != 0 || len(write.Skipped) != 1 {
 		t.Fatalf("write = %+v, want the discovered definition to win", write)
+	}
+}
+
+func TestAccountContextRefusesUnknownAccountsAndRanges(t *testing.T) {
+	h := newHarness(t)
+	manager := pageService(t, h, catalogServer(t, catalogFixture()).URL)
+	ctx := context.Background()
+	if _, err := manager.accounts.AccountContext(ctx, "missing"); !errors.Is(err, appaccount.ErrAccountNotFound) {
+		t.Fatalf("AccountContext(missing) error = %v, want the account refusal", err)
+	}
+	account := h.addAccount("openai", "work", "sk-first")
+	tooBig := int64(100_000_001)
+	if _, err := manager.accounts.SetAccountModelsContext(ctx, account.ID, []string{"model-1"}, &tooBig); !errors.Is(err, appaccount.ErrInvalidCatalogRow) {
+		t.Fatalf("SetAccountModelsContext(range) error = %v, want the range refusal", err)
+	}
+	if _, err := manager.accounts.SetAccountModelsContext(ctx, "missing", []string{"model-1"}, nil); !errors.Is(err, appaccount.ErrAccountNotFound) {
+		t.Fatalf("SetAccountModelsContext(missing) error = %v, want the account refusal", err)
+	}
+}
+
+func TestEffectiveModelWithoutAnAccountKeepsTheSharedView(t *testing.T) {
+	h := newHarness(t)
+	manager := pageService(t, h, catalogServer(t, catalogFixture()).URL)
+	model, err := manager.accounts.EffectiveModel(context.Background(), "openai", "model-1", "")
+	if err != nil {
+		t.Fatalf("EffectiveModel() error = %v", err)
+	}
+	if model.ProviderID != "openai" || model.ID != "model-1" {
+		t.Fatalf("model = %+v, want the shared definition", model)
+	}
+}
+
+func TestAdvertisedContextsWithoutASnapshotIsEmpty(t *testing.T) {
+	service := appaccount.New(appaccount.Options{})
+	if advertised := service.AdvertisedContexts(context.Background()); len(advertised) != 0 {
+		t.Fatalf("advertised = %+v, want no claims without a catalog", advertised)
 	}
 }
