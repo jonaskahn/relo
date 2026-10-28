@@ -103,12 +103,13 @@ func TestAccountModelsContextSizesOneAccount(t *testing.T) {
 		}
 	}
 
-	// The smallest eligible window is what a shared identifier advertises, so
-	// the account sized at 200000 lowers model-2's advertised value.
+	// A second serving account has no account-scoped window, and the shared
+	// model definition is unknown, so the public catalog must not claim an
+	// exact value from the first account alone.
 	advertised := manager.accounts.AdvertisedContexts(ctx)
 	key := appaccount.AdvertisedContextKey("openai", "model-2")
-	if value, found := advertised[key]; !found || value == nil || *value != sized {
-		t.Fatalf("advertised model-2 = %v (found %v), want %d", advertised[key], found, sized)
+	if value, found := advertised[key]; found {
+		t.Fatalf("advertised model-2 = %v, want unknown while one serving account is unknown", *value)
 	}
 
 	// Clearing returns the account to the connection's figure.

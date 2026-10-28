@@ -11,8 +11,9 @@ import (
 )
 
 type errorBody struct {
-	Code    string `json:"code"`
-	Message string `json:"message"`
+	Code    string         `json:"code"`
+	Message string         `json:"message"`
+	Data    map[string]any `json:"data,omitempty"`
 }
 
 type errorResponse struct {
@@ -27,6 +28,10 @@ func writeJSON(w http.ResponseWriter, status int, payload any) {
 
 func writeError(w http.ResponseWriter, status int, code, message string) {
 	writeJSON(w, status, errorResponse{Error: errorBody{Code: code, Message: message}})
+}
+
+func writeErrorData(w http.ResponseWriter, status int, code, message string, data map[string]any) {
+	writeJSON(w, status, errorResponse{Error: errorBody{Code: code, Message: message, Data: data}})
 }
 
 type refusal struct {

@@ -92,6 +92,12 @@ func (r *CatalogRepo) DeleteProvider(ctx context.Context, id string) error {
 	if _, err := tx.ExecContext(ctx, "DELETE FROM providers WHERE id = ?", id); err != nil {
 		return fmt.Errorf("delete provider %s: %w", id, err)
 	}
+	if _, err := tx.ExecContext(ctx, "DELETE FROM account_model_capabilities WHERE provider_id = ?", id); err != nil {
+		return fmt.Errorf("delete account capabilities for provider %s: %w", id, err)
+	}
+	if _, err := tx.ExecContext(ctx, "DELETE FROM account_model_facts WHERE provider_id = ?", id); err != nil {
+		return fmt.Errorf("delete account context completions for provider %s: %w", id, err)
+	}
 	if err := tx.Commit(); err != nil {
 		return fmt.Errorf("commit provider delete %s: %w", id, err)
 	}

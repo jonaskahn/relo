@@ -189,6 +189,27 @@ func (m *Manager) Active(providerID string) int {
 	return count
 }
 
+// ActiveCredentials returns every credential of one connection whose
+// operator-facing status permits serving. It is the stable set a public
+// catalog intersects capabilities across; breaker cooldowns remain a runtime
+// routing concern.
+func (m *Manager) ActiveCredentials(providerID string) []string {
+	entries := m.GetPool(providerID).Entries()
+	ids := make([]string, 0, len(entries))
+	for _, entry := range entries {
+		if entry.Status == StatusActive {
+			ids = append(ids, entry.ID)
+		}
+	}
+	return ids
+}
+
+// AccountCanServe reports whether one credential's known roster holds any of
+// the supplied model identifiers.
+func (m *Manager) AccountCanServe(credentialID string, modelIDs []string) bool {
+	return m.index == nil || m.index.CanServe(credentialID, modelIDs)
+}
+
 // Available reports whether a provider has at least one credential that can
 // take a request right now, which is what tells a cooling-down provider from
 // an unconfigured one.

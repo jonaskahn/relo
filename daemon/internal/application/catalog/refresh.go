@@ -130,6 +130,7 @@ func (s *Service) refreshProvider(ctx context.Context, providerID string) (Refre
 	}
 	s.keepAccountRosters(ctx, rosters)
 	s.keepRequestConfigs(ctx, providerID, host.ModelsFormat, rosters)
+	s.keepAccountCapabilities(ctx, providerID, rosters)
 
 	existingMap := indexExistingModels(existing)
 	assembly := assembleRefreshRoster(t, host, listed, mdIdx, providerID, existingMap)
@@ -380,7 +381,7 @@ func factsForRefresh(providerID string, entry rosterEntry, mdModel catalog.Model
 	providerFact.SupportsTools = entry.SupportsTools
 	providerFact.SupportsReasoning = entry.SupportsReasoning
 	providerFact.SupportsVision = entry.SupportsVision
-	providerFact.ReasoningEfforts = append([]string(nil), entry.ReasoningEfforts...)
+	providerFact.ReasoningEfforts = cloneStringSlice(entry.ReasoningEfforts)
 	providerFact.ReasoningToggle = entry.ReasoningToggle
 	if !providerFact.Empty() {
 		facts = append(facts, providerFact)
@@ -458,13 +459,14 @@ func markRefreshSuperseded(existing []catalog.Model, assembly refreshAssembly) [
 }
 
 type accountRosters struct {
-	union    []catalog.Listed
-	rosters  map[string][]string
-	configs  map[string][]catalog.ModelRequestConfig
-	failures []string
-	firstErr error
-	seen     map[string]bool
-	index    map[string]int
+	union        []catalog.Listed
+	rosters      map[string][]string
+	configs      map[string][]catalog.ModelRequestConfig
+	capabilities map[string][]catalog.AccountFactsRecord
+	failures     []string
+	firstErr     error
+	seen         map[string]bool
+	index        map[string]int
 }
 
 // ids returns the per-account model ids, or nil when no account was read.
@@ -477,11 +479,12 @@ func (acc *accountRosters) ids() map[string][]string {
 
 func (s *Service) discoverAccounts(ctx context.Context, host catalog.Provider, entries []account.PoolEntry) (*accountRosters, error) {
 	acc := &accountRosters{
-		union:   make([]catalog.Listed, 0, 64),
-		rosters: make(map[string][]string, len(entries)),
-		configs: make(map[string][]catalog.ModelRequestConfig, len(entries)),
-		seen:    map[string]bool{},
-		index:   map[string]int{},
+		union:        make([]catalog.Listed, 0, 64),
+		rosters:      make(map[string][]string, len(entries)),
+		configs:      make(map[string][]catalog.ModelRequestConfig, len(entries)),
+		capabilities: make(map[string][]catalog.AccountFactsRecord, len(entries)),
+		seen:         map[string]bool{},
+		index:        map[string]int{},
 	}
 	for _, entry := range entries {
 		s.discoverAccountRoster(ctx, host, entry, acc)
@@ -521,6 +524,44 @@ func (s *Service) discoverAccountRoster(ctx context.Context, host catalog.Provid
 	}
 	acc.rosters[entry.ID] = modelIDs
 	acc.configs[entry.ID] = requestConfigsOf(listed)
+	acc.capabilities[entry.ID] = accountCapabilitiesOf(listed, host.ID, entry.ID)
+}
+
+func accountCapabilitiesOf(listed []catalog.Listed, providerID, credentialID string) []catalog.AccountFactsRecord {
+	facts := make([]catalog.AccountFactsRecord, 0, len(listed))
+	for _, item := range listed {
+		facts = append(facts, catalog.AccountFactsRecord{
+			CredentialID: credentialID, ProviderID: providerID, ModelID: item.ID,
+			Source:        SourceListing,
+			ContextWindow: item.ContextWindow, MaxInput: item.MaxInput, MaxOutput: item.MaxOutput,
+			SupportsTools: item.SupportsTools, SupportsReasoning: item.SupportsReasoning,
+			SupportsVision: item.SupportsVision, ReasoningEfforts: cloneStringSlice(item.ReasoningEfforts),
+			ReasoningToggle: item.ReasoningToggle, ReasoningBudget: item.ReasoningBudget,
+			ReasoningBudgetMin: item.ReasoningBudgetMin, ReasoningBudgetMax: item.ReasoningBudgetMax,
+			ObservedAtMs: catalog.NowMs(),
+		})
+	}
+	return facts
+}
+
+func cloneStringSlice(values []string) []string {
+	if values == nil {
+		return nil
+	}
+	cloned := make([]string, len(values))
+	copy(cloned, values)
+	return cloned
+}
+
+func (s *Service) keepAccountCapabilities(ctx context.Context, providerID string, rosters *accountRosters) {
+	if rosters == nil {
+		return
+	}
+	for credentialID, facts := range rosters.capabilities {
+		if err := s.store.SaveAccountCapabilities(ctx, providerID, credentialID, facts); err != nil {
+			s.logger.Warn("store an account's capability facts", "credential", credentialID, "error", err)
+		}
+	}
 }
 
 // requestConfigsOf collects one account's exact request tuples. A successful

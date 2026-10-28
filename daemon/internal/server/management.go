@@ -344,6 +344,13 @@ func (s *Server) decodeJSON(w http.ResponseWriter, r *http.Request, target any) 
 }
 
 func writeServiceError(w http.ResponseWriter, err error) {
+	var readOnly *appcatalog.CapabilityReadOnlyError
+	if errors.As(err, &readOnly) {
+		writeErrorData(w, http.StatusConflict, "capability_read_only", err.Error(), map[string]any{
+			"field": readOnly.Field, "source": readOnly.Source,
+		})
+		return
+	}
 	status, code := serviceStatus(err)
 	writeError(w, status, code, err.Error())
 }
@@ -364,6 +371,7 @@ func serviceStatus(err error) (int, string) {
 		return http.StatusServiceUnavailable, "service_unavailable"
 	case errors.Is(err, appcatalog.ErrCatalogConflict), errors.Is(err, appaccount.ErrDuplicateAccount),
 		errors.Is(err, appcatalog.ErrListAuthoritative),
+		errors.Is(err, appcatalog.ErrCapabilityReadOnly),
 		appintegration.RefusalCode(err) == appintegration.CodeForeignKey:
 		return http.StatusConflict, "conflict"
 	case errors.Is(err, appintegration.ErrRestoreBlocked):

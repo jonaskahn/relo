@@ -19,6 +19,7 @@ func NewCatalogReader(db *DB) *CatalogReader {
 }
 
 var _ catalog.Reader = (*CatalogReader)(nil)
+var _ catalog.AccountCapabilityReader = (*CatalogReader)(nil)
 
 // ListConnections returns every stored connection.
 func (r *CatalogReader) ListConnections(ctx context.Context) ([]catalog.ConnectionRecord, error) {
@@ -57,6 +58,13 @@ func (r *CatalogReader) ListModelFacts(ctx context.Context) ([]catalog.FactsReco
 		records = append(records, factsRecord(row))
 	}
 	return records, nil
+}
+
+// ListAccountCapabilities returns every credential-scoped capability fact
+// plus the operator's account context completions, so one snapshot build sees
+// one consistent set of facts.
+func (r *CatalogReader) ListAccountCapabilities(ctx context.Context) ([]catalog.AccountFactsRecord, error) {
+	return r.repo.ListAccountCapabilities(ctx)
 }
 
 // ListRoutes returns every stored route with its ordered members.

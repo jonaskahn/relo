@@ -77,6 +77,7 @@ type managementWiring struct {
 	credentials      *upstream.Source
 	accounts         *appaccount.Service
 	catalogSvc       *appcatalog.Service
+	refreshClaude    func(context.Context)
 }
 
 func newManagement(ctx context.Context, home string, db *sqlite.DB, logger *slog.Logger) (*Management, error) {
@@ -133,14 +134,23 @@ func (w *managementWiring) services() {
 		Entries: w.credRepo, Secrets: NewQuietSecrets(w.secrets), Pools: w.pools, Catalog: w.models,
 		Facts:     sqlite.NewAccountFactStore(w.db),
 		Providers: edges, Discover: edges, Refresh: edges.RefreshAfterCredential,
+		AfterChange: func(ctx context.Context) {
+			if w.refreshClaude != nil {
+				w.refreshClaude(ctx)
+			}
+		},
 		Logger: w.logger,
 	})
+	w.refreshClaude = w.managementRefresher()
 	w.catalogSvc = w.newManagementCatalog(edges)
 	edges.Catalog = w.catalogSvc
 }
 
 func (w *managementWiring) newManagementCatalog(edges *AccountEdges) *appcatalog.Service {
-	refreshClaude := w.managementRefresher()
+	refreshClaude := w.refreshClaude
+	if refreshClaude == nil {
+		refreshClaude = w.managementRefresher()
+	}
 	seed, _ := modelsdev.EmbeddedSeed()
 	catalogSvc := appcatalog.New(appcatalog.Options{
 		Store: sqlite.NewCatalogRepo(w.db), Catalog: w.models, Pools: w.pools,

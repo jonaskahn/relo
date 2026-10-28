@@ -33,6 +33,9 @@ type Store interface {
 	SaveModelRequestConfigs(ctx context.Context, providerID, credentialID string, configs []catalog.ModelRequestConfig) error
 	// ModelRequestConfigs returns one account's exact request tuples.
 	ModelRequestConfigs(ctx context.Context, providerID, credentialID string) ([]catalog.ModelRequestConfig, error)
+	// SaveAccountCapabilities replaces one account's discovered capability
+	// facts for one connection.
+	SaveAccountCapabilities(ctx context.Context, providerID, credentialID string, facts []catalog.AccountFactsRecord) error
 	SaveModelsDevFacts(ctx context.Context, facts []catalog.FactsRecord, state catalog.ModelsDevStateRecord) error
 	GetModelsDevState(ctx context.Context) (catalog.ModelsDevStateRecord, bool, error)
 }

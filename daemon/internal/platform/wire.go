@@ -209,6 +209,11 @@ func (w *wiring) services() {
 		Entries: w.credRepo, Secrets: NewQuietSecrets(w.built.secrets), Pools: w.built.pools, Catalog: w.models,
 		Facts:     sqlite.NewAccountFactStore(w.db),
 		Providers: edges, Discover: edges, Refresh: edges.RefreshAfterCredential,
+		AfterChange: func(ctx context.Context) {
+			if w.refreshClaude != nil {
+				w.refreshClaude(ctx)
+			}
+		},
 		Logger: w.logger,
 	})
 	catalogSvc := w.newCatalogService(edges, accounts)
