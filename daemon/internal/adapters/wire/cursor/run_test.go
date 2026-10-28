@@ -93,6 +93,12 @@ func turnEndedPayload() []byte {
 	return ended.BytesOut()
 }
 
+func tokenDeltaPayload(tokens int64) []byte {
+	var delta adapterscursor.Writer
+	delta.Int64(tokenDeltaTokens, tokens)
+	return delta.BytesOut()
+}
+
 func mcpArgsPayload(name, toolCallID string) []byte {
 	var args adapterscursor.Writer
 	args.String(1, name)
