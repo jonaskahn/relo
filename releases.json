@@ -1,7 +1,7 @@
 {
-  "generated": "2026-10-27T09:44:16Z",
+  "generated": "2026-10-28T03:12:10Z",
   "latest": "v0.1.12",
-  "latest_beta": "v0.1.12-beta.48.9097618f",
+  "latest_beta": "v0.1.13-beta.49.3f9bb2d5",
   "install": {
     "stable": {
       "script": "curl -fsSL https://relo.ifelse.one/install.sh | sh",
@@ -17,6 +17,86 @@
     }
   },
   "releases": [
+    {
+      "tag": "v0.1.13-beta.49.3f9bb2d5",
+      "version": "0.1.13-beta.49.3f9bb2d5",
+      "name": "v0.1.13-beta.49.3f9bb2d5",
+      "channel": "beta",
+      "draft": false,
+      "published_at": "2026-10-28T03:12:01Z",
+      "page": "https://github.com/jonaskahn/relo/releases/tag/v0.1.13-beta.49.3f9bb2d5",
+      "notes": "## What's Changed\n* Fix: cursor run stream teardown by @jonaskahn in https://github.com/jonaskahn/relo/pull/86\n* test: cover integration error paths by @jonaskahn in https://github.com/jonaskahn/relo/pull/84\n* chore: bump to 0.1.13 by @github-actions[bot] in https://github.com/jonaskahn/relo/pull/85\n\n\n**Full Changelog**: https://github.com/jonaskahn/relo/compare/v0.1.12...v0.1.13-beta.49.3f9bb2d5",
+      "install": {
+        "script": "curl -fsSL https://relo.ifelse.one/install.sh | sh -s -- --version 0.1.13-beta.49.3f9bb2d5",
+        "powershell": "& ([scriptblock]::Create((irm https://relo.ifelse.one/install.ps1))) -Version 0.1.13-beta.49.3f9bb2d5",
+        "npm": "npm i -g @jonaskahn/relo@0.1.13-beta.49.3f9bb2d5"
+      },
+      "files": [
+        {
+          "name": "checksums.txt",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.1.13-beta.49.3f9bb2d5/checksums.txt",
+          "size": 690,
+          "os": "any",
+          "arch": "any",
+          "kind": "checksums",
+          "format": "txt"
+        },
+        {
+          "name": "relo-0.1.13-beta.49.3f9bb2d5-darwin-amd64.tar.gz",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.1.13-beta.49.3f9bb2d5/relo-0.1.13-beta.49.3f9bb2d5-darwin-amd64.tar.gz",
+          "size": 14316023,
+          "os": "macos",
+          "arch": "amd64",
+          "kind": "archive",
+          "format": "tar.gz"
+        },
+        {
+          "name": "relo-0.1.13-beta.49.3f9bb2d5-darwin-arm64.tar.gz",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.1.13-beta.49.3f9bb2d5/relo-0.1.13-beta.49.3f9bb2d5-darwin-arm64.tar.gz",
+          "size": 13897255,
+          "os": "macos",
+          "arch": "arm64",
+          "kind": "archive",
+          "format": "tar.gz"
+        },
+        {
+          "name": "relo-0.1.13-beta.49.3f9bb2d5-linux-amd64.tar.gz",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.1.13-beta.49.3f9bb2d5/relo-0.1.13-beta.49.3f9bb2d5-linux-amd64.tar.gz",
+          "size": 14008225,
+          "os": "linux",
+          "arch": "amd64",
+          "kind": "archive",
+          "format": "tar.gz"
+        },
+        {
+          "name": "relo-0.1.13-beta.49.3f9bb2d5-linux-arm64.tar.gz",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.1.13-beta.49.3f9bb2d5/relo-0.1.13-beta.49.3f9bb2d5-linux-arm64.tar.gz",
+          "size": 13254631,
+          "os": "linux",
+          "arch": "arm64",
+          "kind": "archive",
+          "format": "tar.gz"
+        },
+        {
+          "name": "relo-0.1.13-beta.49.3f9bb2d5-windows-amd64.tar.gz",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.1.13-beta.49.3f9bb2d5/relo-0.1.13-beta.49.3f9bb2d5-windows-amd64.tar.gz",
+          "size": 13951279,
+          "os": "windows",
+          "arch": "amd64",
+          "kind": "archive",
+          "format": "tar.gz"
+        },
+        {
+          "name": "relo-0.1.13-beta.49.3f9bb2d5-windows-arm64.tar.gz",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.1.13-beta.49.3f9bb2d5/relo-0.1.13-beta.49.3f9bb2d5-windows-arm64.tar.gz",
+          "size": 13099645,
+          "os": "windows",
+          "arch": "arm64",
+          "kind": "archive",
+          "format": "tar.gz"
+        }
+      ]
+    },
     {
       "tag": "v0.1.12",
       "version": "0.1.12",
