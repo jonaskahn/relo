@@ -594,13 +594,14 @@ func explicitToolConfig(choice *inference.ToolChoice) *toolConfig {
 // narrow it, never widen it, because the endpoint refuses a larger one with a
 // 400 the client cannot recover from.
 func outputCeiling(req *inference.Request, variant antigravity.Variant) int {
+	ceiling := assistMaxTokens
 	if variant.MaxOutput > 0 {
-		return variant.MaxOutput
+		ceiling = variant.MaxOutput
 	}
-	if req != nil && req.MaxTokens > 0 {
-		return req.MaxTokens
+	if req != nil && req.MaxTokens > 0 && req.MaxTokens < ceiling {
+		ceiling = req.MaxTokens
 	}
-	return assistMaxTokens
+	return ceiling
 }
 
 func assistLabels(model, trajectory string, step int, turn assistTurn) map[string]string {

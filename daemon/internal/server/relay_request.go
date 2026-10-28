@@ -601,14 +601,13 @@ func (s *Server) modelRequest(spec attemptSpec, template catalog.Template, templ
 	} else if copied.MaxTokens <= 0 && spec.candidate.Model.FactSources.MaxOutput == "" {
 		copied.MaxTokens = int(catalog.DefaultMaxOutput)
 	}
-	requested := 0
-	if spec.outcome != nil && spec.outcome.request != nil {
-		requested = spec.outcome.request.MaxTokens
-	}
-	if requested > 0 && copied.MaxTokens > 0 && requested != copied.MaxTokens && spec.outcome != nil {
-		spec.outcome.warnings = append(spec.outcome.warnings,
-			fmt.Sprintf("output budget %d replaced by provider budget %d (%s)",
-				requested, copied.MaxTokens, spec.candidate.Model.FactSources.MaxOutput))
+	if s.opts.Logger != nil && spec.outcome != nil && spec.outcome.request != nil &&
+		spec.outcome.request.MaxTokens > 0 && copied.MaxTokens > 0 &&
+		spec.outcome.request.MaxTokens != copied.MaxTokens {
+		s.opts.Logger.Debug("normalized the output budget",
+			"provider", spec.candidate.ProviderID, "model", spec.candidate.Model.ID,
+			"requested", spec.outcome.request.MaxTokens, "effective", copied.MaxTokens,
+			"source", spec.candidate.Model.FactSources.MaxOutput)
 	}
 	if spec.candidate.Model.APIFormat == catalog.FormatCloudCode && isClaudeAntigravityPassthrough(spec.candidate) {
 		// Claude thinks through nothing on this transport, so a stated
@@ -654,13 +653,28 @@ func (s *Server) validateOutboundRequest(spec attemptSpec, request *inference.Re
 			return fmt.Errorf("reasoning effort %s is not supported by %s: %w", effort, model.ID, wire.ErrUnsupportedFeature)
 		}
 	}
+	// The estimate is character-derived, so keep a conservative allowance for
+	// multi-byte text while never using it to enlarge the provider's capacity.
 	promptTokens := int64(s.estimateRequestTokens(request))
 	if model.MaxInput != nil && promptTokens > *model.MaxInput {
 		return fmt.Errorf("%w: input uses %d tokens but %s accepts %d", errContextLimitExceeded, promptTokens, model.ID, *model.MaxInput)
 	}
-	if model.ContextWindow != nil && promptTokens+int64(max(request.MaxTokens, 0)) > *model.ContextWindow {
-		return fmt.Errorf("%w: input and reserved output use %d tokens but %s accepts %d",
-			errContextLimitExceeded, promptTokens+int64(max(request.MaxTokens, 0)), model.ID, *model.ContextWindow)
+	if model.MaxOutput != nil && *model.MaxOutput > 0 && request.MaxTokens > int(*model.MaxOutput) {
+		request.MaxTokens = int(*model.MaxOutput)
+	}
+	if model.ContextWindow != nil && promptTokens > *model.ContextWindow {
+		return fmt.Errorf("%w: input uses %d tokens but %s accepts %d",
+			errContextLimitExceeded, promptTokens, model.ID, *model.ContextWindow)
+	}
+	if model.ContextWindow != nil && request.MaxTokens > 0 {
+		available := *model.ContextWindow - promptTokens
+		if available <= 0 {
+			return fmt.Errorf("%w: input uses all %d tokens %s accepts, leaving no room to generate",
+				errContextLimitExceeded, promptTokens, model.ID)
+		}
+		if int64(request.MaxTokens) > available {
+			request.MaxTokens = int(available)
+		}
 	}
 	return nil
 }
