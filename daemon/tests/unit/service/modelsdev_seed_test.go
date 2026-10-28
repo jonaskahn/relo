@@ -177,6 +177,70 @@ func TestNoLocalCopyLeavesTheStateUnavailable(t *testing.T) {
 	}
 }
 
+func TestSeedStateIgnoresARowFromAnEarlierProcess(t *testing.T) {
+	h := newHarness(t)
+	manager := h.buildServiceWith(h.catalog, h.pools, testkit.SecretStore(h.secrets),
+		seedDirectory(t, catalogFixture()), discovery.New(nil))
+	repo := sqlite.NewCatalogRepo(h.db)
+	if err := repo.SaveModelsDevState(context.Background(), sqlite.ModelsDevStateRow{
+		SourceURL: catalog.ModelsDevDefaultURL, FetchedAtMs: 1,
+		ProvidersCount: 9, ModelsCount: 9, LastError: "earlier failure",
+	}); err != nil {
+		t.Fatalf("save the earlier state: %v", err)
+	}
+
+	state, err := manager.ModelsDevState(context.Background())
+	if err != nil {
+		t.Fatalf("ModelsDevState() error = %v", err)
+	}
+	if state.Origin != catalog.ModelsDevOriginSeed || state.FetchedAtMs != seedFetchedAt.UnixMilli() ||
+		state.LastError != "" || state.ProvidersCount == 9 {
+		t.Fatalf("state = %+v, want the seed's own build time", state)
+	}
+}
+
+func TestUnavailableStateTakesTheStoredCounts(t *testing.T) {
+	h := newHarness(t)
+	manager := h.buildServiceWith(h.catalog, h.pools, testkit.SecretStore(h.secrets),
+		modelsdev.NewDirectoryWithSeed(t.TempDir(), catalog.ModelsDevDefaultURL, failingCatalogClient(), modelsdev.Seed{}),
+		discovery.New(nil))
+	repo := sqlite.NewCatalogRepo(h.db)
+	if err := repo.SaveModelsDevState(context.Background(), sqlite.ModelsDevStateRow{
+		SourceURL: catalog.ModelsDevDefaultURL, FetchedAtMs: 100, ProvidersCount: 3, ModelsCount: 7,
+	}); err != nil {
+		t.Fatalf("save the earlier state: %v", err)
+	}
+
+	state, err := manager.ModelsDevState(context.Background())
+	if err != nil {
+		t.Fatalf("ModelsDevState() error = %v", err)
+	}
+	if state.Available || state.Stale || state.ProvidersCount != 3 || state.ModelsCount != 7 {
+		t.Fatalf("state = %+v, want the stored counts without a stale flag", state)
+	}
+}
+
+func TestAStoredFailureMarksTheCachedCopyStale(t *testing.T) {
+	h := newHarness(t)
+	manager := h.buildServiceWith(h.catalog, h.pools, testkit.SecretStore(h.secrets),
+		cacheDirectory(t, h.home, catalogFixture()), discovery.New(nil))
+	repo := sqlite.NewCatalogRepo(h.db)
+	if err := repo.SaveModelsDevState(context.Background(), sqlite.ModelsDevStateRow{
+		SourceURL: catalog.ModelsDevDefaultURL, LastAttemptAtMs: 200, LastError: "fetch failed",
+	}); err != nil {
+		t.Fatalf("save the earlier state: %v", err)
+	}
+
+	state, err := manager.ModelsDevState(context.Background())
+	if err != nil {
+		t.Fatalf("ModelsDevState() error = %v", err)
+	}
+	if !state.Available || !state.Stale || state.Origin != catalog.ModelsDevOriginCache ||
+		state.LastError != "fetch failed" {
+		t.Fatalf("state = %+v, want the cached copy marked stale", state)
+	}
+}
+
 // replaceModelID swaps the harness's default model id for one the catalog
 // fixture describes.
 func replaceModelID(h *harness, providerID, modelID string) error {
