@@ -15,7 +15,7 @@ console, and in this document.
 | Draft        | An in-memory connection setup session: settings, verification, and an unfinished login       |
 | Surface      | One native client endpoint: `chat-completions`, `responses`, or `messages`                   |
 | Format       | An upstream wire format                                                                      |
-| Model index  | The models.dev dataset and its saved copy                                                    |
+| Model index  | The models.dev dataset: the live answer, its saved copy, or the build-time seed             |
 | Quota window | A usage limit period reported for one account                                                |
 
 "Provider" survives only in wire names and in the OAuth adapter, where a

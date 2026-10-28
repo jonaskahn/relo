@@ -60,8 +60,9 @@ The daemon is authoritative for accounts, routes, settings, and usage.
 ## Evidence on Hand
 
 The repository defines the product surface. models.dev metadata is fetched and
-cached; a provider's own model list determines the models its connection
-serves. Do not invent customers, benchmarks, or claims about upstream behavior.
+cached, with a dataset embedded at build time as its offline fallback; a
+provider's own model list determines the models its connection serves. Do not
+invent customers, benchmarks, or claims about upstream behavior.
 
 ## Product Principles
 

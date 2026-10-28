@@ -145,6 +145,7 @@ keychain instead.
 
 ```console
 $ make build          # console + daemon → ./relo
+$ make seed           # download the models.dev build seed when missing
 $ make dev-setup      # writes .dev/relo, leaves ~/.relo alone
 $ make ci
 ```
