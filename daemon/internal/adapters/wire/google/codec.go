@@ -188,7 +188,13 @@ func (c *Codec) DecodeResponse(body []byte) ([]inference.Event, error) {
 func (c *Codec) DecodeError(status int, body []byte) *inference.ErrorInfo {
 	var envelope errorEnvelope
 	if err := json.Unmarshal(body, &envelope); err == nil && envelope.Error != nil {
-		return envelope.Error.info(status)
+		info := envelope.Error.info(status)
+		// Cloud Code Assist may refuse at the top level instead of inside
+		// the response wrapper. The wait belongs to the endpoint either way.
+		if c.cfg.Mode == ModeCloudCodeAssist {
+			info.RetryAfter = antigravity.RetryAfter(status, info.Code, info.Message)
+		}
+		return info
 	}
 	// A Cloud Code Assist refusal arrives inside the same wrapper its answers
 	// use, so the wrapped error is read when none sits on top. The wait is

@@ -715,6 +715,13 @@ func TestCloudCodeAssistRefusalWait(t *testing.T) {
 		t.Fatalf("RetryAfter = %v, want a spent quota to move on instead of waiting", got)
 	}
 
+	t.Run("a top-level refusal carries the same wait", func(t *testing.T) {
+		body := []byte(`{"error":{"code":429,"message":"Individual quota reached","status":"RESOURCE_EXHAUSTED"}}`)
+		if got := cloudCodeAssistCodec().DecodeError(429, body).RetryAfter; got != 30*time.Second {
+			t.Fatalf("RetryAfter = %v, want the rate limit window", got)
+		}
+	})
+
 	t.Run("another endpoint sets no wait", func(t *testing.T) {
 		if got := google.Module().DecodeError(429, []byte(`{"error":{"code":429,"message":"Individual quota reached"}}`)).RetryAfter; got != 0 {
 			t.Fatalf("RetryAfter = %v, want none outside the Antigravity endpoint", got)
