@@ -468,3 +468,46 @@ func TestRunToolHandoff(t *testing.T) {
 		t.Fatalf("terminal = %q, want tool_use", terminal)
 	}
 }
+
+// TestRunToolHandoffRecordsTheUsage covers the native turn that hands a tool
+// to the client: it ends before Cursor reports the final counters, so the
+// usage the stream carried is all the turn has. A turn that recorded nothing
+// left the request's token count at zero.
+func TestRunToolHandoffRecordsTheUsage(t *testing.T) {
+	server := newFixtureServer(t, func(s *fixtureServer, w http.ResponseWriter, reader *adapterscursor.FrameReader) {
+		_ = parseClientMessage(t, s.next(reader))
+		s.write(w, nativeExec(2, "exec-shell", execShell, shellArgsFrame("ls", "/tmp", "call-1")))
+		_ = parseClientMessage(t, s.next(reader))
+		// The counters arrive after the handoff, in the frames the drain reads.
+		s.write(w, serverUpdate(14, turnEndedPayload()))
+		for {
+			_, ended, err := reader.Next()
+			if ended || err != nil {
+				return
+			}
+		}
+	})
+	request := testRequest()
+	request.Tools = []inference.Tool{{Name: "bash", Description: "run a command", Parameters: []byte(`{"type":"object"}`)}}
+	codec := NewCodec(server.server.URL)
+	events, err := codec.RunBidirectional(context.Background(), wire.BidirectionalCall{
+		Client: h2Client(server.server.Client()), Request: request, Opts: wire.CodecOpts{
+			BaseURL: server.server.URL, CredentialRef: "token", Cursor: testSelection(),
+		},
+	})
+	if err != nil {
+		t.Fatalf("RunBidirectional() error = %v", err)
+	}
+	var usage *inference.UsageReport
+	for _, event := range events {
+		if event.Kind == inference.EventUsage {
+			usage = event.Usage
+		}
+	}
+	if usage == nil {
+		t.Fatal("the handoff turn recorded no usage")
+	}
+	if usage.InputTokens != 12 || usage.OutputTokens != 34 {
+		t.Fatalf("usage = %+v, want the counters Cursor reported", usage)
+	}
+}

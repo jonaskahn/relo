@@ -25,16 +25,16 @@ func TestRunRefusesBeforeOpeningAStream(t *testing.T) {
 	}
 }
 
-func TestAwaitStreamEndWithoutAReaderReturns(t *testing.T) {
+func TestDrainWithoutAReaderReturns(t *testing.T) {
 	done := make(chan struct{})
 	go func() {
 		defer close(done)
-		awaitStreamEnd(nil, time.Second)
+		newConversation(nil, History{}, nil).drain(nil, time.Second)
 	}()
 	select {
 	case <-done:
 	case <-time.After(time.Second):
-		t.Fatal("awaitStreamEnd(nil) did not return")
+		t.Fatal("drain(nil) did not return")
 	}
 }
 
