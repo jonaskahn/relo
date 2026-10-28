@@ -29,6 +29,10 @@ type Seed struct {
 // invalid gzip is reported as no seed, never as an error that stops startup.
 func EmbeddedSeed() (Seed, bool) {
 	data, err := seedFiles.ReadFile(seedFileName)
+	return seedFromEmbeddedFile(data, err)
+}
+
+func seedFromEmbeddedFile(data []byte, err error) (Seed, bool) {
 	if err != nil || len(data) == 0 {
 		return Seed{}, false
 	}
@@ -60,17 +64,12 @@ func DecompressSeed(seed Seed) ([]byte, error) {
 // keeps the compressed bytes in memory and decompresses them on first read.
 func SeedFromDataset(data []byte, fetchedAt time.Time) (Seed, error) {
 	var compressed bytes.Buffer
-	writer, err := gzip.NewWriterLevel(&compressed, gzip.BestCompression)
-	if err != nil {
-		return Seed{}, err
-	}
+	// BestCompression is a valid level and bytes.Buffer cannot fail a write,
+	// so the writer cannot report an error here.
+	writer, _ := gzip.NewWriterLevel(&compressed, gzip.BestCompression)
 	writer.ModTime = fetchedAt
-	if _, err := writer.Write(data); err != nil {
-		return Seed{}, err
-	}
-	if err := writer.Close(); err != nil {
-		return Seed{}, err
-	}
+	_, _ = writer.Write(data)
+	_ = writer.Close()
 	return Seed{Gzip: compressed.Bytes(), FetchedAt: fetchedAt}, nil
 }
 
