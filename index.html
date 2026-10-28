@@ -278,11 +278,26 @@
             <span class="os-lens" aria-hidden="true"></span>
           </div>
         <div class="os-panel" id="panel-macos" role="tabpanel" aria-labelledby="tab-macos">
-        <article class="channel is-chosen" data-channel="script">
+        <article class="channel is-chosen" data-channel="npm">
+          <header class="ch-head">
+            <span class="ch-glyph" aria-hidden="true"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"/><path d="M12 12l8-4.5M12 12v9M12 12L4 7.5"/></svg></span>
+            <h3 class="ch-name" data-i18n="chNpm"></h3>
+          <span class="ch-badge" data-i18n="recommended">Recommended</span>
+          </header>
+          <div class="command">
+            <pre><code data-copy>npm i -g @jonaskahn/relo --foreground-scripts</code></pre>
+            <button type="button" class="copy" data-copy-btn aria-label="Copy command" title="Copy command" data-i18n-attr="aria-label:copy;title:copy">
+              <svg class="i-copy" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 0 1 2-2h9"/></svg>
+              <svg class="i-check" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>
+              <svg class="i-fail" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+            </button>
+          </div>
+          <p class="ch-note" data-i18n="chNpmNote"></p>
+        </article>
+        <article class="channel" data-channel="script">
           <header class="ch-head">
             <span class="ch-glyph" aria-hidden="true"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M5 7l4 5-4 5"/><path d="M13 17h6"/></svg></span>
             <h3 class="ch-name" data-i18n="chScript"></h3>
-          <span class="ch-badge" data-i18n="recommended">Recommended</span>
           </header>
           <div class="command">
             <pre><code data-copy>curl -fsSL https://relo.ifelse.one/install.sh | sh</code></pre>
@@ -308,21 +323,6 @@
             </button>
           </div>
           <p class="ch-note" data-i18n="chBrewNote"></p>
-        </article>
-        <article class="channel" data-channel="npm">
-          <header class="ch-head">
-            <span class="ch-glyph" aria-hidden="true"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"/><path d="M12 12l8-4.5M12 12v9M12 12L4 7.5"/></svg></span>
-            <h3 class="ch-name" data-i18n="chNpm"></h3>
-          </header>
-          <div class="command">
-            <pre><code data-copy>npm i -g @jonaskahn/relo --foreground-scripts</code></pre>
-            <button type="button" class="copy" data-copy-btn aria-label="Copy command" title="Copy command" data-i18n-attr="aria-label:copy;title:copy">
-              <svg class="i-copy" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 0 1 2-2h9"/></svg>
-              <svg class="i-check" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>
-              <svg class="i-fail" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
-            </button>
-          </div>
-          <p class="ch-note" data-i18n="chNpmNote"></p>
         </article>
         <article class="channel" data-channel="setup">
           <header class="ch-head">
@@ -336,11 +336,26 @@
         </article>
         </div>
         <div class="os-panel" id="panel-linux" role="tabpanel" aria-labelledby="tab-linux" hidden>
-        <article class="channel is-chosen" data-channel="script">
+        <article class="channel is-chosen" data-channel="npm">
+          <header class="ch-head">
+            <span class="ch-glyph" aria-hidden="true"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"/><path d="M12 12l8-4.5M12 12v9M12 12L4 7.5"/></svg></span>
+            <h3 class="ch-name" data-i18n="chNpm"></h3>
+          <span class="ch-badge" data-i18n="recommended">Recommended</span>
+          </header>
+          <div class="command">
+            <pre><code data-copy>npm i -g @jonaskahn/relo --foreground-scripts</code></pre>
+            <button type="button" class="copy" data-copy-btn aria-label="Copy command" title="Copy command" data-i18n-attr="aria-label:copy;title:copy">
+              <svg class="i-copy" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 0 1 2-2h9"/></svg>
+              <svg class="i-check" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>
+              <svg class="i-fail" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+            </button>
+          </div>
+          <p class="ch-note" data-i18n="chNpmNote"></p>
+        </article>
+        <article class="channel" data-channel="script">
           <header class="ch-head">
             <span class="ch-glyph" aria-hidden="true"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M5 7l4 5-4 5"/><path d="M13 17h6"/></svg></span>
             <h3 class="ch-name" data-i18n="chScript"></h3>
-          <span class="ch-badge" data-i18n="recommended">Recommended</span>
           </header>
           <div class="command">
             <pre><code data-copy>curl -fsSL https://relo.ifelse.one/install.sh | sh</code></pre>
@@ -366,21 +381,6 @@
             </button>
           </div>
           <p class="ch-note" data-i18n="chBrewNote"></p>
-        </article>
-        <article class="channel" data-channel="npm">
-          <header class="ch-head">
-            <span class="ch-glyph" aria-hidden="true"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"/><path d="M12 12l8-4.5M12 12v9M12 12L4 7.5"/></svg></span>
-            <h3 class="ch-name" data-i18n="chNpm"></h3>
-          </header>
-          <div class="command">
-            <pre><code data-copy>npm i -g @jonaskahn/relo --foreground-scripts</code></pre>
-            <button type="button" class="copy" data-copy-btn aria-label="Copy command" title="Copy command" data-i18n-attr="aria-label:copy;title:copy">
-              <svg class="i-copy" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 0 1 2-2h9"/></svg>
-              <svg class="i-check" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>
-              <svg class="i-fail" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
-            </button>
-          </div>
-          <p class="ch-note" data-i18n="chNpmNote"></p>
         </article>
         <article class="channel" data-channel="setup">
           <header class="ch-head">
@@ -397,26 +397,11 @@
         </article>
         </div>
         <div class="os-panel" id="panel-windows" role="tabpanel" aria-labelledby="tab-windows" hidden>
-        <article class="channel is-chosen" data-channel="script">
-          <header class="ch-head">
-            <span class="ch-glyph" aria-hidden="true"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M5 7l4 5-4 5"/><path d="M13 17h6"/></svg></span>
-            <h3 class="ch-name" data-i18n="chScript"></h3>
-          <span class="ch-badge" data-i18n="recommended">Recommended</span>
-          </header>
-          <div class="command">
-            <pre><code data-copy>irm https://relo.ifelse.one/install.ps1 | iex</code></pre>
-            <button type="button" class="copy" data-copy-btn aria-label="Copy command" title="Copy command" data-i18n-attr="aria-label:copy;title:copy">
-              <svg class="i-copy" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 0 1 2-2h9"/></svg>
-              <svg class="i-check" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>
-              <svg class="i-fail" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
-            </button>
-          </div>
-          <p class="ch-note" data-i18n="shellWindows"></p>
-        </article>
-        <article class="channel" data-channel="npm">
+        <article class="channel is-chosen" data-channel="npm">
           <header class="ch-head">
             <span class="ch-glyph" aria-hidden="true"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"/><path d="M12 12l8-4.5M12 12v9M12 12L4 7.5"/></svg></span>
             <h3 class="ch-name" data-i18n="chNpm"></h3>
+          <span class="ch-badge" data-i18n="recommended">Recommended</span>
           </header>
           <div class="command">
             <pre><code data-copy>npm i -g @jonaskahn/relo --foreground-scripts</code></pre>
@@ -427,6 +412,21 @@
             </button>
           </div>
           <p class="ch-note" data-i18n="chNpmNote"></p>
+        </article>
+        <article class="channel" data-channel="script">
+          <header class="ch-head">
+            <span class="ch-glyph" aria-hidden="true"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M5 7l4 5-4 5"/><path d="M13 17h6"/></svg></span>
+            <h3 class="ch-name" data-i18n="chScript"></h3>
+          </header>
+          <div class="command">
+            <pre><code data-copy>irm https://relo.ifelse.one/install.ps1 | iex</code></pre>
+            <button type="button" class="copy" data-copy-btn aria-label="Copy command" title="Copy command" data-i18n-attr="aria-label:copy;title:copy">
+              <svg class="i-copy" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 0 1 2-2h9"/></svg>
+              <svg class="i-check" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>
+              <svg class="i-fail" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+            </button>
+          </div>
+          <p class="ch-note" data-i18n="shellWindows"></p>
         </article>
         <article class="channel" data-channel="setup">
           <header class="ch-head">
@@ -473,26 +473,11 @@
           <span class="os-lens" aria-hidden="true"></span>
         </div>
       <div class="os-panel" id="panel-beta-macos" role="tabpanel" aria-labelledby="tab-beta-macos">
-      <article class="channel is-chosen" data-channel="brew">
-        <header class="ch-head">
-          <span class="ch-glyph" aria-hidden="true"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3h7l3 3v15H7z"/><path d="M9 9h7M9 13h7M9 17h4"/></svg></span>
-          <h3 class="ch-name" data-i18n="chBrew"></h3>
-        <span class="ch-badge" data-i18n="recommended">Recommended</span>
-        </header>
-        <div class="command">
-          <pre><code data-copy>brew install jonaskahn/apps/relo-beta</code></pre>
-          <button type="button" class="copy" data-copy-btn aria-label="Copy command" title="Copy command" data-i18n-attr="aria-label:copy;title:copy">
-            <svg class="i-copy" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 0 1 2-2h9"/></svg>
-            <svg class="i-check" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>
-            <svg class="i-fail" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
-          </button>
-        </div>
-        <p class="ch-note" data-i18n="chBrewBetaNote"></p>
-      </article>
-      <article class="channel" data-channel="npm">
+      <article class="channel is-chosen" data-channel="npm">
         <header class="ch-head">
           <span class="ch-glyph" aria-hidden="true"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"/><path d="M12 12l8-4.5M12 12v9M12 12L4 7.5"/></svg></span>
           <h3 class="ch-name" data-i18n="chNpm"></h3>
+          <span class="ch-badge" data-i18n="recommended">Recommended</span>
         </header>
         <div class="command">
           <pre><code data-copy>npm i -g @jonaskahn/relo@beta --foreground-scripts</code></pre>
@@ -503,29 +488,29 @@
           </button>
         </div>
         <p class="ch-note" data-i18n="chNpmBetaNote"></p>
+      </article>
+      <article class="channel" data-channel="brew">
+        <header class="ch-head">
+          <span class="ch-glyph" aria-hidden="true"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3h7l3 3v15H7z"/><path d="M9 9h7M9 13h7M9 17h4"/></svg></span>
+          <h3 class="ch-name" data-i18n="chBrew"></h3>
+        </header>
+        <div class="command">
+          <pre><code data-copy>brew install jonaskahn/apps/relo-beta</code></pre>
+          <button type="button" class="copy" data-copy-btn aria-label="Copy command" title="Copy command" data-i18n-attr="aria-label:copy;title:copy">
+            <svg class="i-copy" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 0 1 2-2h9"/></svg>
+            <svg class="i-check" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>
+            <svg class="i-fail" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+          </button>
+        </div>
+        <p class="ch-note" data-i18n="chBrewBetaNote"></p>
       </article>
       </div>
       <div class="os-panel" id="panel-beta-linux" role="tabpanel" aria-labelledby="tab-beta-linux" hidden>
-      <article class="channel is-chosen" data-channel="brew">
-        <header class="ch-head">
-          <span class="ch-glyph" aria-hidden="true"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3h7l3 3v15H7z"/><path d="M9 9h7M9 13h7M9 17h4"/></svg></span>
-          <h3 class="ch-name" data-i18n="chBrew"></h3>
-        <span class="ch-badge" data-i18n="recommended">Recommended</span>
-        </header>
-        <div class="command">
-          <pre><code data-copy>brew install jonaskahn/apps/relo-beta</code></pre>
-          <button type="button" class="copy" data-copy-btn aria-label="Copy command" title="Copy command" data-i18n-attr="aria-label:copy;title:copy">
-            <svg class="i-copy" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 0 1 2-2h9"/></svg>
-            <svg class="i-check" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>
-            <svg class="i-fail" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
-          </button>
-        </div>
-        <p class="ch-note" data-i18n="chBrewBetaNote"></p>
-      </article>
-      <article class="channel" data-channel="npm">
+      <article class="channel is-chosen" data-channel="npm">
         <header class="ch-head">
           <span class="ch-glyph" aria-hidden="true"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"/><path d="M12 12l8-4.5M12 12v9M12 12L4 7.5"/></svg></span>
           <h3 class="ch-name" data-i18n="chNpm"></h3>
+          <span class="ch-badge" data-i18n="recommended">Recommended</span>
         </header>
         <div class="command">
           <pre><code data-copy>npm i -g @jonaskahn/relo@beta --foreground-scripts</code></pre>
@@ -536,6 +521,21 @@
           </button>
         </div>
         <p class="ch-note" data-i18n="chNpmBetaNote"></p>
+      </article>
+      <article class="channel" data-channel="brew">
+        <header class="ch-head">
+          <span class="ch-glyph" aria-hidden="true"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3h7l3 3v15H7z"/><path d="M9 9h7M9 13h7M9 17h4"/></svg></span>
+          <h3 class="ch-name" data-i18n="chBrew"></h3>
+        </header>
+        <div class="command">
+          <pre><code data-copy>brew install jonaskahn/apps/relo-beta</code></pre>
+          <button type="button" class="copy" data-copy-btn aria-label="Copy command" title="Copy command" data-i18n-attr="aria-label:copy;title:copy">
+            <svg class="i-copy" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 0 1 2-2h9"/></svg>
+            <svg class="i-check" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>
+            <svg class="i-fail" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+          </button>
+        </div>
+        <p class="ch-note" data-i18n="chBrewBetaNote"></p>
       </article>
       </div>
       <div class="os-panel" id="panel-beta-windows" role="tabpanel" aria-labelledby="tab-beta-windows" hidden>
@@ -543,7 +543,7 @@
         <header class="ch-head">
           <span class="ch-glyph" aria-hidden="true"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"/><path d="M12 12l8-4.5M12 12v9M12 12L4 7.5"/></svg></span>
           <h3 class="ch-name" data-i18n="chNpm"></h3>
-        <span class="ch-badge" data-i18n="recommended">Recommended</span>
+          <span class="ch-badge" data-i18n="recommended">Recommended</span>
         </header>
         <div class="command">
           <pre><code data-copy>npm i -g @jonaskahn/relo@beta --foreground-scripts</code></pre>
