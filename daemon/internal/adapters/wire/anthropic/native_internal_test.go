@@ -18,7 +18,7 @@ func TestRebaseNativeBodyFallsBackWithoutMessages(t *testing.T) {
 	}
 	for name, body := range cases {
 		t.Run(name, func(t *testing.T) {
-			if _, ok := rebaseNativeBody([]byte(body), "claude-sonnet-4", nil); ok {
+			if _, ok := rebaseNativeBody([]byte(body), "claude-sonnet-4", nil, nativeOverride{}); ok {
 				t.Fatalf("body = %s, want the canonical encoder", body)
 			}
 		})
@@ -30,7 +30,7 @@ func TestRebaseNativeBodyFallsBackWithoutMessages(t *testing.T) {
 // so the body has to name it even though the client did not.
 func TestRebaseNativeBodyAddsTheModelItWasNotGiven(t *testing.T) {
 	body := `{"messages":[{"role":"user","content":[]}],"max_tokens":16}`
-	rebuilt, ok := rebaseNativeBody([]byte(body), "claude-sonnet-4", nil)
+	rebuilt, ok := rebaseNativeBody([]byte(body), "claude-sonnet-4", nil, nativeOverride{})
 	if !ok {
 		t.Fatal("want the body retargeted")
 	}
@@ -65,7 +65,7 @@ func TestRebaseNativeBodyNormalizesThinkingDisplay(t *testing.T) {
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
 			body := `{"model":"m","thinking":` + tc.thinking + `,"messages":[{"role":"user","content":[]}]}`
-			rebuilt, ok := rebaseNativeBody([]byte(body), "claude-sonnet-4", nil)
+			rebuilt, ok := rebaseNativeBody([]byte(body), "claude-sonnet-4", nil, nativeOverride{})
 			if !ok {
 				t.Fatal("want the body retargeted")
 			}
@@ -94,11 +94,27 @@ func TestInboundKeepsTheClientsOwnBody(t *testing.T) {
 // no account attribution carries none, rather than the client's own.
 func TestRebaseNativeBodyDropsMetadataWithoutAnAccount(t *testing.T) {
 	body := `{"model":"m","metadata":{"user_id":"caller"},"messages":[{"role":"user","content":[]}]}`
-	rebuilt, ok := rebaseNativeBody([]byte(body), "claude-sonnet-4", nil)
+	rebuilt, ok := rebaseNativeBody([]byte(body), "claude-sonnet-4", nil, nativeOverride{})
 	if !ok {
 		t.Fatal("want the body retargeted")
 	}
 	if string(rebuilt) != `{"model":"claude-sonnet-4","messages":[{"role":"user","content":[]}]}` {
 		t.Fatalf("body = %s, want the caller's attribution dropped", rebuilt)
+	}
+}
+
+// TestRebaseNativeBodyEnforcesProviderBudgetAndThinking pins that a native
+// Messages body cannot bypass the attempt's provider-authoritative controls.
+func TestRebaseNativeBodyEnforcesProviderBudgetAndThinking(t *testing.T) {
+	body := `{"model":"m","max_tokens":1234,"thinking":{"type":"enabled","budget_tokens":1024},"messages":[{"role":"user","content":[]}]}`
+	rebuilt, ok := rebaseNativeBody([]byte(body), "claude-sonnet-4", nil, nativeOverride{
+		MaxTokens: 65536, Thinking: &thinkingDef{Type: "enabled", BudgetTokens: 8192}, EnforceThinking: true,
+	})
+	if !ok {
+		t.Fatal("want the body retargeted")
+	}
+	if !strings.Contains(string(rebuilt), `"max_tokens":65536`) ||
+		!strings.Contains(string(rebuilt), `"budget_tokens":8192`) {
+		t.Fatalf("body = %s, want the provider budget and thinking tuple", rebuilt)
 	}
 }

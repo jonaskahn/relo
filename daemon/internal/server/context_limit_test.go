@@ -1,28 +1,39 @@
 package server
 
 import (
+	"errors"
 	"strings"
 	"testing"
 
+	"github.com/jonaskahn/relo/internal/adapters/wire"
+	"github.com/jonaskahn/relo/internal/catalog"
 	"github.com/jonaskahn/relo/internal/inference"
 	"github.com/jonaskahn/relo/internal/routing"
 )
 
-func TestContextLimitCountsPromptAndRequestedOutput(t *testing.T) {
+func TestAttemptRejectsExplicitlyUnsupportedCapabilities(t *testing.T) {
+	no := false
 	server := New(Options{})
+	spec := attemptSpec{candidate: routing.Candidate{Model: catalog.Model{ID: "m", SupportsTools: &no}}}
+	request := &inference.Request{Tools: []inference.Tool{{Name: "exec"}}}
+	if err := server.validateOutboundRequest(spec, request); !errors.Is(err, wire.ErrUnsupportedFeature) {
+		t.Fatalf("validateOutboundRequest() = %v, want unsupported tools", err)
+	}
+}
+
+func TestAttemptContextUsesInputAndReservedOutputSeparately(t *testing.T) {
+	server := New(Options{})
+	maxInput := int64(10)
+	contextWindow := int64(20)
+	spec := attemptSpec{candidate: routing.Candidate{Model: catalog.Model{
+		ID: "m", MaxInput: &maxInput, ContextWindow: &contextWindow,
+	}}}
 	request := &inference.Request{
-		Messages: []inference.Message{{
-			Role: inference.RoleUser,
-			Content: []inference.ContentPart{{
-				Type: inference.ContentTypeText, Text: strings.Repeat("token ", 3_000),
-			}},
-		}},
-		MaxTokens: 1_000,
+		Messages: []inference.Message{{Role: inference.RoleUser, Content: []inference.ContentPart{{
+			Type: inference.ContentTypeText, Text: strings.Repeat("token ", 100),
+		}}}}, MaxTokens: 64,
 	}
-	if !server.contextLimitExceeded(routing.Plan{ContextLimit: 1_000}, request) {
-		t.Fatal("contextLimitExceeded() = false, want the request refused")
-	}
-	if server.contextLimitExceeded(routing.Plan{}, request) {
-		t.Fatal("contextLimitExceeded() = true without a default-entry limit")
+	if err := server.validateOutboundRequest(spec, request); !errors.Is(err, errContextLimitExceeded) {
+		t.Fatalf("validateOutboundRequest() = %v, want a context refusal", err)
 	}
 }

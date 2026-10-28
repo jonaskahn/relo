@@ -71,7 +71,7 @@ const maxAntigravityAccounts = 32
 func antigravityRequestOf(selected catalog.AntigravityVariant) *wire.AntigravityRequest {
 	return &wire.AntigravityRequest{
 		WireModel: selected.WireModel, ModelEnum: selected.ModelEnum,
-		MaxOutput: selected.MaxOutput, ThinkingBudget: selected.ThinkingBudget,
+		MaxOutput: selected.MaxOutput, Context: selected.Context, ThinkingBudget: selected.ThinkingBudget,
 	}
 }
 

@@ -40,9 +40,8 @@ const (
 	// request retries through. A longer wait belongs to the account's cooldown:
 	// the request moves to the next account or member instead of sitting on the
 	// provider's clock.
-	retryWaitLow          = time.Second
-	retryWaitHigh         = 3 * time.Second
-	contextLimitTolerance = 2_560
+	retryWaitLow  = time.Second
+	retryWaitHigh = 3 * time.Second
 	// anthropicVersionHeader is the header an Anthropic client sends. It
 	// repeats the codec's constant so a server built without a format
 	// registry still answers the model list in the shape the client reads.
@@ -160,24 +159,11 @@ func (s *Server) relay(spec relaySpec) *requestOutcome {
 	if err != nil {
 		return s.relayUnrouted(spec, outcome, request, err, anthropic)
 	}
-	if s.contextLimitExceeded(plan, request) {
-		return s.relayOverLimit(spec, outcome, request, plan, anthropic)
-	}
 	outcome.kind = plan.Kind
 	outcome.groupID = plan.GroupID
 	outcome.longContext = plan.LongContext
 	outcome.nativeMillion = plan.NativeMillion
 	s.send(spec, plan, outcome, anthropic)
-	return outcome
-}
-
-func (s *Server) relayOverLimit(spec relaySpec, outcome *requestOutcome, request *inference.Request, plan routing.Plan, anthropic bool) *requestOutcome {
-	w, r := spec.writer, spec.request
-	err := fmt.Errorf("%w: the default model accepts at most %d tokens; use its 1M entry for a larger request",
-		errContextLimitExceeded, plan.ContextLimit)
-	outcome.kind = failureKind(err)
-	s.failInference(w, r, err, anthropic)
-	s.record(context.WithoutCancel(r.Context()), outcome, Result{Status: failureStatus(err)})
 	return outcome
 }
 
@@ -362,6 +348,9 @@ type failedAttempt struct {
 func (d *sendDriver) handleAttemptFailure(failed failedAttempt, err error) walkAction {
 	d.last = err
 	d.rotateWire(failed)
+	if retryAnotherCandidate(err) {
+		return d.tryAnotherCandidate(failed)
+	}
 	if !failed.result.Retryable {
 		d.recordSpentAccount(failed.candidate, failed.allowance, failed.result)
 		return d.answerUnretryable(failed)
@@ -380,6 +369,28 @@ func (d *sendDriver) handleAttemptFailure(failed failedAttempt, err error) walkA
 		return walkContinue
 	}
 	return d.leaveAccount(failed)
+}
+
+func (d *sendDriver) tryAnotherCandidate(failed failedAttempt) walkAction {
+	credential := credentialKeyOf(failed.result)
+	if credential != "" && !slices.Contains(d.tried[failed.candidate.ProviderID], credential) {
+		d.tried[failed.candidate.ProviderID] = append(d.tried[failed.candidate.ProviderID], credential)
+	}
+	failed.walk.account, failed.walk.retries = "", 0
+	if len(d.tried[failed.candidate.ProviderID]) < failed.allowance {
+		return walkContinue
+	}
+	if failed.lastCandidate {
+		d.s.answerFailed(d, d.outcome, failed.result, d.last)
+		return walkAnswered
+	}
+	d.s.opts.Router.Unpin(d.s.conversationAnchor(d.outcome, d.r), routing.PinPrefix(d.plan))
+	failed.walk.marked = true
+	return walkNextMember
+}
+
+func retryAnotherCandidate(err error) bool {
+	return errors.Is(err, errContextLimitExceeded) || errors.Is(err, wire.ErrUnsupportedFeature)
 }
 
 // rotateWire moves one refused conversation onto the next wire generation, so
@@ -598,6 +609,9 @@ func (s *Server) writeUnwritten(d *sendDriver, upstreamStatus int, cause error) 
 	// Leaving the handler without a write is an empty HTTP 200, which a
 	// streaming client reads as a stream that ended before any event.
 	status := answeredStatus(upstreamStatus)
+	if upstreamStatus == 0 && (errors.Is(cause, errContextLimitExceeded) || errors.Is(cause, wire.ErrUnsupportedFeature)) {
+		status = failureStatus(cause)
+	}
 	if d.anthropic {
 		s.writeAnthropicError(d.w, status, cause.Error())
 		return
@@ -725,6 +739,8 @@ func failureStatus(cause error) int {
 		return http.StatusBadRequest
 	case errors.Is(cause, errContextLimitExceeded):
 		return http.StatusBadRequest
+	case errors.Is(cause, wire.ErrUnsupportedFeature):
+		return http.StatusBadRequest
 	case errors.Is(cause, routing.ErrNoRoute), errors.Is(cause, catalog.ErrNoCatalog):
 		return http.StatusServiceUnavailable
 	default:
@@ -738,6 +754,8 @@ func failureCode(cause error) string {
 		return "model_required"
 	case errors.Is(cause, errContextLimitExceeded):
 		return "context_length_exceeded"
+	case errors.Is(cause, wire.ErrUnsupportedFeature):
+		return "unsupported_capability"
 	case errors.Is(cause, routing.ErrNoRoute), errors.Is(cause, catalog.ErrNoCatalog):
 		return "no_route"
 	case errors.Is(cause, routing.ErrModelUnconfigured):
@@ -745,13 +763,6 @@ func failureCode(cause error) string {
 	default:
 		return "model_not_found"
 	}
-}
-
-func (s *Server) contextLimitExceeded(plan routing.Plan, request *inference.Request) bool {
-	if plan.ContextLimit <= 0 || request == nil {
-		return false
-	}
-	return int64(s.estimateRequestTokens(request)+max(request.MaxTokens, 0)) > plan.ContextLimit+contextLimitTolerance
 }
 
 func (s *Server) estimateRequestTokens(request *inference.Request) int {

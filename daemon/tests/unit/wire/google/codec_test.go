@@ -1551,15 +1551,15 @@ func TestCloudCodeAssistVariantRouting(t *testing.T) {
 		}
 	})
 
-	t.Run("a caller below the ceiling keeps its own limit", func(t *testing.T) {
+	t.Run("the provider ceiling replaces a smaller caller budget", func(t *testing.T) {
 		request := canonicalRequest(false)
 		request.Model = "gemini-3.5-flash"
 		body := assistEnvelope(t, request, wire.CodecOpts{
 			CredentialRef: "token", AuthMethod: wire.AuthOAuth, Project: "project-1",
 		})
 		config := body["request"].(map[string]any)["generationConfig"].(map[string]any)
-		if got, _ := config["maxOutputTokens"].(float64); got != 64 {
-			t.Fatalf("maxOutputTokens = %v, want the caller's limit", got)
+		if got, _ := config["maxOutputTokens"].(float64); got != 65536 {
+			t.Fatalf("maxOutputTokens = %v, want the provider ceiling", got)
 		}
 	})
 }

@@ -512,8 +512,7 @@ func finishAssist(payload *requestPayload, req *inference.Request, turn assistTu
 		payload.GenerationConfig = &generationConfig{}
 	}
 	capOutput := outputCeiling(req, turn.variant)
-	switch {
-	case payload.GenerationConfig.MaxOutputTokens == 0 || payload.GenerationConfig.MaxOutputTokens > capOutput:
+	if capOutput > 0 {
 		payload.GenerationConfig.MaxOutputTokens = capOutput
 	}
 	applyAssistThinking(payload, req, turn)
@@ -595,14 +594,13 @@ func explicitToolConfig(choice *inference.ToolChoice) *toolConfig {
 // narrow it, never widen it, because the endpoint refuses a larger one with a
 // 400 the client cannot recover from.
 func outputCeiling(req *inference.Request, variant antigravity.Variant) int {
-	ceiling := assistMaxTokens
-	if variant.MaxOutput > 0 && variant.MaxOutput < ceiling {
-		ceiling = variant.MaxOutput
+	if variant.MaxOutput > 0 {
+		return variant.MaxOutput
 	}
-	if req.MaxTokens > 0 && req.MaxTokens < ceiling {
-		ceiling = req.MaxTokens
+	if req != nil && req.MaxTokens > 0 {
+		return req.MaxTokens
 	}
-	return ceiling
+	return assistMaxTokens
 }
 
 func assistLabels(model, trajectory string, step int, turn assistTurn) map[string]string {

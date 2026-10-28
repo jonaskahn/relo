@@ -39,9 +39,9 @@ func TestModelRequestOutputDefault(t *testing.T) {
 		}
 	})
 
-	t.Run("a stated client ceiling stays untouched", func(t *testing.T) {
-		if sent, _ := (&Server{}).modelRequest(*stated, catalog.Template{}, false); sent.MaxTokens != 1234 {
-			t.Fatalf("MaxTokens = %d, want the client's 1234", sent.MaxTokens)
+	t.Run("a provider ceiling replaces the client budget", func(t *testing.T) {
+		if sent, _ := (&Server{}).modelRequest(*stated, catalog.Template{}, false); sent.MaxTokens != int(ceiling) {
+			t.Fatalf("MaxTokens = %d, want the provider's %d", sent.MaxTokens, ceiling)
 		}
 	})
 

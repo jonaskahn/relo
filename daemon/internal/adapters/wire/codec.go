@@ -137,6 +137,7 @@ type AntigravityRequest struct {
 	WireModel      string
 	ModelEnum      string
 	MaxOutput      int
+	Context        int64
 	ThinkingBudget *int
 }
 
