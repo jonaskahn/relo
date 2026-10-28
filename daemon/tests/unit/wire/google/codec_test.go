@@ -2187,3 +2187,51 @@ func TestSanitizeSchemaDetails(t *testing.T) {
 		}
 	})
 }
+
+// TestCloudCodeAssistDropsBillingHeader pins the defect Claude Code hit: the
+// endpoint answers a system prompt led by Anthropic's billing stamp with a 429
+// that reads as a spent quota, so the stamp must not reach it.
+func TestCloudCodeAssistDropsBillingHeader(t *testing.T) {
+	systemText := func(system string) string {
+		t.Helper()
+		request := canonicalRequest(false)
+		request.Messages[0].Content[0].Text = system
+		inner, _ := assistEnvelope(t, request, wire.CodecOpts{
+			CredentialRef: "token", AuthMethod: wire.AuthOAuth, Project: "project-1",
+		})["request"].(map[string]any)
+		instruction, _ := inner["systemInstruction"].(map[string]any)
+		parts, _ := instruction["parts"].([]any)
+		if len(parts) == 0 {
+			return ""
+		}
+		text, _ := parts[0].(map[string]any)["text"].(string)
+		return text
+	}
+
+	t.Run("the stamp is removed and the prompt kept", func(t *testing.T) {
+		got := systemText("x-anthropic-billing-header: cc_version=2.1.312.d34; cc_entrypoint=cli;You are an agent.")
+		if got != "You are an agent." {
+			t.Fatalf("system = %q, want the prompt without the stamp", got)
+		}
+	})
+
+	t.Run("a stamp ending its own line is removed with the newline", func(t *testing.T) {
+		got := systemText("x-anthropic-billing-header: cc_version=2.1.312.d34; cc_entrypoint=cli; cch=00000;\nrules")
+		if got != "rules" {
+			t.Fatalf("system = %q, want only the rules", got)
+		}
+	})
+
+	t.Run("a prompt without the stamp is untouched", func(t *testing.T) {
+		if got := systemText("be brief"); got != "be brief" {
+			t.Fatalf("system = %q, want it unchanged", got)
+		}
+	})
+
+	t.Run("the same words later in the prompt stay", func(t *testing.T) {
+		const quoted = "see x-anthropic-billing-header: a=b; for details"
+		if got := systemText(quoted); got != quoted {
+			t.Fatalf("system = %q, want a mention left alone", got)
+		}
+	})
+}

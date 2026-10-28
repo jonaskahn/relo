@@ -505,6 +505,7 @@ type sessionIdentity struct {
 }
 
 func finishAssist(payload *requestPayload, req *inference.Request, turn assistTurn) sessionIdentity {
+	scrubBilling(payload.SystemInstruction)
 	if payload.SystemInstruction != nil {
 		payload.SystemInstruction.Role = roleUser
 	}
@@ -525,6 +526,20 @@ func finishAssist(payload *requestPayload, req *inference.Request, turn assistTu
 	payload.SessionID = sessionID(preimage)
 	payload.Labels = assistLabels(req.Model, identity.trajectory, identity.step, turn)
 	return identity
+}
+
+// billingHeader is the Anthropic subscription stamp a Claude client leads its
+// system prompt with. The endpoint answers any request carrying it with a 429
+// that reads as a spent quota, whatever the account's quota is.
+var billingHeader = regexp.MustCompile(`^x-anthropic-billing-header:(?:\s*\w+=[^;\s]*;)+\s*`)
+
+func scrubBilling(system *content) {
+	if system == nil {
+		return
+	}
+	for index := range system.Parts {
+		system.Parts[index].Text = billingHeader.ReplaceAllString(system.Parts[index].Text, "")
+	}
 }
 
 // applyAssistThinking gives each model family the thinking shape it accepts.
