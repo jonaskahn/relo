@@ -21,6 +21,7 @@ const releaseCatalog = `{
         {"name": "Relo-0.2.0-universal.zip", "url": "https://example.com/universal.zip", "os": "macos", "arch": "universal", "kind": "app", "format": "zip"},
         {"name": "Relo-0.2.0-arm64.zip", "url": "https://example.com/arm64.zip", "os": "macos", "arch": "arm64", "kind": "app", "format": "zip"},
         {"name": "Relo-Setup-0.2.0-amd64.deb", "url": "https://example.com/amd64.deb", "os": "linux", "arch": "amd64", "kind": "installer", "format": "deb"},
+        {"name": "Relo-Setup-0.2.0-arm64.deb", "url": "https://example.com/arm64.deb", "os": "linux", "arch": "arm64", "kind": "installer", "format": "deb"},
         {"name": "Relo-Setup-0.2.0-amd64.exe", "url": "https://example.com/amd64.exe", "os": "windows", "arch": "amd64", "kind": "installer", "format": "exe"}
       ]
     }

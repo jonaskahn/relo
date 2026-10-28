@@ -117,17 +117,19 @@ func listOpenAIModels(t *testing.T, harness *harness, token string) map[string]s
 		t.Fatalf("models status = %d, body = %s", response.Code, response.Body.String())
 	}
 	payload := struct {
-		Models []struct {
-			ID   string `json:"slug"`
-			Name string `json:"display_name"`
-		} `json:"models"`
+		Data []struct {
+			ID   string `json:"id"`
+			Relo struct {
+				Name string `json:"display_name"`
+			} `json:"relo"`
+		} `json:"data"`
 	}{}
 	if err := json.Unmarshal(response.Body.Bytes(), &payload); err != nil {
 		t.Fatalf("decode the listing: %v", err)
 	}
-	names := make(map[string]string, len(payload.Models))
-	for _, entry := range payload.Models {
-		names[entry.ID] = entry.Name
+	names := make(map[string]string, len(payload.Data))
+	for _, entry := range payload.Data {
+		names[entry.ID] = entry.Relo.Name
 	}
 	return names
 }

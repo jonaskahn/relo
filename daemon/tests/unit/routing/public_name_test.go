@@ -239,7 +239,7 @@ func TestResolvedModelCarriesTheRoundedWindow(t *testing.T) {
 		t.Fatal("the catalog has no snapshot")
 	}
 	for modelID, want := range map[string]int64{
-		"alpha": 1_457_000, "odd": 262_000, "tiny": 2_000,
+		"alpha": 1_456_789, "odd": 262_144, "tiny": 1_999,
 	} {
 		model, found := snapshot.Model("openai", modelID)
 		if !found || model.ContextWindow == nil {

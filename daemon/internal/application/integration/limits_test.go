@@ -13,10 +13,9 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-// TestPublishedLimitsFollowTheOverride checks that a client's catalog receives
-// the resolved context and max output. An operator override wins over the
-// provider layer and models.dev, and a model that states neither limit keeps
-// the default output ceiling and no stated context.
+// TestPublishedLimitsFollowTheProvider checks that a client catalog receives
+// the provider-authoritative limits. A manual completion cannot supersede the
+// provider, and a model that states neither limit publishes no invented ceiling.
 func TestPublishedLimitsFollowTheOverride(t *testing.T) {
 	db := testkit.OpenTestDB(t)
 	upstream := testkit.MockUpstream(t, map[string]string{})
@@ -43,15 +42,13 @@ func TestPublishedLimitsFollowTheOverride(t *testing.T) {
 
 	published := indexModels(t, service.publishedModels())
 	got := published["relo-openai-gpt-4o"]
-	if got.ContextWindow == nil || *got.ContextWindow != overrideWindow || got.MaxOutput == nil || *got.MaxOutput != overrideOutput {
-		t.Fatalf("published = %+v, want the override limits", got)
+	if got.ContextWindow == nil || *got.ContextWindow != providerWindow || got.MaxOutput == nil || *got.MaxOutput != providerOutput {
+		t.Fatalf("published = %+v, want the provider limits", got)
 	}
-	// A model no layer describes keeps the default output ceiling, and no
-	// stated context: the ceiling is what /v1/models, the generated client
-	// catalogs, and a silent wire request all agree on.
+	// A model no layer describes keeps both limits unknown.
 	if bare := published["relo-openai-bare"]; bare.ContextWindow != nil ||
-		bare.MaxOutput == nil || *bare.MaxOutput != catalog.DefaultMaxOutput {
-		t.Fatalf("bare = %+v, want only the default output ceiling", bare)
+		bare.MaxOutput != nil {
+		t.Fatalf("bare = %+v, want unknown limits", bare)
 	}
 
 	for _, kind := range []string{codingclients.FilePi, codingclients.FileOMP} {
@@ -59,10 +56,10 @@ func TestPublishedLimitsFollowTheOverride(t *testing.T) {
 		if err != nil {
 			t.Fatalf("MergeKind(%s) error = %v", kind, err)
 		}
-		if !strings.Contains(merged, "400000") || !strings.Contains(merged, "32000") {
-			t.Fatalf("%s catalog = %s, want the override limits", kind, merged)
+		if !strings.Contains(merged, "200000") || !strings.Contains(merged, "8192") {
+			t.Fatalf("%s catalog = %s, want the provider limits", kind, merged)
 		}
-		for _, stale := range []string{"100000", "200000", "4096", "8192"} {
+		for _, stale := range []string{"100000", "400000", "4096", "32000"} {
 			if strings.Contains(merged, stale) {
 				t.Fatalf("%s catalog = %s, want %s left out", kind, merged, stale)
 			}

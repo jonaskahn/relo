@@ -1276,11 +1276,12 @@ func (s *Service) publishedModels() []ModelRef {
 	groups := snap.ListedGroups()
 	models := make([]ModelRef, 0, len(listed)+len(groups))
 	for _, model := range listed {
-		ref := namedRef(snap, model)
+		advertised := snap.AdvertisedModel(model)
+		ref := namedRef(snap, advertised)
 		ref.Connection = connectionLabel(snap, model.ProviderID)
-		ref.Upstream = model.ID
+		ref.Upstream = advertised.ID
 		ref.ChatGPT = servedByChatGPT(snap, model.ProviderID)
-		models = appendPublishedVariants(models, snap, ref, model)
+		models = appendPublishedVariants(models, snap, ref, advertised)
 	}
 	for _, group := range groups {
 		window, output := routeBudget(snap, group)
@@ -1302,7 +1303,7 @@ func (s *Service) claudePickerModels() []ModelRef {
 	groups := snap.ListedGroups()
 	models := make([]ModelRef, 0, len(listed)+len(groups))
 	for _, model := range listed {
-		models = append(models, claudeModelRefs(snap, model)...)
+		models = append(models, claudeModelRefs(snap, snap.AdvertisedModel(model))...)
 	}
 	for _, group := range groups {
 		models = append(models, claudeRouteRefs(snap, group)...)
@@ -1337,12 +1338,13 @@ func claudeRouteRefs(snap *catalog.Snapshot, group catalog.Group) []ModelRef {
 	tools, reasoning, vision, efforts, toggle := routeCapabilities(snap, group)
 	ref.Tools, ref.Reasoning, ref.Vision = tools, reasoning, vision
 	ref.ReasoningEfforts, ref.ReasoningToggle = efforts, toggle
-	_, paired := catalog.StandardContext(ref.ContextWindow, snap.OffersLongContextGroup(group))
+	atMillion := groupAdvertisedAtMillion(snap, group)
+	_, paired := catalog.StandardContext(ref.ContextWindow, snap.OffersLongContextGroup(group) && atMillion)
 	if !paired {
-		if snap.NativeMillionGroup(group) {
+		if snap.NativeMillionGroup(group) && atMillion {
 			ref.ID = catalog.AnthropicClientID(ref.ID, nil)
 		}
-		if snap.OffersSuffixedGroup(group) {
+		if snap.OffersSuffixedGroup(group) && atMillion {
 			ref.ID = catalog.AnthropicClientID(ref.ID, ref.ContextWindow)
 		}
 		return []ModelRef{ref}
@@ -1363,10 +1365,11 @@ func appendPublishedVariants(models []ModelRef, snap *catalog.Snapshot, ref Mode
 }
 
 func appendPublishedGroup(models []ModelRef, snap *catalog.Snapshot, ref ModelRef, group catalog.Group) []ModelRef {
-	if snap.OffersLongContextGroup(group) {
+	atMillion := groupAdvertisedAtMillion(snap, group)
+	if snap.OffersLongContextGroup(group) && atMillion {
 		return appendModelRefVariants(models, ref, true)
 	}
-	if snap.OffersSuffixedGroup(group) {
+	if snap.OffersSuffixedGroup(group) && atMillion {
 		return appendSuffixedVariant(models, ref)
 	}
 	return append(models, ref)
@@ -1418,7 +1421,7 @@ func routeModelRef(group catalog.Group, window, output *int64) ModelRef {
 // advertises a capability only when each member carries it, so a turn the
 // route accepts never lands on a member that cannot serve it.
 func routeCapabilities(snap *catalog.Snapshot, group catalog.Group) (tools, reasoning, vision *bool, efforts []string, toggle *bool) {
-	members := snap.GroupModels(group)
+	members := advertisedGroupModels(snap, group)
 	if len(members) == 0 {
 		return nil, nil, nil, nil, new(false)
 	}
@@ -1507,7 +1510,7 @@ func servedByChatGPT(snap *catalog.Snapshot, providerID string) bool {
 }
 
 func routeBudget(snap *catalog.Snapshot, group catalog.Group) (window, output *int64) {
-	for _, model := range snap.GroupModels(group) {
+	for _, model := range advertisedGroupModels(snap, group) {
 		window = smallerLimit(window, model.ContextWindow)
 		output = smallerLimit(output, model.MaxOutput)
 	}
@@ -1550,8 +1553,32 @@ func modelRef(model catalog.Model) ModelRef {
 	if model.ReasoningEfforts != nil {
 		ref.ReasoningEfforts = append([]string(nil), model.ReasoningEfforts...)
 	}
-	ref.ReasoningToggle = new(model.ReasoningToggle)
+	if model.ReasoningToggleKnown {
+		ref.ReasoningToggle = new(model.ReasoningToggle)
+	}
 	return ref
+}
+
+func advertisedGroupModels(snap *catalog.Snapshot, group catalog.Group) []catalog.Model {
+	models := snap.GroupModels(group)
+	advertised := make([]catalog.Model, 0, len(models))
+	for _, model := range models {
+		advertised = append(advertised, snap.AdvertisedModel(model))
+	}
+	return advertised
+}
+
+func groupAdvertisedAtMillion(snap *catalog.Snapshot, group catalog.Group) bool {
+	models := advertisedGroupModels(snap, group)
+	if len(models) == 0 {
+		return false
+	}
+	for _, model := range models {
+		if model.ContextWindow == nil || *model.ContextWindow < catalog.MillionContext {
+			return false
+		}
+	}
+	return true
 }
 
 func (s *Service) snapshot() (*catalog.Snapshot, error) {

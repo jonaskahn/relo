@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"strings"
 
-	appaccount "github.com/jonaskahn/relo/internal/application/account"
+	"github.com/jonaskahn/relo/internal/adapters/wire"
 	"github.com/jonaskahn/relo/internal/catalog"
 	"github.com/jonaskahn/relo/internal/inference"
 )
@@ -21,30 +21,72 @@ func (s *Server) handleListModels(protocol string) http.HandlerFunc {
 			})
 			return
 		}
-		if protocol == inference.ProtocolAnthropic || s.isAnthropicRequest(r) {
+		profile := strings.ToLower(strings.TrimSpace(r.URL.Query().Get("profile")))
+		anthropic := protocol == inference.ProtocolAnthropic || s.isAnthropicRequest(r)
+		if profile == "anthropic" && protocol != inference.ProtocolAnthropic {
+			writeError(w, http.StatusBadRequest, "incompatible_profile", "the anthropic profile requires the Anthropic protocol")
+			return
+		}
+		if profile != "" && anthropic && profile != "anthropic" {
+			writeError(w, http.StatusBadRequest, "incompatible_profile", "the Anthropic protocol does not serve the "+profile+" profile")
+			return
+		}
+		if anthropicProfile(profile, anthropic) {
 			listed := listedModels(snapshot, listView{advertised: s.advertisedContexts(r.Context()), stripClaude: true})
 			writeJSON(w, http.StatusOK, anthropicModelList(listed))
 			return
 		}
-		rows := []map[string]any{}
-		if s.opts.Integrations != nil {
-			rows = s.opts.Integrations.CodexCatalogRows()
+		if profile == "" && wireClientKind(r) == "codex" {
+			profile = "codex"
 		}
-		attributeCodexRows(rows, listedModels(snapshot, listView{}))
-		writeJSON(w, http.StatusOK, map[string]any{"models": rows})
+		if profile != "" && profile != "openai" && profile != "codex" {
+			writeError(w, http.StatusBadRequest, "unknown_profile", "unknown model-list profile")
+			return
+		}
+		if profile == "codex" {
+			rows := []map[string]any{}
+			if s.opts.Integrations != nil {
+				rows = s.opts.Integrations.CodexCatalogRows()
+			}
+			attributeCodexRows(rows, listedModels(snapshot, listView{}))
+			writeJSON(w, http.StatusOK, map[string]any{"models": rows})
+			return
+		}
+		writeJSON(w, http.StatusOK, openAIModelList(listedModels(snapshot, listView{})))
 	}
 }
 
+func anthropicProfile(profile string, anthropic bool) bool {
+	if anthropic {
+		return true
+	}
+	return profile == "anthropic"
+}
+
+func wireClientKind(r *http.Request) string {
+	if r == nil {
+		return ""
+	}
+	return wire.ClientKind(r.Header)
+}
+
 type listedModel struct {
-	ID            string
-	Name          string
-	ProviderID    string
-	SourceModelID string
-	NativeMillion bool
-	Paired        bool
-	Suffixed      bool
-	ContextWindow *int64
-	MaxOutput     *int64
+	ID               string
+	Name             string
+	ProviderID       string
+	SourceModelID    string
+	NativeMillion    bool
+	Paired           bool
+	Suffixed         bool
+	ContextWindow    *int64
+	MaxInput         *int64
+	MaxOutput        *int64
+	Tools            *bool
+	Reasoning        *bool
+	Vision           *bool
+	ReasoningEfforts []string
+	ReasoningToggle  *bool
+	Sources          catalog.FactSource
 }
 
 func listedModels(snapshot *catalog.Snapshot, view listView) []listedModel {
@@ -53,7 +95,8 @@ func listedModels(snapshot *catalog.Snapshot, view listView) []listedModel {
 	for _, group := range snapshot.ListedGroups() {
 		id := catalog.ClientRouteID(group.ID)
 		seen[id] = true
-		entries = appendListedVariants(entries, listedGroup(snapshot, view.advertised, group, id), snapshot.OffersLongContextGroup(group))
+		entries = appendListedVariants(entries, listedGroup(snapshot, view.advertised, group, id),
+			snapshot.OffersLongContextGroup(group) && groupAdvertisedAtMillion(snapshot, group))
 	}
 	for _, model := range snapshot.Listed() {
 		id := catalog.ClientModelID(model.ProviderID, model.ID)
@@ -72,22 +115,42 @@ type listView struct {
 }
 
 func listedGroup(snapshot *catalog.Snapshot, advertised map[string]*int64, group catalog.Group, id string) listedModel {
-	window := groupSmaller(snapshot, group, func(m catalog.Model) *int64 {
-		return advertisedContext(advertised, m)
-	})
+	members := advertisedGroupModels(snapshot, group)
+	capabilities := catalog.ConservativeCapabilities(members)
+	window := capabilities.ContextWindow
+	atMillion := groupAdvertisedAtMillion(snapshot, group)
 	return listedModel{
-		ID:            id,
-		Name:          catalog.ClientModelName(labelOr(group.Label, group.ID), catalog.RouteLabelPrefix, namedWindow(window, snapshot.NativeMillionGroup(group)), ""),
-		NativeMillion: snapshot.NativeMillionGroup(group),
-		Suffixed:      snapshot.OffersSuffixedGroup(group),
-		ContextWindow: window,
-		MaxOutput:     groupSmaller(snapshot, group, func(m catalog.Model) *int64 { return m.MaxOutput }),
+		ID:               id,
+		Name:             catalog.ClientModelName(labelOr(group.Label, group.ID), catalog.RouteLabelPrefix, namedWindow(window, snapshot.NativeMillionGroup(group) && atMillion), ""),
+		NativeMillion:    snapshot.NativeMillionGroup(group) && atMillion,
+		Suffixed:         snapshot.OffersSuffixedGroup(group) && atMillion,
+		ContextWindow:    window,
+		MaxInput:         capabilities.MaxInput,
+		MaxOutput:        capabilities.MaxOutput,
+		Tools:            capabilities.SupportsTools,
+		Reasoning:        capabilities.SupportsReasoning,
+		Vision:           capabilities.SupportsVision,
+		ReasoningEfforts: append([]string(nil), capabilities.ReasoningEfforts...),
+		ReasoningToggle:  capabilities.ReasoningToggle,
 	}
 }
 
+func groupAdvertisedAtMillion(snapshot *catalog.Snapshot, group catalog.Group) bool {
+	members := advertisedGroupModels(snapshot, group)
+	if len(members) == 0 {
+		return false
+	}
+	for _, model := range members {
+		if model.ContextWindow == nil || *model.ContextWindow < catalog.MillionContext {
+			return false
+		}
+	}
+	return true
+}
+
 func listedStandalone(snapshot *catalog.Snapshot, view listView, model catalog.Model, id string) listedModel {
-	window := advertisedContext(view.advertised, model)
-	viewModel := model
+	viewModel := snapshot.AdvertisedModel(model)
+	window := advertisedContext(view.advertised, viewModel)
 	viewModel.ContextWindow = window
 	label := labelOr(model.Name, model.ID)
 	if view.stripClaude && snapshot.ClaudeSubscription(model.ProviderID) {
@@ -98,8 +161,29 @@ func listedStandalone(snapshot *catalog.Snapshot, view listView, model catalog.M
 		ProviderID: model.ProviderID, SourceModelID: model.ID,
 		NativeMillion: snapshot.MillionAlone(viewModel),
 		Suffixed:      snapshot.OffersSuffixed(viewModel),
-		ContextWindow: window, MaxOutput: model.MaxOutput,
+		ContextWindow: window, MaxInput: viewModel.MaxInput, MaxOutput: viewModel.MaxOutput,
+		Tools: viewModel.SupportsTools, Reasoning: viewModel.SupportsReasoning, Vision: viewModel.SupportsVision,
+		ReasoningEfforts: append([]string(nil), viewModel.ReasoningEfforts...),
+		ReasoningToggle:  knownToggle(viewModel),
+		Sources:          viewModel.FactSources,
 	}
+}
+
+func knownToggle(model catalog.Model) *bool {
+	if !model.ReasoningToggleKnown {
+		return nil
+	}
+	value := model.ReasoningToggle
+	return &value
+}
+
+func advertisedGroupModels(snapshot *catalog.Snapshot, group catalog.Group) []catalog.Model {
+	models := snapshot.GroupModels(group)
+	advertised := make([]catalog.Model, 0, len(models))
+	for _, model := range models {
+		advertised = append(advertised, snapshot.AdvertisedModel(model))
+	}
+	return advertised
 }
 
 // namedWindow is the window the display name may mark. A model that is a
@@ -177,7 +261,10 @@ func providerLabel(snapshot *catalog.Snapshot, providerID string) string {
 }
 
 func advertisedContext(advertised map[string]*int64, model catalog.Model) *int64 {
-	if value, found := advertised[appaccount.AdvertisedContextKey(model.ProviderID, model.ID)]; found {
+	if model.FactSources.ContextWindow == "account" {
+		return model.ContextWindow
+	}
+	if value, found := advertised[model.ProviderID+"\x00"+model.ID]; found {
 		return value
 	}
 	return model.ContextWindow
@@ -226,12 +313,9 @@ func anthropicModelList(entries []listedModel) map[string]any {
 		row := map[string]any{
 			"type": "model", "id": anthropicModelID(entry), "display_name": entry.Name,
 			"created_at":       "1970-01-01T00:00:00Z",
-			"max_input_tokens": nullableInt(entry.ContextWindow),
+			"max_input_tokens": nullableInt(entry.MaxInput),
 			"max_tokens":       nullableInt(entry.MaxOutput),
-		}
-		if entry.ProviderID != "" {
-			row["provider_id"] = entry.ProviderID
-			row["source_model_id"] = entry.SourceModelID
+			"relo":             capabilityExtension(entry),
 		}
 		data = append(data, row)
 	}
@@ -241,6 +325,67 @@ func anthropicModelList(entries []listedModel) map[string]any {
 		response["last_id"] = data[len(data)-1]["id"]
 	}
 	return response
+}
+
+func openAIModelList(entries []listedModel) map[string]any {
+	data := make([]map[string]any, 0, len(entries))
+	for _, entry := range entries {
+		owner := entry.ProviderID
+		if owner == "" {
+			owner = "relo"
+		}
+		data = append(data, map[string]any{
+			"id": entry.ID, "object": "model", "created": 0, "owned_by": owner,
+			"relo": capabilityExtension(entry),
+		})
+	}
+	return map[string]any{"object": "list", "data": data}
+}
+
+func capabilityExtension(entry listedModel) map[string]any {
+	extension := map[string]any{
+		"display_name":       entry.Name,
+		"context_window":     nullableInt(entry.ContextWindow),
+		"max_input_tokens":   nullableInt(entry.MaxInput),
+		"max_output_tokens":  nullableInt(entry.MaxOutput),
+		"supports_tools":     nullableBool(entry.Tools),
+		"supports_reasoning": nullableBool(entry.Reasoning),
+		"supports_vision":    nullableBool(entry.Vision),
+		"reasoning_efforts":  nullableStrings(entry.ReasoningEfforts),
+		"reasoning_toggle":   nullableBool(entry.ReasoningToggle),
+	}
+	if entry.ProviderID != "" {
+		extension["provider_id"] = entry.ProviderID
+		extension["source_model_id"] = entry.SourceModelID
+	}
+	sources := map[string]string{}
+	for name, source := range map[string]string{
+		"context_window": entry.Sources.ContextWindow, "max_input_tokens": entry.Sources.MaxInput,
+		"max_output_tokens": entry.Sources.MaxOutput, "tools": entry.Sources.Tools,
+		"reasoning": entry.Sources.Reasoning, "vision": entry.Sources.Vision,
+	} {
+		if source != "" {
+			sources[name] = source
+		}
+	}
+	if len(sources) > 0 {
+		extension["sources"] = sources
+	}
+	return extension
+}
+
+func nullableBool(value *bool) any {
+	if value == nil {
+		return nil
+	}
+	return *value
+}
+
+func nullableStrings(value []string) any {
+	if value == nil {
+		return nil
+	}
+	return value
 }
 
 func anthropicModelID(entry listedModel) string {
