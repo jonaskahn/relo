@@ -334,6 +334,10 @@ function escapeEnd(text, at) {
 function terminalInput() {
 	if (process.platform === 'win32') {
 		if (!process.stdin?.isTTY) return null;
+		// close() unrefs stdin so the installer can exit; a second question
+		// needs it flowing again or its read never settles.
+		process.stdin.ref();
+		process.stdin.resume();
 		return {
 			input: process.stdin,
 			close() {

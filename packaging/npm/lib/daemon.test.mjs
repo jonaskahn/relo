@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { EventEmitter } from 'node:events';
 import { mkdtempSync, writeFileSync } from 'node:fs';
 import { createServer } from 'node:net';
 import { tmpdir } from 'node:os';
@@ -6,6 +7,7 @@ import { join } from 'node:path';
 import { after, test } from 'node:test';
 
 import {
+	askStart,
 	decodeKeys,
 	isReloImage,
 	isReloProcess,
@@ -171,4 +173,42 @@ test('a menu selection wraps at both ends', () => {
 	assert.equal(move(0, 3, -1), 2);
 	assert.equal(move(2, 3, 1), 0);
 	assert.equal(move(0, 0, 1), 0);
+});
+
+// fakeTTY models the pause and unref a finished question leaves behind on
+// windows: a paused stream drops the answer until something resumes it.
+function fakeTTY() {
+	const input = new EventEmitter();
+	input.isTTY = true;
+	input.flowing = true;
+	input.setRawMode = () => {};
+	input.pause = () => {
+		input.flowing = false;
+	};
+	input.resume = () => {
+		input.flowing = true;
+	};
+	input.ref = () => {};
+	input.unref = () => {};
+	return input;
+}
+
+test('a second windows question reads after the first one closes the terminal', { timeout: 2000 }, async (t) => {
+	const platform = Object.getOwnPropertyDescriptor(process, 'platform');
+	const stdin = Object.getOwnPropertyDescriptor(process, 'stdin');
+	const input = fakeTTY();
+	Object.defineProperty(process, 'platform', { value: 'win32' });
+	Object.defineProperty(process, 'stdin', { value: input, configurable: true });
+	t.after(() => {
+		Object.defineProperty(process, 'platform', platform);
+		Object.defineProperty(process, 'stdin', stdin);
+	});
+
+	const ask = () =>
+		askStart({
+			onQuestion: () => setImmediate(() => input.flowing && input.emit('data', '\r'))
+		});
+
+	assert.equal(await ask(), 'yes');
+	assert.equal(await ask(), 'yes');
 });
