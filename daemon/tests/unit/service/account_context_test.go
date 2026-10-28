@@ -4,8 +4,10 @@ import (
 	"context"
 	"testing"
 
+	"github.com/jonaskahn/relo/internal/adapters/sqlite"
 	appaccount "github.com/jonaskahn/relo/internal/application/account"
 	appcatalog "github.com/jonaskahn/relo/internal/application/catalog"
+	"github.com/jonaskahn/relo/internal/catalog"
 )
 
 // TestAccountModelsContextSizesOneAccount covers the account-wide context
@@ -158,5 +160,82 @@ func TestSingleModelContextAcceptsAboveMaxInput(t *testing.T) {
 		ContextWindow: appcatalog.OptionalInt{Set: true, Value: &allowed},
 	}); err != nil {
 		t.Fatalf("PatchModel(within ceiling) error = %v", err)
+	}
+}
+
+// TestEffectiveModelFollowsTheSelectedCredential pins the attempt-local view:
+// one account's discovered facts replace the shared definition for that
+// credential only, and the shared model is left untouched.
+func TestEffectiveModelFollowsTheSelectedCredential(t *testing.T) {
+	h := newHarness(t)
+	manager := pageService(t, h, catalogServer(t, catalogFixture()).URL)
+	ctx := context.Background()
+	account := h.addAccount("openai", "work", "sk-first")
+
+	window := int64(262_144)
+	output := int64(65_536)
+	no := false
+	if err := sqlite.NewCatalogRepo(h.db).SaveAccountCapabilities(ctx, "openai", account.ID, []catalog.AccountFactsRecord{{
+		CredentialID: account.ID, ProviderID: "openai", ModelID: "model-1", Source: "listing",
+		ContextWindow: &window, MaxInput: &window, MaxOutput: &output, SupportsTools: &no,
+	}}); err != nil {
+		t.Fatalf("SaveAccountCapabilities() error = %v", err)
+	}
+
+	shared, err := manager.Model(ctx, "openai", "model-1")
+	if err != nil {
+		t.Fatalf("Model(shared) error = %v", err)
+	}
+	if shared.ContextWindow != nil {
+		t.Fatalf("shared context = %v, want the shared layers unchanged", shared.ContextWindow)
+	}
+
+	effective, err := manager.accounts.EffectiveModel(ctx, "openai", "model-1", account.ID)
+	if err != nil {
+		t.Fatalf("EffectiveModel() error = %v", err)
+	}
+	if effective.ContextWindow == nil || *effective.ContextWindow != window ||
+		effective.MaxOutput == nil || *effective.MaxOutput != output ||
+		effective.SupportsTools == nil || *effective.SupportsTools {
+		t.Fatalf("effective = %+v, want the selected account's facts", effective)
+	}
+	if effective.FactSources.ContextWindow != "account" || effective.FactSources.MaxOutput != "account" {
+		t.Fatalf("sources = %+v, want the account layer named", effective.FactSources)
+	}
+
+	unknown, err := manager.accounts.EffectiveModel(ctx, "openai", "model-1", "another-account")
+	if err != nil {
+		t.Fatalf("EffectiveModel(other) error = %v", err)
+	}
+	if unknown.ContextWindow != nil {
+		t.Fatalf("other account context = %v, want no borrowed account facts", unknown.ContextWindow)
+	}
+
+	if _, err := manager.accounts.EffectiveModel(ctx, "openai", "missing", account.ID); err == nil {
+		t.Fatal("EffectiveModel(missing) error = nil, want an unknown-model refusal")
+	}
+}
+
+// TestAccountContextSkipsAContextTheRosterAlreadyDefines keeps a manual account
+// completion from superseding a discovered account fact.
+func TestAccountContextSkipsAContextTheRosterAlreadyDefines(t *testing.T) {
+	h := newHarness(t)
+	manager := pageService(t, h, catalogServer(t, catalogFixture()).URL)
+	ctx := context.Background()
+	account := h.addAccount("openai", "work", "sk-first")
+	window := int64(262_144)
+	if err := sqlite.NewCatalogRepo(h.db).SaveAccountCapabilities(ctx, "openai", account.ID, []catalog.AccountFactsRecord{{
+		CredentialID: account.ID, ProviderID: "openai", ModelID: "model-1", Source: "listing",
+		ContextWindow: &window,
+	}}); err != nil {
+		t.Fatalf("SaveAccountCapabilities() error = %v", err)
+	}
+	override := int64(100_000)
+	write, err := manager.accounts.SetAccountModelsContext(ctx, account.ID, []string{"model-1"}, &override)
+	if err != nil {
+		t.Fatalf("SetAccountModelsContext() error = %v", err)
+	}
+	if len(write.Applied) != 0 || len(write.Skipped) != 1 {
+		t.Fatalf("write = %+v, want the discovered definition to win", write)
 	}
 }
