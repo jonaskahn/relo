@@ -1,6 +1,6 @@
 {
-  "generated": "2026-10-28T03:12:10Z",
-  "latest": "v0.1.12",
+  "generated": "2026-10-28T04:16:12Z",
+  "latest": "v0.1.13",
   "latest_beta": "v0.1.13-beta.49.3f9bb2d5",
   "install": {
     "stable": {
@@ -17,6 +17,158 @@
     }
   },
   "releases": [
+    {
+      "tag": "v0.1.13",
+      "version": "0.1.13",
+      "name": "v0.1.13 - Son Bakery  🥯",
+      "channel": "stable",
+      "draft": false,
+      "published_at": "2026-10-28T04:16:02Z",
+      "page": "https://github.com/jonaskahn/relo/releases/tag/v0.1.13",
+      "notes": "## What's Changed\r\n* Fix: cursor run stream teardown by @jonaskahn in https://github.com/jonaskahn/relo/pull/86\r\n* test: cover integration error paths by @jonaskahn in https://github.com/jonaskahn/relo/pull/84\r\n* chore: bump to 0.1.13 by @github-actions[bot] in https://github.com/jonaskahn/relo/pull/85\r\n\r\n\r\n**Full Changelog**: https://github.com/jonaskahn/relo/compare/v0.1.12...v0.1.13",
+      "install": {
+        "script": "curl -fsSL https://relo.ifelse.one/install.sh | sh -s -- --version 0.1.13",
+        "powershell": "& ([scriptblock]::Create((irm https://relo.ifelse.one/install.ps1))) -Version 0.1.13",
+        "npm": "npm i -g @jonaskahn/relo@0.1.13"
+      },
+      "files": [
+        {
+          "name": "checksums.txt",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.1.13/checksums.txt",
+          "size": 588,
+          "os": "any",
+          "arch": "any",
+          "kind": "checksums",
+          "format": "txt"
+        },
+        {
+          "name": "Relo-0.1.13-arm64.zip",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.1.13/Relo-0.1.13-arm64.zip",
+          "size": 15175383,
+          "os": "macos",
+          "arch": "arm64",
+          "kind": "app",
+          "format": "zip"
+        },
+        {
+          "name": "relo-0.1.13-darwin-amd64.tar.gz",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.1.13/relo-0.1.13-darwin-amd64.tar.gz",
+          "size": 14316003,
+          "os": "macos",
+          "arch": "amd64",
+          "kind": "archive",
+          "format": "tar.gz"
+        },
+        {
+          "name": "relo-0.1.13-darwin-arm64.tar.gz",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.1.13/relo-0.1.13-darwin-arm64.tar.gz",
+          "size": 13897197,
+          "os": "macos",
+          "arch": "arm64",
+          "kind": "archive",
+          "format": "tar.gz"
+        },
+        {
+          "name": "relo-0.1.13-linux-amd64.tar.gz",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.1.13/relo-0.1.13-linux-amd64.tar.gz",
+          "size": 14008231,
+          "os": "linux",
+          "arch": "amd64",
+          "kind": "archive",
+          "format": "tar.gz"
+        },
+        {
+          "name": "relo-0.1.13-linux-arm64.tar.gz",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.1.13/relo-0.1.13-linux-arm64.tar.gz",
+          "size": 13254636,
+          "os": "linux",
+          "arch": "arm64",
+          "kind": "archive",
+          "format": "tar.gz"
+        },
+        {
+          "name": "Relo-0.1.13-universal.zip",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.1.13/Relo-0.1.13-universal.zip",
+          "size": 29859985,
+          "os": "macos",
+          "arch": "universal",
+          "kind": "app",
+          "format": "zip"
+        },
+        {
+          "name": "relo-0.1.13-windows-amd64.tar.gz",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.1.13/relo-0.1.13-windows-amd64.tar.gz",
+          "size": 13951265,
+          "os": "windows",
+          "arch": "amd64",
+          "kind": "archive",
+          "format": "tar.gz"
+        },
+        {
+          "name": "relo-0.1.13-windows-arm64.tar.gz",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.1.13/relo-0.1.13-windows-arm64.tar.gz",
+          "size": 13099651,
+          "os": "windows",
+          "arch": "arm64",
+          "kind": "archive",
+          "format": "tar.gz"
+        },
+        {
+          "name": "Relo-Setup-0.1.13-amd64.deb",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.1.13/Relo-Setup-0.1.13-amd64.deb",
+          "size": 14269336,
+          "os": "linux",
+          "arch": "amd64",
+          "kind": "installer",
+          "format": "deb"
+        },
+        {
+          "name": "Relo-Setup-0.1.13-amd64.exe",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.1.13/Relo-Setup-0.1.13-amd64.exe",
+          "size": 10151986,
+          "os": "windows",
+          "arch": "amd64",
+          "kind": "installer",
+          "format": "exe"
+        },
+        {
+          "name": "Relo-Setup-0.1.13-amd64.rpm",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.1.13/Relo-Setup-0.1.13-amd64.rpm",
+          "size": 14233972,
+          "os": "linux",
+          "arch": "amd64",
+          "kind": "installer",
+          "format": "rpm"
+        },
+        {
+          "name": "Relo-Setup-0.1.13-arm64.deb",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.1.13/Relo-Setup-0.1.13-arm64.deb",
+          "size": 13583566,
+          "os": "linux",
+          "arch": "arm64",
+          "kind": "installer",
+          "format": "deb"
+        },
+        {
+          "name": "Relo-Setup-0.1.13-arm64.exe",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.1.13/Relo-Setup-0.1.13-arm64.exe",
+          "size": 9131152,
+          "os": "windows",
+          "arch": "arm64",
+          "kind": "installer",
+          "format": "exe"
+        },
+        {
+          "name": "Relo-Setup-0.1.13-arm64.rpm",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.1.13/Relo-Setup-0.1.13-arm64.rpm",
+          "size": 13523949,
+          "os": "linux",
+          "arch": "arm64",
+          "kind": "installer",
+          "format": "rpm"
+        }
+      ]
+    },
     {
       "tag": "v0.1.13-beta.49.3f9bb2d5",
       "version": "0.1.13-beta.49.3f9bb2d5",
