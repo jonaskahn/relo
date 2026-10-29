@@ -97,6 +97,23 @@ describe('provider sections', () => {
 		expect(visibleTemplateRows(customTyped).map((group) => group.section)).toEqual(['local']);
 	});
 
+	test('the Free filter keeps keyless free rows and paid connections with free models', () => {
+		const rows = buildTemplateRows(
+			[
+				templateOf({ id: 'openai', label: 'OpenAI', free_models: 2 }),
+				templateOf({ id: 'paid', label: 'Paid', free_models: 0 }),
+				templateOf({ id: 'opencode-free', label: 'OpenCode Zen Free' })
+			],
+			new Set(),
+			'',
+			true,
+			true
+		);
+		expect(rows.free.map((row) => row.id)).toEqual(['opencode-free']);
+		expect(rows.key.map((row) => row.id)).toEqual(['openai']);
+		expect(rows.local).toEqual([]);
+	});
+
 	test('matches a search on the label and on the id', () => {
 		expect(matchesQuery('open', 'openai', 'OpenAI')).toBe(true);
 		expect(matchesQuery('OPENAI', 'openai', 'OpenAI')).toBe(true);

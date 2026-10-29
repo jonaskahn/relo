@@ -101,6 +101,7 @@ export function providerOf(patch: Partial<Provider> = {}): Provider {
 			enabled_models: 3,
 			available_models: 3,
 			unpriced_models: 0,
+			free_models: 0,
 			accounts: 1,
 			active_accounts: 1,
 			paused_accounts: 0,

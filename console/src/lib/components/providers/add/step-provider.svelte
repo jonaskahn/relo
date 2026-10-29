@@ -14,8 +14,12 @@
 		type TemplateRow
 	} from '$lib/provider-sections';
 	import { isExperimentalConnection } from '$lib/provider-experimental';
+	import { isSingleFreeConnection } from '$lib/provider-free';
 	import BillingChip from '$lib/components/providers/billing-chip.svelte';
+	import FreeAvailableChip from '$lib/components/providers/free-available-chip.svelte';
 	import { Switch } from 'bits-ui';
+	import { untrack } from 'svelte';
+	import Segmented from '$lib/components/ui/segmented.svelte';
 
 	// The provider picker is a radio list: choosing marks a row and the
 	// footer's Next advances, so a misread row never opens the form by itself.
@@ -49,7 +53,15 @@
 		onretry
 	}: Props = $props();
 
-	const rows = $derived(buildTemplateRows(templates, added, query, freeEnabled));
+	let filter = $state<'all' | 'free'>('all');
+	// The switch shows the committed setting. Enabling is only a request until
+	// the consent dialog is accepted; dismissing that dialog must not leave the
+	// picker in an enabled-looking state.
+	let freeSwitchChecked = $state(untrack(() => freeEnabled));
+	$effect(() => {
+		freeSwitchChecked = freeEnabled;
+	});
+	const rows = $derived(buildTemplateRows(templates, added, query, freeEnabled, filter === 'free'));
 	const groups = $derived(visibleTemplateRows(rows).filter((group) => group.section !== 'free'));
 	const total = $derived(countTemplateRows(rows));
 
@@ -103,6 +115,24 @@
 		if (count === 0) return '';
 		return $t('ui.pages.providersPage.add.rowModels', { values: { count } });
 	}
+
+	// A keyless free lane is the one connection shape that can exist only once.
+	// The row stays visible and focusable so its tooltip can explain why.
+	function singleAdded(row: TemplateRow): boolean {
+		return isSingleFreeConnection(row.id) && row.added;
+	}
+
+	function rowDisabled(row: TemplateRow): boolean {
+		return row.disabledReason !== '' || singleAdded(row);
+	}
+
+	function requestFree(next: boolean) {
+		// The switch reflects only the committed setting. A press to enable is a
+		// consent request; accepting the dialog re-renders this switch checked
+		// through the parent's freeEnabled prop.
+		freeSwitchChecked = freeEnabled;
+		if (next !== freeEnabled) onfreetoggle(next);
+	}
 </script>
 
 {#snippet templateRow(row: TemplateRow)}
@@ -116,19 +146,21 @@
 		modelsdev_provider_id: row.template?.modelsdev_provider_id ?? ''
 	}}
 	{@const chosen = selected === row.id}
-	<button
+	<div class="group relative" title={singleAdded(row) ? $t('ui.pages.providersPage.add.freeAlreadyAdded') : ''}>
+		<button
 		type="button"
 		data-plain
 		role="radio"
 		aria-checked={chosen}
-		disabled={row.disabledReason !== ''}
-		class="flex items-center gap-3 rounded-xl bg-control px-4 py-3 text-left shadow-float-1 transition-[background-color,box-shadow] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring {chosen
+		aria-disabled={rowDisabled(row)}
+		aria-describedby={singleAdded(row) ? 'free-already-added-' + row.id : undefined}
+		class="flex w-full items-center gap-3 rounded-xl bg-control px-4 py-3 text-left shadow-float-1 transition-[background-color,box-shadow] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring {chosen
 			? 'bg-accent-soft ring-1 ring-accent-border'
 			: row.custom
 				? 'border-[1.5px] border-dashed border-line-strong'
-				: 'hover:bg-control-hover'}"
-		onclick={() => onpick(row)}
-	>
+				: 'hover:bg-control-hover'} {rowDisabled(row) ? 'cursor-not-allowed opacity-70' : ''}"
+		onclick={() => { if (!rowDisabled(row)) onpick(row); }}
+		>
 		{#if row.custom}
 			<span
 				class="flex size-9 shrink-0 items-center justify-center rounded-xl bg-sunken text-muted-foreground shadow-float-1"
@@ -142,13 +174,13 @@
 			<span class="flex items-center gap-2">
 				<span class="truncate text-sm font-medium">{row.label}</span>
 				{#if isExperimentalConnection(row.id)}
-					<span data-experimental-chip class="badge shrink-0 bg-sunken text-muted-foreground">
+					<span data-experimental-chip class="badge shrink-0 bg-warn/10 text-ink ring-1 ring-warn/35">
 						{$t('ui.pages.providersPage.list.tagExperimental')}
 					</span>
 				{/if}
 				{#if row.added}
 					<span
-						class="shrink-0 rounded bg-sunken px-1.5 py-0.5 text-[0.6rem] text-muted-foreground"
+				class="shrink-0 rounded bg-ok/10 px-1.5 py-0.5 text-[0.6rem] font-semibold text-ink ring-1 ring-ok/35"
 					>
 						{$t('ui.pages.providersPage.add.added')}
 					</span>
@@ -175,23 +207,45 @@
 			</span>
 		{/if}
 		<BillingChip provider={billingProvider} class="self-start" />
-	</button>
-{/snippet}
-
-{#snippet groupHeading(label: string, count: number, hint: string)}
-	<div
-		{@attach flattenWhenStuck}
-		class="min-h-11 sticky top-0 z-10 flex flex-wrap items-center gap-2 rounded-lg bg-popover/95 px-2 py-2 backdrop-blur data-[stuck=true]:rounded-t-none"
-	>
-		<span class="text-[0.9375rem] font-semibold text-muted-foreground">{label}</span>
-		<span class="text-[0.7rem] text-muted-foreground">{count}</span>
-		<span class="text-[0.7rem] text-muted-foreground">{hint}</span>
+		<FreeAvailableChip provider={{ ...billingProvider, counts: { free_models: row.template?.free_models ?? 0 } }} class="self-start" />
+		</button>
+	{#if singleAdded(row)}
+		<span id={'free-already-added-' + row.id} class="pointer-events-none absolute -top-1 end-3 z-20 hidden rounded-control bg-ink px-2 py-1 text-[0.7rem] text-surface shadow-float-2 group-hover:block group-focus-within:block">
+			{$t('ui.pages.providersPage.add.freeAlreadyAdded')}
+		</span>
+	{/if}
 	</div>
 {/snippet}
 
+{#snippet freeToggle()}
+	<Switch.Root
+		checked={freeSwitchChecked}
+		disabled={freeBusy}
+		onCheckedChange={requestFree}
+		aria-label={$t(SECTION_LABEL_KEY.free)}
+		data-free-toggle
+	/>
+{/snippet}
+
+{#snippet groupHeading(label: string, count: number, hint: string, free = false, trailing?: import('svelte').Snippet)}
+	<div
+		{@attach flattenWhenStuck}
+		class="free-heading min-h-11 sticky top-0 z-10 flex flex-wrap items-center gap-2 rounded-lg border-b border-line bg-surface px-2 py-2 data-[stuck=true]:rounded-t-none {free && freeEnabled ? 'free-heading-glow' : ''}"
+	>
+		<span class="text-[0.9375rem] font-semibold text-ink">{label}</span>
+		<span class="text-[0.7rem] text-muted-foreground">{count}</span>
+		<span class="text-[0.7rem] text-muted-foreground">{hint}</span>
+		{#if trailing}
+			<span class="ms-auto">{@render trailing()}</span>
+		{/if}
+	</div>
+{/snippet}
+
+
 <div class="flex flex-col gap-3">
-	<div {@attach focusSearch}>
-		<Input
+	<div class="flex items-center gap-2">
+		<div class="min-w-0 flex-1" {@attach focusSearch}>
+			<Input
 			placeholder={$t('ui.pages.providersPage.add.searchPlaceholder', {
 				values: { count: templates.length }
 			})}
@@ -200,6 +254,16 @@
 			})}
 			value={query}
 			oninput={(event) => onquery(event.currentTarget.value)}
+			/>
+		</div>
+		<Segmented
+			value={filter}
+			options={[
+				{ value: 'all', label: $t('ui.pages.providersPage.add.filterAll') },
+				{ value: 'free', label: $t('ui.pages.providersPage.add.filterFree') }
+			]}
+			ariaLabel={$t('ui.pages.providersPage.add.filterLabel')}
+			onchange={(next) => (filter = next)}
 		/>
 	</div>
 
@@ -208,40 +272,23 @@
 			<p class="text-sm text-muted-foreground">
 				{$t('ui.pages.providersPage.add.noMatchTitle', { values: { query: query.trim() } })}
 			</p>
-			<Button variant="outline" size="sm" onclick={oncustom}>
-				<Icon name="settings" size={14} />
-				{$t('ui.pages.providersPage.add.customEndpoint')}
-			</Button>
+			{#if filter !== 'free'}
+				<Button variant="outline" size="sm" onclick={oncustom}>
+					<Icon name="settings" size={14} />
+					{$t('ui.pages.providersPage.add.customEndpoint')}
+				</Button>
+			{/if}
 		</div>
 	{:else}
 		<div class="flex flex-col gap-5">
 			<div class="flex flex-col gap-1.5">
-				<div
-					{@attach flattenWhenStuck}
-					class="min-h-11 sticky top-0 z-10 flex flex-wrap items-center gap-2 rounded-lg bg-popover/95 px-2 py-2 backdrop-blur data-[stuck=true]:rounded-t-none"
-				>
-					<span class="text-[0.9375rem] font-semibold text-muted-foreground">
-						{$t(SECTION_LABEL_KEY.free)}
-					</span>
-					{#if freeEnabled}
-						<span class="text-[0.7rem] text-muted-foreground">{rows.free.length}</span>
-						<span class="text-[0.7rem] text-muted-foreground">
-							{$t('ui.pages.providersPage.add.groupHintFree')}
-						</span>
-					{:else}
-						<span class="text-[0.7rem] text-muted-foreground">
-							{$t('ui.pages.providersPage.add.freeOffHint')}
-						</span>
-					{/if}
-					<Switch.Root
-						class="ms-auto"
-						checked={freeEnabled}
-						disabled={freeBusy}
-						onCheckedChange={(next) => onfreetoggle(next)}
-						aria-label={$t(SECTION_LABEL_KEY.free)}
-						data-free-toggle
-					/>
-				</div>
+				{@render groupHeading(
+					$t(SECTION_LABEL_KEY.free),
+					rows.free.length,
+					freeEnabled ? $t('ui.pages.providersPage.add.groupHintFree') : $t('ui.pages.providersPage.add.freeOffHint'),
+					true,
+					freeToggle
+				)}
 				{#if freeEnabled && rows.free.length > 0}
 					<div
 						class="grid gap-2 sm:grid-cols-2"
@@ -300,3 +347,52 @@
 		</span>
 	</div>
 </div>
+
+<style>
+	/* The free heading glows only while consent is on. The border is a conic
+	   accent ring behind the solid surface; reduced motion keeps a static
+	   accent border instead of the sweep. */
+	.free-heading-glow {
+		position: relative;
+		isolation: isolate;
+	}
+	.free-heading-glow::before {
+		content: '';
+		position: absolute;
+		inset: -2px;
+		z-index: -1;
+		border-radius: calc(var(--radius-panel) + 1px);
+		padding: 2px;
+		background: conic-gradient(
+			from var(--free-glow-angle, 0deg),
+			var(--accent) 0deg,
+			var(--accent-glow) 40deg,
+			transparent 85deg,
+			transparent 220deg,
+			var(--accent-glow) 260deg,
+			var(--accent) 310deg,
+			var(--accent-glow) 340deg,
+			transparent 360deg
+		);
+		-webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+		-webkit-mask-composite: xor;
+		mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+		mask-composite: exclude;
+		filter: drop-shadow(0 0 5px var(--accent-glow));
+		animation: free-glow-spin 2.6s linear infinite;
+	}
+	@keyframes free-glow-spin {
+		to { --free-glow-angle: 360deg; }
+	}
+	@property --free-glow-angle {
+		syntax: '<angle>';
+		inherits: false;
+		initial-value: 0deg;
+	}
+	@media (prefers-reduced-motion: reduce) {
+		.free-heading-glow::before {
+			animation: none;
+			background: var(--accent-border);
+		}
+	}
+</style>

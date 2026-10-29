@@ -14,6 +14,7 @@ describe('provider status', () => {
 				enabled_models: 0,
 				available_models: 0,
 				unpriced_models: 0,
+				free_models: 0,
 				accounts: 0,
 				active_accounts: 0,
 				paused_accounts: 0,

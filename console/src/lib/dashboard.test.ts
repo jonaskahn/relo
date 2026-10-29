@@ -71,6 +71,7 @@ function provider(id: string, kind: string): Provider {
 			enabled_models: 4,
 			available_models: 4,
 			unpriced_models: 0,
+			free_models: 0,
 			accounts: 1,
 			active_accounts: 1,
 			paused_accounts: 0,

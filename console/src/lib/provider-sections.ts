@@ -128,7 +128,8 @@ export function buildTemplateRows(
 	templates: readonly ProviderTemplate[],
 	added: Set<string>,
 	query = '',
-	freeEnabled = true
+	freeEnabled = true,
+	freeOnly = false
 ): Record<ProviderSection, TemplateRow[]> {
 	const rows: Record<ProviderSection, TemplateRow[]> = {
 		free: [],
@@ -143,6 +144,10 @@ export function buildTemplateRows(
 		if (!matchesQuery(query, template.id, template.label)) continue;
 		const free = isFreeConnection({ template_id: template.id });
 		if (free && !freeEnabled) continue;
+		if (freeOnly && !free) {
+			const section = sectionOf(template.kind);
+			if ((section !== 'key' && section !== 'cloud') || (template.free_models ?? 0) <= 0) continue;
+		}
 		const section = free ? 'free' : sectionOf(template.kind);
 		rows[section].push({
 			id: template.id,
@@ -167,7 +172,7 @@ export function buildTemplateRows(
 	}
 
 	const customLabel = 'Custom endpoint';
-	if (!searching || matchesQuery(query, CUSTOM_TEMPLATE_ID, customLabel)) {
+	if (!freeOnly && (!searching || matchesQuery(query, CUSTOM_TEMPLATE_ID, customLabel))) {
 		rows.local.push({
 			id: CUSTOM_TEMPLATE_ID,
 			label: customLabel,

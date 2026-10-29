@@ -242,6 +242,9 @@
 	async function toggleFree(enabled: boolean) {
 		if (freeBusy) return;
 		if (enabled) {
+			// The switch is only a request. The consent dialog commits the setting;
+			// clicking outside it must leave Free connections exactly as they were.
+			freeEnabled = false;
 			freeConsentOpen = true;
 			return;
 		}

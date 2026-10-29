@@ -199,6 +199,7 @@ function provider(overrides: Partial<Provider> = {}): Provider {
 			enabled_models: 1,
 			available_models: 1,
 			unpriced_models: 0,
+			free_models: 0,
 			accounts: 1,
 			active_accounts: 1,
 			paused_accounts: 0,

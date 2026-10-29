@@ -6,6 +6,7 @@
 	import { allowedByLanes } from '$lib/group-suggestions';
 	import type { Lane } from '$lib/group-suggestions';
 	import BillingChip from '$lib/components/providers/billing-chip.svelte';
+	import FreeAvailableChip from '$lib/components/providers/free-available-chip.svelte';
 	import type { GroupMember, Model, Provider } from '$lib/types';
 	import Button from '$lib/components/ui/button.svelte';
 	import Input from '$lib/components/ui/input.svelte';
@@ -199,6 +200,7 @@
 				<div class="flex shrink-0 items-center gap-2">
 					{#if providerMap.get(model.provider_id)}
 						<BillingChip provider={providerMap.get(model.provider_id)!} />
+						<FreeAvailableChip provider={providerMap.get(model.provider_id)!} />
 					{/if}
 					<span class="mono-data text-muted-foreground">{modelPrice(model)}</span>
 					<Button

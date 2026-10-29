@@ -21,12 +21,13 @@
 	import ModelList from './model-list.svelte';
 	import AccountsTab from './accounts-tab.svelte';
 	import SettingsTab from './settings-tab.svelte';
-	import { splitsPaidFree, filterModels, isFreeModel } from '$lib/model-filters';
+	import { splitsPaidFree, filterModels, isFreeModelRow } from '$lib/model-filters';
 	import { EMPTY_MODEL_FILTERS, type ModelFilters } from '$lib/model-filters';
 	import type { ModelLabelFilter } from '$lib/model-filters';
 	import { providerStatus } from '$lib/provider-status';
 	import { isExperimentalConnection } from '$lib/provider-experimental';
 	import BillingChip from './billing-chip.svelte';
+	import FreeAvailableChip from './free-available-chip.svelte';
 	import { ageOf } from '$lib/format';
 
 	interface Props {
@@ -173,10 +174,10 @@
 	// meaning when a button is pressed.
 	const visibleModels = $derived(filterModels(models, shownFilters));
 	const bulkPaidIds = $derived(
-		visibleModels.filter((model) => !isFreeModel(model.model_id)).map((model) => model.model_id)
+		visibleModels.filter((model) => !isFreeModelRow(model)).map((model) => model.model_id)
 	);
 	const bulkFreeIds = $derived(
-		visibleModels.filter((model) => isFreeModel(model.model_id)).map((model) => model.model_id)
+		visibleModels.filter((model) => isFreeModelRow(model)).map((model) => model.model_id)
 	);
 
 	let bulkWorking = $state(false);
@@ -296,8 +297,9 @@
 			<div class="min-w-0">
 				<h2 class="flex min-w-0 items-center gap-1.5 truncate text-base font-semibold">
 					<BillingChip {provider} />
+					<FreeAvailableChip {provider} />
 					{#if experimental}
-						<span data-experimental-chip class="badge shrink-0 bg-sunken text-muted-foreground">
+						<span data-experimental-chip class="badge shrink-0 bg-warn/10 text-ink ring-1 ring-warn/35">
 							{$t('ui.pages.providersPage.list.tagExperimental')}
 						</span>
 					{/if}

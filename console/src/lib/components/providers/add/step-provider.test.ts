@@ -49,4 +49,23 @@ describe('the free connection picker', () => {
 		expect(html.indexOf('OpenCode Zen Free')).toBeLessThan(html.indexOf('OpenAI'));
 		expect(html).toContain('Kilo Code Free');
 	});
+
+	it('disables an already-added keyless free row and explains why', () => {
+		const html = render(StepProvider, {
+			props: {
+				templates,
+				freeEnabled: true,
+				freeBusy: false,
+				onfreetoggle: () => {},
+				modelsdev: null,
+				added: new Set<string>(['opencode-free']),
+				onquery: () => {},
+				onpick: () => {},
+				oncustom: () => {},
+				onretry: () => {}
+			}
+		}).body;
+		expect(html).toContain('aria-disabled="true"');
+		expect(html).toContain('This free connection is already added.');
+	});
 });

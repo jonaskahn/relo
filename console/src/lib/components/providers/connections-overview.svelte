@@ -14,6 +14,7 @@
 	import type { ConnectionCard } from '$lib/provider-quota';
 	import { consoleState } from '$lib/console-state.svelte';
 	import { cardLayoutGrid } from '$lib/theme.svelte';
+	import { isFreeAvailableProvider } from '$lib/provider-free';
 
 	// ConnectionsOverview is the list pane: the search and filter that narrow
 	// it, the attention reading across every connection, and the card grid.
@@ -42,7 +43,7 @@
 	}: Props = $props();
 
 	let query = $state('');
-	let filter = $state<'all' | 'attention' | 'unpriced'>('all');
+	let filter = $state<'all' | 'attention' | 'unpriced' | 'free'>('all');
 
 	const providers = $derived(cards.map((card) => card.provider));
 	const attentionItems = $derived(
@@ -53,6 +54,7 @@
 	const unpricedConnections = $derived(
 		providers.filter((provider) => provider.counts.unpriced_models > 0).length
 	);
+	const freeConnections = $derived(providers.filter(isFreeAvailableProvider).length);
 
 	const visible = $derived(
 		cards.filter((card) => {
@@ -65,6 +67,7 @@
 			}
 			if (filter === 'attention') return attentionIds.has(provider.id);
 			if (filter === 'unpriced') return provider.counts.unpriced_models > 0;
+			if (filter === 'free') return isFreeAvailableProvider(provider);
 			return true;
 		})
 	);
@@ -104,6 +107,15 @@
 						values: {
 							label: $t('ui.pages.providersPage.models.chipUnpriced'),
 							count: unpricedConnections
+						}
+					})
+				},
+				{
+					value: 'free',
+					label: $t('ui.pages.providersPage.list.filterOption', {
+						values: {
+							label: $t('ui.pages.providersPage.models.pricingFree'),
+							count: freeConnections
 						}
 					})
 				}
