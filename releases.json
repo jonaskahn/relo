@@ -1,7 +1,7 @@
 {
-  "generated": "2026-10-29T09:06:26Z",
+  "generated": "2026-10-29T10:00:16Z",
   "latest": "v0.1.13",
-  "latest_beta": "v0.1.14-beta.52.4a559ce0",
+  "latest_beta": "v0.1.14-beta.53.bb73682a",
   "install": {
     "stable": {
       "script": "curl -fsSL https://relo.ifelse.one/install.sh | sh",
@@ -17,6 +17,86 @@
     }
   },
   "releases": [
+    {
+      "tag": "v0.1.14-beta.53.bb73682a",
+      "version": "0.1.14-beta.53.bb73682a",
+      "name": "v0.1.14-beta.53.bb73682a",
+      "channel": "beta",
+      "draft": false,
+      "published_at": "2026-10-29T10:00:05Z",
+      "page": "https://github.com/jonaskahn/relo/releases/tag/v0.1.14-beta.53.bb73682a",
+      "notes": "## What's Changed\n* fix(npm): ignore commands in own global bin on Windows by @jonaskahn in https://github.com/jonaskahn/relo/pull/91\n\n\n**Full Changelog**: https://github.com/jonaskahn/relo/compare/v0.1.14-beta.52.4a559ce0...v0.1.14-beta.53.bb73682a",
+      "install": {
+        "script": "curl -fsSL https://relo.ifelse.one/install.sh | sh -s -- --version 0.1.14-beta.53.bb73682a",
+        "powershell": "& ([scriptblock]::Create((irm https://relo.ifelse.one/install.ps1))) -Version 0.1.14-beta.53.bb73682a",
+        "npm": "npm i -g @jonaskahn/relo@0.1.14-beta.53.bb73682a"
+      },
+      "files": [
+        {
+          "name": "checksums.txt",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.1.14-beta.53.bb73682a/checksums.txt",
+          "size": 690,
+          "os": "any",
+          "arch": "any",
+          "kind": "checksums",
+          "format": "txt"
+        },
+        {
+          "name": "relo-0.1.14-beta.53.bb73682a-darwin-amd64.tar.gz",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.1.14-beta.53.bb73682a/relo-0.1.14-beta.53.bb73682a-darwin-amd64.tar.gz",
+          "size": 14980624,
+          "os": "macos",
+          "arch": "amd64",
+          "kind": "archive",
+          "format": "tar.gz"
+        },
+        {
+          "name": "relo-0.1.14-beta.53.bb73682a-darwin-arm64.tar.gz",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.1.14-beta.53.bb73682a/relo-0.1.14-beta.53.bb73682a-darwin-arm64.tar.gz",
+          "size": 14559388,
+          "os": "macos",
+          "arch": "arm64",
+          "kind": "archive",
+          "format": "tar.gz"
+        },
+        {
+          "name": "relo-0.1.14-beta.53.bb73682a-linux-amd64.tar.gz",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.1.14-beta.53.bb73682a/relo-0.1.14-beta.53.bb73682a-linux-amd64.tar.gz",
+          "size": 14670845,
+          "os": "linux",
+          "arch": "amd64",
+          "kind": "archive",
+          "format": "tar.gz"
+        },
+        {
+          "name": "relo-0.1.14-beta.53.bb73682a-linux-arm64.tar.gz",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.1.14-beta.53.bb73682a/relo-0.1.14-beta.53.bb73682a-linux-arm64.tar.gz",
+          "size": 13913401,
+          "os": "linux",
+          "arch": "arm64",
+          "kind": "archive",
+          "format": "tar.gz"
+        },
+        {
+          "name": "relo-0.1.14-beta.53.bb73682a-windows-amd64.tar.gz",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.1.14-beta.53.bb73682a/relo-0.1.14-beta.53.bb73682a-windows-amd64.tar.gz",
+          "size": 14615332,
+          "os": "windows",
+          "arch": "amd64",
+          "kind": "archive",
+          "format": "tar.gz"
+        },
+        {
+          "name": "relo-0.1.14-beta.53.bb73682a-windows-arm64.tar.gz",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.1.14-beta.53.bb73682a/relo-0.1.14-beta.53.bb73682a-windows-arm64.tar.gz",
+          "size": 13764265,
+          "os": "windows",
+          "arch": "arm64",
+          "kind": "archive",
+          "format": "tar.gz"
+        }
+      ]
+    },
     {
       "tag": "v0.1.14-beta.52.4a559ce0",
       "version": "0.1.14-beta.52.4a559ce0",
