@@ -769,10 +769,13 @@ func (s *Server) estimateRequestTokens(request *inference.Request) int {
 	if request == nil {
 		return 0
 	}
+	// Base64 image payloads are never text a tokenizer can measure, so the
+	// view drops them and each image is charged what a provider bills for one.
+	view, images := inference.TextualView(request)
 	body, err := json.Marshal(struct {
 		Messages []inference.Message `json:"messages"`
 		Tools    []inference.Tool    `json:"tools,omitempty"`
-	}{Messages: request.Messages, Tools: request.Tools})
+	}{Messages: view.Messages, Tools: view.Tools})
 	if err != nil {
 		return 0
 	}
@@ -782,7 +785,7 @@ func (s *Server) estimateRequestTokens(request *inference.Request) int {
 			tokens = counted
 		}
 	}
-	return tokens
+	return tokens + images*inference.ImagePromptTokens
 }
 
 func failureKind(cause error) routing.Kind {
@@ -794,17 +797,18 @@ func failureKind(cause error) routing.Kind {
 
 func needsOf(request *inference.Request) catalog.Requirements {
 	needs := catalog.Requirements{Tools: len(request.Tools) > 0}
-	characters := 0
+	characters, images := 0, 0
 	for _, message := range request.Messages {
 		for _, part := range message.Content {
 			if part.Type == inference.ContentTypeImage {
 				needs.Images = true
+				images++
 				continue
 			}
 			characters += len(part.Text)
 		}
 	}
-	needs.PromptTokens = catalog.PromptTokensFrom(characters)
+	needs.PromptTokens = catalog.PromptTokensFrom(characters) + int64(images*inference.ImagePromptTokens)
 	return needs
 }
 

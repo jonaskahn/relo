@@ -20,6 +20,14 @@ const (
 	ContentTypeThinking = "thinking"
 )
 
+// ImagePromptTokens is what one image part is estimated to cost. Providers
+// bill vision input by the pixels they decode, never by the bytes a client
+// inline-encoded: base64 measures about 1.5 characters per token, so counting
+// it as text overstated a 1600x1600 render by two orders of magnitude. The
+// value sits above what a full-size render was observed to cost, because an
+// underestimate would let a request through that the provider then refuses.
+const ImagePromptTokens = 1100
+
 // SpokenText returns the text parts a provider can send. An empty or
 // whitespace-only part is not a valid text block on the wires Relo speaks,
 // and a thinking part stays with the family that produced it.
