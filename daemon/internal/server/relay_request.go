@@ -683,7 +683,7 @@ func (s *Server) validateOutboundRequest(spec attemptSpec, request *inference.Re
 		if model.SupportsReasoning != nil && !*model.SupportsReasoning {
 			return fmt.Errorf("reasoning is not supported by %s: %w", model.ID, wire.ErrUnsupportedFeature)
 		}
-		if !effortKnown(model.ReasoningEfforts, effort) {
+		if !inference.AcceptsEffort(effort, model.ReasoningEfforts, model.ReasoningToggle) {
 			return fmt.Errorf("reasoning effort %s is not supported by %s: %w", effort, model.ID, wire.ErrUnsupportedFeature)
 		}
 	}
@@ -717,25 +717,6 @@ func needsImages(request *inference.Request) bool {
 			if part.Type == inference.ContentTypeImage {
 				return true
 			}
-		}
-	}
-	return false
-}
-
-func effortKnown(ladder []string, effort string) bool {
-	if ladder == nil {
-		return true
-	}
-	if len(ladder) == 0 {
-		return false
-	}
-	normalized, ok := inference.NormalizeEffort(effort)
-	if !ok {
-		return false
-	}
-	for _, listed := range ladder {
-		if listed == normalized {
-			return true
 		}
 	}
 	return false

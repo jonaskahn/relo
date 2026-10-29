@@ -408,6 +408,36 @@ func TestChatEffortFollowsTheModelLadder(t *testing.T) {
 		}
 	})
 
+	t.Run("a toggle-only model enables thinking without an effort", func(t *testing.T) {
+		body := encodeChatOpts(t, request, wire.CodecOpts{
+			CredentialRef: "sk-test", AuthMethod: wire.AuthAPIKey,
+			ReasoningEfforts: []string{}, ReasoningToggle: true,
+		})
+		thinking, _ := body["thinking"].(map[string]any)
+		if thinking["type"] != "enabled" {
+			t.Fatalf("body = %v, want thinking enabled", body)
+		}
+		if _, present := body["reasoning_effort"]; present {
+			t.Fatalf("body = %v, want no effort", body)
+		}
+	})
+
+	t.Run("a toggle-only model disables thinking for none", func(t *testing.T) {
+		request.Reasoning.Effort = "none"
+		defer func() { request.Reasoning.Effort = "xhigh" }()
+		body := encodeChatOpts(t, request, wire.CodecOpts{
+			CredentialRef: "sk-test", AuthMethod: wire.AuthAPIKey,
+			ReasoningEfforts: []string{}, ReasoningToggle: true,
+		})
+		thinking, _ := body["thinking"].(map[string]any)
+		if thinking["type"] != "disabled" {
+			t.Fatalf("body = %v, want thinking disabled", body)
+		}
+		if _, present := body["reasoning_effort"]; present {
+			t.Fatalf("body = %v, want no effort", body)
+		}
+	})
+
 	t.Run("a model with no stated ladder passes the effort through", func(t *testing.T) {
 		body := encodeBodyWithEfforts(t, request, nil)
 		if body["reasoning_effort"] != "xhigh" {

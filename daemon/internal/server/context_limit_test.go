@@ -21,6 +21,31 @@ func TestAttemptRejectsExplicitlyUnsupportedCapabilities(t *testing.T) {
 	}
 }
 
+func TestAttemptValidatesEffortsForToggleOnlyModels(t *testing.T) {
+	server := New(Options{})
+	yes := true
+	spec := attemptSpec{candidate: routing.Candidate{Model: catalog.Model{
+		ID: "m", SupportsReasoning: &yes, ReasoningEfforts: []string{}, ReasoningToggle: true,
+	}}}
+	for _, effort := range []string{"low", "high", "max", "none"} {
+		request := &inference.Request{Reasoning: &inference.ReasoningConfig{Effort: effort}}
+		if err := server.validateOutboundRequest(spec, request); err != nil {
+			t.Fatalf("validateOutboundRequest(%s) = %v, want a toggle-only model to accept it", effort, err)
+		}
+	}
+	unknown := &inference.Request{Reasoning: &inference.ReasoningConfig{Effort: "turbo"}}
+	if err := server.validateOutboundRequest(spec, unknown); !errors.Is(err, wire.ErrUnsupportedFeature) {
+		t.Fatalf("validateOutboundRequest(turbo) = %v, want an unknown effort refused", err)
+	}
+	noEffort := attemptSpec{candidate: routing.Candidate{Model: catalog.Model{
+		ID: "plain", SupportsReasoning: &yes, ReasoningEfforts: []string{},
+	}}}
+	request := &inference.Request{Reasoning: &inference.ReasoningConfig{Effort: "high"}}
+	if err := server.validateOutboundRequest(noEffort, request); !errors.Is(err, wire.ErrUnsupportedFeature) {
+		t.Fatalf("validateOutboundRequest(high) = %v, want an explicit no-effort model to refuse it", err)
+	}
+}
+
 func TestAttemptReducesOutputToFitProviderContext(t *testing.T) {
 	server := New(Options{})
 	maxInput := int64(1_000)

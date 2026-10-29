@@ -104,6 +104,21 @@ func TestChatCompletionsDecodeRequest(t *testing.T) {
 		}
 	})
 
+	t.Run("a thinking type alias maps to canonical high or none", func(t *testing.T) {
+		for body, want := range map[string]string{
+			`{"model":"mimo","messages":[],"thinking":{"type":"enabled"}}`:  "high",
+			`{"model":"mimo","messages":[],"thinking":{"type":"disabled"}}`: "none",
+		} {
+			request, err := openaichat.NewChatCompletionsCodec().DecodeRequest(newRequest(t, body))
+			if err != nil {
+				t.Fatalf("DecodeRequest() error = %v", err)
+			}
+			if request.Reasoning == nil || request.Reasoning.Effort != want {
+				t.Fatalf("Reasoning = %+v, want %s", request.Reasoning, want)
+			}
+		}
+	})
+
 	t.Run("max completion tokens wins over max tokens", func(t *testing.T) {
 		body := `{"model":"gpt-4o","messages":[],"max_tokens":10,"max_completion_tokens":20,"temperature":0.5,"reasoning":{"effort":"low"}}`
 		request, err := openaichat.NewChatCompletionsCodec().DecodeRequest(newRequest(t, body))
