@@ -103,6 +103,44 @@ func TestRebaseNativeBodyDropsMetadataWithoutAnAccount(t *testing.T) {
 	}
 }
 
+// TestRebaseNativeBodyDropsToolChoiceWithoutTools pins that a reused body is
+// held to the same rule as an encoded one: a choice with nothing to choose is
+// refused upstream, so it never travels. A body with tools keeps its choice.
+func TestRebaseNativeBodyDropsToolChoiceWithoutTools(t *testing.T) {
+	cases := []struct {
+		name string
+		body string
+		want string
+	}{
+		{
+			name: "no tools drops the choice",
+			body: `{"model":"m","messages":[{"role":"user","content":[]}],"tools":[],"tool_choice":{"type":"auto"}}`,
+			want: `{"model":"claude-sonnet-4","messages":[{"role":"user","content":[]}],"tools":[]}`,
+		},
+		{
+			name: "no tool list drops the choice",
+			body: `{"model":"m","messages":[{"role":"user","content":[]}],"tool_choice":{"type":"auto"}}`,
+			want: `{"model":"claude-sonnet-4","messages":[{"role":"user","content":[]}]}`,
+		},
+		{
+			name: "a declared tool keeps the choice",
+			body: `{"model":"m","messages":[{"role":"user","content":[]}],"tools":[{"name":"read","input_schema":{"type":"object"}}],"tool_choice":{"type":"auto"}}`,
+			want: `{"model":"claude-sonnet-4","messages":[{"role":"user","content":[]}],"tools":[{"name":"read","input_schema":{"type":"object"}}],"tool_choice":{"type":"auto"}}`,
+		},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			rebuilt, ok := rebaseNativeBody([]byte(tc.body), "claude-sonnet-4", nil, nativeOverride{})
+			if !ok {
+				t.Fatal("want the body retargeted")
+			}
+			if string(rebuilt) != tc.want {
+				t.Fatalf("body = %s, want %s", rebuilt, tc.want)
+			}
+		})
+	}
+}
+
 // TestRebaseNativeBodyEnforcesProviderBudgetAndThinking pins that a native
 // Messages body cannot bypass the attempt's provider-authoritative controls.
 func TestRebaseNativeBodyEnforcesProviderBudgetAndThinking(t *testing.T) {

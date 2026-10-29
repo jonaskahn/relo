@@ -294,6 +294,7 @@ func TestToolChoiceRoundTripsThroughEverySurface(t *testing.T) {
 					Model: "m", Stream: false,
 					Messages:   []inference.Message{{Role: inference.RoleUser, Content: []inference.ContentPart{{Type: inference.ContentTypeText, Text: "go"}}}},
 					ToolChoice: &inference.ToolChoice{Mode: mode},
+					Tools:      []inference.Tool{{Name: "read", Parameters: json.RawMessage(`{"type":"object"}`)}},
 				}
 				outbound, err := entry.codec.EncodeRequest(original, wire.CodecOpts{CredentialRef: "sk-test"})
 				if err != nil {
@@ -303,6 +304,26 @@ func TestToolChoiceRoundTripsThroughEverySurface(t *testing.T) {
 				if replayed.ToolChoice == nil || replayed.ToolChoice.Mode != mode {
 					t.Fatalf("%s tool choice = %+v, want %q", entry.name, replayed.ToolChoice, mode)
 				}
+			}
+		})
+	}
+}
+
+// TestToolChoiceIsDroppedWithoutTools covers a compaction turn that declares no
+// tools: gateways refuse a choice with nothing to choose from.
+func TestToolChoiceIsDroppedWithoutTools(t *testing.T) {
+	for _, entry := range []struct {
+		name  string
+		codec wire.Codec
+	}{
+		{"openai-chat", openaichat.Module()},
+		{"openai-responses", openairesponses.Module()},
+		{"anthropic-messages", anthropic.Module()},
+	} {
+		t.Run(entry.name, func(t *testing.T) {
+			request := &inference.Request{Model: "m", ToolChoice: &inference.ToolChoice{Mode: inference.ToolChoiceAuto}}
+			if _, present := encodeFor(t, entry.codec, request)["tool_choice"]; present {
+				t.Fatal("tool_choice sent without any tool")
 			}
 		})
 	}

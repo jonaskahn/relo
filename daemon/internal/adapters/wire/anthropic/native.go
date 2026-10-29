@@ -31,6 +31,7 @@ func rebaseNativeBody(raw []byte, model string, metadata *metadataDef, override 
 	if !written {
 		rebuilt = append(rebuilt, member{key: "model", value: modelValue(model)})
 	}
+	rebuilt = dropToolChoiceWithoutTools(rebuilt)
 	if override.EnforceThinking && override.Thinking != nil && !hasMember(rebuilt, "thinking") {
 		rebuilt = append(rebuilt, member{key: "thinking", value: thinkingValue(override.Thinking)})
 	}
@@ -79,6 +80,33 @@ func hasMember(members []member, name string) bool {
 		if current.key == name {
 			return true
 		}
+	}
+	return false
+}
+
+// dropToolChoiceWithoutTools removes a choice with nothing to choose, which
+// gateways refuse. A body that declares at least one tool keeps the client's
+// choice byte for byte.
+func dropToolChoiceWithoutTools(members []member) []member {
+	if !hasMember(members, "tool_choice") || hasTools(members) {
+		return members
+	}
+	kept := make([]member, 0, len(members))
+	for _, current := range members {
+		if current.key != "tool_choice" {
+			kept = append(kept, current)
+		}
+	}
+	return kept
+}
+
+func hasTools(members []member) bool {
+	for _, current := range members {
+		if current.key != "tools" {
+			continue
+		}
+		var tools []json.RawMessage
+		return json.Unmarshal(current.value, &tools) == nil && len(tools) > 0
 	}
 	return false
 }

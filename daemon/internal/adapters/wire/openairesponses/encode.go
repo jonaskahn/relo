@@ -111,6 +111,9 @@ func newPayload(req *inference.Request, opts wire.CodecOpts) requestPayload {
 		MaxOutputTokens: req.MaxTokens,
 		Temperature:     req.Temperature,
 	}
+	if len(payload.Tools) == 0 {
+		payload.ToolChoice = nil
+	}
 	payload.applyReasoning(req.Reasoning, opts)
 	return payload
 }

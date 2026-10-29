@@ -220,6 +220,9 @@ func newPayload(req *inference.Request, opts wire.CodecOpts, baseURL string) cha
 		MaxTokens:   req.MaxTokens,
 		Temperature: req.Temperature,
 	}
+	if len(payload.Tools) == 0 {
+		payload.ToolChoice = nil
+	}
 	if req.Stream {
 		payload.StreamOptions = &streamOptions{IncludeUsage: true}
 	}

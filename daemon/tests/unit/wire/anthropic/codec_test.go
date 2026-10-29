@@ -1122,7 +1122,8 @@ func TestMessagesToolChoiceTranslation(t *testing.T) {
 		} {
 			t.Run(entry.mode, func(t *testing.T) {
 				choice := &inference.ToolChoice{Mode: entry.mode, Name: entry.name}
-				body := encodeBody(t, &inference.Request{Model: "claude-sonnet-5", ToolChoice: choice},
+				body := encodeBody(t, &inference.Request{Model: "claude-sonnet-5", ToolChoice: choice,
+					Tools: []inference.Tool{{Name: "read", Parameters: json.RawMessage(`{"type":"object"}`)}}},
 					wire.CodecOpts{CredentialRef: "sk-ant"})
 				selector, ok := body["tool_choice"].(map[string]any)
 				if !ok {
