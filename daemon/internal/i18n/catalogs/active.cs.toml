@@ -693,3 +693,11 @@ other = "Windows tento soubor smaže po ukončení Relo: {{.Path}}"
 [tray.menu.quitting]
 description = "Tray quit action while final records are saved"
 other = "Ukončit — zpracování…"
+
+[api.connections.free_connections_disabled]
+description = "Inference refusal when a configured free connection is reached with consent off"
+other = "Bezplatná připojení vyžadují tvůj souhlas. Zapni bezplatná připojení a přijmi upozornění na odpovědnost, než je použiješ."
+
+[api.connections.free_connection_exists]
+description = "Management refusal when a second keyless free connection is requested"
+other = "Toto bezplatné připojení je již přidáno."

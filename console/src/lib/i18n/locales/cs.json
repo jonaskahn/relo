@@ -497,7 +497,8 @@
           "tagExperimental": "Experimentální",
           "tagPayAsYouGo": "Pay as you go",
           "tagPaidPlan": "Paid plan",
-          "groupFree": "Bezplatná připojení"
+          "groupFree": "Bezplatná připojení",
+          "freeAvailable": "Dostupné zdarma"
         },
         "status": {
           "ready": "Připraveno",
@@ -921,7 +922,11 @@
           "next": "Další",
           "chooseHint": "Vyberte poskytovatele",
           "groupHintFree": "Bez účtu a klíče API",
-          "freeOffHint": "Bezplatná připojení jsou skrytá, dokud je nezapnete."
+          "freeOffHint": "Bezplatná připojení jsou skrytá, dokud je nezapnete.",
+          "filterAll": "Vše",
+          "filterFree": "Zdarma",
+          "filterLabel": "Filtrovat připojení",
+          "freeAlreadyAdded": "Toto bezplatné připojení je již přidáno."
         },
         "verify": {
           "title": "Zkontrolovat připojení",
@@ -971,7 +976,15 @@
           "commitFailed": "Poskytovatele se nepodařilo přidat: {detail}",
           "keyAdded": "Klíč přidán k {label}.",
           "legend": "Cena za 1M tokenů, vstup / výstup",
-          "retainsPrompts": "Tento bezplatný fond nevyžaduje účet. Prompty, které mu pošlete, může poskytovatel evidovat."
+          "retainsPrompts": "Tento bezplatný fond nevyžaduje účet. Prompty, které mu pošlete, může poskytovatel evidovat.",
+          "freeBadge": "Zdarma",
+          "freeOnly": "Pouze zdarma",
+          "noFreeModels": "Žádné modely zdarma",
+          "bulkLabel": "Stavy modelů",
+          "freeOnlyLabel": "Pouze zdarma",
+          "freeOnlyLabelPattern": "{label} (pouze zdarma)",
+          "turnOnFree": "Zapnout všechny zdarma",
+          "turnOffFree": "Vypnout všechny zdarma"
         },
         "format": {
           "openaiChat": "OpenAI Chat Completions; funguje s většinou klientů a bran",

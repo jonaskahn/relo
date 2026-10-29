@@ -693,3 +693,11 @@ other = "Windows sẽ xóa tệp này sau khi Relo thoát: {{.Path}}"
 [tray.menu.quitting]
 description = "Tray quit action while final records are saved"
 other = "Thoát — đang xử lý…"
+
+[api.connections.free_connections_disabled]
+description = "Inference refusal when a configured free connection is reached with consent off"
+other = "Kết nối miễn phí cần sự đồng ý của bạn. Hãy bật kết nối miễn phí và chấp nhận thông báo trách nhiệm trước khi sử dụng."
+
+[api.connections.free_connection_exists]
+description = "Management refusal when a second keyless free connection is requested"
+other = "Kết nối miễn phí này đã được thêm."

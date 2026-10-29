@@ -497,7 +497,8 @@
           "tagExperimental": "Experimental",
           "tagPayAsYouGo": "Pay as you go",
           "tagPaidPlan": "Paid plan",
-          "groupFree": "Conexões gratuitas"
+          "groupFree": "Conexões gratuitas",
+          "freeAvailable": "Grátis disponível"
         },
         "status": {
           "ready": "Pronta",
@@ -921,7 +922,11 @@
           "next": "Avançar",
           "chooseHint": "Escolha um provedor",
           "groupHintFree": "Sem conta nem chave de API",
-          "freeOffHint": "As conexões gratuitas ficam ocultas até você ativá-las."
+          "freeOffHint": "As conexões gratuitas ficam ocultas até você ativá-las.",
+          "filterAll": "Tudo",
+          "filterFree": "Grátis",
+          "filterLabel": "Filtrar conexões",
+          "freeAlreadyAdded": "Esta conexão gratuita já foi adicionada."
         },
         "verify": {
           "title": "Verificar a conexão",
@@ -971,7 +976,15 @@
           "commitFailed": "Não foi possível adicionar o provedor: {detail}",
           "keyAdded": "Chave adicionada a {label}.",
           "legend": "Preço por 1M de tokens, entrada / saída",
-          "retainsPrompts": "Este pool gratuito não exige conta. Os prompts enviados podem ser registrados pelo provedor."
+          "retainsPrompts": "Este pool gratuito não exige conta. Os prompts enviados podem ser registrados pelo provedor.",
+          "freeBadge": "Grátis",
+          "freeOnly": "Somente grátis",
+          "noFreeModels": "Nenhum modelo grátis",
+          "bulkLabel": "Estados dos modelos",
+          "freeOnlyLabel": "Somente grátis",
+          "freeOnlyLabelPattern": "{label} (somente grátis)",
+          "turnOnFree": "Ativar todos os grátis",
+          "turnOffFree": "Desativar todos os grátis"
         },
         "format": {
           "openaiChat": "OpenAI Chat Completions; funciona com a maioria dos clientes e gateways",

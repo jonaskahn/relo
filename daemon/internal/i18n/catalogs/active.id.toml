@@ -672,3 +672,11 @@ other = "Windows akan menghapus file ini setelah Relo keluar: {{.Path}}"
 [tray.menu.quitting]
 description = "Tray quit action while final records are saved"
 other = "Keluar — memproses…"
+
+[api.connections.free_connections_disabled]
+description = "Inference refusal when a configured free connection is reached with consent off"
+other = "Koneksi gratis memerlukan persetujuan Anda. Aktifkan koneksi gratis dan setujui pemberitahuan tanggung jawab sebelum menggunakannya."
+
+[api.connections.free_connection_exists]
+description = "Management refusal when a second keyless free connection is requested"
+other = "Koneksi gratis ini sudah ditambahkan."

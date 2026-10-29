@@ -693,3 +693,11 @@ other = "Windows verwijdert dit bestand nadat Relo stopt: {{.Path}}"
 [tray.menu.quitting]
 description = "Tray quit action while final records are saved"
 other = "Afsluiten — bezig…"
+
+[api.connections.free_connections_disabled]
+description = "Inference refusal when a configured free connection is reached with consent off"
+other = "Gratis verbindingen vereisen je toestemming. Schakel gratis verbindingen in en accepteer de verantwoordelijkheidsmelding voordat je ze gebruikt."
+
+[api.connections.free_connection_exists]
+description = "Management refusal when a second keyless free connection is requested"
+other = "Deze gratis verbinding is al toegevoegd."

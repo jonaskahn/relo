@@ -497,7 +497,8 @@
           "tagExperimental": "Deneysel",
           "tagPayAsYouGo": "Pay as you go",
           "tagPaidPlan": "Paid plan",
-          "groupFree": "Ücretsiz bağlantılar"
+          "groupFree": "Ücretsiz bağlantılar",
+          "freeAvailable": "Ücretsiz mevcut"
         },
         "status": {
           "ready": "Hazır",
@@ -921,7 +922,11 @@
           "next": "İleri",
           "chooseHint": "Bir sağlayıcı seçin",
           "groupHintFree": "Hesap veya API anahtarı gerekmez",
-          "freeOffHint": "Ücretsiz bağlantılar siz açana kadar gizli kalır."
+          "freeOffHint": "Ücretsiz bağlantılar siz açana kadar gizli kalır.",
+          "filterAll": "Tümü",
+          "filterFree": "Ücretsiz",
+          "filterLabel": "Bağlantıları filtrele",
+          "freeAlreadyAdded": "Bu ücretsiz bağlantı zaten eklenmiş."
         },
         "verify": {
           "title": "Bağlantıyı denetle",
@@ -971,7 +976,15 @@
           "commitFailed": "Sağlayıcı eklenemedi: {detail}",
           "keyAdded": "Anahtar {label} bağlantısına eklendi.",
           "legend": "1M token başına fiyat, giriş / çıkış",
-          "retainsPrompts": "Bu ücretsiz havuz hesap gerektirmez. Gönderdiğin istemler sağlayıcı tarafından kaydedilebilir."
+          "retainsPrompts": "Bu ücretsiz havuz hesap gerektirmez. Gönderdiğin istemler sağlayıcı tarafından kaydedilebilir.",
+          "freeBadge": "Ücretsiz",
+          "freeOnly": "Yalnızca ücretsiz",
+          "noFreeModels": "Ücretsiz model yok",
+          "bulkLabel": "Model durumları",
+          "freeOnlyLabel": "Yalnızca ücretsiz",
+          "freeOnlyLabelPattern": "{label} (yalnızca ücretsiz)",
+          "turnOnFree": "Tüm ücretsizleri aç",
+          "turnOffFree": "Tüm ücretsizleri kapat"
         },
         "format": {
           "openaiChat": "OpenAI Chat Completions; çoğu istemci ve gateway ile çalışır",

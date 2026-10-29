@@ -270,4 +270,27 @@ describe('free-pool consent copy', () => {
 			}
 		}
 	});
+
+	it('ships the free-availability and review controls in every language', () => {
+		const longForm = [
+			'ui.pages.providersPage.list.freeAvailable',
+			'ui.pages.providersPage.add.filterFree',
+			'ui.pages.providersPage.add.freeAlreadyAdded',
+			'ui.pages.providersPage.review.bulkLabel',
+			'ui.pages.providersPage.review.turnOnFree',
+			'ui.pages.providersPage.review.turnOffFree',
+			'ui.pages.providersPage.review.freeBadge',
+			'ui.pages.providersPage.review.freeOnly',
+			'ui.pages.providersPage.review.noFreeModels',
+			'ui.pages.providersPage.review.freeOnlyLabelPattern'
+		];
+		for (const [tag, catalog] of Object.entries(catalogs)) {
+			for (const path of longForm) {
+				expect(valueOf(catalog, path).trim(), tag + ' ' + path).not.toBe('');
+				if (tag !== 'en') {
+					expect(valueOf(catalog, path), tag + ' ' + path).not.toBe(valueOf(en, path));
+				}
+			}
+		}
+	});
 });

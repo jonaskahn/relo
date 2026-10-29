@@ -691,3 +691,11 @@ other = "Relo の終了後、Windows がこのファイルを削除します: {{
 [tray.menu.quitting]
 description = "Tray quit action while final records are saved"
 other = "終了 — 処理中…"
+
+[api.connections.free_connections_disabled]
+description = "Inference refusal when a configured free connection is reached with consent off"
+other = "無料接続には同意が必要です。使用する前に無料接続を有効にし、責任に関する通知に同意してください。"
+
+[api.connections.free_connection_exists]
+description = "Management refusal when a second keyless free connection is requested"
+other = "この無料接続はすでに追加されています。"

@@ -497,7 +497,8 @@
           "tagExperimental": "實驗性",
           "tagPayAsYouGo": "按量付費",
           "tagPaidPlan": "付費方案",
-          "groupFree": "免費連線"
+          "groupFree": "免費連線",
+          "freeAvailable": "可用免費模型"
         },
         "status": {
           "ready": "就緒",
@@ -921,7 +922,11 @@
           "next": "下一步",
           "chooseHint": "選擇供應商",
           "groupHintFree": "不需帳號或 API 金鑰",
-          "freeOffHint": "免費連線在啟用前會保持隱藏。"
+          "freeOffHint": "免費連線在啟用前會保持隱藏。",
+          "filterAll": "全部",
+          "filterFree": "免費",
+          "filterLabel": "篩選連線",
+          "freeAlreadyAdded": "此免費連線已新增。"
         },
         "verify": {
           "title": "檢查連線",
@@ -971,7 +976,15 @@
           "commitFailed": "無法新增供應商：{detail}",
           "keyAdded": "金鑰已加入 {label}。",
           "legend": "每 100 萬 Token 的價格（輸入 / 輸出）",
-          "retainsPrompts": "這個免費池不需要賬號。你送出的提示詞可能會被供應商記錄。"
+          "retainsPrompts": "這個免費池不需要賬號。你送出的提示詞可能會被供應商記錄。",
+          "freeBadge": "免費",
+          "freeOnly": "僅免費",
+          "noFreeModels": "沒有免費模型",
+          "bulkLabel": "模型狀態",
+          "freeOnlyLabel": "僅免費",
+          "freeOnlyLabelPattern": "{label}（僅免費）",
+          "turnOnFree": "開啟所有免費模型",
+          "turnOffFree": "關閉所有免費模型"
         },
         "format": {
           "openaiChat": "OpenAI Chat Completions；相容大多數用戶端與閘道器",

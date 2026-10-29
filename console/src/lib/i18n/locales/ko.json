@@ -497,7 +497,8 @@
           "tagExperimental": "실험적",
           "tagPayAsYouGo": "종량제",
           "tagPaidPlan": "유료 요금제",
-          "groupFree": "무료 연결"
+          "groupFree": "무료 연결",
+          "freeAvailable": "무료 사용 가능"
         },
         "status": {
           "ready": "준비됨",
@@ -921,7 +922,11 @@
           "next": "다음",
           "chooseHint": "제공업체 선택",
           "groupHintFree": "계정이나 API 키 없이 사용",
-          "freeOffHint": "무료 연결은 켜기 전까지 숨겨집니다."
+          "freeOffHint": "무료 연결은 켜기 전까지 숨겨집니다.",
+          "filterAll": "전체",
+          "filterFree": "무료",
+          "filterLabel": "연결 필터",
+          "freeAlreadyAdded": "이 무료 연결은 이미 추가되었습니다."
         },
         "verify": {
           "title": "연결 확인",
@@ -971,7 +976,15 @@
           "commitFailed": "연결을 추가할 수 없었어요: {detail}",
           "keyAdded": "키 추가 완료: {label}",
           "legend": "100만 토큰당 가격, 입력 / 출력",
-          "retainsPrompts": "이 무료 풀에는 계정이 필요 없어요. 보낸 프롬프트는 제공업체가 기록할 수 있어요."
+          "retainsPrompts": "이 무료 풀에는 계정이 필요 없어요. 보낸 프롬프트는 제공업체가 기록할 수 있어요.",
+          "freeBadge": "무료",
+          "freeOnly": "무료만",
+          "noFreeModels": "무료 모델 없음",
+          "bulkLabel": "모델 상태",
+          "freeOnlyLabel": "무료만",
+          "freeOnlyLabelPattern": "{label}(무료만)",
+          "turnOnFree": "무료 모두 켜기",
+          "turnOffFree": "무료 모두 끄기"
         },
         "format": {
           "openaiChat": "OpenAI Chat Completions · 대부분의 클라이언트와 게이트웨이에서 동작해요",

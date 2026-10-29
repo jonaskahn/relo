@@ -693,3 +693,11 @@ other = "سيحذف Windows هذا الملف بعد خروج Relo: {{.Path}}"
 [tray.menu.quitting]
 description = "Tray quit action while final records are saved"
 other = "إنهاء — جارٍ المعالجة…"
+
+[api.connections.free_connections_disabled]
+description = "Inference refusal when a configured free connection is reached with consent off"
+other = "تتطلب الاتصالات المجانية موافقتك. فعّل الاتصالات المجانية واقبل إشعار المسؤولية قبل استخدامها."
+
+[api.connections.free_connection_exists]
+description = "Management refusal when a second keyless free connection is requested"
+other = "تمت إضافة هذا الاتصال المجاني بالفعل."

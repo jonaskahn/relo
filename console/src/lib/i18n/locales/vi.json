@@ -497,7 +497,8 @@
           "tagExperimental": "Thử nghiệm",
           "tagPayAsYouGo": "Pay as you go",
           "tagPaidPlan": "Paid plan",
-          "groupFree": "Kết nối miễn phí"
+          "groupFree": "Kết nối miễn phí",
+          "freeAvailable": "Miễn phí khả dụng"
         },
         "status": {
           "ready": "Sẵn sàng",
@@ -921,7 +922,11 @@
           "next": "Tiếp",
           "chooseHint": "Chọn nhà cung cấp",
           "groupHintFree": "Không cần tài khoản hay khóa API",
-          "freeOffHint": "Kết nối miễn phí được ẩn cho đến khi bạn bật."
+          "freeOffHint": "Kết nối miễn phí được ẩn cho đến khi bạn bật.",
+          "filterAll": "Tất cả",
+          "filterFree": "Miễn phí",
+          "filterLabel": "Lọc kết nối",
+          "freeAlreadyAdded": "Kết nối miễn phí này đã được thêm."
         },
         "verify": {
           "title": "Kiểm tra kết nối",
@@ -971,7 +976,15 @@
           "commitFailed": "Không thể thêm nhà cung cấp: {detail}",
           "keyAdded": "Đã thêm khóa vào {label}.",
           "legend": "Giá mỗi 1 triệu token, vào / ra",
-          "retainsPrompts": "Nhóm miễn phí này không cần tài khoản. Nhà cung cấp có thể ghi lại các lời nhắc bạn gửi đến."
+          "retainsPrompts": "Nhóm miễn phí này không cần tài khoản. Nhà cung cấp có thể ghi lại các lời nhắc bạn gửi đến.",
+          "freeBadge": "Miễn phí",
+          "freeOnly": "Chỉ miễn phí",
+          "noFreeModels": "Không có mô hình miễn phí",
+          "bulkLabel": "Trạng thái mô hình",
+          "freeOnlyLabel": "Chỉ miễn phí",
+          "freeOnlyLabelPattern": "{label} (chỉ miễn phí)",
+          "turnOnFree": "Bật tất cả miễn phí",
+          "turnOffFree": "Tắt tất cả miễn phí"
         },
         "format": {
           "openaiChat": "OpenAI Chat Completions; chạy với hầu hết client và gateway",

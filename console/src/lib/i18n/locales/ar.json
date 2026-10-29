@@ -497,7 +497,8 @@
           "tagExperimental": "تجريبي",
           "tagPayAsYouGo": "الدفع حسب الاستخدام",
           "tagPaidPlan": "خطة مدفوعة",
-          "groupFree": "اتصالات مجانية"
+          "groupFree": "اتصالات مجانية",
+          "freeAvailable": "متاح مجانًا"
         },
         "status": {
           "ready": "جاهز",
@@ -921,7 +922,11 @@
           "next": "التالي",
           "chooseHint": "اختر مزوّدًا",
           "groupHintFree": "دون حساب أو مفتاح API",
-          "freeOffHint": "تُخفى الاتصالات المجانية حتى تفعّلها."
+          "freeOffHint": "تُخفى الاتصالات المجانية حتى تفعّلها.",
+          "filterAll": "الكل",
+          "filterFree": "مجاني",
+          "filterLabel": "تصفية الاتصالات",
+          "freeAlreadyAdded": "تمت إضافة هذا الاتصال المجاني بالفعل."
         },
         "verify": {
           "title": "فحص الاتصال",
@@ -971,7 +976,15 @@
           "commitFailed": "تعذّرت إضافة المزوّد: {detail}",
           "keyAdded": "تمت إضافة المفتاح إلى {label}.",
           "legend": "السعر لكل مليون رمز، إدخال / إخراج",
-          "retainsPrompts": "لا تحتاج هذه المجموعة المجانية إلى حساب. قد يسجّل المزوّد الطلبات التي ترسلها إليه."
+          "retainsPrompts": "لا تحتاج هذه المجموعة المجانية إلى حساب. قد يسجّل المزوّد الطلبات التي ترسلها إليه.",
+          "freeBadge": "مجاني",
+          "freeOnly": "مجاني فقط",
+          "noFreeModels": "لا توجد نماذج مجانية",
+          "bulkLabel": "حالات النماذج",
+          "freeOnlyLabel": "مجاني فقط",
+          "freeOnlyLabelPattern": "{label} (مجاني فقط)",
+          "turnOnFree": "تشغيل كل المجاني",
+          "turnOffFree": "إيقاف كل المجاني"
         },
         "format": {
           "openaiChat": "OpenAI Chat Completions؛ يعمل مع معظم العملاء والبوابات",

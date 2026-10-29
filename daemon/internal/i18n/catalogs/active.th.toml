@@ -691,3 +691,11 @@ other = "Windows จะลบไฟล์นี้หลังจาก Relo อ
 [tray.menu.quitting]
 description = "Tray quit action while final records are saved"
 other = "ออก — กำลังดำเนินการ…"
+
+[api.connections.free_connections_disabled]
+description = "Inference refusal when a configured free connection is reached with consent off"
+other = "การเชื่อมต่อฟรีต้องได้รับความยินยอมจากคุณ เปิดใช้การเชื่อมต่อฟรีและยอมรับประกาศความรับผิดชอบก่อนใช้งาน"
+
+[api.connections.free_connection_exists]
+description = "Management refusal when a second keyless free connection is requested"
+other = "การเชื่อมต่อฟรีนี้ถูกเพิ่มแล้ว"

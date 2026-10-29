@@ -497,7 +497,8 @@
           "tagExperimental": "Experimenteel",
           "tagPayAsYouGo": "Betalen per gebruik",
           "tagPaidPlan": "Betaald abonnement",
-          "groupFree": "Gratis verbindingen"
+          "groupFree": "Gratis verbindingen",
+          "freeAvailable": "Gratis beschikbaar"
         },
         "status": {
           "ready": "Klaar",
@@ -921,7 +922,11 @@
           "next": "Volgende",
           "chooseHint": "Kies een provider",
           "groupHintFree": "Zonder account of API-sleutel",
-          "freeOffHint": "Gratis verbindingen blijven verborgen tot je ze inschakelt."
+          "freeOffHint": "Gratis verbindingen blijven verborgen tot je ze inschakelt.",
+          "filterAll": "Alles",
+          "filterFree": "Gratis",
+          "filterLabel": "Verbindingen filteren",
+          "freeAlreadyAdded": "Deze gratis verbinding is al toegevoegd."
         },
         "verify": {
           "title": "De verbinding controleren",
@@ -971,7 +976,15 @@
           "commitFailed": "Kon de provider niet toevoegen: {detail}",
           "keyAdded": "Sleutel toegevoegd aan {label}.",
           "legend": "Prijs per 1M tokens, in / uit",
-          "retainsPrompts": "Deze gratis pool heeft geen account nodig. Prompts die je erheen stuurt, kan de provider vastleggen."
+          "retainsPrompts": "Deze gratis pool heeft geen account nodig. Prompts die je erheen stuurt, kan de provider vastleggen.",
+          "freeBadge": "Gratis",
+          "freeOnly": "Alleen gratis",
+          "noFreeModels": "Geen gratis modellen",
+          "bulkLabel": "Modelstatussen",
+          "freeOnlyLabel": "Alleen gratis",
+          "freeOnlyLabelPattern": "{label} (alleen gratis)",
+          "turnOnFree": "Alle gratis inschakelen",
+          "turnOffFree": "Alle gratis uitschakelen"
         },
         "format": {
           "openaiChat": "OpenAI Chat Completions; werkt met de meeste clients en gateways",

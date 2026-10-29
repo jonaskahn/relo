@@ -497,7 +497,8 @@
           "tagExperimental": "Eksperimental",
           "tagPayAsYouGo": "Pay as you go",
           "tagPaidPlan": "Paid plan",
-          "groupFree": "Koneksi gratis"
+          "groupFree": "Koneksi gratis",
+          "freeAvailable": "Gratis tersedia"
         },
         "status": {
           "ready": "Siap",
@@ -921,7 +922,11 @@
           "next": "Berikutnya",
           "chooseHint": "Pilih penyedia",
           "groupHintFree": "Tanpa akun atau kunci API",
-          "freeOffHint": "Koneksi gratis disembunyikan sampai Anda mengaktifkannya."
+          "freeOffHint": "Koneksi gratis disembunyikan sampai Anda mengaktifkannya.",
+          "filterAll": "Semua",
+          "filterFree": "Gratis",
+          "filterLabel": "Filter koneksi",
+          "freeAlreadyAdded": "Koneksi gratis ini sudah ditambahkan."
         },
         "verify": {
           "title": "Periksa koneksi",
@@ -971,7 +976,15 @@
           "commitFailed": "Gagal menambahkan penyedia: {detail}",
           "keyAdded": "Kunci ditambahkan ke {label}.",
           "legend": "Harga per 1 juta token, masuk / keluar",
-          "retainsPrompts": "Pool gratis ini tidak perlu akun. Prompt yang kamu kirim bisa dicatat oleh penyedia."
+          "retainsPrompts": "Pool gratis ini tidak perlu akun. Prompt yang kamu kirim bisa dicatat oleh penyedia.",
+          "freeBadge": "Gratis",
+          "freeOnly": "Hanya gratis",
+          "noFreeModels": "Tidak ada model gratis",
+          "bulkLabel": "Status model",
+          "freeOnlyLabel": "Hanya gratis",
+          "freeOnlyLabelPattern": "{label} (hanya gratis)",
+          "turnOnFree": "Aktifkan semua gratis",
+          "turnOffFree": "Nonaktifkan semua gratis"
         },
         "format": {
           "openaiChat": "OpenAI Chat Completions; cocok dengan sebagian besar klien dan gateway",

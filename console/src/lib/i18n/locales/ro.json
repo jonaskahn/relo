@@ -497,7 +497,8 @@
           "tagExperimental": "Experimental",
           "tagPayAsYouGo": "Pay as you go",
           "tagPaidPlan": "Paid plan",
-          "groupFree": "Conexiuni gratuite"
+          "groupFree": "Conexiuni gratuite",
+          "freeAvailable": "Disponibil gratuit"
         },
         "status": {
           "ready": "Pregătit",
@@ -921,7 +922,11 @@
           "next": "Înainte",
           "chooseHint": "Alege un furnizor",
           "groupHintFree": "Fără cont sau cheie API",
-          "freeOffHint": "Conexiunile gratuite rămân ascunse până le activezi."
+          "freeOffHint": "Conexiunile gratuite rămân ascunse până le activezi.",
+          "filterAll": "Toate",
+          "filterFree": "Gratuit",
+          "filterLabel": "Filtrează conexiunile",
+          "freeAlreadyAdded": "Această conexiune gratuită este deja adăugată."
         },
         "verify": {
           "title": "Verifică conexiunea",
@@ -971,7 +976,15 @@
           "commitFailed": "Furnizorul nu a putut fi adăugat: {detail}",
           "keyAdded": "Cheie adăugată la {label}.",
           "legend": "Preț per 1M de tokenuri, intrare / ieșire",
-          "retainsPrompts": "Acest pool gratuit nu necesită un cont. Solicitările trimise pot fi înregistrate de furnizor."
+          "retainsPrompts": "Acest pool gratuit nu necesită un cont. Solicitările trimise pot fi înregistrate de furnizor.",
+          "freeBadge": "Gratuit",
+          "freeOnly": "Doar gratuit",
+          "noFreeModels": "Niciun model gratuit",
+          "bulkLabel": "Stări modele",
+          "freeOnlyLabel": "Doar gratuit",
+          "freeOnlyLabelPattern": "{label} (doar gratuit)",
+          "turnOnFree": "Activează toate gratuite",
+          "turnOffFree": "Dezactivează toate gratuite"
         },
         "format": {
           "openaiChat": "OpenAI Chat Completions; funcționează cu majoritatea clienților și gateway-urilor",

@@ -497,7 +497,8 @@
           "tagExperimental": "実験的",
           "tagPayAsYouGo": "従量制",
           "tagPaidPlan": "有料プラン",
-          "groupFree": "無料の接続"
+          "groupFree": "無料の接続",
+          "freeAvailable": "無料で利用可能"
         },
         "status": {
           "ready": "準備完了",
@@ -921,7 +922,11 @@
           "next": "次へ",
           "chooseHint": "プロバイダーを選択",
           "groupHintFree": "アカウント・API キー不要",
-          "freeOffHint": "無料接続は有効にするまで非表示です。"
+          "freeOffHint": "無料接続は有効にするまで非表示です。",
+          "filterAll": "すべて",
+          "filterFree": "無料",
+          "filterLabel": "接続を絞り込む",
+          "freeAlreadyAdded": "この無料接続はすでに追加されています。"
         },
         "verify": {
           "title": "接続を確認",
@@ -971,7 +976,15 @@
           "commitFailed": "プロバイダーを追加できませんでした（{detail}）",
           "keyAdded": "「{label}」にキーを追加しました。",
           "legend": "100万トークンあたりの料金（入力 / 出力）",
-          "retainsPrompts": "この無料プールにアカウントは不要です。送信したプロンプトはプロバイダーが記録する場合があります。"
+          "retainsPrompts": "この無料プールにアカウントは不要です。送信したプロンプトはプロバイダーが記録する場合があります。",
+          "freeBadge": "無料",
+          "freeOnly": "無料のみ",
+          "noFreeModels": "無料モデルなし",
+          "bulkLabel": "モデル状態",
+          "freeOnlyLabel": "無料のみ",
+          "freeOnlyLabelPattern": "{label}（無料のみ）",
+          "turnOnFree": "無料をすべてオン",
+          "turnOffFree": "無料をすべてオフ"
         },
         "format": {
           "openaiChat": "OpenAI Chat Completions：ほとんどのクライアントとゲートウェイで使える",

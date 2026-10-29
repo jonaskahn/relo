@@ -497,7 +497,8 @@
           "tagExperimental": "ทดลอง",
           "tagPayAsYouGo": "จ่ายตามใช้",
           "tagPaidPlan": "แพ็กเกจเสียเงิน",
-          "groupFree": "การเชื่อมต่อฟรี"
+          "groupFree": "การเชื่อมต่อฟรี",
+          "freeAvailable": "มีให้ใช้ฟรี"
         },
         "status": {
           "ready": "พร้อมใช้งาน",
@@ -921,7 +922,11 @@
           "next": "ถัดไป",
           "chooseHint": "เลือกผู้ให้บริการ",
           "groupHintFree": "ไม่ต้องมีบัญชีหรือคีย์ API",
-          "freeOffHint": "การเชื่อมต่อฟรีจะถูกซ่อนจนกว่าคุณจะเปิดใช้งาน"
+          "freeOffHint": "การเชื่อมต่อฟรีจะถูกซ่อนจนกว่าคุณจะเปิดใช้งาน",
+          "filterAll": "ทั้งหมด",
+          "filterFree": "ฟรี",
+          "filterLabel": "กรองการเชื่อมต่อ",
+          "freeAlreadyAdded": "การเชื่อมต่อฟรีนี้ถูกเพิ่มแล้ว"
         },
         "verify": {
           "title": "ตรวจสอบการเชื่อมต่อ",
@@ -971,7 +976,15 @@
           "commitFailed": "เพิ่มผู้ให้บริการไม่ได้: {detail}",
           "keyAdded": "เพิ่มคีย์ให้ {label} แล้ว",
           "legend": "ราคาต่อ 1 ล้านโทเคน รับ / ส่ง",
-          "retainsPrompts": "พูลฟรีนี้ไม่ต้องใช้บัญชี ผู้ให้บริการอาจบันทึกพรอมต์ที่ส่งไป"
+          "retainsPrompts": "พูลฟรีนี้ไม่ต้องใช้บัญชี ผู้ให้บริการอาจบันทึกพรอมต์ที่ส่งไป",
+          "freeBadge": "ฟรี",
+          "freeOnly": "ฟรีเท่านั้น",
+          "noFreeModels": "ไม่มีโมเดลฟรี",
+          "bulkLabel": "สถานะโมเดล",
+          "freeOnlyLabel": "ฟรีเท่านั้น",
+          "freeOnlyLabelPattern": "{label} (ฟรีเท่านั้น)",
+          "turnOnFree": "เปิดโมเดลฟรีทั้งหมด",
+          "turnOffFree": "ปิดโมเดลฟรีทั้งหมด"
         },
         "format": {
           "openaiChat": "OpenAI Chat Completions ใช้ได้กับ client และ gateway ส่วนใหญ่",

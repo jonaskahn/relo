@@ -497,7 +497,8 @@
           "tagExperimental": "Experimentell",
           "tagPayAsYouGo": "Betala per användning",
           "tagPaidPlan": "Betald plan",
-          "groupFree": "Gratisanslutningar"
+          "groupFree": "Gratisanslutningar",
+          "freeAvailable": "Gratis tillgängligt"
         },
         "status": {
           "ready": "Redo",
@@ -921,7 +922,11 @@
           "next": "Nästa",
           "chooseHint": "Välj en leverantör",
           "groupHintFree": "Utan konto eller API-nyckel",
-          "freeOffHint": "Gratisanslutningarna är dolda tills du aktiverar dem."
+          "freeOffHint": "Gratisanslutningarna är dolda tills du aktiverar dem.",
+          "filterAll": "Alla",
+          "filterFree": "Gratis",
+          "filterLabel": "Filtrera anslutningar",
+          "freeAlreadyAdded": "Den här gratisanslutningen är redan tillagd."
         },
         "verify": {
           "title": "Kontrollera anslutningen",
@@ -971,7 +976,15 @@
           "commitFailed": "Kunde inte lägga till leverantören: {detail}",
           "keyAdded": "Nyckeln lades till i {label}.",
           "legend": "Pris per 1M token, in / ut",
-          "retainsPrompts": "Den här fria poolen kräver inget konto. Promptar du skickar kan loggas av leverantören."
+          "retainsPrompts": "Den här fria poolen kräver inget konto. Promptar du skickar kan loggas av leverantören.",
+          "freeBadge": "Gratis",
+          "freeOnly": "Endast gratis",
+          "noFreeModels": "Inga gratis modeller",
+          "bulkLabel": "Modellstatusar",
+          "freeOnlyLabel": "Endast gratis",
+          "freeOnlyLabelPattern": "{label} (endast gratis)",
+          "turnOnFree": "Slå på alla gratis",
+          "turnOffFree": "Slå av alla gratis"
         },
         "format": {
           "openaiChat": "OpenAI Chat Completions; fungerar med de flesta klienter och gateways",

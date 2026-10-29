@@ -495,6 +495,7 @@
           "filterOption": "{label} ({count})",
           "tagFree": "Free",
           "tagExperimental": "Experimental",
+          "freeAvailable": "Free available",
           "tagPayAsYouGo": "Pay as you go",
           "tagPaidPlan": "Paid plan",
           "groupFree": "Free connections"
@@ -822,6 +823,10 @@
           "title": "Add connection",
           "subtitle": "Pick where Relo should route requests.",
           "searchPlaceholder": "Search {count} connections",
+          "filterAll": "All",
+          "filterFree": "Free",
+          "filterLabel": "Filter connections",
+          "freeAlreadyAdded": "This free connection is already added.",
           "noMatchTitle": "No provider matches “{query}”.",
           "noMatchBody": "Set up a custom endpoint instead.",
           "customEndpoint": "Custom endpoint",
@@ -971,7 +976,15 @@
           "commitFailed": "Couldn’t add the provider: {detail}",
           "keyAdded": "Key added to {label}.",
           "legend": "Price per 1M tokens, in / out",
-          "retainsPrompts": "This free pool takes no account. Prompts you send to it may be logged by the provider."
+          "retainsPrompts": "This free pool takes no account. Prompts you send to it may be logged by the provider.",
+          "freeBadge": "Free",
+          "turnOnFree": "Turn on all free",
+          "turnOffFree": "Turn off all free",
+          "freeOnly": "Free only",
+          "noFreeModels": "No free models",
+          "bulkLabel": "Model states",
+          "freeOnlyLabel": "Free only",
+          "freeOnlyLabelPattern": "{label} (Free only)"
         },
         "format": {
           "openaiChat": "OpenAI Chat Completions; works with most clients and gateways",

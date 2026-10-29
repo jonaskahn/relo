@@ -497,7 +497,8 @@
           "tagExperimental": "प्रायोगिक",
           "tagPayAsYouGo": "पे-एज़-यू-गो",
           "tagPaidPlan": "सशुल्क प्लान",
-          "groupFree": "मुफ़्त कनेक्शन"
+          "groupFree": "मुफ़्त कनेक्शन",
+          "freeAvailable": "मुफ़्त उपलब्ध"
         },
         "status": {
           "ready": "तैयार",
@@ -921,7 +922,11 @@
           "next": "आगे",
           "chooseHint": "प्रदाता चुनें",
           "groupHintFree": "खाते या API कुंजी की ज़रूरत नहीं",
-          "freeOffHint": "मुफ़्त कनेक्शन तब तक छिपे रहते हैं जब तक आप उन्हें चालू नहीं करते।"
+          "freeOffHint": "मुफ़्त कनेक्शन तब तक छिपे रहते हैं जब तक आप उन्हें चालू नहीं करते।",
+          "filterAll": "सभी",
+          "filterFree": "मुफ़्त",
+          "filterLabel": "कनेक्शन फ़िल्टर करें",
+          "freeAlreadyAdded": "यह मुफ़्त कनेक्शन पहले से जोड़ा गया है।"
         },
         "verify": {
           "title": "कनेक्शन जाँचें",
@@ -971,7 +976,15 @@
           "commitFailed": "प्रदाता जोड़ा नहीं जा सका: {detail}",
           "keyAdded": "{label} में कुंजी जोड़ दी गई।",
           "legend": "प्रति 1M टोकन कीमत, इन / आउट",
-          "retainsPrompts": "इस मुफ़्त पूल के लिए खाता नहीं चाहिए। आपके भेजे प्रॉम्प्ट प्रदाता दर्ज कर सकता है।"
+          "retainsPrompts": "इस मुफ़्त पूल के लिए खाता नहीं चाहिए। आपके भेजे प्रॉम्प्ट प्रदाता दर्ज कर सकता है।",
+          "freeBadge": "मुफ़्त",
+          "freeOnly": "केवल मुफ़्त",
+          "noFreeModels": "कोई मुफ़्त मॉडल नहीं",
+          "bulkLabel": "मॉडल स्थितियाँ",
+          "freeOnlyLabel": "केवल मुफ़्त",
+          "freeOnlyLabelPattern": "{label} (केवल मुफ़्त)",
+          "turnOnFree": "सभी मुफ़्त चालू करें",
+          "turnOffFree": "सभी मुफ़्त बंद करें"
         },
         "format": {
           "openaiChat": "OpenAI Chat Completions; ज़्यादातर क्लाइंट और गेटवे के साथ चलता है",
