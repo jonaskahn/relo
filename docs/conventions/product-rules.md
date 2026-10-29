@@ -87,5 +87,17 @@ A new home writes false; an existing file without the key reads as true for
 upgrade compatibility. The add-connection modal explains the privacy, service,
 and legal risks before enabling. Free rows stay hidden until the operator turns
 on the switch in the Free heading and accepts that notice. Disabling hides the
-connections and removes them from routing without deleting their stored
-connections, models, or usage.
+connections from management and every published model list without deleting
+their stored connections, models, or usage. Their rows remain in the routing
+snapshot so a configured free model reaches the consent refusal
+(`403 free_connections_disabled`) instead of `model_not_found`; a mixed route
+skips that member and may still serve from a paid one.
+
+**Free availability is derived, not configured.** A conversational model is
+free when the provider marks it free, the provider listing marks it free, both
+effective input and output rates are explicitly zero, or its identifier carries
+`free` as a whole token. Missing prices are unknown, not free. Media, embedding,
+and unknown categories never count. Provider and listing marks are persisted as
+explicit zero token rates, so availability survives a reload without a schema
+change. The add picker and Connections page may filter by free availability; the
+two keyless lanes are the only single-instance connections.

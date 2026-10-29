@@ -31,3 +31,18 @@ request body is a single JSON object of at most 1 MiB with no unknown fields.
 results without management API JSON tags; handlers map them to request and
 response DTOs, choose HTTP status codes, and write error envelopes. Adding a
 domain field does not expose it on the API until the handler maps it.
+
+**Free availability is reported where a picker chooses a connection.** Each
+`GET /api/v1/templates` item carries `free_models`, and every connection from
+`GET /api/v1/connections` (or its detail read) carries
+`counts.free_models`. Probe models carry `is_free`. These counts cover
+conversational models only. The values are derived; they do not add config
+fields or stored rows.
+
+**Two free refusals are stable.** A probe or commit that would create a second
+keyless free connection answers `409 free_connection_exists` and writes
+nothing. Inference that reaches a configured free connection while the opt-in is
+off answers `403 free_connections_disabled`; the OpenAI-compatible and Responses
+surfaces use the management error envelope, while Anthropic uses
+`permission_error` and the same localized message. A route may skip that member
+and continue to a paid one.
