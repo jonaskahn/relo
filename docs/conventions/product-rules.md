@@ -80,3 +80,10 @@ again; a route whose every member failed waits the same way. While it waits, the
 is answered at once with 503 and a `Retry-After` naming when to come back, and a route
 skips the cooling connection for its next member. Both the pins and the cooldowns live in
 memory: a restart starts every connection available.
+
+**Keyless free pools require an operator opt-in on fresh installs.**
+The connections.free setting in config.toml gates Opencode Free and Kilo Free.
+A new home writes false; an existing file without the key reads as true for
+upgrade compatibility. The add-connection modal explains the privacy, service,
+and legal risks before enabling. Disabling hides the connections and removes
+them from routing without deleting their stored connections, models, or usage.

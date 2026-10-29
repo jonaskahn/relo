@@ -224,3 +224,12 @@ the modal open with the reason above the footer.
 
 On success the modal closes, the new connection appears in the grid and its pane opens; the toast names it and its model
 count ("Added Claude.ai — 13 models").
+
+### Free-pool consent
+
+The add-connection picker lists Free first, then Account, Cloud, Local, and API
+key. When free pools are disabled, their rows stay locked with an enable action
+that opens the responsibility notice. Accepting persists the choice immediately;
+cancelling changes nothing. Settings mirrors the choice and uses the same notice
+when enabling. Disabling preserves stored data but hides the connections and
+stops new requests through them. Usage history is not erased or reclassified.
