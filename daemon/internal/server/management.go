@@ -134,6 +134,7 @@ func (s *Server) registerSettingsRoutes(mux *http.ServeMux) {
 	mux.HandleFunc("PATCH "+apiPrefix+"settings/access", s.handlePatchAccess)
 	mux.HandleFunc("PATCH "+apiPrefix+"settings/network", s.handlePatchNetwork)
 	mux.HandleFunc("PATCH "+apiPrefix+"settings/providers", s.handlePatchProviders)
+	mux.HandleFunc("PATCH "+apiPrefix+"settings/connections", s.handlePatchConnections)
 	mux.HandleFunc("PATCH "+apiPrefix+"settings/system", s.handlePatchSystem)
 	mux.HandleFunc("PATCH "+apiPrefix+"settings/language", s.handlePatchLanguage)
 	mux.HandleFunc("PATCH "+apiPrefix+"settings/appearance", s.handlePatchAppearance)
@@ -363,6 +364,13 @@ func writeCapabilityReadOnlyError(w http.ResponseWriter, err error, readOnly *ap
 }
 
 func serviceStatus(err error) (int, string) {
+	if errors.Is(err, appcatalog.ErrFreeConnectionsDisabled) {
+		return http.StatusForbidden, "free_connections_disabled"
+	}
+	return generalServiceStatus(err)
+}
+
+func generalServiceStatus(err error) (int, string) {
 	var portBusy *PortBusyError
 	switch {
 	case errors.As(err, &portBusy) || errors.Is(err, ErrCallbackPortBusy):

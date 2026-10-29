@@ -433,6 +433,7 @@ func (h *harness) newService(models *catalog.Catalog, pools *account.Manager) *a
 		Direct:    upstream.Direct,
 		ModelsDev: modelsdev.NewDirectory(filepath.Join(h.t.TempDir(), "cache"), "", nil),
 		Templates: platform.TemplateRegistry{}, Logger: h.logger,
+		FreeConnections: func() bool { return config.ReadFreeConnections(h.settingsPath) },
 	})
 	edges.Catalog = h.service
 	h.routes = approuting.New(approuting.Options{

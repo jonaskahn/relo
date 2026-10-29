@@ -1020,6 +1020,35 @@ func (s *Server) handlePatchNetwork(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, toServerSettingsResponse(saved))
 }
 
+func (s *Server) handlePatchConnections(w http.ResponseWriter, r *http.Request) {
+	settings, ok := s.settingsOrUnavailable(w, r)
+	if !ok {
+		return
+	}
+	manager, ok := s.catalogAPIOrUnavailable(w, r)
+	if !ok {
+		return
+	}
+	var request connectionsSettingsRequest
+	if !s.decodeJSON(w, r, &request) {
+		return
+	}
+	if request.FreeEnabled == nil {
+		writeError(w, http.StatusBadRequest, "bad_request", "free_enabled is required")
+		return
+	}
+	input := appsettings.ConnectionsSettings{FreeEnabled: *request.FreeEnabled}
+	if err := settings.SaveConnections(input); err != nil {
+		writeServiceError(w, err)
+		return
+	}
+	if err := manager.Reload(r.Context()); err != nil {
+		writeServiceError(w, err)
+		return
+	}
+	writeJSON(w, http.StatusOK, connectionsSettingsResponse{FreeEnabled: input.FreeEnabled})
+}
+
 func (s *Server) handlePatchProviders(w http.ResponseWriter, r *http.Request) {
 	settings, ok := s.settingsOrUnavailable(w, r)
 	if !ok {
@@ -1157,8 +1186,9 @@ func (s *Server) handleListProviderTemplates(w http.ResponseWriter, r *http.Requ
 		s.opts.Logger.Debug("modelsdev fetch notice", "error", err)
 	}
 	writeJSON(w, http.StatusOK, map[string]any{
-		"items":     toTemplateList(templatesList),
-		"modelsdev": toModelsDevStateResponse(mdState),
+		"free_enabled": manager.FreeConnectionsEnabled(),
+		"items":        toTemplateList(templatesList),
+		"modelsdev":    toModelsDevStateResponse(mdState),
 	})
 }
 

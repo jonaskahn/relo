@@ -6,6 +6,13 @@ import (
 	apptemplates "github.com/jonaskahn/relo/internal/application/templatesettings"
 )
 
+type connectionsSettingsResponse struct {
+	FreeEnabled bool `json:"free_enabled"`
+}
+type connectionsSettingsRequest struct {
+	FreeEnabled *bool `json:"free_enabled"`
+}
+
 type retentionSettingsResponse struct {
 	UsageDays int   `json:"usage_days"`
 	MaxEvents int64 `json:"max_events"`
@@ -165,19 +172,21 @@ func toAppearancePatch(request appearancePatchRequest) appsettings.AppearancePat
 }
 
 type settingsResponse struct {
-	Retention      retentionSettingsResponse  `json:"retention"`
-	Language       string                     `json:"language"`
-	Appearance     appearanceSettingsResponse `json:"appearance"`
-	System         systemSettingsResponse     `json:"system"`
-	Server         serverSettingsResponse     `json:"server"`
-	Providers      providersSettingsResponse  `json:"providers"`
-	Access         accessSettingsResponse     `json:"access"`
-	Secrets        secretsSettingsResponse    `json:"secrets"`
-	RestartPending bool                       `json:"restart_pending"`
+	Connections    connectionsSettingsResponse `json:"connections"`
+	Retention      retentionSettingsResponse   `json:"retention"`
+	Language       string                      `json:"language"`
+	Appearance     appearanceSettingsResponse  `json:"appearance"`
+	System         systemSettingsResponse      `json:"system"`
+	Server         serverSettingsResponse      `json:"server"`
+	Providers      providersSettingsResponse   `json:"providers"`
+	Access         accessSettingsResponse      `json:"access"`
+	Secrets        secretsSettingsResponse     `json:"secrets"`
+	RestartPending bool                        `json:"restart_pending"`
 }
 
 func toSettingsResponse(settings appsettings.Settings) settingsResponse {
 	return settingsResponse{
+		Connections:    connectionsSettingsResponse{FreeEnabled: settings.Connections.FreeEnabled},
 		Retention:      toRetentionSettingsResponse(settings.Retention),
 		Language:       settings.Language,
 		Appearance:     toAppearanceSettingsResponse(settings.Appearance),

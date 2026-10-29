@@ -153,6 +153,9 @@ func (s *Server) resolveAttemptCandidate(spec attemptSpec, tried map[string][]st
 	if !found {
 		return catalog.Provider{}, catalog.Authorization{}, fmt.Errorf("%s: %w", candidate.ProviderID, appcatalog.ErrProviderNotFound)
 	}
+	if catalog.IsFreeTemplate(host.TemplateID) && s.opts.CatalogAPI != nil && !s.opts.CatalogAPI.FreeConnectionsEnabled() {
+		return catalog.Provider{}, catalog.Authorization{}, appcatalog.ErrFreeConnectionsDisabled
+	}
 	authorized, err := s.opts.Relay.Authorize(spec.request.Context(), s.attemptAuthRequest(spec, host, tried))
 	if err != nil {
 		return catalog.Provider{}, catalog.Authorization{}, withCooldown(s.opts.Pools, candidate.ProviderID, err)
