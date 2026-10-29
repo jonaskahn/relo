@@ -921,8 +921,7 @@
           "next": "Avançar",
           "chooseHint": "Escolha um provedor",
           "groupHintFree": "Sem conta nem chave de API",
-          "freeLockedBody": "Ative esses serviços de terceiros somente se aceitar os riscos.",
-          "freeEnable": "Ativar conexões gratuitas"
+          "freeOffHint": "As conexões gratuitas ficam ocultas até você ativá-las."
         },
         "verify": {
           "title": "Verificar a conexão",
@@ -988,7 +987,7 @@
         },
         "freeConsent": {
           "title": "Uso por sua conta e risco",
-          "body": "OpenCode Zen e Kilo são gateways de terceiros, não serviços do Relo. A inclusão deles não significa aprovação dos fornecedores. O uso pode violar os termos desses serviços ou a legislação aplicável. Os fornecedores podem armazenar ou usar suas mensagens e seu código: nunca envie informações confidenciais. Modelos, limites e disponibilidade podem mudar ou deixar de existir sem aviso. Na medida permitida por lei, o Relo e seus mantenedores não oferecem garantias nem assumem responsabilidade. Ao ativar essas conexões, você assume toda a responsabilidade pelo uso e pelas consequências legais.",
+          "body": "OpenCode Zen Free e Kilo Code Free são gateways de terceiros, não serviços do Relo. Eles permitem acesso apenas por meio de seus agentes de programação oficiais; o Relo não é um deles. O uso pode violar os termos deles ou a lei, e o Relo não os endossa. Os provedores podem reter ou usar seus prompts e código, então nunca envie informações confidenciais. Modelos, limites e disponibilidade podem mudar ou desaparecer sem aviso. Na medida permitida por lei, o Relo e seus mantenedores não oferecem garantia e não se responsabilizam. Ao ativar as conexões gratuitas, você assume total responsabilidade pelo uso e por quaisquer consequências legais.",
           "confirm": "Aceito a responsabilidade e quero ativar",
           "enabledToast": "Conexões gratuitas ativadas"
         }
@@ -1965,8 +1964,9 @@
       "retryHint": "Espera aleatória antes de cada tentativa, em segundos. Um Retry-After mais longo do provedor vence.",
       "jumpLabel": "Ir para a seção",
       "freeConnectionsLabel": "Conexões gratuitas",
-      "freeConnectionsHint": "Desativar oculta as conexões gratuitas e impede novas solicitações por elas. Suas conexões e modelos salvos são mantidos.",
-      "freeConnectionsDisabledToast": "Conexões gratuitas desativadas"
+      "freeConnectionsHint": "As conexões gratuitas ficam ocultas até você ativá-las e aceitar o aviso de risco. Desativá-las oculta as conexões e impede novas solicitações; os dados salvos são mantidos.",
+      "freeConnectionsDisabledToast": "Conexões gratuitas desativadas",
+      "sectionOthers": "Outros"
     },
     "updateDialog": {
       "title": "Atualizar o Relo",

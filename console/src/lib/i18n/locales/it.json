@@ -921,8 +921,7 @@
           "next": "Avanti",
           "chooseHint": "Scegli un provider",
           "groupHintFree": "Senza account né chiave API",
-          "freeLockedBody": "Attiva questi servizi di terze parti solo se ne accetti i rischi.",
-          "freeEnable": "Attiva le connessioni gratuite"
+          "freeOffHint": "Le connessioni gratuite restano nascoste finché non le attivi."
         },
         "verify": {
           "title": "Verifica la connessione",
@@ -988,7 +987,7 @@
         },
         "freeConsent": {
           "title": "Utilizzo sotto la tua responsabilità",
-          "body": "OpenCode Zen e Kilo sono gateway di terze parti, non servizi di Relo. La loro presenza non implica il sostegno dei fornitori. L’utilizzo può violare le loro condizioni o la legge applicabile. I fornitori possono conservare o utilizzare messaggi e codice: non inviare mai dati riservati. Modelli, limiti e disponibilità possono cambiare o cessare senza preavviso. Nei limiti consentiti dalla legge, Relo e i suoi manutentori non offrono garanzie e declinano ogni responsabilità. Attivando queste connessioni, ti assumi piena responsabilità per l’utilizzo e per le conseguenze legali.",
+          "body": "OpenCode Zen Free e Kilo Code Free sono gateway di terze parti, non servizi Relo. Consentono l’accesso solo tramite i loro agenti di programmazione ufficiali; Relo non è uno di essi. L’uso può violare i loro termini o la legge e Relo non li approva. I fornitori possono conservare o usare i tuoi prompt e il tuo codice, quindi non inviare mai informazioni riservate. Modelli, limiti e disponibilità possono cambiare o scomparire senza preavviso. Nei limiti consentiti dalla legge, Relo e i suoi maintainer non forniscono alcuna garanzia e non assumono alcuna responsabilità. Attivando le connessioni gratuite accetti la piena responsabilità del loro uso e di ogni conseguenza legale.",
           "confirm": "Accetto la responsabilità e attivo",
           "enabledToast": "Connessioni gratuite attivate"
         }
@@ -1965,8 +1964,9 @@
       "retryHint": "Attesa casuale prima di ogni tentativo, in secondi. Un Retry-After del provider più lungo ha la precedenza.",
       "jumpLabel": "Vai alla sezione",
       "freeConnectionsLabel": "Connessioni gratuite",
-      "freeConnectionsHint": "La disattivazione nasconde le connessioni gratuite e blocca le nuove richieste che le usano. Le connessioni e i modelli salvati vengono conservati.",
-      "freeConnectionsDisabledToast": "Connessioni gratuite disattivate"
+      "freeConnectionsHint": "Le connessioni gratuite restano nascoste finché non le attivi e accetti l’avviso sui rischi. Disattivarle le nasconde e blocca le nuove richieste; i dati salvati vengono conservati.",
+      "freeConnectionsDisabledToast": "Connessioni gratuite disattivate",
+      "sectionOthers": "Altro"
     },
     "updateDialog": {
       "title": "Aggiorna Relo",

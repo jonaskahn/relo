@@ -921,8 +921,7 @@
           "next": "Další",
           "chooseHint": "Vyberte poskytovatele",
           "groupHintFree": "Bez účtu a klíče API",
-          "freeLockedBody": "Tyto služby třetích stran zapněte jen tehdy, pokud přijímáte související rizika.",
-          "freeEnable": "Zapnout bezplatná připojení"
+          "freeOffHint": "Bezplatná připojení jsou skrytá, dokud je nezapnete."
         },
         "verify": {
           "title": "Zkontrolovat připojení",
@@ -988,7 +987,7 @@
         },
         "freeConsent": {
           "title": "Použití na vlastní odpovědnost",
-          "body": "OpenCode Zen a Kilo jsou brány třetích stran, nikoli služby Relo. Jejich zařazení neznamená schválení ze strany poskytovatelů. Používání může porušovat jejich podmínky nebo platné zákony. Poskytovatelé mohou ukládat či využívat vaše zadání a kód. Nikdy neposílejte důvěrné informace. Modely, limity a dostupnost se mohou bez upozornění změnit nebo zaniknout. V rozsahu povoleném zákonem neposkytují Relo ani správci projektu žádné záruky a nenesou odpovědnost. Zapnutím přebíráte plnou odpovědnost za používání i případné právní následky.",
+          "body": "OpenCode Zen Free a Kilo Code Free jsou brány třetích stran, nikoli služby Relo. Přístup umožňují pouze prostřednictvím svých oficiálních programovacích agentů; Relo mezi ně nepatří. Použití může porušit jejich podmínky nebo zákon a Relo je nepodporuje. Poskytovatelé mohou uchovávat nebo používat vaše prompty a kód, proto nikdy neposílejte důvěrné informace. Modely, limity a dostupnost se mohou změnit nebo zmizet bez upozornění. V rozsahu povoleném zákonem neposkytují Relo ani jeho správci žádnou záruku a nepřebírají žádnou odpovědnost. Zapnutím bezplatných připojení přijímáte plnou odpovědnost za jejich použití a veškeré právní důsledky.",
           "confirm": "Přijímám odpovědnost a zapínám",
           "enabledToast": "Bezplatná připojení zapnuta"
         }
@@ -1965,8 +1964,9 @@
       "retryHint": "Náhodná prodleva před každým pokusem, v sekundách. Delší Retry-After poskytovatele má přednost.",
       "jumpLabel": "Přejít na oddíl",
       "freeConnectionsLabel": "Bezplatná připojení",
-      "freeConnectionsHint": "Vypnutí skryje bezplatná připojení a zablokuje nové požadavky přes ně. Uložená připojení a modely zůstanou zachovány.",
-      "freeConnectionsDisabledToast": "Bezplatná připojení vypnuta"
+      "freeConnectionsHint": "Bezplatná připojení zůstávají skrytá, dokud je nezapnete a nepřijmete upozornění na rizika. Vypnutím se připojení skryjí a nové požadavky přes ně přestanou procházet; uložená data zůstanou zachována.",
+      "freeConnectionsDisabledToast": "Bezplatná připojení vypnuta",
+      "sectionOthers": "Ostatní"
     },
     "updateDialog": {
       "title": "Aktualizovat Relo",

@@ -921,8 +921,7 @@
           "next": "Berikutnya",
           "chooseHint": "Pilih penyedia",
           "groupHintFree": "Tanpa akun atau kunci API",
-          "freeLockedBody": "Aktifkan layanan pihak ketiga ini hanya jika Anda siap menanggung risikonya.",
-          "freeEnable": "Aktifkan koneksi gratis"
+          "freeOffHint": "Koneksi gratis disembunyikan sampai Anda mengaktifkannya."
         },
         "verify": {
           "title": "Periksa koneksi",
@@ -988,7 +987,7 @@
         },
         "freeConsent": {
           "title": "Gunakan atas tanggung jawab sendiri",
-          "body": "OpenCode Zen dan Kilo adalah gateway pihak ketiga, bukan layanan Relo. Pencantumannya tidak berarti penyedia mendukung integrasi ini. Penggunaannya dapat melanggar ketentuan penyedia atau hukum yang berlaku. Penyedia dapat menyimpan atau menggunakan prompt dan kode Anda. Jangan pernah mengirim informasi rahasia. Model, batas penggunaan, dan ketersediaan dapat berubah atau dihentikan tanpa pemberitahuan. Sejauh diizinkan hukum, Relo dan pengelolanya tidak memberikan jaminan dan tidak menanggung tanggung jawab hukum. Dengan mengaktifkan koneksi ini, Anda bertanggung jawab penuh atas penggunaan dan segala akibat hukumnya.",
+          "body": "OpenCode Zen Free dan Kilo Code Free adalah gateway pihak ketiga, bukan layanan Relo. Keduanya hanya mengizinkan akses melalui agen coding resmi mereka; Relo bukan salah satunya. Penggunaan dapat melanggar ketentuan mereka atau hukum, dan Relo tidak mendukungnya. Penyedia dapat menyimpan atau menggunakan prompt dan kode Anda, jadi jangan pernah mengirim informasi rahasia. Model, batas, dan ketersediaan dapat berubah atau hilang tanpa pemberitahuan. Sejauh diizinkan hukum, Relo dan para pemeliharanya tidak memberikan jaminan dan tidak menerima tanggung jawab apa pun. Dengan mengaktifkan koneksi gratis, Anda menerima tanggung jawab penuh atas penggunaannya dan segala konsekuensi hukumnya.",
           "confirm": "Saya bertanggung jawab dan ingin mengaktifkan",
           "enabledToast": "Koneksi gratis diaktifkan"
         }
@@ -1965,8 +1964,9 @@
       "retryHint": "Jeda acak sebelum setiap percobaan ulang, dalam detik. Retry-After penyedia yang lebih lama menang.",
       "jumpLabel": "Lompat ke bagian",
       "freeConnectionsLabel": "Koneksi gratis",
-      "freeConnectionsHint": "Menonaktifkan akan menyembunyikan koneksi gratis dan menghentikan permintaan baru yang melewatinya. Koneksi dan model yang tersimpan tetap ada.",
-      "freeConnectionsDisabledToast": "Koneksi gratis dinonaktifkan"
+      "freeConnectionsHint": "Koneksi gratis tetap disembunyikan sampai Anda mengaktifkannya dan menyetujui pemberitahuan risikonya. Menonaktifkannya akan menyembunyikan koneksi dan menghentikan permintaan baru; data yang tersimpan tetap ada.",
+      "freeConnectionsDisabledToast": "Koneksi gratis dinonaktifkan",
+      "sectionOthers": "Lainnya"
     },
     "updateDialog": {
       "title": "Perbarui Relo",

@@ -921,8 +921,7 @@
           "next": "Volgende",
           "chooseHint": "Kies een provider",
           "groupHintFree": "Zonder account of API-sleutel",
-          "freeLockedBody": "Schakel deze externe diensten alleen in als je de risico’s zelf wilt dragen.",
-          "freeEnable": "Gratis verbindingen inschakelen"
+          "freeOffHint": "Gratis verbindingen blijven verborgen tot je ze inschakelt."
         },
         "verify": {
           "title": "De verbinding controleren",
@@ -988,7 +987,7 @@
         },
         "freeConsent": {
           "title": "Gebruik op eigen verantwoordelijkheid",
-          "body": "OpenCode Zen en Kilo zijn gateways van derden, geen diensten van Relo. Vermelding houdt geen goedkeuring door de aanbieders in. Gebruik kan in strijd zijn met hun voorwaarden of de geldende wetgeving. Aanbieders kunnen je prompts en code bewaren of gebruiken: verstuur nooit vertrouwelijke informatie. Modellen, limieten en beschikbaarheid kunnen zonder aankondiging veranderen of vervallen. Voor zover wettelijk toegestaan bieden Relo en de beheerders geen garantie en aanvaarden zij geen aansprakelijkheid. Door deze verbindingen in te schakelen neem je de volledige verantwoordelijkheid voor het gebruik en de juridische gevolgen ervan.",
+          "body": "OpenCode Zen Free en Kilo Code Free zijn gateways van derden, geen diensten van Relo. Ze geven alleen toegang via hun officiële coding-agents; Relo is er daar geen van. Gebruik kan hun voorwaarden of de wet schenden, en Relo keurt ze niet goed. Aanbieders kunnen je prompts en code bewaren of gebruiken, dus verstuur nooit vertrouwelijke informatie. Modellen, limieten en beschikbaarheid kunnen zonder kennisgeving veranderen of verdwijnen. Voor zover wettelijk toegestaan bieden Relo en de maintainers geen garantie en aanvaarden zij geen aansprakelijkheid. Door gratis verbindingen in te schakelen aanvaard je de volledige verantwoordelijkheid voor het gebruik en alle juridische gevolgen.",
           "confirm": "Verantwoordelijkheid aanvaarden en inschakelen",
           "enabledToast": "Gratis verbindingen ingeschakeld"
         }
@@ -1965,8 +1964,9 @@
       "retryHint": "Hoe vaak één account opnieuw wordt geprobeerd voordat de aanvraag naar het volgende account gaat. Tussen de pogingen wacht Relo willekeurig 1 tot 3 seconden.",
       "jumpLabel": "Ga naar sectie",
       "freeConnectionsLabel": "Gratis verbindingen",
-      "freeConnectionsHint": "Uitschakelen verbergt gratis verbindingen en blokkeert nieuwe verzoeken via deze verbindingen. Opgeslagen verbindingen en modellen blijven bewaard.",
-      "freeConnectionsDisabledToast": "Gratis verbindingen uitgeschakeld"
+      "freeConnectionsHint": "Gratis verbindingen blijven verborgen tot je ze inschakelt en de risicomededeling accepteert. Uitschakelen verbergt de verbindingen en blokkeert nieuwe verzoeken; opgeslagen gegevens blijven bewaard.",
+      "freeConnectionsDisabledToast": "Gratis verbindingen uitgeschakeld",
+      "sectionOthers": "Overig"
     },
     "updateDialog": {
       "title": "Relo bijwerken",

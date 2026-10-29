@@ -921,8 +921,7 @@
           "next": "Weiter",
           "chooseHint": "Anbieter wählen",
           "groupHintFree": "Ohne Konto und API-Schlüssel",
-          "freeLockedBody": "Aktiviere diese Angebote nur, wenn du die Risiken selbst trägst.",
-          "freeEnable": "Kostenlose Verbindungen aktivieren"
+          "freeOffHint": "Kostenlose Verbindungen bleiben verborgen, bis du sie aktivierst."
         },
         "verify": {
           "title": "Verbindung prüfen",
@@ -988,7 +987,7 @@
         },
         "freeConsent": {
           "title": "Nutzung auf eigene Verantwortung",
-          "body": "OpenCode Zen und Kilo sind Gateways externer Anbieter und keine Dienste von Relo. Die Aufnahme bedeutet keine offizielle Anerkennung durch die Anbieter. Die Nutzung kann gegen deren Bedingungen oder geltendes Recht verstoßen. Anbieter können deine Eingaben und deinen Code speichern oder weiterverwenden. Sende daher keine vertraulichen Daten. Modelle, Limits und Verfügbarkeit können sich jederzeit ändern oder entfallen. Soweit gesetzlich zulässig, übernehmen Relo und die Verantwortlichen weder Gewährleistung noch Haftung. Mit der Aktivierung trägst du die volle Verantwortung für die Nutzung und mögliche rechtliche Folgen.",
+          "body": "OpenCode Zen Free und Kilo Code Free sind Gateways Dritter, keine Dienste von Relo. Der Zugriff ist nur über ihre offiziellen Coding-Agenten erlaubt; Relo ist keiner davon. Die Nutzung kann gegen ihre Bedingungen oder geltendes Recht verstoßen, und Relo befürwortet sie nicht. Anbieter können deine Prompts und deinen Code speichern oder verwenden; sende deshalb niemals vertrauliche Informationen. Modelle, Limits und Verfügbarkeit können sich ohne Ankündigung ändern oder verschwinden. Soweit gesetzlich zulässig, übernehmen Relo und seine Maintainer keine Gewährleistung und keine Haftung. Mit dem Aktivieren der kostenlosen Verbindungen übernimmst du die volle Verantwortung für ihre Nutzung und alle rechtlichen Folgen.",
           "confirm": "Auf eigene Verantwortung aktivieren",
           "enabledToast": "Kostenlose Verbindungen aktiviert"
         }
@@ -1965,8 +1964,9 @@
       "retryHint": "Wie oft ein Konto wiederholt wird, bevor die Anfrage zum nächsten Konto wandert. Zwischen den Versuchen liegt eine zufällige Wartezeit von 1–3 s.",
       "jumpLabel": "Zum Abschnitt springen",
       "freeConnectionsLabel": "Kostenlose Verbindungen",
-      "freeConnectionsHint": "Beim Ausschalten werden kostenlose Verbindungen ausgeblendet und nehmen keine neuen Anfragen an. Gespeicherte Verbindungen und Modelle bleiben erhalten.",
-      "freeConnectionsDisabledToast": "Kostenlose Verbindungen ausgeschaltet"
+      "freeConnectionsHint": "Kostenlose Verbindungen bleiben verborgen, bis du sie aktivierst und den Risikohinweis akzeptierst. Beim Ausschalten werden sie ausgeblendet und nehmen keine neuen Anfragen mehr an; gespeicherte Daten bleiben erhalten.",
+      "freeConnectionsDisabledToast": "Kostenlose Verbindungen ausgeschaltet",
+      "sectionOthers": "Sonstiges"
     },
     "updateDialog": {
       "title": "Relo aktualisieren",

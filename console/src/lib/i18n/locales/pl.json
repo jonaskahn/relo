@@ -921,8 +921,7 @@
           "next": "Dalej",
           "chooseHint": "Wybierz dostawcę",
           "groupHintFree": "Bez konta i klucza API",
-          "freeLockedBody": "Włącz te usługi zewnętrzne tylko wtedy, gdy akceptujesz związane z nimi ryzyko.",
-          "freeEnable": "Włącz bezpłatne połączenia"
+          "freeOffHint": "Bezpłatne połączenia są ukryte, dopóki ich nie włączysz."
         },
         "verify": {
           "title": "Sprawdź połączenie",
@@ -988,7 +987,7 @@
         },
         "freeConsent": {
           "title": "Korzystasz na własną odpowiedzialność",
-          "body": "OpenCode Zen i Kilo to bramy zewnętrznych dostawców, a nie usługi Relo. Ich udostępnienie nie oznacza poparcia ze strony dostawców. Korzystanie z nich może naruszać regulaminy lub obowiązujące prawo. Dostawcy mogą przechowywać i wykorzystywać Twoje polecenia oraz kod. Nie przesyłaj poufnych informacji. Modele, limity i dostępność mogą ulec zmianie lub zniknąć bez uprzedzenia. W zakresie dopuszczalnym przez prawo Relo i opiekunowie projektu nie udzielają gwarancji ani nie ponoszą odpowiedzialności. Włączając te połączenia, bierzesz na siebie pełną odpowiedzialność za ich użycie, w tym za wszelkie skutki prawne.",
+          "body": "OpenCode Zen Free i Kilo Code Free to bramy zewnętrznych dostawców, a nie usługi Relo. Dostęp umożliwiają wyłącznie przez swoich oficjalnych agentów programistycznych; Relo nie jest jednym z nich. Korzystanie może naruszać ich regulamin lub prawo, a Relo ich nie popiera. Dostawcy mogą przechowywać lub wykorzystywać Twoje prompty i kod, dlatego nigdy nie wysyłaj informacji poufnych. Modele, limity i dostępność mogą zmienić się lub zniknąć bez powiadomienia. W zakresie dozwolonym przez prawo Relo i jego opiekunowie nie udzielają żadnej gwarancji i nie ponoszą odpowiedzialności. Włączając bezpłatne połączenia, przyjmujesz pełną odpowiedzialność za ich używanie i wszelkie skutki prawne.",
           "confirm": "Przyjmuję odpowiedzialność i włączam",
           "enabledToast": "Włączono bezpłatne połączenia"
         }
@@ -1965,8 +1964,9 @@
       "retryHint": "Losowa przerwa przed każdą próbą, w sekundach. Dłuższy Retry-After dostawcy ma pierwszeństwo.",
       "jumpLabel": "Przejdź do sekcji",
       "freeConnectionsLabel": "Bezpłatne połączenia",
-      "freeConnectionsHint": "Wyłączenie ukrywa bezpłatne połączenia i blokuje nowe żądania przez nie wysyłane. Zapisane połączenia i modele pozostają bez zmian.",
-      "freeConnectionsDisabledToast": "Wyłączono bezpłatne połączenia"
+      "freeConnectionsHint": "Bezpłatne połączenia pozostają ukryte, dopóki ich nie włączysz i nie zaakceptujesz informacji o ryzyku. Wyłączenie ukrywa połączenia i wstrzymuje nowe żądania; zapisane dane pozostają.",
+      "freeConnectionsDisabledToast": "Wyłączono bezpłatne połączenia",
+      "sectionOthers": "Inne"
     },
     "updateDialog": {
       "title": "Zaktualizuj Relo",

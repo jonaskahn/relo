@@ -921,8 +921,7 @@
           "next": "Înainte",
           "chooseHint": "Alege un furnizor",
           "groupHintFree": "Fără cont sau cheie API",
-          "freeLockedBody": "Activează aceste servicii externe doar dacă îți asumi riscurile.",
-          "freeEnable": "Activează conexiunile gratuite"
+          "freeOffHint": "Conexiunile gratuite rămân ascunse până le activezi."
         },
         "verify": {
           "title": "Verifică conexiunea",
@@ -988,7 +987,7 @@
         },
         "freeConsent": {
           "title": "Utilizare pe propria răspundere",
-          "body": "OpenCode Zen și Kilo sunt gateway-uri ale unor terți, nu servicii Relo. Includerea lor nu înseamnă că furnizorii aprobă integrarea. Utilizarea poate încălca termenii acestora sau legislația aplicabilă. Furnizorii pot păstra sau folosi mesajele și codul trimis. Nu transmite niciodată informații confidențiale. Modelele, limitele și disponibilitatea se pot schimba sau pot dispărea fără preaviz. În măsura permisă de lege, Relo și cei care întrețin proiectul nu oferă garanții și nu își asumă răspunderea. Prin activare îți asumi întreaga responsabilitate pentru utilizare, inclusiv pentru consecințele juridice.",
+          "body": "OpenCode Zen Free și Kilo Code Free sunt gateway-uri ale unor terți, nu servicii Relo. Permit accesul doar prin agenții lor oficiali de programare; Relo nu este unul dintre aceștia. Utilizarea poate încălca termenii lor sau legea, iar Relo nu le susține. Furnizorii pot păstra sau folosi prompturile și codul tău, așa că nu trimite niciodată informații confidențiale. Modelele, limitele și disponibilitatea se pot schimba sau pot dispărea fără notificare. În măsura permisă de lege, Relo și întreținătorii săi nu oferă nicio garanție și nu își asumă răspunderea. Activând conexiunile gratuite, îți asumi întreaga responsabilitate pentru utilizarea lor și pentru orice consecințe legale.",
           "confirm": "Îmi asum răspunderea și activez",
           "enabledToast": "Conexiunile gratuite au fost activate"
         }
@@ -1965,8 +1964,9 @@
       "retryHint": "Pauză aleatorie înainte de fiecare încercare, în secunde. Un Retry-After mai lung al furnizorului câștigă.",
       "jumpLabel": "Mergi la secțiune",
       "freeConnectionsLabel": "Conexiuni gratuite",
-      "freeConnectionsHint": "Dezactivarea ascunde conexiunile gratuite și oprește cererile noi trimise prin ele. Conexiunile și modelele salvate se păstrează.",
-      "freeConnectionsDisabledToast": "Conexiunile gratuite au fost dezactivate"
+      "freeConnectionsHint": "Conexiunile gratuite rămân ascunse până le activezi și accepți notificarea privind riscurile. Dezactivarea le ascunde și oprește cererile noi; datele salvate sunt păstrate.",
+      "freeConnectionsDisabledToast": "Conexiunile gratuite au fost dezactivate",
+      "sectionOthers": "Altele"
     },
     "updateDialog": {
       "title": "Actualizează Relo",

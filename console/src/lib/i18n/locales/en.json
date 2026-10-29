@@ -921,8 +921,7 @@
           "next": "Next",
           "chooseHint": "Choose a provider",
           "groupHintFree": "No account or API key needed",
-          "freeLockedBody": "Enable these third-party pools only if you accept the risks.",
-          "freeEnable": "Enable free connections"
+          "freeOffHint": "Free connections are hidden until you enable them."
         },
         "verify": {
           "title": "Check the connection",
@@ -988,7 +987,7 @@
         },
         "freeConsent": {
           "title": "Use free connections at your own risk",
-          "body": "OpenCode Zen and Kilo are third-party gateways, not Relo services. Their inclusion does not imply endorsement. Using them may breach their terms or applicable law. Providers may retain or use your prompts and code: never send confidential information. Models, limits and availability may change or disappear without notice. To the extent permitted by law, Relo and its maintainers provide no warranty and accept no liability. By enabling these connections, you accept full responsibility for your use and any legal consequences.",
+          "body": "OpenCode Zen Free and Kilo Code Free are third-party gateways, not Relo services. They permit access only through their official coding agents; Relo is not one. Use may breach their terms or the law, and Relo does not endorse them. Providers may keep or use your prompts and code—never send confidential information. Models, limits, and availability may change or disappear without notice. To the extent permitted by law, Relo and its maintainers provide no warranty and accept no liability. By enabling free connections, you accept full responsibility for your use and any legal consequences.",
           "confirm": "I accept responsibility and enable",
           "enabledToast": "Free connections enabled"
         }
@@ -1965,8 +1964,9 @@
       "retryHint": "How many times one account is retried before the request moves to the next account. A random 1–3s wait separates the retries.",
       "jumpLabel": "Jump to section",
       "freeConnectionsLabel": "Free connections",
-      "freeConnectionsHint": "Turning this off hides free connections and stops new requests through them. Your saved connections and models are kept.",
-      "freeConnectionsDisabledToast": "Free connections disabled"
+      "freeConnectionsHint": "Free connections stay hidden until you enable them and accept the risk notice. Turning them off hides the connections and stops new requests; saved data is kept.",
+      "freeConnectionsDisabledToast": "Free connections disabled",
+      "sectionOthers": "Others"
     },
     "updateDialog": {
       "title": "Update Relo",

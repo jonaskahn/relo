@@ -257,8 +257,17 @@ describe('free-pool consent copy', () => {
 				expect(valueOf(catalog, path).trim(), tag + ' ' + key).not.toBe('');
 				expect(valueOf(catalog, path), tag + ' ' + key).not.toBe(valueOf(en, path));
 			}
-			const path = 'ui.pages.providersPage.add.freeLockedBody';
-			expect(valueOf(catalog, path), tag).not.toBe(valueOf(en, path));
+			const body = valueOf(catalog, 'ui.pages.providersPage.freeConsent.body');
+			expect(body, tag).toContain('OpenCode Zen Free');
+			expect(body, tag).toContain('Kilo Code Free');
+			expect(body, tag).not.toMatch(/OpenCode Zen(?! Free)/);
+			for (const path of [
+				'ui.pages.providersPage.add.freeOffHint',
+				'ui.settingsPage.sectionOthers',
+				'ui.settingsPage.freeConnectionsHint'
+			]) {
+				expect(valueOf(catalog, path), tag + ' ' + path).not.toBe(valueOf(en, path));
+			}
 		}
 	});
 });

@@ -921,8 +921,7 @@
           "next": "İleri",
           "chooseHint": "Bir sağlayıcı seçin",
           "groupHintFree": "Hesap veya API anahtarı gerekmez",
-          "freeLockedBody": "Bu üçüncü taraf hizmetlerini yalnızca risklerini üstleniyorsanız açın.",
-          "freeEnable": "Ücretsiz bağlantıları aç"
+          "freeOffHint": "Ücretsiz bağlantılar siz açana kadar gizli kalır."
         },
         "verify": {
           "title": "Bağlantıyı denetle",
@@ -988,7 +987,7 @@
         },
         "freeConsent": {
           "title": "Kullanım sorumluluğu size aittir",
-          "body": "OpenCode Zen ve Kilo, Relo hizmetleri değil, üçüncü taraf ağ geçitleridir. Listelenmeleri, sağlayıcıların bu entegrasyonu onayladığı anlamına gelmez. Kullanımları, hizmet koşullarına veya yürürlükteki yasalara aykırı olabilir. Sağlayıcılar istemlerinizi ve kodunuzu saklayabilir ya da kullanabilir. Gizli bilgi göndermeyin. Modeller, sınırlar ve erişim önceden bildirilmeden değişebilir veya sona erebilir. Yasaların izin verdiği ölçüde Relo ve bakımını üstlenenler hiçbir garanti vermez ve sorumluluk kabul etmez. Bu bağlantıları açarak, hukuki sonuçlar dahil kullanıma ilişkin tüm sorumluluğu üstlenirsiniz.",
+          "body": "OpenCode Zen Free ve Kilo Code Free, Relo hizmetleri değil üçüncü taraf ağ geçitleridir. Yalnızca kendi resmî kodlama ajanları üzerinden erişime izin verirler; Relo bunlardan biri değildir. Kullanım, koşullarını veya yasaları ihlal edebilir ve Relo bunları onaylamaz. Sağlayıcılar istemlerinizi ve kodunuzu saklayabilir veya kullanabilir; bu nedenle gizli bilgi göndermeyin. Modeller, sınırlar ve kullanılabilirlik bildirim yapılmadan değişebilir veya kaybolabilir. Yasaların izin verdiği ölçüde Relo ve bakımcıları hiçbir garanti vermez ve hiçbir sorumluluk kabul etmez. Ücretsiz bağlantıları açarak kullanımı ve doğabilecek her türlü hukuki sonucu tamamen üstlendiğinizi kabul edersiniz.",
           "confirm": "Sorumluluğu kabul et ve aç",
           "enabledToast": "Ücretsiz bağlantılar açıldı"
         }
@@ -1965,8 +1964,9 @@
       "retryHint": "Her denemeden önce rastgele bekleme, saniye cinsinden. Sağlayıcının daha uzun Retry-After değeri kazanır.",
       "jumpLabel": "Bölüme git",
       "freeConnectionsLabel": "Ücretsiz bağlantılar",
-      "freeConnectionsHint": "Kapatıldığında ücretsiz bağlantılar gizlenir ve üzerlerinden yeni istek gönderilmez. Kaydedilmiş bağlantılar ve modeller korunur.",
-      "freeConnectionsDisabledToast": "Ücretsiz bağlantılar kapatıldı"
+      "freeConnectionsHint": "Ücretsiz bağlantılar, siz onları açıp risk bildirimini kabul edene kadar gizli kalır. Kapatıldığında bağlantılar gizlenir ve yeni istekler durur; kaydedilmiş veriler korunur.",
+      "freeConnectionsDisabledToast": "Ücretsiz bağlantılar kapatıldı",
+      "sectionOthers": "Diğer"
     },
     "updateDialog": {
       "title": "Relo'yu güncelle",

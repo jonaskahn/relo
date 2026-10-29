@@ -921,8 +921,7 @@
           "next": "Tiếp",
           "chooseHint": "Chọn nhà cung cấp",
           "groupHintFree": "Không cần tài khoản hay khóa API",
-          "freeLockedBody": "Chỉ bật các dịch vụ bên thứ ba này khi bạn chấp nhận tự chịu rủi ro.",
-          "freeEnable": "Bật kết nối miễn phí"
+          "freeOffHint": "Kết nối miễn phí được ẩn cho đến khi bạn bật."
         },
         "verify": {
           "title": "Kiểm tra kết nối",
@@ -988,7 +987,7 @@
         },
         "freeConsent": {
           "title": "Bạn tự chịu trách nhiệm khi sử dụng",
-          "body": "OpenCode Zen và Kilo là cổng dịch vụ của bên thứ ba, không phải dịch vụ của Relo. Việc tích hợp không có nghĩa là được nhà cung cấp bảo trợ. Sử dụng các kết nối này có thể vi phạm điều khoản của họ hoặc pháp luật hiện hành. Nhà cung cấp có thể lưu lại hoặc sử dụng nội dung yêu cầu và mã nguồn bạn gửi; tuyệt đối không gửi thông tin mật. Mô hình, hạn mức và khả năng truy cập có thể thay đổi hoặc ngừng bất cứ lúc nào. Trong phạm vi pháp luật cho phép, Relo và những người duy trì dự án không đưa ra bảo đảm và không chịu trách nhiệm pháp lý. Khi bật, bạn đồng ý tự chịu toàn bộ trách nhiệm về việc sử dụng, kể cả mọi hậu quả pháp lý.",
+          "body": "OpenCode Zen Free và Kilo Code Free là cổng của bên thứ ba, không phải dịch vụ của Relo. Chúng chỉ cho phép truy cập qua các tác nhân lập trình chính thức của mình; Relo không phải một trong số đó. Việc sử dụng có thể vi phạm điều khoản của họ hoặc pháp luật, và Relo không xác nhận các dịch vụ này. Nhà cung cấp có thể lưu hoặc sử dụng câu lệnh và mã của bạn, vì vậy đừng bao giờ gửi thông tin mật. Mô hình, giới hạn và tính khả dụng có thể thay đổi hoặc biến mất mà không báo trước. Trong phạm vi pháp luật cho phép, Relo và những người bảo trì không đưa ra bất kỳ bảo đảm nào và không chịu trách nhiệm. Khi bật kết nối miễn phí, bạn chấp nhận hoàn toàn trách nhiệm về việc sử dụng và mọi hậu quả pháp lý.",
           "confirm": "Tôi tự chịu trách nhiệm và đồng ý bật",
           "enabledToast": "Đã bật kết nối miễn phí"
         }
@@ -1965,8 +1964,9 @@
       "retryHint": "Khoảng chờ ngẫu nhiên trước mỗi lần thử lại, tính bằng giây. Retry-After dài hơn của nhà cung cấp sẽ thắng.",
       "jumpLabel": "Chuyển đến phần",
       "freeConnectionsLabel": "Kết nối miễn phí",
-      "freeConnectionsHint": "Tắt sẽ ẩn các kết nối miễn phí và chặn yêu cầu mới qua chúng. Các kết nối và mô hình đã lưu vẫn được giữ nguyên.",
-      "freeConnectionsDisabledToast": "Đã tắt kết nối miễn phí"
+      "freeConnectionsHint": "Kết nối miễn phí vẫn bị ẩn cho đến khi bạn bật và chấp nhận thông báo rủi ro. Khi tắt, các kết nối sẽ bị ẩn và ngừng nhận yêu cầu mới; dữ liệu đã lưu vẫn được giữ lại.",
+      "freeConnectionsDisabledToast": "Đã tắt kết nối miễn phí",
+      "sectionOthers": "Khác"
     },
     "updateDialog": {
       "title": "Cập nhật Relo",

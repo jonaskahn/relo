@@ -921,8 +921,7 @@
           "next": "Suivant",
           "chooseHint": "Choisis un provider",
           "groupHintFree": "Sans compte ni clé API",
-          "freeLockedBody": "Activez ces services tiers uniquement si vous en acceptez les risques.",
-          "freeEnable": "Activer les connexions gratuites"
+          "freeOffHint": "Les connexions gratuites restent masquées jusqu’à leur activation."
         },
         "verify": {
           "title": "Vérifier la connexion",
@@ -988,7 +987,7 @@
         },
         "freeConsent": {
           "title": "Une utilisation sous votre responsabilité",
-          "body": "OpenCode Zen et Kilo sont des passerelles tierces, pas des services Relo. Leur présence ne vaut pas approbation de leurs fournisseurs. Leur utilisation peut contrevenir à leurs conditions ou au droit applicable. Les fournisseurs peuvent conserver ou exploiter vos requêtes et votre code : ne transmettez jamais de données confidentielles. Les modèles, quotas et disponibilités peuvent changer ou disparaître sans préavis. Dans les limites autorisées par la loi, Relo et ses mainteneurs ne fournissent aucune garantie et déclinent toute responsabilité. En activant ces connexions, vous assumez seul la responsabilité de leur utilisation et de ses conséquences juridiques.",
+          "body": "OpenCode Zen Free et Kilo Code Free sont des passerelles tierces, et non des services Relo. Elles ne permettent l’accès que par leurs agents de codage officiels ; Relo n’en fait pas partie. Leur utilisation peut enfreindre leurs conditions ou la loi, et Relo ne les approuve pas. Les fournisseurs peuvent conserver ou utiliser vos prompts et votre code : n’envoyez jamais d’informations confidentielles. Les modèles, limites et disponibilités peuvent changer ou disparaître sans préavis. Dans la mesure permise par la loi, Relo et ses mainteneurs n’offrent aucune garantie et déclinent toute responsabilité. En activant les connexions gratuites, vous assumez l’entière responsabilité de leur utilisation et de toute conséquence juridique.",
           "confirm": "Accepter et activer sous ma responsabilité",
           "enabledToast": "Connexions gratuites activées"
         }
@@ -1965,8 +1964,9 @@
       "retryHint": "Combien de fois un compte est relancé avant que la requête passe au compte suivant. Une attente aléatoire de 1 à 3 s sépare les relances.",
       "jumpLabel": "Aller à la section",
       "freeConnectionsLabel": "Connexions gratuites",
-      "freeConnectionsHint": "La désactivation masque les connexions gratuites et bloque les nouvelles requêtes qui les utilisent. Vos connexions et modèles enregistrés sont conservés.",
-      "freeConnectionsDisabledToast": "Connexions gratuites désactivées"
+      "freeConnectionsHint": "Les connexions gratuites restent masquées jusqu’à ce que vous les activiez et acceptiez l’avis de risque. Les désactiver les masque et bloque les nouvelles requêtes ; les données enregistrées sont conservées.",
+      "freeConnectionsDisabledToast": "Connexions gratuites désactivées",
+      "sectionOthers": "Autres"
     },
     "updateDialog": {
       "title": "Mettre à jour Relo",
