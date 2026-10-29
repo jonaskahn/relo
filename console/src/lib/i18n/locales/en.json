@@ -669,7 +669,15 @@
           "editLimits": "Limits",
           "editCapabilities": "Capabilities",
           "overrides": "Overrides",
-          "overridesNone": "No overrides — this model follows the provider, then models.dev."
+          "overridesNone": "No overrides — this model follows the provider, then models.dev.",
+          "sourceAccount": "Defined by account",
+          "sourceProvider": "Defined by connection",
+          "sourceModelsDev": "Defined by models.dev",
+          "sourceManual": "Manual completion",
+          "sourceManualInactive": "Stored manual value (inactive)",
+          "notProvided": "Not provided",
+          "readOnlyCapability": "Defined by {source}; this value cannot be edited.",
+          "exactValue": "{label} ({exact} tokens)"
         },
         "accounts": {
           "title": "Accounts",

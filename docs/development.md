@@ -16,6 +16,27 @@ Use the formatters and checks described in the
 
 `make ci` runs the first five checks before a push.
 
+## models.dev build seed
+
+Release binaries embed a models.dev dataset so a fresh install can price and
+describe models before its first successful download. The generated
+`daemon/internal/adapters/modelsdev/seeddata/modelsdev.json.gz` is ignored by
+git; only the placeholder that keeps `//go:embed` compilable is committed.
+
+- `make seed` downloads the dataset only when the existing seed is missing or
+  invalid.
+- `make seed-latest` downloads a fresh dataset unconditionally.
+- `make clean` removes the generated seed and leaves the placeholder.
+
+The Make-backed build, test, vet, lint, packaging, and cross-build targets
+depend on `seed`. Beta and release workflows run `seed-latest` before
+compiling, so a download or validation failure stops them before artifacts are
+produced. A direct `go build ./...` or `go test ./...` without a generated seed
+remains supported: the runtime fetches models.dev and writes its normal cache.
+At runtime the network is tried first; a failed fetch falls back to the newest
+of a valid cache and the embedded seed, while search, pricing, and state reads
+never ask the network.
+
 ## Windows contributors
 
 Go plus Node 22 is enough on native Windows: `scripts/dev-setup.ps1` writes

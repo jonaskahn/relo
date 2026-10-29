@@ -95,12 +95,15 @@ type Providers interface {
 	Delete(ctx context.Context, id string) error
 }
 
-// FactStore persists per-account context-window overrides.
+// FactStore persists per-account manual context completions and discovered
+// capability facts.
 type FactStore interface {
 	List(ctx context.Context, credentialID string) ([]pool.ContextFact, error)
 	ListProvider(ctx context.Context, providerID string) ([]pool.ContextFact, error)
 	Save(ctx context.Context, fact pool.ContextFact) error
 	Delete(ctx context.Context, credentialID string) error
+	ListCapabilities(ctx context.Context, credentialID string) ([]catalog.AccountFactsRecord, error)
+	ListProviderCapabilities(ctx context.Context, providerID string) ([]catalog.AccountFactsRecord, error)
 }
 
 // Discoverer reads one account's model list and folds it into the connection.
@@ -120,23 +123,27 @@ type Options struct {
 	Providers Providers
 	Discover  Discoverer
 	Refresh   func(providerID string)
-	Logger    *slog.Logger
+	// AfterChange runs after an account write changes the effective catalog.
+	// The composition root uses it to refresh generated client catalogs.
+	AfterChange func(ctx context.Context)
+	Logger      *slog.Logger
 }
 
 // Service is the account use cases.
 type Service struct {
-	entries    pool.CredentialRepository
-	secrets    SecretStore
-	pools      *pool.Manager
-	catalog    *catalog.Catalog
-	facts      FactStore
-	providers  Providers
-	discover   Discoverer
-	refresh    func(providerID string)
-	logger     *slog.Logger
-	mu         sync.Mutex
-	refreshMu  sync.Mutex
-	refreshing map[string]*refreshState
+	entries     pool.CredentialRepository
+	secrets     SecretStore
+	pools       *pool.Manager
+	catalog     *catalog.Catalog
+	facts       FactStore
+	providers   Providers
+	discover    Discoverer
+	refresh     func(providerID string)
+	afterChange func(ctx context.Context)
+	logger      *slog.Logger
+	mu          sync.Mutex
+	refreshMu   sync.Mutex
+	refreshing  map[string]*refreshState
 }
 
 type refreshState struct {
@@ -154,7 +161,8 @@ func New(options Options) *Service {
 		entries: options.Entries, secrets: options.Secrets, pools: options.Pools,
 		catalog: options.Catalog, facts: options.Facts, providers: options.Providers,
 		discover: options.Discover, refresh: options.Refresh, logger: logger,
-		refreshing: map[string]*refreshState{},
+		afterChange: options.AfterChange,
+		refreshing:  map[string]*refreshState{},
 	}
 }
 
@@ -399,6 +407,12 @@ func (s *Service) forgetAccountContext(ctx context.Context, entry pool.PoolEntry
 		if err := s.facts.Delete(ctx, entry.ID); err != nil {
 			s.logger.Warn("forget the account context overrides", "account", entry.ID, "error", err)
 		}
+	}
+	if s.catalog != nil {
+		_ = s.catalog.Reload(ctx)
+	}
+	if s.afterChange != nil {
+		s.afterChange(ctx)
 	}
 	return s.forgetSecret(entry.SecretRef)
 }

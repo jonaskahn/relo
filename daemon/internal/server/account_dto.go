@@ -55,12 +55,16 @@ func toAccountModelsResponse(models appaccount.AccountModels) accountModelsRespo
 }
 
 type accountContextModelResponse struct {
-	ModelID   string `json:"model_id"`
-	Effective *int64 `json:"context_window"`
-	Override  *int64 `json:"override"`
-	Inherited *int64 `json:"inherited"`
-	MaxInput  *int64 `json:"max_input"`
-	Listed    bool   `json:"listed"`
+	ModelID        string `json:"model_id"`
+	Effective      *int64 `json:"context_window"`
+	Override       *int64 `json:"override"`
+	Inherited      *int64 `json:"inherited"`
+	MaxInput       *int64 `json:"max_input"`
+	MaxOutput      *int64 `json:"max_output"`
+	ContextSource  string `json:"context_source,omitempty"`
+	MaxInputSource string `json:"max_input_source,omitempty"`
+	Editable       bool   `json:"editable"`
+	Listed         bool   `json:"listed"`
 }
 
 type accountContextResponse struct {
@@ -75,7 +79,9 @@ func toAccountContextResponse(context appaccount.AccountContext) accountContextR
 		models = append(models, accountContextModelResponse{
 			ModelID: model.ModelID, Effective: model.Effective,
 			Override: model.Override, Inherited: model.Inherited,
-			MaxInput: model.MaxInput, Listed: model.Listed,
+			MaxInput: model.MaxInput, MaxOutput: model.MaxOutput,
+			ContextSource: model.ContextSource, MaxInputSource: model.MaxInputSource,
+			Editable: model.ContextSource == "", Listed: model.Listed,
 		})
 	}
 	return accountContextResponse{

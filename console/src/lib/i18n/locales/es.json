@@ -669,7 +669,15 @@
           "editLimits": "Límites",
           "editCapabilities": "Capacidades",
           "overrides": "Anulaciones",
-          "overridesNone": "Sin anulaciones: el modelo sigue al proveedor y luego a models.dev."
+          "overridesNone": "Sin anulaciones: el modelo sigue al proveedor y luego a models.dev.",
+          "sourceAccount": "Definido por la cuenta",
+          "sourceProvider": "Definido por la conexión",
+          "sourceModelsDev": "Definido por models.dev",
+          "sourceManual": "Completado manual",
+          "sourceManualInactive": "Valor manual guardado (inactivo)",
+          "notProvided": "No proporcionado",
+          "readOnlyCapability": "Definido por {source}; este valor no se puede editar.",
+          "exactValue": "{label} ({exact} tokens)"
         },
         "accounts": {
           "title": "Cuentas",

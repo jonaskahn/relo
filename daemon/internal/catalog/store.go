@@ -26,6 +26,21 @@ type Reader interface {
 	ListRoutes(ctx context.Context) ([]RouteRecord, error)
 }
 
+// AccountCapabilityReader is the optional extension a reader implements when
+// it can supply credential-scoped facts discovered from a per-account roster.
+// Keeping it optional lets small test readers stay focused on shared layers.
+type AccountCapabilityReader interface {
+	ListAccountCapabilities(ctx context.Context) ([]AccountFactsRecord, error)
+}
+
+// AccountRoster answers which credentials are enabled for a connection and
+// whether one may serve a model. The live pool implements it; a test double
+// that omits it keeps the shared model definition unchanged.
+type AccountRoster interface {
+	ActiveCredentials(providerID string) []string
+	AccountCanServe(credentialID string, modelIDs []string) bool
+}
+
 // ConnectionRecord is one stored connection as the catalog reads it.
 type ConnectionRecord struct {
 	ID                  string
@@ -144,7 +159,7 @@ func (f FactsRecord) Empty() bool {
 	return f.Name == nil && f.Description == nil && f.Family == nil && f.Category == nil &&
 		f.ContextWindow == nil && f.MaxInput == nil && f.MaxOutput == nil &&
 		f.SupportsTools == nil && f.SupportsReasoning == nil && f.SupportsVision == nil &&
-		len(f.ReasoningEfforts) == 0 &&
+		f.ReasoningEfforts == nil &&
 		f.ReasoningToggle == nil && f.ReasoningBudget == nil &&
 		f.ReasoningBudgetMin == nil && f.ReasoningBudgetMax == nil &&
 		f.Status == nil && f.ReleaseDate == nil && !f.Prices.Known()

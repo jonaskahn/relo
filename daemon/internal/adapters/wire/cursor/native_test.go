@@ -333,12 +333,20 @@ func replyCarriesShellRejection(t *testing.T, reply []adapterscursor.Field) bool
 // shell call, the shape Cursor sends before the execution frame.
 func nativeToolStartedPayload(callID string, args []byte) []byte {
 	var call adapterscursor.Writer
-	call.Message(callShell, args)
+	call.Message(callShell, toolCallArgs(args))
 	call.String(callIDField, callID)
 	var started adapterscursor.Writer
 	started.String(toolStartedID, callID)
 	started.Message(toolStartedCall, call.BytesOut())
 	return serverUpdate(updateToolStarted, started.BytesOut())
+}
+
+// toolCallArgs wraps one variant's arguments in the message the tool call
+// update nests them in.
+func toolCallArgs(args []byte) []byte {
+	var inner adapterscursor.Writer
+	inner.Message(toolCallArgsField, args)
+	return inner.BytesOut()
 }
 
 // TestNativeTranslationFollowsTheDeclaredTool pins the argument spelling each

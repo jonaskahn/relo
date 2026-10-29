@@ -24,11 +24,25 @@ the favicon is written both into the server package that embeds it and into
 Never edit a derived file by hand: `make icons-check` fails CI when the
 committed artwork and the sources disagree.
 
-**models.dev is fetched, never embedded.** The daemon holds no provider catalog of its own:
-it reads https://models.dev/api.json when a page or a probe needs it, saves the result to the
-modelsdev.json file under the state directory, and falls back to that copy when the fetch
-fails. Every model field resolves as user override, then the provider, then models.dev, so a
-rate the operator set by hand is never overwritten by a price update.
+**models.dev is network-first, with a build seed and a saved copy.** A model-facing read
+asks https://models.dev/api.json, saves a validated answer to `modelsdev.json` under the
+state directory, and falls back to the newest local copy when the network fails. Release
+artifacts embed a dataset downloaded at build time; the local order is a valid cache at
+least as new as the seed, then the seed, then an older cache. A custom `modelsdev_url`
+never uses the embedded seed. `make seed` downloads the seed only when it is missing or
+invalid and `make seed-latest` forces a fresh one; the generated
+`daemon/internal/adapters/modelsdev/seeddata/modelsdev.json.gz` is ignored by git, and a
+direct `go build` or `go test` without it still compiles, fetches, and caches normally.
+Beta and release jobs run `make seed-latest` before compiling, so a download or validation
+failure stops the job before artifacts exist. Pricing still resolves as user override,
+then the provider, then models.dev. Protected capabilities use provider authority instead:
+the selected account's discovered facts, then the connection definition, then models.dev,
+and a manual completion only where all of those are silent. A manual capability can never
+supersede a known definition, and stored legacy completions remain visible but inactive.
+Context capacity, maximum input, and maximum output stay exact and separate; a display label
+may round, but routing, admission, listings, and wire requests use the authoritative count.
+An oversized client output budget is clamped silently to the provider's output ceiling and
+the context left after the prompt; only a prompt that cannot fit at all is refused.
 
 **A provider's own model list decides its models.** A connection serves the ids its model list
 publishes and nothing else: a catalog entry for a model the provider does not list never

@@ -33,15 +33,19 @@ const (
 
 // Argument fields of the native execution messages.
 const (
-	shellCommand        = 1
-	shellWorkingDir     = 2
-	shellTimeout        = 3
-	shellCallID         = 4
-	shellHardTimeout    = 14
-	readPath            = 1
-	readCallID          = 2
-	readOffset          = 4
-	readLimit           = 5
+	shellCommand     = 1
+	shellWorkingDir  = 2
+	shellTimeout     = 3
+	shellCallID      = 4
+	shellHardTimeout = 14
+	readPath         = 1
+	readCallID       = 2
+	readOffset       = 4
+	readLimit        = 5
+	// The read tool call carries its own argument message, which numbers the
+	// offset and the limit differently from the execution channel's read.
+	readToolOffset      = 2
+	readToolLimit       = 3
 	grepPattern         = 1
 	grepPath            = 2
 	grepGlob            = 3
@@ -73,6 +77,11 @@ type nativeCall struct {
 	path       string
 	command    string
 	workDir    string
+	// offsetField and limitField are where this call's own message keeps the
+	// read's offset and limit, which differ between the execution channel
+	// and the tool call update.
+	offsetField int
+	limitField  int
 }
 
 // translateNativeExec decodes one native ExecServerMessage variant into a
@@ -88,14 +97,22 @@ func translateNativeArgs(variant int, fields []cursor.Field, execID string) (nat
 	if !known {
 		return nativeCall{}, false
 	}
+	return translateNativeSpec(spec, variant, fields, execID), true
+}
+
+// translateNativeSpec decodes one variant's arguments under a given reading
+// of the message, which differs between the execution channel and the tool
+// call update.
+func translateNativeSpec(spec nativeSpec, variant int, fields []cursor.Field, execID string) nativeCall {
 	call := nativeCall{variant: variant, fields: fields, candidates: spec.candidates, callID: execID}
 	call.path = cursor.FirstString(fields, spec.pathField)
+	call.offsetField, call.limitField = spec.offsetField, spec.limitField
 	if spec.shell {
 		call.command = cursor.FirstString(fields, shellCommand)
 		call.workDir = cursor.FirstString(fields, shellWorkingDir)
 	}
 	call.callID = firstNonEmpty(cursor.FirstString(fields, spec.callField), call.callID)
-	return call, true
+	return call
 }
 
 // nativeSpec says how one native variant's arguments are read. The native
@@ -106,18 +123,33 @@ type nativeSpec struct {
 	pathField  int
 	callField  int
 	shell      bool
+	// offsetField and limitField are the read tool call's own numbers, which
+	// differ from the execution channel's read.
+	offsetField int
+	limitField  int
 }
 
 var nativeSpecs = map[int]nativeSpec{
 	execShell:        {candidates: []string{"bash", "shell"}, callField: shellCallID, shell: true},
 	execShellStream:  {candidates: []string{"bash", "shell"}, callField: shellCallID, shell: true},
-	execRead:         {candidates: []string{"read"}, pathField: readPath, callField: readCallID},
-	execRedactedRead: {candidates: []string{"read"}, pathField: readPath, callField: readCallID},
+	execRead:         {candidates: []string{"read"}, pathField: readPath, callField: readCallID, offsetField: readOffset, limitField: readLimit},
+	execRedactedRead: {candidates: []string{"read"}, pathField: readPath, callField: readCallID, offsetField: readOffset, limitField: readLimit},
 	execWrite:        {candidates: []string{"write"}, pathField: writePath, callField: writeCallID},
 	execDelete:       {candidates: []string{"delete"}, pathField: deletePath, callField: deleteCallID},
 	execGrep:         {candidates: []string{"grep"}, pathField: grepPath, callField: grepCallID},
 	execLs:           {candidates: []string{"ls"}, pathField: lsPath, callField: lsCallID},
 	execDiagnostics:  {candidates: []string{"diagnostics"}, pathField: diagnosticsPath, callField: diagnosticsCallID},
+}
+
+// nativeReadToolCallSpec is the read tool call's own argument message. It
+// numbers the offset and the limit differently from the execution channel's
+// read arguments, and it carries no call id: the update's own call id names
+// the call.
+var nativeReadToolCallSpec = nativeSpec{
+	candidates:  []string{"read"},
+	pathField:   readPath,
+	offsetField: readToolOffset,
+	limitField:  readToolLimit,
 }
 
 // ParseNativeToolCall decodes a native ToolCall update into the same shape
@@ -137,17 +169,32 @@ func ParseNativeToolCall(payload []byte) (nativeCall, bool, error) {
 		if !known {
 			continue
 		}
-		args, err := cursor.Nested([]cursor.Field{field}, toolCallArgsField)
-		if err != nil {
-			return nativeCall{}, false, err
-		}
-		if len(args) == 0 {
-			return nativeCall{}, false, nil
-		}
-		call, ok := translateNativeArgs(variant, args[0], callID)
-		return call, ok, nil
+		return parseNativeToolCallVariant(variant, field.Raw, callID)
 	}
 	return nativeCall{}, false, nil
+}
+
+// parseNativeToolCallVariant decodes one variant of a tool call update. The
+// update carries the variant's own message, whose args field holds the
+// arguments: reading the variant message as the arguments themselves puts
+// the whole message into the command.
+func parseNativeToolCallVariant(variant int, raw []byte, callID string) (nativeCall, bool, error) {
+	variantFields, err := cursor.Parse(raw)
+	if err != nil {
+		return nativeCall{}, false, err
+	}
+	args, err := cursor.Nested(variantFields, toolCallArgsField)
+	if err != nil {
+		return nativeCall{}, false, err
+	}
+	if len(args) == 0 {
+		return nativeCall{}, false, nil
+	}
+	spec := nativeSpecs[variant]
+	if variant == execRead {
+		spec = nativeReadToolCallSpec
+	}
+	return translateNativeSpec(spec, variant, args[0], callID), true, nil
 }
 
 func toolCallVariant(number int) (int, bool) {
@@ -202,10 +249,10 @@ func (call nativeCall) shellArguments(shell bool) map[string]any {
 
 func (call nativeCall) readArguments() map[string]any {
 	args := map[string]any{"path": call.path}
-	if offset, ok := intField(call.fields, readOffset); ok {
+	if offset, ok := intField(call.fields, call.offsetField); ok {
 		args["offset"] = offset
 	}
-	if limit, ok := intField(call.fields, readLimit); ok {
+	if limit, ok := intField(call.fields, call.limitField); ok {
 		args["limit"] = limit
 	}
 	return args

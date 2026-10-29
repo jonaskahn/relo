@@ -1,16 +1,80 @@
 package cursor
 
 import (
+	"bytes"
 	"context"
+	"encoding/binary"
 	"errors"
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"sync/atomic"
 	"testing"
 	"time"
 
 	adapterscursor "github.com/jonaskahn/relo/internal/adapters/cursor"
 )
+
+type reconnectTransport struct {
+	attempts atomic.Int64
+	failures int
+	response []byte
+}
+
+func (t *reconnectTransport) RoundTrip(request *http.Request) (*http.Response, error) {
+	if int(t.attempts.Add(1)) <= t.failures {
+		_ = request.Body.Close()
+		return nil, io.ErrClosedPipe
+	}
+	if err := consumeFirstFrame(request.Body); err != nil {
+		return nil, err
+	}
+	return &http.Response{
+		StatusCode: http.StatusOK, Header: http.Header{},
+		Body: io.NopCloser(bytes.NewReader(t.response)), Request: request,
+	}, nil
+}
+
+func consumeFirstFrame(body io.Reader) error {
+	header := make([]byte, 5)
+	if _, err := io.ReadFull(body, header); err != nil {
+		return err
+	}
+	_, err := io.CopyN(io.Discard, body, int64(binary.BigEndian.Uint32(header[1:])))
+	return err
+}
+
+func TestRunRetriesOnceWhenTheStreamClosesBeforeHeaders(t *testing.T) {
+	transport := &reconnectTransport{
+		failures: 1,
+		response: adapterscursor.Frame(serverUpdate(14, turnEndedPayload())),
+	}
+	runner := &Runner{
+		Client: &http.Client{Transport: transport}, BaseURL: "https://cursor.test", Token: "token",
+		Request: testRequest(), Selection: testSelection(),
+	}
+	if _, err := runner.Run(context.Background()); err != nil {
+		t.Fatalf("Run() error = %v, want the retried stream to finish", err)
+	}
+	if got := transport.attempts.Load(); got != 2 {
+		t.Fatalf("attempts = %d, want one retry", got)
+	}
+}
+
+func TestRunSurfacesASecondClosedStream(t *testing.T) {
+	transport := &reconnectTransport{failures: 2}
+	runner := &Runner{
+		Client: &http.Client{Transport: transport}, BaseURL: "https://cursor.test", Token: "token",
+		Request: testRequest(), Selection: testSelection(),
+	}
+	_, err := runner.Run(context.Background())
+	if !errors.Is(err, io.ErrClosedPipe) {
+		t.Fatalf("Run() error = %v, want the closed pipe", err)
+	}
+	if got := transport.attempts.Load(); got != 2 {
+		t.Fatalf("attempts = %d, want the one allowed retry", got)
+	}
+}
 
 func newStreamRunner(server *httptest.Server) *Runner {
 	return &Runner{

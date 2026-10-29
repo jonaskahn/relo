@@ -341,42 +341,43 @@ func toContextLayersResponse(layers appcatalog.ContextLayers) contextLayersRespo
 }
 
 type modelResponse struct {
-	ProviderID         string                `json:"provider_id"`
-	ModelID            string                `json:"model_id"`
-	UpstreamModelID    string                `json:"upstream_model_id"`
-	ClonedFrom         string                `json:"cloned_from"`
-	Source             string                `json:"source"`
-	Name               string                `json:"name"`
-	Description        string                `json:"description"`
-	Family             string                `json:"family"`
-	Category           string                `json:"category"`
-	APIFormat          string                `json:"api_format"`
-	BaseURL            string                `json:"base_url"`
-	ModelsDevRef       string                `json:"modelsdev_ref"`
-	Match              string                `json:"match"`
-	ContextWindow      *int64                `json:"context_window"`
-	MaxInput           *int64                `json:"max_input"`
-	MaxOutput          *int64                `json:"max_output"`
-	ContextLayers      contextLayersResponse `json:"context_layers"`
-	ContextSource      string                `json:"context_source"`
-	MaxOutputLayers    contextLayersResponse `json:"max_output_layers"`
-	MaxOutputSource    string                `json:"max_output_source"`
-	Capabilities       capabilitiesResponse  `json:"capabilities"`
-	CapabilityOverride capabilitiesResponse  `json:"capability_override"`
-	Status             string                `json:"status"`
-	ReleaseDate        string                `json:"release_date"`
-	Enabled            bool                  `json:"enabled"`
-	Available          *bool                 `json:"available"`
-	Routable           bool                  `json:"routable"`
-	UnroutableReason   string                `json:"unroutable_reason"`
-	Prices             modelPricesResponse   `json:"prices"`
-	GroupRefs          []string              `json:"group_refs"`
-	Overridden         bool                  `json:"overridden"`
-	Details            *modelDetailsResponse `json:"details,omitempty"`
-	ListedAtMs         *int64                `json:"listed_at_ms,omitempty"`
-	UpdatedAtMs        int64                 `json:"updated_at_ms"`
-	ServingAccounts    int                   `json:"serving_accounts"`
-	ActiveAccounts     int                   `json:"active_accounts"`
+	ProviderID         string                        `json:"provider_id"`
+	ModelID            string                        `json:"model_id"`
+	UpstreamModelID    string                        `json:"upstream_model_id"`
+	ClonedFrom         string                        `json:"cloned_from"`
+	Source             string                        `json:"source"`
+	Name               string                        `json:"name"`
+	Description        string                        `json:"description"`
+	Family             string                        `json:"family"`
+	Category           string                        `json:"category"`
+	APIFormat          string                        `json:"api_format"`
+	BaseURL            string                        `json:"base_url"`
+	ModelsDevRef       string                        `json:"modelsdev_ref"`
+	Match              string                        `json:"match"`
+	ContextWindow      *int64                        `json:"context_window"`
+	MaxInput           *int64                        `json:"max_input"`
+	MaxOutput          *int64                        `json:"max_output"`
+	ContextLayers      contextLayersResponse         `json:"context_layers"`
+	ContextSource      string                        `json:"context_source"`
+	MaxOutputLayers    contextLayersResponse         `json:"max_output_layers"`
+	MaxOutputSource    string                        `json:"max_output_source"`
+	Capabilities       capabilitiesResponse          `json:"capabilities"`
+	CapabilityOverride capabilitiesResponse          `json:"capability_override"`
+	CapabilityStates   modelCapabilityStatesResponse `json:"capability_states"`
+	Status             string                        `json:"status"`
+	ReleaseDate        string                        `json:"release_date"`
+	Enabled            bool                          `json:"enabled"`
+	Available          *bool                         `json:"available"`
+	Routable           bool                          `json:"routable"`
+	UnroutableReason   string                        `json:"unroutable_reason"`
+	Prices             modelPricesResponse           `json:"prices"`
+	GroupRefs          []string                      `json:"group_refs"`
+	Overridden         bool                          `json:"overridden"`
+	Details            *modelDetailsResponse         `json:"details,omitempty"`
+	ListedAtMs         *int64                        `json:"listed_at_ms,omitempty"`
+	UpdatedAtMs        int64                         `json:"updated_at_ms"`
+	ServingAccounts    int                           `json:"serving_accounts"`
+	ActiveAccounts     int                           `json:"active_accounts"`
 }
 
 func toModelResponse(model appcatalog.Model) modelResponse {
@@ -395,6 +396,7 @@ func toModelResponse(model appcatalog.Model) modelResponse {
 		MaxOutputSource:    model.MaxOutputSource,
 		Capabilities:       toCapabilitiesResponse(model.Capabilities),
 		CapabilityOverride: toCapabilitiesResponse(model.CapabilityOverride),
+		CapabilityStates:   toModelCapabilityStatesResponse(model.CapabilityStates),
 		Status:             model.Status, ReleaseDate: model.ReleaseDate,
 		Enabled: model.Enabled, Available: model.Available,
 		Routable: model.Routable, UnroutableReason: model.UnroutableReason,
@@ -404,6 +406,72 @@ func toModelResponse(model appcatalog.Model) modelResponse {
 		ListedAtMs: model.ListedAtMs, UpdatedAtMs: model.UpdatedAtMs,
 		ServingAccounts: model.ServingAccounts, ActiveAccounts: model.ActiveAccounts,
 	}
+}
+
+type capabilityStateIntResponse struct {
+	Value        *int64 `json:"value"`
+	Source       string `json:"source"`
+	Editable     bool   `json:"editable"`
+	Manual       *int64 `json:"manual"`
+	ManualActive bool   `json:"manual_active"`
+}
+
+type capabilityStateBoolResponse struct {
+	Value        *bool  `json:"value"`
+	Source       string `json:"source"`
+	Editable     bool   `json:"editable"`
+	Manual       *bool  `json:"manual"`
+	ManualActive bool   `json:"manual_active"`
+}
+
+type capabilityStateEffortsResponse struct {
+	Value        []string `json:"value"`
+	Source       string   `json:"source"`
+	Manual       []string `json:"manual"`
+	ManualActive bool     `json:"manual_active"`
+}
+
+type modelCapabilityStatesResponse struct {
+	ContextWindow *capabilityStateIntResponse     `json:"context_window"`
+	MaxInput      *capabilityStateIntResponse     `json:"max_input"`
+	MaxOutput     *capabilityStateIntResponse     `json:"max_output"`
+	Tools         *capabilityStateBoolResponse    `json:"tools"`
+	Reasoning     *capabilityStateBoolResponse    `json:"reasoning"`
+	Vision        *capabilityStateBoolResponse    `json:"vision"`
+	Efforts       *capabilityStateEffortsResponse `json:"reasoning_efforts"`
+}
+
+func toModelCapabilityStatesResponse(states appcatalog.ModelCapabilityStates) modelCapabilityStatesResponse {
+	return modelCapabilityStatesResponse{
+		ContextWindow: toCapabilityStateInt(states.ContextWindow),
+		MaxInput:      toCapabilityStateInt(states.MaxInput),
+		MaxOutput:     toCapabilityStateInt(states.MaxOutput),
+		Tools:         toCapabilityStateBool(states.Tools),
+		Reasoning:     toCapabilityStateBool(states.Reasoning),
+		Vision:        toCapabilityStateBool(states.Vision),
+		Efforts:       toCapabilityStateEfforts(states.Efforts),
+	}
+}
+
+func toCapabilityStateInt(state *appcatalog.CapabilityStateInt) *capabilityStateIntResponse {
+	if state == nil {
+		return nil
+	}
+	return &capabilityStateIntResponse{Value: state.Value, Source: state.Source, Editable: state.Editable, Manual: state.Manual, ManualActive: state.ManualActive}
+}
+
+func toCapabilityStateBool(state *appcatalog.CapabilityStateBool) *capabilityStateBoolResponse {
+	if state == nil {
+		return nil
+	}
+	return &capabilityStateBoolResponse{Value: state.Value, Source: state.Source, Editable: state.Editable, Manual: state.Manual, ManualActive: state.ManualActive}
+}
+
+func toCapabilityStateEfforts(state *appcatalog.CapabilityStateEfforts) *capabilityStateEffortsResponse {
+	if state == nil {
+		return nil
+	}
+	return &capabilityStateEffortsResponse{Value: state.Value, Source: state.Source, Manual: state.Manual, ManualActive: state.ManualActive}
 }
 
 func toModelList(models []appcatalog.Model) []modelResponse {

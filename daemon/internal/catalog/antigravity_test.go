@@ -75,8 +75,8 @@ func TestAntigravityClaudeStatesNoThinking(t *testing.T) {
 	collapsed := &Model{ID: "claude-sonnet-5-5"}
 	resolveModelCapabilities(collapsed,
 		Provider{ModelsFormat: ModelsAntigravity},
+		FactsRecord{},
 		FactsRecord{SupportsReasoning: &yes, ReasoningEfforts: []string{"low", "medium", "high"}},
-		FactsRecord{SupportsReasoning: &yes},
 		FactsRecord{},
 	)
 	if collapsed.SupportsReasoning == nil || !*collapsed.SupportsReasoning || len(collapsed.ReasoningEfforts) != 3 {

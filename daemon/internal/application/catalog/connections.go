@@ -40,7 +40,24 @@ var (
 	// ErrListAuthoritative names a connection whose own model list decides
 	// which models it serves, so no model can be added to it by hand.
 	ErrListAuthoritative = errors.New("this connection publishes its own model list")
+	// ErrCapabilityReadOnly reports a manual capability that would supersede a
+	// provider, account, or models.dev value.
+	ErrCapabilityReadOnly = errors.New("capability is read-only")
 )
+
+// CapabilityReadOnlyError names the field and authoritative source behind a
+// refused manual assignment.
+type CapabilityReadOnlyError struct {
+	Field  string
+	Source string
+}
+
+func (e *CapabilityReadOnlyError) Error() string {
+	return fmt.Sprintf("%s is defined by %s", e.Field, e.Source)
+}
+
+// Unwrap maps every read-only refusal onto the stable management error code.
+func (e *CapabilityReadOnlyError) Unwrap() error { return ErrCapabilityReadOnly }
 
 // Prices represents token pricing rates in integer USD micros per million tokens.
 type Prices struct {
@@ -191,6 +208,46 @@ type ModelDetails struct {
 	EffectiveSource DetailSourceMap
 }
 
+// CapabilityStateInt is one numeric protected field's effective value, source,
+// and whether a stored manual completion is active or superseded.
+type CapabilityStateInt struct {
+	Value        *int64
+	Source       string
+	Editable     bool
+	Manual       *int64
+	ManualActive bool
+}
+
+// CapabilityStateBool is one boolean protected field's state.
+type CapabilityStateBool struct {
+	Value        *bool
+	Source       string
+	Editable     bool
+	Manual       *bool
+	ManualActive bool
+}
+
+// CapabilityStateEfforts is the reasoning effort ladder's state. A nil value
+// is unknown and an empty non-nil value is a stated absence of choices.
+type CapabilityStateEfforts struct {
+	Value        []string
+	Source       string
+	Manual       []string
+	ManualActive bool
+}
+
+// ModelCapabilityStates exposes every protected field with enough context for
+// an editor to show why it is read-only.
+type ModelCapabilityStates struct {
+	ContextWindow *CapabilityStateInt
+	MaxInput      *CapabilityStateInt
+	MaxOutput     *CapabilityStateInt
+	Tools         *CapabilityStateBool
+	Reasoning     *CapabilityStateBool
+	Vision        *CapabilityStateBool
+	Efforts       *CapabilityStateEfforts
+}
+
 // ModelPrices carries one model's rates from every layer beside the
 // effective rate a request pays.
 type ModelPrices struct {
@@ -244,6 +301,7 @@ type Model struct {
 	// CapabilityOverride is the operator's own tools, reasoning, and vision,
 	// null where they have not set one. The effective flags stay on Capabilities.
 	CapabilityOverride Capabilities
+	CapabilityStates   ModelCapabilityStates
 	Status             string
 	ReleaseDate        string
 	Enabled            bool
@@ -619,7 +677,13 @@ func baseModelView(model catalog.Model) Model {
 	}
 }
 
+// nolint:funlen
 func describeModelLayers(described *Model, model catalog.Model) {
+	describeModelWindows(described, model)
+	describeModelCapabilities(described, model)
+}
+
+func describeModelWindows(described *Model, model catalog.Model) {
 	described.ContextSource = model.FactSources.ContextWindow
 	described.MaxOutputSource = model.FactSources.MaxOutput
 	described.ContextLayers = ContextLayers{
@@ -632,6 +696,9 @@ func describeModelLayers(described *Model, model catalog.Model) {
 		Provider:  model.FactsProvider.MaxOutput,
 		ModelsDev: model.FactsModelsDev.MaxOutput,
 	}
+}
+
+func describeModelCapabilities(described *Model, model catalog.Model) {
 	described.Capabilities = Capabilities{
 		Tools:     model.SupportsTools,
 		Reasoning: model.SupportsReasoning,
@@ -641,6 +708,33 @@ func describeModelLayers(described *Model, model catalog.Model) {
 		Tools:     model.FactsOverride.Tools,
 		Reasoning: model.FactsOverride.Reasoning,
 		Vision:    model.FactsOverride.Vision,
+	}
+	described.CapabilityStates = ModelCapabilityStates{
+		ContextWindow: capabilityIntState(model.ContextWindow, model.FactSources.ContextWindow, model.FactsOverride.ContextWindow),
+		MaxInput:      capabilityIntState(model.MaxInput, model.FactSources.MaxInput, model.FactsOverride.MaxInput),
+		MaxOutput:     capabilityIntState(model.MaxOutput, model.FactSources.MaxOutput, model.FactsOverride.MaxOutput),
+		Tools:         capabilityBoolState(model.SupportsTools, model.FactSources.Tools, model.FactsOverride.Tools),
+		Reasoning:     capabilityBoolState(model.SupportsReasoning, model.FactSources.Reasoning, model.FactsOverride.Reasoning),
+		Vision:        capabilityBoolState(model.SupportsVision, model.FactSources.Vision, model.FactsOverride.Vision),
+		Efforts: &CapabilityStateEfforts{
+			Value: model.ReasoningEfforts, Source: model.FactSources.ReasoningEfforts,
+			Manual:       model.FactsOverride.ReasoningEfforts,
+			ManualActive: model.FactsOverride.ReasoningEfforts != nil && model.FactSources.ReasoningEfforts == "override",
+		},
+	}
+}
+
+func capabilityIntState(value *int64, source string, manual *int64) *CapabilityStateInt {
+	return &CapabilityStateInt{
+		Value: value, Source: source, Editable: source == "", Manual: manual,
+		ManualActive: manual != nil && source == "override",
+	}
+}
+
+func capabilityBoolState(value *bool, source string, manual *bool) *CapabilityStateBool {
+	return &CapabilityStateBool{
+		Value: value, Source: source, Editable: source == "", Manual: manual,
+		ManualActive: manual != nil && source == "override",
 	}
 }
 
@@ -748,7 +842,12 @@ func (s *Service) describeGroup(snapshot *catalog.Snapshot, group catalog.Group)
 		CreatedAtMs:  group.CreatedAtMs,
 		UpdatedAtMs:  group.UpdatedAtMs,
 	}
-	row.ContextWindow, row.MaxOutput = smallestBudget(snapshot.GroupModels(group))
+	members := snapshot.GroupModels(group)
+	advertised := make([]catalog.Model, 0, len(members))
+	for _, model := range members {
+		advertised = append(advertised, snapshot.AdvertisedModel(model))
+	}
+	row.ContextWindow, row.MaxOutput = smallestBudget(advertised)
 	row.SupportsTools, row.SupportsReasoning, row.SupportsVision = snapshot.PromisedCapabilities(group)
 	row.CapabilityWarnings = snapshot.CapabilityWarnings(group)
 	for _, m := range group.Members {

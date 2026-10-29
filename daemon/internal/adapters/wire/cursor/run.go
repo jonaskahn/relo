@@ -9,6 +9,7 @@ import (
 	"io"
 	"net/http"
 	"strings"
+	"sync"
 	"sync/atomic"
 	"time"
 
@@ -76,7 +77,39 @@ func (r *Runner) Run(ctx context.Context) ([]inference.Event, error) {
 		// ended the run, so its stream is not read again.
 		return turn.conversation.finish(runErr, nil)
 	}
-	return turn.conversation.finish(runErr, streamRefusal(turn.reader, turn.response))
+	return turn.conversation.finish(runErr, turn.conversation.refusal(streamRefusal(turn.reader, turn.response)))
+}
+
+// refusal names why the turn was refused. A conversation Cursor refuses
+// because its state does not match what it already holds is the one failure
+// the replayed state explains, so the refusal carries a summary of what was
+// replayed.
+func (c *conversation) refusal(err error) error {
+	if err == nil {
+		return nil
+	}
+	var refusal cursor.EndStream
+	if !errors.As(err, &refusal) || refusal.Name != "failed_precondition" {
+		return err
+	}
+	return fmt.Errorf("%w: %s", err, c.replaySummary())
+}
+
+// replaySummary describes the state a refused turn replayed: its size, the
+// blobs it references, and the tool calls it carried. It names no prompt
+// text, only what the state is made of.
+func (c *conversation) replaySummary() string {
+	ids := make([]string, 0, len(c.calls))
+	for id := range c.calls {
+		ids = append(ids, id)
+	}
+	sortStrings(ids)
+	blobs := 0
+	if c.history.Store != nil {
+		blobs = len(c.history.Store.blobs)
+	}
+	return fmt.Sprintf("replayed state: %d bytes, %d blobs, calls %v",
+		len(c.history.State), blobs, ids)
 }
 
 // turn is one live duplex stream: the conversation, its body and response,
@@ -138,14 +171,17 @@ func (t *turn) converse(ctx context.Context) error {
 		// The handoff answer has to reach the server before the caller's
 		// cancel tears the request down, or the transport resets the stream
 		// and Cursor keeps waiting on an execution Relo already answered.
-		awaitStreamEnd(t.reader, time.Second)
+		t.conversation.drain(t.reader, time.Second)
 	}
 	return runErr
 }
 
-// awaitStreamEnd reads until the server ends the stream or the grace runs
-// out. Only a handoff turn calls it, and it answers nothing further.
-func awaitStreamEnd(reader *cursor.FrameReader, grace time.Duration) {
+// drain reads until the server ends the stream or the grace runs out. Only a
+// handoff turn calls it: the turn already ended on the handoff, so the frames
+// that follow carry the usage and nothing else. The writer is closed by then,
+// so no frame is answered. The read runs in its own goroutine, which the grace
+// abandons; a frame it takes after that is one the turn never sees.
+func (c *conversation) drain(reader *cursor.FrameReader, grace time.Duration) {
 	if reader == nil {
 		return
 	}
@@ -153,7 +189,11 @@ func awaitStreamEnd(reader *cursor.FrameReader, grace time.Duration) {
 	go func() {
 		defer close(done)
 		for {
-			if _, ended, err := reader.Next(); ended || err != nil {
+			payload, ended, err := reader.Next()
+			if ended || err != nil {
+				return
+			}
+			if !c.observeUsage(payload) {
 				return
 			}
 		}
@@ -162,6 +202,32 @@ func awaitStreamEnd(reader *cursor.FrameReader, grace time.Duration) {
 	case <-done:
 	case <-time.After(grace):
 	}
+	c.usageLock.Lock()
+	c.drained = true
+	c.usageLock.Unlock()
+}
+
+// observeUsage applies the usage frames of a turn that already ended. Only
+// the counters and the token estimate are read; every other frame belongs to
+// a turn that is over. It reports false once the turn has read the usage, so
+// an abandoned reader stops instead of racing the turn that follows it.
+func (c *conversation) observeUsage(payload []byte) bool {
+	c.usageLock.Lock()
+	defer c.usageLock.Unlock()
+	if c.drained {
+		return false
+	}
+	message, err := ParseServerMessage(payload)
+	if err != nil || message.Update == nil {
+		return true
+	}
+	switch message.UpdateKind {
+	case updateTokenDelta:
+		c.output += int(cursor.Uint(message.Update, tokenDeltaTokens))
+	case updateTurnEnded:
+		c.applyTurnEndedLocked(message.Update)
+	}
+	return true
 }
 
 func orDefault(value, fallback time.Duration) time.Duration {
@@ -241,6 +307,16 @@ func (r *Runner) checkStreamStatus(response *http.Response) error {
 }
 
 func (r *Runner) openStream(ctx context.Context, initial []byte) (*cursor.FrameReader, *io.PipeWriter, *http.Response, error) {
+	reader, writer, response, err := r.openStreamOnce(ctx, initial)
+	if err == nil || ctx.Err() != nil || !errors.Is(err, io.ErrClosedPipe) {
+		return reader, writer, response, err
+	}
+	// A pooled connection can close under the non-rewindable pipe body before
+	// any response arrives; one fresh request is the only way to resend it.
+	return r.openStreamOnce(ctx, initial)
+}
+
+func (r *Runner) openStreamOnce(ctx context.Context, initial []byte) (*cursor.FrameReader, *io.PipeWriter, *http.Response, error) {
 	request, writer, err := streamRequest(ctx, r.BaseURL, r.Token)
 	if err != nil {
 		return nil, nil, nil, err
@@ -343,6 +419,12 @@ type conversation struct {
 	// calling client. The turn is over for Relo even though Cursor never sent
 	// turnEnded: the result arrives in the client's next request.
 	externalHandoff bool
+	// usageLock guards the usage counters, which the drain after a handoff
+	// reads while the turn that owns them may still be finishing.
+	usageLock sync.Mutex
+	// drained reports that the turn has read the usage, which stops a reader
+	// the grace abandoned from touching the counters again.
+	drained bool
 }
 
 func newConversation(tools *ToolMap, history History, emit func([]inference.Event)) *conversation {
@@ -424,7 +506,7 @@ func (c *conversation) handleUpdate(message ServerMessage) error {
 			c.publish(inference.Event{Kind: inference.EventReasoningDelta, Text: text})
 		}
 	case updateTokenDelta:
-		c.output += int(cursor.Uint(message.Update, tokenDeltaTokens))
+		c.addOutputTokens(int(cursor.Uint(message.Update, tokenDeltaTokens)))
 	case updateTurnEnded:
 		c.applyTurnEnded(message.Update)
 	case updateToolStarted, updateToolCompleted:
@@ -442,6 +524,14 @@ func (c *conversation) handleUpdate(message ServerMessage) error {
 }
 
 func (c *conversation) applyTurnEnded(update []cursor.Field) {
+	c.usageLock.Lock()
+	defer c.usageLock.Unlock()
+	c.applyTurnEndedLocked(update)
+}
+
+// applyTurnEndedLocked adopts the counters of a finished turn. The caller
+// holds the usage lock.
+func (c *conversation) applyTurnEndedLocked(update []cursor.Field) {
 	usage := inference.UsageReport{
 		InputTokens:      int(optionalInt(update, turnedInput)),
 		OutputTokens:     int(optionalInt(update, turnedOutput)),
@@ -463,6 +553,14 @@ func optionalInt(fields []cursor.Field, number int) int64 {
 		}
 	}
 	return 0
+}
+
+// addOutputTokens adds to the turn's output estimate. The drain that follows
+// a handoff reads the same estimate, so the count is taken under the lock.
+func (c *conversation) addOutputTokens(tokens int) {
+	c.usageLock.Lock()
+	defer c.usageLock.Unlock()
+	c.output += tokens
 }
 
 func (c *conversation) handleToolUpdate(message ServerMessage) error {
@@ -780,12 +878,23 @@ func (c *conversation) finish(runErr, refusal error) ([]inference.Event, error) 
 // Cursor supplied, then tool_use. It is not an upstream failure, so the run
 // error the stream teardown produced is not reported.
 func (c *conversation) finishHandoff() ([]inference.Event, error) {
-	c.publishUsage()
+	c.usageLock.Lock()
+	used, output := c.usedUsage, c.output
+	c.usageLock.Unlock()
+	if used {
+		c.publishUsage()
+	} else if output > 0 {
+		// A handoff ends the turn before Cursor reports the final counters, so
+		// the token estimate the stream carried is all the turn has.
+		c.publish(inference.Event{Kind: inference.EventUsage, Usage: &inference.UsageReport{OutputTokens: output}})
+	}
 	c.publish(inference.Event{Kind: inference.EventTerminal, Terminal: &inference.TerminalInfo{Reason: inference.EventReasonToolUse}})
 	return c.events, nil
 }
 
 func (c *conversation) publishUsage() {
+	c.usageLock.Lock()
+	defer c.usageLock.Unlock()
 	if !c.usedUsage {
 		return
 	}

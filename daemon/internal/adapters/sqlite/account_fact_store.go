@@ -5,6 +5,7 @@ import (
 	"context"
 
 	"github.com/jonaskahn/relo/internal/account"
+	"github.com/jonaskahn/relo/internal/catalog"
 )
 
 // AccountFactStore adapts account context overrides to the account feature.
@@ -45,7 +46,42 @@ func (s *AccountFactStore) Save(ctx context.Context, fact account.ContextFact) e
 
 // Delete removes one account's overrides.
 func (s *AccountFactStore) Delete(ctx context.Context, credentialID string) error {
-	return s.repo.DeleteAccountFacts(ctx, credentialID)
+	if err := s.repo.DeleteAccountFacts(ctx, credentialID); err != nil {
+		return err
+	}
+	return s.repo.DeleteAccountCapabilities(ctx, credentialID)
+}
+
+// ListCapabilities returns one account's discovered facts and manual context
+// completions in the shared capability vocabulary.
+func (s *AccountFactStore) ListCapabilities(ctx context.Context, credentialID string) ([]catalog.AccountFactsRecord, error) {
+	all, err := s.repo.ListAccountCapabilities(ctx)
+	if err != nil {
+		return nil, err
+	}
+	facts := make([]catalog.AccountFactsRecord, 0, len(all))
+	for _, fact := range all {
+		if fact.CredentialID == credentialID {
+			facts = append(facts, fact)
+		}
+	}
+	return facts, nil
+}
+
+// ListProviderCapabilities returns every account capability fact of one
+// connection.
+func (s *AccountFactStore) ListProviderCapabilities(ctx context.Context, providerID string) ([]catalog.AccountFactsRecord, error) {
+	all, err := s.repo.ListAccountCapabilities(ctx)
+	if err != nil {
+		return nil, err
+	}
+	facts := make([]catalog.AccountFactsRecord, 0, len(all))
+	for _, fact := range all {
+		if fact.ProviderID == providerID {
+			facts = append(facts, fact)
+		}
+	}
+	return facts, nil
 }
 
 func factsOf(rows []AccountFactRow) []account.ContextFact {

@@ -33,6 +33,7 @@ daemon/                       Go module
   tests/                       unit, integration, end-to-end, performance,
                                fixtures, and shared testkit
   tools/genicons/              icon generator
+  tools/modelsdevseed/         build-time models.dev seed generator
   go.mod go.sum .golangci.yml  Go dependencies and lint configuration
   .gitignore                   generated and local-file exclusions
 console/                      SvelteKit console

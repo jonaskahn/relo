@@ -23,6 +23,16 @@ func (s *Snapshot) Model(providerID, modelID string) (Model, bool) {
 	return model, found
 }
 
+// AdvertisedModel returns the capability view shared by every enabled
+// account behind a model. When no account-scoped facts narrowed it, the
+// shared model definition is returned unchanged.
+func (s *Snapshot) AdvertisedModel(model Model) Model {
+	if advertised, found := s.advertised[key{providerID: model.ProviderID, modelID: model.ID}]; found {
+		return advertised
+	}
+	return model
+}
+
 // ModelsNamed returns every model with this identifier, across providers, in
 // the order routing tries them.
 func (s *Snapshot) ModelsNamed(modelID string) []Model {
@@ -397,7 +407,7 @@ func (s *Snapshot) CapabilityWarnings(group Group) []string {
 	warnings := make([]string, 0, 3)
 	seen := capabilitySpread{}
 	for _, model := range s.GroupModels(group) {
-		seen.observe(model)
+		seen.observe(s.AdvertisedModel(model))
 	}
 	return seen.warnings(warnings)
 }
@@ -444,6 +454,7 @@ func (s *Snapshot) PromisedCapabilities(group Group) (tools, reasoning, vision *
 	var statedTools, deniedTools bool
 	var statedReasoning, deniedReasoning, statedVision, deniedVision bool
 	for _, model := range s.GroupModels(group) {
+		model = s.AdvertisedModel(model)
 		if model.SupportsTools != nil {
 			if *model.SupportsTools {
 				statedTools = true

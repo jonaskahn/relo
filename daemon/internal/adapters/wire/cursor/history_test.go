@@ -3,6 +3,7 @@ package cursor
 import (
 	"encoding/json"
 	"fmt"
+	"reflect"
 	"testing"
 
 	adapterscursor "github.com/jonaskahn/relo/internal/adapters/cursor"
@@ -157,6 +158,124 @@ func TestBuildHistoryResume(t *testing.T) {
 	if len(fields) != 1 || fields[0].Number != actionResume {
 		t.Fatalf("action = %+v, want a resume over the tool result", fields)
 	}
+}
+
+// TestBuildHistoryEncodesToolArgumentsAsProtoValues covers the replayed
+// tool call Cursor refused: every argument is a google.protobuf.Value, not
+// the JSON text a Value reader cannot decode.
+func TestBuildHistoryEncodesToolArgumentsAsProtoValues(t *testing.T) {
+	const arguments = `{"path":".","limit":25,"options":{"recursive":true},"tags":["a","b"]}`
+	request := &inference.Request{Model: "sonnet", Messages: []inference.Message{
+		{Role: inference.RoleUser, Content: []inference.ContentPart{{Type: inference.ContentTypeText, Text: "read foo"}}},
+		{Role: inference.RoleAssistant, ToolCalls: []inference.ToolCall{{ID: "call-1", Name: "read", Arguments: arguments}}},
+		{Role: inference.RoleTool, ToolCallID: "call-1", Name: "read", Content: []inference.ContentPart{{Type: inference.ContentTypeText, Text: "contents"}}},
+		{Role: inference.RoleUser, Content: []inference.ContentPart{{Type: inference.ContentTypeText, Text: "thanks"}}},
+	}}
+	tools, err := BuildToolMap([]inference.Tool{{Name: "read", Parameters: []byte(`{"type":"object"}`)}})
+	if err != nil {
+		t.Fatalf("BuildToolMap() error = %v", err)
+	}
+	history, _, err := BuildHistory(request, tools)
+	if err != nil {
+		t.Fatalf("BuildHistory() error = %v", err)
+	}
+	call := replayedToolCall(t, history)
+	if call.ToolCallID != "call-1" || call.ToolName != WireName("read") {
+		t.Fatalf("call = %+v, want the declared read call", call)
+	}
+	var want map[string]any
+	if err := json.Unmarshal([]byte(arguments), &want); err != nil {
+		t.Fatalf("arguments: %v", err)
+	}
+	if len(call.Args) != len(want) {
+		t.Fatalf("args = %v, want %v", call.Args, want)
+	}
+	for key, expected := range want {
+		got, ok := decodeJSONValue(call.Args[key])
+		if !ok {
+			t.Fatalf("argument %q is not a google.protobuf.Value: %x", key, call.Args[key])
+		}
+		if !reflect.DeepEqual(got, expected) {
+			t.Fatalf("argument %q = %#v, want %#v", key, got, expected)
+		}
+	}
+}
+
+// TestBuildHistoryReplaysAnUnansweredToolCall covers the assistant call whose
+// result has not arrived yet: the replay still carries the call and its args.
+func TestBuildHistoryReplaysAnUnansweredToolCall(t *testing.T) {
+	request := &inference.Request{Model: "sonnet", Messages: []inference.Message{
+		{Role: inference.RoleUser, Content: []inference.ContentPart{{Type: inference.ContentTypeText, Text: "read foo"}}},
+		{Role: inference.RoleAssistant, ToolCalls: []inference.ToolCall{{ID: "call-1", Name: "read", Arguments: `{"path":"foo"}`}}},
+		{Role: inference.RoleUser, Content: []inference.ContentPart{{Type: inference.ContentTypeText, Text: "thanks"}}},
+	}}
+	tools, err := BuildToolMap([]inference.Tool{{Name: "read", Parameters: []byte(`{"type":"object"}`)}})
+	if err != nil {
+		t.Fatalf("BuildToolMap() error = %v", err)
+	}
+	history, _, err := BuildHistory(request, tools)
+	if err != nil {
+		t.Fatalf("BuildHistory() error = %v", err)
+	}
+	call := replayedToolCall(t, history)
+	if call.ToolCallID != "call-1" || call.ToolName != WireName("read") {
+		t.Fatalf("call = %+v, want the unanswered read call", call)
+	}
+	path, ok := decodeJSONValue(call.Args["path"])
+	if !ok || path != "foo" {
+		t.Fatalf("path = %#v %v, want the replayed argument", path, ok)
+	}
+}
+
+func replayedToolCall(t *testing.T, history History) MCPCall {
+	t.Helper()
+	state, err := adapterscursor.Parse(history.State)
+	if err != nil {
+		t.Fatalf("parse state: %v", err)
+	}
+	turnIDs := rawFields(state, stateTurns)
+	if len(turnIDs) != 1 {
+		t.Fatalf("turns = %d, want one", len(turnIDs))
+	}
+	turnBlob, found := history.Store.Get(turnIDs[0])
+	if !found {
+		t.Fatal("turn blob missing")
+	}
+	wrapped, err := adapterscursor.Parse(turnBlob)
+	if err != nil || len(wrapped) != 1 || wrapped[0].Number != 1 {
+		t.Fatalf("wrapped turn = %v %v", wrapped, err)
+	}
+	turn, err := adapterscursor.Parse(wrapped[0].Raw)
+	if err != nil {
+		t.Fatalf("parse turn: %v", err)
+	}
+	for _, field := range turn {
+		if field.Number != turnSteps || field.Wire != 2 {
+			continue
+		}
+		stepBlob, found := history.Store.Get(field.Raw)
+		if !found {
+			t.Fatalf("step blob %x missing: steps must be blob ids", field.Raw)
+		}
+		step, err := adapterscursor.Parse(stepBlob)
+		if err != nil {
+			t.Fatalf("parse step: %v", err)
+		}
+		for _, nested := range step {
+			if nested.Number != stepToolCall || nested.Wire != 2 {
+				continue
+			}
+			call, isMCP, err := ParseToolCall(nested.Raw)
+			if err != nil {
+				t.Fatalf("ParseToolCall() error = %v", err)
+			}
+			if isMCP {
+				return call
+			}
+		}
+	}
+	t.Fatal("no replayed tool call in the turn")
+	return MCPCall{}
 }
 
 func TestToolResultJSON(t *testing.T) {

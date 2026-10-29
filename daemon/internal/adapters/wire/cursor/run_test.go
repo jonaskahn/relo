@@ -93,6 +93,12 @@ func turnEndedPayload() []byte {
 	return ended.BytesOut()
 }
 
+func tokenDeltaPayload(tokens int64) []byte {
+	var delta adapterscursor.Writer
+	delta.Int64(tokenDeltaTokens, tokens)
+	return delta.BytesOut()
+}
+
 func mcpArgsPayload(name, toolCallID string) []byte {
 	var args adapterscursor.Writer
 	args.String(1, name)
@@ -416,6 +422,34 @@ func TestRunReportsATrailerRefusal(t *testing.T) {
 	}
 }
 
+// TestRunSummarizesARefusedReplay covers the refusal that names a state the
+// conversation already holds. The summary says what the turn replayed, so a
+// rejected state can be read without the blobs that carried it.
+func TestRunSummarizesARefusedReplay(t *testing.T) {
+	server := newFixtureServer(t, func(s *fixtureServer, w http.ResponseWriter, reader *adapterscursor.FrameReader) {
+		_ = parseClientMessage(t, s.next(reader))
+		s.writeEnd(w, []byte(`{"error":{"code":"failed_precondition","message":"Error"}}`))
+	})
+	codec := NewCodec(server.server.URL)
+	_, err := codec.RunBidirectional(context.Background(), wire.BidirectionalCall{
+		Client: h2Client(server.server.Client()), Request: testRequest(), Opts: wire.CodecOpts{
+			BaseURL: server.server.URL, CredentialRef: "token", Cursor: testSelection(),
+		},
+	})
+	if err == nil {
+		t.Fatal("RunBidirectional() succeeded on a refused stream")
+	}
+	if !strings.Contains(err.Error(), "replayed state:") {
+		t.Fatalf("RunBidirectional() error = %v, want the replay summary", err)
+	}
+	// The refusal still classifies as itself, so the next request rotates
+	// onto a fresh wire conversation.
+	var refusal adapterscursor.EndStream
+	if !errors.As(err, &refusal) || refusal.Name != "failed_precondition" {
+		t.Fatalf("RunBidirectional() error = %v, want the refusal itself", err)
+	}
+}
+
 func TestRunToolHandoff(t *testing.T) {
 	server := newFixtureServer(t, func(s *fixtureServer, w http.ResponseWriter, reader *adapterscursor.FrameReader) {
 		_ = parseClientMessage(t, s.next(reader))
@@ -466,5 +500,48 @@ func TestRunToolHandoff(t *testing.T) {
 	}
 	if terminal != inference.EventReasonToolUse {
 		t.Fatalf("terminal = %q, want tool_use", terminal)
+	}
+}
+
+// TestRunToolHandoffRecordsTheUsage covers the native turn that hands a tool
+// to the client: it ends before Cursor reports the final counters, so the
+// usage the stream carried is all the turn has. A turn that recorded nothing
+// left the request's token count at zero.
+func TestRunToolHandoffRecordsTheUsage(t *testing.T) {
+	server := newFixtureServer(t, func(s *fixtureServer, w http.ResponseWriter, reader *adapterscursor.FrameReader) {
+		_ = parseClientMessage(t, s.next(reader))
+		s.write(w, nativeExec(2, "exec-shell", execShell, shellArgsFrame("ls", "/tmp", "call-1")))
+		_ = parseClientMessage(t, s.next(reader))
+		// The counters arrive after the handoff, in the frames the drain reads.
+		s.write(w, serverUpdate(14, turnEndedPayload()))
+		for {
+			_, ended, err := reader.Next()
+			if ended || err != nil {
+				return
+			}
+		}
+	})
+	request := testRequest()
+	request.Tools = []inference.Tool{{Name: "bash", Description: "run a command", Parameters: []byte(`{"type":"object"}`)}}
+	codec := NewCodec(server.server.URL)
+	events, err := codec.RunBidirectional(context.Background(), wire.BidirectionalCall{
+		Client: h2Client(server.server.Client()), Request: request, Opts: wire.CodecOpts{
+			BaseURL: server.server.URL, CredentialRef: "token", Cursor: testSelection(),
+		},
+	})
+	if err != nil {
+		t.Fatalf("RunBidirectional() error = %v", err)
+	}
+	var usage *inference.UsageReport
+	for _, event := range events {
+		if event.Kind == inference.EventUsage {
+			usage = event.Usage
+		}
+	}
+	if usage == nil {
+		t.Fatal("the handoff turn recorded no usage")
+	}
+	if usage.InputTokens != 12 || usage.OutputTokens != 34 {
+		t.Fatalf("usage = %+v, want the counters Cursor reported", usage)
 	}
 }

@@ -33,6 +33,17 @@ func translateFrame(t *testing.T, variant int, args []byte, execID string) nativ
 	return call
 }
 
+// toolCallFrame encodes one tool call update the way Cursor sends it: the
+// variant's own message, whose args field holds the arguments.
+func toolCallFrame(callID string, variant int, args []byte) []byte {
+	var inner adapterscursor.Writer
+	inner.Message(toolCallArgsField, args)
+	var call adapterscursor.Writer
+	call.Message(variant, inner.BytesOut())
+	call.String(callIDField, callID)
+	return call.BytesOut()
+}
+
 // TestNativeArgumentsFollowEachVariant pins the arguments one native execution
 // becomes on the client side: the keys, and the defaults a missing field takes.
 func TestNativeArgumentsFollowEachVariant(t *testing.T) {
@@ -167,6 +178,25 @@ func TestToolCallVariantsCoverEveryDeclaredCall(t *testing.T) {
 	}
 }
 
+// TestToolCallUpdateCarriesTheArguments pins the arguments a tool call update
+// decodes to. The update carries the variant's own message, so reading it as
+// the arguments put the whole message into the command, which reached the
+// client as an unrunnable shell command.
+func TestToolCallUpdateCarriesTheArguments(t *testing.T) {
+	call, ok, err := ParseNativeToolCall(toolCallFrame("call-1", callShell,
+		argsFrame(map[int]string{shellCommand: "git status && git diff", shellWorkingDir: "/src"}, nil)))
+	if err != nil || !ok {
+		t.Fatalf("ParseNativeToolCall() = %v %v, want a call", ok, err)
+	}
+	if call.command != "git status && git diff" {
+		t.Fatalf("command = %q, want the shell command alone", call.command)
+	}
+	args := call.arguments("shell")
+	if args["command"] != "git status && git diff" || args["workdir"] != "/src" {
+		t.Fatalf("arguments = %v, want the command and the workdir", args)
+	}
+}
+
 // TestNativeHandoffAnswersTheWaitingVariant pins the answer each handed-off
 // execution returns, so the server is never left blocked on one Relo moved to
 // the client.
@@ -236,14 +266,32 @@ func TestParseNativeToolCallRefusesWhatItCannotRead(t *testing.T) {
 		}
 	})
 
-	// A non-shell variant carries no wrapper field 1 for the args to be read
-	// out of, so the update is left to the execution frame that follows it.
-	t.Run("a variant without the shell's args wrapper reports no call", func(t *testing.T) {
+	t.Run("a known variant without arguments is not a call", func(t *testing.T) {
 		var call adapterscursor.Writer
 		call.String(callIDField, "call-1")
-		call.Message(callRead, argsFrame(map[int]string{readPath: "/a"}, nil))
+		call.Empty(callShell)
 		if _, ok, err := ParseNativeToolCall(call.BytesOut()); ok || err != nil {
 			t.Fatalf("ParseNativeToolCall() = %v %v, want neither a call nor an error", ok, err)
+		}
+	})
+
+	// A read update names its own argument message, whose offset and limit
+	// are numbered differently from the execution channel's read.
+	t.Run("a read update carries its own offset and limit", func(t *testing.T) {
+		var call adapterscursor.Writer
+		call.String(callIDField, "call-1")
+		var inner adapterscursor.Writer
+		inner.Message(toolCallArgsField, argsFrame(
+			map[int]string{readPath: "/a"},
+			map[int]int64{readToolOffset: 40, readToolLimit: 20}))
+		call.Message(callRead, inner.BytesOut())
+		parsed, ok, err := ParseNativeToolCall(call.BytesOut())
+		if err != nil || !ok {
+			t.Fatalf("ParseNativeToolCall() = %v %v, want a call", ok, err)
+		}
+		args := parsed.arguments("read")
+		if args["path"] != "/a" || args["offset"] != int64(40) || args["limit"] != int64(20) {
+			t.Fatalf("arguments = %v, want the path, offset, and limit", args)
 		}
 	})
 }

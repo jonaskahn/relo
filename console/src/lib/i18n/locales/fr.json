@@ -669,7 +669,15 @@
           "editLimits": "Limites",
           "editCapabilities": "Capacités",
           "overrides": "Remplacements",
-          "overridesNone": "Aucun remplacement — le modèle suit le provider, puis models.dev."
+          "overridesNone": "Aucun remplacement — le modèle suit le provider, puis models.dev.",
+          "sourceAccount": "Défini par le compte",
+          "sourceProvider": "Défini par la connexion",
+          "sourceModelsDev": "Défini par models.dev",
+          "sourceManual": "Complément manuel",
+          "sourceManualInactive": "Valeur manuelle enregistrée (inactive)",
+          "notProvided": "Non fourni",
+          "readOnlyCapability": "Défini par {source} ; cette valeur ne peut pas être modifiée.",
+          "exactValue": "{label} ({exact} jetons)"
         },
         "accounts": {
           "title": "Comptes",

@@ -16,11 +16,32 @@ import (
 // The body is edited as raw JSON members rather than decoded into `any`: a
 // round trip through Go values escapes HTML, coerces numbers through a float,
 // and reorders keys, and any of those rewrites the client's own prompt.
-func rebaseNativeBody(raw []byte, model string, metadata *metadataDef) ([]byte, bool) {
+type nativeOverride struct {
+	MaxTokens       int
+	Thinking        *thinkingDef
+	EnforceThinking bool
+}
+
+func rebaseNativeBody(raw []byte, model string, metadata *metadataDef, override nativeOverride) ([]byte, bool) {
 	members, ok := topLevelMembers(raw)
 	if !ok || !hasMessages(members) {
 		return nil, false
 	}
+	rebuilt, written := rewriteNativeMembers(members, model, metadata, override)
+	if !written {
+		rebuilt = append(rebuilt, member{key: "model", value: modelValue(model)})
+	}
+	if override.EnforceThinking && override.Thinking != nil && !hasMember(rebuilt, "thinking") {
+		rebuilt = append(rebuilt, member{key: "thinking", value: thinkingValue(override.Thinking)})
+	}
+	encoded, err := encodeMembers(rebuilt)
+	if err != nil {
+		return nil, false
+	}
+	return encoded, true
+}
+
+func rewriteNativeMembers(members []member, model string, metadata *metadataDef, override nativeOverride) ([]member, bool) {
 	target := modelValue(model)
 	rebuilt := make([]member, 0, len(members)+1)
 	written := false
@@ -29,24 +50,47 @@ func rebaseNativeBody(raw []byte, model string, metadata *metadataDef) ([]byte, 
 		case "model":
 			current.value = target
 			written = true
+		case "max_tokens":
+			if override.MaxTokens > 0 {
+				current.value = intValue(override.MaxTokens)
+			}
 		case "metadata":
 			if metadata == nil {
 				continue
 			}
 			current.value = metadataValue(metadata)
 		case "thinking":
-			current.value = normalizeThinkingDisplay(current.value)
+			if override.EnforceThinking {
+				if override.Thinking == nil {
+					continue
+				}
+				current.value = thinkingValue(override.Thinking)
+			} else {
+				current.value = normalizeThinkingDisplay(current.value)
+			}
 		}
 		rebuilt = append(rebuilt, current)
 	}
-	if !written {
-		rebuilt = append(rebuilt, member{key: "model", value: target})
+	return rebuilt, written
+}
+
+func hasMember(members []member, name string) bool {
+	for _, current := range members {
+		if current.key == name {
+			return true
+		}
 	}
-	encoded, err := encodeMembers(rebuilt)
-	if err != nil {
-		return nil, false
-	}
-	return encoded, true
+	return false
+}
+
+func intValue(value int) json.RawMessage {
+	encoded, _ := json.Marshal(value)
+	return encoded
+}
+
+func thinkingValue(thinking *thinkingDef) json.RawMessage {
+	encoded, _ := json.Marshal(thinking)
+	return encoded
 }
 
 type member struct {

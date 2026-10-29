@@ -152,6 +152,11 @@ func (s *Service) ModelsDevState(ctx context.Context) (catalog.ModelsDevState, e
 }
 
 func mergeModelsDevRow(state catalog.ModelsDevState, row catalog.ModelsDevStateRecord) catalog.ModelsDevState {
+	if state.Available && state.Origin == catalog.ModelsDevOriginSeed {
+		// The embedded seed is the copy being read, so its own build time and
+		// freshness stand rather than a row left by an earlier process.
+		return state
+	}
 	if row.FetchedAtMs > state.FetchedAtMs {
 		state.FetchedAtMs = row.FetchedAtMs
 	}
@@ -168,7 +173,11 @@ func mergeModelsDevRow(state catalog.ModelsDevState, row catalog.ModelsDevStateR
 		state.ProvidersCount = row.ProvidersCount
 		state.ModelsCount = row.ModelsCount
 	}
-	state.Stale = row.LastError != ""
+	if !state.Available {
+		state.Stale = false
+	} else if state.Origin == catalog.ModelsDevOriginCache && row.LastError != "" {
+		state.Stale = true
+	}
 	return state
 }
 
@@ -252,7 +261,13 @@ func modelsDevStateRow(s *Service, ctx context.Context, idx *catalog.ModelsDevIn
 }
 
 func carriesModelsDevFacts(model catalog.Model) bool {
-	if model.FactsModelsDev != (catalog.Facts{}) {
+	facts := model.FactsModelsDev
+	if facts.Name != nil || facts.Description != nil || facts.Family != nil || facts.Category != nil ||
+		facts.ContextWindow != nil || facts.MaxInput != nil || facts.MaxOutput != nil ||
+		facts.Tools != nil || facts.Reasoning != nil || facts.Vision != nil ||
+		facts.ReasoningEfforts != nil || facts.ReasoningToggle != nil || facts.ReasoningBudget != nil ||
+		facts.ReasoningBudgetMin != nil || facts.ReasoningBudgetMax != nil ||
+		facts.Status != nil || facts.ReleaseDate != nil {
 		return true
 	}
 	return model.PricesModelsDev.Known()

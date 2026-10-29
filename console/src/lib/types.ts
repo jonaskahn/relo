@@ -316,6 +316,43 @@ export interface ContextLayers {
 	readonly modelsdev: number | null;
 }
 
+/** One protected capability with its effective source and manual completion state. */
+export interface CapabilityStateInt {
+	readonly value: number | null;
+	readonly source: string;
+	readonly editable: boolean;
+	readonly manual: number | null;
+	readonly manual_active: boolean;
+}
+
+/** One protected boolean capability with its effective source and manual completion state. */
+export interface CapabilityStateBool {
+	readonly value: boolean | null;
+	readonly source: string;
+	readonly editable: boolean;
+	readonly manual: boolean | null;
+	readonly manual_active: boolean;
+}
+
+/** The reasoning ladder's effective source and superseded manual value. */
+export interface CapabilityStateEfforts {
+	readonly value: string[] | null;
+	readonly source: string;
+	readonly manual: string[] | null;
+	readonly manual_active: boolean;
+}
+
+/** Per-field capability state exposed by the management API. */
+export interface ModelCapabilityStates {
+	readonly context_window: CapabilityStateInt;
+	readonly max_input: CapabilityStateInt;
+	readonly max_output: CapabilityStateInt;
+	readonly tools: CapabilityStateBool;
+	readonly reasoning: CapabilityStateBool;
+	readonly vision: CapabilityStateBool;
+	readonly reasoning_efforts: CapabilityStateEfforts;
+}
+
 /** The override layer a console writes, which replaces the layer that was stored before it.
  *  A null field clears a value rather than stating zero. */
 export interface ModelOverride {
@@ -365,6 +402,7 @@ export interface Model {
 	// capability_override is the operator's own tools, reasoning, and vision.
 	// A null field is one they have not set, so the row can mark a forced value.
 	readonly capability_override: Capabilities;
+	readonly capability_states?: ModelCapabilityStates;
 	readonly status: string;
 	readonly release_date: string;
 	readonly enabled: boolean;
@@ -499,6 +537,10 @@ export interface AccountContextModel {
 	readonly override: number | null;
 	readonly inherited: number | null;
 	readonly max_input: number | null;
+	readonly max_output?: number | null;
+	readonly context_source?: string;
+	readonly max_input_source?: string;
+	readonly editable?: boolean;
 	readonly listed: boolean;
 }
 

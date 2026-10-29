@@ -46,8 +46,6 @@ func TestModelsDevOnlyDescribesTheModelsTheProviderServes(t *testing.T) {
 		ModelsFormat: string(catalog.ModelsOpenAI), ModelsDevProviderID: "groq",
 		Enabled: true, Rank: 100,
 	})
-	h.addAccount("groq", "work", "sk-1")
-
 	result, err := manager.RefreshProviderModels(ctx, "groq")
 	if err != nil {
 		t.Fatalf("RefreshProviderModels() error = %v", err)
@@ -62,10 +60,8 @@ func TestModelsDevOnlyDescribesTheModelsTheProviderServes(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Model(live-1) error = %v", err)
 	}
-	// The catalog's own 4096, offered down to the whole thousand a client is
-	// asked for.
-	if live.ContextWindow == nil || *live.ContextWindow != 4_000 {
-		t.Fatalf("context window = %v, want the catalog's own 4096 rounded to 4000", live.ContextWindow)
+	if live.ContextWindow == nil || *live.ContextWindow != 4_096 {
+		t.Fatalf("context window = %v, want the catalog's exact 4096", live.ContextWindow)
 	}
 	if live.Prices.ModelsDev.Input == nil || *live.Prices.ModelsDev.Input != 1_000_000 {
 		t.Fatalf("catalog rate = %v, want the rate the catalog stated", live.Prices.ModelsDev.Input)
@@ -161,8 +157,8 @@ func TestModelsDevCapabilitiesFollowTheAccountKind(t *testing.T) {
 	on := true
 	if _, err := manager.PatchModel(ctx, "groq", "live-1", appcatalog.ModelPatch{
 		Override: &appcatalog.ModelOverride{Reasoning: &on},
-	}); err != nil {
-		t.Fatalf("PatchModel() error = %v", err)
+	}); err == nil {
+		t.Fatal("PatchModel() error = nil, want the models.dev reasoning definition protected")
 	}
 	if _, err := manager.RefreshProviderModels(ctx, "groq"); err != nil {
 		t.Fatalf("RefreshProviderModels() error = %v", err)
@@ -172,13 +168,13 @@ func TestModelsDevCapabilitiesFollowTheAccountKind(t *testing.T) {
 		t.Fatalf("Model(live-1) error = %v", err)
 	}
 	if overridden.Capabilities.Reasoning == nil || !*overridden.Capabilities.Reasoning {
-		t.Fatalf("reasoning = %v, want the operator's override to survive the refresh", overridden.Capabilities.Reasoning)
+		t.Fatalf("reasoning = %v, want the models.dev definition to survive the refresh", overridden.Capabilities.Reasoning)
 	}
 	if !capabilityOn(overridden.Capabilities.Tools) || !capabilityOn(overridden.Capabilities.Vision) {
 		t.Fatalf("capabilities = %+v, want models.dev to keep the flags the override did not set", overridden.Capabilities)
 	}
-	if overridden.CapabilityOverride.Tools != nil || overridden.CapabilityOverride.Vision != nil {
-		t.Fatalf("override = %+v, want only reasoning forced", overridden.CapabilityOverride)
+	if overridden.CapabilityOverride.Tools != nil || overridden.CapabilityOverride.Reasoning != nil || overridden.CapabilityOverride.Vision != nil {
+		t.Fatalf("override = %+v, want the refused write to leave no stored completion", overridden.CapabilityOverride)
 	}
 
 	seedRow(t, h, sqlite.ProviderRow{
@@ -235,8 +231,8 @@ func TestCapabilityPatchKeepsTheRestOfTheOverride(t *testing.T) {
 	if err != nil {
 		t.Fatalf("PatchModel(reasoning) error = %v", err)
 	}
-	if patched.ContextWindow == nil || *patched.ContextWindow != 8_000 {
-		t.Fatalf("context = %v, want the window kept, rounded to 8000", patched.ContextWindow)
+	if patched.ContextWindow == nil || *patched.ContextWindow != 8_192 {
+		t.Fatalf("context = %v, want the exact window kept", patched.ContextWindow)
 	}
 	if !capabilityOn(patched.Capabilities.Reasoning) || !capabilityOn(patched.CapabilityOverride.Reasoning) {
 		t.Fatalf("reasoning = %+v override %+v, want on", patched.Capabilities.Reasoning, patched.CapabilityOverride.Reasoning)
@@ -251,7 +247,7 @@ func TestCapabilityPatchKeepsTheRestOfTheOverride(t *testing.T) {
 	if cleared.Capabilities.Reasoning != nil || cleared.CapabilityOverride.Reasoning != nil {
 		t.Fatalf("reasoning = %+v, want the override cleared", cleared.Capabilities)
 	}
-	if cleared.ContextWindow == nil || *cleared.ContextWindow != 8_000 {
+	if cleared.ContextWindow == nil || *cleared.ContextWindow != 8_192 {
 		t.Fatalf("context = %v, want the window kept after the flag was cleared", cleared.ContextWindow)
 	}
 }
@@ -284,7 +280,7 @@ func TestPricesPatchKeepsTheRestOfTheOverride(t *testing.T) {
 	if priced.Prices.Effective.Output == nil || *priced.Prices.Effective.Output != output {
 		t.Fatalf("output = %+v, want the rate the operator wrote", priced.Prices.Effective.Output)
 	}
-	if priced.ContextWindow == nil || *priced.ContextWindow != 8_000 {
+	if priced.ContextWindow == nil || *priced.ContextWindow != 8_192 {
 		t.Fatalf("context = %v, want the window the price write did not touch", priced.ContextWindow)
 	}
 
@@ -314,7 +310,7 @@ func TestPricesPatchKeepsTheRestOfTheOverride(t *testing.T) {
 	if cleared.Name != "Model 1" {
 		t.Fatalf("name = %q, want the name the layer held to stay", cleared.Name)
 	}
-	if cleared.ContextWindow == nil || *cleared.ContextWindow != 8_000 {
+	if cleared.ContextWindow == nil || *cleared.ContextWindow != 8_192 {
 		t.Fatalf("context = %v, want the window kept after the rates were cleared", cleared.ContextWindow)
 	}
 }

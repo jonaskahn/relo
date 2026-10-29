@@ -24,20 +24,24 @@ func TestAnthropicModelIDSeparatesThePickerPrefix(t *testing.T) {
 func TestAnthropicModelListStatesNullWhenUnknown(t *testing.T) {
 	window := int64(200_000)
 	entries := []listedModel{
-		{ID: "known", Name: "Known", ContextWindow: &window},
+		{ID: "known", Name: "Known", ContextWindow: &window, MaxInput: &window},
 		{ID: "unknown", Name: "Unknown"},
 	}
 
 	list := anthropicModelList(entries)
 	data, _ := list["data"].([]map[string]any)
 	if data[0]["max_input_tokens"] != window {
-		t.Fatalf("known entry = %+v, want the context window", data[0])
+		t.Fatalf("known entry = %+v, want the maximum input", data[0])
 	}
 	if data[0]["max_tokens"] != nil {
 		t.Fatalf("known entry = %+v, want a null output ceiling when unstated", data[0])
 	}
 	if data[1]["max_input_tokens"] != nil || data[1]["max_tokens"] != nil {
 		t.Fatalf("unknown entry = %+v, want both counts null", data[1])
+	}
+	extension, ok := data[0]["relo"].(map[string]any)
+	if !ok || extension["context_window"] != window {
+		t.Fatalf("extension = %+v, want the total context in the Relo namespace", extension)
 	}
 }
 

@@ -15,6 +15,9 @@ coverage.out
 /.relo/
 /config.toml
 
+# Downloaded models.dev build seed; `make seed` writes it, releases embed it.
+/daemon/internal/adapters/modelsdev/seeddata/modelsdev.json.gz
+
 # Local traffic capture proxy for debugging upstream requests (never commit)
 /debugger/
 

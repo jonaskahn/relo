@@ -80,8 +80,8 @@ func TestXiaomiModelsOnlyOfferThreeThinkLevels(t *testing.T) {
 	}
 
 	speech, ok := snap.Model("xiaomi", "mimo-asr")
-	if !ok || !sameEfforts(speech.ReasoningEfforts, []string{"low", "xhigh"}) {
-		t.Fatalf("xiaomi/mimo-asr efforts = %v, want the stored ladder left alone", speech.ReasoningEfforts)
+	if !ok || !sameEfforts(speech.ReasoningEfforts, []string{}) {
+		t.Fatalf("xiaomi/mimo-asr efforts = %v, want no ladder when reasoning is explicitly unsupported", speech.ReasoningEfforts)
 	}
 	other, ok := snap.Model("openai", "gpt-5")
 	if !ok || !sameEfforts(other.ReasoningEfforts, []string{"low", "xhigh"}) {

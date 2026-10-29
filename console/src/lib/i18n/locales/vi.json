@@ -669,7 +669,15 @@
           "editLimits": "Giới hạn",
           "editCapabilities": "Khả năng",
           "overrides": "Ghi đè",
-          "overridesNone": "Không có ghi đè — mô hình tuân theo nhà cung cấp, rồi models.dev."
+          "overridesNone": "Không có ghi đè — mô hình tuân theo nhà cung cấp, rồi models.dev.",
+          "sourceAccount": "Được xác định bởi tài khoản",
+          "sourceProvider": "Được xác định bởi kết nối",
+          "sourceModelsDev": "Được xác định bởi models.dev",
+          "sourceManual": "Bổ sung thủ công",
+          "sourceManualInactive": "Giá trị thủ công đã lưu (không hoạt động)",
+          "notProvided": "Không được cung cấp",
+          "readOnlyCapability": "Được xác định bởi {source}; không thể chỉnh sửa giá trị này.",
+          "exactValue": "{label} ({exact} token)"
         },
         "accounts": {
           "title": "Tài khoản",

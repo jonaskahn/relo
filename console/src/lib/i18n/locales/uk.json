@@ -669,7 +669,15 @@
           "editLimits": "Ліміти",
           "editCapabilities": "Можливості",
           "overrides": "Перевизначення",
-          "overridesNone": "Перевизначень немає — модель бере значення провайдера, потім models.dev."
+          "overridesNone": "Перевизначень немає — модель бере значення провайдера, потім models.dev.",
+          "sourceAccount": "Визначено обліковим записом",
+          "sourceProvider": "Визначено підключенням",
+          "sourceModelsDev": "Визначено models.dev",
+          "sourceManual": "Ручне заповнення",
+          "sourceManualInactive": "Збережене ручне значення (неактивне)",
+          "notProvided": "Не вказано",
+          "readOnlyCapability": "Визначено {source}; це значення не можна редагувати.",
+          "exactValue": "{label} ({exact} токенів)"
         },
         "accounts": {
           "title": "Акаунти",

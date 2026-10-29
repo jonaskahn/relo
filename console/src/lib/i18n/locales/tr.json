@@ -669,7 +669,15 @@
           "editLimits": "Sınırlar",
           "editCapabilities": "Yetenekler",
           "overrides": "Geçersiz kılmalar",
-          "overridesNone": "Geçersiz kılma yok — model sağlayıcıyı, ardından models.dev'i izler."
+          "overridesNone": "Geçersiz kılma yok — model sağlayıcıyı, ardından models.dev'i izler.",
+          "sourceAccount": "Hesap tarafından tanımlanır",
+          "sourceProvider": "Bağlantı tarafından tanımlanır",
+          "sourceModelsDev": "models.dev tarafından tanımlanır",
+          "sourceManual": "Manuel tamamlama",
+          "sourceManualInactive": "Kayıtlı manuel değer (etkin değil)",
+          "notProvided": "Sağlanmadı",
+          "readOnlyCapability": "{source} tarafından tanımlandığı için bu değer düzenlenemez.",
+          "exactValue": "{label} ({exact} belirteç)"
         },
         "accounts": {
           "title": "Hesaplar",

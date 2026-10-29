@@ -102,7 +102,13 @@ func (c *Codec) encodePayload(req *inference.Request, oauth bool, opts wire.Code
 	if err != nil || len(opts.NativeBody) == 0 {
 		return encoded, err
 	}
-	if rebased, ok := rebaseNativeBody(opts.NativeBody, req.Model, request.Metadata); ok {
+	override := nativeOverride{MaxTokens: request.MaxTokens}
+	if opts.ReasoningEfforts != nil || opts.ReasoningToggle || opts.ReasoningBudget ||
+		opts.ReasoningBudgetMin != nil || opts.ReasoningBudgetMax != nil {
+		override.EnforceThinking = true
+		override.Thinking = request.Thinking
+	}
+	if rebased, ok := rebaseNativeBody(opts.NativeBody, req.Model, request.Metadata, override); ok {
 		return rebased, nil
 	}
 	return encoded, nil

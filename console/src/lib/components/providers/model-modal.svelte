@@ -21,7 +21,12 @@
 	import TokenSizeField from './token-size-field.svelte';
 	import { formatDollars, formatTokens, formatUnitPrice, parseDollars } from '$lib/format';
 	import { contextLabel, parseContextInput, roundTokenCount } from '$lib/context-window';
-	import { SOURCE_LABEL_KEY, headingPriceSource, tilePriceSource } from '$lib/model-sources';
+	import {
+		CAPABILITY_SOURCE_LABEL_KEY,
+		SOURCE_LABEL_KEY,
+		headingPriceSource,
+		tilePriceSource
+	} from '$lib/model-sources';
 	import { effectiveDetailValue } from '$lib/model-detail';
 	import { PRICE_TAG_KEY, categoriesOf, isPriced, priceTag } from '$lib/model-filters';
 
@@ -100,6 +105,15 @@
 			if (value === null || value === undefined || value === '') return;
 			entries.push({ id, label: name, value });
 		};
+		const manual = (
+			id: 'context_window' | 'max_input' | 'max_output' | 'tools' | 'reasoning' | 'vision',
+			value: string
+		) => {
+			const state = shown.capability_states?.[id];
+			return state && !state.manual_active
+				? value + ' · ' + $t('ui.pages.providersPage.models.sourceManualInactive')
+				: value;
+		};
 		const layer = layers?.override ?? null;
 		if (layer !== null) {
 			push('name', label('detailName'), layer.name);
@@ -108,25 +122,37 @@
 			push(
 				'context',
 				label('detailContext'),
-				layer.context_window === null ? null : contextLabel(roundTokenCount(layer.context_window))
+				layer.context_window === null
+					? null
+					: manual('context_window', contextLabel(roundTokenCount(layer.context_window)))
 			);
 			push(
 				'max_input',
 				label('detailMaxInput'),
-				layer.max_input === null ? null : contextLabel(roundTokenCount(layer.max_input))
+				layer.max_input === null
+					? null
+					: manual('max_input', contextLabel(roundTokenCount(layer.max_input)))
 			);
 			push(
 				'max_output',
 				label('detailMaxOutput'),
-				layer.max_output === null ? null : formatTokens(layer.max_output)
+				layer.max_output === null ? null : manual('max_output', formatTokens(layer.max_output))
 			);
-			push('tools', label('detailTools'), layer.tools === null ? null : layer.tools ? yes : no);
+			push(
+				'tools',
+				label('detailTools'),
+				layer.tools === null ? null : manual('tools', layer.tools ? yes : no)
+			);
 			push(
 				'reasoning',
 				label('detailReasoning'),
-				layer.reasoning === null ? null : layer.reasoning ? yes : no
+				layer.reasoning === null ? null : manual('reasoning', layer.reasoning ? yes : no)
 			);
-			push('vision', label('detailVision'), layer.vision === null ? null : layer.vision ? yes : no);
+			push(
+				'vision',
+				label('detailVision'),
+				layer.vision === null ? null : manual('vision', layer.vision ? yes : no)
+			);
 		}
 		const money = (value: number | null | undefined) =>
 			value === null || value === undefined ? null : formatUnitPrice(value);
@@ -234,12 +260,20 @@
 	function show(key: keyof DetailLayer): string {
 		if (shown === null) return '—';
 		const value = effectiveDetailValue(shown, layers, key);
-		if (value === null || value === undefined) return '—';
+		if (value === null || value === undefined)
+			return $t('ui.pages.providersPage.models.notProvided');
 		if (key === 'context_window' || key === 'max_input') {
-			return contextLabel(roundTokenCount(Number(value)));
+			return $t('ui.pages.providersPage.models.exactValue', {
+				values: {
+					label: contextLabel(roundTokenCount(Number(value))),
+					exact: Number(value).toLocaleString()
+				}
+			});
 		}
 		if (key === 'max_output') {
-			return formatTokens(Number(value));
+			return $t('ui.pages.providersPage.models.exactValue', {
+				values: { label: formatTokens(Number(value)), exact: Number(value).toLocaleString() }
+			});
 		}
 		if (typeof value === 'boolean') {
 			return value ? $t('ui.common.yes') : $t('ui.common.no');
@@ -251,7 +285,22 @@
 		const map = layers?.effective_source ?? null;
 		const name = map ? (map[key as keyof typeof map] ?? '') : '';
 		if (name === '') return '';
-		return SOURCE_LABEL_KEY[name] ?? '';
+		return CAPABILITY_SOURCE_LABEL_KEY[name] ?? '';
+	}
+
+	function capabilityState(
+		key: 'context_window' | 'max_input' | 'max_output' | 'tools' | 'reasoning' | 'vision'
+	) {
+		return shown?.capability_states?.[key] ?? null;
+	}
+
+	function readOnlyNotice(
+		key: 'context_window' | 'max_input' | 'max_output' | 'tools' | 'reasoning' | 'vision'
+	): string {
+		const state = capabilityState(key);
+		if (state === null || state.editable) return '';
+		const source = CAPABILITY_SOURCE_LABEL_KEY[state.source] ?? state.source;
+		return $t('ui.pages.providersPage.models.readOnlyCapability', { values: { source } });
 	}
 
 	function priceSource(key: 'input' | 'output'): string {
@@ -306,6 +355,12 @@
 
 		return {
 			enabled: false,
+			contextEditable: true,
+			maxInputEditable: true,
+			maxOutputEditable: true,
+			toolsEditable: true,
+			reasoningEditable: true,
+			visionEditable: true,
 			name: '',
 			description: '',
 			category: '',
@@ -326,30 +381,31 @@
 			extCacheWrite: '',
 			initial: '',
 			body(): { enabled: boolean; override: ModelOverride } {
+				const override: Record<string, unknown> = {
+					name: draft.name.trim() === '' ? null : draft.name.trim(),
+					description: draft.description.trim() === '' ? null : draft.description.trim(),
+					category: this.category === '' ? null : this.category,
+					prices: {
+						input: parseDollars(this.input),
+						output: parseDollars(this.output),
+						cache_read: parseDollars(this.cacheRead),
+						cache_write: parseDollars(this.cacheWrite),
+						ext_threshold: parseDollars(this.extThreshold),
+						ext_input: parseDollars(this.extInput),
+						ext_output: parseDollars(this.extOutput),
+						ext_cache_read: parseDollars(this.extCacheRead),
+						ext_cache_write: parseDollars(this.extCacheWrite)
+					}
+				};
+				if (this.contextEditable) override.context_window = tokenCount(this.contextWindow);
+				if (this.maxInputEditable) override.max_input = tokenCount(this.maxInput);
+				if (this.maxOutputEditable) override.max_output = tokenCount(this.maxOutput);
+				if (this.toolsEditable) override.tools = parseTri(this.tools);
+				if (this.reasoningEditable) override.reasoning = parseTri(this.reasoning);
+				if (this.visionEditable) override.vision = parseTri(this.vision);
 				return {
 					enabled: this.enabled,
-					override: {
-						name: draft.name.trim() === '' ? null : draft.name.trim(),
-						description: draft.description.trim() === '' ? null : draft.description.trim(),
-						category: this.category === '' ? null : this.category,
-						context_window: tokenCount(this.contextWindow),
-						max_input: tokenCount(this.maxInput),
-						max_output: tokenCount(this.maxOutput),
-						tools: parseTri(this.tools),
-						reasoning: parseTri(this.reasoning),
-						vision: parseTri(this.vision),
-						prices: {
-							input: parseDollars(this.input),
-							output: parseDollars(this.output),
-							cache_read: parseDollars(this.cacheRead),
-							cache_write: parseDollars(this.cacheWrite),
-							ext_threshold: parseDollars(this.extThreshold),
-							ext_input: parseDollars(this.extInput),
-							ext_output: parseDollars(this.extOutput),
-							ext_cache_read: parseDollars(this.extCacheRead),
-							ext_cache_write: parseDollars(this.extCacheWrite)
-						}
-					}
+					override: override as ModelOverride
 				};
 			},
 			problems(): { contextWindow: string; maxInput: string; maxOutput: string } {
@@ -362,16 +418,27 @@
 			load(source: Model) {
 				const layer: DetailLayer = source.details?.override ?? emptyLayer();
 				const prices: Prices = source.prices.override;
+				const states = source.capability_states;
+				this.contextEditable = states?.context_window?.editable ?? true;
+				this.maxInputEditable = states?.max_input?.editable ?? true;
+				this.maxOutputEditable = states?.max_output?.editable ?? true;
+				this.toolsEditable = states?.tools?.editable ?? true;
+				this.reasoningEditable = states?.reasoning?.editable ?? true;
+				this.visionEditable = states?.vision?.editable ?? true;
 				this.enabled = source.enabled;
 				this.name = layer.name ?? '';
 				this.description = layer.description ?? '';
 				this.category = layer.category ?? '';
-				this.contextWindow = sizeLabel(layer.context_window);
-				this.maxInput = sizeLabel(layer.max_input);
-				this.maxOutput = sizeLabel(layer.max_output);
-				this.tools = tri(layer.tools);
-				this.reasoning = tri(layer.reasoning);
-				this.vision = tri(layer.vision);
+				this.contextWindow = sizeLabel(
+					this.contextEditable ? layer.context_window : source.context_window
+				);
+				this.maxInput = sizeLabel(this.maxInputEditable ? layer.max_input : source.max_input);
+				this.maxOutput = sizeLabel(this.maxOutputEditable ? layer.max_output : source.max_output);
+				this.tools = this.toolsEditable ? tri(layer.tools) : tri(source.capabilities.tools);
+				this.reasoning = this.reasoningEditable
+					? tri(layer.reasoning)
+					: tri(source.capabilities.reasoning);
+				this.vision = this.visionEditable ? tri(layer.vision) : tri(source.capabilities.vision);
 				this.input = formatDollars(prices.input);
 				this.output = formatDollars(prices.output);
 				this.cacheRead = formatDollars(prices.cache_read);
@@ -788,6 +855,8 @@
 								label={$t('ui.pages.providersPage.models.overrideContext')}
 								bind:value={draft.contextWindow}
 								presets
+								disabled={!draft.contextEditable}
+								notice={!draft.contextEditable ? readOnlyNotice('context_window') : ''}
 								editLabel={$t('ui.pages.providersPage.context.edit', {
 									values: {
 										value: draft.contextWindow || $t('ui.pages.providersPage.context.unset')
@@ -800,7 +869,10 @@
 								label={$t('ui.pages.providersPage.models.overrideMaxInput')}
 								bind:value={draft.maxInput}
 								presets
-								notice={$t('ui.pages.providersPage.models.overrideMaxInputNotice')}
+								disabled={!draft.maxInputEditable}
+								notice={!draft.maxInputEditable
+									? readOnlyNotice('max_input')
+									: $t('ui.pages.providersPage.models.overrideMaxInputNotice')}
 								editLabel={$t('ui.pages.providersPage.models.overrideEditMaxInput', {
 									values: { value: draft.maxInput || $t('ui.pages.providersPage.context.unset') }
 								})}
@@ -811,6 +883,8 @@
 								label={$t('ui.pages.providersPage.models.overrideMaxOutput')}
 								bind:value={draft.maxOutput}
 								presets
+								disabled={!draft.maxOutputEditable}
+								notice={!draft.maxOutputEditable ? readOnlyNotice('max_output') : ''}
 								editLabel={$t('ui.pages.providersPage.maxOutput.edit', {
 									values: { value: draft.maxOutput || $t('ui.pages.providersPage.context.unset') }
 								})}
@@ -830,12 +904,20 @@
 									<Select
 										id={'model-cap-' + field.key}
 										bind:value={draft[field.key as 'tools' | 'reasoning' | 'vision']}
+										disabled={(field.key === 'tools' && !draft.toolsEditable) ||
+											(field.key === 'reasoning' && !draft.reasoningEditable) ||
+											(field.key === 'vision' && !draft.visionEditable)}
 										options={[
 											{ value: '', label: $t('ui.pages.providersPage.models.overrideUnset') },
 											{ value: 'yes', label: $t('ui.pages.providersPage.models.overrideYes') },
 											{ value: 'no', label: $t('ui.pages.providersPage.models.overrideNo') }
 										]}
 									/>
+									{#if (field.key === 'tools' && !draft.toolsEditable) || (field.key === 'reasoning' && !draft.reasoningEditable) || (field.key === 'vision' && !draft.visionEditable)}
+										<p class="mt-1 text-xs text-muted-foreground">
+											{readOnlyNotice(field.key)}
+										</p>
+									{/if}
 								</Field>
 							{/each}
 						</div>

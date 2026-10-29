@@ -669,7 +669,15 @@
           "editLimits": "Limieten",
           "editCapabilities": "Mogelijkheden",
           "overrides": "Overrides",
-          "overridesNone": "Geen overrides — het model volgt de provider en daarna models.dev."
+          "overridesNone": "Geen overrides — het model volgt de provider en daarna models.dev.",
+          "sourceAccount": "Bepaald door account",
+          "sourceProvider": "Bepaald door verbinding",
+          "sourceModelsDev": "Bepaald door models.dev",
+          "sourceManual": "Handmatige aanvulling",
+          "sourceManualInactive": "Opgeslagen handmatige waarde (inactief)",
+          "notProvided": "Niet opgegeven",
+          "readOnlyCapability": "Bepaald door {source}; deze waarde kan niet worden bewerkt.",
+          "exactValue": "{label} ({exact} tokens)"
         },
         "accounts": {
           "title": "Accounts",

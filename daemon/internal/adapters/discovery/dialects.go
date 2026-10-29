@@ -280,6 +280,7 @@ func (l *Lister) collectGeminiPage(ctx context.Context, target Target, models *[
 			ID:            strings.TrimPrefix(entry.Name, "models/"),
 			Name:          entry.DisplayName,
 			ContextWindow: entry.InputTokenLimit,
+			MaxInput:      entry.InputTokenLimit,
 			MaxOutput:     entry.OutputTokenLimit,
 		})
 	}
@@ -495,7 +496,7 @@ func groupAntigravityServed(served map[string]antigravityServed) (map[string][]a
 			logical, found = item.id, true
 		}
 		if !found || !antigravityCollapses(logical) {
-			itemListed := Listed{ID: item.id, Name: item.name, ContextWindow: item.ctx, MaxOutput: item.max}
+			itemListed := Listed{ID: item.id, Name: item.name, ContextWindow: item.ctx, MaxInput: item.ctx, MaxOutput: item.max}
 			if catalog.ClaudeAntigravityPassthrough(item.id) {
 				noReasoning := false
 				itemListed.SupportsReasoning = &noReasoning
@@ -523,6 +524,7 @@ func antigravityCollapses(logical string) bool {
 func antigravityGrouped(logical string, members []antigravityServed) Listed {
 	listed := Listed{ID: logical, Name: antigravityGroupName(logical, members)}
 	listed.ContextWindow, listed.MaxOutput = antigravityWidest(members)
+	listed.MaxInput = listed.ContextWindow
 	listed.RequestConfigs, listed.ReasoningEfforts = antigravityBandConfigs(logical, members)
 	supported := true
 	listed.SupportsReasoning = &supported

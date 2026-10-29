@@ -167,18 +167,21 @@
 		{model}
 		field="tools"
 		labelKey="ui.pages.providersPage.modelsTable.columnTools"
+		disabled={model.capability_states?.tools?.editable === false}
 		onsave={(value) => onsavecapability(model, 'tools', value)}
 	/>
 	<CapabilityPicker
 		{model}
 		field="reasoning"
 		labelKey="ui.pages.providersPage.modelsTable.columnReasoning"
+		disabled={model.capability_states?.reasoning?.editable === false}
 		onsave={(value) => onsavecapability(model, 'reasoning', value)}
 	/>
 	<CapabilityPicker
 		{model}
 		field="vision"
 		labelKey="ui.pages.providersPage.modelsTable.columnVision"
+		disabled={model.capability_states?.vision?.editable === false}
 		onsave={(value) => onsavecapability(model, 'vision', value)}
 	/>
 

@@ -505,6 +505,7 @@ type sessionIdentity struct {
 }
 
 func finishAssist(payload *requestPayload, req *inference.Request, turn assistTurn) sessionIdentity {
+	scrubBilling(payload.SystemInstruction)
 	if payload.SystemInstruction != nil {
 		payload.SystemInstruction.Role = roleUser
 	}
@@ -512,8 +513,7 @@ func finishAssist(payload *requestPayload, req *inference.Request, turn assistTu
 		payload.GenerationConfig = &generationConfig{}
 	}
 	capOutput := outputCeiling(req, turn.variant)
-	switch {
-	case payload.GenerationConfig.MaxOutputTokens == 0 || payload.GenerationConfig.MaxOutputTokens > capOutput:
+	if capOutput > 0 {
 		payload.GenerationConfig.MaxOutputTokens = capOutput
 	}
 	applyAssistThinking(payload, req, turn)
@@ -526,6 +526,20 @@ func finishAssist(payload *requestPayload, req *inference.Request, turn assistTu
 	payload.SessionID = sessionID(preimage)
 	payload.Labels = assistLabels(req.Model, identity.trajectory, identity.step, turn)
 	return identity
+}
+
+// billingHeader is the Anthropic subscription stamp a Claude client leads its
+// system prompt with. The endpoint answers any request carrying it with a 429
+// that reads as a spent quota, whatever the account's quota is.
+var billingHeader = regexp.MustCompile(`^x-anthropic-billing-header:(?:\s*\w+=[^;\s]*;)+\s*`)
+
+func scrubBilling(system *content) {
+	if system == nil {
+		return
+	}
+	for index := range system.Parts {
+		system.Parts[index].Text = billingHeader.ReplaceAllString(system.Parts[index].Text, "")
+	}
 }
 
 // applyAssistThinking gives each model family the thinking shape it accepts.
@@ -596,10 +610,10 @@ func explicitToolConfig(choice *inference.ToolChoice) *toolConfig {
 // 400 the client cannot recover from.
 func outputCeiling(req *inference.Request, variant antigravity.Variant) int {
 	ceiling := assistMaxTokens
-	if variant.MaxOutput > 0 && variant.MaxOutput < ceiling {
+	if variant.MaxOutput > 0 {
 		ceiling = variant.MaxOutput
 	}
-	if req.MaxTokens > 0 && req.MaxTokens < ceiling {
+	if req != nil && req.MaxTokens > 0 && req.MaxTokens < ceiling {
 		ceiling = req.MaxTokens
 	}
 	return ceiling

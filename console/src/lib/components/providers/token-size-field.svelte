@@ -22,6 +22,7 @@
 		notice?: string;
 		editLabel: string;
 		presets?: boolean;
+		disabled?: boolean;
 	}
 
 	let {
@@ -31,7 +32,8 @@
 		error = '',
 		notice = '',
 		editLabel,
-		presets = false
+		presets = false,
+		disabled = false
 	}: Props = $props();
 
 	let open = $state(false);
@@ -51,8 +53,8 @@
 <div class="flex flex-col gap-1.5">
 	<Field {id} {label} {error}>
 		<div class="flex items-center gap-1.5">
-			<Input {id} class="font-mono" inputmode="decimal" bind:value onblur={normalize} />
-			{#if presets}
+			<Input {id} class="font-mono" inputmode="decimal" bind:value onblur={normalize} {disabled} />
+			{#if presets && !disabled}
 				<Popover.Root bind:open>
 					<Popover.Trigger
 						type="button"

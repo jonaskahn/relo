@@ -669,7 +669,15 @@
           "editLimits": "Limity",
           "editCapabilities": "Schopnosti",
           "overrides": "Přepisy",
-          "overridesNone": "Žádné přepisy — model následuje poskytovatele a poté models.dev."
+          "overridesNone": "Žádné přepisy — model následuje poskytovatele a poté models.dev.",
+          "sourceAccount": "Určeno účtem",
+          "sourceProvider": "Určeno připojením",
+          "sourceModelsDev": "Určeno models.dev",
+          "sourceManual": "Ruční doplnění",
+          "sourceManualInactive": "Uložená ruční hodnota (neaktivní)",
+          "notProvided": "Není uvedeno",
+          "readOnlyCapability": "Určeno {source}; tuto hodnotu nelze upravit.",
+          "exactValue": "{label} ({exact} tokenů)"
         },
         "accounts": {
           "title": "Účty",

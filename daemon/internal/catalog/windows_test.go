@@ -2,16 +2,15 @@ package catalog
 
 import "testing"
 
-// TestResolveModelWindows pins the output-ceiling default: a model no fact
-// layer describes keeps the 64K default so the wire, /v1/models, and the
-// generated client configs all bound the same way, while a layer that stated
-// a ceiling — override, provider, or model index — is left untouched.
+// TestResolveModelWindows pins provider authority and exact presence: the
+// provider wins over models.dev and a manual completion, and a model no layer
+// describes keeps its output ceiling unknown instead of inventing a default.
 func TestResolveModelWindows(t *testing.T) {
-	t.Run("every layer silent carries the default ceiling", func(t *testing.T) {
+	t.Run("every layer silent leaves the ceiling unknown", func(t *testing.T) {
 		res := &Model{}
 		resolveModelWindows(res, FactsRecord{}, FactsRecord{}, FactsRecord{})
-		if res.MaxOutput == nil || *res.MaxOutput != DefaultMaxOutput {
-			t.Fatalf("MaxOutput = %v, want the %d default", res.MaxOutput, DefaultMaxOutput)
+		if res.MaxOutput != nil {
+			t.Fatalf("MaxOutput = %v, want unknown", res.MaxOutput)
 		}
 		if res.ContextWindow != nil {
 			t.Fatalf("ContextWindow = %v, want nil so routing keeps DefaultContext", res.ContextWindow)
@@ -30,12 +29,12 @@ func TestResolveModelWindows(t *testing.T) {
 		}
 	})
 
-	t.Run("an override wins over the model index", func(t *testing.T) {
+	t.Run("the provider wins over a manual completion", func(t *testing.T) {
 		stated, over := int64(32_000), int64(128_000)
 		res := &Model{}
-		resolveModelWindows(res, FactsRecord{MaxOutput: &over}, FactsRecord{}, FactsRecord{MaxOutput: &stated})
-		if res.MaxOutput == nil || *res.MaxOutput != over {
-			t.Fatalf("MaxOutput = %v, want the override %d", res.MaxOutput, over)
+		resolveModelWindows(res, FactsRecord{MaxOutput: &over}, FactsRecord{MaxOutput: &stated}, FactsRecord{})
+		if res.MaxOutput == nil || *res.MaxOutput != stated {
+			t.Fatalf("MaxOutput = %v, want the provider's %d", res.MaxOutput, stated)
 		}
 	})
 }

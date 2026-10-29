@@ -715,6 +715,13 @@ func TestCloudCodeAssistRefusalWait(t *testing.T) {
 		t.Fatalf("RetryAfter = %v, want a spent quota to move on instead of waiting", got)
 	}
 
+	t.Run("a top-level refusal carries the same wait", func(t *testing.T) {
+		body := []byte(`{"error":{"code":429,"message":"Individual quota reached","status":"RESOURCE_EXHAUSTED"}}`)
+		if got := cloudCodeAssistCodec().DecodeError(429, body).RetryAfter; got != 30*time.Second {
+			t.Fatalf("RetryAfter = %v, want the rate limit window", got)
+		}
+	})
+
 	t.Run("another endpoint sets no wait", func(t *testing.T) {
 		if got := google.Module().DecodeError(429, []byte(`{"error":{"code":429,"message":"Individual quota reached"}}`)).RetryAfter; got != 0 {
 			t.Fatalf("RetryAfter = %v, want none outside the Antigravity endpoint", got)
@@ -1544,7 +1551,7 @@ func TestCloudCodeAssistVariantRouting(t *testing.T) {
 		}
 	})
 
-	t.Run("a caller below the ceiling keeps its own limit", func(t *testing.T) {
+	t.Run("the attempt's normalized budget is serialized exactly", func(t *testing.T) {
 		request := canonicalRequest(false)
 		request.Model = "gemini-3.5-flash"
 		body := assistEnvelope(t, request, wire.CodecOpts{
@@ -1552,7 +1559,7 @@ func TestCloudCodeAssistVariantRouting(t *testing.T) {
 		})
 		config := body["request"].(map[string]any)["generationConfig"].(map[string]any)
 		if got, _ := config["maxOutputTokens"].(float64); got != 64 {
-			t.Fatalf("maxOutputTokens = %v, want the caller's limit", got)
+			t.Fatalf("maxOutputTokens = %v, want the normalized attempt budget", got)
 		}
 	})
 }
@@ -2177,6 +2184,54 @@ func TestSanitizeSchemaDetails(t *testing.T) {
 		cleaned := string(google.SanitizeSchema(json.RawMessage(`{"type":"array","items":{"type":"string"},"prefixItems":[{"type":"number"}]}`)))
 		if !sameJSON(cleaned, `{"items":{"type":"string"},"type":"array"}`) {
 			t.Fatalf("schema = %s, want prefixItems gone", cleaned)
+		}
+	})
+}
+
+// TestCloudCodeAssistDropsBillingHeader pins the defect Claude Code hit: the
+// endpoint answers a system prompt led by Anthropic's billing stamp with a 429
+// that reads as a spent quota, so the stamp must not reach it.
+func TestCloudCodeAssistDropsBillingHeader(t *testing.T) {
+	systemText := func(system string) string {
+		t.Helper()
+		request := canonicalRequest(false)
+		request.Messages[0].Content[0].Text = system
+		inner, _ := assistEnvelope(t, request, wire.CodecOpts{
+			CredentialRef: "token", AuthMethod: wire.AuthOAuth, Project: "project-1",
+		})["request"].(map[string]any)
+		instruction, _ := inner["systemInstruction"].(map[string]any)
+		parts, _ := instruction["parts"].([]any)
+		if len(parts) == 0 {
+			return ""
+		}
+		text, _ := parts[0].(map[string]any)["text"].(string)
+		return text
+	}
+
+	t.Run("the stamp is removed and the prompt kept", func(t *testing.T) {
+		got := systemText("x-anthropic-billing-header: cc_version=2.1.312.d34; cc_entrypoint=cli;You are an agent.")
+		if got != "You are an agent." {
+			t.Fatalf("system = %q, want the prompt without the stamp", got)
+		}
+	})
+
+	t.Run("a stamp ending its own line is removed with the newline", func(t *testing.T) {
+		got := systemText("x-anthropic-billing-header: cc_version=2.1.312.d34; cc_entrypoint=cli; cch=00000;\nrules")
+		if got != "rules" {
+			t.Fatalf("system = %q, want only the rules", got)
+		}
+	})
+
+	t.Run("a prompt without the stamp is untouched", func(t *testing.T) {
+		if got := systemText("be brief"); got != "be brief" {
+			t.Fatalf("system = %q, want it unchanged", got)
+		}
+	})
+
+	t.Run("the same words later in the prompt stay", func(t *testing.T) {
+		const quoted = "see x-anthropic-billing-header: a=b; for details"
+		if got := systemText(quoted); got != quoted {
+			t.Fatalf("system = %q, want a mention left alone", got)
 		}
 	})
 }

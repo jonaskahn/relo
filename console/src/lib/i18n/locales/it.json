@@ -669,7 +669,15 @@
           "editLimits": "Limiti",
           "editCapabilities": "Capacità",
           "overrides": "Override",
-          "overridesNone": "Nessun override: il modello segue il provider, poi models.dev."
+          "overridesNone": "Nessun override: il modello segue il provider, poi models.dev.",
+          "sourceAccount": "Definito dall'account",
+          "sourceProvider": "Definito dalla connessione",
+          "sourceModelsDev": "Definito da models.dev",
+          "sourceManual": "Completamento manuale",
+          "sourceManualInactive": "Valore manuale salvato (inattivo)",
+          "notProvided": "Non fornito",
+          "readOnlyCapability": "Definito da {source}; questo valore non può essere modificato.",
+          "exactValue": "{label} ({exact} token)"
         },
         "accounts": {
           "title": "Account",

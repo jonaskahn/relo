@@ -55,16 +55,19 @@ func (s *Server) attempt(w http.ResponseWriter, spec attemptSpec, tried map[stri
 	if err := s.resolveAttemptSelections(&spec, tried); err != nil {
 		return Result{}, err
 	}
+	if err := s.resolveAttemptCapabilities(spec.request.Context(), &spec); err != nil {
+		return Result{}, err
+	}
 	module, supported := s.opts.Formats.Outbound(spec.candidate.Model.APIFormat)
 	if !supported {
 		return Result{}, fmt.Errorf("%s: %w (%s)",
 			spec.candidate.ProviderID, catalog.ErrUnsupportedFormat, spec.candidate.Model.APIFormat)
 	}
-	s.announceAttempt(w, spec)
 	exchange, err := s.buildAttemptExchange(spec, module, final)
 	if err != nil {
-		return Result{}, err
+		return Result{CredentialID: spec.authorized.CredentialID}, err
 	}
+	s.announceAttempt(w, spec)
 	result, err := s.opts.Relay.Execute(s.proxyContext(spec.request, spec.host.UseProxy), exchange, w)
 	result.CredentialID = spec.authorized.CredentialID
 	if err != nil {
@@ -74,6 +77,35 @@ func (s *Server) attempt(w http.ResponseWriter, spec attemptSpec, tried map[stri
 	}
 	s.reportAttemptAsync(spec, result)
 	return result, err
+}
+
+// resolveAttemptCapabilities overlays the selected credential's discovered
+// facts and the selected provider tuple on the attempt-local model. Nothing
+// here mutates the catalog snapshot shared by retries and route members.
+func (s *Server) resolveAttemptCapabilities(ctx context.Context, spec *attemptSpec) error {
+	if s.opts.Accounts != nil && spec.authorized.CredentialID != "" {
+		effective, err := s.opts.Accounts.EffectiveModel(ctx, spec.candidate.ProviderID, spec.candidate.ModelID, spec.authorized.CredentialID)
+		if err != nil {
+			return err
+		}
+		spec.candidate.Model = effective
+	}
+	if spec.antigravity == nil {
+		return nil
+	}
+	if spec.antigravity.Context > 0 {
+		contextWindow := spec.antigravity.Context
+		spec.candidate.Model.ContextWindow = &contextWindow
+		spec.candidate.Model.MaxInput = &contextWindow
+		spec.candidate.Model.FactSources.ContextWindow = "account"
+		spec.candidate.Model.FactSources.MaxInput = "account"
+	}
+	if spec.antigravity.MaxOutput > 0 {
+		maxOutput := int64(spec.antigravity.MaxOutput)
+		spec.candidate.Model.MaxOutput = &maxOutput
+		spec.candidate.Model.FactSources.MaxOutput = "account"
+	}
+	return nil
 }
 
 func (s *Server) resolveAttemptSelections(spec *attemptSpec, tried map[string][]string) error {
@@ -178,24 +210,53 @@ func (s *Server) droppedCeilingWarning(spec attemptSpec) string {
 	return "the model ignores the max-output ceiling"
 }
 
+// nolint:funlen
 func (s *Server) buildAttemptExchange(spec attemptSpec, module wire.CodecModule, final bool) (Exchange, error) {
-	candidate, outcome, host, authorized := spec.candidate, spec.outcome, spec.host, spec.authorized
-	template, templated := s.connectionTemplate(host)
+	template, templated := s.connectionTemplate(spec.host)
 	extra, err := s.attemptHeaders(spec, template, templated)
 	if err != nil {
 		return Exchange{}, err
 	}
 	request, originals := s.modelRequest(spec, template, templated)
-	exchange := Exchange{
-		ProviderID: candidate.ProviderID, Codec: wire.RestoreToolNames(module, originals),
+	if err := s.validateOutboundRequest(spec, request); err != nil {
+		return Exchange{}, err
+	}
+	exchange := s.attemptExchange(spec, attemptExchangeInputs{
+		module: module, final: final, request: request, originals: originals, extra: extra,
+		template: template, templated: templated,
+	})
+	s.attachAttemptHooks(&exchange, spec)
+	return exchange, nil
+}
+
+type attemptExchangeInputs struct {
+	module    wire.CodecModule
+	final     bool
+	request   *inference.Request
+	originals map[string]string
+	extra     map[string]string
+	template  catalog.Template
+	templated bool
+}
+
+func (s *Server) attemptExchange(spec attemptSpec, in attemptExchangeInputs) Exchange {
+	candidate, outcome, host, authorized := spec.candidate, spec.outcome, spec.host, spec.authorized
+	return Exchange{
+		ProviderID: candidate.ProviderID, Codec: wire.RestoreToolNames(in.module, in.originals),
 		CaptureLimit:   s.captureLimit(),
-		RequiresStream: templated && template.RequiresStream,
-		Options:        s.attemptCodecOptions(spec, extra, template, templated),
-		Request:        request,
-		Inbound:        spec.inbound, Surface: outcome.surface, RequestID: outcome.requestID,
-		CredentialLabel: authorized.Label, Final: final,
+		RequiresStream: in.templated && in.template.RequiresStream,
+		Options: s.attemptCodecOptions(spec, attemptCodecInputs{
+			request: in.request, extra: in.extra, template: in.template, templated: in.templated,
+		}),
+		Request: in.request,
+		Inbound: spec.inbound, Surface: outcome.surface, RequestID: outcome.requestID,
+		CredentialLabel: authorized.Label, Final: in.final,
 		Policy: connectionPolicy(host),
 	}
+}
+
+func (s *Server) attachAttemptHooks(exchange *Exchange, spec attemptSpec) {
+	candidate, outcome, host, authorized := spec.candidate, spec.outcome, spec.host, spec.authorized
 	if host.Auth == catalog.AuthOAuth && authorized.CredentialID != "" {
 		providerID, credentialID, rejected := candidate.ProviderID, authorized.CredentialID, authorized.Token
 		exchange.OnUnauthorized = func(ctx context.Context) (catalog.Authorization, error) {
@@ -207,7 +268,6 @@ func (s *Server) buildAttemptExchange(spec attemptSpec, module wire.CodecModule,
 		anchor, providerID, credentialID := s.conversationAnchor(outcome, spec.request), candidate.ProviderID, authorized.CredentialID
 		exchange.OnHandoff = func() { s.cursorWires.rotate(providerID, credentialID, anchor) }
 	}
-	return exchange, nil
 }
 
 func (s *Server) attemptHeaders(spec attemptSpec, template catalog.Template, templated bool) (map[string]string, error) {
@@ -293,8 +353,15 @@ func (s *Server) freeLaneSession(lane string) string {
 	return session
 }
 
+type attemptCodecInputs struct {
+	request   *inference.Request
+	extra     map[string]string
+	template  catalog.Template
+	templated bool
+}
+
 // nolint:funlen
-func (s *Server) attemptCodecOptions(spec attemptSpec, extra map[string]string, template catalog.Template, templated bool) wire.CodecOpts {
+func (s *Server) attemptCodecOptions(spec attemptSpec, in attemptCodecInputs) wire.CodecOpts {
 	candidate, outcome, host, authorized := spec.candidate, spec.outcome, spec.host, spec.authorized
 	anchor := s.conversationAnchor(outcome, spec.request)
 	return wire.CodecOpts{
@@ -311,8 +378,8 @@ func (s *Server) attemptCodecOptions(spec attemptSpec, extra map[string]string, 
 		NativeBody:             s.nativeBody(outcome, candidate),
 		RequestID:              outcome.requestID,
 		SessionAnchor:          anchor,
-		ExtraHeaders:           extra,
-		RefusesMaxOutputTokens: templated && template.RefusesMaxOutputTokens,
+		ExtraHeaders:           in.extra,
+		RefusesMaxOutputTokens: in.templated && in.template.RefusesMaxOutputTokens,
 		MaxOutput:              candidate.Model.MaxOutput,
 		ReasoningEfforts:       candidate.Model.ReasoningEfforts,
 		ReasoningToggle:        candidate.Model.ReasoningToggle,
@@ -324,17 +391,23 @@ func (s *Server) attemptCodecOptions(spec attemptSpec, extra map[string]string, 
 		LongContext:            outcome.longContext,
 		NativeMillion:          outcome.nativeMillion,
 		UpstreamModel:          candidate.Model.UpstreamID,
-		PromptTokens:           s.attemptPromptTokens(outcome),
+		PromptTokens:           s.attemptPromptTokens(in.request, candidate.Model, in.templated && in.template.RefusesMaxOutputTokens),
 		Cursor:                 spec.cursor,
 		Antigravity:            spec.antigravity,
 	}
 }
 
-func (s *Server) attemptPromptTokens(outcome *requestOutcome) int64 {
-	if outcome == nil || outcome.request == nil {
+func (s *Server) attemptPromptTokens(request *inference.Request, model catalog.Model, refusesOutput bool) int64 {
+	if request == nil {
 		return 0
 	}
-	return int64(s.estimateRequestTokens(outcome.request) + max(outcome.request.MaxTokens, 0))
+	reserved := request.MaxTokens
+	if refusesOutput {
+		reserved = 0
+	} else if model.MaxOutput != nil && *model.MaxOutput > 0 {
+		reserved = int(*model.MaxOutput)
+	}
+	return int64(s.estimateRequestTokens(request) + max(reserved, 0))
 }
 
 // nativeBody returns the client's own body when the attempt speaks the client's
@@ -546,6 +619,7 @@ func endpointBase(candidate routing.Candidate, authorized catalog.Authorization)
 // each shortened tool again on the answer. The signed-out Zen lane corrects
 // everything its gateway refuses; a paid OpenCode lane shares only the
 // gateway's tool-name limit, so its request stays otherwise whole.
+// nolint:funlen
 func (s *Server) modelRequest(spec attemptSpec, template catalog.Template, templated bool) (*inference.Request, map[string]string) {
 	copied := modelRequest(spec.outcome.request, spec.candidate.Model.UpstreamID)
 	// A client that names no output ceiling leaves the upstream gateway its
@@ -553,8 +627,20 @@ func (s *Server) modelRequest(spec attemptSpec, template catalog.Template, templ
 	// either, the wire carries the catalog default, so the turn matches the
 	// ceiling /v1/models and the generated client configs publish. A model a
 	// layer described keeps today's pass-through.
-	if copied.MaxTokens <= 0 && spec.candidate.Model.FactSources.MaxOutput == "" {
+	if templated && template.RefusesMaxOutputTokens {
+		copied.MaxTokens = 0
+	} else if maxOutput := spec.candidate.Model.MaxOutput; maxOutput != nil && *maxOutput > 0 {
+		copied.MaxTokens = int(*maxOutput)
+	} else if copied.MaxTokens <= 0 && spec.candidate.Model.FactSources.MaxOutput == "" {
 		copied.MaxTokens = int(catalog.DefaultMaxOutput)
+	}
+	if s.opts.Logger != nil && spec.outcome != nil && spec.outcome.request != nil &&
+		spec.outcome.request.MaxTokens > 0 && copied.MaxTokens > 0 &&
+		spec.outcome.request.MaxTokens != copied.MaxTokens {
+		s.opts.Logger.Debug("normalized the output budget",
+			"provider", spec.candidate.ProviderID, "model", spec.candidate.Model.ID,
+			"requested", spec.outcome.request.MaxTokens, "effective", copied.MaxTokens,
+			"source", spec.candidate.Model.FactSources.MaxOutput)
 	}
 	if spec.candidate.Model.APIFormat == catalog.FormatCloudCode && isClaudeAntigravityPassthrough(spec.candidate) {
 		// Claude thinks through nothing on this transport, so a stated
@@ -577,6 +663,84 @@ func (s *Server) modelRequest(spec attemptSpec, template catalog.Template, templ
 		return wire.OpenCodeGatewayRequest(copied)
 	}
 	return copied, nil
+}
+
+// validateOutboundRequest rejects a request the selected account explicitly
+// cannot serve. It never drops tools, images, or reasoning to make a turn fit.
+// nolint:funlen
+func (s *Server) validateOutboundRequest(spec attemptSpec, request *inference.Request) error {
+	if request == nil {
+		return nil
+	}
+	model := spec.candidate.Model
+	if len(request.Tools) > 0 && model.SupportsTools != nil && !*model.SupportsTools {
+		return fmt.Errorf("tools are not supported by %s: %w", model.ID, wire.ErrUnsupportedFeature)
+	}
+	if needsImages(request) && model.SupportsVision != nil && !*model.SupportsVision {
+		return fmt.Errorf("images are not supported by %s: %w", model.ID, wire.ErrUnsupportedFeature)
+	}
+	if effort, stated := catalog.RequestEffort(request.Reasoning); stated && effort != "" {
+		if model.SupportsReasoning != nil && !*model.SupportsReasoning {
+			return fmt.Errorf("reasoning is not supported by %s: %w", model.ID, wire.ErrUnsupportedFeature)
+		}
+		if !effortKnown(model.ReasoningEfforts, effort) {
+			return fmt.Errorf("reasoning effort %s is not supported by %s: %w", effort, model.ID, wire.ErrUnsupportedFeature)
+		}
+	}
+	// The estimate is character-derived, so keep a conservative allowance for
+	// multi-byte text while never using it to enlarge the provider's capacity.
+	promptTokens := int64(s.estimateRequestTokens(request))
+	if model.MaxInput != nil && promptTokens > *model.MaxInput {
+		return fmt.Errorf("%w: input uses %d tokens but %s accepts %d", errContextLimitExceeded, promptTokens, model.ID, *model.MaxInput)
+	}
+	if model.MaxOutput != nil && *model.MaxOutput > 0 && request.MaxTokens > int(*model.MaxOutput) {
+		request.MaxTokens = int(*model.MaxOutput)
+	}
+	if model.ContextWindow != nil && promptTokens > *model.ContextWindow {
+		return fmt.Errorf("%w: input uses %d tokens but %s accepts %d",
+			errContextLimitExceeded, promptTokens, model.ID, *model.ContextWindow)
+	}
+	if model.ContextWindow != nil && request.MaxTokens > 0 {
+		available := *model.ContextWindow - promptTokens
+		if available <= 0 {
+			return fmt.Errorf("%w: input uses all %d tokens %s accepts, leaving no room to generate",
+				errContextLimitExceeded, promptTokens, model.ID)
+		}
+		if int64(request.MaxTokens) > available {
+			request.MaxTokens = int(available)
+		}
+	}
+	return nil
+}
+
+func needsImages(request *inference.Request) bool {
+	for _, message := range request.Messages {
+		for _, part := range message.Content {
+			if part.Type == inference.ContentTypeImage {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+func effortKnown(ladder []string, effort string) bool {
+	if ladder == nil {
+		return true
+	}
+	if len(ladder) == 0 {
+		return false
+	}
+	normalized, ok := inference.NormalizeEffort(effort)
+	if !ok {
+		return false
+	}
+	for _, listed := range ladder {
+		if listed == normalized {
+			return true
+		}
+	}
+	return false
 }
 
 func (s *Server) openCodeFreeToolCutoff(spec attemptSpec) bool {

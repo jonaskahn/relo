@@ -1,6 +1,7 @@
 package cursor
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"net/http"
@@ -25,16 +26,100 @@ func TestRunRefusesBeforeOpeningAStream(t *testing.T) {
 	}
 }
 
-func TestAwaitStreamEndWithoutAReaderReturns(t *testing.T) {
+func TestDrainWithoutAReaderReturns(t *testing.T) {
 	done := make(chan struct{})
 	go func() {
 		defer close(done)
-		awaitStreamEnd(nil, time.Second)
+		newConversation(nil, History{}, nil).drain(nil, time.Second)
 	}()
 	select {
 	case <-done:
 	case <-time.After(time.Second):
-		t.Fatal("awaitStreamEnd(nil) did not return")
+		t.Fatal("drain(nil) did not return")
+	}
+}
+
+func TestDrainStopsAfterTheUsageWasRead(t *testing.T) {
+	conversation := newConversation(nil, History{}, nil)
+	conversation.drained = true
+	payload := serverUpdate(updateTokenDelta, tokenDeltaPayload(9))
+	reader := adapterscursor.NewFrameReader(bytes.NewReader(adapterscursor.Frame(payload)))
+	done := make(chan struct{})
+	go func() {
+		defer close(done)
+		conversation.drain(reader, time.Second)
+	}()
+	select {
+	case <-done:
+	case <-time.After(time.Second):
+		t.Fatal("drain did not stop after the usage was read")
+	}
+	if conversation.output != 0 {
+		t.Fatalf("output = %d, want the abandoned reader to add nothing", conversation.output)
+	}
+}
+
+func TestReplaySummaryNamesTheReplayedCalls(t *testing.T) {
+	conversation := newConversation(nil, History{State: []byte{1, 2, 3}, Store: NewStore()}, nil)
+	conversation.calls["call-b"] = true
+	conversation.calls["call-a"] = true
+	summary := conversation.replaySummary()
+	if summary != "replayed state: 3 bytes, 0 blobs, calls [call-a call-b]" {
+		t.Fatalf("summary = %q, want the sorted replayed calls", summary)
+	}
+}
+
+func TestObserveUsageIgnoresFramesThatAreNotUpdates(t *testing.T) {
+	conversation := newConversation(nil, History{}, nil)
+	if !conversation.observeUsage([]byte{0x08}) {
+		t.Fatal("observeUsage() stopped on a malformed frame")
+	}
+	var checkpoint adapterscursor.Writer
+	checkpoint.Empty(serverCheckpoint)
+	if !conversation.observeUsage(checkpoint.BytesOut()) {
+		t.Fatal("observeUsage() stopped on a non-update frame")
+	}
+	if conversation.output != 0 {
+		t.Fatalf("output = %d, want no estimate from non-update frames", conversation.output)
+	}
+}
+
+func TestObserveUsageAddsTheTokenEstimate(t *testing.T) {
+	conversation := newConversation(nil, History{}, nil)
+	payload := serverUpdate(updateTokenDelta, tokenDeltaPayload(7))
+	if !conversation.observeUsage(payload) {
+		t.Fatal("observeUsage() stopped before the usage was applied")
+	}
+	if conversation.output != 7 {
+		t.Fatalf("output = %d, want the token delta", conversation.output)
+	}
+}
+
+func TestObserveUsageStopsAfterTheDrain(t *testing.T) {
+	conversation := newConversation(nil, History{}, nil)
+	conversation.drained = true
+	payload := serverUpdate(updateTokenDelta, tokenDeltaPayload(7))
+	if conversation.observeUsage(payload) {
+		t.Fatal("observeUsage() kept reading after the drain")
+	}
+}
+
+func TestFinishHandoffUsesTheTokenEstimate(t *testing.T) {
+	conversation := newConversation(nil, History{}, nil)
+	conversation.externalHandoff = true
+	update := mustParseForTest(t, tokenDeltaPayload(7))
+	if err := conversation.handleUpdate(ServerMessage{UpdateKind: updateTokenDelta, Update: update}); err != nil {
+		t.Fatalf("handleUpdate() error = %v", err)
+	}
+	events, err := conversation.finish(nil, nil)
+	if err != nil {
+		t.Fatalf("finish() error = %v", err)
+	}
+	if len(events) != 2 || events[0].Usage == nil || events[0].Usage.OutputTokens != 7 {
+		t.Fatalf("events = %+v, want the stream's token estimate", events)
+	}
+	if events[1].Terminal == nil || events[1].Terminal.Reason != inference.EventReasonToolUse {
+		t.Fatalf("terminal = %+v, want tool_use", events[1].Terminal)
 	}
 }
 
@@ -75,10 +160,11 @@ func TestHeartbeatStopsWhenAsked(t *testing.T) {
 }
 
 // nativeToolCallFrame frames one ToolCall carrying a native variant, the shape
-// an update nests: the variant field's own payload is the variant's arguments.
+// an update nests: the variant field carries the message that holds the
+// variant's arguments.
 func nativeToolCallFrame(callID string, variant int, args []byte) []byte {
 	var call adapterscursor.Writer
-	call.Bytes(variant, args)
+	call.Bytes(variant, toolCallArgs(args))
 	call.String(callIDField, callID)
 	return call.BytesOut()
 }

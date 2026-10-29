@@ -72,6 +72,24 @@ func (d *PoolDirectory) CooldownUntil(providerID string) time.Time {
 	return d.pools.CooldownUntil(providerID)
 }
 
+// ActiveCredentials returns the stable, operator-enabled accounts of one
+// connection for conservative catalog capability intersection.
+func (d *PoolDirectory) ActiveCredentials(providerID string) []string {
+	if d.pools == nil {
+		return nil
+	}
+	return d.pools.ActiveCredentials(providerID)
+}
+
+// AccountCanServe reports whether one account's roster holds any identifier
+// the model may be requested under.
+func (d *PoolDirectory) AccountCanServe(credentialID string, modelIDs []string) bool {
+	if d.pools == nil {
+		return false
+	}
+	return d.pools.AccountCanServe(credentialID, modelIDs)
+}
+
 // CredentialPools adapts the pools to what the credential source needs, so
 // the source reads a credential without knowing the pool implementation.
 type CredentialPools struct {

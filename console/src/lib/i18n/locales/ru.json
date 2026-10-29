@@ -669,7 +669,15 @@
           "editLimits": "Лимиты",
           "editCapabilities": "Возможности",
           "overrides": "Переопределения",
-          "overridesNone": "Переопределений нет — модель следует за провайдером, затем за models.dev."
+          "overridesNone": "Переопределений нет — модель следует за провайдером, затем за models.dev.",
+          "sourceAccount": "Определено аккаунтом",
+          "sourceProvider": "Определено подключением",
+          "sourceModelsDev": "Определено models.dev",
+          "sourceManual": "Ручное заполнение",
+          "sourceManualInactive": "Сохранённое ручное значение (неактивно)",
+          "notProvided": "Не указано",
+          "readOnlyCapability": "Определено {source}; это значение нельзя изменить.",
+          "exactValue": "{label} ({exact} токенов)"
         },
         "accounts": {
           "title": "Аккаунты",

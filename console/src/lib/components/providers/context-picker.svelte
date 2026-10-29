@@ -48,6 +48,11 @@
 	// value came from, and a context above the model's own maximum input is
 	// marked rather than hidden, because the daemon stores it either way.
 	const mark = $derived(contextMark(layers, output ? null : model.max_input));
+	const editable = $derived(
+		output
+			? model.capability_states?.max_output?.editable !== false
+			: model.capability_states?.context_window?.editable !== false
+	);
 	const markTitle = $derived.by(() => {
 		if (mark === '!') {
 			return $t('ui.pages.providersPage.context.overMaxTitle', {
@@ -109,10 +114,10 @@
 	</span>
 	<Popover.Root bind:open>
 		<Popover.Trigger
-			{disabled}
+			disabled={disabled || !editable}
 			class={cn(
 				'inline-flex size-6 shrink-0 items-center justify-center rounded-control-sm text-faint transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
-				disabled ? 'cursor-not-allowed' : 'hover:bg-hover hover:text-ink'
+				disabled || !editable ? 'cursor-not-allowed' : 'hover:bg-hover hover:text-ink'
 			)}
 			aria-label={$t(editKey, { values: { value: label } })}
 			title={$t(editKey, { values: { value: label } })}
@@ -137,7 +142,7 @@
 				<button
 					type="button"
 					data-plain
-					disabled={busy}
+					disabled={busy || !editable}
 					class="flex w-full items-center justify-between gap-2 rounded-md px-2 py-1.5 text-left text-xs hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring {!custom
 						? 'bg-accent-soft text-foreground ring-1 ring-accent-border'
 						: ''}"
@@ -157,7 +162,7 @@
 						<button
 							type="button"
 							data-plain
-							disabled={busy}
+							disabled={busy || !editable}
 							class="badge bg-sunken font-mono text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring {layers.override ===
 							preset
 								? 'bg-accent-soft text-foreground ring-1 ring-accent-border'
