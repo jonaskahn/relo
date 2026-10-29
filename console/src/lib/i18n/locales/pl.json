@@ -496,7 +496,8 @@
           "tagFree": "Bezpłatne",
           "tagExperimental": "Eksperymentalne",
           "tagPayAsYouGo": "Płatność za zużycie",
-          "tagPaidPlan": "Płatny plan"
+          "tagPaidPlan": "Płatny plan",
+          "groupFree": "Bezpłatne połączenia"
         },
         "status": {
           "ready": "Gotowe",
@@ -918,7 +919,10 @@
           "forceSignInBody": "{process} (pid {pid}) zajmuje port potrzebny do tego logowania. Zakończenie go zwalnia port.",
           "signInPortBusy": "{process} zajmuje port potrzebny do tego logowania",
           "next": "Dalej",
-          "chooseHint": "Wybierz dostawcę"
+          "chooseHint": "Wybierz dostawcę",
+          "groupHintFree": "Bez konta i klucza API",
+          "freeLockedBody": "Włącz te usługi zewnętrzne tylko wtedy, gdy akceptujesz związane z nimi ryzyko.",
+          "freeEnable": "Włącz bezpłatne połączenia"
         },
         "verify": {
           "title": "Sprawdź połączenie",
@@ -981,6 +985,12 @@
           "kiro": "API CodeWhisperer Kiro przez sesję Kiro CLI",
           "cloudCode": "Google Cloud Code Assist, używane przez logowania Antigravity",
           "unsupported": "Relo nie obsługuje jeszcze tego formatu"
+        },
+        "freeConsent": {
+          "title": "Korzystasz na własną odpowiedzialność",
+          "body": "OpenCode Zen i Kilo to bramy zewnętrznych dostawców, a nie usługi Relo. Ich udostępnienie nie oznacza poparcia ze strony dostawców. Korzystanie z nich może naruszać regulaminy lub obowiązujące prawo. Dostawcy mogą przechowywać i wykorzystywać Twoje polecenia oraz kod. Nie przesyłaj poufnych informacji. Modele, limity i dostępność mogą ulec zmianie lub zniknąć bez uprzedzenia. W zakresie dopuszczalnym przez prawo Relo i opiekunowie projektu nie udzielają gwarancji ani nie ponoszą odpowiedzialności. Włączając te połączenia, bierzesz na siebie pełną odpowiedzialność za ich użycie, w tym za wszelkie skutki prawne.",
+          "confirm": "Przyjmuję odpowiedzialność i włączam",
+          "enabledToast": "Włączono bezpłatne połączenia"
         }
       },
       "keys": {
@@ -1953,7 +1963,10 @@
       "failoverLabel": "Odczekanie po odmowie",
       "failoverHint": "Jak długo odrzucone konto albo członek trasy zostaje poza rotacją po limicie żądań lub awarii serwera i jak ta przerwa rośnie z każdą kolejną odmową. Udane żądanie ją zeruje. Opcja „Brak” nie czeka wcale: pierwsza odmowa od razu nadaje się do ponownego użycia.",
       "retryHint": "Losowa przerwa przed każdą próbą, w sekundach. Dłuższy Retry-After dostawcy ma pierwszeństwo.",
-      "jumpLabel": "Przejdź do sekcji"
+      "jumpLabel": "Przejdź do sekcji",
+      "freeConnectionsLabel": "Bezpłatne połączenia",
+      "freeConnectionsHint": "Wyłączenie ukrywa bezpłatne połączenia i blokuje nowe żądania przez nie wysyłane. Zapisane połączenia i modele pozostają bez zmian.",
+      "freeConnectionsDisabledToast": "Wyłączono bezpłatne połączenia"
     },
     "updateDialog": {
       "title": "Zaktualizuj Relo",

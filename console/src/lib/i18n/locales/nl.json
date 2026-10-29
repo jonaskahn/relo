@@ -496,7 +496,8 @@
           "tagFree": "Gratis",
           "tagExperimental": "Experimenteel",
           "tagPayAsYouGo": "Betalen per gebruik",
-          "tagPaidPlan": "Betaald abonnement"
+          "tagPaidPlan": "Betaald abonnement",
+          "groupFree": "Gratis verbindingen"
         },
         "status": {
           "ready": "Klaar",
@@ -918,7 +919,10 @@
           "forceSignInBody": "{process} (pid {pid}) gebruikt de poort die deze aanmelding nodig heeft. Beëindigen geeft de poort vrij.",
           "signInPortBusy": "{process} gebruikt de poort die deze aanmelding nodig heeft",
           "next": "Volgende",
-          "chooseHint": "Kies een provider"
+          "chooseHint": "Kies een provider",
+          "groupHintFree": "Zonder account of API-sleutel",
+          "freeLockedBody": "Schakel deze externe diensten alleen in als je de risico’s zelf wilt dragen.",
+          "freeEnable": "Gratis verbindingen inschakelen"
         },
         "verify": {
           "title": "De verbinding controleren",
@@ -981,6 +985,12 @@
           "kiro": "Kiro’s CodeWhisperer API via een Kiro CLI-sessie",
           "cloudCode": "Google Cloud Code Assist, gebruikt door Antigravity-logins",
           "unsupported": "Relo spreekt dit formaat nog niet"
+        },
+        "freeConsent": {
+          "title": "Gebruik op eigen verantwoordelijkheid",
+          "body": "OpenCode Zen en Kilo zijn gateways van derden, geen diensten van Relo. Vermelding houdt geen goedkeuring door de aanbieders in. Gebruik kan in strijd zijn met hun voorwaarden of de geldende wetgeving. Aanbieders kunnen je prompts en code bewaren of gebruiken: verstuur nooit vertrouwelijke informatie. Modellen, limieten en beschikbaarheid kunnen zonder aankondiging veranderen of vervallen. Voor zover wettelijk toegestaan bieden Relo en de beheerders geen garantie en aanvaarden zij geen aansprakelijkheid. Door deze verbindingen in te schakelen neem je de volledige verantwoordelijkheid voor het gebruik en de juridische gevolgen ervan.",
+          "confirm": "Verantwoordelijkheid aanvaarden en inschakelen",
+          "enabledToast": "Gratis verbindingen ingeschakeld"
         }
       },
       "keys": {
@@ -1953,7 +1963,10 @@
       "failoverLabel": "Wachttijd bij failover",
       "failoverHint": "Hoe lang een geweigerd account of route-lid uit de rotatie blijft na een snelheidslimiet of serverfout, en hoe die wachttijd groeit bij elke volgende fout. Een geslaagde aanvraag zet hem terug op nul. Kies je geen wachttijd, dan is de eerste weigering meteen weer bruikbaar.",
       "retryHint": "Hoe vaak één account opnieuw wordt geprobeerd voordat de aanvraag naar het volgende account gaat. Tussen de pogingen wacht Relo willekeurig 1 tot 3 seconden.",
-      "jumpLabel": "Ga naar sectie"
+      "jumpLabel": "Ga naar sectie",
+      "freeConnectionsLabel": "Gratis verbindingen",
+      "freeConnectionsHint": "Uitschakelen verbergt gratis verbindingen en blokkeert nieuwe verzoeken via deze verbindingen. Opgeslagen verbindingen en modellen blijven bewaard.",
+      "freeConnectionsDisabledToast": "Gratis verbindingen uitgeschakeld"
     },
     "updateDialog": {
       "title": "Relo bijwerken",

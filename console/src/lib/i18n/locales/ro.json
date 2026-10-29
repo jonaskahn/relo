@@ -496,7 +496,8 @@
           "tagFree": "Gratuit",
           "tagExperimental": "Experimental",
           "tagPayAsYouGo": "Pay as you go",
-          "tagPaidPlan": "Paid plan"
+          "tagPaidPlan": "Paid plan",
+          "groupFree": "Conexiuni gratuite"
         },
         "status": {
           "ready": "Pregătit",
@@ -918,7 +919,10 @@
           "forceSignInBody": "{process} (pid {pid}) folsește portul de care are nevoie această autentificare. Închiderea lui eliberează portul.",
           "signInPortBusy": "{process} folsește portul de care are nevoie această autentificare",
           "next": "Înainte",
-          "chooseHint": "Alege un furnizor"
+          "chooseHint": "Alege un furnizor",
+          "groupHintFree": "Fără cont sau cheie API",
+          "freeLockedBody": "Activează aceste servicii externe doar dacă îți asumi riscurile.",
+          "freeEnable": "Activează conexiunile gratuite"
         },
         "verify": {
           "title": "Verifică conexiunea",
@@ -981,6 +985,12 @@
           "kiro": "API-ul CodeWhisperer de la Kiro printr-o sesiune Kiro CLI",
           "cloudCode": "Google Cloud Code Assist, folosit de autentificările Antigravity",
           "unsupported": "Relo nu poate vorbi încă acest format"
+        },
+        "freeConsent": {
+          "title": "Utilizare pe propria răspundere",
+          "body": "OpenCode Zen și Kilo sunt gateway-uri ale unor terți, nu servicii Relo. Includerea lor nu înseamnă că furnizorii aprobă integrarea. Utilizarea poate încălca termenii acestora sau legislația aplicabilă. Furnizorii pot păstra sau folosi mesajele și codul trimis. Nu transmite niciodată informații confidențiale. Modelele, limitele și disponibilitatea se pot schimba sau pot dispărea fără preaviz. În măsura permisă de lege, Relo și cei care întrețin proiectul nu oferă garanții și nu își asumă răspunderea. Prin activare îți asumi întreaga responsabilitate pentru utilizare, inclusiv pentru consecințele juridice.",
+          "confirm": "Îmi asum răspunderea și activez",
+          "enabledToast": "Conexiunile gratuite au fost activate"
         }
       },
       "keys": {
@@ -1953,7 +1963,10 @@
       "failoverLabel": "Failover wait",
       "failoverHint": "Cât timp rămâne un cont sau un membru de rută refuzat în afara rotației după o limită de rată sau o eroare de server și cum crește așteptarea cu fiecare eșec nou. Un succes o resetează. „Fără” pornește fără așteptare: primul refuz e refolosibil imediat.",
       "retryHint": "Pauză aleatorie înainte de fiecare încercare, în secunde. Un Retry-After mai lung al furnizorului câștigă.",
-      "jumpLabel": "Mergi la secțiune"
+      "jumpLabel": "Mergi la secțiune",
+      "freeConnectionsLabel": "Conexiuni gratuite",
+      "freeConnectionsHint": "Dezactivarea ascunde conexiunile gratuite și oprește cererile noi trimise prin ele. Conexiunile și modelele salvate se păstrează.",
+      "freeConnectionsDisabledToast": "Conexiunile gratuite au fost dezactivate"
     },
     "updateDialog": {
       "title": "Actualizează Relo",

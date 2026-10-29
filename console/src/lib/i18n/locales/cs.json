@@ -496,7 +496,8 @@
           "tagFree": "Zdarma",
           "tagExperimental": "Experimentální",
           "tagPayAsYouGo": "Pay as you go",
-          "tagPaidPlan": "Paid plan"
+          "tagPaidPlan": "Paid plan",
+          "groupFree": "Bezplatná připojení"
         },
         "status": {
           "ready": "Připraveno",
@@ -918,7 +919,10 @@
           "forceSignInBody": "{process} (pid {pid}) používá port, který toto přihlášení potřebuje. Ukončením se port uvolní.",
           "signInPortBusy": "{process} používá port, který toto přihlášení potřebuje",
           "next": "Další",
-          "chooseHint": "Vyberte poskytovatele"
+          "chooseHint": "Vyberte poskytovatele",
+          "groupHintFree": "Bez účtu a klíče API",
+          "freeLockedBody": "Tyto služby třetích stran zapněte jen tehdy, pokud přijímáte související rizika.",
+          "freeEnable": "Zapnout bezplatná připojení"
         },
         "verify": {
           "title": "Zkontrolovat připojení",
@@ -981,6 +985,12 @@
           "kiro": "API Kiro CodeWhisperer přes relaci Kiro CLI",
           "cloudCode": "Google Cloud Code Assist, používané přihlášeními Antigravity",
           "unsupported": "Relo tímto formátem zatím nemluví"
+        },
+        "freeConsent": {
+          "title": "Použití na vlastní odpovědnost",
+          "body": "OpenCode Zen a Kilo jsou brány třetích stran, nikoli služby Relo. Jejich zařazení neznamená schválení ze strany poskytovatelů. Používání může porušovat jejich podmínky nebo platné zákony. Poskytovatelé mohou ukládat či využívat vaše zadání a kód. Nikdy neposílejte důvěrné informace. Modely, limity a dostupnost se mohou bez upozornění změnit nebo zaniknout. V rozsahu povoleném zákonem neposkytují Relo ani správci projektu žádné záruky a nenesou odpovědnost. Zapnutím přebíráte plnou odpovědnost za používání i případné právní následky.",
+          "confirm": "Přijímám odpovědnost a zapínám",
+          "enabledToast": "Bezplatná připojení zapnuta"
         }
       },
       "keys": {
@@ -1953,7 +1963,10 @@
       "failoverLabel": "Failover wait",
       "failoverHint": "Jak dlouho zůstane odmítnutý účet nebo člen trasy mimo rotaci po limitu rychlosti nebo chybě serveru a jak se čekání prodlužuje s každým dalším selháním. Úspěch ho resetuje. „Žádné“ začíná bez čekání: první odmítnutí jde hned použít znovu.",
       "retryHint": "Náhodná prodleva před každým pokusem, v sekundách. Delší Retry-After poskytovatele má přednost.",
-      "jumpLabel": "Přejít na oddíl"
+      "jumpLabel": "Přejít na oddíl",
+      "freeConnectionsLabel": "Bezplatná připojení",
+      "freeConnectionsHint": "Vypnutí skryje bezplatná připojení a zablokuje nové požadavky přes ně. Uložená připojení a modely zůstanou zachovány.",
+      "freeConnectionsDisabledToast": "Bezplatná připojení vypnuta"
     },
     "updateDialog": {
       "title": "Aktualizovat Relo",

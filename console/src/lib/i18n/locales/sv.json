@@ -496,7 +496,8 @@
           "tagFree": "Gratis",
           "tagExperimental": "Experimentell",
           "tagPayAsYouGo": "Betala per användning",
-          "tagPaidPlan": "Betald plan"
+          "tagPaidPlan": "Betald plan",
+          "groupFree": "Gratisanslutningar"
         },
         "status": {
           "ready": "Redo",
@@ -918,7 +919,10 @@
           "forceSignInBody": "{process} (pid {pid}) använder porten som den här inloggningen behöver. Att avsluta den frigör porten.",
           "signInPortBusy": "{process} använder porten som den här inloggningen behöver",
           "next": "Nästa",
-          "chooseHint": "Välj en leverantör"
+          "chooseHint": "Välj en leverantör",
+          "groupHintFree": "Utan konto eller API-nyckel",
+          "freeLockedBody": "Aktivera bara dessa tredjepartstjänster om du själv tar risken.",
+          "freeEnable": "Aktivera gratisanslutningar"
         },
         "verify": {
           "title": "Kontrollera anslutningen",
@@ -981,6 +985,12 @@
           "kiro": "Kiros CodeWhisperer API via en Kiro CLI-session",
           "cloudCode": "Google Cloud Code Assist, används av Antigravity-inloggningar",
           "unsupported": "Relo kan inte hantera det här formatet än"
+        },
+        "freeConsent": {
+          "title": "Användning på eget ansvar",
+          "body": "OpenCode Zen och Kilo är tredjepartsgatewayer, inte tjänster från Relo. Att de finns med innebär inte att leverantörerna har godkänt integrationen. Användningen kan strida mot deras villkor eller gällande lag. Leverantörerna kan spara eller använda dina instruktioner och din kod. Skicka aldrig konfidentiell information. Modeller, begränsningar och tillgänglighet kan ändras eller upphöra utan förvarning. I den mån lagen tillåter lämnar Relo och dess underhållare inga garantier och tar inget ansvar. Genom att aktivera anslutningarna tar du fullt ansvar för användningen och eventuella rättsliga följder.",
+          "confirm": "Jag tar ansvaret och aktiverar",
+          "enabledToast": "Gratisanslutningar aktiverade"
         }
       },
       "keys": {
@@ -1953,7 +1963,10 @@
       "failoverLabel": "Failover-väntetid",
       "failoverHint": "Hur länge ett avvisat konto eller en avvisad gruppmedlem står utanför rotationen efter en hastighetsgräns eller ett serverfel, och hur väntetiden växer för varje nytt fel. Ett lyckat försök nollställer den. Väljer du Inget börjar det utan väntetid: första avvisningen kan användas direkt igen.",
       "retryHint": "Hur många gånger samma konto försöks igen innan förfrågan går vidare till nästa konto. En slumpmässig väntetid på 1–3 s skiljer försöken åt.",
-      "jumpLabel": "Gå till avsnitt"
+      "jumpLabel": "Gå till avsnitt",
+      "freeConnectionsLabel": "Gratisanslutningar",
+      "freeConnectionsHint": "När du stänger av döljs gratisanslutningarna och nya förfrågningar via dem stoppas. Sparade anslutningar och modeller finns kvar.",
+      "freeConnectionsDisabledToast": "Gratisanslutningar avstängda"
     },
     "updateDialog": {
       "title": "Uppdatera Relo",

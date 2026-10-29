@@ -19,8 +19,8 @@ import {
 import { providerOf, signInTemplate, templateOf } from './provider-fixtures';
 
 describe('provider sections', () => {
-	test('lists the sections account, cloud, local, then the long key list', () => {
-		expect(SECTION_ORDER).toEqual(['account', 'cloud', 'local', 'key']);
+	test('starts with free pools and ends with the long key list', () => {
+		expect(SECTION_ORDER).toEqual(['free', 'account', 'cloud', 'local', 'key']);
 	});
 
 	test('files a kind under its section, and an unknown kind under keys', () => {
@@ -256,4 +256,31 @@ test('files a Command Code key template under keys', () => {
 		new Set()
 	);
 	expect(rows.key.map((row) => row.id)).toEqual(['command-code']);
+});
+
+describe('free-pool opt-in', () => {
+	test('locks both pools while leaving paid and local options usable', () => {
+		const templates = [
+			templateOf({ id: 'openai' }),
+			templateOf({ id: 'opencode-free' }),
+			templateOf({ id: 'kilo-free' })
+		];
+		const rows = buildTemplateRows(templates, new Set(), '', false);
+		expect(visibleTemplateRows(rows)[0].section).toBe('free');
+		expect(rows.free.map((row) => row.id)).toEqual(['opencode-free', 'kilo-free']);
+		expect(rows.free.every((row) => row.locked)).toBe(true);
+		expect(rows.key.every((row) => !row.locked)).toBe(true);
+		expect(buildTemplateRows(templates, new Set(), '', true).free.every((row) => !row.locked)).toBe(
+			true
+		);
+	});
+	test('search removes an empty free section', () => {
+		const rows = buildTemplateRows(
+			[templateOf({ id: 'opencode-free', label: 'Opencode Free' })],
+			new Set(),
+			'missing',
+			false
+		);
+		expect(visibleTemplateRows(rows)).toEqual([]);
+	});
 });

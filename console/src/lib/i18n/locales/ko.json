@@ -496,7 +496,8 @@
           "tagFree": "무료",
           "tagExperimental": "실험적",
           "tagPayAsYouGo": "종량제",
-          "tagPaidPlan": "유료 요금제"
+          "tagPaidPlan": "유료 요금제",
+          "groupFree": "무료 연결"
         },
         "status": {
           "ready": "준비됨",
@@ -918,7 +919,10 @@
           "forceSignInBody": "{process}(pid {pid})이(가) 이 로그인에 필요한 포트를 쓰고 있어요. 종료하면 포트가 풀려요.",
           "signInPortBusy": "{process}이(가) 이 로그인에 필요한 포트를 쓰고 있어요",
           "next": "다음",
-          "chooseHint": "제공업체 선택"
+          "chooseHint": "제공업체 선택",
+          "groupHintFree": "계정이나 API 키 없이 사용",
+          "freeLockedBody": "위험을 이해하고 본인이 책임질 수 있는 경우에만 켜세요.",
+          "freeEnable": "무료 연결 켜기"
         },
         "verify": {
           "title": "연결 확인",
@@ -981,6 +985,12 @@
           "kiro": "Kiro CLI 세션을 통한 Kiro CodeWhisperer API",
           "cloudCode": "Antigravity 로그인에서 쓰는 Google Cloud Code Assist",
           "unsupported": "Relo는 아직 이 형식을 지원하지 않아요"
+        },
+        "freeConsent": {
+          "title": "사용에 따른 책임은 본인에게 있습니다",
+          "body": "OpenCode Zen과 Kilo는 제삼자가 운영하는 게이트웨이이며 Relo의 서비스가 아닙니다. 목록에 포함되었다고 해서 제공업체가 공식 승인한 것은 아닙니다. 사용 시 해당 서비스의 약관이나 관련 법률을 위반할 수 있습니다. 제공업체가 보낸 프롬프트와 코드를 보관하거나 활용할 수 있으므로 기밀 정보를 보내지 마세요. 모델, 사용 한도 및 서비스 제공 여부는 예고 없이 변경되거나 종료될 수 있습니다. 법률이 허용하는 범위에서 Relo와 유지관리자는 어떠한 보증도 하지 않으며 책임을 지지 않습니다. 연결을 켜면 법적 결과를 포함해 사용에 따른 모든 책임을 본인이 부담하는 데 동의하는 것입니다.",
+          "confirm": "책임을 수락하고 켜기",
+          "enabledToast": "무료 연결을 켰습니다"
         }
       },
       "keys": {
@@ -1953,7 +1963,10 @@
       "failoverLabel": "장애 조치 대기",
       "failoverHint": "속도 제한이나 서버 오류가 난 뒤 거절된 계정이나 라우트 멤버가 로테이션에서 얼마나 빠져 있는지, 그리고 실패가 이어질수록 이 대기가 어떻게 늘어나는지예요. 성공하면 초기화되고, 없음으로 두면 대기 없이 시작하므로 첫 거절 직후 바로 다시 쓸 수 있어요.",
       "retryHint": "요청이 다음 계정으로 넘어가기 전에 한 계정을 몇 번 재시도할지예요. 재시도 사이에는 1~3초를 무작위로 기다려요.",
-      "jumpLabel": "섹션으로 이동"
+      "jumpLabel": "섹션으로 이동",
+      "freeConnectionsLabel": "무료 연결",
+      "freeConnectionsHint": "끄면 무료 연결이 숨겨지고 이를 통한 새 요청이 차단됩니다. 저장된 연결과 모델은 그대로 유지됩니다.",
+      "freeConnectionsDisabledToast": "무료 연결을 껐습니다"
     },
     "updateDialog": {
       "title": "Relo 업데이트",

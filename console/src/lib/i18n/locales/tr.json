@@ -496,7 +496,8 @@
           "tagFree": "Ücretsiz",
           "tagExperimental": "Deneysel",
           "tagPayAsYouGo": "Pay as you go",
-          "tagPaidPlan": "Paid plan"
+          "tagPaidPlan": "Paid plan",
+          "groupFree": "Ücretsiz bağlantılar"
         },
         "status": {
           "ready": "Hazır",
@@ -918,7 +919,10 @@
           "forceSignInBody": "{process} (pid {pid}) bu oturumun gerektirdiği portu kullanıyor. Sonlandırmak portu boşaltır.",
           "signInPortBusy": "{process} bu oturumun gerektirdiği portu kullanıyor",
           "next": "İleri",
-          "chooseHint": "Bir sağlayıcı seçin"
+          "chooseHint": "Bir sağlayıcı seçin",
+          "groupHintFree": "Hesap veya API anahtarı gerekmez",
+          "freeLockedBody": "Bu üçüncü taraf hizmetlerini yalnızca risklerini üstleniyorsanız açın.",
+          "freeEnable": "Ücretsiz bağlantıları aç"
         },
         "verify": {
           "title": "Bağlantıyı denetle",
@@ -981,6 +985,12 @@
           "kiro": "Kiro CLI oturumu üzerinden Kiro CodeWhisperer API’si",
           "cloudCode": "Google Cloud Code Assist, Antigravity oturum açmalarında kullanılır",
           "unsupported": "Relo bu biçimi henüz desteklemiyor"
+        },
+        "freeConsent": {
+          "title": "Kullanım sorumluluğu size aittir",
+          "body": "OpenCode Zen ve Kilo, Relo hizmetleri değil, üçüncü taraf ağ geçitleridir. Listelenmeleri, sağlayıcıların bu entegrasyonu onayladığı anlamına gelmez. Kullanımları, hizmet koşullarına veya yürürlükteki yasalara aykırı olabilir. Sağlayıcılar istemlerinizi ve kodunuzu saklayabilir ya da kullanabilir. Gizli bilgi göndermeyin. Modeller, sınırlar ve erişim önceden bildirilmeden değişebilir veya sona erebilir. Yasaların izin verdiği ölçüde Relo ve bakımını üstlenenler hiçbir garanti vermez ve sorumluluk kabul etmez. Bu bağlantıları açarak, hukuki sonuçlar dahil kullanıma ilişkin tüm sorumluluğu üstlenirsiniz.",
+          "confirm": "Sorumluluğu kabul et ve aç",
+          "enabledToast": "Ücretsiz bağlantılar açıldı"
         }
       },
       "keys": {
@@ -1953,7 +1963,10 @@
       "failoverLabel": "Failover wait",
       "failoverHint": "Reddedilen bir hesap ya da rota üyesi, hız sınırı veya sunucu hatasından sonra rotasyonun dışında ne kadar kalır ve her yeni hatayla bekleme nasıl uzar. Bir başarı beklemiyi sıfırlar. “Yok” beklemesiz başlar: ilk reddedilme hemen yeniden kullanılabilir.",
       "retryHint": "Her denemeden önce rastgele bekleme, saniye cinsinden. Sağlayıcının daha uzun Retry-After değeri kazanır.",
-      "jumpLabel": "Bölüme git"
+      "jumpLabel": "Bölüme git",
+      "freeConnectionsLabel": "Ücretsiz bağlantılar",
+      "freeConnectionsHint": "Kapatıldığında ücretsiz bağlantılar gizlenir ve üzerlerinden yeni istek gönderilmez. Kaydedilmiş bağlantılar ve modeller korunur.",
+      "freeConnectionsDisabledToast": "Ücretsiz bağlantılar kapatıldı"
     },
     "updateDialog": {
       "title": "Relo'yu güncelle",

@@ -20,6 +20,8 @@
 	// footer's Next advances, so a misread row never opens the form by itself.
 	interface Props {
 		templates: ProviderTemplate[];
+		freeEnabled: boolean;
+		onenablefree: () => void;
 		modelsdev: ModelsDevState | null;
 		added: Set<string>;
 		selected?: string;
@@ -32,6 +34,8 @@
 
 	let {
 		templates,
+		freeEnabled,
+		onenablefree,
 		modelsdev,
 		added,
 		selected = '',
@@ -42,7 +46,7 @@
 		onretry
 	}: Props = $props();
 
-	const rows = $derived(buildTemplateRows(templates, added, query));
+	const rows = $derived(buildTemplateRows(templates, added, query, freeEnabled));
 	const groups = $derived(visibleTemplateRows(rows));
 	const total = $derived(countTemplateRows(rows));
 
@@ -142,6 +146,14 @@
 							)}
 						</span>
 					</div>
+					{#if group.section === 'free' && !freeEnabled}
+						<div class="rounded-panel bg-sunken p-3 text-sm">
+							<p>{$t('ui.pages.providersPage.add.freeLockedBody')}</p>
+							<Button class="mt-2" onclick={onenablefree}
+								>{$t('ui.pages.providersPage.add.freeEnable')}</Button
+							>
+						</div>
+					{/if}
 					<div
 						class="grid gap-2 sm:grid-cols-2"
 						role="radiogroup"
@@ -163,13 +175,15 @@
 								data-plain
 								role="radio"
 								aria-checked={chosen}
-								disabled={row.disabledReason !== ''}
+								disabled={row.locked || row.disabledReason !== ''}
 								class="flex items-center gap-3 rounded-xl bg-control px-4 py-3 text-left shadow-float-1 transition-[background-color,box-shadow] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring {chosen
 									? 'bg-accent-soft ring-1 ring-accent-border'
 									: row.custom
 										? 'border-[1.5px] border-dashed border-line-strong'
 										: 'hover:bg-control-hover'}"
-								onclick={() => onpick(row)}
+								onclick={() => {
+									if (!row.locked) onpick(row);
+								}}
 							>
 								{#if row.custom}
 									<span

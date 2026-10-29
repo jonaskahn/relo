@@ -1,19 +1,19 @@
+import { isFreeConnection } from '$lib/provider-free';
 import type { Provider, ProviderTemplate } from '$lib/types';
 
-// The four sections the console groups providers under, in the order both
-// screens list them: the account that signs in, the cloud the provider runs
-// on, the server on this machine, then the key from a dashboard. The long
-// list of key providers comes last so the short sections stay reachable.
+// The picker starts with free pools; the long key list stays last so the
+// short sections remain reachable. Existing connections keep their kind grouping.
 
 /** The group a connection is filed under: the account it signs into, the cloud it runs on, a
  *  server on this machine, or a key from a dashboard. */
-export type ProviderSection = 'account' | 'cloud' | 'local' | 'key';
+export type ProviderSection = 'free' | 'account' | 'cloud' | 'local' | 'key';
 
 /** The add-connection list's grouping, in the order it shows. */
-export const SECTION_ORDER: ProviderSection[] = ['account', 'cloud', 'local', 'key'];
+export const SECTION_ORDER: ProviderSection[] = ['free', 'account', 'cloud', 'local', 'key'];
 
 /** The copy key each section heading reads. */
 export const SECTION_LABEL_KEY: Record<ProviderSection, string> = {
+	free: 'ui.pages.providersPage.list.groupFree',
 	account: 'ui.pages.providersPage.list.groupAccount',
 	cloud: 'ui.pages.providersPage.list.groupCloud',
 	local: 'ui.pages.providersPage.list.groupLocal',
@@ -92,6 +92,7 @@ export interface TemplateRow {
 	template: ProviderTemplate | null;
 	added: boolean;
 	disabledReason: string;
+	locked?: boolean;
 	// hint is a translation key, or an empty string for a row whose hint is a
 	// value rather than prose.
 	hintKey: string;
@@ -120,16 +121,18 @@ export function matchesQuery(query: string, id: string, label: string): boolean 
 	return id.toLowerCase().includes(needle) || label.toLowerCase().includes(needle);
 }
 
-/** Groups every template the daemon offers into the four sections, in the daemon's order, with
+/** Groups every template the daemon offers into sections, in the daemon's order, with
  *  unsupported rows last inside their section.
  *  A search hides empty sections and always keeps the custom card, which is what an operator
  *  falls back to when nothing matches. */
 export function buildTemplateRows(
 	templates: readonly ProviderTemplate[],
 	added: Set<string>,
-	query = ''
+	query = '',
+	freeEnabled = true
 ): Record<ProviderSection, TemplateRow[]> {
 	const rows: Record<ProviderSection, TemplateRow[]> = {
+		free: [],
 		account: [],
 		cloud: [],
 		local: [],
@@ -139,10 +142,13 @@ export function buildTemplateRows(
 
 	for (const template of templates) {
 		if (!matchesQuery(query, template.id, template.label)) continue;
-		rows[sectionOf(template.kind)].push({
+		const free = isFreeConnection({ template_id: template.id });
+		const section = free ? 'free' : sectionOf(template.kind);
+		rows[section].push({
 			id: template.id,
 			label: template.label,
-			section: sectionOf(template.kind),
+			section,
+			locked: free && !freeEnabled,
 			custom: false,
 			template,
 			added: added.has(template.id),
@@ -182,6 +188,8 @@ export function buildTemplateRows(
 /** Names the line under a template's name: how it signs in, what credentials it takes, or what
  *  it speaks. */
 export function templateHintKey(template: ProviderTemplate): string {
+	if (isFreeConnection({ template_id: template.id }))
+		return 'ui.pages.providersPage.add.groupHintFree';
 	switch (sectionOf(template.kind)) {
 		case 'account':
 			return LOGIN_HINT_KEY[loginHint(template)];
@@ -234,6 +242,7 @@ export interface ProviderGroup {
  *  network it reaches. */
 export function groupProviders(providers: Provider[], query = ''): ProviderGroup[] {
 	const groups: Record<ProviderSection, Provider[]> = {
+		free: [],
 		account: [],
 		cloud: [],
 		local: [],

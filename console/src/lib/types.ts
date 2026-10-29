@@ -190,6 +190,7 @@ export interface ModelsDevState {
 
 /** The template list with the state of the saved models.dev copy. */
 export interface ProviderTemplatesResponse {
+	readonly free_enabled: boolean;
 	readonly items: ProviderTemplate[];
 	readonly modelsdev: ModelsDevState;
 }
@@ -905,6 +906,7 @@ export interface Settings {
 	readonly providers: ProvidersSettings;
 	readonly access: AccessSettings;
 	readonly secrets: SecretsSettings;
+	readonly connections: { readonly free_enabled: boolean };
 	readonly restart_pending: boolean;
 }
 

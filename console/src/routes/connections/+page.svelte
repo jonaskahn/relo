@@ -4,6 +4,7 @@
 	import { t } from 'svelte-i18n';
 	import { toast } from 'svelte-sonner';
 	import { api } from '$lib/api';
+	import FreeConsentDialog from '$lib/components/providers/free-consent-dialog.svelte';
 	import {
 		connectionsViewQuery,
 		linkedProviderId,
@@ -213,9 +214,13 @@
 		}
 	}
 
+	let freeEnabled = $state(false);
+	let freeConsentOpen = $state(false);
+
 	async function loadCatalog() {
 		try {
 			const data = await api<ProviderTemplatesResponse>('/templates');
+			freeEnabled = data.free_enabled;
 			templates = data.items ?? [];
 			modelsdev = data.modelsdev ?? null;
 		} catch (error) {
@@ -532,7 +537,17 @@
 	</div>
 </div>
 
+<FreeConsentDialog
+	bind:open={freeConsentOpen}
+	onenabled={() => {
+		freeEnabled = true;
+		void refreshProviders();
+	}}
+/>
+
 <AddProviderStepper
+	{freeEnabled}
+	onenablefree={() => (freeConsentOpen = true)}
 	bind:open={addOpen}
 	presetProviderId={addPreset}
 	{templates}

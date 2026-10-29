@@ -247,3 +247,18 @@ describe('page messages', () => {
 		expectCovered(namespaceKeysUsed('ui.settingsPage'));
 	});
 });
+
+describe('free-pool consent copy', () => {
+	it('ships a notice in each language rather than falling back to English', () => {
+		for (const [tag, catalog] of Object.entries(catalogs)) {
+			if (tag === 'en') continue;
+			for (const key of ['title', 'body', 'confirm', 'enabledToast']) {
+				const path = 'ui.pages.providersPage.freeConsent.' + key;
+				expect(valueOf(catalog, path).trim(), tag + ' ' + key).not.toBe('');
+				expect(valueOf(catalog, path), tag + ' ' + key).not.toBe(valueOf(en, path));
+			}
+			const path = 'ui.pages.providersPage.add.freeLockedBody';
+			expect(valueOf(catalog, path), tag).not.toBe(valueOf(en, path));
+		}
+	});
+});

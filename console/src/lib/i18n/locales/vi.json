@@ -496,7 +496,8 @@
           "tagFree": "Miễn phí",
           "tagExperimental": "Thử nghiệm",
           "tagPayAsYouGo": "Pay as you go",
-          "tagPaidPlan": "Paid plan"
+          "tagPaidPlan": "Paid plan",
+          "groupFree": "Kết nối miễn phí"
         },
         "status": {
           "ready": "Sẵn sàng",
@@ -918,7 +919,10 @@
           "forceSignInBody": "{process} (pid {pid}) đang dùng cổng mà việc đăng nhập này cần. Kết thúc nó sẽ giải phóng cổng.",
           "signInPortBusy": "{process} đang dùng cổng mà việc đăng nhập này cần",
           "next": "Tiếp",
-          "chooseHint": "Chọn nhà cung cấp"
+          "chooseHint": "Chọn nhà cung cấp",
+          "groupHintFree": "Không cần tài khoản hay khóa API",
+          "freeLockedBody": "Chỉ bật các dịch vụ bên thứ ba này khi bạn chấp nhận tự chịu rủi ro.",
+          "freeEnable": "Bật kết nối miễn phí"
         },
         "verify": {
           "title": "Kiểm tra kết nối",
@@ -981,6 +985,12 @@
           "kiro": "API CodeWhisperer của Kiro qua một phiên Kiro CLI",
           "cloudCode": "Google Cloud Code Assist, dùng cho các lần đăng nhập Antigravity",
           "unsupported": "Relo chưa hỗ trợ định dạng này"
+        },
+        "freeConsent": {
+          "title": "Bạn tự chịu trách nhiệm khi sử dụng",
+          "body": "OpenCode Zen và Kilo là cổng dịch vụ của bên thứ ba, không phải dịch vụ của Relo. Việc tích hợp không có nghĩa là được nhà cung cấp bảo trợ. Sử dụng các kết nối này có thể vi phạm điều khoản của họ hoặc pháp luật hiện hành. Nhà cung cấp có thể lưu lại hoặc sử dụng nội dung yêu cầu và mã nguồn bạn gửi; tuyệt đối không gửi thông tin mật. Mô hình, hạn mức và khả năng truy cập có thể thay đổi hoặc ngừng bất cứ lúc nào. Trong phạm vi pháp luật cho phép, Relo và những người duy trì dự án không đưa ra bảo đảm và không chịu trách nhiệm pháp lý. Khi bật, bạn đồng ý tự chịu toàn bộ trách nhiệm về việc sử dụng, kể cả mọi hậu quả pháp lý.",
+          "confirm": "Tôi tự chịu trách nhiệm và đồng ý bật",
+          "enabledToast": "Đã bật kết nối miễn phí"
         }
       },
       "keys": {
@@ -1953,7 +1963,10 @@
       "failoverLabel": "Failover wait",
       "failoverHint": "Tài khoản hay thành viên tuyến bị từ chối ở ngoài vòng xoay bao lâu sau khi chạm giới hạn tốc độ hay lỗi máy chủ, và thời gian chờ dài thêm thế nào sau mỗi lần hỏng tiếp theo. Một lần thành công là đặt lại. Chọn “Không” thì không phải chờ: lần từ chối đầu dùng lại được ngay.",
       "retryHint": "Khoảng chờ ngẫu nhiên trước mỗi lần thử lại, tính bằng giây. Retry-After dài hơn của nhà cung cấp sẽ thắng.",
-      "jumpLabel": "Chuyển đến phần"
+      "jumpLabel": "Chuyển đến phần",
+      "freeConnectionsLabel": "Kết nối miễn phí",
+      "freeConnectionsHint": "Tắt sẽ ẩn các kết nối miễn phí và chặn yêu cầu mới qua chúng. Các kết nối và mô hình đã lưu vẫn được giữ nguyên.",
+      "freeConnectionsDisabledToast": "Đã tắt kết nối miễn phí"
     },
     "updateDialog": {
       "title": "Cập nhật Relo",

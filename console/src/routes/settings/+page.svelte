@@ -9,6 +9,7 @@
 	import ConsoleCard from '$lib/components/settings/console-card.svelte';
 	import DaemonCard from '$lib/components/settings/daemon-card.svelte';
 	import NetworkCard from '$lib/components/settings/network-card.svelte';
+	import FreeConnectionsCard from '$lib/components/settings/free-connections-card.svelte';
 	import ProvidersCard from '$lib/components/settings/providers-card.svelte';
 	import ReclaimCard from '$lib/components/settings/reclaim-card.svelte';
 	import RestartBanner from '$lib/components/settings/restart-banner.svelte';
@@ -146,6 +147,7 @@
 		<div class="grid grid-cols-1 gap-[var(--section)] xl:grid-cols-2">
 			<NetworkCard value={settings.server} onsaved={onNetworkSaved} />
 			<AccessCard access={settings.access} secrets={settings.secrets} onsaved={onAccessSaved} />
+			<FreeConnectionsCard value={settings.connections.free_enabled} />
 			<ProvidersCard value={settings.providers} onsaved={onProvidersSaved} />
 			<DaemonCard value={settings.system} onsaved={onSystemSaved} />
 			<RetentionCard value={settings.retention} onsaved={onRetentionSaved} />

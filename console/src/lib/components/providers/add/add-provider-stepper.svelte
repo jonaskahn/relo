@@ -40,6 +40,8 @@
 	interface Props {
 		open?: boolean;
 		templates: ProviderTemplate[];
+		freeEnabled: boolean;
+		onenablefree: () => void;
 		// presetProviderId names a connection the operator is already inside, so
 		// the flow opens on the connect step with that provider chosen.
 		presetProviderId?: string;
@@ -56,6 +58,8 @@
 	let {
 		open = $bindable(false),
 		templates,
+		freeEnabled,
+		onenablefree,
 		presetProviderId = '',
 		modelsdev = null,
 		providers,
@@ -161,7 +165,7 @@
 
 	function confirmPick() {
 		const row = selectedRow;
-		if (row === null || row.disabledReason !== '') return;
+		if (row === null || row.locked || row.disabledReason !== '') return;
 		if (row.custom) return startCustom();
 		const target = providers.filter(
 			(provider) => provider.template_id === row.id || provider.id === row.id
@@ -462,6 +466,8 @@
 
 		{#if step === 'provider'}
 			<StepProvider
+				{freeEnabled}
+				{onenablefree}
 				{templates}
 				{modelsdev}
 				{added}

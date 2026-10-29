@@ -496,7 +496,8 @@
           "tagFree": "免費",
           "tagExperimental": "實驗性",
           "tagPayAsYouGo": "按量付費",
-          "tagPaidPlan": "付費方案"
+          "tagPaidPlan": "付費方案",
+          "groupFree": "免費連線"
         },
         "status": {
           "ready": "就緒",
@@ -918,7 +919,10 @@
           "forceSignInBody": "{process}（pid {pid}）正佔用這次登入需要的連接埠。結束它就能釋放連接埠。",
           "signInPortBusy": "{process} 正在使用此登入所需的連接埠",
           "next": "下一步",
-          "chooseHint": "選擇供應商"
+          "chooseHint": "選擇供應商",
+          "groupHintFree": "不需帳號或 API 金鑰",
+          "freeLockedBody": "啟用這些第三方服務前，請確認你願意自行承擔風險。",
+          "freeEnable": "啟用免費連線"
         },
         "verify": {
           "title": "檢查連線",
@@ -981,6 +985,12 @@
           "kiro": "透過 Kiro CLI 工作階段使用 Kiro 的 CodeWhisperer API",
           "cloudCode": "Google Cloud Code Assist，供 Antigravity 登入使用",
           "unsupported": "Relo 尚不支援此格式"
+        },
+        "freeConsent": {
+          "title": "使用風險由你自行承擔",
+          "body": "OpenCode Zen 和 Kilo 是第三方閘道，並非 Relo 提供的服務。列出這些服務不代表獲得其供應商的認可。使用它們可能違反服務條款或適用法律。供應商可能保留或使用你傳送的提示詞與程式碼，請勿提交任何機密資訊。模型、額度及可用性可能隨時變更或終止，恕不另行通知。在法律允許的範圍內，Relo 及其維護者不提供任何保證，也不承擔責任。啟用即表示你同意對使用行為及衍生的一切法律後果負完全責任。",
+          "confirm": "我願自行承擔責任並啟用",
+          "enabledToast": "已啟用免費連線"
         }
       },
       "keys": {
@@ -1953,7 +1963,10 @@
       "failoverLabel": "容錯等待",
       "failoverHint": "賬號或路由成員被拒絕後（例如碰到速率限制或伺服器錯誤），要等多久才會再回到輪替中，以及每多失敗一次等待怎麼拉長。成功一次就會歸零。選「無」代表不等待：第一次被拒絕馬上就能再用。",
       "retryHint": "一個賬號重試幾次之後，請求才換到下一個賬號。每次重試之間會隨機等 1–3 秒。",
-      "jumpLabel": "跳至區段"
+      "jumpLabel": "跳至區段",
+      "freeConnectionsLabel": "免費連線",
+      "freeConnectionsHint": "關閉後會隱藏免費連線，並停止透過它們傳送新請求。已儲存的連線與模型不會被刪除。",
+      "freeConnectionsDisabledToast": "已關閉免費連線"
     },
     "updateDialog": {
       "title": "更新 Relo",

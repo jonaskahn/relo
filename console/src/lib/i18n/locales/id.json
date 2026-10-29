@@ -496,7 +496,8 @@
           "tagFree": "Gratis",
           "tagExperimental": "Eksperimental",
           "tagPayAsYouGo": "Pay as you go",
-          "tagPaidPlan": "Paid plan"
+          "tagPaidPlan": "Paid plan",
+          "groupFree": "Koneksi gratis"
         },
         "status": {
           "ready": "Siap",
@@ -918,7 +919,10 @@
           "forceSignInBody": "{process} (pid {pid}) menggunakan port yang dibutuhkan masuk ini. Mengakhirinya membebaskan port.",
           "signInPortBusy": "{process} menggunakan port yang dibutuhkan masuk ini",
           "next": "Berikutnya",
-          "chooseHint": "Pilih penyedia"
+          "chooseHint": "Pilih penyedia",
+          "groupHintFree": "Tanpa akun atau kunci API",
+          "freeLockedBody": "Aktifkan layanan pihak ketiga ini hanya jika Anda siap menanggung risikonya.",
+          "freeEnable": "Aktifkan koneksi gratis"
         },
         "verify": {
           "title": "Periksa koneksi",
@@ -981,6 +985,12 @@
           "kiro": "CodeWhisperer API Kiro lewat sesi Kiro CLI",
           "cloudCode": "Google Cloud Code Assist, dipakai untuk masuk ke Antigravity",
           "unsupported": "Relo belum bisa memakai format ini"
+        },
+        "freeConsent": {
+          "title": "Gunakan atas tanggung jawab sendiri",
+          "body": "OpenCode Zen dan Kilo adalah gateway pihak ketiga, bukan layanan Relo. Pencantumannya tidak berarti penyedia mendukung integrasi ini. Penggunaannya dapat melanggar ketentuan penyedia atau hukum yang berlaku. Penyedia dapat menyimpan atau menggunakan prompt dan kode Anda. Jangan pernah mengirim informasi rahasia. Model, batas penggunaan, dan ketersediaan dapat berubah atau dihentikan tanpa pemberitahuan. Sejauh diizinkan hukum, Relo dan pengelolanya tidak memberikan jaminan dan tidak menanggung tanggung jawab hukum. Dengan mengaktifkan koneksi ini, Anda bertanggung jawab penuh atas penggunaan dan segala akibat hukumnya.",
+          "confirm": "Saya bertanggung jawab dan ingin mengaktifkan",
+          "enabledToast": "Koneksi gratis diaktifkan"
         }
       },
       "keys": {
@@ -1953,7 +1963,10 @@
       "failoverLabel": "Failover wait",
       "failoverHint": "Berapa lama akun atau anggota rute yang ditolak tetap di luar rotasi setelah kena batas laju atau galat server, dan bagaimana jedanya bertambah tiap kali gagal lagi. Sekali berhasil, jedanya direset. Pilihan “Tidak ada” mulai tanpa jeda: penolakan pertama langsung bisa dipakai lagi.",
       "retryHint": "Jeda acak sebelum setiap percobaan ulang, dalam detik. Retry-After penyedia yang lebih lama menang.",
-      "jumpLabel": "Lompat ke bagian"
+      "jumpLabel": "Lompat ke bagian",
+      "freeConnectionsLabel": "Koneksi gratis",
+      "freeConnectionsHint": "Menonaktifkan akan menyembunyikan koneksi gratis dan menghentikan permintaan baru yang melewatinya. Koneksi dan model yang tersimpan tetap ada.",
+      "freeConnectionsDisabledToast": "Koneksi gratis dinonaktifkan"
     },
     "updateDialog": {
       "title": "Perbarui Relo",

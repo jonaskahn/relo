@@ -496,7 +496,8 @@
           "tagFree": "Kostenlos",
           "tagExperimental": "Experimentell",
           "tagPayAsYouGo": "Nutzungsbasiert",
-          "tagPaidPlan": "Abo"
+          "tagPaidPlan": "Abo",
+          "groupFree": "Kostenlose Verbindungen"
         },
         "status": {
           "ready": "Bereit",
@@ -918,7 +919,10 @@
           "forceSignInBody": "{process} (pid {pid}) belegt den Port, den diese Anmeldung braucht. Beende ihn, um den Port freizugeben.",
           "signInPortBusy": "{process} belegt den Port, den diese Anmeldung braucht",
           "next": "Weiter",
-          "chooseHint": "Anbieter wählen"
+          "chooseHint": "Anbieter wählen",
+          "groupHintFree": "Ohne Konto und API-Schlüssel",
+          "freeLockedBody": "Aktiviere diese Angebote nur, wenn du die Risiken selbst trägst.",
+          "freeEnable": "Kostenlose Verbindungen aktivieren"
         },
         "verify": {
           "title": "Verbindung prüfen",
@@ -981,6 +985,12 @@
           "kiro": "Kiros CodeWhisperer API über eine Kiro-CLI-Sitzung",
           "cloudCode": "Google Cloud Code Assist, von Antigravity-Anmeldungen genutzt",
           "unsupported": "Relo spricht dieses Format noch nicht."
+        },
+        "freeConsent": {
+          "title": "Nutzung auf eigene Verantwortung",
+          "body": "OpenCode Zen und Kilo sind Gateways externer Anbieter und keine Dienste von Relo. Die Aufnahme bedeutet keine offizielle Anerkennung durch die Anbieter. Die Nutzung kann gegen deren Bedingungen oder geltendes Recht verstoßen. Anbieter können deine Eingaben und deinen Code speichern oder weiterverwenden. Sende daher keine vertraulichen Daten. Modelle, Limits und Verfügbarkeit können sich jederzeit ändern oder entfallen. Soweit gesetzlich zulässig, übernehmen Relo und die Verantwortlichen weder Gewährleistung noch Haftung. Mit der Aktivierung trägst du die volle Verantwortung für die Nutzung und mögliche rechtliche Folgen.",
+          "confirm": "Auf eigene Verantwortung aktivieren",
+          "enabledToast": "Kostenlose Verbindungen aktiviert"
         }
       },
       "keys": {
@@ -1953,7 +1963,10 @@
       "failoverLabel": "Failover-Wartezeit",
       "failoverHint": "Wie lange ein abgelehntes Konto oder Gruppenmitglied nach einem Rate-Limit oder Serverfehler aus der Rotation bleibt, und wie die Wartezeit mit jedem weiteren Fehler wächst. Ein Erfolg setzt sie zurück. Ohne Wartezeit ist die erste Ablehnung sofort wieder nutzbar.",
       "retryHint": "Wie oft ein Konto wiederholt wird, bevor die Anfrage zum nächsten Konto wandert. Zwischen den Versuchen liegt eine zufällige Wartezeit von 1–3 s.",
-      "jumpLabel": "Zum Abschnitt springen"
+      "jumpLabel": "Zum Abschnitt springen",
+      "freeConnectionsLabel": "Kostenlose Verbindungen",
+      "freeConnectionsHint": "Beim Ausschalten werden kostenlose Verbindungen ausgeblendet und nehmen keine neuen Anfragen an. Gespeicherte Verbindungen und Modelle bleiben erhalten.",
+      "freeConnectionsDisabledToast": "Kostenlose Verbindungen ausgeschaltet"
     },
     "updateDialog": {
       "title": "Relo aktualisieren",

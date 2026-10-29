@@ -496,7 +496,8 @@
           "tagFree": "Gratis",
           "tagExperimental": "Experimental",
           "tagPayAsYouGo": "Pago por uso",
-          "tagPaidPlan": "Plan de pago"
+          "tagPaidPlan": "Plan de pago",
+          "groupFree": "Conexiones gratuitas"
         },
         "status": {
           "ready": "Lista",
@@ -918,7 +919,10 @@
           "forceSignInBody": "{process} (pid {pid}) está usando el puerto que necesita este inicio de sesión. Terminarlo libera el puerto.",
           "signInPortBusy": "{process} está usando el puerto que necesita este inicio de sesión",
           "next": "Siguiente",
-          "chooseHint": "Elige un provider"
+          "chooseHint": "Elige un provider",
+          "groupHintFree": "Sin cuenta ni clave de API",
+          "freeLockedBody": "Activa estos servicios de terceros solo si aceptas los riesgos.",
+          "freeEnable": "Activar conexiones gratuitas"
         },
         "verify": {
           "title": "Comprobar la conexión",
@@ -981,6 +985,12 @@
           "kiro": "La API CodeWhisperer de Kiro desde una sesión de Kiro CLI",
           "cloudCode": "Google Cloud Code Assist, que usan los inicios de sesión de Antigravity",
           "unsupported": "Relo todavía no habla este formato"
+        },
+        "freeConsent": {
+          "title": "Uso bajo tu responsabilidad",
+          "body": "OpenCode Zen y Kilo son pasarelas de terceros, no servicios de Relo. Su inclusión no implica el respaldo de sus proveedores. Su uso puede incumplir sus condiciones o la legislación aplicable. Los proveedores pueden guardar o utilizar tus mensajes y tu código: no envíes información confidencial. Los modelos, límites y disponibilidad pueden cambiar o desaparecer sin aviso. En la medida permitida por la ley, Relo y sus responsables no ofrecen garantías ni asumen responsabilidad alguna. Al activar estas conexiones, asumes toda la responsabilidad por su uso y por las consecuencias legales.",
+          "confirm": "Acepto la responsabilidad y activo",
+          "enabledToast": "Conexiones gratuitas activadas"
         }
       },
       "keys": {
@@ -1953,7 +1963,10 @@
       "failoverLabel": "Espera tras un fallo",
       "failoverHint": "Cuánto tiempo sigue fuera de rotación una cuenta o un miembro de ruta rechazado tras un límite de tasa o un fallo del servidor, y cuánto crece la espera con cada fallo más. Un acierto la reinicia. Con “Ninguno” no hay espera: el primer rechazo vuelve a estar disponible de inmediato.",
       "retryHint": "Espera aleatoria antes de cada reintento, en segundos. Si el proveedor manda un Retry-After más largo, se respeta ese.",
-      "jumpLabel": "Ir a la sección"
+      "jumpLabel": "Ir a la sección",
+      "freeConnectionsLabel": "Conexiones gratuitas",
+      "freeConnectionsHint": "Al desactivarlas, se ocultan las conexiones gratuitas y se bloquean las nuevas solicitudes que las utilicen. Las conexiones y modelos guardados se conservan.",
+      "freeConnectionsDisabledToast": "Conexiones gratuitas desactivadas"
     },
     "updateDialog": {
       "title": "Actualizar Relo",

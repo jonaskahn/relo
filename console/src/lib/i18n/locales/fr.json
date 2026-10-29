@@ -496,7 +496,8 @@
           "tagFree": "Gratuit",
           "tagExperimental": "Expérimental",
           "tagPayAsYouGo": "Paiement à l’usage",
-          "tagPaidPlan": "Forfait payant"
+          "tagPaidPlan": "Forfait payant",
+          "groupFree": "Connexions gratuites"
         },
         "status": {
           "ready": "Prêt",
@@ -918,7 +919,10 @@
           "forceSignInBody": "{process} (pid {pid}) occupe le port dont cette connexion a besoin. Le terminer libère le port.",
           "signInPortBusy": "{process} occupe le port dont cette connexion a besoin",
           "next": "Suivant",
-          "chooseHint": "Choisis un provider"
+          "chooseHint": "Choisis un provider",
+          "groupHintFree": "Sans compte ni clé API",
+          "freeLockedBody": "Activez ces services tiers uniquement si vous en acceptez les risques.",
+          "freeEnable": "Activer les connexions gratuites"
         },
         "verify": {
           "title": "Vérifier la connexion",
@@ -981,6 +985,12 @@
           "kiro": "L’API CodeWhisperer de Kiro via une session Kiro CLI",
           "cloudCode": "Google Cloud Code Assist, utilisé par les connexions Antigravity",
           "unsupported": "Relo ne parle pas encore ce format"
+        },
+        "freeConsent": {
+          "title": "Une utilisation sous votre responsabilité",
+          "body": "OpenCode Zen et Kilo sont des passerelles tierces, pas des services Relo. Leur présence ne vaut pas approbation de leurs fournisseurs. Leur utilisation peut contrevenir à leurs conditions ou au droit applicable. Les fournisseurs peuvent conserver ou exploiter vos requêtes et votre code : ne transmettez jamais de données confidentielles. Les modèles, quotas et disponibilités peuvent changer ou disparaître sans préavis. Dans les limites autorisées par la loi, Relo et ses mainteneurs ne fournissent aucune garantie et déclinent toute responsabilité. En activant ces connexions, vous assumez seul la responsabilité de leur utilisation et de ses conséquences juridiques.",
+          "confirm": "Accepter et activer sous ma responsabilité",
+          "enabledToast": "Connexions gratuites activées"
         }
       },
       "keys": {
@@ -1953,7 +1963,10 @@
       "failoverLabel": "Attente de bascule",
       "failoverHint": "Combien de temps un compte refusé ou un membre de route reste hors rotation après une limite de débit ou une panne du serveur, et comment l’attente grandit à chaque nouvel échec. Un succès la remet à zéro. « Aucun » démarre sans attente : le premier refus est réutilisable tout de suite.",
       "retryHint": "Combien de fois un compte est relancé avant que la requête passe au compte suivant. Une attente aléatoire de 1 à 3 s sépare les relances.",
-      "jumpLabel": "Aller à la section"
+      "jumpLabel": "Aller à la section",
+      "freeConnectionsLabel": "Connexions gratuites",
+      "freeConnectionsHint": "La désactivation masque les connexions gratuites et bloque les nouvelles requêtes qui les utilisent. Vos connexions et modèles enregistrés sont conservés.",
+      "freeConnectionsDisabledToast": "Connexions gratuites désactivées"
     },
     "updateDialog": {
       "title": "Mettre à jour Relo",
