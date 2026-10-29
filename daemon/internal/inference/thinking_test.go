@@ -40,6 +40,41 @@ func TestChooseThinking(t *testing.T) {
 	}
 }
 
+func TestToggleOnlyAcceptsEveryKnownEffort(t *testing.T) {
+	if !ToggleOnly([]string{}, true) {
+		t.Fatal("an empty ladder with a toggle is toggle-only")
+	}
+	for _, ladder := range [][]string{nil, {"low"}, {"none"}} {
+		if ToggleOnly(ladder, true) {
+			t.Fatalf("ToggleOnly(%v, true) = true, want false", ladder)
+		}
+	}
+	if ToggleOnly([]string{}, false) {
+		t.Fatal("an empty ladder without a toggle is not toggle-only")
+	}
+
+	for _, effort := range []string{"none", "minimal", "low", "medium", "high", "xhigh", "max", "ultra"} {
+		if !AcceptsEffort(effort, []string{}, true) {
+			t.Fatalf("AcceptsEffort(%q) = false, want a toggle-only model to accept it", effort)
+		}
+	}
+	if AcceptsEffort("turbo", []string{}, true) {
+		t.Fatal("a toggle-only model accepted an unknown effort")
+	}
+	if AcceptsEffort("high", []string{}, false) {
+		t.Fatal("an explicit empty non-toggle ladder accepted a positive effort")
+	}
+	if !AcceptsEffort("none", []string{}, false) {
+		t.Fatal("an explicit empty non-toggle ladder rejected thinking off")
+	}
+	if !AcceptsEffort("high", nil, false) {
+		t.Fatal("an unstated ladder rejected a positive effort")
+	}
+	if AcceptsEffort("max", []string{"low", "high"}, false) {
+		t.Fatal("a stated ladder accepted an effort outside it")
+	}
+}
+
 func TestClampBudget(t *testing.T) {
 	min := int64(1024)
 	max := int64(8000)

@@ -1,6 +1,8 @@
 // Provider-authoritative capabilities: one resolver for every surface.
 package catalog
 
+import "github.com/jonaskahn/relo/internal/inference"
+
 // AccountFactsRecord is one credential's discovered capability facts for one
 // model. Nil fields are unknown; an empty ReasoningEfforts slice is a stated
 // absence of effort choices, which is different from a nil slice.
@@ -332,6 +334,83 @@ func ConservativeCapabilities(models []Model) CapabilityResolution {
 		res.ReasoningEfforts = intersectEfforts(res.ReasoningEfforts, model.ReasoningEfforts)
 	}
 	return res
+}
+
+// toggleOnlyProjection is the synthetic level pair a toggle-only model shows
+// on client surfaces. It is presentation-only and is never stored as a fact.
+var toggleOnlyProjection = []string{"none", "high"}
+
+// sharedReasoningLadder is the ladder a client offers when a model states no
+// effort list. It repeats the adapter's shared list.
+var sharedReasoningLadder = []string{"low", "medium", "high", "xhigh", "max"}
+
+// ToggleOnly reports a reasoning model whose facts state an empty effort
+// ladder and an on/off thinking switch, with no effort intensity of its own.
+func ToggleOnly(model Model) bool {
+	return model.SupportsReasoning != nil && *model.SupportsReasoning &&
+		inference.ToggleOnly(model.ReasoningEfforts, model.ReasoningToggle)
+}
+
+// ClientReasoningEfforts is the effort list a client surface shows for one
+// model. A toggle-only model gets the synthetic off/on pair; every other
+// model keeps the ladder it stated.
+func ClientReasoningEfforts(model Model) []string {
+	if ToggleOnly(model) {
+		return append([]string(nil), toggleOnlyProjection...)
+	}
+	return cloneEfforts(model.ReasoningEfforts)
+}
+
+// SharedReasoning is the effort list and toggle a route publishes. A
+// toggle-only member accepts every positive effort, so it does not narrow the
+// ladder; an all-toggle route advertises the synthetic off/on pair. A nil
+// ladder keeps the shared fallback, while an explicit empty ladder on a
+// non-toggle member forces an empty intersection. The toggle is true only
+// when every member carries one.
+func SharedReasoning(members []Model) ([]string, bool) {
+	if len(members) == 0 {
+		return nil, false
+	}
+	toggle := true
+	for _, model := range members {
+		if !model.ReasoningToggle {
+			toggle = false
+		}
+	}
+	if allToggleOnly(members) {
+		return append([]string(nil), toggleOnlyProjection...), toggle
+	}
+	return sharedStatedLadder(members), toggle
+}
+
+func allToggleOnly(members []Model) bool {
+	for _, model := range members {
+		if !ToggleOnly(model) {
+			return false
+		}
+	}
+	return true
+}
+
+func sharedStatedLadder(members []Model) []string {
+	var shared []string
+	stated := false
+	for _, model := range members {
+		if ToggleOnly(model) {
+			continue
+		}
+		ladder := model.ReasoningEfforts
+		if ladder == nil {
+			ladder = sharedReasoningLadder
+		}
+		if !stated {
+			shared = append([]string(nil), ladder...)
+			stated = true
+			continue
+		}
+		shared = intersectEfforts(shared, ladder)
+	}
+	return shared
 }
 
 func indexAdvertisedModels(snapshot *Snapshot, facts []AccountFactsRecord) {

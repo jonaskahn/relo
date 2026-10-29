@@ -791,7 +791,7 @@ func resolveModelCapabilities(res *Model, host Provider, ov, pr, md FactsRecord)
 	res.SupportsTools = resolution.SupportsTools
 	res.SupportsReasoning = resolution.SupportsReasoning
 	res.SupportsVision = resolution.SupportsVision
-	res.ReasoningEfforts = xiaomiEfforts(host, res.SupportsReasoning, resolution.ReasoningEfforts)
+	res.ReasoningEfforts = resolution.ReasoningEfforts
 	res.ReasoningToggle = valueOfBool(resolution.ReasoningToggle)
 	res.ReasoningToggleKnown = resolution.ReasoningToggle != nil
 	res.ReasoningBudget = valueOfBool(resolution.ReasoningBudget)
@@ -896,8 +896,6 @@ func pickSource[T any](ov, pr, md *T) string {
 	return ""
 }
 
-var xiaomiThinkLevels = []string{"low", "medium", "high"}
-
 // ToolCallDialectText names a serving template that renders a tool call as
 // text (the Qwen / MiMo family) rather than through structured deltas. A chat
 // decoder reads it to recover the call instead of forwarding it as prose.
@@ -908,13 +906,6 @@ func toolCallDialect(host Provider) string {
 		return ToolCallDialectText
 	}
 	return ""
-}
-
-func xiaomiEfforts(host Provider, reasoning *bool, efforts []string) []string {
-	if reasoning == nil || !*reasoning || !xiaomiConnection(host) {
-		return efforts
-	}
-	return append([]string(nil), xiaomiThinkLevels...)
 }
 
 func xiaomiConnection(host Provider) bool {

@@ -49,6 +49,35 @@ func ChooseThinking(effort string, ladder []string, toggle bool) (level string, 
 	return "", false
 }
 
+// ToggleOnly reports a model whose canonical facts state an empty effort
+// ladder and an on/off thinking switch. Such a model has no effort intensity;
+// presentation layers project a synthetic choice onto it instead.
+func ToggleOnly(ladder []string, toggle bool) bool {
+	return ladder != nil && len(ladder) == 0 && toggle
+}
+
+// AcceptsEffort reports whether one model accepts a requested effort. An
+// unstated ladder keeps the current pass-through. A toggle-only model accepts
+// every known effort because the request only chooses thinking on or off. A
+// non-toggle model with an explicit empty ladder accepts no effort.
+func AcceptsEffort(effort string, ladder []string, toggle bool) bool {
+	if ladder == nil {
+		return true
+	}
+	name, ok := NormalizeEffort(effort)
+	if !ok {
+		return false
+	}
+	if ToggleOnly(ladder, toggle) {
+		return true
+	}
+	if len(ladder) == 0 {
+		return name == "none"
+	}
+	_, found := listedEffort(ladder, name)
+	return found
+}
+
 // EffortBudget reports the token budget a canonical effort stands for.
 func EffortBudget(effort string) (int, bool) {
 	name, ok := NormalizeEffort(effort)
