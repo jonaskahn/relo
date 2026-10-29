@@ -110,7 +110,8 @@
 		{ href: '#settings-providers', label: $t('ui.settingsPage.sectionProviders') },
 		{ href: '#settings-daemon', label: $t('ui.settingsPage.sectionDaemon') },
 		{ href: '#settings-retention', label: $t('ui.settingsPage.sectionRetention') },
-		{ href: '#settings-console', label: $t('ui.settingsPage.sectionConsole') }
+		{ href: '#settings-console', label: $t('ui.settingsPage.sectionConsole') },
+		{ href: '#settings-others', label: $t('ui.settingsPage.sectionOthers') }
 	]);
 </script>
 
@@ -147,13 +148,18 @@
 		<div class="grid grid-cols-1 gap-[var(--section)] xl:grid-cols-2">
 			<NetworkCard value={settings.server} onsaved={onNetworkSaved} />
 			<AccessCard access={settings.access} secrets={settings.secrets} onsaved={onAccessSaved} />
-			<FreeConnectionsCard value={settings.connections.free_enabled} />
 			<ProvidersCard value={settings.providers} onsaved={onProvidersSaved} />
 			<DaemonCard value={settings.system} onsaved={onSystemSaved} />
 			<RetentionCard value={settings.retention} onsaved={onRetentionSaved} />
 			<ReclaimCard />
 			<div class="xl:col-span-2"><ConsoleCard /></div>
 		</div>
+		<section class="flex flex-col gap-3" aria-labelledby="settings-others">
+			<h2 id="settings-others" class="section-heading">
+				{$t('ui.settingsPage.sectionOthers')}
+			</h2>
+			<FreeConnectionsCard value={settings.connections.free_enabled} />
+		</section>
 	{:else}
 		<div
 			class="section-surface flat-surface flex min-h-48 items-center justify-center"
