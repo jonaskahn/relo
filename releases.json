@@ -1,7 +1,7 @@
 {
-  "generated": "2026-10-29T07:35:19Z",
+  "generated": "2026-10-29T09:06:26Z",
   "latest": "v0.1.13",
-  "latest_beta": "v0.1.14-beta.51.252796db",
+  "latest_beta": "v0.1.14-beta.52.4a559ce0",
   "install": {
     "stable": {
       "script": "curl -fsSL https://relo.ifelse.one/install.sh | sh",
@@ -17,6 +17,86 @@
     }
   },
   "releases": [
+    {
+      "tag": "v0.1.14-beta.52.4a559ce0",
+      "version": "0.1.14-beta.52.4a559ce0",
+      "name": "v0.1.14-beta.52.4a559ce0",
+      "channel": "beta",
+      "draft": false,
+      "published_at": "2026-10-29T09:06:16Z",
+      "page": "https://github.com/jonaskahn/relo/releases/tag/v0.1.14-beta.52.4a559ce0",
+      "notes": "## What's Changed\n* Fix: context limit image estimate by @jonaskahn in https://github.com/jonaskahn/relo/pull/90\n\n\n**Full Changelog**: https://github.com/jonaskahn/relo/compare/v0.1.14-beta.51.252796db...v0.1.14-beta.52.4a559ce0",
+      "install": {
+        "script": "curl -fsSL https://relo.ifelse.one/install.sh | sh -s -- --version 0.1.14-beta.52.4a559ce0",
+        "powershell": "& ([scriptblock]::Create((irm https://relo.ifelse.one/install.ps1))) -Version 0.1.14-beta.52.4a559ce0",
+        "npm": "npm i -g @jonaskahn/relo@0.1.14-beta.52.4a559ce0"
+      },
+      "files": [
+        {
+          "name": "checksums.txt",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.1.14-beta.52.4a559ce0/checksums.txt",
+          "size": 690,
+          "os": "any",
+          "arch": "any",
+          "kind": "checksums",
+          "format": "txt"
+        },
+        {
+          "name": "relo-0.1.14-beta.52.4a559ce0-darwin-amd64.tar.gz",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.1.14-beta.52.4a559ce0/relo-0.1.14-beta.52.4a559ce0-darwin-amd64.tar.gz",
+          "size": 14973095,
+          "os": "macos",
+          "arch": "amd64",
+          "kind": "archive",
+          "format": "tar.gz"
+        },
+        {
+          "name": "relo-0.1.14-beta.52.4a559ce0-darwin-arm64.tar.gz",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.1.14-beta.52.4a559ce0/relo-0.1.14-beta.52.4a559ce0-darwin-arm64.tar.gz",
+          "size": 14557261,
+          "os": "macos",
+          "arch": "arm64",
+          "kind": "archive",
+          "format": "tar.gz"
+        },
+        {
+          "name": "relo-0.1.14-beta.52.4a559ce0-linux-amd64.tar.gz",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.1.14-beta.52.4a559ce0/relo-0.1.14-beta.52.4a559ce0-linux-amd64.tar.gz",
+          "size": 14661802,
+          "os": "linux",
+          "arch": "amd64",
+          "kind": "archive",
+          "format": "tar.gz"
+        },
+        {
+          "name": "relo-0.1.14-beta.52.4a559ce0-linux-arm64.tar.gz",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.1.14-beta.52.4a559ce0/relo-0.1.14-beta.52.4a559ce0-linux-arm64.tar.gz",
+          "size": 13902773,
+          "os": "linux",
+          "arch": "arm64",
+          "kind": "archive",
+          "format": "tar.gz"
+        },
+        {
+          "name": "relo-0.1.14-beta.52.4a559ce0-windows-amd64.tar.gz",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.1.14-beta.52.4a559ce0/relo-0.1.14-beta.52.4a559ce0-windows-amd64.tar.gz",
+          "size": 14611502,
+          "os": "windows",
+          "arch": "amd64",
+          "kind": "archive",
+          "format": "tar.gz"
+        },
+        {
+          "name": "relo-0.1.14-beta.52.4a559ce0-windows-arm64.tar.gz",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.1.14-beta.52.4a559ce0/relo-0.1.14-beta.52.4a559ce0-windows-arm64.tar.gz",
+          "size": 13754151,
+          "os": "windows",
+          "arch": "arm64",
+          "kind": "archive",
+          "format": "tar.gz"
+        }
+      ]
+    },
     {
       "tag": "v0.1.14-beta.51.252796db",
       "version": "0.1.14-beta.51.252796db",
