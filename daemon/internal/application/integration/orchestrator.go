@@ -10,7 +10,6 @@ import (
 	"log/slog"
 	"net/http"
 	"path/filepath"
-	"slices"
 	"strings"
 	"sync"
 	"time"
@@ -1426,8 +1425,8 @@ func routeCapabilities(snap *catalog.Snapshot, group catalog.Group) (tools, reas
 		return nil, nil, nil, nil, new(false)
 	}
 	tools, reasoning, vision = new(true), new(true), new(true)
-	toggle = new(true)
-	efforts = sharedEfforts(members)
+	efforts, sharedToggle := catalog.SharedReasoning(members)
+	toggle = &sharedToggle
 	for _, model := range members {
 		if model.SupportsTools == nil || !*model.SupportsTools {
 			tools = nil
@@ -1438,42 +1437,9 @@ func routeCapabilities(snap *catalog.Snapshot, group catalog.Group) (tools, reas
 		if model.SupportsVision == nil || !*model.SupportsVision {
 			vision = nil
 		}
-		if !model.ReasoningToggle {
-			toggle = new(false)
-		}
 	}
 	return tools, reasoning, vision, efforts, toggle
 }
-
-// sharedEfforts is the ladder every member of a route accepts. The effort a
-// route offers has to exist on the member a turn lands on, so the route
-// offers only the shared names.
-func sharedEfforts(members []catalog.Model) []string {
-	var shared []string
-	for index, model := range members {
-		ladder := model.ReasoningEfforts
-		if ladder == nil {
-			ladder = sharedReasoningLadder
-		}
-		if index == 0 {
-			shared = append([]string(nil), ladder...)
-			continue
-		}
-		kept := shared[:0]
-		for _, effort := range shared {
-			if slices.Contains(ladder, effort) {
-				kept = append(kept, effort)
-			}
-		}
-		shared = kept
-	}
-	return shared
-}
-
-// sharedReasoningLadder is the effort list a client offers when a model
-// states none. It repeats the adapter's shared list, which stays the copy a
-// client file is written from; this one only intersects route members.
-var sharedReasoningLadder = []string{"low", "medium", "high", "xhigh", "max"}
 
 func connectionLabel(snap *catalog.Snapshot, providerID string) string {
 	host, found := snap.Provider(providerID)
