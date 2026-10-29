@@ -1,7 +1,7 @@
 {
-  "generated": "2026-10-29T10:00:16Z",
+  "generated": "2026-10-29T13:06:59Z",
   "latest": "v0.1.13",
-  "latest_beta": "v0.1.14-beta.53.bb73682a",
+  "latest_beta": "v0.1.14-beta.54.6d5172a4",
   "install": {
     "stable": {
       "script": "curl -fsSL https://relo.ifelse.one/install.sh | sh",
@@ -17,6 +17,86 @@
     }
   },
   "releases": [
+    {
+      "tag": "v0.1.14-beta.54.6d5172a4",
+      "version": "0.1.14-beta.54.6d5172a4",
+      "name": "v0.1.14-beta.54.6d5172a4",
+      "channel": "beta",
+      "draft": false,
+      "published_at": "2026-10-29T13:06:49Z",
+      "page": "https://github.com/jonaskahn/relo/releases/tag/v0.1.14-beta.54.6d5172a4",
+      "notes": "## What's Changed\n* Fix/toggle only thinking by @jonaskahn in https://github.com/jonaskahn/relo/pull/92\n\n\n**Full Changelog**: https://github.com/jonaskahn/relo/compare/v0.1.14-beta.53.bb73682a...v0.1.14-beta.54.6d5172a4",
+      "install": {
+        "script": "curl -fsSL https://relo.ifelse.one/install.sh | sh -s -- --version 0.1.14-beta.54.6d5172a4",
+        "powershell": "& ([scriptblock]::Create((irm https://relo.ifelse.one/install.ps1))) -Version 0.1.14-beta.54.6d5172a4",
+        "npm": "npm i -g @jonaskahn/relo@0.1.14-beta.54.6d5172a4"
+      },
+      "files": [
+        {
+          "name": "checksums.txt",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.1.14-beta.54.6d5172a4/checksums.txt",
+          "size": 690,
+          "os": "any",
+          "arch": "any",
+          "kind": "checksums",
+          "format": "txt"
+        },
+        {
+          "name": "relo-0.1.14-beta.54.6d5172a4-darwin-amd64.tar.gz",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.1.14-beta.54.6d5172a4/relo-0.1.14-beta.54.6d5172a4-darwin-amd64.tar.gz",
+          "size": 14980988,
+          "os": "macos",
+          "arch": "amd64",
+          "kind": "archive",
+          "format": "tar.gz"
+        },
+        {
+          "name": "relo-0.1.14-beta.54.6d5172a4-darwin-arm64.tar.gz",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.1.14-beta.54.6d5172a4/relo-0.1.14-beta.54.6d5172a4-darwin-arm64.tar.gz",
+          "size": 14564824,
+          "os": "macos",
+          "arch": "arm64",
+          "kind": "archive",
+          "format": "tar.gz"
+        },
+        {
+          "name": "relo-0.1.14-beta.54.6d5172a4-linux-amd64.tar.gz",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.1.14-beta.54.6d5172a4/relo-0.1.14-beta.54.6d5172a4-linux-amd64.tar.gz",
+          "size": 14670073,
+          "os": "linux",
+          "arch": "amd64",
+          "kind": "archive",
+          "format": "tar.gz"
+        },
+        {
+          "name": "relo-0.1.14-beta.54.6d5172a4-linux-arm64.tar.gz",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.1.14-beta.54.6d5172a4/relo-0.1.14-beta.54.6d5172a4-linux-arm64.tar.gz",
+          "size": 13910810,
+          "os": "linux",
+          "arch": "arm64",
+          "kind": "archive",
+          "format": "tar.gz"
+        },
+        {
+          "name": "relo-0.1.14-beta.54.6d5172a4-windows-amd64.tar.gz",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.1.14-beta.54.6d5172a4/relo-0.1.14-beta.54.6d5172a4-windows-amd64.tar.gz",
+          "size": 14616104,
+          "os": "windows",
+          "arch": "amd64",
+          "kind": "archive",
+          "format": "tar.gz"
+        },
+        {
+          "name": "relo-0.1.14-beta.54.6d5172a4-windows-arm64.tar.gz",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.1.14-beta.54.6d5172a4/relo-0.1.14-beta.54.6d5172a4-windows-arm64.tar.gz",
+          "size": 13761230,
+          "os": "windows",
+          "arch": "arm64",
+          "kind": "archive",
+          "format": "tar.gz"
+        }
+      ]
+    },
     {
       "tag": "v0.1.14-beta.53.bb73682a",
       "version": "0.1.14-beta.53.bb73682a",
