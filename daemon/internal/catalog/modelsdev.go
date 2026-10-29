@@ -67,6 +67,8 @@ type ModelsDevProvider struct {
 	Doc    string
 	Env    []string
 	Models map[string]ModelsDevModel
+	// IsFree is a provider-level free mark, when the dataset states one.
+	IsFree *bool
 }
 
 // ModelsDevTransport names an alternative transport endpoint and shape for
@@ -102,7 +104,21 @@ type ModelsDevModel struct {
 	Status             string
 	ReleaseDate        string
 	Prices             Prices
-	Via                ModelsDevTransport
+	// IsFree is the dataset's own free mark for this entry.
+	IsFree *bool
+	Via    ModelsDevTransport
+}
+
+// FreeModels counts the conversational models in one provider entry that the
+// shared free-model predicate accepts.
+func (p ModelsDevProvider) FreeModels() int {
+	count := 0
+	for id, model := range p.Models {
+		if IsFreeModel(p.IsFree, model.IsFree, id, model.Prices.Input, model.Prices.Output, Category(model.Category)) {
+			count++
+		}
+	}
+	return count
 }
 
 // TotalModels counts every model the dataset describes.

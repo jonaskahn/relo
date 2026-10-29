@@ -310,7 +310,11 @@ func TestTeamoRouter(t *testing.T) {
 }
 
 func TestRewrittenLabel(t *testing.T) {
-	next, ok := RewrittenLabel("openai-codex", "ChatGPT (Codex sign-in)")
+	next, ok := RewrittenLabel("nvidia", "Nvidia")
+	if !ok || next != "NVIDIA NIM" {
+		t.Errorf("RewrittenLabel(nvidia) = %q, %v, want NVIDIA NIM, true", next, ok)
+	}
+	next, ok = RewrittenLabel("openai-codex", "ChatGPT (Codex sign-in)")
 	if !ok || next != "ChatGPT" {
 		t.Errorf("RewrittenLabel(codex) = %q, %v, want ChatGPT, true", next, ok)
 	}

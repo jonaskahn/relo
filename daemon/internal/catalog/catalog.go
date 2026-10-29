@@ -218,10 +218,13 @@ type Model struct {
 	PricesProvider       Prices
 	PricesModelsDev      Prices
 	PriceSources         PriceSource
-	FactsOverride        Facts
-	FactsProvider        Facts
-	FactsModelsDev       Facts
-	FactSources          FactSource
+	// IsFree reports a conversational model that costs nothing: a provider or
+	// listing mark, explicit zero input and output rates, or a free id token.
+	IsFree         bool
+	FactsOverride  Facts
+	FactsProvider  Facts
+	FactsModelsDev Facts
+	FactSources    FactSource
 	// Overridden reports whether an operator changed anything about the
 	// model, which is what the console lists under its overrides.
 	Overridden       bool
@@ -292,6 +295,9 @@ type Snapshot struct {
 	Providers []Provider
 	Groups    []Group
 	accounts  Accounts
+	// freeConnections reports the operator's consent. A nil reads as enabled,
+	// which keeps embedded and test callers unchanged.
+	freeConnectionsEnabled func() bool
 	// advertised holds the conservative capability view shared by every
 	// enabled account behind a model. A missing entry means no account facts
 	// narrowed the shared definition.
@@ -379,13 +385,23 @@ type Catalog struct {
 	reader   Reader
 	accounts Accounts
 	formats  Formats
-	current  atomic.Pointer[Snapshot]
+	// freeConnections reports the operator's consent. A nil reads as enabled,
+	// which keeps embedded and test callers unchanged.
+	freeConnections func() bool
+	current         atomic.Pointer[Snapshot]
 }
 
 // New wires a catalog over its row reader and live account state, empty
 // until the first reload.
 func New(reader Reader, accounts Accounts, formats Formats) *Catalog {
 	return &Catalog{reader: reader, accounts: accounts, formats: formats}
+}
+
+// WithFreeConnections returns a catalog that hides disabled free connections
+// from the model lists it publishes.
+func (c *Catalog) WithFreeConnections(enabled func() bool) *Catalog {
+	c.freeConnections = enabled
+	return c
 }
 
 // Reload rebuilds the resolved snapshot from stored rows, so routing and
@@ -430,7 +446,12 @@ func (c *Catalog) build(ctx context.Context) (*Snapshot, error) {
 			return nil, fmt.Errorf("read account capabilities: %w", err)
 		}
 	}
-	return newSnapshot(snapshotInputs{providers: providers, models: models, facts: facts, groups: groups, accounts: c.accounts, formats: c.formats, accountFacts: accountFacts})
+	snapshot, err := newSnapshot(snapshotInputs{providers: providers, models: models, facts: facts, groups: groups, accounts: c.accounts, formats: c.formats, accountFacts: accountFacts})
+	if err != nil {
+		return nil, err
+	}
+	snapshot.freeConnectionsEnabled = c.freeConnections
+	return snapshot, nil
 }
 
 func indexSnapshotProviders(snapshot *Snapshot, providers []ConnectionRecord, accounts Accounts, formats Formats) {
@@ -839,6 +860,7 @@ type factLayers struct {
 
 func finishResolvedModel(res *Model, m ModelRecord, host Provider, formats Formats, layers factLayers) {
 	ov, pr, md := layers.override, layers.provider, layers.models
+	res.IsFree = IsFreeModel(nil, nil, res.ID, res.Prices.Input, res.Prices.Output, res.Category)
 	res.Routable = routableModel(*res, host, formats)
 	res.UnroutableReason = unroutableModelReason(*res, host)
 	res.FactsOverride = factsOf(ov)

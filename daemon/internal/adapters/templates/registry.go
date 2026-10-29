@@ -42,6 +42,7 @@ func All(idx *modelsdev.Index) []Template {
 		}
 		t.Normalize()
 		t.ModelsDevModels = modelsDevModelCount(idx, t.ModelsDevProviderID)
+		t.FreeModels = modelsDevFreeModelCount(idx, t.ModelsDevProviderID)
 		list = append(list, t)
 	}
 
@@ -63,6 +64,7 @@ func dynamicTemplates(idx *modelsdev.Index, seen map[string]bool) []Template {
 		t := fromModelsDevProvider(p)
 		t.Normalize()
 		t.ModelsDevModels = len(p.Models)
+		t.FreeModels = p.FreeModels()
 		dyn = append(dyn, t)
 	}
 	sort.Slice(dyn, func(i, j int) bool {
@@ -77,6 +79,7 @@ func Get(id string, idx *modelsdev.Index) (Template, bool) {
 		if t.ID == id {
 			t.Normalize()
 			t.ModelsDevModels = modelsDevModelCount(idx, t.ModelsDevProviderID)
+			t.FreeModels = modelsDevFreeModelCount(idx, t.ModelsDevProviderID)
 			return t, true
 		}
 	}
@@ -89,6 +92,7 @@ func Get(id string, idx *modelsdev.Index) (Template, bool) {
 			t := fromModelsDevProvider(p)
 			t.Normalize()
 			t.ModelsDevModels = len(p.Models)
+			t.FreeModels = p.FreeModels()
 			return t, true
 		}
 	}
@@ -174,6 +178,17 @@ func modelsDevModelCount(idx *modelsdev.Index, providerID string) int {
 		return 0
 	}
 	return len(p.Models)
+}
+
+func modelsDevFreeModelCount(idx *modelsdev.Index, providerID string) int {
+	if idx == nil || providerID == "" {
+		return 0
+	}
+	p, found := idx.Providers[providerID]
+	if !found {
+		return 0
+	}
+	return p.FreeModels()
 }
 func fromModelsDevProvider(p modelsdev.Provider) Template {
 	fmtChoice, modelsChoice, defaultBase, unsupported := resolveTransport(p.NPM, p.API)

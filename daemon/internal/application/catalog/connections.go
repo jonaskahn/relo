@@ -92,6 +92,7 @@ type ProviderCounts struct {
 	EnabledModels   int
 	AvailableModels int
 	UnpricedModels  int
+	FreeModels      int
 	Accounts        int
 	ActiveAccounts  int
 	PausedAccounts  int
@@ -322,6 +323,8 @@ type Model struct {
 	// model. They are equal on a connection whose accounts share one roster.
 	ServingAccounts int
 	ActiveAccounts  int
+	// IsFree reports a conversational model that costs nothing.
+	IsFree bool
 }
 
 // GroupMember is one model inside a route, with its weight and current eligibility.
@@ -412,6 +415,9 @@ func (s *Service) Providers(ctx context.Context, query ProviderQuery) ([]Provide
 	}
 	rows := make([]Provider, 0, len(snapshot.Providers))
 	for _, host := range snapshot.Providers {
+		if !s.visibleHost(host) {
+			continue
+		}
 		if !query.matches(host) {
 			continue
 		}
@@ -428,6 +434,9 @@ func (s *Service) Provider(ctx context.Context, id string) (Provider, error) {
 	}
 	host, found := snapshot.Provider(id)
 	if !found {
+		return Provider{}, fmt.Errorf("%s: %w", id, ErrProviderNotFound)
+	}
+	if !s.visibleHost(host) {
 		return Provider{}, fmt.Errorf("%s: %w", id, ErrProviderNotFound)
 	}
 	return s.describeProvider(snapshot, host), nil
@@ -523,6 +532,9 @@ func countModels(models []catalog.Model) ProviderCounts {
 		if !m.Prices.Known() {
 			counts.UnpricedModels++
 		}
+		if m.IsFree {
+			counts.FreeModels++
+		}
 	}
 	return counts
 }
@@ -564,6 +576,9 @@ func (s *Service) Models(ctx context.Context, query ModelQuery) ([]Model, int, e
 	}
 	matched := make([]Model, 0, 64)
 	for _, host := range snapshot.Providers {
+		if !s.visibleHost(host) {
+			continue
+		}
 		if query.Provider != "" && host.ID != query.Provider {
 			continue
 		}
@@ -627,7 +642,16 @@ func (s *Service) Model(ctx context.Context, providerID, modelID string) (Model,
 	if !found {
 		return Model{}, fmt.Errorf("%s/%s: %w", providerID, modelID, ErrModelNotFound)
 	}
+	if host, ok := snapshot.Provider(providerID); !ok || !s.visibleHost(host) {
+		return Model{}, fmt.Errorf("%s/%s: %w", providerID, modelID, ErrModelNotFound)
+	}
 	return s.describeModel(snapshot, m, true), nil
+}
+
+// visibleHost hides a disabled keyless-free connection from the management
+// projections, while the routing snapshot still holds it for consent checks.
+func (s *Service) visibleHost(host catalog.Provider) bool {
+	return s.FreeConnectionsEnabled() || !catalog.IsFreeTemplate(host.TemplateID)
 }
 
 func (s *Service) describeModel(snapshot *catalog.Snapshot, model catalog.Model, withDetails bool) Model {
@@ -674,6 +698,7 @@ func baseModelView(model catalog.Model) Model {
 		Overridden:       model.Overridden,
 		ListedAtMs:       model.ListedAtMs,
 		UpdatedAtMs:      model.UpdatedAtMs,
+		IsFree:           model.IsFree,
 	}
 }
 
@@ -789,6 +814,14 @@ func toPrices(p catalog.Prices) Prices {
 	}
 }
 
+func (p Prices) catalog() catalog.Prices {
+	return catalog.Prices{
+		Input: p.Input, Output: p.Output, CacheRead: p.CacheRead, CacheWrite: p.CacheWrite,
+		ExtThreshold: p.ExtThreshold, ExtInput: p.ExtInput, ExtOutput: p.ExtOutput,
+		ExtCacheRead: p.ExtCacheRead, ExtCacheWrite: p.ExtCacheWrite,
+	}
+}
+
 func groupsOf(snapshot *catalog.Snapshot, model catalog.Model) []string {
 	refs := []string{}
 	for _, group := range snapshot.Groups {
@@ -851,6 +884,11 @@ func (s *Service) describeGroup(snapshot *catalog.Snapshot, group catalog.Group)
 	row.SupportsTools, row.SupportsReasoning, row.SupportsVision = snapshot.PromisedCapabilities(group)
 	row.CapabilityWarnings = snapshot.CapabilityWarnings(group)
 	for _, m := range group.Members {
+		if m.ProviderID != "" {
+			if host, found := snapshot.Provider(m.ProviderID); found && !s.visibleHost(host) {
+				continue
+			}
+		}
 		row.Members = append(row.Members, describeGroupMember(snapshot, m))
 	}
 	return row
@@ -906,6 +944,9 @@ func describeAutoMember(snapshot *catalog.Snapshot, described *GroupMember) {
 	}
 	firstReason := ""
 	for _, model := range models {
+		if host, found := snapshot.Provider(model.ProviderID); found && !snapshot.ProviderVisible(host) {
+			continue
+		}
 		reason := snapshot.SkipReason(model, catalog.Requirements{})
 		serving, active := snapshot.Coverage(model)
 		described.ServingAccounts += serving

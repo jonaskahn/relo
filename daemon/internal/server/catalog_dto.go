@@ -55,6 +55,7 @@ type providerCountsResponse struct {
 	EnabledModels   int `json:"enabled_models"`
 	AvailableModels int `json:"available_models"`
 	UnpricedModels  int `json:"unpriced_models"`
+	FreeModels      int `json:"free_models"`
 	Accounts        int `json:"accounts"`
 	ActiveAccounts  int `json:"active_accounts"`
 	PausedAccounts  int `json:"paused_accounts"`
@@ -65,7 +66,8 @@ func toProviderCountsResponse(counts appcatalog.ProviderCounts) providerCountsRe
 	return providerCountsResponse{
 		Models: counts.Models, EnabledModels: counts.EnabledModels,
 		AvailableModels: counts.AvailableModels, UnpricedModels: counts.UnpricedModels,
-		Accounts: counts.Accounts, ActiveAccounts: counts.ActiveAccounts,
+		FreeModels: counts.FreeModels,
+		Accounts:   counts.Accounts, ActiveAccounts: counts.ActiveAccounts,
 		PausedAccounts: counts.PausedAccounts, ReauthAccounts: counts.ReauthAccounts,
 	}
 }
@@ -378,6 +380,7 @@ type modelResponse struct {
 	UpdatedAtMs        int64                         `json:"updated_at_ms"`
 	ServingAccounts    int                           `json:"serving_accounts"`
 	ActiveAccounts     int                           `json:"active_accounts"`
+	IsFree             bool                          `json:"is_free"`
 }
 
 func toModelResponse(model appcatalog.Model) modelResponse {
@@ -405,6 +408,7 @@ func toModelResponse(model appcatalog.Model) modelResponse {
 		Details:    toModelDetailsOrNil(model.Details),
 		ListedAtMs: model.ListedAtMs, UpdatedAtMs: model.UpdatedAtMs,
 		ServingAccounts: model.ServingAccounts, ActiveAccounts: model.ActiveAccounts,
+		IsFree: model.IsFree,
 	}
 }
 
@@ -582,6 +586,7 @@ type templateResponse struct {
 	Headers                map[string]string      `json:"headers,omitempty"`
 	UnsupportedReason      string                 `json:"unsupported_reason,omitempty"`
 	ModelsDevModels        int                    `json:"modelsdev_models"`
+	FreeModels             int                    `json:"free_models"`
 }
 
 func toTemplateResponse(template catalog.Template) templateResponse {
@@ -602,6 +607,7 @@ func toTemplateResponse(template catalog.Template) templateResponse {
 		Headers:           template.Headers,
 		UnsupportedReason: template.UnsupportedReason,
 		ModelsDevModels:   template.ModelsDevModels,
+		FreeModels:        template.FreeModels,
 	}
 }
 

@@ -10,6 +10,8 @@ func DisplayName(id, name string) string {
 		return "Grok API"
 	case "orcarouter":
 		return "OrcaRouter API"
+	case "nvidia":
+		return "NVIDIA NIM"
 	case "github-copilot":
 		if name == "" || name == "GitHub Copilot" {
 			return "GitHub Copilot API"
@@ -33,6 +35,7 @@ var retiredDefaults = map[string]string{
 	"xai":              "xAI",
 	"orcarouter":       "OrcaRouter",
 	"github-copilot":   "GitHub Copilot",
+	"nvidia":           "Nvidia",
 }
 
 // RewrittenLabel returns the current default when stored is still the

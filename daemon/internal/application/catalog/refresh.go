@@ -379,7 +379,7 @@ func factsForRefresh(providerID string, entry rosterEntry, mdModel catalog.Model
 		Name:          stringPtrOrNil(entry.Name),
 		ContextWindow: entry.ContextWindow,
 		MaxOutput:     entry.MaxOutput,
-		Prices:        provPrices.row(),
+		Prices:        toPrices(catalog.FreePrices(provPrices.catalog(), entry.IsFree)).row(),
 	}
 	providerFact.SupportsTools = entry.SupportsTools
 	providerFact.SupportsReasoning = entry.SupportsReasoning

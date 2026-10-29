@@ -54,6 +54,7 @@ func parseIndexProvider(pID string, rp rawProvider) Provider {
 		Doc:    rp.Doc,
 		Env:    rp.Env,
 		Models: make(map[string]Model, len(rp.Models)),
+		IsFree: rp.Free,
 	}
 	if rp.ID != "" {
 		p.ID = rp.ID
@@ -61,6 +62,9 @@ func parseIndexProvider(pID string, rp rawProvider) Provider {
 
 	for mID, rm := range rp.Models {
 		m := parseRawModel(mID, rm)
+		if m.IsFree == nil {
+			m.IsFree = rp.Free
+		}
 		p.Models[m.ID] = m
 	}
 	return p
@@ -74,6 +78,7 @@ type rawSnapshotProvider struct {
 	Doc    string          `json:"doc"`
 	Env    []string        `json:"env"`
 	Models []rawModelEntry `json:"models"`
+	Free   *bool           `json:"free"`
 }
 
 type rawProvider struct {
@@ -84,6 +89,7 @@ type rawProvider struct {
 	Doc    string                   `json:"doc"`
 	Env    []string                 `json:"env"`
 	Models map[string]rawModelEntry `json:"models"`
+	Free   *bool                    `json:"free"`
 }
 
 type rawModelEntry struct {
@@ -106,6 +112,8 @@ type rawModelEntry struct {
 	Cost             *rawCost          `json:"cost"`
 	Via              *rawVia           `json:"via"`
 	Provider         *rawVia           `json:"provider"`
+	Free             *bool             `json:"free"`
+	IsFree           *bool             `json:"is_free"`
 }
 
 type rawReasoningOpt struct {
@@ -206,9 +214,13 @@ func parseSnapshotIndex(snaps []rawSnapshotProvider) *Index {
 			Doc:    sp.Doc,
 			Env:    sp.Env,
 			Models: make(map[string]Model, len(sp.Models)),
+			IsFree: sp.Free,
 		}
 		for _, sm := range sp.Models {
 			m := parseRawModel(sm.ID, sm)
+			if m.IsFree == nil {
+				m.IsFree = sp.Free
+			}
 			p.Models[m.ID] = m
 		}
 		providers[p.ID] = p
@@ -240,9 +252,20 @@ func parseRawModel(fallbackID string, rm rawModelEntry) Model {
 		Status:             normalizeStatus(rm.Status),
 		ReleaseDate:        rm.ReleaseDate,
 		Prices:             parsePrices(rm.Cost),
+		IsFree:             firstBool(rm.IsFree, rm.Free),
 	}
 	attachModelVia(&model, rm)
 	return model
+}
+
+func firstBool(values ...*bool) *bool {
+	for _, value := range values {
+		if value != nil {
+			copy := *value
+			return &copy
+		}
+	}
+	return nil
 }
 
 func modalitySupport(inputs []string) *bool {
