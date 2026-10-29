@@ -133,6 +133,15 @@ test('Windows still rejects a relo beside another node_modules', (t) => {
 	assert.equal(findConflictingRelo({ env: { Path: otherDir }, nodePlatform: 'win32', selfDir: bin }), other);
 });
 
+test('Windows ignores a version manager shim directory that holds node.exe', (t) => {
+	const bin = join(tempDir(t, 'owned'), 'node_modules', '@jonaskahn', 'relo', 'bin');
+	mkdirSync(bin, { recursive: true });
+	const shims = tempDir(t, 'shims');
+	reloCommand(shims, 'node.exe');
+	reloCommand(shims, 'relo.exe');
+	assert.equal(findConflictingRelo({ env: { Path: shims }, nodePlatform: 'win32', selfDir: bin }), null);
+});
+
 test('findReloApp reports the bundle in Applications on macOS', (t) => {
 	const apps = tempDir(t, 'apps');
 	mkdirSync(join(apps, 'Relo.app'), { recursive: true });
