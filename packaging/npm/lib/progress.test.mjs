@@ -1,7 +1,24 @@
 import assert from 'node:assert/strict';
+import { spawnSync } from 'node:child_process';
 import { test } from 'node:test';
 
 import { bar, buttons, bytes, duration, errorBox } from './progress.mjs';
+
+test('Windows without a terminal stays noninteractive after drawing the installer', () => {
+	const result = spawnSync(process.execPath, ['--input-type=module', '--eval', `
+		import assert from 'node:assert/strict';
+		Object.defineProperty(process, 'platform', { value: 'win32' });
+		const { openScreen, closeScreen, interactive } = await import(${JSON.stringify(new URL('./progress.mjs', import.meta.url).href)});
+		assert.equal(interactive(), false);
+		assert.equal(interactive(), false);
+		await openScreen(['RELO'], 'INSTALLER', ['WINDOWS · ARM64']);
+		assert.equal(interactive(), false);
+		closeScreen();
+	`], { encoding: 'utf8', timeout: 5000 });
+	assert.ifError(result.error);
+	assert.equal(result.status, 0, result.stderr);
+	assert.match(result.stdout, /WINDOWS · ARM64/);
+});
 
 test('a bar fills up to the width and never past it', () => {
 	assert.equal(bar(0, { width: 10 }), '░'.repeat(10));

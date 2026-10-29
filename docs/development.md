@@ -45,6 +45,40 @@ then `go run ./cmd/relo daemon run` in `daemon/` and `npm run dev` in
 `console/`. `make ci`, the `scripts/*.sh` builds, and `make package-windows`
 still need Git Bash or WSL.
 
+### Windows ARM64 npm installer verification
+
+Use a disposable Windows ARM64 guest with Node 22.23.4 ARM64. The
+`dockurr/windows-arm` image requires a KVM-capable Linux ARM64 host with
+`/dev/kvm` and `/dev/net/tun`; Docker Desktop on macOS is not supported.
+
+1. Copy `packaging/npm` to a temporary staging directory. Set only the staged
+   `package.json` version to `0.1.14-beta.50.42407133`, then run `npm pack`
+   there. This keeps the patched installer pinned to the original release.
+2. Start `dockurr/windows-arm` on the compatible host with both devices,
+   `NET_ADMIN`, a persistent `/storage` volume, and an artifact directory
+   mounted at `/shared`. Bind port 8006 to localhost for the guest console.
+3. Inside Windows, install Node ARM64 and confirm `node -p process.arch` is
+   `arm64`. Set `npm_config_prefix` to an isolated path containing spaces
+   (for example, `$env:TEMP\Author Software\relo-test`) and prepend it to
+   PATH. Set `RELO_HOME` and `npm_config_cache` to separate temporary paths.
+4. Use PowerShell `Start-Transcript` to record the test. Run
+   `npm.cmd install -g @jonaskahn/relo@0.1.14-beta.50.42407133`, then repeat
+   with `--foreground-scripts --loglevel verbose`. Record `$LASTEXITCODE`
+   immediately after each command and preserve the npm cache `_logs`.
+5. Install the staged tarball from the shared drive (`Z:`), repeat the
+   install, and repeat with `--foreground-scripts`. Require zero exit codes.
+   Choose NO at the start prompt; require `relo.cmd --version` to launch and
+   report the pinned version. In another foreground reinstall choose YES
+   for start and NO for login, verify daemon status, then stop the daemon.
+6. Prepend a separate directory containing a foreign `relo.cmd`, reinstall,
+   and require a nonzero exit naming that command. Remove that PATH entry.
+7. Stop the transcript, save the container logs and npm debug logs alongside
+   it, and stop the guest. Never use a real user home for these tests.
+
+Keep Windows verification pending when KVM is unavailable: Linux tests and
+simulated platform checks do not replace this guest test. Publish a beta
+only after the required verification passes.
+
 `Relo.app` updates through Sparkle. Every other install opens the update
 dialog with the command for the channel that installed it (shell, PowerShell,
 npm, or Homebrew), or with every command when the channel cannot be detected;
