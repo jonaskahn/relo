@@ -5,9 +5,10 @@
 	import ConfirmDialog from '$lib/components/ui/confirm-dialog.svelte';
 	interface Props {
 		open?: boolean;
+		layer?: 'base' | 'above';
 		onenabled: () => void;
 	}
-	let { open = $bindable(false), onenabled }: Props = $props();
+	let { open = $bindable(false), layer = 'base', onenabled }: Props = $props();
 	let busy = $state(false);
 	let error = $state('');
 	async function enable() {
@@ -35,6 +36,7 @@
 	title={$t('ui.pages.providersPage.freeConsent.title')}
 	body={$t('ui.pages.providersPage.freeConsent.body')}
 	confirmLabel={$t('ui.pages.providersPage.freeConsent.confirm')}
+	{layer}
 	{busy}
 	{error}
 	onconfirm={enable}
