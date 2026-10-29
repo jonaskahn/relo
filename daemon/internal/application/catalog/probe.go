@@ -33,6 +33,7 @@ type ProbeModel struct {
 	Source        string
 	Prices        ModelPrices
 	Enabled       bool
+	IsFree        bool
 }
 
 // ProbeRequest is the connection an operator wants to verify: a template or
@@ -439,6 +440,9 @@ func (s *Service) ProbeProvider(ctx context.Context, req ProbeRequest) (ProbeRes
 	if err := s.checkFreeConnection(ctx, req.TemplateID, req.ProviderID); err != nil {
 		return ProbeResult{}, err
 	}
+	if err := s.checkSingleFreeConnection(ctx, req.TemplateID, req.ProviderID); err != nil {
+		return ProbeResult{}, err
+	}
 	return s.probeProvider(ctx, req)
 }
 
@@ -514,6 +518,7 @@ func (a *probeAssembly) add(entry rosterEntry, mdIdx *catalog.ModelsDevIndex, pr
 	if priceProbeModel(&pm, entry, mdModel, foundMD).Known() {
 		a.priced++
 	}
+	pm.IsFree = freeProbeModel(entry, pm, mdModel, foundMD)
 	a.models = append(a.models, pm)
 	a.appendProbeRow(entry, pm)
 	a.facts = append(a.facts, factsForEntry(entry, pm, mdModel, foundMD)...)
@@ -573,6 +578,18 @@ func priceProbeModel(pm *ProbeModel, entry rosterEntry, mdModel catalog.ModelsDe
 	return effPrices
 }
 
+func freeProbeModel(entry rosterEntry, pm ProbeModel, mdModel catalog.ModelsDevModel, foundMD bool) bool {
+	category := catalog.CategoryChat
+	if foundMD && mdModel.Category != "" {
+		category = catalog.Category(mdModel.Category)
+	}
+	mark := entry.IsFree
+	if mark == nil && foundMD {
+		mark = mdModel.IsFree
+	}
+	return catalog.IsFreeModel(nil, mark, entry.ID, pm.Prices.Effective.Input, pm.Prices.Effective.Output, category)
+}
+
 func factsForEntry(entry rosterEntry, pm ProbeModel, mdModel catalog.ModelsDevModel, foundMD bool) []catalog.FactsRecord {
 	var facts []catalog.FactsRecord
 	// The provider's own facts are recorded whatever it publishes, so a
@@ -584,7 +601,7 @@ func factsForEntry(entry rosterEntry, pm ProbeModel, mdModel catalog.ModelsDevMo
 		Name:          stringPtrOrNil(entry.Name),
 		ContextWindow: entry.ContextWindow,
 		MaxOutput:     entry.MaxOutput,
-		Prices:        pm.Prices.Provider.row(),
+		Prices:        toPrices(catalog.FreePrices(pm.Prices.Provider.catalog(), entry.IsFree)).row(),
 	}
 	providerFact.SupportsTools = entry.SupportsTools
 	providerFact.SupportsReasoning = entry.SupportsReasoning
@@ -713,6 +730,22 @@ func (s *Service) CommitProbe(ctx context.Context, probeID string, req CommitPro
 	if err := s.checkFreeConnection(ctx, session.Provider.TemplateID, session.Target); err != nil {
 		return Provider{}, err
 	}
+	if s.accounts != nil && catalog.IsFreeTemplate(session.Provider.TemplateID) && session.Target == "" {
+		var committed Provider
+		var commitErr error
+		s.accounts.WithLock(func() {
+			if err := s.checkSingleFreeConnection(ctx, session.Provider.TemplateID, session.Target); err != nil {
+				commitErr = err
+				return
+			}
+			committed, commitErr = s.commitProbeLocked(ctx, probeID, session, req)
+		})
+		return committed, commitErr
+	}
+	return s.commitProbeLocked(ctx, probeID, session, req)
+}
+
+func (s *Service) commitProbeLocked(ctx context.Context, probeID string, session *probeSession, req CommitProbeRequest) (Provider, error) {
 
 	// A probe that named a provider adds one credential to that provider and
 	// changes nothing else about it, so no roster and no label are written.

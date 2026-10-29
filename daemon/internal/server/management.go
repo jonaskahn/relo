@@ -367,6 +367,9 @@ func serviceStatus(err error) (int, string) {
 	if errors.Is(err, appcatalog.ErrFreeConnectionsDisabled) {
 		return http.StatusForbidden, "free_connections_disabled"
 	}
+	if errors.Is(err, appcatalog.ErrFreeConnectionExists) {
+		return http.StatusConflict, "free_connection_exists"
+	}
 	return generalServiceStatus(err)
 }
 

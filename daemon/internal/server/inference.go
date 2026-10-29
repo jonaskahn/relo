@@ -17,6 +17,7 @@ import (
 	"github.com/jonaskahn/relo/internal/account"
 	"github.com/jonaskahn/relo/internal/activity"
 	"github.com/jonaskahn/relo/internal/adapters/wire"
+	appcatalog "github.com/jonaskahn/relo/internal/application/catalog"
 	"github.com/jonaskahn/relo/internal/catalog"
 	"github.com/jonaskahn/relo/internal/config"
 	"github.com/jonaskahn/relo/internal/inference"
@@ -246,11 +247,25 @@ func (d *sendDriver) run() {
 	if d.last == nil {
 		d.last = skipCause(d.plan)
 	}
+	if errors.Is(d.last, appcatalog.ErrFreeConnectionsDisabled) {
+		d.s.failInference(d.w, d.r, d.last, d.anthropic)
+		d.s.record(context.WithoutCancel(d.r.Context()), d.outcome, Result{Status: http.StatusForbidden})
+		return
+	}
 	d.s.failInference(d.w, d.r, fmt.Errorf("%w: %v", routing.ErrNoRoute, d.last), d.anthropic)
 	d.s.record(context.WithoutCancel(d.r.Context()), d.outcome, Result{Status: http.StatusServiceUnavailable})
 }
 
 func (d *sendDriver) runMember(candidate routing.Candidate, lastCandidate bool) bool {
+	if d.s.freeConsentBlocked(candidate.ProviderID) {
+		d.last = appcatalog.ErrFreeConnectionsDisabled
+		if lastCandidate {
+			d.s.failInference(d.w, d.r, d.last, d.anthropic)
+			d.s.record(context.WithoutCancel(d.r.Context()), d.outcome, Result{Status: http.StatusForbidden})
+			return false
+		}
+		return true
+	}
 	if until := d.s.connectionCooldown(candidate.ProviderID); !until.IsZero() {
 		// A connection that just failed every account is not asked again
 		// until its wait is over: the request goes to the next member.
@@ -511,6 +526,21 @@ func (s *Server) connectionCooldown(providerID string) time.Time {
 	return s.opts.Pools.ConnectionCooldownUntil(providerID)
 }
 
+// freeConsentBlocked reports a keyless-free candidate the operator has not
+// consented to. It is a routing skip: no account is authorized, no health is
+// marked, and a later paid member still gets the request.
+func (s *Server) freeConsentBlocked(providerID string) bool {
+	if s.opts.CatalogAPI == nil || s.opts.CatalogAPI.FreeConnectionsEnabled() || s.opts.Catalog == nil {
+		return false
+	}
+	snapshot, found := s.opts.Catalog.Snapshot()
+	if !found {
+		return false
+	}
+	host, found := snapshot.Provider(providerID)
+	return found && catalog.IsFreeTemplate(host.TemplateID)
+}
+
 func (s *Server) markConnectionServed(providerID, credentialID string) {
 	if s.opts.Pools != nil && credentialID != "" {
 		s.opts.Pools.MarkServed(providerID, credentialID)
@@ -613,6 +643,10 @@ func (s *Server) writeUnwritten(d *sendDriver, upstreamStatus int, cause error) 
 		status = failureStatus(cause)
 	}
 	local := upstreamStatus == 0
+	if local && errors.Is(cause, appcatalog.ErrFreeConnectionsDisabled) {
+		s.freeConsentRefusal(d.w, d.r, d.anthropic)
+		return
+	}
 	if d.anthropic {
 		if local {
 			s.writeAnthropicRefusal(d.w, status, cause)
@@ -710,10 +744,28 @@ func (s *Server) failInference(w http.ResponseWriter, r *http.Request, cause err
 		w.Header().Set("Retry-After", strconv.Itoa(max(1, int(time.Until(cooling.Until).Seconds()+0.5))))
 	}
 	if anthropic {
+		if errors.Is(cause, appcatalog.ErrFreeConnectionsDisabled) {
+			s.freeConsentRefusal(w, r, true)
+			return
+		}
 		s.writeAnthropicRefusal(w, status, cause)
 		return
 	}
+	if errors.Is(cause, appcatalog.ErrFreeConnectionsDisabled) {
+		s.freeConsentRefusal(w, r, false)
+		return
+	}
 	s.fail(w, r, refusal{Status: status, Code: failureCode(cause), Detail: cause})
+}
+
+// freeConsentRefusal writes the localized opt-in refusal every inference
+// surface reads when a configured free model is reached with consent off.
+func (s *Server) freeConsentRefusal(w http.ResponseWriter, r *http.Request, anthropic bool) {
+	if anthropic {
+		s.writeAnthropicDocument(w, http.StatusForbidden, "permission_error", s.translator(r).Text("api.connections.free_connections_disabled", nil))
+		return
+	}
+	s.fail(w, r, refusal{Status: http.StatusForbidden, Code: "free_connections_disabled", Message: "api.connections.free_connections_disabled", Detail: nil})
 }
 
 // anthropicRefusalCode is the error type Claude Code reads as a request it
@@ -780,6 +832,8 @@ func (e *skipFailure) Error() string {
 
 func failureStatus(cause error) int {
 	switch {
+	case errors.Is(cause, appcatalog.ErrFreeConnectionsDisabled):
+		return http.StatusForbidden
 	case errors.Is(cause, routing.ErrModelRequired):
 		return http.StatusBadRequest
 	case errors.Is(cause, errContextLimitExceeded):
@@ -795,6 +849,8 @@ func failureStatus(cause error) int {
 
 func failureCode(cause error) string {
 	switch {
+	case errors.Is(cause, appcatalog.ErrFreeConnectionsDisabled):
+		return "free_connections_disabled"
 	case errors.Is(cause, routing.ErrModelRequired):
 		return "model_required"
 	case errors.Is(cause, errContextLimitExceeded):

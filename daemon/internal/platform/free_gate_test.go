@@ -34,7 +34,7 @@ func TestFreeGatePreservesRowsAcrossOptIn(t *testing.T) {
 		t.Fatal(err)
 	}
 	path := config.ConfigPath(home)
-	reader := freeGate{sqlite.NewCatalogReader(db), path}
+	reader := freeGate{CatalogReader: sqlite.NewCatalogReader(db)}
 	var _ catalog.AccountCapabilityReader = reader
 	models := catalog.New(reader, nil, wireformats.New())
 	for _, enabled := range []bool{false, true, false, true} {
@@ -45,18 +45,20 @@ func TestFreeGatePreservesRowsAcrossOptIn(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
+		models.WithFreeConnections(func() bool { return config.ReadFreeConnections(path) })
 		if err := models.Reload(ctx); err != nil {
 			t.Fatal(err)
 		}
 		snapshot, _ := models.Snapshot()
 		_, exists := snapshot.Model(catalog.OpenCodeFreeTemplate, "free-model")
-		if exists != enabled {
-			t.Fatalf("enabled=%v model visible=%v", enabled, exists)
+		if !exists {
+			t.Fatalf("enabled=%v model must stay resolvable", enabled)
 		}
-		want := 1
-		if enabled {
-			want = 3
+		listed := len(snapshot.Providers)
+		if listed != 3 {
+			t.Fatalf("enabled=%v published models=%d", enabled, listed)
 		}
+		want := 3
 		if len(rows) != want {
 			t.Fatalf("enabled=%v rows=%d want=%d", enabled, len(rows), want)
 		}
@@ -69,7 +71,7 @@ func TestFreeGatePreservesRowsAcrossOptIn(t *testing.T) {
 		t.Fatal(err)
 	}
 	rows, err := reader.ListConnections(ctx)
-	if err != nil || len(rows) != 1 {
+	if err != nil || len(rows) != 3 {
 		t.Fatalf("invalid config must fail closed: %v %v", rows, err)
 	}
 }

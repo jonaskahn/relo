@@ -106,6 +106,19 @@ func (r *CatalogRepo) ListProviders(ctx context.Context) ([]ProviderRow, error) 
 	return scanProviders(rows)
 }
 
+// ListConnections returns every stored connection in the catalog record shape.
+func (r *CatalogRepo) ListConnections(ctx context.Context) ([]catalog.ConnectionRecord, error) {
+	rows, err := r.ListProviders(ctx)
+	if err != nil {
+		return nil, err
+	}
+	records := make([]catalog.ConnectionRecord, 0, len(rows))
+	for _, row := range rows {
+		records = append(records, catalog.ConnectionRecord(row))
+	}
+	return records, nil
+}
+
 // GetProvider returns one provider row.
 func (r *CatalogRepo) GetProvider(ctx context.Context, id string) (ProviderRow, error) {
 	row := r.db.sql.QueryRowContext(ctx, "SELECT "+providerColumns+" FROM providers WHERE id = ?", id)

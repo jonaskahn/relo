@@ -6,6 +6,7 @@ import (
 
 	"github.com/jonaskahn/relo/internal/activity"
 	appaccount "github.com/jonaskahn/relo/internal/application/account"
+	appcatalog "github.com/jonaskahn/relo/internal/application/catalog"
 	appintegration "github.com/jonaskahn/relo/internal/application/integration"
 	"github.com/jonaskahn/relo/internal/catalog"
 )
@@ -25,6 +26,8 @@ func TestServiceStatusMapsRecoverableFailures(t *testing.T) {
 		{name: "catalog", err: catalog.ErrNoCatalog, status: http.StatusServiceUnavailable, code: "service_unavailable"},
 		{name: "rejected list", err: catalog.ErrListRejected, status: http.StatusBadGateway, code: "upstream_unavailable"},
 		{name: "unsupported list", err: catalog.ErrListUnsupported, status: http.StatusBadGateway, code: "upstream_unavailable"},
+		{name: "free consent", err: appcatalog.ErrFreeConnectionsDisabled, status: http.StatusForbidden, code: "free_connections_disabled"},
+		{name: "duplicate free connection", err: appcatalog.ErrFreeConnectionExists, status: http.StatusConflict, code: "free_connection_exists"},
 	}
 
 	for _, test := range tests {

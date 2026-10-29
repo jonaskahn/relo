@@ -119,7 +119,9 @@ func (w *managementWiring) foundation() error {
 
 func (w *managementWiring) catalog() error {
 	w.templateSettings = sqlite.NewTemplateSettings(w.db)
-	w.models = catalog.New(freeGate{sqlite.NewCatalogReader(w.db), config.ConfigPath(w.home)}, NewPoolDirectory(w.pools), wireformats.New())
+	w.models = catalog.New(freeGate{CatalogReader: sqlite.NewCatalogReader(w.db)}, NewPoolDirectory(w.pools), wireformats.New()).WithFreeConnections(func() bool {
+		return config.ReadFreeConnections(config.ConfigPath(w.home))
+	})
 	return w.models.Reload(w.ctx)
 }
 

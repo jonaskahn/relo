@@ -1221,6 +1221,10 @@ func (s *Server) handleProbeProvider(w http.ResponseWriter, r *http.Request) {
 			writeJSON(w, http.StatusBadGateway, toProbeResultResponse(res))
 			return
 		}
+		if errors.Is(err, appcatalog.ErrFreeConnectionExists) {
+			s.fail(w, r, refusal{Status: http.StatusConflict, Code: "free_connection_exists", Message: "api.connections.free_connection_exists"})
+			return
+		}
 		writeServiceError(w, err)
 		return
 	}
@@ -1238,6 +1242,10 @@ func (s *Server) handleCommitProbe(w http.ResponseWriter, r *http.Request) {
 	}
 	provider, err := manager.CommitProbe(r.Context(), r.PathValue("id"), toCommitProbeInput(req))
 	if err != nil {
+		if errors.Is(err, appcatalog.ErrFreeConnectionExists) {
+			s.fail(w, r, refusal{Status: http.StatusConflict, Code: "free_connection_exists", Message: "api.connections.free_connection_exists"})
+			return
+		}
 		writeServiceError(w, err)
 		return
 	}

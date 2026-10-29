@@ -17,6 +17,7 @@ import (
 
 // Store persists connections, models, and their detail layers.
 type Store interface {
+	ListConnections(ctx context.Context) ([]catalog.ConnectionRecord, error)
 	GetProvider(ctx context.Context, id string) (catalog.ConnectionRecord, error)
 	SaveProvider(ctx context.Context, conn catalog.ConnectionRecord) error
 	DeleteProvider(ctx context.Context, id string) error

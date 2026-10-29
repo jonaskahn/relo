@@ -168,7 +168,9 @@ func newPoolManager(db *sqlite.DB, secrets secrets.SecretStore, clk clock.Clock,
 
 func (w *wiring) catalogLayer() error {
 	templateSettings := sqlite.NewTemplateSettings(w.db)
-	models := catalog.New(freeGate{sqlite.NewCatalogReader(w.db), config.ConfigPath(w.options.Home)}, NewPoolDirectory(w.built.pools), wireformats.New())
+	models := catalog.New(freeGate{CatalogReader: sqlite.NewCatalogReader(w.db)}, NewPoolDirectory(w.built.pools), wireformats.New()).WithFreeConnections(func() bool {
+		return config.ReadFreeConnections(config.ConfigPath(w.options.Home))
+	})
 	if err := models.Reload(context.WithoutCancel(w.ctx)); err != nil {
 		return err
 	}
