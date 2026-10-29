@@ -3,12 +3,32 @@ package server
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
 	"github.com/jonaskahn/relo/internal/adapters/wire/formats"
 )
+
+func TestAnthropicContextMessage(t *testing.T) {
+	for _, test := range []struct {
+		name  string
+		cause error
+		want  string
+	}{
+		{"sentinel", errContextLimitExceeded, "context length exceeded"},
+		{"unrelated", errors.New("provider unavailable"), "provider unavailable"},
+		{"wrapped", fmt.Errorf("attempt: %w", &contextLimitError{Model: "m", Estimated: 100, Limit: 50}),
+			"prompt is too long: 100 tokens > 50 maximum"},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			if got := anthropicContextMessage(test.cause); got != test.want {
+				t.Fatalf("message = %q, want %q", got, test.want)
+			}
+		})
+	}
+}
 
 // TestContextRefusalReachesAnOpenAIClientAsItsOwnCode covers the code a
 // coding client acts on: an overflow Relo decided itself is a request error,

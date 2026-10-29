@@ -1,0 +1,11 @@
+coverage:
+  status:
+    patch:
+      default:
+        target: 80%
+        threshold: 0%
+
+# Management API shapes and their field-to-field mappings. Keep model and
+# entity behavior measured; those names also contain business rules here.
+ignore:
+  - "daemon/internal/server/*_dto.go"

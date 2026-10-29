@@ -59,6 +59,40 @@ func TestAttemptRejectsInputThatCannotFit(t *testing.T) {
 	}
 }
 
+func TestAttemptRejectsInputLeavingNoRoomForOutput(t *testing.T) {
+	server := New(Options{})
+	request := &inference.Request{MaxTokens: 1, Messages: []inference.Message{{
+		Role: inference.RoleUser, Content: []inference.ContentPart{{Type: inference.ContentTypeText, Text: "hello"}},
+	}}}
+	window := int64(server.estimateRequestTokens(request))
+	spec := attemptSpec{candidate: routing.Candidate{Model: catalog.Model{ID: "m", ContextWindow: &window}}}
+
+	cause := server.validateOutboundRequest(spec, request)
+	if !errors.Is(cause, errContextLimitExceeded) {
+		t.Fatalf("validateOutboundRequest() = %v, want a context refusal", cause)
+	}
+	limit, found := contextLimitOf(cause)
+	if !found || limit.Estimated != window || limit.Limit != window {
+		t.Fatalf("context limit = %+v, want estimate and limit %d", limit, window)
+	}
+}
+
+func TestRoutingNeedsCountImagesSeparatelyFromText(t *testing.T) {
+	request := &inference.Request{
+		Tools: []inference.Tool{{Name: "exec"}},
+		Messages: []inference.Message{{Role: inference.RoleUser, Content: []inference.ContentPart{
+			{Type: inference.ContentTypeImage, ImageURL: "data:image/png;base64,AAAA"},
+			{Type: inference.ContentTypeText, Text: "describe both images"},
+			{Type: inference.ContentTypeImage, ImageURL: "https://example.com/image.png"},
+		}}},
+	}
+	needs := needsOf(request)
+	want := catalog.PromptTokensFrom(len("describe both images")) + 2*inference.ImagePromptTokens
+	if !needs.Images || !needs.Tools || needs.PromptTokens != want {
+		t.Fatalf("needs = %+v, want images, tools and %d prompt tokens", needs, want)
+	}
+}
+
 // imageRequest is the shape a coding client sends after reading a screenshot:
 // one text turn and one image whose payload dwarfs every word in it.
 func imageRequest(payload int) *inference.Request {
