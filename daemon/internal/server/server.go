@@ -164,7 +164,7 @@ type Options struct {
 // the two remaining family details the transport needs.
 type InboundRegistry interface {
 	Inbound(surface string) (wire.InboundCodec, bool)
-	FailureDocument(status int, message string) []byte
+	FailureDocument(status int, code, message string) []byte
 	IsAnthropicRequest(header http.Header) bool
 }
 

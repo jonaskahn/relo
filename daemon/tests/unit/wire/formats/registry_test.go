@@ -100,7 +100,7 @@ func TestAnthropicRequestRecognition(t *testing.T) {
 
 func TestFailureDocumentNamesTheRefusal(t *testing.T) {
 	registry := formats.New()
-	document := registry.FailureDocument(http.StatusTooManyRequests, "slow down")
+	document := registry.FailureDocument(http.StatusTooManyRequests, "", "slow down")
 	var payload struct {
 		Error struct {
 			Type    string `json:"type"`
@@ -115,6 +115,47 @@ func TestFailureDocumentNamesTheRefusal(t *testing.T) {
 	}
 	if payload.Error.Message != "slow down" {
 		t.Fatalf("FailureDocument message = %q, want the refusal words", payload.Error.Message)
+	}
+}
+
+// TestFailureDocumentKeepsANamedCode covers the one caller that knows more
+// than the status does: a locally decided context overflow names its own
+// type so a Claude client can branch on it instead of reading an api_error.
+func TestFailureDocumentKeepsANamedCode(t *testing.T) {
+	registry := formats.New()
+	document := registry.FailureDocument(http.StatusBadRequest, "invalid_request_error", "prompt is too long: 2 tokens > 1 maximum")
+	var payload struct {
+		Error struct {
+			Type    string `json:"type"`
+			Message string `json:"message"`
+		} `json:"error"`
+	}
+	if err := json.Unmarshal(document, &payload); err != nil {
+		t.Fatalf("FailureDocument did not return JSON: %v", err)
+	}
+	if payload.Error.Type != "invalid_request_error" {
+		t.Fatalf("FailureDocument type = %q, want the named code", payload.Error.Type)
+	}
+	if payload.Error.Message != "prompt is too long: 2 tokens > 1 maximum" {
+		t.Fatalf("FailureDocument message = %q, want the refusal words", payload.Error.Message)
+	}
+}
+
+// TestFailureDocumentIgnoresAForeignCode keeps a code from another wire
+// family out of the Anthropic envelope, since a client cannot act on it.
+func TestFailureDocumentIgnoresAForeignCode(t *testing.T) {
+	registry := formats.New()
+	document := registry.FailureDocument(http.StatusBadRequest, "context_length_exceeded", "too long")
+	var payload struct {
+		Error struct {
+			Type string `json:"type"`
+		} `json:"error"`
+	}
+	if err := json.Unmarshal(document, &payload); err != nil {
+		t.Fatalf("FailureDocument did not return JSON: %v", err)
+	}
+	if payload.Error.Type != "api_error" {
+		t.Fatalf("FailureDocument type = %q, want api_error for a foreign code", payload.Error.Type)
 	}
 }
 

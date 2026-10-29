@@ -612,11 +612,27 @@ func (s *Server) writeUnwritten(d *sendDriver, upstreamStatus int, cause error) 
 	if upstreamStatus == 0 && (errors.Is(cause, errContextLimitExceeded) || errors.Is(cause, wire.ErrUnsupportedFeature)) {
 		status = failureStatus(cause)
 	}
+	local := upstreamStatus == 0
 	if d.anthropic {
+		if local {
+			s.writeAnthropicRefusal(d.w, status, cause)
+			return
+		}
 		s.writeAnthropicError(d.w, status, cause.Error())
 		return
 	}
-	s.fail(d.w, d.r, refusal{Status: status, Code: "upstream_error", Detail: cause})
+	s.fail(d.w, d.r, refusal{Status: status, Code: unwrittenCode(cause, local), Detail: cause})
+}
+
+// unwrittenCode names a failure that never reached the client. Only a
+// condition Relo decided itself has a code a client acts on; anything else,
+// including a cause that arrived with an upstream status, stays the upstream
+// failure it is.
+func unwrittenCode(cause error, local bool) string {
+	if local && errors.Is(cause, errContextLimitExceeded) {
+		return failureCode(cause)
+	}
+	return "upstream_error"
 }
 
 func answeredStatus(upstreamStatus int) int {
@@ -694,26 +710,55 @@ func (s *Server) failInference(w http.ResponseWriter, r *http.Request, cause err
 		w.Header().Set("Retry-After", strconv.Itoa(max(1, int(time.Until(cooling.Until).Seconds()+0.5))))
 	}
 	if anthropic {
-		s.writeAnthropicError(w, status, cause.Error())
+		s.writeAnthropicRefusal(w, status, cause)
 		return
 	}
 	s.fail(w, r, refusal{Status: status, Code: failureCode(cause), Detail: cause})
 }
 
+// anthropicRefusalCode is the error type Claude Code reads as a request it
+// raised wrongly, which is what a context overflow is. An api_error reads as
+// a provider fault, so Claude would surface it without compacting.
+const anthropicRefusalCode = "invalid_request_error"
+
+// anthropicContextMessage is the wording Claude Code matches to decide the
+// conversation is too long. It is the vendor's own sentence, not Relo's.
+func anthropicContextMessage(cause error) string {
+	limit, found := contextLimitOf(cause)
+	if !found {
+		return cause.Error()
+	}
+	return fmt.Sprintf("prompt is too long: %d tokens > %d maximum", limit.Estimated, limit.Limit)
+}
+
+// writeAnthropicRefusal writes the document a Claude client reads, naming the
+// condition when Relo knows it so the client can act on it.
+func (s *Server) writeAnthropicRefusal(w http.ResponseWriter, status int, cause error) {
+	if errors.Is(cause, errContextLimitExceeded) {
+		s.writeAnthropicDocument(w, status, anthropicRefusalCode, anthropicContextMessage(cause))
+		return
+	}
+	s.writeAnthropicError(w, status, cause.Error())
+}
+
 func (s *Server) writeAnthropicError(w http.ResponseWriter, status int, message string) {
+	s.writeAnthropicDocument(w, status, "", message)
+}
+
+func (s *Server) writeAnthropicDocument(w http.ResponseWriter, status int, code, message string) {
 	if status == 0 {
 		status = http.StatusServiceUnavailable
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
-	_, _ = w.Write(s.anthropicFailure(status, message))
+	_, _ = w.Write(s.anthropicFailure(status, code, message))
 }
 
-func (s *Server) anthropicFailure(status int, message string) []byte {
+func (s *Server) anthropicFailure(status int, code, message string) []byte {
 	if s.opts.Formats == nil {
 		return nil
 	}
-	return s.opts.Formats.FailureDocument(status, message)
+	return s.opts.Formats.FailureDocument(status, code, message)
 }
 
 func skipCause(plan routing.Plan) error {
