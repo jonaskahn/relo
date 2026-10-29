@@ -3,8 +3,8 @@
 // installers. Two installs would still fight over the name, the home
 // directory, and the ports, so the install refuses when a command this
 // package did not install answers PATH.
-import { accessSync, constants, existsSync, realpathSync } from 'node:fs';
-import { delimiter, join, resolve, sep } from 'node:path';
+import { accessSync, constants, existsSync, readFileSync, realpathSync } from 'node:fs';
+import { delimiter, dirname, join, resolve, sep } from 'node:path';
 import { homedir } from 'node:os';
 import { execFileSync } from 'node:child_process';
 
@@ -44,9 +44,27 @@ export function findConflictingRelo({
 		if (selfDir && insideDir(candidate, selfDir)) {
 			continue;
 		}
+		if (selfDir && nodePlatform === 'win32' && ownNpmShim(candidate, selfDir)) {
+			continue;
+		}
 		return candidate;
 	}
 	return null;
+}
+
+// npm's Windows command shim is a batch file, not a symlink. Recognize its
+// launcher invocation only; other shim formats remain conflicts until supported.
+function ownNpmShim(candidate, selfDir) {
+	if (!candidate.toLowerCase().endsWith('.cmd')) return false;
+	try {
+		const text = readFileSync(candidate, 'utf8');
+		const match = /"%_prog%"[ \t]+"%dp0%\\([^"\r\n]+)"[ \t]+%\*/i.exec(text);
+		if (!match) return false;
+		const launcher = resolve(dirname(candidate), ...match[1].split('\\'));
+		return realpathSync(launcher) === realpathSync(join(selfDir, 'relo.mjs'));
+	} catch {
+		return false;
+	}
 }
 
 // appBundles lists where the macOS Relo.app may live. The bundle installs
