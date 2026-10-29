@@ -1,6 +1,6 @@
 {
-  "generated": "2026-10-29T13:06:59Z",
-  "latest": "v0.1.13",
+  "generated": "2026-10-29T14:11:32Z",
+  "latest": "v0.1.14",
   "latest_beta": "v0.1.14-beta.54.6d5172a4",
   "install": {
     "stable": {
@@ -17,6 +17,158 @@
     }
   },
   "releases": [
+    {
+      "tag": "v0.1.14",
+      "version": "0.1.14",
+      "name": "v0.1.14 -  Coconut Americano  🥥",
+      "channel": "stable",
+      "draft": false,
+      "published_at": "2026-10-29T14:11:22Z",
+      "page": "https://github.com/jonaskahn/relo/releases/tag/v0.1.14",
+      "notes": "## 🚀 v0.1.14\r\n\r\n### ✨ Improvements\r\n\r\n- More accurate provider-specific model capabilities, context limits, and reasoning settings—including models with on/off thinking.\r\n- Console now displays provider-defined capability state.\r\n- Bundled models.dev data provides a fallback when live data is unavailable.\r\n\r\n### 🐛 Fixes\r\n\r\n- Cursor: Fixed tool-call arguments, conversation replay, missing token usage, and retries for prematurely closed connections.\r\n- Antigravity: Fixed Anthropic billing-stamp compatibility and respected provider-requested waits.\r\n- Context handling: Prevented inflated image token estimates, fitted oversized output budgets to context limits, and returned client-compatible overflow errors.\r\n- Tool requests: Removed tool_choice when no tools are declared, avoiding upstream failures during compaction.\r\n- Windows npm installer: Fixed command-shim detection, terminal handling, and prompts stalling after the first question.\r\n\r\n### 🧪 Quality\r\n\r\n- Expanded regression coverage and enforced an 80% patch-coverage threshold.",
+      "install": {
+        "script": "curl -fsSL https://relo.ifelse.one/install.sh | sh -s -- --version 0.1.14",
+        "powershell": "& ([scriptblock]::Create((irm https://relo.ifelse.one/install.ps1))) -Version 0.1.14",
+        "npm": "npm i -g @jonaskahn/relo@0.1.14"
+      },
+      "files": [
+        {
+          "name": "checksums.txt",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.1.14/checksums.txt",
+          "size": 588,
+          "os": "any",
+          "arch": "any",
+          "kind": "checksums",
+          "format": "txt"
+        },
+        {
+          "name": "Relo-0.1.14-arm64.zip",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.1.14/Relo-0.1.14-arm64.zip",
+          "size": 15843186,
+          "os": "macos",
+          "arch": "arm64",
+          "kind": "app",
+          "format": "zip"
+        },
+        {
+          "name": "relo-0.1.14-darwin-amd64.tar.gz",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.1.14/relo-0.1.14-darwin-amd64.tar.gz",
+          "size": 14980919,
+          "os": "macos",
+          "arch": "amd64",
+          "kind": "archive",
+          "format": "tar.gz"
+        },
+        {
+          "name": "relo-0.1.14-darwin-arm64.tar.gz",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.1.14/relo-0.1.14-darwin-arm64.tar.gz",
+          "size": 14564807,
+          "os": "macos",
+          "arch": "arm64",
+          "kind": "archive",
+          "format": "tar.gz"
+        },
+        {
+          "name": "relo-0.1.14-linux-amd64.tar.gz",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.1.14/relo-0.1.14-linux-amd64.tar.gz",
+          "size": 14670092,
+          "os": "linux",
+          "arch": "amd64",
+          "kind": "archive",
+          "format": "tar.gz"
+        },
+        {
+          "name": "relo-0.1.14-linux-arm64.tar.gz",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.1.14/relo-0.1.14-linux-arm64.tar.gz",
+          "size": 13910788,
+          "os": "linux",
+          "arch": "arm64",
+          "kind": "archive",
+          "format": "tar.gz"
+        },
+        {
+          "name": "Relo-0.1.14-universal.zip",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.1.14/Relo-0.1.14-universal.zip",
+          "size": 31197917,
+          "os": "macos",
+          "arch": "universal",
+          "kind": "app",
+          "format": "zip"
+        },
+        {
+          "name": "relo-0.1.14-windows-amd64.tar.gz",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.1.14/relo-0.1.14-windows-amd64.tar.gz",
+          "size": 14616101,
+          "os": "windows",
+          "arch": "amd64",
+          "kind": "archive",
+          "format": "tar.gz"
+        },
+        {
+          "name": "relo-0.1.14-windows-arm64.tar.gz",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.1.14/relo-0.1.14-windows-arm64.tar.gz",
+          "size": 13761155,
+          "os": "windows",
+          "arch": "arm64",
+          "kind": "archive",
+          "format": "tar.gz"
+        },
+        {
+          "name": "Relo-Setup-0.1.14-amd64.deb",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.1.14/Relo-Setup-0.1.14-amd64.deb",
+          "size": 14930360,
+          "os": "linux",
+          "arch": "amd64",
+          "kind": "installer",
+          "format": "deb"
+        },
+        {
+          "name": "Relo-Setup-0.1.14-amd64.exe",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.1.14/Relo-Setup-0.1.14-amd64.exe",
+          "size": 10806903,
+          "os": "windows",
+          "arch": "amd64",
+          "kind": "installer",
+          "format": "exe"
+        },
+        {
+          "name": "Relo-Setup-0.1.14-amd64.rpm",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.1.14/Relo-Setup-0.1.14-amd64.rpm",
+          "size": 14900328,
+          "os": "linux",
+          "arch": "amd64",
+          "kind": "installer",
+          "format": "rpm"
+        },
+        {
+          "name": "Relo-Setup-0.1.14-arm64.deb",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.1.14/Relo-Setup-0.1.14-arm64.deb",
+          "size": 14246492,
+          "os": "linux",
+          "arch": "arm64",
+          "kind": "installer",
+          "format": "deb"
+        },
+        {
+          "name": "Relo-Setup-0.1.14-arm64.exe",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.1.14/Relo-Setup-0.1.14-arm64.exe",
+          "size": 9776628,
+          "os": "windows",
+          "arch": "arm64",
+          "kind": "installer",
+          "format": "exe"
+        },
+        {
+          "name": "Relo-Setup-0.1.14-arm64.rpm",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.1.14/Relo-Setup-0.1.14-arm64.rpm",
+          "size": 14188777,
+          "os": "linux",
+          "arch": "arm64",
+          "kind": "installer",
+          "format": "rpm"
+        }
+      ]
+    },
     {
       "tag": "v0.1.14-beta.54.6d5172a4",
       "version": "0.1.14-beta.54.6d5172a4",
