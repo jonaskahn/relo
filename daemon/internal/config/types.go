@@ -24,7 +24,7 @@ type Config struct {
 // ConnectionsConfig holds the operator's opt-ins for connections that carry
 // a legal or privacy trade-off.
 type ConnectionsConfig struct {
-	// Free enables the keyless free connections (Opencode Free, Kilo Free).
+	// Free enables the keyless free connections (OpenCode Zen Free, Kilo Code Free).
 	// A file without the key reads as true so an upgrade keeps what it had;
 	// a fresh home writes false and the operator opts in.
 	Free bool `toml:"free"`

@@ -1055,7 +1055,7 @@ func startZenFreeDaemon(t *testing.T, upstreamURL string, models ...zenFreeModel
 	return startDaemonSeeded(t, seed{
 		Provider: sqlite.ProviderRow{
 			ID: catalog.OpenCodeFreeTemplate, TemplateID: catalog.OpenCodeFreeTemplate,
-			Origin: string(catalog.OriginTemplate), Label: "Opencode Free",
+			Origin: string(catalog.OriginTemplate), Label: "OpenCode Zen Free",
 			Auth: string(catalog.AuthNone), KeyHeader: string(catalog.KeyHeaderNone),
 			APIFormat: string(catalog.FormatOpenAIChat), BaseURL: upstreamURL + "/v1",
 			ModelsFormat: string(catalog.ModelsOpenAI), ModelsSource: "listing",

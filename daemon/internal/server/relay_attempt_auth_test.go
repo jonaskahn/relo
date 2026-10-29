@@ -79,7 +79,7 @@ func keylessSpec(providerID string) attemptSpec {
 func TestResolveAttemptCandidateAuthorizesTheCatalogConnection(t *testing.T) {
 	connection := catalog.ConnectionRecord{
 		ID: catalog.OpenCodeFreeTemplate, TemplateID: catalog.OpenCodeFreeTemplate,
-		Origin: string(catalog.OriginTemplate), Label: "Opencode Free",
+		Origin: string(catalog.OriginTemplate), Label: "OpenCode Zen Free",
 		Auth: string(catalog.AuthNone), KeyHeader: string(catalog.KeyHeaderNone),
 		APIFormat: string(catalog.FormatOpenAIChat), BaseURL: "https://opencode.ai/zen/v1",
 		ModelsFormat: string(catalog.ModelsOpenAI), Enabled: true, Rank: 100,

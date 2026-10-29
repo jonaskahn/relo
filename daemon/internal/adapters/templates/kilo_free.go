@@ -1,4 +1,4 @@
-// Kilo Free declares the keyless Kilo gateway connection and its model policy.
+// Kilo Code Free declares the keyless Kilo gateway connection and its model policy.
 package templates
 
 import (
@@ -9,7 +9,7 @@ const kiloGatewayURL = "https://api.kilo.ai/api/gateway"
 
 var kiloFreeTemplates = []Template{
 	{
-		ID: catalog.KiloFreeTemplate, Label: "Kilo Free", Kind: KindKey,
+		ID: catalog.KiloFreeTemplate, Label: "Kilo Code Free", Kind: KindKey,
 		Origin: catalog.OriginTemplate, Auth: catalog.AuthNone, KeyHeader: catalog.KeyHeaderNone,
 		DefaultFormat: catalog.FormatOpenAIChat, DefaultBaseURL: kiloGatewayURL,
 		ModelsSource: "listing", ModelsFormat: catalog.ModelsOpenAI, ModelsDevProviderID: "kilo",

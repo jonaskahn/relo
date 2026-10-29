@@ -791,7 +791,7 @@ func TestRefreshOpenCodeFreeKeepsTheFreeRosterWithoutCatalogPrices(t *testing.T)
 	}).URL)
 	seedRow(t, h, sqlite.ProviderRow{
 		ID: "opencode-free", TemplateID: catalog.OpenCodeFreeTemplate, Origin: string(catalog.OriginTemplate),
-		Label: "Opencode Free", Auth: string(catalog.AuthNone),
+		Label: "OpenCode Zen Free", Auth: string(catalog.AuthNone),
 		APIFormat: string(catalog.FormatOpenAIChat), BaseURL: listing.URL + "/v1",
 		ModelsSource: "listing", ModelsFormat: string(catalog.ModelsOpenAI), ModelsDevProviderID: "opencode",
 		Enabled: true, Rank: 100,

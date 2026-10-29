@@ -1185,8 +1185,18 @@ func (s *Server) handleListProviderTemplates(w http.ResponseWriter, r *http.Requ
 	if err != nil && s.opts.Logger != nil {
 		s.opts.Logger.Debug("modelsdev fetch notice", "error", err)
 	}
+	freeEnabled := manager.FreeConnectionsEnabled()
+	if !freeEnabled {
+		kept := make([]catalog.Template, 0, len(templatesList))
+		for _, template := range templatesList {
+			if !catalog.IsFreeTemplate(template.ID) {
+				kept = append(kept, template)
+			}
+		}
+		templatesList = kept
+	}
 	writeJSON(w, http.StatusOK, map[string]any{
-		"free_enabled": manager.FreeConnectionsEnabled(),
+		"free_enabled": freeEnabled,
 		"items":        toTemplateList(templatesList),
 		"modelsdev":    toModelsDevStateResponse(mdState),
 	})

@@ -38,12 +38,35 @@ func TestFreeConnectionsSettingAndProbeGuard(t *testing.T) {
 		templates := h.management(http.MethodGet, "/api/v1/templates", adminToken, nil)
 		var listed struct {
 			FreeEnabled bool `json:"free_enabled"`
+			Items       []struct {
+				ID    string `json:"id"`
+				Label string `json:"label"`
+			} `json:"items"`
 		}
 		if err := json.Unmarshal(templates.Body.Bytes(), &listed); err != nil {
 			t.Fatal(err)
 		}
 		if listed.FreeEnabled != enabled {
 			t.Fatalf("templates flag = %v want %v", listed.FreeEnabled, enabled)
+		}
+		freeLabels := map[string]string{
+			"opencode-free": "OpenCode Zen Free",
+			"kilo-free":     "Kilo Code Free",
+		}
+		seenFree := map[string]bool{}
+		for _, item := range listed.Items {
+			if want, free := freeLabels[item.ID]; free {
+				seenFree[item.ID] = true
+				if item.Label != want {
+					t.Fatalf("%s label = %q want %q", item.ID, item.Label, want)
+				}
+			}
+		}
+		if enabled && len(seenFree) != len(freeLabels) {
+			t.Fatalf("enabled returned free templates %v", seenFree)
+		}
+		if !enabled && len(seenFree) != 0 {
+			t.Fatalf("disabled returned free templates %v", seenFree)
 		}
 		if !enabled {
 			probe := h.management(http.MethodPost, "/api/v1/connections/probe", adminToken, strings.NewReader("{\"template_id\":\"opencode-free\"}"))
