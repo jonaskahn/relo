@@ -37,7 +37,7 @@ describe('the connection list row', () => {
 			props: {
 				provider: providerOf({
 					id: 'kilo',
-					label: 'Kilo Free',
+					label: 'Kilo Code Free',
 					template_id: 'kilo-free',
 					auth: 'none'
 				}),

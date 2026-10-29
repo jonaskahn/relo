@@ -41,7 +41,8 @@
 		open?: boolean;
 		templates: ProviderTemplate[];
 		freeEnabled: boolean;
-		onenablefree: () => void;
+		freeBusy: boolean;
+		onfreetoggle: (enabled: boolean) => void;
 		// presetProviderId names a connection the operator is already inside, so
 		// the flow opens on the connect step with that provider chosen.
 		presetProviderId?: string;
@@ -59,7 +60,8 @@
 		open = $bindable(false),
 		templates,
 		freeEnabled,
-		onenablefree,
+		freeBusy,
+		onfreetoggle,
 		presetProviderId = '',
 		modelsdev = null,
 		providers,
@@ -157,6 +159,20 @@
 		if (open) reset();
 	});
 
+	// A free row can disappear when the operator turns free connections off or
+	// refreshes the template list; the pending pick must not survive it.
+	$effect(() => {
+		const row = selectedRow;
+		if (row === null) return;
+		if (row.section === 'free' && !freeEnabled) {
+			selectedRow = null;
+			return;
+		}
+		if (!row.custom && !templates.some((template) => template.id === row.id)) {
+			selectedRow = null;
+		}
+	});
+
 	// The footer's Next opens the form, so a misread row never advances on its
 	// own.
 	function select(row: TemplateRow) {
@@ -165,7 +181,7 @@
 
 	function confirmPick() {
 		const row = selectedRow;
-		if (row === null || row.locked || row.disabledReason !== '') return;
+		if (row === null || row.disabledReason !== '') return;
 		if (row.custom) return startCustom();
 		const target = providers.filter(
 			(provider) => provider.template_id === row.id || provider.id === row.id
@@ -467,7 +483,8 @@
 		{#if step === 'provider'}
 			<StepProvider
 				{freeEnabled}
-				{onenablefree}
+				{freeBusy}
+				{onfreetoggle}
 				{templates}
 				{modelsdev}
 				{added}

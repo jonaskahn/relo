@@ -92,7 +92,6 @@ export interface TemplateRow {
 	template: ProviderTemplate | null;
 	added: boolean;
 	disabledReason: string;
-	locked?: boolean;
 	// hint is a translation key, or an empty string for a row whose hint is a
 	// value rather than prose.
 	hintKey: string;
@@ -143,12 +142,12 @@ export function buildTemplateRows(
 	for (const template of templates) {
 		if (!matchesQuery(query, template.id, template.label)) continue;
 		const free = isFreeConnection({ template_id: template.id });
+		if (free && !freeEnabled) continue;
 		const section = free ? 'free' : sectionOf(template.kind);
 		rows[section].push({
 			id: template.id,
 			label: template.label,
 			section,
-			locked: free && !freeEnabled,
 			custom: false,
 			template,
 			added: added.has(template.id),

@@ -216,6 +216,7 @@
 
 	let freeEnabled = $state(false);
 	let freeConsentOpen = $state(false);
+	let freeBusy = $state(false);
 
 	async function loadCatalog() {
 		try {
@@ -227,6 +228,43 @@
 			failed = error instanceof Error ? error.message : String(error);
 		}
 	}
+
+	async function enableFree() {
+		freeBusy = true;
+		try {
+			freeEnabled = true;
+			await Promise.all([loadCatalog(), refreshProviders()]);
+		} finally {
+			freeBusy = false;
+		}
+	}
+
+	async function toggleFree(enabled: boolean) {
+		if (freeBusy) return;
+		if (enabled) {
+			freeConsentOpen = true;
+			return;
+		}
+		freeBusy = true;
+		try {
+			await api('/settings/connections', {
+				method: 'PATCH',
+				body: JSON.stringify({ free_enabled: false })
+			});
+			freeEnabled = false;
+			await Promise.all([loadCatalog(), refreshProviders()]);
+			toast.success($t('ui.settingsPage.freeConnectionsDisabledToast'));
+		} catch (error) {
+			toast.error(error instanceof Error ? error.message : String(error));
+		} finally {
+			freeBusy = false;
+		}
+	}
+
+	// The consent dialog belongs to the add flow; closing that flow must close it too.
+	$effect(() => {
+		if (!addOpen) freeConsentOpen = false;
+	});
 
 	// readingCatalog is the read in flight, so a caller that needs the list
 	// waits on the read already running rather than asking the daemon twice.
@@ -537,17 +575,10 @@
 	</div>
 </div>
 
-<FreeConsentDialog
-	bind:open={freeConsentOpen}
-	onenabled={() => {
-		freeEnabled = true;
-		void refreshProviders();
-	}}
-/>
-
 <AddProviderStepper
 	{freeEnabled}
-	onenablefree={() => (freeConsentOpen = true)}
+	{freeBusy}
+	onfreetoggle={(enabled) => void toggleFree(enabled)}
 	bind:open={addOpen}
 	presetProviderId={addPreset}
 	{templates}
@@ -557,5 +588,7 @@
 	ondiscarded={closeAddFlow}
 	onrefreshdev={refreshDev}
 />
+
+<FreeConsentDialog layer="above" bind:open={freeConsentOpen} onenabled={() => void enableFree()} />
 
 <ScrollToTop />

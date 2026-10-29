@@ -46,7 +46,7 @@ describe('the connection card footer', () => {
 	it('reads an unlimited quota when the provider needs no account', () => {
 		const html = render(ProviderQuotaFooter, {
 			props: {
-				provider: providerOf({ id: 'opencode-free', auth: 'none', label: 'Opencode Free' }),
+				provider: providerOf({ id: 'opencode-free', auth: 'none', label: 'OpenCode Zen Free' }),
 				accounts: [],
 				needsCredentials: false,
 				onreload: () => {}
@@ -55,14 +55,14 @@ describe('the connection card footer', () => {
 
 		expect(html).toContain('∞');
 		expect(html).toContain('Unlimited');
-		expect(html).toContain('Account 1: Opencode Free');
+		expect(html).toContain('Account 1: OpenCode Zen Free');
 		expect(html).not.toContain('This provider needs no credentials.');
 	});
 
 	it('keeps the unlimited reading and numbers each free account', () => {
 		const html = render(ProviderQuotaFooter, {
 			props: {
-				provider: providerOf({ id: 'opencode-free', auth: 'none', label: 'Opencode Free' }),
+				provider: providerOf({ id: 'opencode-free', auth: 'none', label: 'OpenCode Zen Free' }),
 				accounts: [
 					accountOf({ id: 'acc-1', kind: 'api_key', label: 'one' }),
 					accountOf({ id: 'acc-2', kind: 'api_key', label: 'two' })

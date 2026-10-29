@@ -15,13 +15,15 @@
 	} from '$lib/provider-sections';
 	import { isExperimentalConnection } from '$lib/provider-experimental';
 	import BillingChip from '$lib/components/providers/billing-chip.svelte';
+	import { Switch } from 'bits-ui';
 
 	// The provider picker is a radio list: choosing marks a row and the
 	// footer's Next advances, so a misread row never opens the form by itself.
 	interface Props {
 		templates: ProviderTemplate[];
 		freeEnabled: boolean;
-		onenablefree: () => void;
+		freeBusy: boolean;
+		onfreetoggle: (enabled: boolean) => void;
 		modelsdev: ModelsDevState | null;
 		added: Set<string>;
 		selected?: string;
@@ -35,7 +37,8 @@
 	let {
 		templates,
 		freeEnabled,
-		onenablefree,
+		freeBusy,
+		onfreetoggle,
 		modelsdev,
 		added,
 		selected = '',
@@ -47,7 +50,7 @@
 	}: Props = $props();
 
 	const rows = $derived(buildTemplateRows(templates, added, query, freeEnabled));
-	const groups = $derived(visibleTemplateRows(rows));
+	const groups = $derived(visibleTemplateRows(rows).filter((group) => group.section !== 'free'));
 	const total = $derived(countTemplateRows(rows));
 
 	// The search is the first thing an operator uses, so it opens focused.
@@ -102,6 +105,90 @@
 	}
 </script>
 
+{#snippet templateRow(row: TemplateRow)}
+	{@const billingProvider = {
+		id: row.id,
+		template_id: row.id,
+		kind: row.template?.kind ?? '',
+		auth: row.template?.auth ?? '',
+		origin: row.template?.origin ?? '',
+		base_url: row.template?.default_base_url ?? '',
+		modelsdev_provider_id: row.template?.modelsdev_provider_id ?? ''
+	}}
+	{@const chosen = selected === row.id}
+	<button
+		type="button"
+		data-plain
+		role="radio"
+		aria-checked={chosen}
+		disabled={row.disabledReason !== ''}
+		class="flex items-center gap-3 rounded-xl bg-control px-4 py-3 text-left shadow-float-1 transition-[background-color,box-shadow] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring {chosen
+			? 'bg-accent-soft ring-1 ring-accent-border'
+			: row.custom
+				? 'border-[1.5px] border-dashed border-line-strong'
+				: 'hover:bg-control-hover'}"
+		onclick={() => onpick(row)}
+	>
+		{#if row.custom}
+			<span
+				class="flex size-9 shrink-0 items-center justify-center rounded-xl bg-sunken text-muted-foreground shadow-float-1"
+			>
+				<Icon name="plus" size={16} />
+			</span>
+		{:else}
+			<ProviderLogo id={row.id} label={row.label} size="sm" />
+		{/if}
+		<span class="min-w-0 flex-1">
+			<span class="flex items-center gap-2">
+				<span class="truncate text-sm font-medium">{row.label}</span>
+				{#if isExperimentalConnection(row.id)}
+					<span data-experimental-chip class="badge shrink-0 bg-sunken text-muted-foreground">
+						{$t('ui.pages.providersPage.list.tagExperimental')}
+					</span>
+				{/if}
+				{#if row.added}
+					<span
+						class="shrink-0 rounded bg-sunken px-1.5 py-0.5 text-[0.6rem] text-muted-foreground"
+					>
+						{$t('ui.pages.providersPage.add.added')}
+					</span>
+				{/if}
+			</span>
+			<span class="block truncate font-mono text-[0.7rem] text-muted-foreground">
+				{hint(row)}{#if modelCount(row)}
+					· {modelCount(row)}{/if}
+			</span>
+			{#if row.disabledReason}
+				<span class="block truncate text-[0.7rem] text-warn">{row.disabledReason}</span>
+			{/if}
+		</span>
+		{#if chosen}
+			<span
+				data-check
+				data-checkbox
+				data-selected
+				data-selected-check
+				class="flex size-5 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground"
+				aria-hidden="true"
+			>
+				<Icon name="check" size={13} />
+			</span>
+		{/if}
+		<BillingChip provider={billingProvider} class="self-start" />
+	</button>
+{/snippet}
+
+{#snippet groupHeading(label: string, count: number, hint: string)}
+	<div
+		{@attach flattenWhenStuck}
+		class="min-h-11 sticky top-0 z-10 flex flex-wrap items-center gap-2 rounded-lg bg-popover/95 px-2 py-2 backdrop-blur data-[stuck=true]:rounded-t-none"
+	>
+		<span class="text-[0.9375rem] font-semibold text-muted-foreground">{label}</span>
+		<span class="text-[0.7rem] text-muted-foreground">{count}</span>
+		<span class="text-[0.7rem] text-muted-foreground">{hint}</span>
+	</div>
+{/snippet}
+
 <div class="flex flex-col gap-3">
 	<div {@attach focusSearch}>
 		<Input
@@ -116,7 +203,7 @@
 		/>
 	</div>
 
-	{#if groups.length === 0}
+	{#if total === 0}
 		<div class="flex flex-col items-center gap-2 py-8">
 			<p class="text-sm text-muted-foreground">
 				{$t('ui.pages.providersPage.add.noMatchTitle', { values: { query: query.trim() } })}
@@ -128,115 +215,63 @@
 		</div>
 	{:else}
 		<div class="flex flex-col gap-5">
+			<div class="flex flex-col gap-1.5">
+				<div
+					{@attach flattenWhenStuck}
+					class="min-h-11 sticky top-0 z-10 flex flex-wrap items-center gap-2 rounded-lg bg-popover/95 px-2 py-2 backdrop-blur data-[stuck=true]:rounded-t-none"
+				>
+					<span class="text-[0.9375rem] font-semibold text-muted-foreground">
+						{$t(SECTION_LABEL_KEY.free)}
+					</span>
+					{#if freeEnabled}
+						<span class="text-[0.7rem] text-muted-foreground">{rows.free.length}</span>
+						<span class="text-[0.7rem] text-muted-foreground">
+							{$t('ui.pages.providersPage.add.groupHintFree')}
+						</span>
+					{:else}
+						<span class="text-[0.7rem] text-muted-foreground">
+							{$t('ui.pages.providersPage.add.freeOffHint')}
+						</span>
+					{/if}
+					<Switch.Root
+						class="ms-auto"
+						checked={freeEnabled}
+						disabled={freeBusy}
+						onCheckedChange={(next) => onfreetoggle(next)}
+						aria-label={$t(SECTION_LABEL_KEY.free)}
+						data-free-toggle
+					/>
+				</div>
+				{#if freeEnabled && rows.free.length > 0}
+					<div
+						class="grid gap-2 sm:grid-cols-2"
+						role="radiogroup"
+						aria-label={$t(SECTION_LABEL_KEY.free)}
+					>
+						{#each rows.free as row (row.id)}
+							{@render templateRow(row)}
+						{/each}
+					</div>
+				{/if}
+			</div>
 			{#each groups as group (group.section)}
 				<div class="flex flex-col gap-1.5">
-					<div
-						{@attach flattenWhenStuck}
-						class="min-h-10 sticky top-0 z-10 flex flex-wrap items-baseline gap-2 rounded-lg bg-popover/95 px-2 py-2 backdrop-blur data-[stuck=true]:rounded-t-none"
-					>
-						<span class="text-[0.8125rem] font-semibold text-muted-foreground">
-							{$t(SECTION_LABEL_KEY[group.section])}
-						</span>
-						<span class="text-[0.7rem] text-muted-foreground">{group.rows.length}</span>
-						<span class="text-[0.7rem] text-muted-foreground">
-							{$t(
-								'ui.pages.providersPage.add.groupHint' +
-									group.section.charAt(0).toUpperCase() +
-									group.section.slice(1)
-							)}
-						</span>
-					</div>
-					{#if group.section === 'free' && !freeEnabled}
-						<div class="rounded-panel bg-sunken p-3 text-sm">
-							<p>{$t('ui.pages.providersPage.add.freeLockedBody')}</p>
-							<Button class="mt-2" onclick={onenablefree}
-								>{$t('ui.pages.providersPage.add.freeEnable')}</Button
-							>
-						</div>
-					{/if}
+					{@render groupHeading(
+						$t(SECTION_LABEL_KEY[group.section]),
+						group.rows.length,
+						$t(
+							'ui.pages.providersPage.add.groupHint' +
+								group.section.charAt(0).toUpperCase() +
+								group.section.slice(1)
+						)
+					)}
 					<div
 						class="grid gap-2 sm:grid-cols-2"
 						role="radiogroup"
 						aria-label={$t(SECTION_LABEL_KEY[group.section])}
 					>
 						{#each group.rows as row (row.id)}
-							{@const billingProvider = {
-								id: row.id,
-								template_id: row.id,
-								kind: row.template?.kind ?? '',
-								auth: row.template?.auth ?? '',
-								origin: row.template?.origin ?? '',
-								base_url: row.template?.default_base_url ?? '',
-								modelsdev_provider_id: row.template?.modelsdev_provider_id ?? ''
-							}}
-							{@const chosen = selected === row.id}
-							<button
-								type="button"
-								data-plain
-								role="radio"
-								aria-checked={chosen}
-								disabled={row.locked || row.disabledReason !== ''}
-								class="flex items-center gap-3 rounded-xl bg-control px-4 py-3 text-left shadow-float-1 transition-[background-color,box-shadow] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring {chosen
-									? 'bg-accent-soft ring-1 ring-accent-border'
-									: row.custom
-										? 'border-[1.5px] border-dashed border-line-strong'
-										: 'hover:bg-control-hover'}"
-								onclick={() => {
-									if (!row.locked) onpick(row);
-								}}
-							>
-								{#if row.custom}
-									<span
-										class="flex size-9 shrink-0 items-center justify-center rounded-xl bg-sunken text-muted-foreground shadow-float-1"
-									>
-										<Icon name="plus" size={16} />
-									</span>
-								{:else}
-									<ProviderLogo id={row.id} label={row.label} size="sm" />
-								{/if}
-								<span class="min-w-0 flex-1">
-									<span class="flex items-center gap-2">
-										<span class="truncate text-sm font-medium">{row.label}</span>
-										{#if isExperimentalConnection(row.id)}
-											<span
-												data-experimental-chip
-												class="badge shrink-0 bg-sunken text-muted-foreground"
-											>
-												{$t('ui.pages.providersPage.list.tagExperimental')}
-											</span>
-										{/if}
-										{#if row.added}
-											<span
-												class="shrink-0 rounded bg-sunken px-1.5 py-0.5 text-[0.6rem] text-muted-foreground"
-											>
-												{$t('ui.pages.providersPage.add.added')}
-											</span>
-										{/if}
-									</span>
-									<span class="block truncate font-mono text-[0.7rem] text-muted-foreground">
-										{hint(row)}{#if modelCount(row)}
-											· {modelCount(row)}{/if}
-									</span>
-									{#if row.disabledReason}
-										<span class="block truncate text-[0.7rem] text-warn">
-											{row.disabledReason}
-										</span>
-									{/if}
-								</span>
-								{#if chosen}
-									<span
-										data-check
-										data-checkbox
-										data-selected
-										data-selected-check
-										class="flex size-5 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground"
-										aria-hidden="true"
-									>
-										<Icon name="check" size={13} />
-									</span>
-								{/if}
-								<BillingChip provider={billingProvider} class="self-start" />
-							</button>
+							{@render templateRow(row)}
 						{/each}
 					</div>
 				</div>

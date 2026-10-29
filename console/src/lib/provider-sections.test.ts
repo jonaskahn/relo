@@ -259,24 +259,24 @@ test('files a Command Code key template under keys', () => {
 });
 
 describe('free-pool opt-in', () => {
-	test('locks both pools while leaving paid and local options usable', () => {
+	test('hides both pools while leaving paid and local options usable', () => {
 		const templates = [
 			templateOf({ id: 'openai' }),
 			templateOf({ id: 'opencode-free' }),
 			templateOf({ id: 'kilo-free' })
 		];
 		const rows = buildTemplateRows(templates, new Set(), '', false);
-		expect(visibleTemplateRows(rows)[0].section).toBe('free');
-		expect(rows.free.map((row) => row.id)).toEqual(['opencode-free', 'kilo-free']);
-		expect(rows.free.every((row) => row.locked)).toBe(true);
-		expect(rows.key.every((row) => !row.locked)).toBe(true);
-		expect(buildTemplateRows(templates, new Set(), '', true).free.every((row) => !row.locked)).toBe(
-			true
-		);
+		expect(rows.free).toEqual([]);
+		expect(visibleTemplateRows(rows).some((group) => group.section === 'free')).toBe(false);
+		expect(rows.key.map((row) => row.id)).toEqual(['openai']);
+		expect(buildTemplateRows(templates, new Set(), '', true).free.map((row) => row.id)).toEqual([
+			'opencode-free',
+			'kilo-free'
+		]);
 	});
 	test('search removes an empty free section', () => {
 		const rows = buildTemplateRows(
-			[templateOf({ id: 'opencode-free', label: 'Opencode Free' })],
+			[templateOf({ id: 'opencode-free', label: 'OpenCode Zen Free' })],
 			new Set(),
 			'missing',
 			false

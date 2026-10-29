@@ -36,7 +36,7 @@ describe('the connection overview card', () => {
 			props: {
 				provider: providerOf({
 					id: 'opencode-free',
-					label: 'Opencode Free',
+					label: 'OpenCode Zen Free',
 					auth: 'none',
 					counts: { ...providerOf().counts, accounts: 0, active_accounts: 0 }
 				}),
@@ -48,7 +48,7 @@ describe('the connection overview card', () => {
 		expect(html).toContain('data-account-line');
 		expect(html).not.toContain('data-selected-account=');
 		expect(html).toContain('data-status-pill="ready"');
-		expect(html).toContain('Account 1: Opencode Free');
+		expect(html).toContain('Account 1: OpenCode Zen Free');
 		expect(html).toContain('∞');
 		expect(html).toContain('Unlimited');
 		expect(html).not.toContain('This provider needs no credentials.');
@@ -59,7 +59,7 @@ describe('the connection overview card', () => {
 			props: {
 				provider: providerOf({
 					id: 'opencode-free',
-					label: 'Opencode Free',
+					label: 'OpenCode Zen Free',
 					auth: 'none',
 					counts: { ...providerOf().counts, accounts: 2, active_accounts: 2 }
 				}),
@@ -84,7 +84,7 @@ describe('the connection overview card', () => {
 			props: {
 				provider: providerOf({
 					id: 'kilo',
-					label: 'Kilo Free',
+					label: 'Kilo Code Free',
 					template_id: 'kilo-free',
 					auth: 'none'
 				}),
@@ -130,7 +130,7 @@ describe('the connection overview card', () => {
 			props: {
 				provider: providerOf({
 					id: 'kilo',
-					label: 'Kilo Free',
+					label: 'Kilo Code Free',
 					template_id: 'kilo-free',
 					auth: 'none'
 				}),
@@ -144,7 +144,7 @@ describe('the connection overview card', () => {
 			props: {
 				provider: providerOf({
 					id: 'opencode-free',
-					label: 'Opencode Free',
+					label: 'OpenCode Zen Free',
 					template_id: 'opencode-free',
 					auth: 'none'
 				}),
