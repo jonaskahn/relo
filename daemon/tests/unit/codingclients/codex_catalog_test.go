@@ -368,6 +368,31 @@ func TestWriteCodexCatalogUsesAStatedThinkLadder(t *testing.T) {
 	}
 }
 
+func TestWriteCodexCatalogProjectsToggleOnlyLevels(t *testing.T) {
+	reasoning := true
+	toggle := true
+	rows := writeCatalogWithCache(t, "", []codingclients.ModelRef{{
+		ID: "relo-xiaomi-mimo", Name: "MiMo", Connection: "Xiaomi", Reasoning: &reasoning,
+		ReasoningEfforts: []string{}, ReasoningToggle: &toggle,
+	}})
+	row := rows[0]
+	if row["default_reasoning_level"] != "high" {
+		t.Fatalf("default = %v, want high", row["default_reasoning_level"])
+	}
+	levels, _ := row["supported_reasoning_levels"].([]any)
+	if len(levels) != 2 {
+		t.Fatalf("levels = %v, want none and high", levels)
+	}
+	for i, effort := range []string{"none", "high"} {
+		if levels[i].(map[string]any)["effort"] != effort {
+			t.Fatalf("levels = %v, want %s at %d", levels, effort, i)
+		}
+	}
+	if levels[0].(map[string]any)["description"] != "Thinking disabled" {
+		t.Fatalf("levels = %v, want a none description", levels)
+	}
+}
+
 func TestModelsDigestChangesWhenTheListChanges(t *testing.T) {
 	first := codingclients.ModelsDigest([]codingclients.ModelRef{{ID: "a", Name: "A", Connection: "One"}})
 	second := codingclients.ModelsDigest([]codingclients.ModelRef{{ID: "a", Name: "A", Connection: "Two"}})

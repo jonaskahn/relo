@@ -238,10 +238,35 @@ func openCodeModalities(model ModelRef) string {
 }
 
 func openCodeCapabilities(model ModelRef) string {
-	if model.Vision == nil {
+	parts := make([]string, 0, 3)
+	if model.Vision != nil {
+		parts = append(parts, `"input":`+openCodeInput(*model.Vision))
+		parts = append(parts, `"output":["text"]`)
+	}
+	if reasoning := openCodeReasoning(model); reasoning != "" {
+		parts = append(parts, reasoning)
+	}
+	if len(parts) == 0 {
 		return ""
 	}
-	return `"capabilities":{"input":` + openCodeInput(*model.Vision) + `,"output":["text"]}`
+	return `"capabilities":{` + strings.Join(parts, ",") + `}`
+}
+
+func openCodeReasoning(model ModelRef) string {
+	if model.Reasoning == nil || !*model.Reasoning {
+		return ""
+	}
+	if model.ReasoningToggle != nil && *model.ReasoningToggle && model.ReasoningEfforts != nil && len(model.ReasoningEfforts) == 0 {
+		return `"reasoning":{"supported":true,"toggle":true}`
+	}
+	if model.ReasoningEfforts != nil {
+		quoted := make([]string, 0, len(model.ReasoningEfforts))
+		for _, effort := range model.ReasoningEfforts {
+			quoted = append(quoted, jsonString(effort))
+		}
+		return `"reasoning":{"supported":true,"effort":[` + strings.Join(quoted, ",") + `]}`
+	}
+	return `"reasoning":{"supported":true}`
 }
 
 func openCodeInput(vision bool) string {

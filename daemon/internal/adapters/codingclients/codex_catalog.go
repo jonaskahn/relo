@@ -412,7 +412,9 @@ func codexLevelsFor(model ModelRef) []codexReasoningLevel {
 		return nil
 	}
 	efforts := model.ReasoningEfforts
-	if efforts == nil {
+	if model.ReasoningToggle != nil && *model.ReasoningToggle && efforts != nil && len(efforts) == 0 {
+		efforts = []string{"none", "high"}
+	} else if efforts == nil {
 		efforts = []string{"low", "medium", "high", "xhigh"}
 	}
 	levels := make([]codexReasoningLevel, 0, len(efforts))
@@ -423,16 +425,27 @@ func codexLevelsFor(model ModelRef) []codexReasoningLevel {
 }
 
 func codexDefaultEffort(levels []codexReasoningLevel) string {
+	hasHigh := false
+	for _, level := range levels {
+		if level.Effort == "high" {
+			hasHigh = true
+		}
+	}
 	for _, level := range levels {
 		if level.Effort == "medium" {
 			return "medium"
 		}
+	}
+	if levels[0].Effort == "none" && hasHigh {
+		return "high"
 	}
 	return levels[0].Effort
 }
 
 func codexEffortDescription(effort string) string {
 	switch effort {
+	case "none":
+		return "Thinking disabled"
 	case "low":
 		return "Fast responses with lighter reasoning"
 	case "medium":

@@ -438,6 +438,61 @@ func TestClientConfigsTranslateCapabilities(t *testing.T) {
 	}
 }
 
+func TestOpenCodeV2WritesNativeReasoning(t *testing.T) {
+	on := true
+	models := []codingclients.ModelRef{
+		{ID: "toggle", Reasoning: &on, ReasoningEfforts: []string{}, ReasoningToggle: &on},
+		{ID: "ladder", Reasoning: &on, ReasoningEfforts: []string{"low", "high"}},
+		{ID: "unknown-ladder", Reasoning: &on},
+	}
+	merged, err := codingclients.MergeOpenCode("", baseURL, models)
+	if err != nil {
+		t.Fatalf("MergeOpenCode() error = %v", err)
+	}
+	var document map[string]any
+	if err := json.Unmarshal([]byte(merged), &document); err != nil {
+		t.Fatalf("merged file does not parse: %v\n%s", err, merged)
+	}
+	v2 := openCodeModelsOf(t, document, "providers")
+	toggle := v2["toggle"].(map[string]any)["capabilities"].(map[string]any)["reasoning"].(map[string]any)
+	if toggle["supported"] != true || toggle["toggle"] != true {
+		t.Fatalf("toggle reasoning = %v, want a native toggle", toggle)
+	}
+	ladder := v2["ladder"].(map[string]any)["capabilities"].(map[string]any)["reasoning"].(map[string]any)
+	efforts := ladder["effort"].([]any)
+	if len(efforts) != 2 || efforts[0] != "low" || efforts[1] != "high" {
+		t.Fatalf("ladder reasoning = %v, want low/high", ladder)
+	}
+	unknown := v2["unknown-ladder"].(map[string]any)["capabilities"].(map[string]any)["reasoning"].(map[string]any)
+	if unknown["supported"] != true || unknown["effort"] != nil || unknown["toggle"] != nil {
+		t.Fatalf("unknown reasoning = %v, want supported only", unknown)
+	}
+}
+
+func TestOpenCodeV2KeepsReasoningWhenVisionIsUnknown(t *testing.T) {
+	on := true
+	models := []codingclients.ModelRef{
+		{ID: "reasoning-only", Reasoning: &on, ReasoningEfforts: []string{}, ReasoningToggle: &on},
+	}
+	merged, err := codingclients.MergeOpenCode("", baseURL, models)
+	if err != nil {
+		t.Fatalf("MergeOpenCode() error = %v", err)
+	}
+	var document map[string]any
+	if err := json.Unmarshal([]byte(merged), &document); err != nil {
+		t.Fatalf("merged file does not parse: %v\n%s", err, merged)
+	}
+	v2 := openCodeModelsOf(t, document, "providers")
+	capabilities := v2["reasoning-only"].(map[string]any)["capabilities"].(map[string]any)
+	if _, present := capabilities["input"]; present {
+		t.Fatalf("capabilities = %v, want no invented vision", capabilities)
+	}
+	reasoning := capabilities["reasoning"].(map[string]any)
+	if reasoning["supported"] != true || reasoning["toggle"] != true {
+		t.Fatalf("reasoning = %v, want the native toggle", reasoning)
+	}
+}
+
 func clawModel(t *testing.T, rows []any, id string) map[string]any {
 	t.Helper()
 	for _, row := range rows {
