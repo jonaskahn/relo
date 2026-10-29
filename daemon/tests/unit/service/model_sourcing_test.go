@@ -46,8 +46,6 @@ func TestModelsDevOnlyDescribesTheModelsTheProviderServes(t *testing.T) {
 		ModelsFormat: string(catalog.ModelsOpenAI), ModelsDevProviderID: "groq",
 		Enabled: true, Rank: 100,
 	})
-	h.addAccount("groq", "work", "sk-1")
-
 	result, err := manager.RefreshProviderModels(ctx, "groq")
 	if err != nil {
 		t.Fatalf("RefreshProviderModels() error = %v", err)
