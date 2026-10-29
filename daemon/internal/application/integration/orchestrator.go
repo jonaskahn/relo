@@ -1517,7 +1517,10 @@ func modelRef(model catalog.Model) ModelRef {
 		ref.Vision = new(*model.SupportsVision)
 	}
 	if model.ReasoningEfforts != nil {
-		ref.ReasoningEfforts = append([]string(nil), model.ReasoningEfforts...)
+		// Keep an explicitly empty ladder distinct from an unstated one, so a
+		// client can project a toggle-only model instead of offering the
+		// shared effort list.
+		ref.ReasoningEfforts = append([]string{}, model.ReasoningEfforts...)
 	}
 	if model.ReasoningToggleKnown {
 		ref.ReasoningToggle = new(model.ReasoningToggle)
