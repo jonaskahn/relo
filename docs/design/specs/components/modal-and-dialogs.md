@@ -35,7 +35,8 @@ No rules between header, body and footer. The footer band and spacing separate t
 - **Destructive footer action**: a delete, revoke or remove in a footer is a labeled destructive button (icon + label),
   never a bare trash icon action, and it leads the action group. It stays clear of the primary's end of the row.
 - **Multi-step flows** (Add connection, the model modal) swap the content of the same modal. Never open a second modal
-  on top.
+  on top, except the free-connection responsibility notice. That confirmation may stack above the add-connection modal
+  with `layer="above"` so the flow stays intact; dismissing it returns focus to the free-connection switch.
 - **View ↔ edit swap**: a read view whose footer carries one primary **Edit** swaps the body to the edit form while
   header, footer band and summary stay. The ghost action next to the primary returns to the view. Closing with unsaved
   changes asks the discard AlertDialog; a destructive action closes the modal first, then opens its AlertDialog.

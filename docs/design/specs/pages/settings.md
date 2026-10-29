@@ -1,6 +1,6 @@
 ---
 name: settings
-description: Every daemon choice — console, access, network, providers, daemon, retention.
+description: Every daemon choice — console, access, network, providers, daemon, retention, free connections.
 requires: [form-controls, appearance-popover, cards-and-quota, modal-and-dialogs, status-and-banners]
 ---
 
@@ -17,6 +17,11 @@ as `appearance-popover`, in their page layout: the accent row is the 20-slot boa
 the radar — a saturation/value square, a hue rail and a hex field — which saves and applies the colour the moment a
 drag ends or the field commits. A jump row above the grid links to each card's heading. Loading keeps one centred
 spinner in the frame; a failed load answers one card with the reason and a Retry action.
+
+A final **Others** section sits below the main grid. Its first option is **Free connections**, a full-width card whose
+switch opens the same responsibility notice as the add-connection picker. Free connections stay hidden until the
+operator accepts that notice; switching them off hides the connections and stops new requests without deleting stored
+data.
 
 ## Row anatomy
 
@@ -44,6 +49,7 @@ One column below 1280px. From `xl` the small cards pair and Console keeps a full
 | 2   | Providers + Daemon           |
 | 3   | Retention + Reclaim space    |
 | 4   | Console (full)               |
+| 5   | Others — Free connections (full) |
 
 Pairing is never forced: a card that holds wide fields keeps its own row, and below `xl` everything stacks because a
 paired port or URL row needs the width. Cards in one grid row share their height, and an explicit-save card pins its
@@ -61,6 +67,7 @@ banner spans the full grid above the cards.
 | Providers          | Proxy and waits at once; model directory at the next start          | Explicit **Save**                  |
 | Daemon             | Start at login at once; log level and update feed at the next start | Explicit **Save**                  |
 | Retention          | At once                                                             | Explicit **Save**                  |
+| Free connections   | At once                                                             | — (the switch opens the notice)    |
 
 A switch that applies at once never shares a panel with a form that has an explicit Save; the one switch inside an
 explicit-save card (Start at login) is part of that card's form and is written with its Save.

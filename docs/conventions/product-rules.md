@@ -82,8 +82,10 @@ skips the cooling connection for its next member. Both the pins and the cooldown
 memory: a restart starts every connection available.
 
 **Keyless free pools require an operator opt-in on fresh installs.**
-The connections.free setting in config.toml gates Opencode Free and Kilo Free.
+The connections.free setting in config.toml gates OpenCode Zen Free and Kilo Code Free.
 A new home writes false; an existing file without the key reads as true for
 upgrade compatibility. The add-connection modal explains the privacy, service,
-and legal risks before enabling. Disabling hides the connections and removes
-them from routing without deleting their stored connections, models, or usage.
+and legal risks before enabling. Free rows stay hidden until the operator turns
+on the switch in the Free heading and accepts that notice. Disabling hides the
+connections and removes them from routing without deleting their stored
+connections, models, or usage.
