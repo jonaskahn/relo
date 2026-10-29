@@ -1,7 +1,7 @@
 {
-  "generated": "2026-10-28T04:16:23Z",
+  "generated": "2026-10-29T03:25:21Z",
   "latest": "v0.1.13",
-  "latest_beta": "v0.1.13-beta.49.3f9bb2d5",
+  "latest_beta": "v0.1.14-beta.50.42407133",
   "install": {
     "stable": {
       "script": "curl -fsSL https://relo.ifelse.one/install.sh | sh",
@@ -17,6 +17,86 @@
     }
   },
   "releases": [
+    {
+      "tag": "v0.1.14-beta.50.42407133",
+      "version": "0.1.14-beta.50.42407133",
+      "name": "v0.1.14-beta.50.42407133",
+      "channel": "beta",
+      "draft": false,
+      "published_at": "2026-10-29T03:25:10Z",
+      "page": "https://github.com/jonaskahn/relo/releases/tag/v0.1.14-beta.50.42407133",
+      "notes": "## What's Changed\n* Fix: Cursor, Antigravity stop working in Claude Code by @jonaskahn in https://github.com/jonaskahn/relo/pull/88\n* chore: bump to 0.1.14 by @github-actions[bot] in https://github.com/jonaskahn/relo/pull/87\n\n\n**Full Changelog**: https://github.com/jonaskahn/relo/compare/v0.1.13...v0.1.14-beta.50.42407133",
+      "install": {
+        "script": "curl -fsSL https://relo.ifelse.one/install.sh | sh -s -- --version 0.1.14-beta.50.42407133",
+        "powershell": "& ([scriptblock]::Create((irm https://relo.ifelse.one/install.ps1))) -Version 0.1.14-beta.50.42407133",
+        "npm": "npm i -g @jonaskahn/relo@0.1.14-beta.50.42407133"
+      },
+      "files": [
+        {
+          "name": "checksums.txt",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.1.14-beta.50.42407133/checksums.txt",
+          "size": 690,
+          "os": "any",
+          "arch": "any",
+          "kind": "checksums",
+          "format": "txt"
+        },
+        {
+          "name": "relo-0.1.14-beta.50.42407133-darwin-amd64.tar.gz",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.1.14-beta.50.42407133/relo-0.1.14-beta.50.42407133-darwin-amd64.tar.gz",
+          "size": 14977949,
+          "os": "macos",
+          "arch": "amd64",
+          "kind": "archive",
+          "format": "tar.gz"
+        },
+        {
+          "name": "relo-0.1.14-beta.50.42407133-darwin-arm64.tar.gz",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.1.14-beta.50.42407133/relo-0.1.14-beta.50.42407133-darwin-arm64.tar.gz",
+          "size": 14561818,
+          "os": "macos",
+          "arch": "arm64",
+          "kind": "archive",
+          "format": "tar.gz"
+        },
+        {
+          "name": "relo-0.1.14-beta.50.42407133-linux-amd64.tar.gz",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.1.14-beta.50.42407133/relo-0.1.14-beta.50.42407133-linux-amd64.tar.gz",
+          "size": 14668788,
+          "os": "linux",
+          "arch": "amd64",
+          "kind": "archive",
+          "format": "tar.gz"
+        },
+        {
+          "name": "relo-0.1.14-beta.50.42407133-linux-arm64.tar.gz",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.1.14-beta.50.42407133/relo-0.1.14-beta.50.42407133-linux-arm64.tar.gz",
+          "size": 13907962,
+          "os": "linux",
+          "arch": "arm64",
+          "kind": "archive",
+          "format": "tar.gz"
+        },
+        {
+          "name": "relo-0.1.14-beta.50.42407133-windows-amd64.tar.gz",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.1.14-beta.50.42407133/relo-0.1.14-beta.50.42407133-windows-amd64.tar.gz",
+          "size": 14611867,
+          "os": "windows",
+          "arch": "amd64",
+          "kind": "archive",
+          "format": "tar.gz"
+        },
+        {
+          "name": "relo-0.1.14-beta.50.42407133-windows-arm64.tar.gz",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.1.14-beta.50.42407133/relo-0.1.14-beta.50.42407133-windows-arm64.tar.gz",
+          "size": 13759771,
+          "os": "windows",
+          "arch": "arm64",
+          "kind": "archive",
+          "format": "tar.gz"
+        }
+      ]
+    },
     {
       "tag": "v0.1.13",
       "version": "0.1.13",
