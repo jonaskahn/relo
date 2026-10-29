@@ -47,6 +47,9 @@ export function findConflictingRelo({
 		if (selfDir && nodePlatform === 'win32' && inGlobalBin(candidate, selfDir)) {
 			continue;
 		}
+		if (nodePlatform === 'win32' && inNodeToolDir(candidate)) {
+			continue;
+		}
 		return candidate;
 	}
 	return null;
@@ -64,6 +67,14 @@ function inGlobalBin(candidate, selfDir) {
 		modules = parent;
 	}
 	return existingPath(dirname(candidate)) === existingPath(dirname(modules));
+}
+
+// inNodeToolDir reports whether a Windows candidate sits beside node.exe. A
+// version manager (nvm, Volta, fnm) keeps generic launcher stubs for every
+// global command in such a directory, away from the package's own prefix, so
+// the stub is the command of the install being made, not a second Relo.
+function inNodeToolDir(candidate) {
+	return existsSync(join(dirname(candidate), 'node.exe'));
 }
 
 // appBundles lists where the macOS Relo.app may live. The bundle installs

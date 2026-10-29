@@ -60,9 +60,10 @@ build-all: seed build-console sync-console
 	@mkdir -p dist
 	@for platform in $(PLATFORMS); do \
 		os=$${platform%/*}; arch=$${platform#*/}; ext=""; \
-		if [ "$$os" = "windows" ]; then ext=".exe"; fi; \
+		flags="$(LDFLAGS)"; \
+		if [ "$$os" = "windows" ]; then ext=".exe"; flags="-H windowsgui $$flags"; fi; \
 		echo "building dist/$(BINARY)-$$os-$$arch$$ext"; \
-		(cd $(BACKEND) && GOOS=$$os GOARCH=$$arch CGO_ENABLED=0 go build -trimpath -ldflags "$(LDFLAGS)" \
+		(cd $(BACKEND) && GOOS=$$os GOARCH=$$arch CGO_ENABLED=0 go build -trimpath -ldflags "$$flags" \
 			-o ../dist/$(BINARY)-$$os-$$arch$$ext ./cmd/relo) || exit 1; \
 		done
 
