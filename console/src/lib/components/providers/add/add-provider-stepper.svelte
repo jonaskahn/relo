@@ -82,6 +82,12 @@
 	let refreshNote = $state('');
 	let reviewId = $state('');
 	let reviewLabel = $state('');
+	// idEdited and labelEdited track whether the operator touched the two
+	// suggested fields. Automatic free-only markers never overwrite an edit.
+	let idEdited = $state(false);
+	let labelEdited = $state(false);
+	let autoId = $state('');
+	let autoLabel = $state('');
 	let disabled = $state<string[]>([]);
 	let working = $state(false);
 	let discardOpen = $state(false);
@@ -140,6 +146,8 @@
 		reviewId =
 			preset === undefined ? '' : suggestProviderId(preset.template_id || preset.id, takenIds);
 		reviewLabel = preset === undefined ? '' : suggestLabel(preset.label, takenLabels);
+		idEdited = false;
+		labelEdited = false;
 		query = '';
 		selectedRow = null;
 		probe = null;
@@ -205,6 +213,8 @@
 		};
 		reviewId = suggestProviderId(row.id, takenIds);
 		reviewLabel = suggestLabel(row.label, takenLabels);
+		idEdited = false;
+		labelEdited = false;
 		probe = null;
 		problems = {};
 		step = 'connect';
@@ -214,6 +224,8 @@
 		draft = { ...emptyStepperState(), path: 'custom' };
 		reviewId = '';
 		reviewLabel = '';
+		idEdited = false;
+		labelEdited = false;
 		probe = null;
 		problems = {};
 		step = 'connect';
@@ -342,6 +354,33 @@
 			working = false;
 		}
 	}
+
+	// Review's free-only mode owns two automatic markers while the operator has
+	// not typed over them: the -free id suffix and a native-language label mark.
+	$effect(() => {
+		const models = probe?.models ?? [];
+		const free = models.filter((model) => model.is_free);
+		const paid = models.filter((model) => !model.is_free);
+		const freeOnly = free.length > 0 && paid.length > 0 && paid.every((model) => disabled.includes(model.id)) &&
+			free.every((model) => !disabled.includes(model.id));
+		if (freeOnly) {
+			if (!idEdited && autoId === '' && !reviewId.endsWith('-free')) {
+				autoId = reviewId;
+				reviewId = reviewId + '-free';
+			}
+			if (!labelEdited && autoLabel === '') {
+				autoLabel = reviewLabel;
+				reviewLabel = $t('ui.pages.providersPage.review.freeOnlyLabelPattern', {
+					values: { label: reviewLabel }
+				});
+			}
+		} else {
+			if (!idEdited && autoId !== '' && reviewId === autoId + '-free') reviewId = autoId;
+			if (!labelEdited && autoLabel !== '' && reviewLabel === $t('ui.pages.providersPage.review.freeOnlyLabelPattern', { values: { label: autoLabel } })) reviewLabel = autoLabel;
+			autoId = '';
+			autoLabel = '';
+		}
+	});
 
 	function discard() {
 		if (probe)
@@ -537,8 +576,14 @@
 					modelsdev_provider_id: template?.modelsdev_provider_id ?? ''
 				}}
 				onchange={(change) => {
-					if (change.providerId !== undefined) reviewId = change.providerId;
-					if (change.label !== undefined) reviewLabel = change.label;
+					if (change.providerId !== undefined) {
+						idEdited = true;
+						reviewId = change.providerId;
+					}
+					if (change.label !== undefined) {
+						labelEdited = true;
+						reviewLabel = change.label;
+					}
 					if (change.disabled !== undefined) disabled = change.disabled;
 				}}
 			/>

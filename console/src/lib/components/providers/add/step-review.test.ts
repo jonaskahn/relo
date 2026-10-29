@@ -3,6 +3,7 @@ import { addMessages, init } from 'svelte-i18n';
 import { beforeAll, describe, expect, it } from 'vitest';
 
 import en from '$lib/i18n/locales/en.json';
+import { emptyPrices } from '$lib/provider-fixtures';
 import type { ProbeResult } from '$lib/types';
 
 import StepReview from './step-review.svelte';
@@ -30,6 +31,33 @@ const probe: ProbeResult = {
 };
 
 describe('the review step', () => {
+	it('gives free models a badge and exposes four canonical bulk modes', () => {
+		const html = render(StepReview, {
+			props: {
+				probe: {
+					...probe,
+					models: [
+						{ ...probeModel('free-model', true) },
+						{ ...probeModel('paid-model', false) }
+					]
+				},
+				onchange: () => {}
+			}
+		}).body;
+		expect(html).toContain('data-free-model-badge');
+		expect(html).toContain('aria-label="Turn all on"');
+		expect(html).toContain('aria-label="Turn all off"');
+		expect(html).toContain('Turn on all free');
+		expect(html).toContain('Turn off all free');
+	});
+
+	it('disables the free-only controls with an explanation when nothing is free', () => {
+		const html = render(StepReview, {
+			props: { probe: { ...probe, models: [probeModel('paid-model', false)] }, onchange: () => {} }
+		}).body;
+		expect(html).toContain('No free models');
+	});
+
 	// The keyless pool is free because the provider logs what it is sent, so an
 	// operator reads that where they choose what routes to it.
 	it('warns that the keyless pool may log prompts', () => {
@@ -81,3 +109,22 @@ describe('the review step', () => {
 		expect(html).not.toContain('data-payg-chip');
 	});
 });
+
+function probeModel(id: string, isFree: boolean) {
+	return {
+		id,
+		name: id,
+		match: 'none',
+		modelsdev_ref: '',
+		source: 'listing',
+		prices: {
+			override: emptyPrices(),
+			provider: emptyPrices(),
+			modelsdev: emptyPrices(),
+			effective: emptyPrices(),
+			effective_source: {}
+		},
+		enabled: true,
+		is_free: isFree
+	};
+}
