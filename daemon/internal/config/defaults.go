@@ -35,6 +35,14 @@ const (
 	DefaultFailoverCooldownSeconds = 0
 )
 
+// DefaultFreeConnections is what a config file without the key reads as, so a
+// home that predates the option keeps its free connections. FreshFreeConnections
+// is what a brand-new home writes: the operator opts in.
+const (
+	DefaultFreeConnections = true
+	FreshFreeConnections   = false
+)
+
 // DefaultAutostart is the shipped default: a proxy an operator relies on
 // should come back after a restart.
 const DefaultAutostart = true
@@ -58,9 +66,10 @@ func DefaultConfig() Config {
 			RetryAttempts:           DefaultUpstreamRetryAttempts,
 			FailoverCooldownSeconds: DefaultFailoverCooldownSeconds,
 		},
-		Catalog: CatalogConfig{ModelsDevURL: DefaultModelsDevURL},
-		Secrets: SecretsConfig{Keychain: false, KeyFile: defaultKeyFile},
-		Admin:   AdminConfig{Login: false},
+		Catalog:     CatalogConfig{ModelsDevURL: DefaultModelsDevURL},
+		Secrets:     SecretsConfig{Keychain: false, KeyFile: defaultKeyFile},
+		Admin:       AdminConfig{Login: false},
+		Connections: ConnectionsConfig{Free: DefaultFreeConnections},
 		UI: UIConfig{
 			Language: DefaultUILanguage, Theme: DefaultUITheme, Accent: DefaultUIAccent,
 			Usage: UsageConfig{OverviewMetrics: append([]string(nil), DefaultOverviewMetrics()...)},

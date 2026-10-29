@@ -17,6 +17,17 @@ type Config struct {
 	Secrets  SecretsConfig  `toml:"secrets"`
 	Admin    AdminConfig    `toml:"admin"`
 	UI       UIConfig       `toml:"ui"`
+	// Connections gates the connections that need the operator's consent.
+	Connections ConnectionsConfig `toml:"connections"`
+}
+
+// ConnectionsConfig holds the operator's opt-ins for connections that carry
+// a legal or privacy trade-off.
+type ConnectionsConfig struct {
+	// Free enables the keyless free connections (Opencode Free, Kilo Free).
+	// A file without the key reads as true so an upgrade keeps what it had;
+	// a fresh home writes false and the operator opts in.
+	Free bool `toml:"free"`
 }
 
 // SystemConfig is how the process behaves: when it starts at login, how it
