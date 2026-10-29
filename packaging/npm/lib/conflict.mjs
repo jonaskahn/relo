@@ -3,8 +3,8 @@
 // installers. Two installs would still fight over the name, the home
 // directory, and the ports, so the install refuses when a command this
 // package did not install answers PATH.
-import { accessSync, constants, existsSync, readFileSync, realpathSync } from 'node:fs';
-import { delimiter, dirname, join, resolve, sep } from 'node:path';
+import { accessSync, constants, existsSync, realpathSync } from 'node:fs';
+import { basename, delimiter, dirname, join, resolve, sep } from 'node:path';
 import { homedir } from 'node:os';
 import { execFileSync } from 'node:child_process';
 
@@ -44,7 +44,7 @@ export function findConflictingRelo({
 		if (selfDir && insideDir(candidate, selfDir)) {
 			continue;
 		}
-		if (selfDir && nodePlatform === 'win32' && ownNpmShim(candidate, selfDir)) {
+		if (selfDir && nodePlatform === 'win32' && inGlobalBin(candidate, selfDir)) {
 			continue;
 		}
 		return candidate;
@@ -52,19 +52,18 @@ export function findConflictingRelo({
 	return null;
 }
 
-// npm's Windows command shim is a batch file, not a symlink. Recognize its
-// launcher invocation only; other shim formats remain conflicts until supported.
-function ownNpmShim(candidate, selfDir) {
-	if (!candidate.toLowerCase().endsWith('.cmd')) return false;
-	try {
-		const text = readFileSync(candidate, 'utf8');
-		const match = /"%_prog%"[ \t]+"%dp0%\\([^"\r\n]+)"[ \t]+%\*/i.exec(text);
-		if (!match) return false;
-		const launcher = resolve(dirname(candidate), ...match[1].split('\\'));
-		return realpathSync(launcher) === realpathSync(join(selfDir, 'relo.mjs'));
-	} catch {
-		return false;
+// On Windows npm keeps its command shims in the prefix that holds node_modules,
+// and a version manager may expose that prefix through a link or add shims of
+// its own. npm already refuses to overwrite another package's command there,
+// so whatever sits in this install's global bin is not a second Relo.
+function inGlobalBin(candidate, selfDir) {
+	let modules = selfDir;
+	while (basename(modules) !== 'node_modules') {
+		const parent = dirname(modules);
+		if (parent === modules) return false;
+		modules = parent;
 	}
+	return existingPath(dirname(candidate)) === existingPath(dirname(modules));
 }
 
 // appBundles lists where the macOS Relo.app may live. The bundle installs
