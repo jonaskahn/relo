@@ -10,7 +10,7 @@ import (
 	"github.com/jonaskahn/relo/tests/testkit"
 )
 
-func TestXiaomiModelsOnlyOfferThreeThinkLevels(t *testing.T) {
+func TestXiaomiModelsResolveToToggleOnly(t *testing.T) {
 	ctx := context.Background()
 	db := testkit.OpenTestDB(t)
 	repo := sqlite.NewCatalogRepo(db)
@@ -44,11 +44,11 @@ func TestXiaomiModelsOnlyOfferThreeThinkLevels(t *testing.T) {
 	}
 
 	facts := []sqlite.ModelFactsRow{
-		{ProviderID: "xiaomi", ModelID: "mimo-v2.6-pro", Layer: "modelsdev", SupportsReasoning: &on, ReasoningEfforts: []string{"low", "xhigh"}},
+		{ProviderID: "xiaomi", ModelID: "mimo-v2.6-pro", Layer: "modelsdev", SupportsReasoning: &on, ReasoningEfforts: []string{}, ReasoningToggle: &on},
 		{ProviderID: "xiaomi", ModelID: "mimo-asr", Layer: "modelsdev", SupportsReasoning: &off, ReasoningEfforts: []string{"low", "xhigh"}},
-		{ProviderID: "xiaomi-token-plan-sgp", ModelID: "mimo-v2.5-pro", Layer: "modelsdev", SupportsReasoning: &on},
-		{ProviderID: "desk", ModelID: "mimo-v2.6-pro", Layer: "modelsdev", SupportsReasoning: &on, ReasoningEfforts: []string{"max"}},
-		{ProviderID: "mimo-custom", ModelID: "mimo-v2.6-flash", Layer: "provider", SupportsReasoning: &on},
+		{ProviderID: "xiaomi-token-plan-sgp", ModelID: "mimo-v2.5-pro", Layer: "modelsdev", SupportsReasoning: &on, ReasoningEfforts: []string{}, ReasoningToggle: &on},
+		{ProviderID: "desk", ModelID: "mimo-v2.6-pro", Layer: "modelsdev", SupportsReasoning: &on, ReasoningEfforts: []string{}, ReasoningToggle: &on},
+		{ProviderID: "mimo-custom", ModelID: "mimo-v2.6-flash", Layer: "provider", SupportsReasoning: &on, ReasoningEfforts: []string{}, ReasoningToggle: &on},
 		{ProviderID: "openai", ModelID: "gpt-5", Layer: "modelsdev", SupportsReasoning: &on, ReasoningEfforts: []string{"low", "xhigh"}},
 	}
 	for _, layer := range facts {
@@ -66,7 +66,6 @@ func TestXiaomiModelsOnlyOfferThreeThinkLevels(t *testing.T) {
 		t.Fatal("Reload() stored no snapshot")
 	}
 
-	want := []string{"low", "medium", "high"}
 	for _, id := range []struct{ provider, model string }{
 		{"xiaomi", "mimo-v2.6-pro"},
 		{"xiaomi-token-plan-sgp", "mimo-v2.5-pro"},
@@ -74,8 +73,11 @@ func TestXiaomiModelsOnlyOfferThreeThinkLevels(t *testing.T) {
 		{"mimo-custom", "mimo-v2.6-flash"},
 	} {
 		model, ok := snap.Model(id.provider, id.model)
-		if !ok || !sameEfforts(model.ReasoningEfforts, want) {
-			t.Fatalf("%s/%s efforts = %v, want %v", id.provider, id.model, model.ReasoningEfforts, want)
+		if !ok || model.ReasoningEfforts == nil || len(model.ReasoningEfforts) != 0 {
+			t.Fatalf("%s/%s efforts = %v, want a stated empty ladder", id.provider, id.model, model.ReasoningEfforts)
+		}
+		if !model.ReasoningToggle || !model.ReasoningToggleKnown {
+			t.Fatalf("%s/%s toggle = %v known %v, want a known toggle", id.provider, id.model, model.ReasoningToggle, model.ReasoningToggleKnown)
 		}
 	}
 

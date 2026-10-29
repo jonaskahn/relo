@@ -122,6 +122,17 @@ func (p *requestPayload) applyReasoning(reasoning *inference.ReasoningConfig, op
 	if reasoning == nil {
 		return
 	}
+	if inference.ToggleOnly(opts.ReasoningEfforts, opts.ReasoningToggle) {
+		name, ok := inference.NormalizeEffort(reasoning.Effort)
+		if !ok {
+			return
+		}
+		if name == "minimal" {
+			name = "low"
+		}
+		p.Reasoning = &reasoningDef{Effort: name}
+		return
+	}
 	level, off := inference.ChooseThinking(reasoning.Effort, opts.ReasoningEfforts, opts.ReasoningToggle)
 	if off {
 		level = "none"

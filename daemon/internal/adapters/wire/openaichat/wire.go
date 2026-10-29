@@ -4,6 +4,8 @@ package openaichat
 import (
 	"encoding/json"
 	"fmt"
+	"strings"
+
 	"github.com/jonaskahn/relo/internal/adapters/wire"
 	"github.com/jonaskahn/relo/internal/inference"
 )
@@ -19,6 +21,7 @@ type chatWireRequest struct {
 	Temperature         *float64           `json:"temperature"`
 	Reasoning           *chatWireReasoning `json:"reasoning"`
 	ReasoningEffort     string             `json:"reasoning_effort"`
+	Thinking            *chatWireThinking  `json:"thinking"`
 }
 
 type chatWireMessage struct {
@@ -58,6 +61,10 @@ type chatWirePart struct {
 
 type chatWireReasoning struct {
 	Effort string `json:"effort"`
+}
+
+type chatWireThinking struct {
+	Type string `json:"type"`
 }
 
 func (w chatWireRequest) toCanonical() (*inference.Request, error) {
@@ -205,6 +212,14 @@ func (w chatWireRequest) reasoning() *inference.ReasoningConfig {
 	}
 	if w.ReasoningEffort != "" {
 		return &inference.ReasoningConfig{Effort: w.ReasoningEffort}
+	}
+	if w.Thinking != nil {
+		switch strings.ToLower(strings.TrimSpace(w.Thinking.Type)) {
+		case "enabled":
+			return &inference.ReasoningConfig{Effort: "high"}
+		case "disabled":
+			return &inference.ReasoningConfig{Effort: "none"}
+		}
 	}
 	return nil
 }

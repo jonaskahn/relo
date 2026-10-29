@@ -234,6 +234,9 @@ func applyChatThinking(payload *chatRequestPayload, req *inference.Request, opts
 	if req.Reasoning == nil {
 		return
 	}
+	if applyToggleOnlyChatThinking(payload, req.Reasoning.Effort, opts) {
+		return
+	}
 	level, off := inference.ChooseThinking(req.Reasoning.Effort, opts.ReasoningEfforts, opts.ReasoningToggle)
 	if qwenThinking(opts.TemplateID) {
 		applyQwenThinking(payload, req.Reasoning.Effort, level, off, opts)
@@ -254,6 +257,24 @@ func applyChatThinking(payload *chatRequestPayload, req *inference.Request, opts
 	if opts.ReasoningToggle && level != "none" && !off {
 		payload.Thinking = &chatThinking{Type: "enabled"}
 	}
+}
+
+// applyToggleOnlyChatThinking renders a model with no effort intensity as its
+// native thinking switch, and reports whether it handled the request.
+func applyToggleOnlyChatThinking(payload *chatRequestPayload, effort string, opts wire.CodecOpts) bool {
+	if !inference.ToggleOnly(opts.ReasoningEfforts, opts.ReasoningToggle) {
+		return false
+	}
+	name, ok := inference.NormalizeEffort(effort)
+	if !ok {
+		return true
+	}
+	if name == "none" {
+		payload.Thinking = &chatThinking{Type: "disabled"}
+		return true
+	}
+	payload.Thinking = &chatThinking{Type: "enabled"}
+	return true
 }
 
 func applyQwenThinking(payload *chatRequestPayload, effort, level string, off bool, opts wire.CodecOpts) {

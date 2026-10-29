@@ -69,6 +69,28 @@ func TestEncodeRequest(t *testing.T) {
 		}
 	})
 
+	t.Run("a toggle-only model sends the requested effort without a summary", func(t *testing.T) {
+		request := canonicalRequest(false)
+		request.Reasoning = &inference.ReasoningConfig{Effort: "minimal"}
+		body := decodeBody(t, newTestRequest(t, request, wire.CodecOpts{
+			CredentialRef: "sk-test", ReasoningEfforts: []string{}, ReasoningToggle: true,
+		}))
+		reasoning := body["reasoning"].(map[string]any)
+		if reasoning["effort"] != "low" || reasoning["summary"] != nil {
+			t.Fatalf("reasoning = %v, want the low effort and no summary", reasoning)
+		}
+		if _, present := body["include"]; present {
+			t.Fatalf("body = %v, want no encrypted reasoning include", body)
+		}
+		request.Reasoning.Effort = "none"
+		body = decodeBody(t, newTestRequest(t, request, wire.CodecOpts{
+			CredentialRef: "sk-test", ReasoningEfforts: []string{}, ReasoningToggle: true,
+		}))
+		if body["reasoning"].(map[string]any)["effort"] != "none" {
+			t.Fatalf("body = %v, want thinking off as none", body)
+		}
+	})
+
 	t.Run("encrypted reasoning is replayed byte-for-byte", func(t *testing.T) {
 		request := conversationRequest()
 		request.Reasoning = &inference.ReasoningConfig{Effort: "low", ID: "rs_9", EncryptedContent: []byte(encryptedState)}

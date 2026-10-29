@@ -189,6 +189,25 @@ func TestEncodeRequest(t *testing.T) {
 		}
 	})
 
+	t.Run("a toggle-only model enables thinking without a budget", func(t *testing.T) {
+		request := canonicalRequest(false)
+		request.Reasoning = &inference.ReasoningConfig{Effort: "high"}
+		body := encodeBody(t, request, wire.CodecOpts{
+			CredentialRef: "sk-ant", ReasoningEfforts: []string{}, ReasoningToggle: true,
+		})
+		thinking := body["thinking"].(map[string]any)
+		if thinking["type"] != "enabled" || thinking["budget_tokens"] != nil {
+			t.Fatalf("thinking = %v, want enabled without a budget", thinking)
+		}
+		request.Reasoning.Effort = "none"
+		body = encodeBody(t, request, wire.CodecOpts{
+			CredentialRef: "sk-ant", ReasoningEfforts: []string{}, ReasoningToggle: true,
+		})
+		if body["thinking"].(map[string]any)["type"] != "disabled" {
+			t.Fatalf("body = %v, want thinking disabled", body)
+		}
+	})
+
 	t.Run("an empty text part is left out", func(t *testing.T) {
 		request := canonicalRequest(false)
 		request.Messages = append(request.Messages, inference.Message{

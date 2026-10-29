@@ -114,3 +114,38 @@ func TestConservativeCapabilitiesKeepsUnknownUnknown(t *testing.T) {
 		t.Fatalf("efforts = %v, want the intersection", res.ReasoningEfforts)
 	}
 }
+
+func TestClientReasoningProjectsToggleOnly(t *testing.T) {
+	yes := true
+	model := Model{SupportsReasoning: &yes, ReasoningEfforts: []string{}, ReasoningToggle: true, ReasoningToggleKnown: true}
+	if !ToggleOnly(model) {
+		t.Fatal("a reasoned empty-ladder toggle model is toggle-only")
+	}
+	if got := ClientReasoningEfforts(model); len(got) != 2 || got[0] != "none" || got[1] != "high" {
+		t.Fatalf("efforts = %v, want the synthetic none/high pair", got)
+	}
+	plain := Model{SupportsReasoning: &yes, ReasoningEfforts: []string{}, ReasoningToggleKnown: true}
+	if ToggleOnly(plain) || ClientReasoningEfforts(plain) == nil {
+		t.Fatalf("a non-toggle empty ladder = %v, want no synthetic projection", ClientReasoningEfforts(plain))
+	}
+}
+
+func TestSharedReasoningIntersectsRoutes(t *testing.T) {
+	yes := true
+	toggleOnly := Model{SupportsReasoning: &yes, ReasoningEfforts: []string{}, ReasoningToggle: true, ReasoningToggleKnown: true}
+	stated := Model{SupportsReasoning: &yes, ReasoningEfforts: []string{"low", "high", "max"}, ReasoningToggleKnown: true}
+	noEffort := Model{SupportsReasoning: &yes, ReasoningEfforts: []string{}, ReasoningToggleKnown: true}
+
+	efforts, toggle := SharedReasoning([]Model{toggleOnly, stated})
+	if len(efforts) != 3 || efforts[0] != "low" || efforts[2] != "max" || toggle {
+		t.Fatalf("mixed efforts = %v toggle %v, want low/high/max and no shared toggle", efforts, toggle)
+	}
+	efforts, toggle = SharedReasoning([]Model{toggleOnly, toggleOnly})
+	if len(efforts) != 2 || efforts[0] != "none" || efforts[1] != "high" || !toggle {
+		t.Fatalf("toggle-only efforts = %v toggle %v, want none/high", efforts, toggle)
+	}
+	efforts, _ = SharedReasoning([]Model{stated, noEffort})
+	if len(efforts) != 0 {
+		t.Fatalf("efforts = %v, want an empty intersection", efforts)
+	}
+}

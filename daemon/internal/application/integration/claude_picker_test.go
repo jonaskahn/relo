@@ -106,6 +106,37 @@ func TestClaudePickerNamesStayOffOtherClients(t *testing.T) {
 	}
 }
 
+// TestPublishedToggleOnlyModelsKeepAnEmptyLadder pins the reference the agent
+// adapters project: a resolved toggle-only model reaches them as a stated
+// empty ladder, not as an unstated one that would offer the shared list.
+func TestPublishedToggleOnlyModelsKeepAnEmptyLadder(t *testing.T) {
+	db := testkit.OpenTestDB(t)
+	upstream := testkit.MockUpstream(t, map[string]string{})
+	testkit.CustomProvider(t, db, testkit.Upstream{
+		ID: "xiaomi", Label: "Xiaomi", APIFormat: catalog.FormatOpenAIChat,
+		BaseURL: upstream.URL, Auth: catalog.AuthAPIKey,
+		Models: []string{"mimo"}, ModelsFormat: catalog.ModelsNone, ContextWindow: 128_000,
+		SupportsReason: true,
+	})
+	repo := sqlite.NewCatalogRepo(db)
+	on := true
+	if err := repo.SaveModelFacts(context.Background(), sqlite.ModelFactsRow{
+		ProviderID: "xiaomi", ModelID: "mimo", Layer: "provider",
+		SupportsReasoning: &on, ReasoningEfforts: []string{}, ReasoningToggle: &on,
+	}); err != nil {
+		t.Fatalf("SaveModelFacts() error = %v", err)
+	}
+	service := NewService(ServiceOptions{Catalog: testkit.ReloadCatalog(t, db, activeAccounts{})})
+
+	model := indexModels(t, service.publishedModels())["relo-xiaomi-mimo"]
+	if model.ReasoningEfforts == nil || len(model.ReasoningEfforts) != 0 {
+		t.Fatalf("efforts = %v, want a stated empty ladder", model.ReasoningEfforts)
+	}
+	if model.ReasoningToggle == nil || !*model.ReasoningToggle {
+		t.Fatalf("toggle = %v, want the model's toggle", model.ReasoningToggle)
+	}
+}
+
 func TestClaudeSignInPublishesDefaultAndMillionEntries(t *testing.T) {
 	db := testkit.OpenTestDB(t)
 	upstream := testkit.MockUpstream(t, map[string]string{})

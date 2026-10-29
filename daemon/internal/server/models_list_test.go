@@ -45,6 +45,34 @@ func TestAnthropicModelListStatesNullWhenUnknown(t *testing.T) {
 	}
 }
 
+func TestToggleOnlyModelListProjection(t *testing.T) {
+	yes := true
+	entry := capabilityExtension(listedModel{
+		ID: "relo-xiaomi-mimo", Reasoning: &yes, ReasoningToggle: &yes,
+		ReasoningEfforts: []string{"none", "high"},
+	})
+	efforts := entry["reasoning_efforts"].([]string)
+	if len(efforts) != 2 || efforts[0] != "none" || efforts[1] != "high" || entry["reasoning_toggle"] != true {
+		t.Fatalf("extension = %v, want the none/high toggle projection", entry)
+	}
+}
+
+func TestToggleOnlyRouteProjection(t *testing.T) {
+	yes := true
+	members := []catalog.Model{
+		{ProviderID: "xiaomi", ID: "mimo", SupportsReasoning: &yes, ReasoningEfforts: []string{}, ReasoningToggle: true, ReasoningToggleKnown: true},
+		{ProviderID: "xiaomi", ID: "mimo-pro", SupportsReasoning: &yes, ReasoningEfforts: []string{}, ReasoningToggle: true, ReasoningToggleKnown: true},
+	}
+	efforts, toggle := catalog.SharedReasoning(members)
+	entry := capabilityExtension(listedModel{
+		ID: "reloc-xiaomi", Reasoning: &yes, ReasoningEfforts: efforts, ReasoningToggle: &toggle,
+	})
+	got := entry["reasoning_efforts"].([]string)
+	if len(got) != 2 || got[0] != "none" || got[1] != "high" || entry["reasoning_toggle"] != true {
+		t.Fatalf("extension = %v, want the synthetic route projection", entry)
+	}
+}
+
 func TestAppendListedVariantsPublishesDefaultAndMillionEntries(t *testing.T) {
 	window := int64(catalog.MillionContext)
 	entries := appendListedVariants(nil, listedModel{

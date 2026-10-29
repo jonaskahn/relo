@@ -131,6 +131,7 @@ type listView struct {
 func listedGroup(snapshot *catalog.Snapshot, advertised map[string]*int64, group catalog.Group, id string) listedModel {
 	members := advertisedGroupModels(snapshot, group)
 	capabilities := catalog.ConservativeCapabilities(members)
+	efforts, toggle := catalog.SharedReasoning(members)
 	window := capabilities.ContextWindow
 	atMillion := groupAdvertisedAtMillion(snapshot, group)
 	return listedModel{
@@ -144,8 +145,8 @@ func listedGroup(snapshot *catalog.Snapshot, advertised map[string]*int64, group
 		Tools:            capabilities.SupportsTools,
 		Reasoning:        capabilities.SupportsReasoning,
 		Vision:           capabilities.SupportsVision,
-		ReasoningEfforts: append([]string(nil), capabilities.ReasoningEfforts...),
-		ReasoningToggle:  capabilities.ReasoningToggle,
+		ReasoningEfforts: efforts,
+		ReasoningToggle:  &toggle,
 	}
 }
 
@@ -177,7 +178,7 @@ func listedStandalone(snapshot *catalog.Snapshot, view listView, model catalog.M
 		Suffixed:      snapshot.OffersSuffixed(viewModel),
 		ContextWindow: window, MaxInput: viewModel.MaxInput, MaxOutput: viewModel.MaxOutput,
 		Tools: viewModel.SupportsTools, Reasoning: viewModel.SupportsReasoning, Vision: viewModel.SupportsVision,
-		ReasoningEfforts: append([]string(nil), viewModel.ReasoningEfforts...),
+		ReasoningEfforts: catalog.ClientReasoningEfforts(viewModel),
 		ReasoningToggle:  knownToggle(viewModel),
 		Sources:          viewModel.FactSources,
 	}
