@@ -75,6 +75,17 @@ func TestNativeBodyReuse(t *testing.T) {
 			t.Fatalf("body = %s, want the canonical request off the official host", raw)
 		}
 	})
+
+	t.Run("a reused body drops a choice with no tools", func(t *testing.T) {
+		body := `{"model":"m","tools":[],"tool_choice":{"type":"auto"},` +
+			`"messages":[{"role":"user","content":[{"type":"text","text":"hi"}]}]}`
+		encoded := encodeBody(t, canonicalRequest(true), wire.CodecOpts{
+			CredentialRef: "oauth-token", AuthMethod: "oauth", NativeBody: []byte(body),
+		})
+		if _, present := encoded["tool_choice"]; present {
+			t.Fatalf("body = %v, want no tool_choice with no tools", encoded)
+		}
+	})
 }
 
 // TestNativeBodyKeepsTheClientsBytes pins that retargeting rewrites only the

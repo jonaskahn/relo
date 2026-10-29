@@ -139,6 +139,9 @@ func newPayload(req *inference.Request, oauth bool, opts wire.CodecOpts) request
 		Stream:      req.Stream,
 		Temperature: req.Temperature,
 	}
+	if len(payload.Tools) == 0 {
+		payload.ToolChoice = nil
+	}
 	applyThinking(&payload, req, opts)
 	return payload
 }
