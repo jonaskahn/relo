@@ -39,6 +39,9 @@ type LoginKind string
 // OpenCodeFreeTemplate is the signed-out OpenCode Zen connection.
 const OpenCodeFreeTemplate = "opencode-free"
 
+// IsFreeTemplate reports the keyless pools that require opt-in.
+func IsFreeTemplate(id string) bool { return id == OpenCodeFreeTemplate || id == KiloFreeTemplate }
+
 // OpenCodeGoTemplate is the paid OpenCode Go connection, which shares the
 // gateway's tool-name limit with the signed-out lane.
 const OpenCodeGoTemplate = "opencode-go"

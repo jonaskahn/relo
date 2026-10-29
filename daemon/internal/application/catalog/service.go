@@ -88,18 +88,20 @@ type Accounts interface {
 
 // Options configure the catalog use cases.
 type Options struct {
-	Store       Store
-	Catalog     *catalog.Catalog
-	Pools       *account.Manager
-	Entries     account.CredentialRepository
-	Accounts    Accounts
-	Secrets     SecretStore
-	Credentials Credentials
-	Direct      DirectAuthorizer
-	Discover    ModelLister
-	ModelsDev   ModelsDev
-	Templates   Templates
-	Logger      *slog.Logger
+	// FreeConnections reads the opt-in; nil preserves embedded callers.
+	FreeConnections func() bool
+	Store           Store
+	Catalog         *catalog.Catalog
+	Pools           *account.Manager
+	Entries         account.CredentialRepository
+	Accounts        Accounts
+	Secrets         SecretStore
+	Credentials     Credentials
+	Direct          DirectAuthorizer
+	Discover        ModelLister
+	ModelsDev       ModelsDev
+	Templates       Templates
+	Logger          *slog.Logger
 	// TemplatePrefixes names the stored model families one template's roster
 	// keeps. Nil keeps the template default.
 	TemplatePrefixes func(ctx context.Context, templateID string) ([]string, bool)
@@ -114,6 +116,7 @@ type Options struct {
 
 // Service runs the connection and model lifecycle.
 type Service struct {
+	freeConnections  func() bool
 	store            Store
 	catalog          *catalog.Catalog
 	pools            *account.Manager
@@ -143,7 +146,8 @@ func New(options Options) *Service {
 		logger = slog.New(slog.DiscardHandler)
 	}
 	return &Service{
-		store: options.Store, catalog: options.Catalog, pools: options.Pools,
+		freeConnections: options.FreeConnections,
+		store:           options.Store, catalog: options.Catalog, pools: options.Pools,
 		entries:  options.Entries,
 		accounts: options.Accounts,
 		secrets:  options.Secrets, credentials: options.Credentials, direct: options.Direct,

@@ -103,6 +103,9 @@ type RefreshResult struct {
 // commits the roster it publishes. The catalog is reloaded once the attempt is
 // over either way, because a listing that failed still records why.
 func (s *Service) RefreshProviderModels(ctx context.Context, providerID string) (RefreshResult, error) {
+	if err := s.checkFreeConnection(ctx, "", providerID); err != nil {
+		return RefreshResult{}, err
+	}
 	defer func() { _ = s.reload(ctx) }()
 	return s.refreshProvider(ctx, providerID)
 }

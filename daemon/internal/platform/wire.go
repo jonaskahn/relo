@@ -168,7 +168,7 @@ func newPoolManager(db *sqlite.DB, secrets secrets.SecretStore, clk clock.Clock,
 
 func (w *wiring) catalogLayer() error {
 	templateSettings := sqlite.NewTemplateSettings(w.db)
-	models := catalog.New(sqlite.NewCatalogReader(w.db), NewPoolDirectory(w.built.pools), wireformats.New())
+	models := catalog.New(freeGate{sqlite.NewCatalogReader(w.db), config.ConfigPath(w.options.Home)}, NewPoolDirectory(w.built.pools), wireformats.New())
 	if err := models.Reload(context.WithoutCancel(w.ctx)); err != nil {
 		return err
 	}
@@ -230,9 +230,10 @@ func (w *wiring) newCatalogService(edges *AccountEdges, accounts *appaccount.Ser
 		Store: sqlite.NewCatalogRepo(w.db), Catalog: w.models, Pools: w.built.pools,
 		Entries: w.credRepo, Accounts: accounts, Secrets: NewQuietSecrets(w.built.secrets),
 		Credentials: w.built.credentials, Direct: upstream.Direct,
-		Discover:  discovery.New(NewHTTPClient()),
-		ModelsDev: modelsdev.NewDirectoryWithSeed(filepath.Join(w.options.Home, "cache"), w.cfg.Catalog.ModelsDevURL, nil, seed),
-		Templates: TemplateRegistry{},
+		Discover:        discovery.New(NewHTTPClient()),
+		ModelsDev:       modelsdev.NewDirectoryWithSeed(filepath.Join(w.options.Home, "cache"), w.cfg.Catalog.ModelsDevURL, nil, seed),
+		Templates:       TemplateRegistry{},
+		FreeConnections: func() bool { return config.ReadFreeConnections(config.ConfigPath(w.options.Home)) },
 		TemplatePrefixes: func(ctx context.Context, templateID string) ([]string, bool) {
 			prefixes, found, err := w.templateSettings.Prefixes(ctx, templateID)
 			if err != nil || !found {

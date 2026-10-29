@@ -436,6 +436,13 @@ func (s *Service) openProbePlan(ctx context.Context, req ProbeRequest) (probePla
 // ProbeProvider stages one connection's listing for review: what it publishes,
 // what it costs, and what checks it failed, without writing anything.
 func (s *Service) ProbeProvider(ctx context.Context, req ProbeRequest) (ProbeResult, error) {
+	if err := s.checkFreeConnection(ctx, req.TemplateID, req.ProviderID); err != nil {
+		return ProbeResult{}, err
+	}
+	return s.probeProvider(ctx, req)
+}
+
+func (s *Service) probeProvider(ctx context.Context, req ProbeRequest) (ProbeResult, error) {
 	plan, mdIdx, mdState, mdErr := s.openProbePlan(ctx, req)
 	t := plan.template
 	targetProviderID := plan.targetID
@@ -700,6 +707,10 @@ func firstNonEmpty(values ...string) string {
 func (s *Service) CommitProbe(ctx context.Context, probeID string, req CommitProbeRequest) (Provider, error) {
 	session, err := s.loadProbeSession(probeID)
 	if err != nil {
+		return Provider{}, err
+	}
+
+	if err := s.checkFreeConnection(ctx, session.Provider.TemplateID, session.Target); err != nil {
 		return Provider{}, err
 	}
 
