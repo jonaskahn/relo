@@ -370,7 +370,7 @@ func writeFailure(w http.ResponseWriter, inbound wire.InboundCodec, info *infere
 	}
 	var payload []byte
 	if _, anthropicClient := inbound.(*anthropic.Inbound); anthropicClient {
-		payload = anthropic.FailureDocument(status, info.Message)
+		payload = anthropic.FailureDocument(status, info.Code, info.Message)
 	} else {
 		var err error
 		payload, err = json.Marshal(map[string]any{"error": map[string]any{

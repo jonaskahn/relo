@@ -20,7 +20,7 @@ const BRIGHT = [155, 188, 15];
 // all share this width, so every row ends on the same column.
 const INNER = 76;
 
-let handle;
+let handle = null;
 let tried = false;
 let active = null;
 let frame = 0;

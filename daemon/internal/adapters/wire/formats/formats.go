@@ -109,9 +109,10 @@ func (r *Registry) Inbound(surface string) (wire.InboundCodec, bool) {
 }
 
 // FailureDocument renders a refusal a client of the Messages surface reads.
-// It lives here so the transport never imports a codec family directly.
-func (r *Registry) FailureDocument(status int, message string) []byte {
-	return anthropic.FailureDocument(status, message)
+// It lives here so the transport never imports a codec family directly. An
+// empty code leaves the error type to the status.
+func (r *Registry) FailureDocument(status int, code, message string) []byte {
+	return anthropic.FailureDocument(status, code, message)
 }
 
 // IsAnthropicRequest reports whether a request carries the header an

@@ -121,15 +121,17 @@ func (i *Inbound) EncodeResponse(events []inference.Event) ([]byte, error) {
 
 // FailureDocument is the JSON body an Anthropic client reads for a refusal
 // that happens before any stream starts. A rate limit and an overload use
-// the types Claude Code branches on; every other status is an API error.
-func FailureDocument(status int, message string) []byte {
+// the types Claude Code branches on; every other status is an API error,
+// unless the caller names the code it already chose.
+func FailureDocument(status int, code, message string) []byte {
 	if status == 0 {
 		status = http.StatusBadGateway
 	}
+	code = failureTypeFor(status, code)
 	payload, err := json.Marshal(map[string]any{
 		"type": "error",
 		"error": map[string]any{
-			"type":    failureType(status),
+			"type":    code,
 			"message": message,
 		},
 	})
@@ -137,6 +139,30 @@ func FailureDocument(status int, message string) []byte {
 		return []byte(`{"type":"error","error":{"type":"api_error","message":"encoding the error failed"}}`)
 	}
 	return payload
+}
+
+// The error types the Messages API defines. A caller may name one of these
+// so a client can branch on the condition rather than on the status alone.
+var failureTypes = map[string]bool{
+	"invalid_request_error": true,
+	"authentication_error":  true,
+	"permission_error":      true,
+	"not_found_error":       true,
+	"request_too_large":     true,
+	"rate_limit_error":      true,
+	"api_error":             true,
+	"overloaded_error":      true,
+	"billing_error":         true,
+}
+
+// failureTypeFor keeps a type the Messages API defines and falls back to the
+// status for any other code, so an upstream family's vocabulary never leaks
+// into an Anthropic client's error envelope.
+func failureTypeFor(status int, code string) string {
+	if failureTypes[code] {
+		return code
+	}
+	return failureType(status)
 }
 
 func failureType(status int) string {

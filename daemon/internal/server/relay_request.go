@@ -691,20 +691,18 @@ func (s *Server) validateOutboundRequest(spec attemptSpec, request *inference.Re
 	// multi-byte text while never using it to enlarge the provider's capacity.
 	promptTokens := int64(s.estimateRequestTokens(request))
 	if model.MaxInput != nil && promptTokens > *model.MaxInput {
-		return fmt.Errorf("%w: input uses %d tokens but %s accepts %d", errContextLimitExceeded, promptTokens, model.ID, *model.MaxInput)
+		return &contextLimitError{Model: model.ID, Estimated: promptTokens, Limit: *model.MaxInput}
 	}
 	if model.MaxOutput != nil && *model.MaxOutput > 0 && request.MaxTokens > int(*model.MaxOutput) {
 		request.MaxTokens = int(*model.MaxOutput)
 	}
 	if model.ContextWindow != nil && promptTokens > *model.ContextWindow {
-		return fmt.Errorf("%w: input uses %d tokens but %s accepts %d",
-			errContextLimitExceeded, promptTokens, model.ID, *model.ContextWindow)
+		return &contextLimitError{Model: model.ID, Estimated: promptTokens, Limit: *model.ContextWindow}
 	}
 	if model.ContextWindow != nil && request.MaxTokens > 0 {
 		available := *model.ContextWindow - promptTokens
 		if available <= 0 {
-			return fmt.Errorf("%w: input uses all %d tokens %s accepts, leaving no room to generate",
-				errContextLimitExceeded, promptTokens, model.ID)
+			return &contextLimitError{Model: model.ID, Estimated: promptTokens, Limit: *model.ContextWindow}
 		}
 		if int64(request.MaxTokens) > available {
 			request.MaxTokens = int(available)
