@@ -257,27 +257,8 @@ func (d *sendDriver) run() {
 }
 
 func (d *sendDriver) runMember(candidate routing.Candidate, lastCandidate bool) bool {
-	if d.s.freeConsentBlocked(candidate.ProviderID) {
-		d.last = appcatalog.ErrFreeConnectionsDisabled
-		if lastCandidate {
-			d.s.failInference(d.w, d.r, d.last, d.anthropic)
-			d.s.record(context.WithoutCancel(d.r.Context()), d.outcome, Result{Status: http.StatusForbidden})
-			return false
-		}
-		return true
-	}
-	if until := d.s.connectionCooldown(candidate.ProviderID); !until.IsZero() {
-		// A connection that just failed every account is not asked again
-		// until its wait is over: the request goes to the next member.
-		cooling := &routing.CoolingError{
-			Name: candidate.ProviderID, Until: until,
-			Reason: account.CoolingDown(candidate.ProviderID, until),
-		}
-		if d.cooldown == nil || until.Before(d.cooldown.Until) {
-			d.cooldown = cooling
-		}
-		d.last = cooling
-		return true
+	if action := d.blockedMember(candidate, lastCandidate); action != walkContinue {
+		return action != walkAnswered
 	}
 	d.walked++
 	// One member may spend one attempt per account it can reach, plus the
@@ -299,6 +280,32 @@ func (d *sendDriver) runMember(candidate routing.Candidate, lastCandidate bool) 
 		d.s.markCandidateFailed(candidate, walk.pending)
 	}
 	return true
+}
+
+func (d *sendDriver) blockedMember(candidate routing.Candidate, lastCandidate bool) walkAction {
+	if d.s.freeConsentBlocked(candidate.ProviderID) {
+		d.last = appcatalog.ErrFreeConnectionsDisabled
+		if lastCandidate {
+			d.s.failInference(d.w, d.r, d.last, d.anthropic)
+			d.s.record(context.WithoutCancel(d.r.Context()), d.outcome, Result{Status: http.StatusForbidden})
+			return walkAnswered
+		}
+		return walkNextMember
+	}
+	if until := d.s.connectionCooldown(candidate.ProviderID); !until.IsZero() {
+		// A connection that just failed every account is not asked again
+		// until its wait is over: the request goes to the next member.
+		cooling := &routing.CoolingError{
+			Name: candidate.ProviderID, Until: until,
+			Reason: account.CoolingDown(candidate.ProviderID, until),
+		}
+		if d.cooldown == nil || until.Before(d.cooldown.Until) {
+			d.cooldown = cooling
+		}
+		d.last = cooling
+		return walkNextMember
+	}
+	return walkContinue
 }
 
 func (d *sendDriver) stepAttempt(candidate routing.Candidate, lastCandidate bool, allowance int, walk *memberWalk) walkAction {
