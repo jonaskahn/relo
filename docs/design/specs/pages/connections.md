@@ -239,12 +239,14 @@ count ("Added Claude.ai — 13 models").
 
 The add-connection picker lists Free first, then Account, Cloud, Local, and API
 key. The Free heading stays visible with a switch even while free pools are
-disabled; its rows are hidden until the operator turns the switch on and accepts
+disabled; it always shows the two free connections Relo offers, and its rows are
+hidden until the operator turns the switch on and accepts
 the responsibility notice. The notice opens above the add-connection modal, so
 cancelling it leaves the flow untouched, and the switch returns to its committed
 position. Enabling is never optimistic: only accepting the notice persists the
 choice. Accepting persists the choice and
 reveals both gateways in place; switching them off hides every free row again.
+Once enabled, the count follows search and the Free filter.
 Settings mirrors the choice and uses the same notice when enabling. Disabling
 preserves stored data but hides the connections and stops new requests through
 them. Usage history is not erased or reclassified.

@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"sort"
 	"strings"
+	"sync"
 	"sync/atomic"
 	"time"
 )
@@ -394,7 +395,10 @@ type Catalog struct {
 	// freeConnections reports the operator's consent. A nil reads as enabled,
 	// which keeps embedded and test callers unchanged.
 	freeConnections func() bool
-	current         atomic.Pointer[Snapshot]
+	// reload serializes rebuilds so a slower build that read older rows
+	// cannot publish over a newer one.
+	reload  sync.Mutex
+	current atomic.Pointer[Snapshot]
 }
 
 // New wires a catalog over its row reader and live account state, empty
@@ -413,6 +417,9 @@ func (c *Catalog) WithFreeConnections(enabled func() bool) *Catalog {
 // Reload rebuilds the resolved snapshot from stored rows, so routing and
 // the console read what the operator just changed.
 func (c *Catalog) Reload(ctx context.Context) error {
+	c.reload.Lock()
+	defer c.reload.Unlock()
+
 	snapshot, err := c.build(ctx)
 	if err != nil {
 		return err
