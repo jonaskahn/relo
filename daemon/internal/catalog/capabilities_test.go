@@ -135,6 +135,30 @@ func TestResolveCapabilitiesManualReasoningKeepsTheDetectedLadder(t *testing.T) 
 	}
 }
 
+func TestResolveCapabilitiesManualReasoningOffClearsTheDetectedFamily(t *testing.T) {
+	yes, no := true, false
+	res := ResolveCapabilities(CapabilityInputs{
+		AllowOverrides: true,
+		Provider: FactsRecord{
+			SupportsReasoning: &yes, ReasoningEfforts: []string{"low", "high"},
+			ReasoningToggle: &yes, ReasoningBudget: &yes,
+		},
+		Manual: FactsRecord{SupportsReasoning: &no},
+	})
+	if res.SupportsReasoning == nil || *res.SupportsReasoning {
+		t.Fatalf("SupportsReasoning = %v, want the operator's off switch", res.SupportsReasoning)
+	}
+	if len(res.ReasoningEfforts) != 0 || res.ReasoningToggle == nil || *res.ReasoningToggle ||
+		res.ReasoningBudget == nil || *res.ReasoningBudget {
+		t.Fatalf("reasoning = %+v, want the family cleared", res)
+	}
+	if res.Sources.Reasoning != "override" || res.Sources.ReasoningEfforts != "override" ||
+		res.Sources.ReasoningToggle != "override" || res.Sources.ReasoningBudget != "override" ||
+		res.Sources.ReasoningBudgetMin != "override" || res.Sources.ReasoningBudgetMax != "override" {
+		t.Fatalf("sources = %+v, want the manual layer named", res.Sources)
+	}
+}
+
 func TestConservativeCapabilitiesKeepsUnknownUnknown(t *testing.T) {
 	narrow, wide := int64(100_000), int64(200_000)
 	yes := true

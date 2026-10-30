@@ -149,3 +149,41 @@ func TestDisabledFreeConnectionKeepsTheConsentRefusal(t *testing.T) {
 		t.Fatalf("upstream requests = %d, want no provider contact", h.upstream.requestCount())
 	}
 }
+
+func TestDisabledFreeConnectionIsHiddenFromManagement(t *testing.T) {
+	h := newHarness(t)
+	if err := config.UpdateConnectionsConfig(h.settingsPath, false); err != nil {
+		t.Fatal(err)
+	}
+	repo := sqlite.NewCatalogRepo(h.db)
+	if err := repo.SaveProvider(context.Background(), sqlite.ProviderRow{
+		ID: catalog.OpenCodeFreeTemplate, TemplateID: catalog.OpenCodeFreeTemplate,
+		Origin: "template", Label: "OpenCode Zen Free", Auth: "none",
+		APIFormat: "openai-chat", BaseURL: h.upstream.URL(), ModelsFormat: "openai", Enabled: true, Rank: 100,
+	}); err != nil {
+		t.Fatal(err)
+	}
+	if err := repo.SaveModel(context.Background(), sqlite.ModelRow{
+		ProviderID: catalog.OpenCodeFreeTemplate, ModelID: "free-model", Enabled: true,
+	}); err != nil {
+		t.Fatal(err)
+	}
+	if err := h.catalog.Reload(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+
+	listed := h.management(http.MethodGet, "/api/v1/connections", adminToken, nil)
+	if listed.Code != http.StatusOK || strings.Contains(listed.Body.String(), catalog.OpenCodeFreeTemplate) {
+		t.Fatalf("connections = %d %s, want the unconsented free pool hidden", listed.Code, listed.Body)
+	}
+	if got := h.management(http.MethodGet, "/api/v1/connections/"+catalog.OpenCodeFreeTemplate, adminToken, nil).Code; got != http.StatusNotFound {
+		t.Fatalf("GET a hidden free connection = %d, want 404", got)
+	}
+	models := h.management(http.MethodGet, "/api/v1/models?provider="+catalog.OpenCodeFreeTemplate, adminToken, nil)
+	if models.Code != http.StatusOK || strings.Contains(models.Body.String(), "free-model") {
+		t.Fatalf("models = %d %s, want the hidden pool's models left out", models.Code, models.Body)
+	}
+	if got := h.management(http.MethodGet, "/api/v1/models/"+catalog.OpenCodeFreeTemplate+"/free-model", adminToken, nil).Code; got != http.StatusNotFound {
+		t.Fatalf("GET a hidden pool's model = %d, want 404", got)
+	}
+}
