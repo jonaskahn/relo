@@ -39,6 +39,7 @@ describe('the free connection picker', () => {
 	it('keeps the free heading and toggle while hiding every free row', () => {
 		const html = renderPicker(false);
 		expect(html).toContain('Free connections');
+		expect(html).toMatch(/Free connections<\/span>\s*<span[^>]*>2<\/span>/);
 		expect(html).toContain('data-free-toggle');
 		expect(html).not.toContain('OpenCode Zen Free');
 		expect(html).not.toContain('Kilo Code Free');
@@ -48,6 +49,27 @@ describe('the free connection picker', () => {
 		const html = renderPicker(true);
 		expect(html.indexOf('OpenCode Zen Free')).toBeLessThan(html.indexOf('OpenAI'));
 		expect(html).toContain('Kilo Code Free');
+	});
+
+	it('counts the free rows a search leaves', () => {
+		const html = render(StepProvider, {
+			props: {
+				templates,
+				freeEnabled: true,
+				freeBusy: false,
+				onfreetoggle: () => {},
+				modelsdev: null,
+				added: new Set<string>(),
+				query: 'opencode',
+				onquery: () => {},
+				onpick: () => {},
+				oncustom: () => {},
+				onretry: () => {}
+			}
+		}).body;
+		expect(html).toMatch(/Free connections<\/span>\s*<span[^>]*>1<\/span>/);
+		expect(html).toContain('OpenCode Zen Free');
+		expect(html).not.toContain('Kilo Code Free');
 	});
 
 	it('disables an already-added keyless free row and explains why', () => {

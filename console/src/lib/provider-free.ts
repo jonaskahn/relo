@@ -5,6 +5,9 @@ import type { Provider } from '$lib/types';
  *  endpoints, custom keys) is not a "Free plan". */
 const FREE_TEMPLATES = new Set(['kilo-free', 'opencode-free']);
 
+/** The number of keyless free lanes, which the picker shows while they are hidden. */
+export const FREE_TEMPLATE_COUNT = FREE_TEMPLATES.size;
+
 /** The two keyless lanes that can exist only once per daemon. */
 export function isSingleFreeConnection(templateID: string): boolean {
 	return FREE_TEMPLATES.has(templateID);

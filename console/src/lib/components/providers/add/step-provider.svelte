@@ -15,7 +15,7 @@
 		type TemplateRow
 	} from '$lib/provider-sections';
 	import { isExperimentalConnection } from '$lib/provider-experimental';
-	import { isSingleFreeConnection } from '$lib/provider-free';
+	import { FREE_TEMPLATE_COUNT, isSingleFreeConnection } from '$lib/provider-free';
 	import BillingChip from '$lib/components/providers/billing-chip.svelte';
 	import FreeAvailableChip from '$lib/components/providers/free-available-chip.svelte';
 	import { Switch } from 'bits-ui';
@@ -61,6 +61,7 @@
 	const rows = $derived(buildTemplateRows(templates, added, query, freeEnabled, filter === 'free'));
 	const groups = $derived(visibleTemplateRows(rows).filter((group) => group.section !== 'free'));
 	const total = $derived(countTemplateRows(rows));
+	const freeCount = $derived(freeEnabled ? rows.free.length : FREE_TEMPLATE_COUNT);
 
 	// The search is the first thing an operator uses, so it opens focused.
 	function focusSearch(node: HTMLElement) {
@@ -307,7 +308,7 @@
 			<div class="flex flex-col gap-1.5">
 				{@render groupHeading(
 					$t(SECTION_LABEL_KEY.free),
-					rows.free.length,
+					freeCount,
 					freeEnabled
 						? $t('ui.pages.providersPage.add.groupHintFree')
 						: $t('ui.pages.providersPage.add.freeOffHint'),
