@@ -385,13 +385,10 @@
 		padding: 2px;
 		background: conic-gradient(
 			from var(--free-glow-angle, 0deg),
-			var(--accent) 0deg,
-			var(--accent-glow) 40deg,
-			transparent 85deg,
-			transparent 220deg,
-			var(--accent-glow) 260deg,
-			var(--accent) 310deg,
-			var(--accent-glow) 340deg,
+			transparent 0deg 330deg,
+			var(--accent-glow) 338deg,
+			var(--accent) 345deg,
+			var(--accent-glow) 352deg,
 			transparent 360deg
 		);
 		-webkit-mask:
