@@ -990,6 +990,12 @@
           "body": "OpenCode Zen Free dan Kilo Code Free adalah gateway pihak ketiga, bukan layanan Relo. Keduanya hanya mengizinkan akses melalui agen coding resmi mereka; Relo bukan salah satunya. Penggunaan dapat melanggar ketentuan mereka atau hukum, dan Relo tidak mendukungnya. Penyedia dapat menyimpan atau menggunakan prompt dan kode Anda, jadi jangan pernah mengirim informasi rahasia. Model, batas, dan ketersediaan dapat berubah atau hilang tanpa pemberitahuan. Sejauh diizinkan hukum, Relo dan para pemeliharanya tidak memberikan jaminan dan tidak menerima tanggung jawab apa pun. Dengan mengaktifkan koneksi gratis, Anda menerima tanggung jawab penuh atas penggunaannya dan segala konsekuensi hukumnya.",
           "confirm": "Saya bertanggung jawab dan ingin mengaktifkan",
           "enabledToast": "Koneksi gratis diaktifkan"
+        },
+        "override": {
+          "allowFor": "Izinkan penimpaan untuk {connection}",
+          "blockedFor": "Penimpaan nonaktif untuk {connection}",
+          "dormantHint": "Penimpaan model yang disimpan tetap tersimpan tetapi diabaikan selama koneksi ini tidak mengizinkannya.",
+          "failed": "Tidak dapat mengubah pengaturan penimpaan: {detail}"
         }
       },
       "keys": {

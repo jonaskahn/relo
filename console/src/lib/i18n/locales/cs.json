@@ -990,6 +990,12 @@
           "body": "OpenCode Zen Free a Kilo Code Free jsou brány třetích stran, nikoli služby Relo. Přístup umožňují pouze prostřednictvím svých oficiálních programovacích agentů; Relo mezi ně nepatří. Použití může porušit jejich podmínky nebo zákon a Relo je nepodporuje. Poskytovatelé mohou uchovávat nebo používat vaše prompty a kód, proto nikdy neposílejte důvěrné informace. Modely, limity a dostupnost se mohou změnit nebo zmizet bez upozornění. V rozsahu povoleném zákonem neposkytují Relo ani jeho správci žádnou záruku a nepřebírají žádnou odpovědnost. Zapnutím bezplatných připojení přijímáte plnou odpovědnost za jejich použití a veškeré právní důsledky.",
           "confirm": "Přijímám odpovědnost a zapínám",
           "enabledToast": "Bezplatná připojení zapnuta"
+        },
+        "override": {
+          "allowFor": "Povolit přepsání pro {connection}",
+          "blockedFor": "Přepsání vypnuta pro {connection}",
+          "dormantHint": "Uložená přepsání modelu zůstávají, ale ignorují se, dokud je toto připojení nepovolí.",
+          "failed": "Nastavení přepsání se nepodařilo změnit: {detail}"
         }
       },
       "keys": {

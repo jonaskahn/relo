@@ -63,6 +63,7 @@ function provider(id: string, kind: string): Provider {
 		retry_attempts: null,
 		switch_on_4xx: true,
 		switch_on_5xx: true,
+		allow_overrides: true,
 		rank: 0,
 		pool_strategy: 'least-loaded',
 		configured: true,

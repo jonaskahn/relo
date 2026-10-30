@@ -990,6 +990,12 @@
           "body": "OpenCode Zen Free ve Kilo Code Free, Relo hizmetleri değil üçüncü taraf ağ geçitleridir. Yalnızca kendi resmî kodlama ajanları üzerinden erişime izin verirler; Relo bunlardan biri değildir. Kullanım, koşullarını veya yasaları ihlal edebilir ve Relo bunları onaylamaz. Sağlayıcılar istemlerinizi ve kodunuzu saklayabilir veya kullanabilir; bu nedenle gizli bilgi göndermeyin. Modeller, sınırlar ve kullanılabilirlik bildirim yapılmadan değişebilir veya kaybolabilir. Yasaların izin verdiği ölçüde Relo ve bakımcıları hiçbir garanti vermez ve hiçbir sorumluluk kabul etmez. Ücretsiz bağlantıları açarak kullanımı ve doğabilecek her türlü hukuki sonucu tamamen üstlendiğinizi kabul edersiniz.",
           "confirm": "Sorumluluğu kabul et ve aç",
           "enabledToast": "Ücretsiz bağlantılar açıldı"
+        },
+        "override": {
+          "allowFor": "{connection} için geçersiz kılmalara izin ver",
+          "blockedFor": "{connection} için geçersiz kılmalar kapalı",
+          "dormantHint": "Kaydedilen model geçersiz kılmaları korunur ancak bu bağlantı izin vermediği sürece yok sayılır.",
+          "failed": "Geçersiz kılma ayarı değiştirilemedi: {detail}"
         }
       },
       "keys": {

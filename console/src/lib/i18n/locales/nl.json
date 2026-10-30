@@ -990,6 +990,12 @@
           "body": "OpenCode Zen Free en Kilo Code Free zijn gateways van derden, geen diensten van Relo. Ze geven alleen toegang via hun officiële coding-agents; Relo is er daar geen van. Gebruik kan hun voorwaarden of de wet schenden, en Relo keurt ze niet goed. Aanbieders kunnen je prompts en code bewaren of gebruiken, dus verstuur nooit vertrouwelijke informatie. Modellen, limieten en beschikbaarheid kunnen zonder kennisgeving veranderen of verdwijnen. Voor zover wettelijk toegestaan bieden Relo en de maintainers geen garantie en aanvaarden zij geen aansprakelijkheid. Door gratis verbindingen in te schakelen aanvaard je de volledige verantwoordelijkheid voor het gebruik en alle juridische gevolgen.",
           "confirm": "Verantwoordelijkheid aanvaarden en inschakelen",
           "enabledToast": "Gratis verbindingen ingeschakeld"
+        },
+        "override": {
+          "allowFor": "Overschrijvingen toestaan voor {connection}",
+          "blockedFor": "Overschrijvingen uit voor {connection}",
+          "dormantHint": "Opgeslagen modeloverschrijvingen blijven bewaard maar worden genegeerd zolang deze verbinding ze niet toestaat.",
+          "failed": "Kan de overschrijvingsinstelling niet wijzigen: {detail}"
         }
       },
       "keys": {

@@ -990,6 +990,12 @@
           "body": "OpenCode Zen Free och Kilo Code Free är tredjepartsgatewayer, inte tjänster från Relo. De ger endast åtkomst via sina officiella kodagenter; Relo är inte en av dem. Användning kan bryta mot deras villkor eller lag och Relo rekommenderar dem inte. Leverantörerna kan spara eller använda dina prompter och din kod, så skicka aldrig konfidentiell information. Modeller, gränser och tillgänglighet kan ändras eller försvinna utan förvarning. I den utsträckning lagen tillåter lämnar Relo och dess maintainers ingen garanti och tar inget ansvar. Genom att aktivera gratisanslutningarna tar du fullt ansvar för användningen och eventuella rättsliga konsekvenser.",
           "confirm": "Jag tar ansvaret och aktiverar",
           "enabledToast": "Gratisanslutningar aktiverade"
+        },
+        "override": {
+          "allowFor": "Tillåt åsidosättningar för {connection}",
+          "blockedFor": "Åsidosättningar av för {connection}",
+          "dormantHint": "Sparade modellåsidosättningar finns kvar men ignoreras så länge anslutningen inte tillåter dem.",
+          "failed": "Kunde inte ändra åsidosättningsinställningen: {detail}"
         }
       },
       "keys": {

@@ -3,7 +3,7 @@ import { addMessages, init } from 'svelte-i18n';
 import { beforeAll, describe, expect, it } from 'vitest';
 
 import en from '$lib/i18n/locales/en.json';
-import { modelOf } from '$lib/provider-fixtures';
+import { capabilityStatesOf, modelOf } from '$lib/provider-fixtures';
 import type { Model } from '$lib/types';
 
 import CapabilityPicker from './capability-picker.svelte';
@@ -62,7 +62,16 @@ describe('a capability cell', () => {
 		const forced = capability(
 			modelOf({
 				capabilities: { tools: true, reasoning: null, vision: null },
-				capability_override: { tools: true, reasoning: null, vision: null }
+				capability_override: { tools: true, reasoning: null, vision: null },
+				capability_states: capabilityStatesOf({
+					tools: {
+						value: true,
+						source: 'override',
+						editable: true,
+						manual: true,
+						manual_active: true
+					}
+				})
 			}),
 			'tools',
 			column.tools

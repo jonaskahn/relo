@@ -27,6 +27,7 @@
 	import { providerStatus } from '$lib/provider-status';
 	import { isExperimentalConnection } from '$lib/provider-experimental';
 	import BillingChip from './billing-chip.svelte';
+	import AllowOverridesButton from './allow-overrides-button.svelte';
 	import { ageOf } from '$lib/format';
 
 	interface Props {
@@ -80,6 +81,7 @@
 	let deleteFailed = $state('');
 	let refreshing = $state(false);
 	let quotaRevision = $state(0);
+	let overrideBusy = $state(false);
 
 	const status = $derived(providerStatus(provider));
 	const paidFree = $derived(splitsPaidFree(models));
@@ -264,6 +266,26 @@
 		onchanged(updated);
 	}
 
+	async function toggleAllowOverrides() {
+		overrideBusy = true;
+		try {
+			const updated = await api<Provider>('/connections/' + encodeURIComponent(provider.id), {
+				method: 'PATCH',
+				body: JSON.stringify({ allow_overrides: !provider.allow_overrides })
+			});
+			onchanged(updated);
+			reloadModels();
+		} catch (error) {
+			toast.error(
+				$t('ui.pages.providersPage.override.failed', {
+					values: { detail: error instanceof Error ? error.message : String(error) }
+				})
+			);
+		} finally {
+			overrideBusy = false;
+		}
+	}
+
 	async function refreshThisConnection() {
 		refreshing = true;
 		try {
@@ -395,6 +417,12 @@
 			<div class="pt-actions">
 				{#if tab === 'models'}
 					<ModelFilterMenu filters={shownFilters} onfilters={setFilters} {models} {paidFree} />
+					<AllowOverridesButton
+						label={provider.label}
+						allowed={provider.allow_overrides}
+						busy={overrideBusy}
+						ontoggle={() => void toggleAllowOverrides()}
+					/>
 					<DropdownMenu.Root>
 						<DropdownMenu.Trigger
 							class={cn(

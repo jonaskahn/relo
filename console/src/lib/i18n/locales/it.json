@@ -990,6 +990,12 @@
           "body": "OpenCode Zen Free e Kilo Code Free sono gateway di terze parti, non servizi Relo. Consentono l’accesso solo tramite i loro agenti di programmazione ufficiali; Relo non è uno di essi. L’uso può violare i loro termini o la legge e Relo non li approva. I fornitori possono conservare o usare i tuoi prompt e il tuo codice, quindi non inviare mai informazioni riservate. Modelli, limiti e disponibilità possono cambiare o scomparire senza preavviso. Nei limiti consentiti dalla legge, Relo e i suoi maintainer non forniscono alcuna garanzia e non assumono alcuna responsabilità. Attivando le connessioni gratuite accetti la piena responsabilità del loro uso e di ogni conseguenza legale.",
           "confirm": "Accetto la responsabilità e attivo",
           "enabledToast": "Connessioni gratuite attivate"
+        },
+        "override": {
+          "allowFor": "Consenti sostituzioni per {connection}",
+          "blockedFor": "Sostituzioni disattivate per {connection}",
+          "dormantHint": "Le sostituzioni del modello restano salvate ma vengono ignorate finché questa connessione non le consente.",
+          "failed": "Impossibile modificare l’impostazione delle sostituzioni: {detail}"
         }
       },
       "keys": {

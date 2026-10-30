@@ -990,6 +990,12 @@
           "body": "OpenCode Zen Free und Kilo Code Free sind Gateways Dritter, keine Dienste von Relo. Der Zugriff ist nur über ihre offiziellen Coding-Agenten erlaubt; Relo ist keiner davon. Die Nutzung kann gegen ihre Bedingungen oder geltendes Recht verstoßen, und Relo befürwortet sie nicht. Anbieter können deine Prompts und deinen Code speichern oder verwenden; sende deshalb niemals vertrauliche Informationen. Modelle, Limits und Verfügbarkeit können sich ohne Ankündigung ändern oder verschwinden. Soweit gesetzlich zulässig, übernehmen Relo und seine Maintainer keine Gewährleistung und keine Haftung. Mit dem Aktivieren der kostenlosen Verbindungen übernimmst du die volle Verantwortung für ihre Nutzung und alle rechtlichen Folgen.",
           "confirm": "Auf eigene Verantwortung aktivieren",
           "enabledToast": "Kostenlose Verbindungen aktiviert"
+        },
+        "override": {
+          "allowFor": "Überschreibungen für {connection} erlauben",
+          "blockedFor": "Überschreibungen für {connection} aus",
+          "dormantHint": "Gespeicherte Modell-Überschreibungen bleiben erhalten, werden aber ignoriert, solange diese Verbindung Überschreibungen nicht erlaubt.",
+          "failed": "Überschreibungseinstellung konnte nicht geändert werden: {detail}"
         }
       },
       "keys": {
