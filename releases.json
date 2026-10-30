@@ -1,5 +1,5 @@
 {
-  "generated": "2026-10-30T17:57:32Z",
+  "generated": "2026-10-30T17:59:29Z",
   "latest": "v0.2.0",
   "latest_beta": "v0.2.0-beta.58.66e534d7",
   "install": {
@@ -1977,7 +1977,7 @@
       "draft": false,
       "published_at": "2026-10-26T10:49:31Z",
       "page": "https://github.com/jonaskahn/relo/releases/tag/v0.1.9",
-      "notes": "## What's Changed\r\n* Fix/sveltekit 3 dependabot by @jonaskahn in https://github.com/jonaskahn/relo/pull/71\r\n* Feat/group billing smart pick by @jonaskahn in https://github.com/jonaskahn/relo/pull/72\r\n\r\n\r\n**Full Changelog**: https://github.com/jonaskahn/relo/compare/v0.1.8...v0.1.9",
+      "notes": "# 🚀 v0.1.9 — 2026-10-26\n\n### ✨ Improvements\n\n- 🧩 Group billing lanes with smart member suggestions; the member picker pages on scroll.\n- 🎚️ New Select component replaces native selects; floating controls and split modal headers.\n- 🌍 Group billing copy translated into every shipped language.\n\n### 🐛 Fixes\n\n- 🏠 Manual lane counts only local endpoints.\n- ⏱️ Callback window dissolves in 2 seconds.\n\n### 🧰 Maintenance\n\n- ⬆️ Migrated the console to SvelteKit 3.\n- 🚀 Chat rails dock with a CSS transition.\n",
       "install": {
         "script": "curl -fsSL https://relo.ifelse.one/install.sh | sh -s -- --version 0.1.9",
         "powershell": "& ([scriptblock]::Create((irm https://relo.ifelse.one/install.ps1))) -Version 0.1.9",
@@ -2289,7 +2289,7 @@
       "draft": false,
       "published_at": "2026-10-25T05:23:59Z",
       "page": "https://github.com/jonaskahn/relo/releases/tag/v0.1.8",
-      "notes": "## What's Changed\r\n* feat: make Command Code an API-key provider by @jonaskahn in https://github.com/jonaskahn/relo/pull/67\r\n* Feat/deepseek web account by @jonaskahn in https://github.com/jonaskahn/relo/pull/68\r\n\r\n\r\n**Full Changelog**: https://github.com/jonaskahn/relo/compare/v0.1.7...v0.1.8",
+      "notes": "# 🚀 v0.1.8 — 2026-10-25\n\n### ✨ Improvements\n\n- ➕ New providers: **Command Code** (API key) and **DeepSeek account** import.\n- 🏷️ Connections classified as free, paid plan, or pay-as-you-go, with billing chips everywhere.\n- 🎛️ Bulk model on/off menu; models load on scroll; back-to-top control on long lists.\n- 🎭 Impersonate a captured request, tool turns included, and replay it.\n- 🕒 Dates shown in your local timezone.\n- 💬 Chat settings stay editable mid-conversation.\n- 📱 Phone-friendly logs tabs and filters.\n- 🌍 Copy pass across all 23 languages.\n\n### 🐛 Fixes\n\n- 🧮 Token and coding plans count as plan usage, not API spend.\n- 📜 Scrolled log pages survive live refresh.\n",
       "install": {
         "script": "curl -fsSL https://relo.ifelse.one/install.sh | sh -s -- --version 0.1.8",
         "powershell": "& ([scriptblock]::Create((irm https://relo.ifelse.one/install.ps1))) -Version 0.1.8",
@@ -2601,7 +2601,7 @@
       "draft": false,
       "published_at": "2026-10-23T14:56:17Z",
       "page": "https://github.com/jonaskahn/relo/releases/tag/v0.1.7",
-      "notes": "## What's Changed\r\n* chore: bump to 0.1.7 by @github-actions[bot] in https://github.com/jonaskahn/relo/pull/62\r\n* fix: align activity calendar test pending prop type by @jonaskahn in https://github.com/jonaskahn/relo/pull/63\r\n* fix: ci and code coverage by @jonaskahn in https://github.com/jonaskahn/relo/pull/64\r\n* Feat/redesign logs page by @jonaskahn in https://github.com/jonaskahn/relo/pull/65\r\n\r\n\r\n**Full Changelog**: https://github.com/jonaskahn/relo/compare/v0.1.6...v0.1.7",
+      "notes": "# 🚀 v0.1.7 — 2026-10-23\n\n### ✨ Improvements\n\n- 📈 Usage page rebuilt: grouped lists, insight and share cards, metric series.\n- 🗓️ Yearly activity calendar with figures — and a snake game 🐍.\n- 🪵 Logs redesigned: KPIs, request summaries, collapsed repeats, detail in a drawer, animated live rows.\n- 🌌 Antigravity: Claude 5.5 collapses onto thinking bands.\n\n### 🐛 Fixes\n\n- 🔄 A catalog refresh switches off models the provider no longer lists.\n- 🧹 Uninstall detects and removes script installs.\n- 🏁 Startup race fixes: ready fires before listeners serve, workers start after bind.\n- 🏷️ Latest stable and beta versions show correctly.\n",
       "install": {
         "script": "curl -fsSL https://relo.ifelse.one/install.sh | sh -s -- --version 0.1.7",
         "powershell": "& ([scriptblock]::Create((irm https://relo.ifelse.one/install.ps1))) -Version 0.1.7",
@@ -3073,7 +3073,7 @@
       "draft": false,
       "published_at": "2026-10-22T11:58:37Z",
       "page": "https://github.com/jonaskahn/relo/releases/tag/v0.1.6",
-      "notes": "## What's Changed\r\n* chore(deps): bump github.com/klauspost/compress from 1.18.0 to 1.18.7 in /daemon in the go_modules group across 1 directory by @dependabot[bot] in https://github.com/jonaskahn/relo/pull/57\r\n* chore(deps-dev): bump vite from 8.3.1 to 8.3.4 in /console in the npm_and_yarn group across 1 directory by @dependabot[bot] in https://github.com/jonaskahn/relo/pull/58\r\n* Feat/routing universe window by @jonaskahn in https://github.com/jonaskahn/relo/pull/59\r\n* Feat/output ceiling 65536 by @jonaskahn in https://github.com/jonaskahn/relo/pull/60\r\n* Feat/console attention ticker by @jonaskahn in https://github.com/jonaskahn/relo/pull/61\r\n\r\n\r\n**Full Changelog**: https://github.com/jonaskahn/relo/compare/v0.1.5...v0.1.6",
+      "notes": "# 🚀 v0.1.6 — 2026-10-22\n\n### ✨ Improvements\n\n- 🌌 Dashboard rebuilt: routes drawn as a tunnel, a routing universe of node pills, and window figures up front.\n- 🚨 Accounts that need an operator rise to a scrolling attention band.\n- 💸 Spend shown as cards with the costliest connections, per-connection pricing labels, and a free-lanes card.\n- 🧩 Coding client shown on request log rows.\n- 🧠 Pi and Oh My Pi learn what a model can think.\n- 📏 Undetectable output ceilings default to 65536.\n\n### 🐛 Fixes\n\n- 🔁 One result per call on every inbound surface; repeated results fold into one.\n- ✂️ A truncated turn ends on `response.incomplete`.\n- 🔑 Pi and Oh My Pi read the right key variable.\n\n### 🧰 Maintenance\n\n- 📦 Dependency bumps: klauspost/compress, vite.\n",
       "install": {
         "script": "curl -fsSL https://relo.ifelse.one/install.sh | sh -s -- --version 0.1.6",
         "powershell": "& ([scriptblock]::Create((irm https://relo.ifelse.one/install.ps1))) -Version 0.1.6",
@@ -3625,7 +3625,7 @@
       "draft": false,
       "published_at": "2026-10-20T14:27:06Z",
       "page": "https://github.com/jonaskahn/relo/releases/tag/v0.1.5",
-      "notes": "## What's Changed\r\n* Chore/enhence build script",
+      "notes": "# 🚀 v0.1.5 — 2026-10-20\n\n### ✨ Improvements\n\n- 📦 npm install asks to start before installing, so the run is unattended, and offers start-at-login.\n- 🗂️ Releases publish a catalog that the app reads; the update dialog shows the changelog and a download link.\n\n### 🐛 Fixes\n\n- 🐧 Linux setup packages are uploaded with each release.\n",
       "install": {
         "script": "curl -fsSL https://relo.ifelse.one/install.sh | sh -s -- --version 0.1.5",
         "powershell": "& ([scriptblock]::Create((irm https://relo.ifelse.one/install.ps1))) -Version 0.1.5",
@@ -3857,7 +3857,7 @@
       "draft": false,
       "published_at": "2026-10-20T10:00:30Z",
       "page": "https://github.com/jonaskahn/relo/releases/tag/v0.1.4",
-      "notes": "## What's Changed\r\n* Feat/add demo assests by @jonaskahn in https://github.com/jonaskahn/relo/pull/51\r\n* Feat/open design by @jonaskahn in https://github.com/jonaskahn/relo/pull/52\r\n* Fix/ci failed enhance update by @jonaskahn in https://github.com/jonaskahn/relo/pull/53\r\n\r\n\r\n**Full Changelog**: https://github.com/jonaskahn/relo/compare/v0.1.3...v0.1.4",
+      "notes": "# 🚀 v0.1.4 — 2026-10-20\n\n### ✨ Improvements\n\n- 🎨 New **OpenDesign** provider with its own logo.\n- 🔍 Context limits and vision support are read from OpenAI-style model listings.\n- ✂️ OpenCode Free tool cutoff setting trims long tool lists.\n- ⬆️ Updates follow beta releases, report the install channel, and show upgrade commands per install method from the top bar.\n- 🔢 Token counts are abbreviated above a thousand.\n\n### 🐛 Fixes\n\n- 💾 Listing capabilities persist on probe.\n- 📊 Provider charts balance around logos; tray token units stay in step.\n- 🚦 A failed start is recorded before it is reported.\n",
       "install": {
         "script": "curl -fsSL https://relo.ifelse.one/install.sh | sh -s -- --version 0.1.4",
         "powershell": "& ([scriptblock]::Create((irm https://relo.ifelse.one/install.ps1))) -Version 0.1.4",
@@ -4133,7 +4133,7 @@
       "draft": false,
       "published_at": "2026-10-19T11:00:58Z",
       "page": "https://github.com/jonaskahn/relo/releases/tag/v0.1.3",
-      "notes": "## What's Changed\r\n* fix: OpenCode requests and release version handling by @jonaskahn in https://github.com/jonaskahn/relo/pull/48\r\n\r\n\r\n**Full Changelog**: https://github.com/jonaskahn/relo/compare/v0.1.2...v0.1.3",
+      "notes": "# 🚀 v0.1.3 — 2026-10-19\n\n### 🐛 Fixes\n\n- 🛠️ OpenCode free turns now declare their tools.\n- 🧾 Chat tool arguments must be JSON objects.\n- 📱 Fixed Xiaomi tool-call arguments.\n- 🏷️ Fixed release version handling.\n",
       "install": {
         "script": "curl -fsSL https://relo.ifelse.one/install.sh | sh -s -- --version 0.1.3",
         "powershell": "& ([scriptblock]::Create((irm https://relo.ifelse.one/install.ps1))) -Version 0.1.3",
@@ -4329,7 +4329,7 @@
       "draft": false,
       "published_at": "2026-10-16T13:38:14Z",
       "page": "https://github.com/jonaskahn/relo/releases/tag/v0.1.2",
-      "notes": "## What's Changed\r\n* chore: bump to 0.1.2 by @github-actions[bot] in https://github.com/jonaskahn/relo/pull/45\r\n* Fix/deepseek model nullbyte pattern by @jonaskahn in https://github.com/jonaskahn/relo/pull/46\r\n\r\n## New Contributors\r\n* @github-actions[bot] made their first contribution in https://github.com/jonaskahn/relo/pull/45\r\n\r\n**Full Changelog**: https://github.com/jonaskahn/relo/compare/v0.1.1...v0.1.2",
+      "notes": "# 🚀 v0.1.2 — 2026-10-16\n\n### ✨ Improvements\n\n- 🔄 Reload the OpenCode service without a full restart; a repaired client is reloaded or restarted as needed.\n- 🧭 Console names the reload action, shows result warnings, and offers reload apart from restart.\n- 🚫 OpenCode V1 is no longer offered for new setups.\n\n### 🐛 Fixes\n\n- ✍️ Skip equivalent client-file writes, and judge model staleness from the client files.\n- 🐋 DeepSeek null-byte workaround now applies to DeepSeek models only.\n- 🧰 Tool encoding follows the request model, not the upstream host.\n- 🌌 Antigravity: fixed the thinking budget sent upstream.\n",
       "install": {
         "script": "curl -fsSL https://relo.ifelse.one/install.sh | sh -s -- --version 0.1.2",
         "powershell": "& ([scriptblock]::Create((irm https://relo.ifelse.one/install.ps1))) -Version 0.1.2",
@@ -4605,7 +4605,7 @@
       "draft": false,
       "published_at": "2026-10-15T19:24:39Z",
       "page": "https://github.com/jonaskahn/relo/releases/tag/v0.1.1",
-      "notes": "## What's Changed\r\n* Fix/opencode 403 by @jonaskahn in https://github.com/jonaskahn/relo/pull/43\r\n* fix(npm): detect and refuse install over Relo.app / Relo-Setup by @jonaskahn in https://github.com/jonaskahn/relo/pull/44\r\n\r\n\r\n**Full Changelog**: https://github.com/jonaskahn/relo/compare/v0.1.0...v0.1.1",
+      "notes": "# 🚀 v0.1.1 — 2026-10-16\n\n### ✨ Improvements\n\n- 🆓 Free lane forges native session and request ids and relays the inbound client identity upstream.\n\n### 🐛 Fixes\n\n- 🔧 Free lane sends tool-free turns exactly as the client sent them.\n- 🚪 Fixed OpenCode 403 responses.\n- 📦 npm installer detects and refuses to install over Relo.app or Relo-Setup.\n",
       "install": {
         "script": "curl -fsSL https://relo.ifelse.one/install.sh | sh -s -- --version 0.1.1",
         "powershell": "& ([scriptblock]::Create((irm https://relo.ifelse.one/install.ps1))) -Version 0.1.1",
@@ -4881,7 +4881,7 @@
       "draft": false,
       "published_at": "2026-10-15T15:10:13Z",
       "page": "https://github.com/jonaskahn/relo/releases/tag/v0.1.0",
-      "notes": "Relo is a local LLM proxy between AI coding clients and upstream providers. Your agents keep their native protocol; Relo routes, pools accounts, and records usage and cost — all on loopback.\r\n\r\n### What's in it\r\n\r\n- **Single-port data plane** at `127.0.0.1:10101`: `/inference/v1/*` speaks OpenAI-compatible, `/inference-claude/v1/*` speaks Anthropic.\r\n- **Console + management API** on the same port: connect providers, manage accounts, routes, and client keys, inspect requests, review usage.\r\n- **Daemon CLI**: `relo daemon run|start|stop|restart|status`, `autostart`, `uninstall`, `version`. Self-updating via installers.\r\n- **Account pooling & routing** with retries, failover cooldowns, and per-connection timeouts.\r\n- **Three credential classes**: admin token for the console, one-time-shown client keys for inbound traffic, provider credentials sealed in `secrets.enc` (or OS keychain).\r\n- **Usage & cost tracking** with configurable overview cards.\r\n- Console in 23 languages, light/dark/system themes.\r\n",
+      "notes": "# 🚀 v0.1.0 — 2026-10-15\n\nRelo is a local LLM proxy between AI coding clients and upstream providers. Your agents keep their native protocol; Relo routes, pools accounts, and records usage and cost — all on loopback.\n\n### ✨ What's in it\n\n- 🔌 **Single-port data plane** at `127.0.0.1:10101`: `/inference/v1/*` speaks OpenAI-compatible, `/inference-claude/v1/*` speaks Anthropic.\n- 🖥️ **Console + management API** on the same port: connect providers, manage accounts, routes, and client keys, inspect requests, review usage.\n- ⌨️ **Daemon CLI**: `relo daemon run|start|stop|restart|status`, `autostart`, `uninstall`, `version`. Self-updating via installers.\n- 🔁 **Account pooling & routing** with retries, failover cooldowns, and per-connection timeouts.\n- 🔐 **Three credential classes**: admin token for the console, one-time-shown client keys for inbound traffic, provider credentials sealed in `secrets.enc` (or OS keychain).\n- 📊 **Usage & cost tracking** with configurable overview cards.\n- 🌍 Console in 23 languages, light/dark/system themes.\n",
       "install": {
         "script": "curl -fsSL https://relo.ifelse.one/install.sh | sh -s -- --version 0.1.0",
         "powershell": "& ([scriptblock]::Create((irm https://relo.ifelse.one/install.ps1))) -Version 0.1.0",
