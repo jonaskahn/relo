@@ -411,7 +411,7 @@ func toModelResponse(model appcatalog.Model) modelResponse {
 		Details:    toModelDetailsOrNil(model.Details),
 		ListedAtMs: model.ListedAtMs, UpdatedAtMs: model.UpdatedAtMs,
 		ServingAccounts: model.ServingAccounts, ActiveAccounts: model.ActiveAccounts,
-		IsFree: model.IsFree,
+		IsFree:         model.IsFree,
 		AllowOverrides: model.AllowOverrides,
 	}
 }
