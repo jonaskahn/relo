@@ -167,6 +167,10 @@ func applyReasoningFamily(res *CapabilityResolution, layers []namedCapabilityLay
 		return
 	}
 	applyReasoningLayer(res, layers[chosen])
+	applyManualReasoning(res, layers)
+}
+
+func applyManualReasoning(res *CapabilityResolution, layers []namedCapabilityLayer) {
 	// The manual layer states only the on/off capability. Its ladder, toggle,
 	// and budget keep the definition every other layer agrees on.
 	for _, layer := range layers {

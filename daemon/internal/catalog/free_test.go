@@ -36,7 +36,11 @@ func TestIsFreeModel(t *testing.T) {
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			if got := IsFreeModel(test.provider, test.listing, test.id, test.input, test.output, test.category); got != test.want {
+			facts := FreeModelFacts{
+				ProviderMark: test.provider, ListingMark: test.listing,
+				ID: test.id, Prices: Prices{Input: test.input, Output: test.output}, Category: test.category,
+			}
+			if got := IsFreeModel(facts); got != test.want {
 				t.Fatalf("IsFreeModel() = %v, want %v", got, test.want)
 			}
 		})

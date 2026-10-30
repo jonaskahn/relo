@@ -56,12 +56,11 @@ func TestClaudeAntigravity(t *testing.T) {
 func TestAntigravityClaudeStatesNoThinking(t *testing.T) {
 	yes := true
 	res := &Model{ID: "claude-sonnet-4-6"}
-	resolveModelCapabilities(res,
-		Provider{ModelsFormat: ModelsAntigravity},
-		FactsRecord{SupportsReasoning: &yes, ReasoningEfforts: []string{"low", "medium", "high", "max"}, ReasoningToggle: &yes, ReasoningBudget: &yes},
-		FactsRecord{SupportsReasoning: &yes},
-		FactsRecord{SupportsReasoning: &yes, ReasoningEfforts: []string{"low", "medium", "high", "max"}, ReasoningBudget: &yes},
-	)
+	resolveModelCapabilities(res, Provider{ModelsFormat: ModelsAntigravity}, factLayers{
+		override: FactsRecord{SupportsReasoning: &yes, ReasoningEfforts: []string{"low", "medium", "high", "max"}, ReasoningToggle: &yes, ReasoningBudget: &yes},
+		provider: FactsRecord{SupportsReasoning: &yes},
+		models:   FactsRecord{SupportsReasoning: &yes, ReasoningEfforts: []string{"low", "medium", "high", "max"}, ReasoningBudget: &yes},
+	})
 	if res.SupportsReasoning == nil || *res.SupportsReasoning {
 		t.Fatalf("SupportsReasoning = %v, want false for Claude on Antigravity", res.SupportsReasoning)
 	}
@@ -73,12 +72,9 @@ func TestAntigravityClaudeStatesNoThinking(t *testing.T) {
 	}
 
 	collapsed := &Model{ID: "claude-sonnet-5-5"}
-	resolveModelCapabilities(collapsed,
-		Provider{ModelsFormat: ModelsAntigravity},
-		FactsRecord{},
-		FactsRecord{SupportsReasoning: &yes, ReasoningEfforts: []string{"low", "medium", "high"}},
-		FactsRecord{},
-	)
+	resolveModelCapabilities(collapsed, Provider{ModelsFormat: ModelsAntigravity}, factLayers{
+		provider: FactsRecord{SupportsReasoning: &yes, ReasoningEfforts: []string{"low", "medium", "high"}},
+	})
 	if collapsed.SupportsReasoning == nil || !*collapsed.SupportsReasoning || len(collapsed.ReasoningEfforts) != 3 {
 		t.Fatalf("collapsed = %+v, want the 5.5 generation to keep its ladder", collapsed)
 	}

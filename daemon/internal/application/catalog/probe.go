@@ -587,7 +587,9 @@ func freeProbeModel(entry rosterEntry, pm ProbeModel, mdModel catalog.ModelsDevM
 	if mark == nil && foundMD {
 		mark = mdModel.IsFree
 	}
-	return catalog.IsFreeModel(nil, mark, entry.ID, pm.Prices.Effective.Input, pm.Prices.Effective.Output, category)
+	return catalog.IsFreeModel(catalog.FreeModelFacts{
+		ListingMark: mark, ID: entry.ID, Prices: pm.Prices.Effective.catalog(), Category: category,
+	})
 }
 
 func factsForEntry(entry rosterEntry, pm ProbeModel, mdModel catalog.ModelsDevModel, foundMD bool) []catalog.FactsRecord {

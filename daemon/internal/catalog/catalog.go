@@ -755,15 +755,17 @@ func finishProviderFrom(host *Provider, row ConnectionRecord, formats Formats) {
 }
 
 func resolveModel(m ModelRecord, facts map[string]FactsRecord, host Provider, formats Formats) Model {
-	ov := facts["override"]
-	pr := facts["provider"]
-	md := facts["modelsdev"]
+	layers := factLayers{
+		override: facts["override"],
+		provider: facts["provider"],
+		models:   facts["modelsdev"],
+	}
 
-	res := resolvedIdentity(m, host, ov, pr, md)
-	resolveModelWindows(&res, host, ov, pr, md)
-	resolveModelCapabilities(&res, host, ov, pr, md)
-	resolveModelPricing(&res, ov, pr, md)
-	finishResolvedModel(&res, m, host, formats, factLayers{override: ov, provider: pr, models: md})
+	res := resolvedIdentity(m, host, layers.override, layers.provider, layers.models)
+	resolveModelWindows(&res, host, layers)
+	resolveModelCapabilities(&res, host, layers)
+	resolveModelPricing(&res, layers.override, layers.provider, layers.models)
+	finishResolvedModel(&res, m, host, formats, layers)
 	return res
 }
 
@@ -804,8 +806,11 @@ func resolveModelEndpoint(m ModelRecord, host Provider) (APIFormat, string) {
 	return apiFmt, baseURL
 }
 
-func resolveModelWindows(res *Model, host Provider, ov, pr, md FactsRecord) {
-	resolution := ResolveCapabilities(CapabilityInputs{Provider: pr, ModelsDev: md, Manual: ov, AllowOverrides: host.AllowOverrides})
+func resolveModelWindows(res *Model, host Provider, layers factLayers) {
+	resolution := ResolveCapabilities(CapabilityInputs{
+		Provider: layers.provider, ModelsDev: layers.models,
+		Manual: layers.override, AllowOverrides: host.AllowOverrides,
+	})
 	res.ContextWindow = resolution.ContextWindow
 	res.MaxInput = resolution.MaxInput
 	res.MaxOutput = resolution.MaxOutput
@@ -814,8 +819,11 @@ func resolveModelWindows(res *Model, host Provider, ov, pr, md FactsRecord) {
 	res.FactSources.MaxOutput = resolution.Sources.MaxOutput
 }
 
-func resolveModelCapabilities(res *Model, host Provider, ov, pr, md FactsRecord) {
-	resolution := ResolveCapabilities(CapabilityInputs{Provider: pr, ModelsDev: md, Manual: ov, AllowOverrides: host.AllowOverrides})
+func resolveModelCapabilities(res *Model, host Provider, layers factLayers) {
+	resolution := ResolveCapabilities(CapabilityInputs{
+		Provider: layers.provider, ModelsDev: layers.models,
+		Manual: layers.override, AllowOverrides: host.AllowOverrides,
+	})
 	res.SupportsTools = resolution.SupportsTools
 	res.SupportsReasoning = resolution.SupportsReasoning
 	res.SupportsVision = resolution.SupportsVision
@@ -834,20 +842,25 @@ func resolveModelCapabilities(res *Model, host Provider, ov, pr, md FactsRecord)
 	res.FactSources.ReasoningBudgetMin = resolution.Sources.ReasoningBudgetMin
 	res.FactSources.ReasoningBudgetMax = resolution.Sources.ReasoningBudgetMax
 	res.FactSources.Vision = resolution.Sources.Vision
-	if host.ModelsFormat == ModelsAntigravity && ClaudeAntigravityPassthrough(res.ID) {
-		// Claude reaches the wire under its own id with no thinking, so a
-		// ladder inherited from the model index or an operator override
-		// must not surface as thinking controls.
-		no := false
-		res.SupportsReasoning = &no
-		res.ReasoningEfforts = []string{}
-		res.ReasoningToggle = false
-		res.ReasoningToggleKnown = true
-		res.ReasoningBudget = false
-		res.ReasoningBudgetKnown = true
-		res.ReasoningBudgetMin = nil
-		res.ReasoningBudgetMax = nil
+	suppressAntigravityThinking(res, host)
+}
+
+func suppressAntigravityThinking(res *Model, host Provider) {
+	if host.ModelsFormat != ModelsAntigravity || !ClaudeAntigravityPassthrough(res.ID) {
+		return
 	}
+	// Claude reaches the wire under its own id with no thinking, so a ladder
+	// inherited from the model index or an operator override must not surface
+	// as thinking controls.
+	no := false
+	res.SupportsReasoning = &no
+	res.ReasoningEfforts = []string{}
+	res.ReasoningToggle = false
+	res.ReasoningToggleKnown = true
+	res.ReasoningBudget = false
+	res.ReasoningBudgetKnown = true
+	res.ReasoningBudgetMin = nil
+	res.ReasoningBudgetMax = nil
 }
 
 func resolveModelPricing(res *Model, ov, pr, md FactsRecord) {
@@ -867,7 +880,7 @@ type factLayers struct {
 
 func finishResolvedModel(res *Model, m ModelRecord, host Provider, formats Formats, layers factLayers) {
 	ov, pr, md := layers.override, layers.provider, layers.models
-	res.IsFree = IsFreeModel(nil, nil, res.ID, res.Prices.Input, res.Prices.Output, res.Category)
+	res.IsFree = IsFreeModel(FreeModelFacts{ID: res.ID, Prices: res.Prices, Category: res.Category})
 	res.AllowOverrides = host.AllowOverrides
 	res.Routable = routableModel(*res, host, formats)
 	res.UnroutableReason = unroutableModelReason(*res, host)

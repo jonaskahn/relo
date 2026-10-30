@@ -114,7 +114,10 @@ type ModelsDevModel struct {
 func (p ModelsDevProvider) FreeModels() int {
 	count := 0
 	for id, model := range p.Models {
-		if IsFreeModel(p.IsFree, model.IsFree, id, model.Prices.Input, model.Prices.Output, Category(model.Category)) {
+		if IsFreeModel(FreeModelFacts{
+			ProviderMark: p.IsFree, ListingMark: model.IsFree,
+			ID: id, Prices: model.Prices, Category: Category(model.Category),
+		}) {
 			count++
 		}
 	}

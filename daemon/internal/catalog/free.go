@@ -27,24 +27,34 @@ func IDFreeToken(id string) bool {
 	return freeIDToken.MatchString(strings.ToLower(strings.TrimSpace(id)))
 }
 
+// FreeModelFacts are the signs one model entry offers about its cost.
+type FreeModelFacts struct {
+	ProviderMark *bool
+	ListingMark  *bool
+	ID           string
+	Prices       Prices
+	Category     Category
+}
+
 // IsFreeModel reports whether a conversational model is free. A provider or
 // listing mark is enough, and so are explicit zero input and output rates.
 // Missing rates prove nothing. The identifier rule is the fallback for a
 // gateway that names free models without stating either mark or a price.
-func IsFreeModel(providerFree, listingFree *bool, id string, input, output *int64, category Category) bool {
-	if !IsConversationalCategory(category) {
+func IsFreeModel(model FreeModelFacts) bool {
+	if !IsConversationalCategory(model.Category) {
 		return false
 	}
-	if providerFree != nil && *providerFree {
+	if model.ProviderMark != nil && *model.ProviderMark {
 		return true
 	}
-	if listingFree != nil && *listingFree {
+	if model.ListingMark != nil && *model.ListingMark {
 		return true
 	}
-	if input != nil && output != nil && *input == 0 && *output == 0 {
+	if model.Prices.Input != nil && model.Prices.Output != nil &&
+		*model.Prices.Input == 0 && *model.Prices.Output == 0 {
 		return true
 	}
-	return IDFreeToken(id)
+	return IDFreeToken(model.ID)
 }
 
 // FreePrices projects a provider or listing free mark into explicit zero
