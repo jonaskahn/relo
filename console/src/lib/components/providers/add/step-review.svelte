@@ -1,12 +1,10 @@
 <script lang="ts">
 	import { t } from 'svelte-i18n';
 	import type { ProbeResult } from '$lib/types';
-	import Button from '$lib/components/ui/button.svelte';
 	import Input from '$lib/components/ui/input.svelte';
 	import Label from '$lib/components/ui/label.svelte';
 	import Icon from '$lib/components/ui/icon.svelte';
 	import BillingChip from '$lib/components/providers/billing-chip.svelte';
-	import FreeAvailableChip from '$lib/components/providers/free-available-chip.svelte';
 	import IconAction from '$lib/components/ui/icon-action.svelte';
 	import { formatUnitPrice } from '$lib/format';
 	import type { BillingInput } from '$lib/provider-billing';
@@ -74,11 +72,15 @@
 	const allOn = $derived(disabled.length === 0);
 	const allOff = $derived(allIds.length > 0 && disabled.length === allIds.length);
 	const freeOnly = $derived(
-		freeIds.length > 0 && paidIds.length > 0 && paidIds.every((id) => disabled.includes(id)) &&
+		freeIds.length > 0 &&
+			paidIds.length > 0 &&
+			paidIds.every((id) => disabled.includes(id)) &&
 			freeIds.every((id) => !disabled.includes(id))
 	);
 	const paidOnly = $derived(
-		freeIds.length > 0 && paidIds.length > 0 && freeIds.every((id) => disabled.includes(id)) &&
+		freeIds.length > 0 &&
+			paidIds.length > 0 &&
+			freeIds.every((id) => disabled.includes(id)) &&
 			paidIds.every((id) => !disabled.includes(id))
 	);
 
@@ -162,24 +164,42 @@
 				aria-label={$t('ui.pages.providersPage.review.search')}
 				bind:value={search}
 			/>
-		<div class="flex items-center gap-1" role="group" aria-label={$t('ui.pages.providersPage.review.bulkLabel')}>
-			<IconAction icon="power" label={$t('ui.pages.providersPage.review.turnAllOn')} pressed={allOn} onclick={turnOnAll} />
-			<IconAction icon="circle-off" label={$t('ui.pages.providersPage.review.turnAllOff')} pressed={allOff} onclick={turnOffAll} />
-			<IconAction
-				icon="sparkles"
-				label={freeIds.length === 0 ? $t('ui.pages.providersPage.review.noFreeModels') : $t('ui.pages.providersPage.review.turnOnFree')}
-				pressed={freeOnly}
-				disabled={freeIds.length === 0}
-				onclick={turnOnFree}
-			/>
-			<IconAction
-				icon="sparkles-off"
-				label={freeIds.length === 0 ? $t('ui.pages.providersPage.review.noFreeModels') : $t('ui.pages.providersPage.review.turnOffFree')}
-				pressed={paidOnly}
-				disabled={freeIds.length === 0}
-				onclick={turnOffFree}
-			/>
-		</div>
+			<div
+				class="flex items-center gap-1"
+				role="group"
+				aria-label={$t('ui.pages.providersPage.review.bulkLabel')}
+			>
+				<IconAction
+					icon="power"
+					label={$t('ui.pages.providersPage.review.turnAllOn')}
+					pressed={allOn}
+					onclick={turnOnAll}
+				/>
+				<IconAction
+					icon="circle-off"
+					label={$t('ui.pages.providersPage.review.turnAllOff')}
+					pressed={allOff}
+					onclick={turnOffAll}
+				/>
+				<IconAction
+					icon="sparkles"
+					label={freeIds.length === 0
+						? $t('ui.pages.providersPage.review.noFreeModels')
+						: $t('ui.pages.providersPage.review.turnOnFree')}
+					pressed={freeOnly}
+					disabled={freeIds.length === 0}
+					onclick={turnOnFree}
+				/>
+				<IconAction
+					icon="sparkles-off"
+					label={freeIds.length === 0
+						? $t('ui.pages.providersPage.review.noFreeModels')
+						: $t('ui.pages.providersPage.review.turnOffFree')}
+					pressed={paidOnly}
+					disabled={freeIds.length === 0}
+					onclick={turnOffFree}
+				/>
+			</div>
 		</div>
 
 		<p class="text-xs text-muted-foreground">{$t('ui.pages.providersPage.review.legend')}</p>

@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { t } from 'svelte-i18n';
+	import type { Snippet } from 'svelte';
 	import type { ModelsDevState, ProviderTemplate } from '$lib/types';
 	import Input from '$lib/components/ui/input.svelte';
 	import Button from '$lib/components/ui/button.svelte';
@@ -18,7 +19,6 @@
 	import BillingChip from '$lib/components/providers/billing-chip.svelte';
 	import FreeAvailableChip from '$lib/components/providers/free-available-chip.svelte';
 	import { Switch } from 'bits-ui';
-	import { untrack } from 'svelte';
 	import Segmented from '$lib/components/ui/segmented.svelte';
 
 	// The provider picker is a radio list: choosing marks a row and the
@@ -57,10 +57,7 @@
 	// The switch shows the committed setting. Enabling is only a request until
 	// the consent dialog is accepted; dismissing that dialog must not leave the
 	// picker in an enabled-looking state.
-	let freeSwitchChecked = $state(untrack(() => freeEnabled));
-	$effect(() => {
-		freeSwitchChecked = freeEnabled;
-	});
+	const freeSwitchChecked = $derived(freeEnabled);
 	const rows = $derived(buildTemplateRows(templates, added, query, freeEnabled, filter === 'free'));
 	const groups = $derived(visibleTemplateRows(rows).filter((group) => group.section !== 'free'));
 	const total = $derived(countTemplateRows(rows));
@@ -130,7 +127,6 @@
 		// The switch reflects only the committed setting. A press to enable is a
 		// consent request; accepting the dialog re-renders this switch checked
 		// through the parent's freeEnabled prop.
-		freeSwitchChecked = freeEnabled;
 		if (next !== freeEnabled) onfreetoggle(next);
 	}
 </script>
@@ -146,74 +142,88 @@
 		modelsdev_provider_id: row.template?.modelsdev_provider_id ?? ''
 	}}
 	{@const chosen = selected === row.id}
-	<div class="group relative" title={singleAdded(row) ? $t('ui.pages.providersPage.add.freeAlreadyAdded') : ''}>
+	<div
+		class="group relative"
+		title={singleAdded(row) ? $t('ui.pages.providersPage.add.freeAlreadyAdded') : ''}
+	>
 		<button
-		type="button"
-		data-plain
-		role="radio"
-		aria-checked={chosen}
-		aria-disabled={rowDisabled(row)}
-		aria-describedby={singleAdded(row) ? 'free-already-added-' + row.id : undefined}
-		class="flex w-full items-center gap-3 rounded-xl bg-control px-4 py-3 text-left shadow-float-1 transition-[background-color,box-shadow] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring {chosen
-			? 'bg-accent-soft ring-1 ring-accent-border'
-			: row.custom
-				? 'border-[1.5px] border-dashed border-line-strong'
-				: 'hover:bg-control-hover'} {rowDisabled(row) ? 'cursor-not-allowed opacity-70' : ''}"
-		onclick={() => { if (!rowDisabled(row)) onpick(row); }}
+			type="button"
+			data-plain
+			role="radio"
+			aria-checked={chosen}
+			aria-disabled={rowDisabled(row)}
+			aria-describedby={singleAdded(row) ? 'free-already-added-' + row.id : undefined}
+			class="flex w-full items-center gap-3 rounded-xl bg-control px-4 py-3 text-left shadow-float-1 transition-[background-color,box-shadow] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring {chosen
+				? 'bg-accent-soft ring-1 ring-accent-border'
+				: row.custom
+					? 'border-[1.5px] border-dashed border-line-strong'
+					: 'hover:bg-control-hover'} {rowDisabled(row) ? 'cursor-not-allowed opacity-70' : ''}"
+			onclick={() => {
+				if (!rowDisabled(row)) onpick(row);
+			}}
 		>
-		{#if row.custom}
-			<span
-				class="flex size-9 shrink-0 items-center justify-center rounded-xl bg-sunken text-muted-foreground shadow-float-1"
-			>
-				<Icon name="plus" size={16} />
-			</span>
-		{:else}
-			<ProviderLogo id={row.id} label={row.label} size="sm" />
-		{/if}
-		<span class="min-w-0 flex-1">
-			<span class="flex items-center gap-2">
-				<span class="truncate text-sm font-medium">{row.label}</span>
-				{#if isExperimentalConnection(row.id)}
-					<span data-experimental-chip class="badge shrink-0 bg-warn/10 text-ink ring-1 ring-warn/35">
-						{$t('ui.pages.providersPage.list.tagExperimental')}
-					</span>
-				{/if}
-				{#if row.added}
-					<span
-				class="shrink-0 rounded bg-ok/10 px-1.5 py-0.5 text-[0.6rem] font-semibold text-ink ring-1 ring-ok/35"
-					>
-						{$t('ui.pages.providersPage.add.added')}
-					</span>
-				{/if}
-			</span>
-			<span class="block truncate font-mono text-[0.7rem] text-muted-foreground">
-				{hint(row)}{#if modelCount(row)}
-					· {modelCount(row)}{/if}
-			</span>
-			{#if row.disabledReason}
-				<span class="block truncate text-[0.7rem] text-warn">{row.disabledReason}</span>
+			{#if row.custom}
+				<span
+					class="flex size-9 shrink-0 items-center justify-center rounded-xl bg-sunken text-muted-foreground shadow-float-1"
+				>
+					<Icon name="plus" size={16} />
+				</span>
+			{:else}
+				<ProviderLogo id={row.id} label={row.label} size="sm" />
 			{/if}
-		</span>
-		{#if chosen}
+			<span class="min-w-0 flex-1">
+				<span class="flex items-center gap-2">
+					<span class="truncate text-sm font-medium">{row.label}</span>
+					{#if isExperimentalConnection(row.id)}
+						<span
+							data-experimental-chip
+							class="badge shrink-0 bg-warn/10 text-ink ring-1 ring-warn/35"
+						>
+							{$t('ui.pages.providersPage.list.tagExperimental')}
+						</span>
+					{/if}
+					{#if row.added}
+						<span
+							class="shrink-0 rounded bg-ok/10 px-1.5 py-0.5 text-[0.6rem] font-semibold text-ink ring-1 ring-ok/35"
+						>
+							{$t('ui.pages.providersPage.add.added')}
+						</span>
+					{/if}
+				</span>
+				<span class="block truncate font-mono text-[0.7rem] text-muted-foreground">
+					{hint(row)}{#if modelCount(row)}
+						· {modelCount(row)}{/if}
+				</span>
+				{#if row.disabledReason}
+					<span class="block truncate text-[0.7rem] text-warn">{row.disabledReason}</span>
+				{/if}
+			</span>
+			{#if chosen}
+				<span
+					data-check
+					data-checkbox
+					data-selected
+					data-selected-check
+					class="flex size-5 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground"
+					aria-hidden="true"
+				>
+					<Icon name="check" size={13} />
+				</span>
+			{/if}
+			<BillingChip provider={billingProvider} class="self-start" />
+			<FreeAvailableChip
+				provider={{ ...billingProvider, counts: { free_models: row.template?.free_models ?? 0 } }}
+				class="self-start"
+			/>
+		</button>
+		{#if singleAdded(row)}
 			<span
-				data-check
-				data-checkbox
-				data-selected
-				data-selected-check
-				class="flex size-5 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground"
-				aria-hidden="true"
+				id={'free-already-added-' + row.id}
+				class="pointer-events-none absolute -top-1 end-3 z-20 hidden rounded-control bg-ink px-2 py-1 text-[0.7rem] text-surface shadow-float-2 group-hover:block group-focus-within:block"
 			>
-				<Icon name="check" size={13} />
+				{$t('ui.pages.providersPage.add.freeAlreadyAdded')}
 			</span>
 		{/if}
-		<BillingChip provider={billingProvider} class="self-start" />
-		<FreeAvailableChip provider={{ ...billingProvider, counts: { free_models: row.template?.free_models ?? 0 } }} class="self-start" />
-		</button>
-	{#if singleAdded(row)}
-		<span id={'free-already-added-' + row.id} class="pointer-events-none absolute -top-1 end-3 z-20 hidden rounded-control bg-ink px-2 py-1 text-[0.7rem] text-surface shadow-float-2 group-hover:block group-focus-within:block">
-			{$t('ui.pages.providersPage.add.freeAlreadyAdded')}
-		</span>
-	{/if}
 	</div>
 {/snippet}
 
@@ -227,10 +237,19 @@
 	/>
 {/snippet}
 
-{#snippet groupHeading(label: string, count: number, hint: string, free = false, trailing?: import('svelte').Snippet)}
+{#snippet groupHeading(
+	label: string,
+	count: number,
+	hint: string,
+	free = false,
+	trailing?: Snippet
+)}
 	<div
 		{@attach flattenWhenStuck}
-		class="free-heading min-h-11 sticky top-0 z-10 flex flex-wrap items-center gap-2 rounded-lg border-b border-line bg-surface px-2 py-2 data-[stuck=true]:rounded-t-none {free && freeEnabled ? 'free-heading-glow' : ''}"
+		class="free-heading min-h-11 sticky top-0 z-10 flex flex-wrap items-center gap-2 rounded-lg border-b border-line bg-surface px-2 py-2 data-[stuck=true]:rounded-t-none {free &&
+		freeEnabled
+			? 'free-heading-glow'
+			: ''}"
 	>
 		<span class="text-[0.9375rem] font-semibold text-ink">{label}</span>
 		<span class="text-[0.7rem] text-muted-foreground">{count}</span>
@@ -241,19 +260,18 @@
 	</div>
 {/snippet}
 
-
 <div class="flex flex-col gap-3">
 	<div class="flex items-center gap-2">
 		<div class="min-w-0 flex-1" {@attach focusSearch}>
 			<Input
-			placeholder={$t('ui.pages.providersPage.add.searchPlaceholder', {
-				values: { count: templates.length }
-			})}
-			aria-label={$t('ui.pages.providersPage.add.searchPlaceholder', {
-				values: { count: templates.length }
-			})}
-			value={query}
-			oninput={(event) => onquery(event.currentTarget.value)}
+				placeholder={$t('ui.pages.providersPage.add.searchPlaceholder', {
+					values: { count: templates.length }
+				})}
+				aria-label={$t('ui.pages.providersPage.add.searchPlaceholder', {
+					values: { count: templates.length }
+				})}
+				value={query}
+				oninput={(event) => onquery(event.currentTarget.value)}
 			/>
 		</div>
 		<Segmented
@@ -285,7 +303,9 @@
 				{@render groupHeading(
 					$t(SECTION_LABEL_KEY.free),
 					rows.free.length,
-					freeEnabled ? $t('ui.pages.providersPage.add.groupHintFree') : $t('ui.pages.providersPage.add.freeOffHint'),
+					freeEnabled
+						? $t('ui.pages.providersPage.add.groupHintFree')
+						: $t('ui.pages.providersPage.add.freeOffHint'),
 					true,
 					freeToggle
 				)}
@@ -374,15 +394,21 @@
 			var(--accent-glow) 340deg,
 			transparent 360deg
 		);
-		-webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+		-webkit-mask:
+			linear-gradient(#000 0 0) content-box,
+			linear-gradient(#000 0 0);
 		-webkit-mask-composite: xor;
-		mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+		mask:
+			linear-gradient(#000 0 0) content-box,
+			linear-gradient(#000 0 0);
 		mask-composite: exclude;
 		filter: drop-shadow(0 0 5px var(--accent-glow));
 		animation: free-glow-spin 2.6s linear infinite;
 	}
 	@keyframes free-glow-spin {
-		to { --free-glow-angle: 360deg; }
+		to {
+			--free-glow-angle: 360deg;
+		}
 	}
 	@property --free-glow-angle {
 		syntax: '<angle>';

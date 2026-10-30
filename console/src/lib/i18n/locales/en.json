@@ -1003,6 +1003,12 @@
           "body": "OpenCode Zen Free and Kilo Code Free are third-party gateways, not Relo services. They permit access only through their official coding agents; Relo is not one. Use may breach their terms or the law, and Relo does not endorse them. Providers may keep or use your prompts and code—never send confidential information. Models, limits, and availability may change or disappear without notice. To the extent permitted by law, Relo and its maintainers provide no warranty and accept no liability. By enabling free connections, you accept full responsibility for your use and any legal consequences.",
           "confirm": "I accept responsibility and enable",
           "enabledToast": "Free connections enabled"
+        },
+        "override": {
+          "allowFor": "Allow overrides for {connection}",
+          "blockedFor": "Overrides off for {connection}",
+          "dormantHint": "Stored model overrides stay saved but are ignored while this connection does not allow overrides.",
+          "failed": "Couldn’t change the override setting: {detail}"
         }
       },
       "keys": {

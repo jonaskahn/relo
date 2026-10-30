@@ -1003,6 +1003,12 @@
           "body": "OpenCode Zen Free et Kilo Code Free sont des passerelles tierces, et non des services Relo. Elles ne permettent l’accès que par leurs agents de codage officiels ; Relo n’en fait pas partie. Leur utilisation peut enfreindre leurs conditions ou la loi, et Relo ne les approuve pas. Les fournisseurs peuvent conserver ou utiliser vos prompts et votre code : n’envoyez jamais d’informations confidentielles. Les modèles, limites et disponibilités peuvent changer ou disparaître sans préavis. Dans la mesure permise par la loi, Relo et ses mainteneurs n’offrent aucune garantie et déclinent toute responsabilité. En activant les connexions gratuites, vous assumez l’entière responsabilité de leur utilisation et de toute conséquence juridique.",
           "confirm": "Accepter et activer sous ma responsabilité",
           "enabledToast": "Connexions gratuites activées"
+        },
+        "override": {
+          "allowFor": "Autoriser les remplacements pour {connection}",
+          "blockedFor": "Remplacements désactivés pour {connection}",
+          "dormantHint": "Les remplacements du modèle restent enregistrés mais sont ignorés tant que cette connexion ne les autorise pas.",
+          "failed": "Impossible de modifier le réglage des remplacements : {detail}"
         }
       },
       "keys": {

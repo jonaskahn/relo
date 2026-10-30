@@ -41,14 +41,6 @@ func (s *Service) SetModelsContextWindow(ctx context.Context, providerID string,
 		if _, err := s.modelRow(ctx, providerID, modelID); err != nil {
 			continue
 		}
-		if err := s.validateCapabilityAssignments(ctx, providerID, modelID, []capabilityAssignment{{field: "context_window", set: value != nil}}); err != nil {
-			return err
-		}
-	}
-	for _, modelID := range modelIDs {
-		if _, err := s.modelRow(ctx, providerID, modelID); err != nil {
-			continue
-		}
 		if err := s.writeOverrideContextWindow(ctx, providerID, modelID, value); err != nil {
 			return err
 		}
@@ -74,18 +66,6 @@ func (f CapabilityFlags) any() bool {
 func (s *Service) SetModelsCapabilities(ctx context.Context, providerID string, modelIDs []string, flags CapabilityFlags) error {
 	if !flags.any() {
 		return nil
-	}
-	for _, modelID := range modelIDs {
-		if _, err := s.modelRow(ctx, providerID, modelID); err != nil {
-			continue
-		}
-		if err := s.validateCapabilityAssignments(ctx, providerID, modelID, []capabilityAssignment{
-			{field: "tools", set: flags.Tools.Set && flags.Tools.Value != nil},
-			{field: "reasoning", set: flags.Reasoning.Set && flags.Reasoning.Value != nil},
-			{field: "vision", set: flags.Vision.Set && flags.Vision.Value != nil},
-		}); err != nil {
-			return err
-		}
 	}
 	for _, modelID := range modelIDs {
 		if _, err := s.modelRow(ctx, providerID, modelID); err != nil {
@@ -120,6 +100,8 @@ type ProviderPatch struct {
 	// status of that class. An absent field leaves the stored choice alone.
 	SwitchOn4xx *bool
 	SwitchOn5xx *bool
+	// AllowOverrides applies this connection's manual capability values.
+	AllowOverrides *bool
 }
 
 // PatchProvider applies an operator's edits to one connection, so a label,
@@ -220,6 +202,9 @@ func applyProviderRetry(row *catalog.ConnectionRecord, patch ProviderPatch) {
 	}
 	if patch.SwitchOn5xx != nil {
 		row.SwitchOn5xx = patch.SwitchOn5xx
+	}
+	if patch.AllowOverrides != nil {
+		row.AllowOverrides = *patch.AllowOverrides
 	}
 }
 
@@ -402,10 +387,6 @@ func (s *Service) PatchModel(ctx context.Context, providerID, modelID string, pa
 	if err != nil {
 		return Model{}, err
 	}
-	if err := s.validateModelProtectedPatch(ctx, providerID, modelID, patch); err != nil {
-		return Model{}, err
-	}
-
 	if err := s.applyModelPatch(ctx, providerID, modelID, &mRow, patch); err != nil {
 		return Model{}, err
 	}
@@ -496,107 +477,11 @@ func (s *Service) writeModelOverrides(ctx context.Context, providerID, modelID s
 	return s.rematchModel(ctx, providerID, modelID)
 }
 
-type capabilityAssignment struct {
-	field string
-	set   bool
-}
-
-func (s *Service) validateModelProtectedPatch(ctx context.Context, providerID, modelID string, patch ModelPatch) error {
-	assignments := make([]capabilityAssignment, 0, 6)
-	if patch.Override != nil {
-		override := patch.Override
-		assignments = append(assignments,
-			capabilityAssignment{field: "context_window", set: override.ContextWindow != nil},
-			capabilityAssignment{field: "max_input", set: override.MaxInput != nil},
-			capabilityAssignment{field: "max_output", set: override.MaxOutput != nil},
-			capabilityAssignment{field: "tools", set: override.Tools != nil},
-			capabilityAssignment{field: "reasoning", set: override.Reasoning != nil},
-			capabilityAssignment{field: "vision", set: override.Vision != nil},
-		)
-	}
-	assignments = append(assignments,
-		capabilityAssignment{field: "context_window", set: patch.ContextWindow.Set && patch.ContextWindow.Value != nil},
-		capabilityAssignment{field: "max_output", set: patch.MaxOutput.Set && patch.MaxOutput.Value != nil},
-		capabilityAssignment{field: "tools", set: patch.Tools.Set && patch.Tools.Value != nil},
-		capabilityAssignment{field: "reasoning", set: patch.Reasoning.Set && patch.Reasoning.Value != nil},
-		capabilityAssignment{field: "vision", set: patch.Vision.Set && patch.Vision.Value != nil},
-	)
-	return s.validateCapabilityAssignments(ctx, providerID, modelID, assignments)
-}
-
-func (s *Service) validateCapabilityAssignments(ctx context.Context, providerID, modelID string, assignments []capabilityAssignment) error {
-	rows, err := s.store.ListModelFacts(ctx, providerID, modelID)
-	if err != nil {
-		return err
-	}
-	layers := make(map[string]catalog.FactsRecord, len(rows))
-	for _, row := range rows {
-		layers[row.Layer] = row
-	}
-	provider, modelsDev := layers["provider"], layers["modelsdev"]
-	for _, assignment := range assignments {
-		if !assignment.set {
-			continue
-		}
-		if source := protectedFieldSource(assignment.field, provider, modelsDev); source != "" {
-			return &CapabilityReadOnlyError{Field: assignment.field, Source: source}
-		}
-	}
-	return nil
-}
-
-func protectedFieldSource(field string, provider, modelsDev catalog.FactsRecord) string {
-	hasValue := func(layer catalog.FactsRecord, name string) bool {
-		switch name {
-		case "context_window":
-			return layer.ContextWindow != nil
-		case "max_input":
-			return layer.MaxInput != nil
-		case "max_output":
-			return layer.MaxOutput != nil
-		case "tools":
-			return layer.SupportsTools != nil
-		case "reasoning":
-			return layer.SupportsReasoning != nil || layer.ReasoningEfforts != nil ||
-				layer.ReasoningToggle != nil || layer.ReasoningBudget != nil
-		case "vision":
-			return layer.SupportsVision != nil
-		default:
-			return false
-		}
-	}
-	if hasValue(provider, field) {
-		return "provider"
-	}
-	if hasValue(modelsDev, field) {
-		return "models.dev"
-	}
-	return ""
-}
-
-func (s *Service) validateOverrideAssignment(ctx context.Context, providerID, modelID string, override *ModelOverride) error {
-	if override == nil {
-		return nil
-	}
-	assignments := []capabilityAssignment{
-		{field: "context_window", set: override.ContextWindow != nil},
-		{field: "max_input", set: override.MaxInput != nil},
-		{field: "max_output", set: override.MaxOutput != nil},
-		{field: "tools", set: override.Tools != nil},
-		{field: "reasoning", set: override.Reasoning != nil},
-		{field: "vision", set: override.Vision != nil},
-	}
-	return s.validateCapabilityAssignments(ctx, providerID, modelID, assignments)
-}
-
 func (s *Service) writeOverride(ctx context.Context, providerID, modelID string, override *ModelOverride) error {
 	if override == nil {
 		return nil
 	}
 	if err := validateOverride(*override); err != nil {
-		return err
-	}
-	if err := s.validateOverrideAssignment(ctx, providerID, modelID, override); err != nil {
 		return err
 	}
 	row := catalog.FactsRecord{
@@ -619,9 +504,6 @@ func (s *Service) writeOverrideContextWindow(ctx context.Context, providerID, mo
 	if value != nil && (*value < 1 || *value > maxContextWindow) {
 		return fmt.Errorf("context_window must be between 1 and %d: %w", maxContextWindow, ErrInvalidCatalogRow)
 	}
-	if err := s.validateCapabilityAssignments(ctx, providerID, modelID, []capabilityAssignment{{field: "context_window", set: value != nil}}); err != nil {
-		return err
-	}
 	row, err := s.overrideLayer(ctx, providerID, modelID)
 	if err != nil {
 		return err
@@ -638,9 +520,6 @@ func (s *Service) writeOverrideMaxOutput(ctx context.Context, providerID, modelI
 	if value != nil && (*value < 1 || *value > maxContextWindow) {
 		return fmt.Errorf("max_output must be between 1 and %d: %w", maxContextWindow, ErrInvalidCatalogRow)
 	}
-	if err := s.validateCapabilityAssignments(ctx, providerID, modelID, []capabilityAssignment{{field: "max_output", set: value != nil}}); err != nil {
-		return err
-	}
 	row, err := s.overrideLayer(ctx, providerID, modelID)
 	if err != nil {
 		return err
@@ -654,13 +533,6 @@ func (s *Service) writeOverrideMaxOutput(ctx context.Context, providerID, modelI
 }
 
 func (s *Service) writeOverrideCapabilities(ctx context.Context, providerID, modelID string, flags CapabilityFlags) error {
-	if err := s.validateCapabilityAssignments(ctx, providerID, modelID, []capabilityAssignment{
-		{field: "tools", set: flags.Tools.Set && flags.Tools.Value != nil},
-		{field: "reasoning", set: flags.Reasoning.Set && flags.Reasoning.Value != nil},
-		{field: "vision", set: flags.Vision.Set && flags.Vision.Value != nil},
-	}); err != nil {
-		return err
-	}
 	if !flags.any() {
 		return nil
 	}
@@ -718,9 +590,6 @@ func (s *Service) applyOverrideFields(ctx context.Context, providerID, modelID s
 		return nil
 	}
 	if err := validateOverride(*override); err != nil {
-		return err
-	}
-	if err := s.validateOverrideAssignment(ctx, providerID, modelID, override); err != nil {
 		return err
 	}
 	row, err := s.overrideLayer(ctx, providerID, modelID)
@@ -978,9 +847,6 @@ func (s *Service) CloneModel(ctx context.Context, providerID string, req CloneRe
 	}
 	source, err := s.modelRow(ctx, providerID, sourceID)
 	if err != nil {
-		return Model{}, err
-	}
-	if err := s.validateOverrideAssignment(ctx, providerID, sourceID, req.Override); err != nil {
 		return Model{}, err
 	}
 	if err := s.ensureModelAbsent(ctx, providerID, newID); err != nil {

@@ -2,7 +2,7 @@
 	import { t } from 'svelte-i18n';
 	import Icon from '$lib/components/ui/icon.svelte';
 	import { hasFreeAvailability } from '$lib/provider-free';
-import type { Provider } from '$lib/types';
+	import type { Provider } from '$lib/types';
 
 	interface Props {
 		provider: Pick<Provider, 'kind' | 'template_id' | 'auth'> & {

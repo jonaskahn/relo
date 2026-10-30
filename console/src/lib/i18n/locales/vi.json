@@ -1003,6 +1003,12 @@
           "body": "OpenCode Zen Free và Kilo Code Free là cổng của bên thứ ba, không phải dịch vụ của Relo. Chúng chỉ cho phép truy cập qua các tác nhân lập trình chính thức của mình; Relo không phải một trong số đó. Việc sử dụng có thể vi phạm điều khoản của họ hoặc pháp luật, và Relo không xác nhận các dịch vụ này. Nhà cung cấp có thể lưu hoặc sử dụng câu lệnh và mã của bạn, vì vậy đừng bao giờ gửi thông tin mật. Mô hình, giới hạn và tính khả dụng có thể thay đổi hoặc biến mất mà không báo trước. Trong phạm vi pháp luật cho phép, Relo và những người bảo trì không đưa ra bất kỳ bảo đảm nào và không chịu trách nhiệm. Khi bật kết nối miễn phí, bạn chấp nhận hoàn toàn trách nhiệm về việc sử dụng và mọi hậu quả pháp lý.",
           "confirm": "Tôi tự chịu trách nhiệm và đồng ý bật",
           "enabledToast": "Đã bật kết nối miễn phí"
+        },
+        "override": {
+          "allowFor": "Cho phép ghi đè cho {connection}",
+          "blockedFor": "Đã tắt ghi đè cho {connection}",
+          "dormantHint": "Các ghi đè của mô hình vẫn được lưu nhưng bị bỏ qua khi kết nối này không cho phép ghi đè.",
+          "failed": "Không thể đổi cài đặt ghi đè: {detail}"
         }
       },
       "keys": {

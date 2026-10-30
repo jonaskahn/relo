@@ -301,6 +301,27 @@
 		}
 	}
 
+	// The switch belongs to the connection, so one row action updates every row
+	// the All models list already holds for that connection.
+	async function setAllowOverrides(providerId: string, allowed: boolean) {
+		try {
+			const updated = await api<Provider>('/connections/' + encodeURIComponent(providerId), {
+				method: 'PATCH',
+				body: JSON.stringify({ allow_overrides: allowed })
+			});
+			onProviderChanged(updated);
+			allModels = allModels.map((model) =>
+				model.provider_id === providerId ? { ...model, allow_overrides: allowed } : model
+			);
+		} catch (error) {
+			toast.error(
+				$t('ui.pages.providersPage.override.failed', {
+					values: { detail: error instanceof Error ? error.message : String(error) }
+				})
+			);
+		}
+	}
+
 	let addPreset = $state('');
 
 	async function openAdd(providerId = '') {
@@ -526,6 +547,8 @@
 								onloadmore={() => void loadAllModels(false)}
 								onreload={() => void loadAllModels(true)}
 								onopenprovider={(id) => selectProvider(id)}
+								onallowoverrides={(providerId, allowed) =>
+									void setAllowOverrides(providerId, allowed)}
 							>
 								{#snippet toolbarStart()}
 									<Button variant="outline" onclick={backToList}>

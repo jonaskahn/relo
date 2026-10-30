@@ -1,6 +1,7 @@
 import type {
 	Account,
 	Model,
+	ModelCapabilityStates,
 	ModelPrices,
 	Prices,
 	Provider,
@@ -93,6 +94,7 @@ export function providerOf(patch: Partial<Provider> = {}): Provider {
 		retry_attempts: null,
 		switch_on_4xx: true,
 		switch_on_5xx: true,
+		allow_overrides: true,
 		rank: 100,
 		pool_strategy: 'least-loaded',
 		configured: true,
@@ -177,6 +179,7 @@ export function modelOf(patch: Partial<Model> = {}): Model {
 		max_output_layers: { override: null, provider: 128000, modelsdev: null },
 		max_output_source: 'provider',
 		capabilities: { tools: true, reasoning: null, vision: null },
+		allow_overrides: true,
 		capability_override: { tools: null, reasoning: null, vision: null },
 		status: 'active',
 		release_date: '',
@@ -192,6 +195,30 @@ export function modelOf(patch: Partial<Model> = {}): Model {
 		group_refs: null,
 		overridden: false,
 		updated_at_ms: 1,
+		...patch
+	};
+}
+
+/** Builds capability state for a cell test, with silent fields filled in. */
+export function capabilityStatesOf(
+	patch: Partial<ModelCapabilityStates> = {}
+): ModelCapabilityStates {
+	const silentInt = { value: null, source: '', editable: true, manual: null, manual_active: false };
+	const silentBool = {
+		value: null,
+		source: '',
+		editable: true,
+		manual: null,
+		manual_active: false
+	};
+	return {
+		context_window: silentInt,
+		max_input: silentInt,
+		max_output: silentInt,
+		tools: silentBool,
+		reasoning: silentBool,
+		vision: silentBool,
+		reasoning_efforts: { value: null, source: '', manual: null, manual_active: false },
 		...patch
 	};
 }

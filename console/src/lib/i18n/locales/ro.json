@@ -1003,6 +1003,12 @@
           "body": "OpenCode Zen Free și Kilo Code Free sunt gateway-uri ale unor terți, nu servicii Relo. Permit accesul doar prin agenții lor oficiali de programare; Relo nu este unul dintre aceștia. Utilizarea poate încălca termenii lor sau legea, iar Relo nu le susține. Furnizorii pot păstra sau folosi prompturile și codul tău, așa că nu trimite niciodată informații confidențiale. Modelele, limitele și disponibilitatea se pot schimba sau pot dispărea fără notificare. În măsura permisă de lege, Relo și întreținătorii săi nu oferă nicio garanție și nu își asumă răspunderea. Activând conexiunile gratuite, îți asumi întreaga responsabilitate pentru utilizarea lor și pentru orice consecințe legale.",
           "confirm": "Îmi asum răspunderea și activez",
           "enabledToast": "Conexiunile gratuite au fost activate"
+        },
+        "override": {
+          "allowFor": "Permite suprascrierile pentru {connection}",
+          "blockedFor": "Suprascrieri oprite pentru {connection}",
+          "dormantHint": "Suprascrierile modelului rămân salvate, dar sunt ignorate cât timp această conexiune nu le permite.",
+          "failed": "Nu s-a putut schimba setarea suprascrierilor: {detail}"
         }
       },
       "keys": {

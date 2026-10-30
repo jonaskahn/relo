@@ -63,6 +63,7 @@ func newProviderRow(t catalog.Template, id string) catalog.ConnectionRecord {
 		Enabled:             true,
 		Rank:                100,
 		PoolStrategy:        "least-loaded",
+		AllowOverrides:      true,
 		CreatedAtMs:         now,
 		UpdatedAtMs:         now,
 	}

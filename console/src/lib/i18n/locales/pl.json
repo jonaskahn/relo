@@ -1003,6 +1003,12 @@
           "body": "OpenCode Zen Free i Kilo Code Free to bramy zewnętrznych dostawców, a nie usługi Relo. Dostęp umożliwiają wyłącznie przez swoich oficjalnych agentów programistycznych; Relo nie jest jednym z nich. Korzystanie może naruszać ich regulamin lub prawo, a Relo ich nie popiera. Dostawcy mogą przechowywać lub wykorzystywać Twoje prompty i kod, dlatego nigdy nie wysyłaj informacji poufnych. Modele, limity i dostępność mogą zmienić się lub zniknąć bez powiadomienia. W zakresie dozwolonym przez prawo Relo i jego opiekunowie nie udzielają żadnej gwarancji i nie ponoszą odpowiedzialności. Włączając bezpłatne połączenia, przyjmujesz pełną odpowiedzialność za ich używanie i wszelkie skutki prawne.",
           "confirm": "Przyjmuję odpowiedzialność i włączam",
           "enabledToast": "Włączono bezpłatne połączenia"
+        },
+        "override": {
+          "allowFor": "Zezwalaj na nadpisania dla {connection}",
+          "blockedFor": "Nadpisania wyłączone dla {connection}",
+          "dormantHint": "Zapisane nadpisania modelu pozostają, ale są ignorowane, dopóki to połączenie na nie nie pozwala.",
+          "failed": "Nie udało się zmienić ustawienia nadpisań: {detail}"
         }
       },
       "keys": {

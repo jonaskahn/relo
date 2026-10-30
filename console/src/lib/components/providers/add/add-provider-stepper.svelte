@@ -361,7 +361,10 @@
 		const models = probe?.models ?? [];
 		const free = models.filter((model) => model.is_free);
 		const paid = models.filter((model) => !model.is_free);
-		const freeOnly = free.length > 0 && paid.length > 0 && paid.every((model) => disabled.includes(model.id)) &&
+		const freeOnly =
+			free.length > 0 &&
+			paid.length > 0 &&
+			paid.every((model) => disabled.includes(model.id)) &&
 			free.every((model) => !disabled.includes(model.id));
 		if (freeOnly) {
 			if (!idEdited && autoId === '' && !reviewId.endsWith('-free')) {
@@ -376,7 +379,13 @@
 			}
 		} else {
 			if (!idEdited && autoId !== '' && reviewId === autoId + '-free') reviewId = autoId;
-			if (!labelEdited && autoLabel !== '' && reviewLabel === $t('ui.pages.providersPage.review.freeOnlyLabelPattern', { values: { label: autoLabel } })) reviewLabel = autoLabel;
+			if (
+				!labelEdited &&
+				autoLabel !== '' &&
+				reviewLabel ===
+					$t('ui.pages.providersPage.review.freeOnlyLabelPattern', { values: { label: autoLabel } })
+			)
+				reviewLabel = autoLabel;
 			autoId = '';
 			autoLabel = '';
 		}

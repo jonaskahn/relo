@@ -25,7 +25,7 @@
 	let error = $state('');
 
 	const value = $derived(model.capabilities?.[field] ?? null);
-	const forced = $derived((model.capability_override?.[field] ?? null) !== null);
+	const forced = $derived((model.capability_states?.[field]?.manual_active ?? false) === true);
 	const icon = $derived(
 		value === true ? 'circle-check' : value === false ? 'circle-x' : 'circle-off'
 	);

@@ -40,24 +40,7 @@ var (
 	// ErrListAuthoritative names a connection whose own model list decides
 	// which models it serves, so no model can be added to it by hand.
 	ErrListAuthoritative = errors.New("this connection publishes its own model list")
-	// ErrCapabilityReadOnly reports a manual capability that would supersede a
-	// provider, account, or models.dev value.
-	ErrCapabilityReadOnly = errors.New("capability is read-only")
 )
-
-// CapabilityReadOnlyError names the field and authoritative source behind a
-// refused manual assignment.
-type CapabilityReadOnlyError struct {
-	Field  string
-	Source string
-}
-
-func (e *CapabilityReadOnlyError) Error() string {
-	return fmt.Sprintf("%s is defined by %s", e.Field, e.Source)
-}
-
-// Unwrap maps every read-only refusal onto the stable management error code.
-func (e *CapabilityReadOnlyError) Unwrap() error { return ErrCapabilityReadOnly }
 
 // Prices represents token pricing rates in integer USD micros per million tokens.
 type Prices struct {
@@ -144,8 +127,10 @@ type Provider struct {
 	// SwitchOn4xx and SwitchOn5xx report whether this connection fails over on
 	// an unlisted status of that class. Both are resolved, so a console never
 	// repeats the default.
-	SwitchOn4xx       bool
-	SwitchOn5xx       bool
+	SwitchOn4xx bool
+	SwitchOn5xx bool
+	// AllowOverrides applies this connection's manual capability values.
+	AllowOverrides    bool
 	Rank              int
 	PoolStrategy      string
 	Configured        bool
@@ -325,6 +310,9 @@ type Model struct {
 	ActiveAccounts  int
 	// IsFree reports a conversational model that costs nothing.
 	IsFree bool
+	// AllowOverrides reports whether this model's manual capability values are
+	// allowed to supersede the account, provider, and models.dev layers.
+	AllowOverrides bool
 }
 
 // GroupMember is one model inside a route, with its weight and current eligibility.
@@ -458,6 +446,7 @@ func baseProviderView(s *Service, host catalog.Provider, models []catalog.Model)
 	view.RetryAttempts = host.RetryAttempts
 	view.SwitchOn4xx = host.SwitchOn4xx
 	view.SwitchOn5xx = host.SwitchOn5xx
+	view.AllowOverrides = host.AllowOverrides
 	view.Rank = host.Rank
 	view.PoolStrategy = host.PoolStrategy
 	view.Configured = host.Configured
@@ -491,6 +480,7 @@ func providerIdentityView(s *Service, host catalog.Provider, models []catalog.Mo
 		UnroutableReason:    host.UnroutableReason,
 		Enabled:             host.Enabled,
 		UseProxy:            host.UseProxy,
+		AllowOverrides:      host.AllowOverrides,
 	}
 	fillProviderDerived(&view, s, host, models)
 	return view
@@ -699,6 +689,7 @@ func baseModelView(model catalog.Model) Model {
 		ListedAtMs:       model.ListedAtMs,
 		UpdatedAtMs:      model.UpdatedAtMs,
 		IsFree:           model.IsFree,
+		AllowOverrides:   model.AllowOverrides,
 	}
 }
 
@@ -751,14 +742,14 @@ func describeModelCapabilities(described *Model, model catalog.Model) {
 
 func capabilityIntState(value *int64, source string, manual *int64) *CapabilityStateInt {
 	return &CapabilityStateInt{
-		Value: value, Source: source, Editable: source == "", Manual: manual,
+		Value: value, Source: source, Editable: true, Manual: manual,
 		ManualActive: manual != nil && source == "override",
 	}
 }
 
 func capabilityBoolState(value *bool, source string, manual *bool) *CapabilityStateBool {
 	return &CapabilityStateBool{
-		Value: value, Source: source, Editable: source == "", Manual: manual,
+		Value: value, Source: source, Editable: true, Manual: manual,
 		ManualActive: manual != nil && source == "override",
 	}
 }

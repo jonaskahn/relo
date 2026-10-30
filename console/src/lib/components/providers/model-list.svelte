@@ -35,6 +35,9 @@
 		onenable?: (ids: string[]) => Promise<void>;
 		ondisable?: (ids: string[]) => Promise<void>;
 		onopenprovider?: (id: string) => void;
+		// onallowoverrides changes a connection's override policy from a row in
+		// the combined list; a connection pane leaves it unset.
+		onallowoverrides?: (providerId: string, allowed: boolean) => void;
 		hasMore?: boolean;
 		onloadmore?: () => void;
 		canAdd?: boolean;
@@ -65,6 +68,7 @@
 		onenable,
 		ondisable,
 		onopenprovider,
+		onallowoverrides,
 		hasMore = false,
 		onloadmore,
 		canAdd = false,
@@ -491,6 +495,9 @@
 						onopen={openModel}
 						onedit={editModel}
 						onclone={providerId === '' ? undefined : (row) => (cloning = row)}
+						onallowoverrides={providerId === '' && onallowoverrides
+							? (row, allowed) => onallowoverrides(row.provider_id, allowed)
+							: undefined}
 						onsavecontext={saveContext}
 						onsavemaxoutput={saveMaxOutput}
 						onsavecapability={saveCapability}

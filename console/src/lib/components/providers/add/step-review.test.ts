@@ -36,10 +36,7 @@ describe('the review step', () => {
 			props: {
 				probe: {
 					...probe,
-					models: [
-						{ ...probeModel('free-model', true) },
-						{ ...probeModel('paid-model', false) }
-					]
+					models: [{ ...probeModel('free-model', true) }, { ...probeModel('paid-model', false) }]
 				},
 				onchange: () => {}
 			}

@@ -137,7 +137,10 @@
 					<BillingChip {provider} hover />
 					<FreeAvailableChip {provider} />
 					{#if experimental}
-						<span data-experimental-chip class="badge shrink-0 bg-warn/10 text-ink ring-1 ring-warn/35">
+						<span
+							data-experimental-chip
+							class="badge shrink-0 bg-warn/10 text-ink ring-1 ring-warn/35"
+						>
 							{$t('ui.pages.providersPage.list.tagExperimental')}
 						</span>
 					{/if}

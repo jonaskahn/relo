@@ -100,6 +100,8 @@ type patchProviderRequest struct {
 	// status of that class; absent leaves the stored choice alone.
 	SwitchOn4xx *bool `json:"switch_on_4xx"`
 	SwitchOn5xx *bool `json:"switch_on_5xx"`
+	// AllowOverrides applies this connection's manual capability values.
+	AllowOverrides *bool `json:"allow_overrides"`
 }
 
 type patchModelRequest struct {
@@ -320,6 +322,7 @@ func (s *Server) handlePatchProvider(w http.ResponseWriter, r *http.Request) {
 		Label: request.Label, APIFormat: request.APIFormat, KeyHeader: request.KeyHeader, Headers: request.Headers,
 		UseProxy: request.UseProxy, TimeoutSeconds: request.TimeoutSeconds, RetryAttempts: request.RetryAttempts,
 		SwitchOn4xx: request.SwitchOn4xx, SwitchOn5xx: request.SwitchOn5xx,
+		AllowOverrides: request.AllowOverrides,
 	})
 	if err != nil {
 		writeServiceError(w, err)

@@ -35,10 +35,11 @@ invalid and `make seed-latest` forces a fresh one; the generated
 direct `go build` or `go test` without it still compiles, fetches, and caches normally.
 Beta and release jobs run `make seed-latest` before compiling, so a download or validation
 failure stops the job before artifacts exist. Pricing still resolves as user override,
-then the provider, then models.dev. Protected capabilities use provider authority instead:
-the selected account's discovered facts, then the connection definition, then models.dev,
-and a manual completion only where all of those are silent. A manual capability can never
-supersede a known definition, and stored legacy completions remain visible but inactive.
+then the provider, then models.dev. Protected capabilities follow the connection's Allow
+overrides switch: when on, the operator's saved manual values come first, then the selected
+account's discovered facts, the connection definition, and models.dev. When off, manual values
+remain stored and editable but are ignored entirely; the detected layers decide. Name,
+description, category, and prices keep their own always-active override behavior.
 Context capacity, maximum input, and maximum output stay exact and separate; a display label
 may round, but routing, admission, listings, and wire requests use the authoritative count.
 An oversized client output budget is clamped silently to the provider's output ceiling and

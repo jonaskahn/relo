@@ -321,7 +321,9 @@
 											/>
 											<span class="truncate">{model.name || model.model_id}</span>
 											<BillingChip provider={providers.find((p) => p.id === model.provider_id)!} />
-											<FreeAvailableChip provider={providers.find((p) => p.id === model.provider_id)!} />
+											<FreeAvailableChip
+												provider={providers.find((p) => p.id === model.provider_id)!}
+											/>
 										</button>
 									{/each}
 								</div>

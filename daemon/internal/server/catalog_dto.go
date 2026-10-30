@@ -178,6 +178,7 @@ type providerResponse struct {
 	RetryAttempts       *int                   `json:"retry_attempts"`
 	SwitchOn4xx         bool                   `json:"switch_on_4xx"`
 	SwitchOn5xx         bool                   `json:"switch_on_5xx"`
+	AllowOverrides      bool                   `json:"allow_overrides"`
 	Rank                int                    `json:"rank"`
 	PoolStrategy        string                 `json:"pool_strategy"`
 	Configured          bool                   `json:"configured"`
@@ -206,7 +207,8 @@ func toProviderResponse(provider appcatalog.Provider) providerResponse {
 		UseProxy: provider.UseProxy, TimeoutSeconds: provider.TimeoutSeconds,
 		RetryAttempts: provider.RetryAttempts,
 		SwitchOn4xx:   provider.SwitchOn4xx, SwitchOn5xx: provider.SwitchOn5xx,
-		Rank: provider.Rank, PoolStrategy: provider.PoolStrategy,
+		AllowOverrides: provider.AllowOverrides,
+		Rank:           provider.Rank, PoolStrategy: provider.PoolStrategy,
 		Configured:        provider.Configured,
 		LastRefreshedAtMs: provider.LastRefreshedAtMs,
 		LastRefreshError:  provider.LastRefreshError,
@@ -381,6 +383,7 @@ type modelResponse struct {
 	ServingAccounts    int                           `json:"serving_accounts"`
 	ActiveAccounts     int                           `json:"active_accounts"`
 	IsFree             bool                          `json:"is_free"`
+	AllowOverrides     bool                          `json:"allow_overrides"`
 }
 
 func toModelResponse(model appcatalog.Model) modelResponse {
@@ -409,6 +412,7 @@ func toModelResponse(model appcatalog.Model) modelResponse {
 		ListedAtMs: model.ListedAtMs, UpdatedAtMs: model.UpdatedAtMs,
 		ServingAccounts: model.ServingAccounts, ActiveAccounts: model.ActiveAccounts,
 		IsFree: model.IsFree,
+		AllowOverrides: model.AllowOverrides,
 	}
 }
 

@@ -3,7 +3,7 @@ import { addMessages, init } from 'svelte-i18n';
 import { beforeAll, describe, expect, it } from 'vitest';
 
 import en from '$lib/i18n/locales/en.json';
-import { modelOf } from '$lib/provider-fixtures';
+import { capabilityStatesOf, modelOf } from '$lib/provider-fixtures';
 import type { Model } from '$lib/types';
 
 import ContextPicker from './context-picker.svelte';
@@ -43,7 +43,16 @@ describe('the context cell', () => {
 			modelOf({
 				context_window: 200_000,
 				max_input: 262_144,
-				context_layers: { override: 200_000, provider: null, modelsdev: null }
+				context_layers: { override: 200_000, provider: null, modelsdev: null },
+				capability_states: capabilityStatesOf({
+					context_window: {
+						value: 200_000,
+						source: 'override',
+						editable: true,
+						manual: 200_000,
+						manual_active: true
+					}
+				})
 			})
 		);
 
@@ -56,7 +65,16 @@ describe('the context cell', () => {
 			modelOf({
 				max_output: 128_000,
 				max_output_layers: { override: 128_000, provider: 64_000, modelsdev: null },
-				max_output_source: 'override'
+				max_output_source: 'override',
+				capability_states: capabilityStatesOf({
+					max_output: {
+						value: 128_000,
+						source: 'override',
+						editable: true,
+						manual: 128_000,
+						manual_active: true
+					}
+				})
 			}),
 			'output'
 		);
@@ -71,7 +89,16 @@ describe('the context cell', () => {
 			modelOf({
 				context_window: 1_000_000,
 				max_input: 262_144,
-				context_layers: { override: 1_000_000, provider: null, modelsdev: null }
+				context_layers: { override: 1_000_000, provider: null, modelsdev: null },
+				capability_states: capabilityStatesOf({
+					context_window: {
+						value: 1_000_000,
+						source: 'override',
+						editable: true,
+						manual: 1_000_000,
+						manual_active: true
+					}
+				})
 			})
 		);
 

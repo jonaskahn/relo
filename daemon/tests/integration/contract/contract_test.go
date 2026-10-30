@@ -256,15 +256,15 @@ func (h *harness) saveProviders() {
 		{ID: "openai", Origin: string(catalog.OriginCustom), Label: "OpenAI",
 			Auth: string(catalog.AuthAPIKey), APIFormat: string(catalog.FormatOpenAIChat),
 			BaseURL: h.upstream.URL(), ModelsFormat: string(catalog.ModelsNone),
-			Enabled: true, Rank: 100, PoolStrategy: "least-loaded"},
+			Enabled: true, Rank: 100, PoolStrategy: "least-loaded", AllowOverrides: true},
 		{ID: "openai-resp", Origin: string(catalog.OriginCustom), Label: "Responses",
 			Auth: string(catalog.AuthAPIKey), APIFormat: string(catalog.FormatOpenAIResp),
 			BaseURL: h.upstream.URL(), ModelsFormat: string(catalog.ModelsNone),
-			Enabled: true, Rank: 90, PoolStrategy: "least-loaded"},
+			Enabled: true, Rank: 90, PoolStrategy: "least-loaded", AllowOverrides: true},
 		{ID: "anthropic", Origin: string(catalog.OriginCustom), Label: "Anthropic",
 			Auth: string(catalog.AuthAPIKey), APIFormat: string(catalog.FormatAnthropic),
 			BaseURL: h.upstream.URL(), ModelsFormat: string(catalog.ModelsNone),
-			Enabled: true, Rank: 80, PoolStrategy: "least-loaded"},
+			Enabled: true, Rank: 80, PoolStrategy: "least-loaded", AllowOverrides: true},
 	}
 	for _, row := range providers {
 		if err := repo.SaveProvider(ctx, row); err != nil {

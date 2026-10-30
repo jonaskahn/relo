@@ -1003,6 +1003,12 @@
           "body": "OpenCode Zen Free e Kilo Code Free são gateways de terceiros, não serviços do Relo. Eles permitem acesso apenas por meio de seus agentes de programação oficiais; o Relo não é um deles. O uso pode violar os termos deles ou a lei, e o Relo não os endossa. Os provedores podem reter ou usar seus prompts e código, então nunca envie informações confidenciais. Modelos, limites e disponibilidade podem mudar ou desaparecer sem aviso. Na medida permitida por lei, o Relo e seus mantenedores não oferecem garantia e não se responsabilizam. Ao ativar as conexões gratuitas, você assume total responsabilidade pelo uso e por quaisquer consequências legais.",
           "confirm": "Aceito a responsabilidade e quero ativar",
           "enabledToast": "Conexões gratuitas ativadas"
+        },
+        "override": {
+          "allowFor": "Permitir substituições para {connection}",
+          "blockedFor": "Substituições desativadas para {connection}",
+          "dormantHint": "As substituições do modelo continuam salvas, mas são ignoradas enquanto esta conexão não as permitir.",
+          "failed": "Não foi possível alterar a configuração de substituições: {detail}"
         }
       },
       "keys": {

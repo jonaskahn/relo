@@ -116,6 +116,9 @@ export interface Provider {
 	// always retry. The daemon resolves the default, so both are plain.
 	readonly switch_on_4xx: boolean;
 	readonly switch_on_5xx: boolean;
+	// allow_overrides applies this connection's manual capability values over
+	// the account, provider, and models.dev layers.
+	readonly allow_overrides: boolean;
 	readonly rank: number;
 	readonly pool_strategy: string;
 	readonly configured: boolean;
@@ -404,6 +407,9 @@ export interface Model {
 	readonly max_output_layers: ContextLayers;
 	readonly max_output_source: string;
 	readonly capabilities: Capabilities;
+	// allow_overrides reports whether this model's manual capability values
+	// are currently allowed to win.
+	readonly allow_overrides: boolean;
 	// capability_override is the operator's own tools, reasoning, and vision.
 	// A null field is one they have not set, so the row can mark a forced value.
 	readonly capability_override: Capabilities;

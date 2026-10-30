@@ -39,6 +39,7 @@ func seedRow(t *testing.T, h *harness, row sqlite.ProviderRow) {
 	if row.PoolStrategy == "" {
 		row.PoolStrategy = sqlite.StrategyLeastLoaded
 	}
+	row.AllowOverrides = true
 	repo := sqlite.NewCatalogRepo(h.db)
 	if err := repo.SaveProvider(context.Background(), row); err != nil {
 		t.Fatalf("save provider %s: %v", row.ID, err)

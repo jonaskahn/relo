@@ -81,10 +81,11 @@ banner stay.
 ### Models tab
 
 Toolbar, one row that wraps: the bulk-actions menu (turn the shown models on or off, and — once the connection lists
-both paid and free models — turn all paid or all free on or off). Search and the one filter menu (category, price
-paid/free, status, Unpriced / Overridden / Unavailable with an active-dimension badge and Clear filters) sit in the
-pane toolbar beside Back. The paid/free items appear only when the connection's roster holds both, since not every
-provider publishes free models. Active filters mark their control with `--accent-soft`.
+both paid and free models — turn all paid or all free on or off), and the **Allow overrides** icon toggle. It is pressed
+and accents when on, and every model row in All models carries the same connection-level toggle. Search and the one
+filter menu (category, price paid/free, status, Unpriced / Overridden / Unavailable with an active-dimension badge and
+Clear filters) sit in the pane toolbar beside Back. The paid/free items appear only when the connection's roster holds
+both, since not every provider publishes free models. Active filters mark their control with `--accent-soft`.
 
 **Model row-card** (no table, no row lines — each model is its own container, `--surface`, full 1px `--line`,
 `--radius-card`, gap 8px between rows):
@@ -119,7 +120,9 @@ One modal for reading and editing one model. The body swaps content; the header 
 - Pricing: input and output tiles in `.mono-data` with the source named under each, then "per 1M tokens".
 - Overrides: always shown — the fields the operator pinned (name, description, category, context, max input and output,
   capabilities, rates) with their values, otherwise "No overrides — this model follows the provider, then models.dev."
-  This is what tells an override apart from the provider's own values without entering the form.
+  This is what tells an override apart from the provider's own values without entering the form. While Allow overrides
+  is off, stored capability values are marked inactive and the effective values keep their account/provider/models.dev
+  source.
 - Sources: the effective value of every field with the layer it came from. Compare sources and Advanced disclosures; the
   **Priced as** reference lives here and re-prices the model immediately.
 - Footer: the price summary and the source pill ("Provider" / "models.dev" / "Manual"), then Clone (ghost), Delete
@@ -132,7 +135,8 @@ One modal for reading and editing one model. The body swaps content; the header 
 2. **Pricing**: input and output per 1M tokens, the other cache and long-context rates under More rates. The **Priced
    as** reference stays under Advanced in the read view; a manual rate never gets overwritten by a price refresh.
 3. **Limits**: context window and max output with presets; each offers the provider and models.dev value as a one-click
-   fallback, and clearing removes the override.
+   fallback, and clearing removes the override. The form stays editable while Allow overrides is off and says the saved
+   values are dormant.
 4. **Capabilities**: tools, reasoning, vision as Default / On / Off, so "no override" stays distinct from "no".
 5. **Advanced**: description, category, delete model.
 

@@ -656,6 +656,7 @@ func (p *probePlan) probeConnectionRecord(req ProbeRequest) catalog.ConnectionRe
 		Enabled:             true,
 		Rank:                100,
 		PoolStrategy:        "least-loaded",
+		AllowOverrides:      true,
 		UseProxy:            t.ID == catalog.OpenCodeFreeTemplate,
 	}
 }
