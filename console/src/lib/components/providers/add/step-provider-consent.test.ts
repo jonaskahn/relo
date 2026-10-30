@@ -36,7 +36,7 @@ describe('the free consent gate in the picker', () => {
 		expect(html).not.toContain('OpenCode Zen Free');
 	});
 
-	it('keeps the tracing accent glow in both consent states', () => {
+	it('renders the one-pass accent glow in both consent states', () => {
 		const base = {
 			templates: [templateOf({ id: 'opencode-free', label: 'OpenCode Zen Free' })],
 			freeBusy: false,

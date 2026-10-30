@@ -374,9 +374,10 @@
 </div>
 
 <style>
-	/* A short accent dash traces the free heading border continuously. The
-	   normalized pathLength lets the dash length stay proportional to the
-	   heading width. Reduced motion keeps the full accent border static. */
+	/* A short accent dash traces the free heading border once when the picker
+	   opens, then fades out. The normalized pathLength lets the dash length stay
+	   proportional to the heading width. Reduced motion keeps the full accent
+	   border static instead of animating it. */
 	.free-heading-glow {
 		position: relative;
 		isolation: isolate;
@@ -398,7 +399,8 @@
 		fill: none;
 		stroke-linecap: round;
 		stroke-dasharray: var(--free-glow-line-length) calc(100 - var(--free-glow-line-length));
-		animation: free-glow-trace 2.6s linear infinite;
+		opacity: 0;
+		animation: free-glow-trace 2.6s ease-in-out 1 forwards;
 	}
 	.free-glow-line {
 		stroke: var(--accent);
@@ -410,8 +412,17 @@
 		filter: blur(3px);
 	}
 	@keyframes free-glow-trace {
+		0% {
+			stroke-dashoffset: 0;
+			opacity: 0;
+		}
+		10%,
+		85% {
+			opacity: 1;
+		}
 		to {
 			stroke-dashoffset: -100;
+			opacity: 0;
 		}
 	}
 	@media (prefers-reduced-motion: reduce) {
@@ -419,6 +430,7 @@
 			animation: none;
 			stroke-dasharray: none;
 			stroke: var(--accent-border);
+			opacity: 1;
 		}
 		.free-glow-blur {
 			display: none;

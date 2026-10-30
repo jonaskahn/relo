@@ -132,8 +132,8 @@
 				aria-label={$t('ui.common.openCard', { values: { name: provider.label } })}
 				onclick={() => onopen(provider.id)}
 			>
-				<CardTitle class="flex min-w-0 items-center gap-1.5 truncate text-sm">
-					<span class="truncate">{provider.label}</span>
+				<CardTitle class="flex min-w-0 items-center gap-1.5 text-sm">
+					<span class="min-w-0 truncate">{provider.label}</span>
 					<BillingChip {provider} hover />
 					<FreeAvailableChip {provider} />
 					{#if experimental}
