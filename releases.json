@@ -1,5 +1,5 @@
 {
-  "generated": "2026-10-30T17:59:41Z",
+  "generated": "2026-10-30T18:00:33Z",
   "latest": "v0.2.0",
   "latest_beta": "v0.2.0-beta.58.66e534d7",
   "install": {
@@ -25,7 +25,7 @@
       "draft": false,
       "published_at": "2026-10-30T16:43:09Z",
       "page": "https://github.com/jonaskahn/relo/releases/tag/v0.2.0",
-      "notes": "🎉 **Introducing Free Connections (opt-in)**\r\n\r\n- ⚙️ New `free connections` setting — off by default, you choose to enable it\r\n- 🔒 Strict consent required before any free connection is used — enforced server-side, not just in the UI\r\n- 🎛️ Toggle free connections directly in the add picker, with per-connection overrides\r\n- 🙈 Free gateways are hidden and renamed until you opt in\r\n- ✨ Free-aware review controls and smarter free connection discovery\r\n- 🌍 Rewritten consent copy, now fully localized (i18n)\r\n\r\n🐛 **Fixes**\r\n- 🐳 Fixed snapshot reload serialization\r\n- 🧅 Fixed consent modal layering above the add modal\r\n- 🔢 Fixed hidden free connection count not displaying\r\n\r\n🪟 **Windows**\r\n- 🖥️ Binary now links as a GUI app (no console window popups)\r\n- 📦 npm no longer trips over version manager shims\r\n\r\n🧹 **Under the hood**\r\n- 🎨 Refined experimental chip & free glow styling\r\n- 🧪 Added test coverage for free visibility and consent refusals\r\n- ♻️ Internal refactors for catalog model facts and blocked-member checks\r\n",
+      "notes": "# v0.2.0 - New Fire 🔥\n\n🎉 **Introducing Free Connections (opt-in)**\n\n- ⚙️ New `free connections` setting — off by default, you choose to enable it (found under **Others**)\n- 🔒 Strict consent required before any free connection is used — enforced server-side in routing, not just in the UI\n- 🎛️ Toggle free connections directly in the add picker, with per-connection overrides\n- 🙈 Free gateways are hidden and renamed until you opt in\n- ✨ Free-aware review controls, free model availability, and smarter free connection discovery\n- 🌍 Rewritten consent copy, now fully localized (i18n)\n\n🐛 **Fixes**\n- 🐳 Fixed snapshot reload serialization\n- 🧅 Fixed consent modal layering above the add modal\n- 🔢 Fixed hidden free connection count not displaying\n\n🪟 **Windows**\n- 🖥️ Binary now links as a GUI app (no console window popups)\n- 📦 npm no longer trips over version manager shims\n\n🧹 **Under the hood**\n- 📝 Documented free connection behavior, consent, model availability, and the override policy\n- 🎨 Refined experimental chip & free glow styling\n- 🧪 Added test coverage for free visibility and consent refusals\n- ♻️ Internal refactors for catalog model facts and blocked-member checks\n",
       "install": {
         "script": "curl -fsSL https://relo.ifelse.one/install.sh | sh -s -- --version 0.2.0",
         "powershell": "& ([scriptblock]::Create((irm https://relo.ifelse.one/install.ps1))) -Version 0.2.0",
