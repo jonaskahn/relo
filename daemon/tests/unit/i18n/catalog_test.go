@@ -199,3 +199,32 @@ func TestCatalogsMatchTheEmbeddedFiles(t *testing.T) {
 		t.Fatalf("catalog files = %d, want one per language (%d)", len(entries), len(loaded.Supported()))
 	}
 }
+
+func TestFreeConnectionMessagesAreTranslated(t *testing.T) {
+	loaded, err := i18n.Load()
+	if err != nil {
+		t.Fatalf("Load() error = %v", err)
+	}
+	reference := catalog(t, "en")
+	for _, id := range []string{
+		"api.connections.free_connections_disabled",
+		"api.connections.free_connection_exists",
+	} {
+		if _, found := reference[id]; !found {
+			t.Fatalf("English catalog is missing %s", id)
+		}
+		for _, tag := range loaded.Supported() {
+			entries := catalog(t, tag)
+			translated, found := entries[id]
+			if !found {
+				t.Fatalf("%s: %s is missing", tag, id)
+			}
+			if strings.TrimSpace(translated.Other) == "" {
+				t.Fatalf("%s: %s is empty", tag, id)
+			}
+			if tag != "en" && translated.Other == reference[id].Other {
+				t.Errorf("%s: %s still reads English", tag, id)
+			}
+		}
+	}
+}

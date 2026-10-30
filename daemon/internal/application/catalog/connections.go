@@ -40,24 +40,7 @@ var (
 	// ErrListAuthoritative names a connection whose own model list decides
 	// which models it serves, so no model can be added to it by hand.
 	ErrListAuthoritative = errors.New("this connection publishes its own model list")
-	// ErrCapabilityReadOnly reports a manual capability that would supersede a
-	// provider, account, or models.dev value.
-	ErrCapabilityReadOnly = errors.New("capability is read-only")
 )
-
-// CapabilityReadOnlyError names the field and authoritative source behind a
-// refused manual assignment.
-type CapabilityReadOnlyError struct {
-	Field  string
-	Source string
-}
-
-func (e *CapabilityReadOnlyError) Error() string {
-	return fmt.Sprintf("%s is defined by %s", e.Field, e.Source)
-}
-
-// Unwrap maps every read-only refusal onto the stable management error code.
-func (e *CapabilityReadOnlyError) Unwrap() error { return ErrCapabilityReadOnly }
 
 // Prices represents token pricing rates in integer USD micros per million tokens.
 type Prices struct {
@@ -92,6 +75,7 @@ type ProviderCounts struct {
 	EnabledModels   int
 	AvailableModels int
 	UnpricedModels  int
+	FreeModels      int
 	Accounts        int
 	ActiveAccounts  int
 	PausedAccounts  int
@@ -143,8 +127,10 @@ type Provider struct {
 	// SwitchOn4xx and SwitchOn5xx report whether this connection fails over on
 	// an unlisted status of that class. Both are resolved, so a console never
 	// repeats the default.
-	SwitchOn4xx       bool
-	SwitchOn5xx       bool
+	SwitchOn4xx bool
+	SwitchOn5xx bool
+	// AllowOverrides applies this connection's manual capability values.
+	AllowOverrides    bool
 	Rank              int
 	PoolStrategy      string
 	Configured        bool
@@ -322,6 +308,11 @@ type Model struct {
 	// model. They are equal on a connection whose accounts share one roster.
 	ServingAccounts int
 	ActiveAccounts  int
+	// IsFree reports a conversational model that costs nothing.
+	IsFree bool
+	// AllowOverrides reports whether this model's manual capability values are
+	// allowed to supersede the account, provider, and models.dev layers.
+	AllowOverrides bool
 }
 
 // GroupMember is one model inside a route, with its weight and current eligibility.
@@ -412,6 +403,9 @@ func (s *Service) Providers(ctx context.Context, query ProviderQuery) ([]Provide
 	}
 	rows := make([]Provider, 0, len(snapshot.Providers))
 	for _, host := range snapshot.Providers {
+		if !s.visibleHost(host) {
+			continue
+		}
 		if !query.matches(host) {
 			continue
 		}
@@ -428,6 +422,9 @@ func (s *Service) Provider(ctx context.Context, id string) (Provider, error) {
 	}
 	host, found := snapshot.Provider(id)
 	if !found {
+		return Provider{}, fmt.Errorf("%s: %w", id, ErrProviderNotFound)
+	}
+	if !s.visibleHost(host) {
 		return Provider{}, fmt.Errorf("%s: %w", id, ErrProviderNotFound)
 	}
 	return s.describeProvider(snapshot, host), nil
@@ -449,6 +446,7 @@ func baseProviderView(s *Service, host catalog.Provider, models []catalog.Model)
 	view.RetryAttempts = host.RetryAttempts
 	view.SwitchOn4xx = host.SwitchOn4xx
 	view.SwitchOn5xx = host.SwitchOn5xx
+	view.AllowOverrides = host.AllowOverrides
 	view.Rank = host.Rank
 	view.PoolStrategy = host.PoolStrategy
 	view.Configured = host.Configured
@@ -482,6 +480,7 @@ func providerIdentityView(s *Service, host catalog.Provider, models []catalog.Mo
 		UnroutableReason:    host.UnroutableReason,
 		Enabled:             host.Enabled,
 		UseProxy:            host.UseProxy,
+		AllowOverrides:      host.AllowOverrides,
 	}
 	fillProviderDerived(&view, s, host, models)
 	return view
@@ -522,6 +521,9 @@ func countModels(models []catalog.Model) ProviderCounts {
 		}
 		if !m.Prices.Known() {
 			counts.UnpricedModels++
+		}
+		if m.IsFree {
+			counts.FreeModels++
 		}
 	}
 	return counts
@@ -564,6 +566,9 @@ func (s *Service) Models(ctx context.Context, query ModelQuery) ([]Model, int, e
 	}
 	matched := make([]Model, 0, 64)
 	for _, host := range snapshot.Providers {
+		if !s.visibleHost(host) {
+			continue
+		}
 		if query.Provider != "" && host.ID != query.Provider {
 			continue
 		}
@@ -627,7 +632,16 @@ func (s *Service) Model(ctx context.Context, providerID, modelID string) (Model,
 	if !found {
 		return Model{}, fmt.Errorf("%s/%s: %w", providerID, modelID, ErrModelNotFound)
 	}
+	if host, ok := snapshot.Provider(providerID); !ok || !s.visibleHost(host) {
+		return Model{}, fmt.Errorf("%s/%s: %w", providerID, modelID, ErrModelNotFound)
+	}
 	return s.describeModel(snapshot, m, true), nil
+}
+
+// visibleHost hides a disabled keyless-free connection from the management
+// projections, while the routing snapshot still holds it for consent checks.
+func (s *Service) visibleHost(host catalog.Provider) bool {
+	return s.FreeConnectionsEnabled() || !catalog.IsFreeTemplate(host.TemplateID)
 }
 
 func (s *Service) describeModel(snapshot *catalog.Snapshot, model catalog.Model, withDetails bool) Model {
@@ -674,6 +688,8 @@ func baseModelView(model catalog.Model) Model {
 		Overridden:       model.Overridden,
 		ListedAtMs:       model.ListedAtMs,
 		UpdatedAtMs:      model.UpdatedAtMs,
+		IsFree:           model.IsFree,
+		AllowOverrides:   model.AllowOverrides,
 	}
 }
 
@@ -726,14 +742,14 @@ func describeModelCapabilities(described *Model, model catalog.Model) {
 
 func capabilityIntState(value *int64, source string, manual *int64) *CapabilityStateInt {
 	return &CapabilityStateInt{
-		Value: value, Source: source, Editable: source == "", Manual: manual,
+		Value: value, Source: source, Editable: true, Manual: manual,
 		ManualActive: manual != nil && source == "override",
 	}
 }
 
 func capabilityBoolState(value *bool, source string, manual *bool) *CapabilityStateBool {
 	return &CapabilityStateBool{
-		Value: value, Source: source, Editable: source == "", Manual: manual,
+		Value: value, Source: source, Editable: true, Manual: manual,
 		ManualActive: manual != nil && source == "override",
 	}
 }
@@ -786,6 +802,14 @@ func toPrices(p catalog.Prices) Prices {
 		ExtOutput:     p.ExtOutput,
 		ExtCacheRead:  p.ExtCacheRead,
 		ExtCacheWrite: p.ExtCacheWrite,
+	}
+}
+
+func (p Prices) catalog() catalog.Prices {
+	return catalog.Prices{
+		Input: p.Input, Output: p.Output, CacheRead: p.CacheRead, CacheWrite: p.CacheWrite,
+		ExtThreshold: p.ExtThreshold, ExtInput: p.ExtInput, ExtOutput: p.ExtOutput,
+		ExtCacheRead: p.ExtCacheRead, ExtCacheWrite: p.ExtCacheWrite,
 	}
 }
 
@@ -851,6 +875,11 @@ func (s *Service) describeGroup(snapshot *catalog.Snapshot, group catalog.Group)
 	row.SupportsTools, row.SupportsReasoning, row.SupportsVision = snapshot.PromisedCapabilities(group)
 	row.CapabilityWarnings = snapshot.CapabilityWarnings(group)
 	for _, m := range group.Members {
+		if m.ProviderID != "" {
+			if host, found := snapshot.Provider(m.ProviderID); found && !s.visibleHost(host) {
+				continue
+			}
+		}
 		row.Members = append(row.Members, describeGroupMember(snapshot, m))
 	}
 	return row
@@ -906,6 +935,9 @@ func describeAutoMember(snapshot *catalog.Snapshot, described *GroupMember) {
 	}
 	firstReason := ""
 	for _, model := range models {
+		if host, found := snapshot.Provider(model.ProviderID); found && !snapshot.ProviderVisible(host) {
+			continue
+		}
 		reason := snapshot.SkipReason(model, catalog.Requirements{})
 		serving, active := snapshot.Coverage(model)
 		described.ServingAccounts += serving

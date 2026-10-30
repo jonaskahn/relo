@@ -496,7 +496,9 @@
           "tagFree": "Kostenlos",
           "tagExperimental": "Experimentell",
           "tagPayAsYouGo": "Nutzungsbasiert",
-          "tagPaidPlan": "Abo"
+          "tagPaidPlan": "Abo",
+          "groupFree": "Kostenlose Verbindungen",
+          "freeAvailable": "Kostenlos verfügbar"
         },
         "status": {
           "ready": "Bereit",
@@ -918,7 +920,13 @@
           "forceSignInBody": "{process} (pid {pid}) belegt den Port, den diese Anmeldung braucht. Beende ihn, um den Port freizugeben.",
           "signInPortBusy": "{process} belegt den Port, den diese Anmeldung braucht",
           "next": "Weiter",
-          "chooseHint": "Anbieter wählen"
+          "chooseHint": "Anbieter wählen",
+          "groupHintFree": "Ohne Konto und API-Schlüssel",
+          "freeOffHint": "Kostenlose Verbindungen bleiben verborgen, bis du sie aktivierst.",
+          "filterAll": "Alle",
+          "filterFree": "Kostenlos",
+          "filterLabel": "Verbindungen filtern",
+          "freeAlreadyAdded": "Diese kostenlose Verbindung ist bereits hinzugefügt."
         },
         "verify": {
           "title": "Verbindung prüfen",
@@ -968,7 +976,15 @@
           "commitFailed": "Der Anbieter konnte nicht hinzugefügt werden: {detail}",
           "keyAdded": "Schlüssel zu {label} hinzugefügt.",
           "legend": "Preis pro 1M Token, ein / aus",
-          "retainsPrompts": "Dieser kostenlose Pool braucht kein Konto. Die Prompts, die du ihm sendest, können vom Anbieter protokolliert werden."
+          "retainsPrompts": "Dieser kostenlose Pool braucht kein Konto. Die Prompts, die du ihm sendest, können vom Anbieter protokolliert werden.",
+          "freeBadge": "Kostenlos",
+          "freeOnly": "Nur kostenlos",
+          "noFreeModels": "Keine kostenlosen Modelle",
+          "bulkLabel": "Modellzustände",
+          "freeOnlyLabel": "Nur kostenlos",
+          "freeOnlyLabelPattern": "{label} (nur kostenlos)",
+          "turnOnFree": "Alle kostenlosen einschalten",
+          "turnOffFree": "Alle kostenlosen ausschalten"
         },
         "format": {
           "openaiChat": "OpenAI Chat Completions; funktioniert mit den meisten Clients und Gateways",
@@ -981,6 +997,18 @@
           "kiro": "Kiros CodeWhisperer API über eine Kiro-CLI-Sitzung",
           "cloudCode": "Google Cloud Code Assist, von Antigravity-Anmeldungen genutzt",
           "unsupported": "Relo spricht dieses Format noch nicht."
+        },
+        "freeConsent": {
+          "title": "Nutzung auf eigene Verantwortung",
+          "body": "OpenCode Zen Free und Kilo Code Free sind Gateways Dritter, keine Dienste von Relo. Der Zugriff ist nur über ihre offiziellen Coding-Agenten erlaubt; Relo ist keiner davon. Die Nutzung kann gegen ihre Bedingungen oder geltendes Recht verstoßen, und Relo befürwortet sie nicht. Anbieter können deine Prompts und deinen Code speichern oder verwenden; sende deshalb niemals vertrauliche Informationen. Modelle, Limits und Verfügbarkeit können sich ohne Ankündigung ändern oder verschwinden. Soweit gesetzlich zulässig, übernehmen Relo und seine Maintainer keine Gewährleistung und keine Haftung. Mit dem Aktivieren der kostenlosen Verbindungen übernimmst du die volle Verantwortung für ihre Nutzung und alle rechtlichen Folgen.",
+          "confirm": "Auf eigene Verantwortung aktivieren",
+          "enabledToast": "Kostenlose Verbindungen aktiviert"
+        },
+        "override": {
+          "allowFor": "Überschreibungen für {connection} erlauben",
+          "blockedFor": "Überschreibungen für {connection} aus",
+          "dormantHint": "Gespeicherte Modell-Überschreibungen bleiben erhalten, werden aber ignoriert, solange diese Verbindung Überschreibungen nicht erlaubt.",
+          "failed": "Überschreibungseinstellung konnte nicht geändert werden: {detail}"
         }
       },
       "keys": {
@@ -1953,7 +1981,11 @@
       "failoverLabel": "Failover-Wartezeit",
       "failoverHint": "Wie lange ein abgelehntes Konto oder Gruppenmitglied nach einem Rate-Limit oder Serverfehler aus der Rotation bleibt, und wie die Wartezeit mit jedem weiteren Fehler wächst. Ein Erfolg setzt sie zurück. Ohne Wartezeit ist die erste Ablehnung sofort wieder nutzbar.",
       "retryHint": "Wie oft ein Konto wiederholt wird, bevor die Anfrage zum nächsten Konto wandert. Zwischen den Versuchen liegt eine zufällige Wartezeit von 1–3 s.",
-      "jumpLabel": "Zum Abschnitt springen"
+      "jumpLabel": "Zum Abschnitt springen",
+      "freeConnectionsLabel": "Kostenlose Verbindungen",
+      "freeConnectionsHint": "Kostenlose Verbindungen bleiben verborgen, bis du sie aktivierst und den Risikohinweis akzeptierst. Beim Ausschalten werden sie ausgeblendet und nehmen keine neuen Anfragen mehr an; gespeicherte Daten bleiben erhalten.",
+      "freeConnectionsDisabledToast": "Kostenlose Verbindungen ausgeschaltet",
+      "sectionOthers": "Sonstiges"
     },
     "updateDialog": {
       "title": "Relo aktualisieren",

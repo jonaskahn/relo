@@ -2,10 +2,12 @@ package server
 
 import (
 	"net/http"
+	"net/http/httptest"
 	"testing"
 
 	"github.com/jonaskahn/relo/internal/activity"
 	appaccount "github.com/jonaskahn/relo/internal/application/account"
+	appcatalog "github.com/jonaskahn/relo/internal/application/catalog"
 	appintegration "github.com/jonaskahn/relo/internal/application/integration"
 	"github.com/jonaskahn/relo/internal/catalog"
 )
@@ -25,6 +27,8 @@ func TestServiceStatusMapsRecoverableFailures(t *testing.T) {
 		{name: "catalog", err: catalog.ErrNoCatalog, status: http.StatusServiceUnavailable, code: "service_unavailable"},
 		{name: "rejected list", err: catalog.ErrListRejected, status: http.StatusBadGateway, code: "upstream_unavailable"},
 		{name: "unsupported list", err: catalog.ErrListUnsupported, status: http.StatusBadGateway, code: "upstream_unavailable"},
+		{name: "free consent", err: appcatalog.ErrFreeConnectionsDisabled, status: http.StatusForbidden, code: "free_connections_disabled"},
+		{name: "duplicate free connection", err: appcatalog.ErrFreeConnectionExists, status: http.StatusConflict, code: "free_connection_exists"},
 	}
 
 	for _, test := range tests {
@@ -34,5 +38,20 @@ func TestServiceStatusMapsRecoverableFailures(t *testing.T) {
 				t.Fatalf("serviceStatus() = %d, %q; want %d, %q", status, code, test.status, test.code)
 			}
 		})
+	}
+}
+
+func TestFreeConsentSurvivesARequestThatRanOutOfMembers(t *testing.T) {
+	server := New(Options{})
+	for _, anthropic := range []bool{false, true} {
+		driver := &sendDriver{
+			s: server, w: httptest.NewRecorder(), r: httptest.NewRequest(http.MethodPost, "/", nil),
+			anthropic: anthropic, outcome: &requestOutcome{},
+		}
+		driver.last = appcatalog.ErrFreeConnectionsDisabled
+		driver.run()
+		if recorder := driver.w.(*httptest.ResponseRecorder); recorder.Code != http.StatusForbidden {
+			t.Fatalf("anthropic=%v: status = %d, want the consent refusal", anthropic, recorder.Code)
+		}
 	}
 }

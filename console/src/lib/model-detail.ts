@@ -56,7 +56,7 @@ export function effectiveDetailValue(
 			const sourced = details[source][key];
 			if (sourced !== null && sourced !== undefined) return sourced;
 		}
-		const fallback = details.override[key] ?? details.provider[key] ?? details.modelsdev[key];
+		const fallback = details.provider[key] ?? details.modelsdev[key];
 		if (fallback !== null && fallback !== undefined) return fallback;
 	}
 	return rowDetails(model).provider[key];

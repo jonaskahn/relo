@@ -157,7 +157,7 @@ func startKiloFreeDaemon(t *testing.T, upstreamURL string, models ...seedModel) 
 	return startDaemonSeeded(t, seed{
 		Provider: sqlite.ProviderRow{
 			ID: catalog.KiloFreeTemplate, TemplateID: catalog.KiloFreeTemplate,
-			Origin: string(catalog.OriginTemplate), Label: "Kilo Free",
+			Origin: string(catalog.OriginTemplate), Label: "Kilo Code Free",
 			Auth: string(catalog.AuthNone), KeyHeader: string(catalog.KeyHeaderNone),
 			APIFormat: string(catalog.FormatOpenAIChat), BaseURL: upstreamURL,
 			ModelsFormat: string(catalog.ModelsOpenAI), ModelsSource: "listing",

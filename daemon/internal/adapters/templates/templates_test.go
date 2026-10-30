@@ -256,6 +256,42 @@ func TestTemplates(t *testing.T) {
 	}
 }
 
+func TestFreeModelCountsComeFromTheModelsDevEntry(t *testing.T) {
+	paid := false
+	idx := &modelsdev.Index{Providers: map[string]modelsdev.Provider{
+		"groq": {
+			ID: "groq", Name: "Groq",
+			Models: map[string]modelsdev.Model{
+				"free-chat":  {ID: "free-chat", Category: "chat"},
+				"paid-chat":  {ID: "paid-chat", Category: "chat", IsFree: &paid},
+				"free-image": {ID: "free-image", Category: "image"},
+			},
+		},
+	}}
+	groq, found := Get("groq", idx)
+	if !found {
+		t.Fatal("groq dynamic template not found")
+	}
+	if groq.FreeModels != 1 {
+		t.Fatalf("Get(groq).FreeModels = %d, want the one conversational free model", groq.FreeModels)
+	}
+	all := All(idx)
+	for _, template := range all {
+		if template.ID == "groq" && template.FreeModels != 1 {
+			t.Fatalf("All(groq).FreeModels = %d, want 1", template.FreeModels)
+		}
+	}
+	if got := modelsDevFreeModelCount(nil, "groq"); got != 0 {
+		t.Fatalf("modelsDevFreeModelCount(nil) = %d, want 0", got)
+	}
+	if got := modelsDevFreeModelCount(idx, ""); got != 0 {
+		t.Fatalf("modelsDevFreeModelCount(no provider) = %d, want 0", got)
+	}
+	if got := modelsDevFreeModelCount(idx, "missing"); got != 0 {
+		t.Fatalf("modelsDevFreeModelCount(missing) = %d, want 0", got)
+	}
+}
+
 func TestTeamoRouter(t *testing.T) {
 	held, ok := Get("teamorouter", nil)
 	if !ok {
@@ -310,7 +346,11 @@ func TestTeamoRouter(t *testing.T) {
 }
 
 func TestRewrittenLabel(t *testing.T) {
-	next, ok := RewrittenLabel("openai-codex", "ChatGPT (Codex sign-in)")
+	next, ok := RewrittenLabel("nvidia", "Nvidia")
+	if !ok || next != "NVIDIA NIM" {
+		t.Errorf("RewrittenLabel(nvidia) = %q, %v, want NVIDIA NIM, true", next, ok)
+	}
+	next, ok = RewrittenLabel("openai-codex", "ChatGPT (Codex sign-in)")
 	if !ok || next != "ChatGPT" {
 		t.Errorf("RewrittenLabel(codex) = %q, %v, want ChatGPT, true", next, ok)
 	}

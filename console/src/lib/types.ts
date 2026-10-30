@@ -58,6 +58,7 @@ export interface ProviderCounts {
 	readonly enabled_models: number;
 	readonly available_models: number;
 	readonly unpriced_models: number;
+	readonly free_models: number;
 	readonly accounts: number;
 	readonly active_accounts: number;
 	// paused_accounts and reauth_accounts are what tell a console why a
@@ -115,6 +116,9 @@ export interface Provider {
 	// always retry. The daemon resolves the default, so both are plain.
 	readonly switch_on_4xx: boolean;
 	readonly switch_on_5xx: boolean;
+	// allow_overrides applies this connection's manual capability values over
+	// the account, provider, and models.dev layers.
+	readonly allow_overrides: boolean;
 	readonly rank: number;
 	readonly pool_strategy: string;
 	readonly configured: boolean;
@@ -174,6 +178,8 @@ export interface ProviderTemplate {
 	// modelsdev_models is how many models the template models.dev entry
 	// lists, which the add list shows as a size hint.
 	readonly modelsdev_models?: number;
+	// free_models counts the conversational models that cost nothing.
+	readonly free_models?: number;
 }
 
 /** The freshness of the models.dev catalog the daemon holds. */
@@ -190,6 +196,7 @@ export interface ModelsDevState {
 
 /** The template list with the state of the saved models.dev copy. */
 export interface ProviderTemplatesResponse {
+	readonly free_enabled: boolean;
 	readonly items: ProviderTemplate[];
 	readonly modelsdev: ModelsDevState;
 }
@@ -213,6 +220,7 @@ export interface ProbeModel {
 	readonly source: 'listing' | 'modelsdev' | 'manual' | string;
 	readonly prices: ModelPrices;
 	readonly enabled: boolean;
+	readonly is_free: boolean;
 }
 
 /** What a sign-in probe found at one endpoint. */
@@ -399,6 +407,9 @@ export interface Model {
 	readonly max_output_layers: ContextLayers;
 	readonly max_output_source: string;
 	readonly capabilities: Capabilities;
+	// allow_overrides reports whether this model's manual capability values
+	// are currently allowed to win.
+	readonly allow_overrides: boolean;
 	// capability_override is the operator's own tools, reasoning, and vision.
 	// A null field is one they have not set, so the row can mark a forced value.
 	readonly capability_override: Capabilities;
@@ -414,6 +425,7 @@ export interface Model {
 	// model, which is what tells a model that lists from one that routes.
 	readonly serving_accounts?: number;
 	readonly active_accounts?: number;
+	readonly is_free?: boolean;
 	readonly prices: ModelPrices;
 	readonly group_refs: string[] | null;
 	// overridden reports whether an operator changed anything about this
@@ -905,6 +917,7 @@ export interface Settings {
 	readonly providers: ProvidersSettings;
 	readonly access: AccessSettings;
 	readonly secrets: SecretsSettings;
+	readonly connections: { readonly free_enabled: boolean };
 	readonly restart_pending: boolean;
 }
 

@@ -14,6 +14,7 @@
 	import { isCardOpenClick } from '$lib/card-target';
 	import { cardLayoutCard, type CardLayout } from '$lib/theme.svelte';
 	import BillingChip from './billing-chip.svelte';
+	import FreeAvailableChip from './free-available-chip.svelte';
 	import ProviderQuotaFooter from './provider-quota-footer.svelte';
 
 	// The card leads with what the connection is and the account on show, and
@@ -131,11 +132,15 @@
 				aria-label={$t('ui.common.openCard', { values: { name: provider.label } })}
 				onclick={() => onopen(provider.id)}
 			>
-				<CardTitle class="flex min-w-0 items-center gap-1.5 truncate text-sm">
-					<span class="truncate">{provider.label}</span>
+				<CardTitle class="flex min-w-0 items-center gap-1.5 text-sm">
+					<span class="min-w-0 truncate">{provider.label}</span>
 					<BillingChip {provider} hover />
+					<FreeAvailableChip {provider} />
 					{#if experimental}
-						<span data-experimental-chip class="badge shrink-0 bg-sunken text-muted-foreground">
+						<span
+							data-experimental-chip
+							class="badge shrink-0 bg-warn/10 text-ink ring-1 ring-warn/35"
+						>
 							{$t('ui.pages.providersPage.list.tagExperimental')}
 						</span>
 					{/if}

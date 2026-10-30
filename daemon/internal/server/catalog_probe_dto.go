@@ -38,6 +38,7 @@ type probeModelResponse struct {
 	Source        string              `json:"source"`
 	Prices        modelPricesResponse `json:"prices"`
 	Enabled       bool                `json:"enabled"`
+	IsFree        bool                `json:"is_free"`
 }
 
 func toProbeModelResponse(model appcatalog.ProbeModel) probeModelResponse {
@@ -47,6 +48,7 @@ func toProbeModelResponse(model appcatalog.ProbeModel) probeModelResponse {
 		Match: model.Match, ModelsDevRef: model.ModelsDevRef,
 		Source: model.Source, Prices: toModelPricesResponse(model.Prices),
 		Enabled: model.Enabled,
+		IsFree:  model.IsFree,
 	}
 }
 

@@ -105,7 +105,7 @@ func (h *harness) seedProvider(id, label, auth string) {
 		KeyHeader:    string(catalog.KeyHeaderBearer),
 		ModelsFormat: string(catalog.ModelsNone), Headers: map[string]string{},
 		Variables: map[string]string{}, Enabled: true, Rank: 100,
-		PoolStrategy: sqlite.StrategyLeastLoaded,
+		PoolStrategy: sqlite.StrategyLeastLoaded, AllowOverrides: true,
 	}
 	if err := repo.SaveProvider(context.Background(), host); err != nil {
 		h.t.Fatalf("save provider %s: %v", id, err)

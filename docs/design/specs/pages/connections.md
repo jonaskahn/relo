@@ -81,10 +81,11 @@ banner stay.
 ### Models tab
 
 Toolbar, one row that wraps: the bulk-actions menu (turn the shown models on or off, and — once the connection lists
-both paid and free models — turn all paid or all free on or off). Search and the one filter menu (category, price
-paid/free, status, Unpriced / Overridden / Unavailable with an active-dimension badge and Clear filters) sit in the
-pane toolbar beside Back. The paid/free items appear only when the connection's roster holds both, since not every
-provider publishes free models. Active filters mark their control with `--accent-soft`.
+both paid and free models — turn all paid or all free on or off), and the **Allow overrides** icon toggle. It is pressed
+and accents when on, and every model row in All models carries the same connection-level toggle. Search and the one
+filter menu (category, price paid/free, status, Unpriced / Overridden / Unavailable with an active-dimension badge and
+Clear filters) sit in the pane toolbar beside Back. The paid/free items appear only when the connection's roster holds
+both, since not every provider publishes free models. Active filters mark their control with `--accent-soft`.
 
 **Model row-card** (no table, no row lines — each model is its own container, `--surface`, full 1px `--line`,
 `--radius-card`, gap 8px between rows):
@@ -119,7 +120,9 @@ One modal for reading and editing one model. The body swaps content; the header 
 - Pricing: input and output tiles in `.mono-data` with the source named under each, then "per 1M tokens".
 - Overrides: always shown — the fields the operator pinned (name, description, category, context, max input and output,
   capabilities, rates) with their values, otherwise "No overrides — this model follows the provider, then models.dev."
-  This is what tells an override apart from the provider's own values without entering the form.
+  This is what tells an override apart from the provider's own values without entering the form. While Allow overrides
+  is off, stored capability values are marked inactive and the effective values keep their account/provider/models.dev
+  source.
 - Sources: the effective value of every field with the layer it came from. Compare sources and Advanced disclosures; the
   **Priced as** reference lives here and re-prices the model immediately.
 - Footer: the price summary and the source pill ("Provider" / "models.dev" / "Manual"), then Clone (ghost), Delete
@@ -132,7 +135,8 @@ One modal for reading and editing one model. The body swaps content; the header 
 2. **Pricing**: input and output per 1M tokens, the other cache and long-context rates under More rates. The **Priced
    as** reference stays under Advanced in the read view; a manual rate never gets overwritten by a price refresh.
 3. **Limits**: context window and max output with presets; each offers the provider and models.dev value as a one-click
-   fallback, and clearing removes the override.
+   fallback, and clearing removes the override. The form stays editable while Allow overrides is off and says the saved
+   values are dormant.
 4. **Capabilities**: tools, reasoning, vision as Default / On / Off, so "no override" stays distinct from "no".
 5. **Advanced**: description, category, delete model.
 
@@ -216,11 +220,45 @@ summary shows "`N` models found"; the primary stays disabled until the credentia
 
 Two panes: left, the summary card — connection id (editable `.mono-data`), label (editable), provider, base URL, API
 format, account, source (listing or manual); right, "Models this connection will serve" — row-cards with the enabled
-switch, name, `.mono-data` id, price in/out and source chip, a legend "Price per 1M tokens, in / out", Turn all on/off
-and search when the list is long. The add-key path reviews the target connection and the new models it takes.
+switch, name, `.mono-data` id, price in/out, source chip and a `Free` badge on free models. One icon-only toolbar group
+offers four canonical states: turn on all, turn off all, turn on all free, and turn off all free (paid-only). Each
+control has a localized tooltip and accessible name, uses a distinct power / circle-off / sparkles / sparkles-off icon,
+and at most one is pressed. Manual per-model toggles may leave none pressed. The free controls stay visible but disabled
+with a "No free models" explanation when the probe found none. Free-only mode shows a `Free only` chip and appends
+`-free` to an untouched id plus a native-language free-only marker to an untouched label; operator edits are preserved
+exactly and automatic markers are removed when the mode exits. The add-key path reviews the target connection and the
+new models it takes.
 
 Footer: logo, label, id, and "`x` of `y` models on"; primary **Add connection** (or **Add key**). A failed commit keeps
 the modal open with the reason above the footer.
 
 On success the modal closes, the new connection appears in the grid and its pane opens; the toast names it and its model
 count ("Added Claude.ai — 13 models").
+
+### Free-pool consent
+
+The add-connection picker lists Free first, then Account, Cloud, Local, and API
+key. The Free heading stays visible with a switch even while free pools are
+disabled; its rows are hidden until the operator turns the switch on and accepts
+the responsibility notice. The notice opens above the add-connection modal, so
+cancelling it leaves the flow untouched, and the switch returns to its committed
+position. Enabling is never optimistic: only accepting the notice persists the
+choice. Accepting persists the choice and
+reveals both gateways in place; switching them off hides every free row again.
+Settings mirrors the choice and uses the same notice when enabling. Disabling
+preserves stored data but hides the connections and stops new requests through
+them. Usage history is not erased or reclassified.
+
+The Free heading is the one section heading with an infinite animated accent
+border while consent is on. Its border is a solid `bg-surface` band with a
+sticky bottom rule; the conic accent sweep is reduced to a static accent border
+under `prefers-reduced-motion: reduce` and disappears entirely while consent is
+off. A compact `All` / `Free` segmented control sits beside search: Free keeps
+the two keyless lanes and paid key/cloud templates with free models, search
+narrows within it, and the Custom endpoint card is absent.
+
+The keyless free rows are single-instance. Once added, the row stays focusable
+but disabled with `aria-disabled` and the description "This free connection is
+already added." A paid key/cloud connection with at least one free model wears
+the `Free available` chip beside its billing chip; keyless free lanes, sign-in
+plans, local endpoints, and custom endpoints do not.

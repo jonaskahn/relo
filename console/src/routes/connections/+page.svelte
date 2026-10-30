@@ -4,6 +4,7 @@
 	import { t } from 'svelte-i18n';
 	import { toast } from 'svelte-sonner';
 	import { api } from '$lib/api';
+	import FreeConsentDialog from '$lib/components/providers/free-consent-dialog.svelte';
 	import {
 		connectionsViewQuery,
 		linkedProviderId,
@@ -213,15 +214,60 @@
 		}
 	}
 
+	let freeEnabled = $state(false);
+	let freeConsentOpen = $state(false);
+	let freeBusy = $state(false);
+
 	async function loadCatalog() {
 		try {
 			const data = await api<ProviderTemplatesResponse>('/templates');
+			freeEnabled = data.free_enabled;
 			templates = data.items ?? [];
 			modelsdev = data.modelsdev ?? null;
 		} catch (error) {
 			failed = error instanceof Error ? error.message : String(error);
 		}
 	}
+
+	async function enableFree() {
+		freeBusy = true;
+		try {
+			freeEnabled = true;
+			await Promise.all([loadCatalog(), refreshProviders()]);
+		} finally {
+			freeBusy = false;
+		}
+	}
+
+	async function toggleFree(enabled: boolean) {
+		if (freeBusy) return;
+		if (enabled) {
+			// The switch is only a request. The consent dialog commits the setting;
+			// clicking outside it must leave Free connections exactly as they were.
+			freeEnabled = false;
+			freeConsentOpen = true;
+			return;
+		}
+		freeBusy = true;
+		try {
+			await api('/settings/connections', {
+				method: 'PATCH',
+				body: JSON.stringify({ free_enabled: false })
+			});
+			freeEnabled = false;
+			await Promise.all([loadCatalog(), refreshProviders()]);
+			toast.success($t('ui.settingsPage.freeConnectionsDisabledToast'));
+		} catch (error) {
+			toast.error(error instanceof Error ? error.message : String(error));
+		} finally {
+			freeBusy = false;
+		}
+	}
+
+	// The consent dialog belongs to the add flow; closing that flow must close it too.
+	$effect(() => {
+		if (!addOpen) freeConsentOpen = false;
+	});
 
 	// readingCatalog is the read in flight, so a caller that needs the list
 	// waits on the read already running rather than asking the daemon twice.
@@ -252,6 +298,27 @@
 			allFailed = error instanceof Error ? error.message : String(error);
 		} finally {
 			allLoading = false;
+		}
+	}
+
+	// The switch belongs to the connection, so one row action updates every row
+	// the All models list already holds for that connection.
+	async function setAllowOverrides(providerId: string, allowed: boolean) {
+		try {
+			const updated = await api<Provider>('/connections/' + encodeURIComponent(providerId), {
+				method: 'PATCH',
+				body: JSON.stringify({ allow_overrides: allowed })
+			});
+			onProviderChanged(updated);
+			allModels = allModels.map((model) =>
+				model.provider_id === providerId ? { ...model, allow_overrides: allowed } : model
+			);
+		} catch (error) {
+			toast.error(
+				$t('ui.pages.providersPage.override.failed', {
+					values: { detail: error instanceof Error ? error.message : String(error) }
+				})
+			);
 		}
 	}
 
@@ -480,6 +547,8 @@
 								onloadmore={() => void loadAllModels(false)}
 								onreload={() => void loadAllModels(true)}
 								onopenprovider={(id) => selectProvider(id)}
+								onallowoverrides={(providerId, allowed) =>
+									void setAllowOverrides(providerId, allowed)}
 							>
 								{#snippet toolbarStart()}
 									<Button variant="outline" onclick={backToList}>
@@ -533,6 +602,9 @@
 </div>
 
 <AddProviderStepper
+	{freeEnabled}
+	{freeBusy}
+	onfreetoggle={(enabled) => void toggleFree(enabled)}
 	bind:open={addOpen}
 	presetProviderId={addPreset}
 	{templates}
@@ -542,5 +614,7 @@
 	ondiscarded={closeAddFlow}
 	onrefreshdev={refreshDev}
 />
+
+<FreeConsentDialog layer="above" bind:open={freeConsentOpen} onenabled={() => void enableFree()} />
 
 <ScrollToTop />

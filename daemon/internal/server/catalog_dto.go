@@ -55,6 +55,7 @@ type providerCountsResponse struct {
 	EnabledModels   int `json:"enabled_models"`
 	AvailableModels int `json:"available_models"`
 	UnpricedModels  int `json:"unpriced_models"`
+	FreeModels      int `json:"free_models"`
 	Accounts        int `json:"accounts"`
 	ActiveAccounts  int `json:"active_accounts"`
 	PausedAccounts  int `json:"paused_accounts"`
@@ -65,7 +66,8 @@ func toProviderCountsResponse(counts appcatalog.ProviderCounts) providerCountsRe
 	return providerCountsResponse{
 		Models: counts.Models, EnabledModels: counts.EnabledModels,
 		AvailableModels: counts.AvailableModels, UnpricedModels: counts.UnpricedModels,
-		Accounts: counts.Accounts, ActiveAccounts: counts.ActiveAccounts,
+		FreeModels: counts.FreeModels,
+		Accounts:   counts.Accounts, ActiveAccounts: counts.ActiveAccounts,
 		PausedAccounts: counts.PausedAccounts, ReauthAccounts: counts.ReauthAccounts,
 	}
 }
@@ -176,6 +178,7 @@ type providerResponse struct {
 	RetryAttempts       *int                   `json:"retry_attempts"`
 	SwitchOn4xx         bool                   `json:"switch_on_4xx"`
 	SwitchOn5xx         bool                   `json:"switch_on_5xx"`
+	AllowOverrides      bool                   `json:"allow_overrides"`
 	Rank                int                    `json:"rank"`
 	PoolStrategy        string                 `json:"pool_strategy"`
 	Configured          bool                   `json:"configured"`
@@ -204,7 +207,8 @@ func toProviderResponse(provider appcatalog.Provider) providerResponse {
 		UseProxy: provider.UseProxy, TimeoutSeconds: provider.TimeoutSeconds,
 		RetryAttempts: provider.RetryAttempts,
 		SwitchOn4xx:   provider.SwitchOn4xx, SwitchOn5xx: provider.SwitchOn5xx,
-		Rank: provider.Rank, PoolStrategy: provider.PoolStrategy,
+		AllowOverrides: provider.AllowOverrides,
+		Rank:           provider.Rank, PoolStrategy: provider.PoolStrategy,
 		Configured:        provider.Configured,
 		LastRefreshedAtMs: provider.LastRefreshedAtMs,
 		LastRefreshError:  provider.LastRefreshError,
@@ -378,6 +382,8 @@ type modelResponse struct {
 	UpdatedAtMs        int64                         `json:"updated_at_ms"`
 	ServingAccounts    int                           `json:"serving_accounts"`
 	ActiveAccounts     int                           `json:"active_accounts"`
+	IsFree             bool                          `json:"is_free"`
+	AllowOverrides     bool                          `json:"allow_overrides"`
 }
 
 func toModelResponse(model appcatalog.Model) modelResponse {
@@ -405,6 +411,8 @@ func toModelResponse(model appcatalog.Model) modelResponse {
 		Details:    toModelDetailsOrNil(model.Details),
 		ListedAtMs: model.ListedAtMs, UpdatedAtMs: model.UpdatedAtMs,
 		ServingAccounts: model.ServingAccounts, ActiveAccounts: model.ActiveAccounts,
+		IsFree:         model.IsFree,
+		AllowOverrides: model.AllowOverrides,
 	}
 }
 
@@ -582,6 +590,7 @@ type templateResponse struct {
 	Headers                map[string]string      `json:"headers,omitempty"`
 	UnsupportedReason      string                 `json:"unsupported_reason,omitempty"`
 	ModelsDevModels        int                    `json:"modelsdev_models"`
+	FreeModels             int                    `json:"free_models"`
 }
 
 func toTemplateResponse(template catalog.Template) templateResponse {
@@ -602,6 +611,7 @@ func toTemplateResponse(template catalog.Template) templateResponse {
 		Headers:           template.Headers,
 		UnsupportedReason: template.UnsupportedReason,
 		ModelsDevModels:   template.ModelsDevModels,
+		FreeModels:        template.FreeModels,
 	}
 }
 

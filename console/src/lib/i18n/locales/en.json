@@ -495,8 +495,10 @@
           "filterOption": "{label} ({count})",
           "tagFree": "Free",
           "tagExperimental": "Experimental",
+          "freeAvailable": "Free available",
           "tagPayAsYouGo": "Pay as you go",
-          "tagPaidPlan": "Paid plan"
+          "tagPaidPlan": "Paid plan",
+          "groupFree": "Free connections"
         },
         "status": {
           "ready": "Ready",
@@ -821,6 +823,10 @@
           "title": "Add connection",
           "subtitle": "Pick where Relo should route requests.",
           "searchPlaceholder": "Search {count} connections",
+          "filterAll": "All",
+          "filterFree": "Free",
+          "filterLabel": "Filter connections",
+          "freeAlreadyAdded": "This free connection is already added.",
           "noMatchTitle": "No provider matches “{query}”.",
           "noMatchBody": "Set up a custom endpoint instead.",
           "customEndpoint": "Custom endpoint",
@@ -918,7 +924,9 @@
           "forceSignInBody": "{process} (pid {pid}) is listening on the port this sign-in needs. Ending it finishes the sign-in that is holding the port.",
           "signInPortBusy": "{process} is holding the port this sign-in needs",
           "next": "Next",
-          "chooseHint": "Choose a provider"
+          "chooseHint": "Choose a provider",
+          "groupHintFree": "No account or API key needed",
+          "freeOffHint": "Free connections are hidden until you enable them."
         },
         "verify": {
           "title": "Check the connection",
@@ -968,7 +976,15 @@
           "commitFailed": "Couldn’t add the provider: {detail}",
           "keyAdded": "Key added to {label}.",
           "legend": "Price per 1M tokens, in / out",
-          "retainsPrompts": "This free pool takes no account. Prompts you send to it may be logged by the provider."
+          "retainsPrompts": "This free pool takes no account. Prompts you send to it may be logged by the provider.",
+          "freeBadge": "Free",
+          "turnOnFree": "Turn on all free",
+          "turnOffFree": "Turn off all free",
+          "freeOnly": "Free only",
+          "noFreeModels": "No free models",
+          "bulkLabel": "Model states",
+          "freeOnlyLabel": "Free only",
+          "freeOnlyLabelPattern": "{label} (Free only)"
         },
         "format": {
           "openaiChat": "OpenAI Chat Completions; works with most clients and gateways",
@@ -981,6 +997,18 @@
           "kiro": "Kiro’s CodeWhisperer API through a Kiro CLI session",
           "cloudCode": "Google Cloud Code Assist, used by Antigravity sign-ins",
           "unsupported": "Relo cannot speak this format yet"
+        },
+        "freeConsent": {
+          "title": "Use free connections at your own risk",
+          "body": "OpenCode Zen Free and Kilo Code Free are third-party gateways, not Relo services. They permit access only through their official coding agents; Relo is not one. Use may breach their terms or the law, and Relo does not endorse them. Providers may keep or use your prompts and code—never send confidential information. Models, limits, and availability may change or disappear without notice. To the extent permitted by law, Relo and its maintainers provide no warranty and accept no liability. By enabling free connections, you accept full responsibility for your use and any legal consequences.",
+          "confirm": "I accept responsibility and enable",
+          "enabledToast": "Free connections enabled"
+        },
+        "override": {
+          "allowFor": "Allow overrides for {connection}",
+          "blockedFor": "Overrides off for {connection}",
+          "dormantHint": "Stored model overrides stay saved but are ignored while this connection does not allow overrides.",
+          "failed": "Couldn’t change the override setting: {detail}"
         }
       },
       "keys": {
@@ -1953,7 +1981,11 @@
       "failoverLabel": "Failover wait",
       "failoverHint": "How long a refused account or route member stays out of rotation after a rate limit or server fault, and how the wait grows with each further failure. A success resets it. None starts with no wait: the first refusal is immediately reusable.",
       "retryHint": "How many times one account is retried before the request moves to the next account. A random 1–3s wait separates the retries.",
-      "jumpLabel": "Jump to section"
+      "jumpLabel": "Jump to section",
+      "freeConnectionsLabel": "Free connections",
+      "freeConnectionsHint": "Free connections stay hidden until you enable them and accept the risk notice. Turning them off hides the connections and stops new requests; saved data is kept.",
+      "freeConnectionsDisabledToast": "Free connections disabled",
+      "sectionOthers": "Others"
     },
     "updateDialog": {
       "title": "Update Relo",

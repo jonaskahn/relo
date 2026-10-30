@@ -496,7 +496,9 @@
           "tagFree": "Ücretsiz",
           "tagExperimental": "Deneysel",
           "tagPayAsYouGo": "Pay as you go",
-          "tagPaidPlan": "Paid plan"
+          "tagPaidPlan": "Paid plan",
+          "groupFree": "Ücretsiz bağlantılar",
+          "freeAvailable": "Ücretsiz mevcut"
         },
         "status": {
           "ready": "Hazır",
@@ -918,7 +920,13 @@
           "forceSignInBody": "{process} (pid {pid}) bu oturumun gerektirdiği portu kullanıyor. Sonlandırmak portu boşaltır.",
           "signInPortBusy": "{process} bu oturumun gerektirdiği portu kullanıyor",
           "next": "İleri",
-          "chooseHint": "Bir sağlayıcı seçin"
+          "chooseHint": "Bir sağlayıcı seçin",
+          "groupHintFree": "Hesap veya API anahtarı gerekmez",
+          "freeOffHint": "Ücretsiz bağlantılar siz açana kadar gizli kalır.",
+          "filterAll": "Tümü",
+          "filterFree": "Ücretsiz",
+          "filterLabel": "Bağlantıları filtrele",
+          "freeAlreadyAdded": "Bu ücretsiz bağlantı zaten eklenmiş."
         },
         "verify": {
           "title": "Bağlantıyı denetle",
@@ -968,7 +976,15 @@
           "commitFailed": "Sağlayıcı eklenemedi: {detail}",
           "keyAdded": "Anahtar {label} bağlantısına eklendi.",
           "legend": "1M token başına fiyat, giriş / çıkış",
-          "retainsPrompts": "Bu ücretsiz havuz hesap gerektirmez. Gönderdiğin istemler sağlayıcı tarafından kaydedilebilir."
+          "retainsPrompts": "Bu ücretsiz havuz hesap gerektirmez. Gönderdiğin istemler sağlayıcı tarafından kaydedilebilir.",
+          "freeBadge": "Ücretsiz",
+          "freeOnly": "Yalnızca ücretsiz",
+          "noFreeModels": "Ücretsiz model yok",
+          "bulkLabel": "Model durumları",
+          "freeOnlyLabel": "Yalnızca ücretsiz",
+          "freeOnlyLabelPattern": "{label} (yalnızca ücretsiz)",
+          "turnOnFree": "Tüm ücretsizleri aç",
+          "turnOffFree": "Tüm ücretsizleri kapat"
         },
         "format": {
           "openaiChat": "OpenAI Chat Completions; çoğu istemci ve gateway ile çalışır",
@@ -981,6 +997,18 @@
           "kiro": "Kiro CLI oturumu üzerinden Kiro CodeWhisperer API’si",
           "cloudCode": "Google Cloud Code Assist, Antigravity oturum açmalarında kullanılır",
           "unsupported": "Relo bu biçimi henüz desteklemiyor"
+        },
+        "freeConsent": {
+          "title": "Kullanım sorumluluğu size aittir",
+          "body": "OpenCode Zen Free ve Kilo Code Free, Relo hizmetleri değil üçüncü taraf ağ geçitleridir. Yalnızca kendi resmî kodlama ajanları üzerinden erişime izin verirler; Relo bunlardan biri değildir. Kullanım, koşullarını veya yasaları ihlal edebilir ve Relo bunları onaylamaz. Sağlayıcılar istemlerinizi ve kodunuzu saklayabilir veya kullanabilir; bu nedenle gizli bilgi göndermeyin. Modeller, sınırlar ve kullanılabilirlik bildirim yapılmadan değişebilir veya kaybolabilir. Yasaların izin verdiği ölçüde Relo ve bakımcıları hiçbir garanti vermez ve hiçbir sorumluluk kabul etmez. Ücretsiz bağlantıları açarak kullanımı ve doğabilecek her türlü hukuki sonucu tamamen üstlendiğinizi kabul edersiniz.",
+          "confirm": "Sorumluluğu kabul et ve aç",
+          "enabledToast": "Ücretsiz bağlantılar açıldı"
+        },
+        "override": {
+          "allowFor": "{connection} için geçersiz kılmalara izin ver",
+          "blockedFor": "{connection} için geçersiz kılmalar kapalı",
+          "dormantHint": "Kaydedilen model geçersiz kılmaları korunur ancak bu bağlantı izin vermediği sürece yok sayılır.",
+          "failed": "Geçersiz kılma ayarı değiştirilemedi: {detail}"
         }
       },
       "keys": {
@@ -1953,7 +1981,11 @@
       "failoverLabel": "Failover wait",
       "failoverHint": "Reddedilen bir hesap ya da rota üyesi, hız sınırı veya sunucu hatasından sonra rotasyonun dışında ne kadar kalır ve her yeni hatayla bekleme nasıl uzar. Bir başarı beklemiyi sıfırlar. “Yok” beklemesiz başlar: ilk reddedilme hemen yeniden kullanılabilir.",
       "retryHint": "Her denemeden önce rastgele bekleme, saniye cinsinden. Sağlayıcının daha uzun Retry-After değeri kazanır.",
-      "jumpLabel": "Bölüme git"
+      "jumpLabel": "Bölüme git",
+      "freeConnectionsLabel": "Ücretsiz bağlantılar",
+      "freeConnectionsHint": "Ücretsiz bağlantılar, siz onları açıp risk bildirimini kabul edene kadar gizli kalır. Kapatıldığında bağlantılar gizlenir ve yeni istekler durur; kaydedilmiş veriler korunur.",
+      "freeConnectionsDisabledToast": "Ücretsiz bağlantılar kapatıldı",
+      "sectionOthers": "Diğer"
     },
     "updateDialog": {
       "title": "Relo'yu güncelle",

@@ -35,10 +35,11 @@ invalid and `make seed-latest` forces a fresh one; the generated
 direct `go build` or `go test` without it still compiles, fetches, and caches normally.
 Beta and release jobs run `make seed-latest` before compiling, so a download or validation
 failure stops the job before artifacts exist. Pricing still resolves as user override,
-then the provider, then models.dev. Protected capabilities use provider authority instead:
-the selected account's discovered facts, then the connection definition, then models.dev,
-and a manual completion only where all of those are silent. A manual capability can never
-supersede a known definition, and stored legacy completions remain visible but inactive.
+then the provider, then models.dev. Protected capabilities follow the connection's Allow
+overrides switch: when on, the operator's saved manual values come first, then the selected
+account's discovered facts, the connection definition, and models.dev. When off, manual values
+remain stored and editable but are ignored entirely; the detected layers decide. Name,
+description, category, and prices keep their own always-active override behavior.
 Context capacity, maximum input, and maximum output stay exact and separate; a display label
 may round, but routing, admission, listings, and wire requests use the authoritative count.
 An oversized client output budget is clamped silently to the provider's output ceiling and
@@ -80,3 +81,24 @@ again; a route whose every member failed waits the same way. While it waits, the
 is answered at once with 503 and a `Retry-After` naming when to come back, and a route
 skips the cooling connection for its next member. Both the pins and the cooldowns live in
 memory: a restart starts every connection available.
+
+**Keyless free pools require an operator opt-in on fresh installs.**
+The connections.free setting in config.toml gates OpenCode Zen Free and Kilo Code Free.
+A new home writes false; an existing file without the key reads as true for
+upgrade compatibility. The add-connection modal explains the privacy, service,
+and legal risks before enabling. Free rows stay hidden until the operator turns
+on the switch in the Free heading and accepts that notice. Disabling hides the
+connections from management and every published model list without deleting
+their stored connections, models, or usage. Their rows remain in the routing
+snapshot so a configured free model reaches the consent refusal
+(`403 free_connections_disabled`) instead of `model_not_found`; a mixed route
+skips that member and may still serve from a paid one.
+
+**Free availability is derived, not configured.** A conversational model is
+free when the provider marks it free, the provider listing marks it free, both
+effective input and output rates are explicitly zero, or its identifier carries
+`free` as a whole token. Missing prices are unknown, not free. Media, embedding,
+and unknown categories never count. Provider and listing marks are persisted as
+explicit zero token rates, so availability survives a reload without a schema
+change. The add picker and Connections page may filter by free availability; the
+two keyless lanes are the only single-instance connections.

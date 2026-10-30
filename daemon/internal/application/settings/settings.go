@@ -28,9 +28,10 @@ type RetentionSettings struct {
 
 // Settings is everything the settings page reads and writes.
 type Settings struct {
-	Retention  RetentionSettings
-	Language   string
-	Appearance AppearanceSettings
+	Connections ConnectionsSettings
+	Retention   RetentionSettings
+	Language    string
+	Appearance  AppearanceSettings
 	// System is when the daemon runs, how it logs, and how it learns about
 	// newer builds.
 	System SystemSettings
@@ -46,6 +47,14 @@ type Settings struct {
 	// RestartPending reports that stored choices await a daemon restart
 	// before they take effect, such as a listener port or the log level.
 	RestartPending bool
+}
+
+// ConnectionsSettings holds the opt-in for keyless free pools.
+type ConnectionsSettings struct{ FreeEnabled bool }
+
+// SaveConnections persists the operator choice.
+func (s *Service) SaveConnections(input ConnectionsSettings) error {
+	return config.UpdateConnectionsConfig(s.configPath, input.FreeEnabled)
 }
 
 // SystemSettings is when the daemon runs, how it logs, and how it learns
@@ -186,6 +195,7 @@ func (s *Service) Read(ctx context.Context) (Settings, error) {
 	if err != nil {
 		return Settings{}, err
 	}
+	settings.Connections = ConnectionsSettings{FreeEnabled: file.Connections.Free}
 	readSystemServer(&settings, file)
 	if err := s.readUpstream(&settings, file); err != nil {
 		return Settings{}, err

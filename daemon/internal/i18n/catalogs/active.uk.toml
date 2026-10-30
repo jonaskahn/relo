@@ -689,3 +689,11 @@ other = "Windows видалить цей файл після завершенн�
 [tray.menu.quitting]
 description = "Tray quit action while final records are saved"
 other = "Вихід — обробка…"
+
+[api.connections.free_connections_disabled]
+description = "Inference refusal when a configured free connection is reached with consent off"
+other = "Безкоштовні підключення потребують вашої згоди. Увімкніть безкоштовні підключення та прийміть повідомлення про відповідальність, перш ніж користуватися ними."
+
+[api.connections.free_connection_exists]
+description = "Management refusal when a second keyless free connection is requested"
+other = "Це безкоштовне підключення вже додано."

@@ -496,7 +496,9 @@
           "tagFree": "Zdarma",
           "tagExperimental": "Experimentální",
           "tagPayAsYouGo": "Pay as you go",
-          "tagPaidPlan": "Paid plan"
+          "tagPaidPlan": "Paid plan",
+          "groupFree": "Bezplatná připojení",
+          "freeAvailable": "Dostupné zdarma"
         },
         "status": {
           "ready": "Připraveno",
@@ -918,7 +920,13 @@
           "forceSignInBody": "{process} (pid {pid}) používá port, který toto přihlášení potřebuje. Ukončením se port uvolní.",
           "signInPortBusy": "{process} používá port, který toto přihlášení potřebuje",
           "next": "Další",
-          "chooseHint": "Vyberte poskytovatele"
+          "chooseHint": "Vyberte poskytovatele",
+          "groupHintFree": "Bez účtu a klíče API",
+          "freeOffHint": "Bezplatná připojení jsou skrytá, dokud je nezapnete.",
+          "filterAll": "Vše",
+          "filterFree": "Zdarma",
+          "filterLabel": "Filtrovat připojení",
+          "freeAlreadyAdded": "Toto bezplatné připojení je již přidáno."
         },
         "verify": {
           "title": "Zkontrolovat připojení",
@@ -968,7 +976,15 @@
           "commitFailed": "Poskytovatele se nepodařilo přidat: {detail}",
           "keyAdded": "Klíč přidán k {label}.",
           "legend": "Cena za 1M tokenů, vstup / výstup",
-          "retainsPrompts": "Tento bezplatný fond nevyžaduje účet. Prompty, které mu pošlete, může poskytovatel evidovat."
+          "retainsPrompts": "Tento bezplatný fond nevyžaduje účet. Prompty, které mu pošlete, může poskytovatel evidovat.",
+          "freeBadge": "Zdarma",
+          "freeOnly": "Pouze zdarma",
+          "noFreeModels": "Žádné modely zdarma",
+          "bulkLabel": "Stavy modelů",
+          "freeOnlyLabel": "Pouze zdarma",
+          "freeOnlyLabelPattern": "{label} (pouze zdarma)",
+          "turnOnFree": "Zapnout všechny zdarma",
+          "turnOffFree": "Vypnout všechny zdarma"
         },
         "format": {
           "openaiChat": "OpenAI Chat Completions; funguje s většinou klientů a bran",
@@ -981,6 +997,18 @@
           "kiro": "API Kiro CodeWhisperer přes relaci Kiro CLI",
           "cloudCode": "Google Cloud Code Assist, používané přihlášeními Antigravity",
           "unsupported": "Relo tímto formátem zatím nemluví"
+        },
+        "freeConsent": {
+          "title": "Použití na vlastní odpovědnost",
+          "body": "OpenCode Zen Free a Kilo Code Free jsou brány třetích stran, nikoli služby Relo. Přístup umožňují pouze prostřednictvím svých oficiálních programovacích agentů; Relo mezi ně nepatří. Použití může porušit jejich podmínky nebo zákon a Relo je nepodporuje. Poskytovatelé mohou uchovávat nebo používat vaše prompty a kód, proto nikdy neposílejte důvěrné informace. Modely, limity a dostupnost se mohou změnit nebo zmizet bez upozornění. V rozsahu povoleném zákonem neposkytují Relo ani jeho správci žádnou záruku a nepřebírají žádnou odpovědnost. Zapnutím bezplatných připojení přijímáte plnou odpovědnost za jejich použití a veškeré právní důsledky.",
+          "confirm": "Přijímám odpovědnost a zapínám",
+          "enabledToast": "Bezplatná připojení zapnuta"
+        },
+        "override": {
+          "allowFor": "Povolit přepsání pro {connection}",
+          "blockedFor": "Přepsání vypnuta pro {connection}",
+          "dormantHint": "Uložená přepsání modelu zůstávají, ale ignorují se, dokud je toto připojení nepovolí.",
+          "failed": "Nastavení přepsání se nepodařilo změnit: {detail}"
         }
       },
       "keys": {
@@ -1953,7 +1981,11 @@
       "failoverLabel": "Failover wait",
       "failoverHint": "Jak dlouho zůstane odmítnutý účet nebo člen trasy mimo rotaci po limitu rychlosti nebo chybě serveru a jak se čekání prodlužuje s každým dalším selháním. Úspěch ho resetuje. „Žádné“ začíná bez čekání: první odmítnutí jde hned použít znovu.",
       "retryHint": "Náhodná prodleva před každým pokusem, v sekundách. Delší Retry-After poskytovatele má přednost.",
-      "jumpLabel": "Přejít na oddíl"
+      "jumpLabel": "Přejít na oddíl",
+      "freeConnectionsLabel": "Bezplatná připojení",
+      "freeConnectionsHint": "Bezplatná připojení zůstávají skrytá, dokud je nezapnete a nepřijmete upozornění na rizika. Vypnutím se připojení skryjí a nové požadavky přes ně přestanou procházet; uložená data zůstanou zachována.",
+      "freeConnectionsDisabledToast": "Bezplatná připojení vypnuta",
+      "sectionOthers": "Ostatní"
     },
     "updateDialog": {
       "title": "Aktualizovat Relo",

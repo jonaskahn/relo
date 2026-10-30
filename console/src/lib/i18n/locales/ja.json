@@ -496,7 +496,9 @@
           "tagFree": "無料",
           "tagExperimental": "実験的",
           "tagPayAsYouGo": "従量制",
-          "tagPaidPlan": "有料プラン"
+          "tagPaidPlan": "有料プラン",
+          "groupFree": "無料の接続",
+          "freeAvailable": "無料で利用可能"
         },
         "status": {
           "ready": "準備完了",
@@ -918,7 +920,13 @@
           "forceSignInBody": "{process}（pid {pid}）がこのサインインに必要なポートを使用しています。終了するとポートは解放されます。",
           "signInPortBusy": "{process} がこのサインインに必要なポートを使用しています",
           "next": "次へ",
-          "chooseHint": "プロバイダーを選択"
+          "chooseHint": "プロバイダーを選択",
+          "groupHintFree": "アカウント・API キー不要",
+          "freeOffHint": "無料接続は有効にするまで非表示です。",
+          "filterAll": "すべて",
+          "filterFree": "無料",
+          "filterLabel": "接続を絞り込む",
+          "freeAlreadyAdded": "この無料接続はすでに追加されています。"
         },
         "verify": {
           "title": "接続を確認",
@@ -968,7 +976,15 @@
           "commitFailed": "プロバイダーを追加できませんでした（{detail}）",
           "keyAdded": "「{label}」にキーを追加しました。",
           "legend": "100万トークンあたりの料金（入力 / 出力）",
-          "retainsPrompts": "この無料プールにアカウントは不要です。送信したプロンプトはプロバイダーが記録する場合があります。"
+          "retainsPrompts": "この無料プールにアカウントは不要です。送信したプロンプトはプロバイダーが記録する場合があります。",
+          "freeBadge": "無料",
+          "freeOnly": "無料のみ",
+          "noFreeModels": "無料モデルなし",
+          "bulkLabel": "モデル状態",
+          "freeOnlyLabel": "無料のみ",
+          "freeOnlyLabelPattern": "{label}（無料のみ）",
+          "turnOnFree": "無料をすべてオン",
+          "turnOffFree": "無料をすべてオフ"
         },
         "format": {
           "openaiChat": "OpenAI Chat Completions：ほとんどのクライアントとゲートウェイで使える",
@@ -981,6 +997,18 @@
           "kiro": "Kiro CLIセッション経由のCodeWhisperer API",
           "cloudCode": "Antigravityのサインインで使うGoogle Cloud Code Assist",
           "unsupported": "Reloはこの形式にまだ対応していません"
+        },
+        "freeConsent": {
+          "title": "ご利用は自己責任となります",
+          "body": "OpenCode Zen Free と Kilo Code Free は第三者が運営するゲートウェイであり、Relo のサービスではありません。各サービスの公式コーディングエージェント経由でのみアクセスが許可されており、Relo はその公式エージェントではありません。利用は各サービスの規約または法律に違反する可能性があり、Relo はこれらを推奨しません。提供元はプロンプトやコードを保存・利用する場合があるため、機密情報は送信しないでください。モデル、制限、提供状況は予告なく変更または終了する場合があります。法律で認められる範囲で、Relo とその維持管理者はいかなる保証も提供せず、責任も負いません。無料接続を有効にすることで、その利用およびあらゆる法的結果についての全責任を負うことに同意したものとみなされます。",
+          "confirm": "自己責任での利用に同意して有効にする",
+          "enabledToast": "無料の接続を有効にしました"
+        },
+        "override": {
+          "allowFor": "{connection} の上書きを許可",
+          "blockedFor": "{connection} の上書きはオフ",
+          "dormantHint": "保存されたモデルの上書きは保持されますが、この接続が許可するまで無視されます。",
+          "failed": "上書き設定を変更できませんでした: {detail}"
         }
       },
       "keys": {
@@ -1953,7 +1981,11 @@
       "failoverLabel": "フェイルオーバーの待ち時間",
       "failoverHint": "レート制限やサーバー障害で拒否されたアカウントやルートのメンバーを、ローテーションから外しておく時間です。失敗を重ねるほど待ち時間が延び、成功すれば元に戻ります。「なし」は待ち時間ゼロで始まるので、最初に拒否されてもすぐまた使えます。",
       "retryHint": "リクエストが次のアカウントに移る前に、1つのアカウントを何回再試行するか。再試行の間には1〜3秒のランダムな待ち時間が入ります。",
-      "jumpLabel": "セクションへ移動"
+      "jumpLabel": "セクションへ移動",
+      "freeConnectionsLabel": "無料の接続",
+      "freeConnectionsHint": "無料接続は、有効にしてリスクの通知に同意するまで非表示です。無効にすると接続が非表示になり、新しいリクエストは送信されません。保存済みデータは保持されます。",
+      "freeConnectionsDisabledToast": "無料の接続を無効にしました",
+      "sectionOthers": "その他"
     },
     "updateDialog": {
       "title": "Relo を更新",

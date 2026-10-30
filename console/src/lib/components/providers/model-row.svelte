@@ -12,6 +12,7 @@
 	import { isPriced } from '$lib/model-filters';
 	import CapabilityPicker from './capability-picker.svelte';
 	import ContextPicker from './context-picker.svelte';
+	import AllowOverridesButton from './allow-overrides-button.svelte';
 
 	// One model is one row-card: the switch decides a request, the name opens
 	// the model, the middle reads its limits and capabilities, and the menu
@@ -24,6 +25,9 @@
 		onopen: (model: Model) => void;
 		onedit: (model: Model) => void;
 		onclone?: (model: Model) => void;
+		// onallowoverrides changes the connection setting; the row action is the
+		// only way to reach it from the combined All models list.
+		onallowoverrides?: (model: Model, allowed: boolean) => void;
 		onsavecontext: (model: Model, value: number | null) => Promise<void>;
 		onsavemaxoutput: (model: Model, value: number | null) => Promise<void>;
 		onsavecapability: (
@@ -41,6 +45,7 @@
 		onopen,
 		onedit,
 		onclone,
+		onallowoverrides,
 		onsavecontext,
 		onsavemaxoutput,
 		onsavecapability
@@ -167,25 +172,29 @@
 		{model}
 		field="tools"
 		labelKey="ui.pages.providersPage.modelsTable.columnTools"
-		disabled={model.capability_states?.tools?.editable === false}
 		onsave={(value) => onsavecapability(model, 'tools', value)}
 	/>
 	<CapabilityPicker
 		{model}
 		field="reasoning"
 		labelKey="ui.pages.providersPage.modelsTable.columnReasoning"
-		disabled={model.capability_states?.reasoning?.editable === false}
 		onsave={(value) => onsavecapability(model, 'reasoning', value)}
 	/>
 	<CapabilityPicker
 		{model}
 		field="vision"
 		labelKey="ui.pages.providersPage.modelsTable.columnVision"
-		disabled={model.capability_states?.vision?.editable === false}
 		onsave={(value) => onsavecapability(model, 'vision', value)}
 	/>
 
 	<div class="flex shrink-0 items-center gap-0.5" data-row-menu>
+		{#if onallowoverrides}
+			<AllowOverridesButton
+				label={providerLabel || model.provider_id}
+				allowed={model.allow_overrides}
+				ontoggle={() => onallowoverrides?.(model, !model.allow_overrides)}
+			/>
+		{/if}
 		<DropdownMenu.Root>
 			<DropdownMenu.Trigger
 				class={cn(

@@ -100,6 +100,8 @@ type patchProviderRequest struct {
 	// status of that class; absent leaves the stored choice alone.
 	SwitchOn4xx *bool `json:"switch_on_4xx"`
 	SwitchOn5xx *bool `json:"switch_on_5xx"`
+	// AllowOverrides applies this connection's manual capability values.
+	AllowOverrides *bool `json:"allow_overrides"`
 }
 
 type patchModelRequest struct {
@@ -320,6 +322,7 @@ func (s *Server) handlePatchProvider(w http.ResponseWriter, r *http.Request) {
 		Label: request.Label, APIFormat: request.APIFormat, KeyHeader: request.KeyHeader, Headers: request.Headers,
 		UseProxy: request.UseProxy, TimeoutSeconds: request.TimeoutSeconds, RetryAttempts: request.RetryAttempts,
 		SwitchOn4xx: request.SwitchOn4xx, SwitchOn5xx: request.SwitchOn5xx,
+		AllowOverrides: request.AllowOverrides,
 	})
 	if err != nil {
 		writeServiceError(w, err)
@@ -1020,6 +1023,35 @@ func (s *Server) handlePatchNetwork(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, toServerSettingsResponse(saved))
 }
 
+func (s *Server) handlePatchConnections(w http.ResponseWriter, r *http.Request) {
+	settings, ok := s.settingsOrUnavailable(w, r)
+	if !ok {
+		return
+	}
+	manager, ok := s.catalogAPIOrUnavailable(w, r)
+	if !ok {
+		return
+	}
+	var request connectionsSettingsRequest
+	if !s.decodeJSON(w, r, &request) {
+		return
+	}
+	if request.FreeEnabled == nil {
+		writeError(w, http.StatusBadRequest, "bad_request", "free_enabled is required")
+		return
+	}
+	input := appsettings.ConnectionsSettings{FreeEnabled: *request.FreeEnabled}
+	if err := settings.SaveConnections(input); err != nil {
+		writeServiceError(w, err)
+		return
+	}
+	if err := manager.Reload(r.Context()); err != nil {
+		writeServiceError(w, err)
+		return
+	}
+	writeJSON(w, http.StatusOK, connectionsSettingsResponse{FreeEnabled: input.FreeEnabled})
+}
+
 func (s *Server) handlePatchProviders(w http.ResponseWriter, r *http.Request) {
 	settings, ok := s.settingsOrUnavailable(w, r)
 	if !ok {
@@ -1156,9 +1188,20 @@ func (s *Server) handleListProviderTemplates(w http.ResponseWriter, r *http.Requ
 	if err != nil && s.opts.Logger != nil {
 		s.opts.Logger.Debug("modelsdev fetch notice", "error", err)
 	}
+	freeEnabled := manager.FreeConnectionsEnabled()
+	if !freeEnabled {
+		kept := make([]catalog.Template, 0, len(templatesList))
+		for _, template := range templatesList {
+			if !catalog.IsFreeTemplate(template.ID) {
+				kept = append(kept, template)
+			}
+		}
+		templatesList = kept
+	}
 	writeJSON(w, http.StatusOK, map[string]any{
-		"items":     toTemplateList(templatesList),
-		"modelsdev": toModelsDevStateResponse(mdState),
+		"free_enabled": freeEnabled,
+		"items":        toTemplateList(templatesList),
+		"modelsdev":    toModelsDevStateResponse(mdState),
 	})
 }
 
@@ -1181,6 +1224,10 @@ func (s *Server) handleProbeProvider(w http.ResponseWriter, r *http.Request) {
 			writeJSON(w, http.StatusBadGateway, toProbeResultResponse(res))
 			return
 		}
+		if errors.Is(err, appcatalog.ErrFreeConnectionExists) {
+			s.fail(w, r, refusal{Status: http.StatusConflict, Code: "free_connection_exists", Message: "api.connections.free_connection_exists"})
+			return
+		}
 		writeServiceError(w, err)
 		return
 	}
@@ -1198,6 +1245,10 @@ func (s *Server) handleCommitProbe(w http.ResponseWriter, r *http.Request) {
 	}
 	provider, err := manager.CommitProbe(r.Context(), r.PathValue("id"), toCommitProbeInput(req))
 	if err != nil {
+		if errors.Is(err, appcatalog.ErrFreeConnectionExists) {
+			s.fail(w, r, refusal{Status: http.StatusConflict, Code: "free_connection_exists", Message: "api.connections.free_connection_exists"})
+			return
+		}
 		writeServiceError(w, err)
 		return
 	}

@@ -496,7 +496,9 @@
           "tagFree": "Miễn phí",
           "tagExperimental": "Thử nghiệm",
           "tagPayAsYouGo": "Pay as you go",
-          "tagPaidPlan": "Paid plan"
+          "tagPaidPlan": "Paid plan",
+          "groupFree": "Kết nối miễn phí",
+          "freeAvailable": "Miễn phí khả dụng"
         },
         "status": {
           "ready": "Sẵn sàng",
@@ -918,7 +920,13 @@
           "forceSignInBody": "{process} (pid {pid}) đang dùng cổng mà việc đăng nhập này cần. Kết thúc nó sẽ giải phóng cổng.",
           "signInPortBusy": "{process} đang dùng cổng mà việc đăng nhập này cần",
           "next": "Tiếp",
-          "chooseHint": "Chọn nhà cung cấp"
+          "chooseHint": "Chọn nhà cung cấp",
+          "groupHintFree": "Không cần tài khoản hay khóa API",
+          "freeOffHint": "Kết nối miễn phí được ẩn cho đến khi bạn bật.",
+          "filterAll": "Tất cả",
+          "filterFree": "Miễn phí",
+          "filterLabel": "Lọc kết nối",
+          "freeAlreadyAdded": "Kết nối miễn phí này đã được thêm."
         },
         "verify": {
           "title": "Kiểm tra kết nối",
@@ -968,7 +976,15 @@
           "commitFailed": "Không thể thêm nhà cung cấp: {detail}",
           "keyAdded": "Đã thêm khóa vào {label}.",
           "legend": "Giá mỗi 1 triệu token, vào / ra",
-          "retainsPrompts": "Nhóm miễn phí này không cần tài khoản. Nhà cung cấp có thể ghi lại các lời nhắc bạn gửi đến."
+          "retainsPrompts": "Nhóm miễn phí này không cần tài khoản. Nhà cung cấp có thể ghi lại các lời nhắc bạn gửi đến.",
+          "freeBadge": "Miễn phí",
+          "freeOnly": "Chỉ miễn phí",
+          "noFreeModels": "Không có mô hình miễn phí",
+          "bulkLabel": "Trạng thái mô hình",
+          "freeOnlyLabel": "Chỉ miễn phí",
+          "freeOnlyLabelPattern": "{label} (chỉ miễn phí)",
+          "turnOnFree": "Bật tất cả miễn phí",
+          "turnOffFree": "Tắt tất cả miễn phí"
         },
         "format": {
           "openaiChat": "OpenAI Chat Completions; chạy với hầu hết client và gateway",
@@ -981,6 +997,18 @@
           "kiro": "API CodeWhisperer của Kiro qua một phiên Kiro CLI",
           "cloudCode": "Google Cloud Code Assist, dùng cho các lần đăng nhập Antigravity",
           "unsupported": "Relo chưa hỗ trợ định dạng này"
+        },
+        "freeConsent": {
+          "title": "Bạn tự chịu trách nhiệm khi sử dụng",
+          "body": "OpenCode Zen Free và Kilo Code Free là cổng của bên thứ ba, không phải dịch vụ của Relo. Chúng chỉ cho phép truy cập qua các tác nhân lập trình chính thức của mình; Relo không phải một trong số đó. Việc sử dụng có thể vi phạm điều khoản của họ hoặc pháp luật, và Relo không xác nhận các dịch vụ này. Nhà cung cấp có thể lưu hoặc sử dụng câu lệnh và mã của bạn, vì vậy đừng bao giờ gửi thông tin mật. Mô hình, giới hạn và tính khả dụng có thể thay đổi hoặc biến mất mà không báo trước. Trong phạm vi pháp luật cho phép, Relo và những người bảo trì không đưa ra bất kỳ bảo đảm nào và không chịu trách nhiệm. Khi bật kết nối miễn phí, bạn chấp nhận hoàn toàn trách nhiệm về việc sử dụng và mọi hậu quả pháp lý.",
+          "confirm": "Tôi tự chịu trách nhiệm và đồng ý bật",
+          "enabledToast": "Đã bật kết nối miễn phí"
+        },
+        "override": {
+          "allowFor": "Cho phép ghi đè cho {connection}",
+          "blockedFor": "Đã tắt ghi đè cho {connection}",
+          "dormantHint": "Các ghi đè của mô hình vẫn được lưu nhưng bị bỏ qua khi kết nối này không cho phép ghi đè.",
+          "failed": "Không thể đổi cài đặt ghi đè: {detail}"
         }
       },
       "keys": {
@@ -1953,7 +1981,11 @@
       "failoverLabel": "Failover wait",
       "failoverHint": "Tài khoản hay thành viên tuyến bị từ chối ở ngoài vòng xoay bao lâu sau khi chạm giới hạn tốc độ hay lỗi máy chủ, và thời gian chờ dài thêm thế nào sau mỗi lần hỏng tiếp theo. Một lần thành công là đặt lại. Chọn “Không” thì không phải chờ: lần từ chối đầu dùng lại được ngay.",
       "retryHint": "Khoảng chờ ngẫu nhiên trước mỗi lần thử lại, tính bằng giây. Retry-After dài hơn của nhà cung cấp sẽ thắng.",
-      "jumpLabel": "Chuyển đến phần"
+      "jumpLabel": "Chuyển đến phần",
+      "freeConnectionsLabel": "Kết nối miễn phí",
+      "freeConnectionsHint": "Kết nối miễn phí vẫn bị ẩn cho đến khi bạn bật và chấp nhận thông báo rủi ro. Khi tắt, các kết nối sẽ bị ẩn và ngừng nhận yêu cầu mới; dữ liệu đã lưu vẫn được giữ lại.",
+      "freeConnectionsDisabledToast": "Đã tắt kết nối miễn phí",
+      "sectionOthers": "Khác"
     },
     "updateDialog": {
       "title": "Cập nhật Relo",

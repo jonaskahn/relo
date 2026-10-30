@@ -332,7 +332,7 @@ func (h *harness) saveMockProvider() {
 		ID: "openai", Origin: string(catalog.OriginCustom), Label: "OpenAI",
 		Auth: string(catalog.AuthAPIKey), APIFormat: string(catalog.FormatOpenAIChat),
 		BaseURL: h.upstream.URL(), ModelsFormat: string(catalog.ModelsNone),
-		Enabled: true, Rank: 100, PoolStrategy: "least-loaded",
+		Enabled: true, Rank: 100, PoolStrategy: "least-loaded", AllowOverrides: true,
 	}); err != nil {
 		h.t.Fatalf("save the mock provider: %v", err)
 	}
@@ -433,6 +433,7 @@ func (h *harness) newService(models *catalog.Catalog, pools *account.Manager) *a
 		Direct:    upstream.Direct,
 		ModelsDev: modelsdev.NewDirectory(filepath.Join(h.t.TempDir(), "cache"), "", nil),
 		Templates: platform.TemplateRegistry{}, Logger: h.logger,
+		FreeConnections: func() bool { return config.ReadFreeConnections(h.settingsPath) },
 	})
 	edges.Catalog = h.service
 	h.routes = approuting.New(approuting.Options{

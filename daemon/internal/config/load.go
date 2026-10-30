@@ -18,6 +18,7 @@ func LoadConfig(path string, logger *slog.Logger) (*Config, error) {
 	cfg := DefaultConfig()
 	data, err := os.ReadFile(path)
 	if errors.Is(err, fs.ErrNotExist) {
+		cfg.Connections.Free = FreshFreeConnections
 		return &cfg, writeDefaultConfig(path, cfg, logger)
 	}
 	if err != nil {
@@ -39,6 +40,7 @@ func ReadFile(path string) (Config, error) {
 	cfg := DefaultConfig()
 	data, err := os.ReadFile(path)
 	if errors.Is(err, fs.ErrNotExist) {
+		cfg.Connections.Free = FreshFreeConnections
 		return cfg, nil
 	}
 	if err != nil {

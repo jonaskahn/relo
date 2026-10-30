@@ -8,6 +8,7 @@ func TestResolveCapabilitiesUsesProviderAuthority(t *testing.T) {
 	no, yes := false, true
 
 	res := ResolveCapabilities(CapabilityInputs{
+		AllowOverrides: true,
 		Provider: FactsRecord{
 			ContextWindow: &providerWindow, MaxOutput: &providerOutput,
 			SupportsTools: &no, SupportsReasoning: &no, SupportsVision: &no,
@@ -22,19 +23,19 @@ func TestResolveCapabilitiesUsesProviderAuthority(t *testing.T) {
 		},
 	})
 
-	if res.ContextWindow == nil || *res.ContextWindow != providerWindow || res.Sources.ContextWindow != "provider" {
-		t.Fatalf("context = %v from %q, want the provider's %d", res.ContextWindow, res.Sources.ContextWindow, providerWindow)
+	if res.ContextWindow == nil || *res.ContextWindow != manualWindow || res.Sources.ContextWindow != "override" {
+		t.Fatalf("context = %v from %q, want the operator's %d", res.ContextWindow, res.Sources.ContextWindow, manualWindow)
 	}
-	if res.MaxOutput == nil || *res.MaxOutput != providerOutput || res.Sources.MaxOutput != "provider" {
-		t.Fatalf("output = %v from %q, want the provider's %d", res.MaxOutput, res.Sources.MaxOutput, providerOutput)
+	if res.MaxOutput == nil || *res.MaxOutput != manualOutput || res.Sources.MaxOutput != "override" {
+		t.Fatalf("output = %v from %q, want the operator's %d", res.MaxOutput, res.Sources.MaxOutput, manualOutput)
 	}
-	if res.SupportsTools == nil || *res.SupportsTools || res.SupportsReasoning == nil || *res.SupportsReasoning ||
-		res.SupportsVision == nil || *res.SupportsVision {
-		t.Fatalf("capabilities = %+v, want the provider's explicit false values", res)
+	if res.SupportsTools == nil || !*res.SupportsTools || res.SupportsReasoning == nil || !*res.SupportsReasoning ||
+		res.SupportsVision == nil || !*res.SupportsVision {
+		t.Fatalf("capabilities = %+v, want the operator's explicit true values", res)
 	}
-	if !res.ManualInactive.ContextWindow || !res.ManualInactive.MaxOutput || !res.ManualInactive.Tools ||
-		!res.ManualInactive.Reasoning || !res.ManualInactive.Vision {
-		t.Fatalf("inactive manuals = %+v, want every superseded manual value marked", res.ManualInactive)
+	if res.ManualInactive.ContextWindow || res.ManualInactive.MaxOutput || res.ManualInactive.Tools ||
+		res.ManualInactive.Reasoning || res.ManualInactive.Vision {
+		t.Fatalf("inactive manuals = %+v, want the live manual values marked active", res.ManualInactive)
 	}
 }
 
@@ -83,8 +84,9 @@ func TestResolveCapabilitiesToggleOnlyDoesNotInheritLadder(t *testing.T) {
 func TestResolveCapabilitiesFallsThroughFieldByField(t *testing.T) {
 	modelsWindow, manualOutput := int64(100_000), int64(16_000)
 	res := ResolveCapabilities(CapabilityInputs{
-		ModelsDev: FactsRecord{ContextWindow: &modelsWindow},
-		Manual:    FactsRecord{MaxOutput: &manualOutput},
+		AllowOverrides: true,
+		ModelsDev:      FactsRecord{ContextWindow: &modelsWindow},
+		Manual:         FactsRecord{MaxOutput: &manualOutput},
 	})
 	if res.ContextWindow == nil || *res.ContextWindow != modelsWindow || res.Sources.ContextWindow != "modelsdev" {
 		t.Fatalf("context = %v from %q, want models.dev", res.ContextWindow, res.Sources.ContextWindow)
@@ -92,8 +94,68 @@ func TestResolveCapabilitiesFallsThroughFieldByField(t *testing.T) {
 	if res.MaxOutput == nil || *res.MaxOutput != manualOutput || res.Sources.MaxOutput != "override" {
 		t.Fatalf("output = %v from %q, want manual completion", res.MaxOutput, res.Sources.MaxOutput)
 	}
-	if res.Editable.ContextWindow || !res.Editable.MaxOutput {
-		t.Fatalf("editable = %+v, want models.dev locked and the manual completion editable", res.Editable)
+	if !res.Editable.ContextWindow || !res.Editable.MaxOutput {
+		t.Fatalf("editable = %+v, want manual values saved regardless of the detected layers", res.Editable)
+	}
+}
+
+func TestResolveCapabilitiesLeavesManualValuesDormantWhenOverridesAreOff(t *testing.T) {
+	manualWindow, providerWindow := int64(400_000), int64(200_000)
+	yes := true
+	res := ResolveCapabilities(CapabilityInputs{
+		Provider: FactsRecord{ContextWindow: &providerWindow},
+		Manual:   FactsRecord{ContextWindow: &manualWindow, SupportsTools: &yes},
+	})
+	if res.ContextWindow == nil || *res.ContextWindow != providerWindow || res.Sources.ContextWindow != "provider" {
+		t.Fatalf("context = %v from %q, want the provider's %d", res.ContextWindow, res.Sources.ContextWindow, providerWindow)
+	}
+	if res.SupportsTools != nil {
+		t.Fatalf("tools = %v, want a dormant manual value to fill nothing", res.SupportsTools)
+	}
+	if !res.ManualInactive.ContextWindow || !res.ManualInactive.Tools {
+		t.Fatalf("inactive manuals = %+v, want the stored values marked inactive", res.ManualInactive)
+	}
+}
+
+func TestResolveCapabilitiesManualReasoningKeepsTheDetectedLadder(t *testing.T) {
+	yes := true
+	res := ResolveCapabilities(CapabilityInputs{
+		AllowOverrides: true,
+		Provider:       FactsRecord{SupportsReasoning: &yes, ReasoningEfforts: []string{"low", "high"}, ReasoningToggle: &yes},
+		Manual:         FactsRecord{SupportsReasoning: &yes},
+	})
+	if res.Sources.Reasoning != "override" {
+		t.Fatalf("reasoning source = %q, want the manual flag", res.Sources.Reasoning)
+	}
+	if len(res.ReasoningEfforts) != 2 || res.Sources.ReasoningEfforts != "provider" {
+		t.Fatalf("efforts = %v from %q, want the detected ladder", res.ReasoningEfforts, res.Sources.ReasoningEfforts)
+	}
+	if res.ReasoningToggle == nil || !*res.ReasoningToggle {
+		t.Fatalf("toggle = %v, want the detected toggle", res.ReasoningToggle)
+	}
+}
+
+func TestResolveCapabilitiesManualReasoningOffClearsTheDetectedFamily(t *testing.T) {
+	yes, no := true, false
+	res := ResolveCapabilities(CapabilityInputs{
+		AllowOverrides: true,
+		Provider: FactsRecord{
+			SupportsReasoning: &yes, ReasoningEfforts: []string{"low", "high"},
+			ReasoningToggle: &yes, ReasoningBudget: &yes,
+		},
+		Manual: FactsRecord{SupportsReasoning: &no},
+	})
+	if res.SupportsReasoning == nil || *res.SupportsReasoning {
+		t.Fatalf("SupportsReasoning = %v, want the operator's off switch", res.SupportsReasoning)
+	}
+	if len(res.ReasoningEfforts) != 0 || res.ReasoningToggle == nil || *res.ReasoningToggle ||
+		res.ReasoningBudget == nil || *res.ReasoningBudget {
+		t.Fatalf("reasoning = %+v, want the family cleared", res)
+	}
+	if res.Sources.Reasoning != "override" || res.Sources.ReasoningEfforts != "override" ||
+		res.Sources.ReasoningToggle != "override" || res.Sources.ReasoningBudget != "override" ||
+		res.Sources.ReasoningBudgetMin != "override" || res.Sources.ReasoningBudgetMax != "override" {
+		t.Fatalf("sources = %+v, want the manual layer named", res.Sources)
 	}
 }
 

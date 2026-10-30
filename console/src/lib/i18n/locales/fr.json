@@ -496,7 +496,9 @@
           "tagFree": "Gratuit",
           "tagExperimental": "Expérimental",
           "tagPayAsYouGo": "Paiement à l’usage",
-          "tagPaidPlan": "Forfait payant"
+          "tagPaidPlan": "Forfait payant",
+          "groupFree": "Connexions gratuites",
+          "freeAvailable": "Gratuit disponible"
         },
         "status": {
           "ready": "Prêt",
@@ -918,7 +920,13 @@
           "forceSignInBody": "{process} (pid {pid}) occupe le port dont cette connexion a besoin. Le terminer libère le port.",
           "signInPortBusy": "{process} occupe le port dont cette connexion a besoin",
           "next": "Suivant",
-          "chooseHint": "Choisis un provider"
+          "chooseHint": "Choisis un provider",
+          "groupHintFree": "Sans compte ni clé API",
+          "freeOffHint": "Les connexions gratuites restent masquées jusqu’à leur activation.",
+          "filterAll": "Tout",
+          "filterFree": "Gratuit",
+          "filterLabel": "Filtrer les connexions",
+          "freeAlreadyAdded": "Cette connexion gratuite est déjà ajoutée."
         },
         "verify": {
           "title": "Vérifier la connexion",
@@ -968,7 +976,15 @@
           "commitFailed": "Impossible d’ajouter le provider : {detail}",
           "keyAdded": "Clé ajoutée à {label}.",
           "legend": "Prix par million de tokens, entrée / sortie",
-          "retainsPrompts": "Ce pool gratuit ne demande aucun compte. Le provider peut enregistrer les requêtes que tu lui envoies."
+          "retainsPrompts": "Ce pool gratuit ne demande aucun compte. Le provider peut enregistrer les requêtes que tu lui envoies.",
+          "freeBadge": "Gratuit",
+          "freeOnly": "Gratuit uniquement",
+          "noFreeModels": "Aucun modèle gratuit",
+          "bulkLabel": "États des modèles",
+          "freeOnlyLabel": "Gratuit uniquement",
+          "freeOnlyLabelPattern": "{label} (gratuit uniquement)",
+          "turnOnFree": "Activer tous les gratuits",
+          "turnOffFree": "Désactiver tous les gratuits"
         },
         "format": {
           "openaiChat": "OpenAI Chat Completions ; fonctionne avec la plupart des clients et des passerelles",
@@ -981,6 +997,18 @@
           "kiro": "L’API CodeWhisperer de Kiro via une session Kiro CLI",
           "cloudCode": "Google Cloud Code Assist, utilisé par les connexions Antigravity",
           "unsupported": "Relo ne parle pas encore ce format"
+        },
+        "freeConsent": {
+          "title": "Une utilisation sous votre responsabilité",
+          "body": "OpenCode Zen Free et Kilo Code Free sont des passerelles tierces, et non des services Relo. Elles ne permettent l’accès que par leurs agents de codage officiels ; Relo n’en fait pas partie. Leur utilisation peut enfreindre leurs conditions ou la loi, et Relo ne les approuve pas. Les fournisseurs peuvent conserver ou utiliser vos prompts et votre code : n’envoyez jamais d’informations confidentielles. Les modèles, limites et disponibilités peuvent changer ou disparaître sans préavis. Dans la mesure permise par la loi, Relo et ses mainteneurs n’offrent aucune garantie et déclinent toute responsabilité. En activant les connexions gratuites, vous assumez l’entière responsabilité de leur utilisation et de toute conséquence juridique.",
+          "confirm": "Accepter et activer sous ma responsabilité",
+          "enabledToast": "Connexions gratuites activées"
+        },
+        "override": {
+          "allowFor": "Autoriser les remplacements pour {connection}",
+          "blockedFor": "Remplacements désactivés pour {connection}",
+          "dormantHint": "Les remplacements du modèle restent enregistrés mais sont ignorés tant que cette connexion ne les autorise pas.",
+          "failed": "Impossible de modifier le réglage des remplacements : {detail}"
         }
       },
       "keys": {
@@ -1953,7 +1981,11 @@
       "failoverLabel": "Attente de bascule",
       "failoverHint": "Combien de temps un compte refusé ou un membre de route reste hors rotation après une limite de débit ou une panne du serveur, et comment l’attente grandit à chaque nouvel échec. Un succès la remet à zéro. « Aucun » démarre sans attente : le premier refus est réutilisable tout de suite.",
       "retryHint": "Combien de fois un compte est relancé avant que la requête passe au compte suivant. Une attente aléatoire de 1 à 3 s sépare les relances.",
-      "jumpLabel": "Aller à la section"
+      "jumpLabel": "Aller à la section",
+      "freeConnectionsLabel": "Connexions gratuites",
+      "freeConnectionsHint": "Les connexions gratuites restent masquées jusqu’à ce que vous les activiez et acceptiez l’avis de risque. Les désactiver les masque et bloque les nouvelles requêtes ; les données enregistrées sont conservées.",
+      "freeConnectionsDisabledToast": "Connexions gratuites désactivées",
+      "sectionOthers": "Autres"
     },
     "updateDialog": {
       "title": "Mettre à jour Relo",

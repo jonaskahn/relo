@@ -14,6 +14,7 @@
 		confirmLabel: string;
 		cancelLabel?: string;
 		tone?: 'default' | 'destructive';
+		layer?: 'base' | 'above';
 		busy?: boolean;
 		error?: string;
 		icon?: IconName;
@@ -29,6 +30,7 @@
 		// whole word for it, the way discarding an unsaved choice is.
 		cancelLabel = '',
 		tone = 'default',
+		layer = 'base',
 		busy = false,
 		error = '',
 		icon = 'alert-triangle',
@@ -36,7 +38,7 @@
 	}: Props = $props();
 </script>
 
-<CenteredModal bind:open size="compact" {title} dismissible={!busy}>
+<CenteredModal bind:open size="compact" {title} {layer} dismissible={!busy}>
 	{#snippet footer()}
 		<div class="modal-footer">
 			<Button variant="outline" disabled={busy} onclick={() => (open = false)}>

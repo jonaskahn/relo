@@ -496,7 +496,9 @@
           "tagFree": "Gratis",
           "tagExperimental": "Experimentell",
           "tagPayAsYouGo": "Betala per användning",
-          "tagPaidPlan": "Betald plan"
+          "tagPaidPlan": "Betald plan",
+          "groupFree": "Gratisanslutningar",
+          "freeAvailable": "Gratis tillgängligt"
         },
         "status": {
           "ready": "Redo",
@@ -918,7 +920,13 @@
           "forceSignInBody": "{process} (pid {pid}) använder porten som den här inloggningen behöver. Att avsluta den frigör porten.",
           "signInPortBusy": "{process} använder porten som den här inloggningen behöver",
           "next": "Nästa",
-          "chooseHint": "Välj en leverantör"
+          "chooseHint": "Välj en leverantör",
+          "groupHintFree": "Utan konto eller API-nyckel",
+          "freeOffHint": "Gratisanslutningarna är dolda tills du aktiverar dem.",
+          "filterAll": "Alla",
+          "filterFree": "Gratis",
+          "filterLabel": "Filtrera anslutningar",
+          "freeAlreadyAdded": "Den här gratisanslutningen är redan tillagd."
         },
         "verify": {
           "title": "Kontrollera anslutningen",
@@ -968,7 +976,15 @@
           "commitFailed": "Kunde inte lägga till leverantören: {detail}",
           "keyAdded": "Nyckeln lades till i {label}.",
           "legend": "Pris per 1M token, in / ut",
-          "retainsPrompts": "Den här fria poolen kräver inget konto. Promptar du skickar kan loggas av leverantören."
+          "retainsPrompts": "Den här fria poolen kräver inget konto. Promptar du skickar kan loggas av leverantören.",
+          "freeBadge": "Gratis",
+          "freeOnly": "Endast gratis",
+          "noFreeModels": "Inga gratis modeller",
+          "bulkLabel": "Modellstatusar",
+          "freeOnlyLabel": "Endast gratis",
+          "freeOnlyLabelPattern": "{label} (endast gratis)",
+          "turnOnFree": "Slå på alla gratis",
+          "turnOffFree": "Slå av alla gratis"
         },
         "format": {
           "openaiChat": "OpenAI Chat Completions; fungerar med de flesta klienter och gateways",
@@ -981,6 +997,18 @@
           "kiro": "Kiros CodeWhisperer API via en Kiro CLI-session",
           "cloudCode": "Google Cloud Code Assist, används av Antigravity-inloggningar",
           "unsupported": "Relo kan inte hantera det här formatet än"
+        },
+        "freeConsent": {
+          "title": "Användning på eget ansvar",
+          "body": "OpenCode Zen Free och Kilo Code Free är tredjepartsgatewayer, inte tjänster från Relo. De ger endast åtkomst via sina officiella kodagenter; Relo är inte en av dem. Användning kan bryta mot deras villkor eller lag och Relo rekommenderar dem inte. Leverantörerna kan spara eller använda dina prompter och din kod, så skicka aldrig konfidentiell information. Modeller, gränser och tillgänglighet kan ändras eller försvinna utan förvarning. I den utsträckning lagen tillåter lämnar Relo och dess maintainers ingen garanti och tar inget ansvar. Genom att aktivera gratisanslutningarna tar du fullt ansvar för användningen och eventuella rättsliga konsekvenser.",
+          "confirm": "Jag tar ansvaret och aktiverar",
+          "enabledToast": "Gratisanslutningar aktiverade"
+        },
+        "override": {
+          "allowFor": "Tillåt åsidosättningar för {connection}",
+          "blockedFor": "Åsidosättningar av för {connection}",
+          "dormantHint": "Sparade modellåsidosättningar finns kvar men ignoreras så länge anslutningen inte tillåter dem.",
+          "failed": "Kunde inte ändra åsidosättningsinställningen: {detail}"
         }
       },
       "keys": {
@@ -1953,7 +1981,11 @@
       "failoverLabel": "Failover-väntetid",
       "failoverHint": "Hur länge ett avvisat konto eller en avvisad gruppmedlem står utanför rotationen efter en hastighetsgräns eller ett serverfel, och hur väntetiden växer för varje nytt fel. Ett lyckat försök nollställer den. Väljer du Inget börjar det utan väntetid: första avvisningen kan användas direkt igen.",
       "retryHint": "Hur många gånger samma konto försöks igen innan förfrågan går vidare till nästa konto. En slumpmässig väntetid på 1–3 s skiljer försöken åt.",
-      "jumpLabel": "Gå till avsnitt"
+      "jumpLabel": "Gå till avsnitt",
+      "freeConnectionsLabel": "Gratisanslutningar",
+      "freeConnectionsHint": "Gratisanslutningarna förblir dolda tills du aktiverar dem och godkänner riskinformationen. Om du stänger av dem döljs anslutningarna och nya förfrågningar stoppas; sparad data behålls.",
+      "freeConnectionsDisabledToast": "Gratisanslutningar avstängda",
+      "sectionOthers": "Övrigt"
     },
     "updateDialog": {
       "title": "Uppdatera Relo",

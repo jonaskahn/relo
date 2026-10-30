@@ -693,3 +693,11 @@ other = "Windows usunie ten plik po zamknięciu Relo: {{.Path}}"
 [tray.menu.quitting]
 description = "Tray quit action while final records are saved"
 other = "Zakończ — przetwarzanie…"
+
+[api.connections.free_connections_disabled]
+description = "Inference refusal when a configured free connection is reached with consent off"
+other = "Bezpłatne połączenia wymagają Twojej zgody. Włącz bezpłatne połączenia i zaakceptuj informację o odpowiedzialności, zanim ich użyjesz."
+
+[api.connections.free_connection_exists]
+description = "Management refusal when a second keyless free connection is requested"
+other = "To bezpłatne połączenie zostało już dodane."

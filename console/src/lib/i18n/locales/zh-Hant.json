@@ -496,7 +496,9 @@
           "tagFree": "免費",
           "tagExperimental": "實驗性",
           "tagPayAsYouGo": "按量付費",
-          "tagPaidPlan": "付費方案"
+          "tagPaidPlan": "付費方案",
+          "groupFree": "免費連線",
+          "freeAvailable": "可用免費模型"
         },
         "status": {
           "ready": "就緒",
@@ -918,7 +920,13 @@
           "forceSignInBody": "{process}（pid {pid}）正佔用這次登入需要的連接埠。結束它就能釋放連接埠。",
           "signInPortBusy": "{process} 正在使用此登入所需的連接埠",
           "next": "下一步",
-          "chooseHint": "選擇供應商"
+          "chooseHint": "選擇供應商",
+          "groupHintFree": "不需帳號或 API 金鑰",
+          "freeOffHint": "免費連線在啟用前會保持隱藏。",
+          "filterAll": "全部",
+          "filterFree": "免費",
+          "filterLabel": "篩選連線",
+          "freeAlreadyAdded": "此免費連線已新增。"
         },
         "verify": {
           "title": "檢查連線",
@@ -968,7 +976,15 @@
           "commitFailed": "無法新增供應商：{detail}",
           "keyAdded": "金鑰已加入 {label}。",
           "legend": "每 100 萬 Token 的價格（輸入 / 輸出）",
-          "retainsPrompts": "這個免費池不需要賬號。你送出的提示詞可能會被供應商記錄。"
+          "retainsPrompts": "這個免費池不需要賬號。你送出的提示詞可能會被供應商記錄。",
+          "freeBadge": "免費",
+          "freeOnly": "僅免費",
+          "noFreeModels": "沒有免費模型",
+          "bulkLabel": "模型狀態",
+          "freeOnlyLabel": "僅免費",
+          "freeOnlyLabelPattern": "{label}（僅免費）",
+          "turnOnFree": "開啟所有免費模型",
+          "turnOffFree": "關閉所有免費模型"
         },
         "format": {
           "openaiChat": "OpenAI Chat Completions；相容大多數用戶端與閘道器",
@@ -981,6 +997,18 @@
           "kiro": "透過 Kiro CLI 工作階段使用 Kiro 的 CodeWhisperer API",
           "cloudCode": "Google Cloud Code Assist，供 Antigravity 登入使用",
           "unsupported": "Relo 尚不支援此格式"
+        },
+        "freeConsent": {
+          "title": "使用風險由你自行承擔",
+          "body": "OpenCode Zen Free 和 Kilo Code Free 是第三方閘道，並非 Relo 提供的服務。它們僅允許透過各自的官方程式設計代理存取；Relo 並非其官方代理。使用這些服務可能違反其條款或適用法律，Relo 不為其背書。供應商可能保留或使用你的提示詞與程式碼，因此切勿傳送機密資訊。模型、限制與可用性可能隨時變更或消失，恕不另行通知。在法律允許的範圍內，Relo 及其維護者不提供任何保證，也不承擔任何責任。啟用免費連線即表示你接受對其使用及任何法律後果承擔全部責任。",
+          "confirm": "我願自行承擔責任並啟用",
+          "enabledToast": "已啟用免費連線"
+        },
+        "override": {
+          "allowFor": "允許 {connection} 覆寫",
+          "blockedFor": "{connection} 的覆寫已關閉",
+          "dormantHint": "已儲存的模型覆寫會保留，但在此連線不允許覆寫時將被忽略。",
+          "failed": "無法變更覆寫設定：{detail}"
         }
       },
       "keys": {
@@ -1953,7 +1981,11 @@
       "failoverLabel": "容錯等待",
       "failoverHint": "賬號或路由成員被拒絕後（例如碰到速率限制或伺服器錯誤），要等多久才會再回到輪替中，以及每多失敗一次等待怎麼拉長。成功一次就會歸零。選「無」代表不等待：第一次被拒絕馬上就能再用。",
       "retryHint": "一個賬號重試幾次之後，請求才換到下一個賬號。每次重試之間會隨機等 1–3 秒。",
-      "jumpLabel": "跳至區段"
+      "jumpLabel": "跳至區段",
+      "freeConnectionsLabel": "免費連線",
+      "freeConnectionsHint": "免費連線會持續隱藏，直到你啟用並接受風險提示。關閉後會隱藏連線並停止傳送新請求；已儲存的資料仍會保留。",
+      "freeConnectionsDisabledToast": "已關閉免費連線",
+      "sectionOthers": "其他"
     },
     "updateDialog": {
       "title": "更新 Relo",

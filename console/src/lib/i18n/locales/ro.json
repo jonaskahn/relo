@@ -496,7 +496,9 @@
           "tagFree": "Gratuit",
           "tagExperimental": "Experimental",
           "tagPayAsYouGo": "Pay as you go",
-          "tagPaidPlan": "Paid plan"
+          "tagPaidPlan": "Paid plan",
+          "groupFree": "Conexiuni gratuite",
+          "freeAvailable": "Disponibil gratuit"
         },
         "status": {
           "ready": "Pregătit",
@@ -918,7 +920,13 @@
           "forceSignInBody": "{process} (pid {pid}) folsește portul de care are nevoie această autentificare. Închiderea lui eliberează portul.",
           "signInPortBusy": "{process} folsește portul de care are nevoie această autentificare",
           "next": "Înainte",
-          "chooseHint": "Alege un furnizor"
+          "chooseHint": "Alege un furnizor",
+          "groupHintFree": "Fără cont sau cheie API",
+          "freeOffHint": "Conexiunile gratuite rămân ascunse până le activezi.",
+          "filterAll": "Toate",
+          "filterFree": "Gratuit",
+          "filterLabel": "Filtrează conexiunile",
+          "freeAlreadyAdded": "Această conexiune gratuită este deja adăugată."
         },
         "verify": {
           "title": "Verifică conexiunea",
@@ -968,7 +976,15 @@
           "commitFailed": "Furnizorul nu a putut fi adăugat: {detail}",
           "keyAdded": "Cheie adăugată la {label}.",
           "legend": "Preț per 1M de tokenuri, intrare / ieșire",
-          "retainsPrompts": "Acest pool gratuit nu necesită un cont. Solicitările trimise pot fi înregistrate de furnizor."
+          "retainsPrompts": "Acest pool gratuit nu necesită un cont. Solicitările trimise pot fi înregistrate de furnizor.",
+          "freeBadge": "Gratuit",
+          "freeOnly": "Doar gratuit",
+          "noFreeModels": "Niciun model gratuit",
+          "bulkLabel": "Stări modele",
+          "freeOnlyLabel": "Doar gratuit",
+          "freeOnlyLabelPattern": "{label} (doar gratuit)",
+          "turnOnFree": "Activează toate gratuite",
+          "turnOffFree": "Dezactivează toate gratuite"
         },
         "format": {
           "openaiChat": "OpenAI Chat Completions; funcționează cu majoritatea clienților și gateway-urilor",
@@ -981,6 +997,18 @@
           "kiro": "API-ul CodeWhisperer de la Kiro printr-o sesiune Kiro CLI",
           "cloudCode": "Google Cloud Code Assist, folosit de autentificările Antigravity",
           "unsupported": "Relo nu poate vorbi încă acest format"
+        },
+        "freeConsent": {
+          "title": "Utilizare pe propria răspundere",
+          "body": "OpenCode Zen Free și Kilo Code Free sunt gateway-uri ale unor terți, nu servicii Relo. Permit accesul doar prin agenții lor oficiali de programare; Relo nu este unul dintre aceștia. Utilizarea poate încălca termenii lor sau legea, iar Relo nu le susține. Furnizorii pot păstra sau folosi prompturile și codul tău, așa că nu trimite niciodată informații confidențiale. Modelele, limitele și disponibilitatea se pot schimba sau pot dispărea fără notificare. În măsura permisă de lege, Relo și întreținătorii săi nu oferă nicio garanție și nu își asumă răspunderea. Activând conexiunile gratuite, îți asumi întreaga responsabilitate pentru utilizarea lor și pentru orice consecințe legale.",
+          "confirm": "Îmi asum răspunderea și activez",
+          "enabledToast": "Conexiunile gratuite au fost activate"
+        },
+        "override": {
+          "allowFor": "Permite suprascrierile pentru {connection}",
+          "blockedFor": "Suprascrieri oprite pentru {connection}",
+          "dormantHint": "Suprascrierile modelului rămân salvate, dar sunt ignorate cât timp această conexiune nu le permite.",
+          "failed": "Nu s-a putut schimba setarea suprascrierilor: {detail}"
         }
       },
       "keys": {
@@ -1953,7 +1981,11 @@
       "failoverLabel": "Failover wait",
       "failoverHint": "Cât timp rămâne un cont sau un membru de rută refuzat în afara rotației după o limită de rată sau o eroare de server și cum crește așteptarea cu fiecare eșec nou. Un succes o resetează. „Fără” pornește fără așteptare: primul refuz e refolosibil imediat.",
       "retryHint": "Pauză aleatorie înainte de fiecare încercare, în secunde. Un Retry-After mai lung al furnizorului câștigă.",
-      "jumpLabel": "Mergi la secțiune"
+      "jumpLabel": "Mergi la secțiune",
+      "freeConnectionsLabel": "Conexiuni gratuite",
+      "freeConnectionsHint": "Conexiunile gratuite rămân ascunse până le activezi și accepți notificarea privind riscurile. Dezactivarea le ascunde și oprește cererile noi; datele salvate sunt păstrate.",
+      "freeConnectionsDisabledToast": "Conexiunile gratuite au fost dezactivate",
+      "sectionOthers": "Altele"
     },
     "updateDialog": {
       "title": "Actualizează Relo",

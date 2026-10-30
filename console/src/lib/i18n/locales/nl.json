@@ -496,7 +496,9 @@
           "tagFree": "Gratis",
           "tagExperimental": "Experimenteel",
           "tagPayAsYouGo": "Betalen per gebruik",
-          "tagPaidPlan": "Betaald abonnement"
+          "tagPaidPlan": "Betaald abonnement",
+          "groupFree": "Gratis verbindingen",
+          "freeAvailable": "Gratis beschikbaar"
         },
         "status": {
           "ready": "Klaar",
@@ -918,7 +920,13 @@
           "forceSignInBody": "{process} (pid {pid}) gebruikt de poort die deze aanmelding nodig heeft. Beëindigen geeft de poort vrij.",
           "signInPortBusy": "{process} gebruikt de poort die deze aanmelding nodig heeft",
           "next": "Volgende",
-          "chooseHint": "Kies een provider"
+          "chooseHint": "Kies een provider",
+          "groupHintFree": "Zonder account of API-sleutel",
+          "freeOffHint": "Gratis verbindingen blijven verborgen tot je ze inschakelt.",
+          "filterAll": "Alles",
+          "filterFree": "Gratis",
+          "filterLabel": "Verbindingen filteren",
+          "freeAlreadyAdded": "Deze gratis verbinding is al toegevoegd."
         },
         "verify": {
           "title": "De verbinding controleren",
@@ -968,7 +976,15 @@
           "commitFailed": "Kon de provider niet toevoegen: {detail}",
           "keyAdded": "Sleutel toegevoegd aan {label}.",
           "legend": "Prijs per 1M tokens, in / uit",
-          "retainsPrompts": "Deze gratis pool heeft geen account nodig. Prompts die je erheen stuurt, kan de provider vastleggen."
+          "retainsPrompts": "Deze gratis pool heeft geen account nodig. Prompts die je erheen stuurt, kan de provider vastleggen.",
+          "freeBadge": "Gratis",
+          "freeOnly": "Alleen gratis",
+          "noFreeModels": "Geen gratis modellen",
+          "bulkLabel": "Modelstatussen",
+          "freeOnlyLabel": "Alleen gratis",
+          "freeOnlyLabelPattern": "{label} (alleen gratis)",
+          "turnOnFree": "Alle gratis inschakelen",
+          "turnOffFree": "Alle gratis uitschakelen"
         },
         "format": {
           "openaiChat": "OpenAI Chat Completions; werkt met de meeste clients en gateways",
@@ -981,6 +997,18 @@
           "kiro": "Kiro’s CodeWhisperer API via een Kiro CLI-sessie",
           "cloudCode": "Google Cloud Code Assist, gebruikt door Antigravity-logins",
           "unsupported": "Relo spreekt dit formaat nog niet"
+        },
+        "freeConsent": {
+          "title": "Gebruik op eigen verantwoordelijkheid",
+          "body": "OpenCode Zen Free en Kilo Code Free zijn gateways van derden, geen diensten van Relo. Ze geven alleen toegang via hun officiële coding-agents; Relo is er daar geen van. Gebruik kan hun voorwaarden of de wet schenden, en Relo keurt ze niet goed. Aanbieders kunnen je prompts en code bewaren of gebruiken, dus verstuur nooit vertrouwelijke informatie. Modellen, limieten en beschikbaarheid kunnen zonder kennisgeving veranderen of verdwijnen. Voor zover wettelijk toegestaan bieden Relo en de maintainers geen garantie en aanvaarden zij geen aansprakelijkheid. Door gratis verbindingen in te schakelen aanvaard je de volledige verantwoordelijkheid voor het gebruik en alle juridische gevolgen.",
+          "confirm": "Verantwoordelijkheid aanvaarden en inschakelen",
+          "enabledToast": "Gratis verbindingen ingeschakeld"
+        },
+        "override": {
+          "allowFor": "Overschrijvingen toestaan voor {connection}",
+          "blockedFor": "Overschrijvingen uit voor {connection}",
+          "dormantHint": "Opgeslagen modeloverschrijvingen blijven bewaard maar worden genegeerd zolang deze verbinding ze niet toestaat.",
+          "failed": "Kan de overschrijvingsinstelling niet wijzigen: {detail}"
         }
       },
       "keys": {
@@ -1953,7 +1981,11 @@
       "failoverLabel": "Wachttijd bij failover",
       "failoverHint": "Hoe lang een geweigerd account of route-lid uit de rotatie blijft na een snelheidslimiet of serverfout, en hoe die wachttijd groeit bij elke volgende fout. Een geslaagde aanvraag zet hem terug op nul. Kies je geen wachttijd, dan is de eerste weigering meteen weer bruikbaar.",
       "retryHint": "Hoe vaak één account opnieuw wordt geprobeerd voordat de aanvraag naar het volgende account gaat. Tussen de pogingen wacht Relo willekeurig 1 tot 3 seconden.",
-      "jumpLabel": "Ga naar sectie"
+      "jumpLabel": "Ga naar sectie",
+      "freeConnectionsLabel": "Gratis verbindingen",
+      "freeConnectionsHint": "Gratis verbindingen blijven verborgen tot je ze inschakelt en de risicomededeling accepteert. Uitschakelen verbergt de verbindingen en blokkeert nieuwe verzoeken; opgeslagen gegevens blijven bewaard.",
+      "freeConnectionsDisabledToast": "Gratis verbindingen uitgeschakeld",
+      "sectionOthers": "Overig"
     },
     "updateDialog": {
       "title": "Relo bijwerken",

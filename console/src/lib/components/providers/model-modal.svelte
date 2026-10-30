@@ -19,6 +19,7 @@
 	import PriceLayers from './price-layers.svelte';
 	import PricedAsPicker from './priced-as-picker.svelte';
 	import TokenSizeField from './token-size-field.svelte';
+	import AllowOverridesButton from './allow-overrides-button.svelte';
 	import { formatDollars, formatTokens, formatUnitPrice, parseDollars } from '$lib/format';
 	import { contextLabel, parseContextInput, roundTokenCount } from '$lib/context-window';
 	import {
@@ -74,6 +75,7 @@
 	let draft = $state(editDraft());
 	let sizeProblems = $state({ contextWindow: '', maxInput: '', maxOutput: '' });
 	let saving = $state(false);
+	let overrideBusy = $state(false);
 	let saveFailed = $state('');
 	let discardOpen = $state(false);
 
@@ -303,6 +305,31 @@
 		return $t('ui.pages.providersPage.models.readOnlyCapability', { values: { source } });
 	}
 
+	async function toggleAllowOverrides() {
+		const source = shown;
+		if (source === null) return;
+		overrideBusy = true;
+		saveFailed = '';
+		try {
+			await api('/connections/' + encodeURIComponent(source.provider_id), {
+				method: 'PATCH',
+				body: JSON.stringify({ allow_overrides: !source.allow_overrides })
+			});
+			const updated = await api<Model>(
+				'/models/' +
+					encodeURIComponent(source.provider_id) +
+					'/' +
+					encodeURIComponent(source.model_id)
+			);
+			detail = updated;
+			onchanged(updated);
+		} catch (error) {
+			saveFailed = error instanceof Error ? error.message : String(error);
+		} finally {
+			overrideBusy = false;
+		}
+	}
+
 	function priceSource(key: 'input' | 'output'): string {
 		return shown ? tilePriceSource(shown.prices.effective_source[key]) : '';
 	}
@@ -418,27 +445,22 @@
 			load(source: Model) {
 				const layer: DetailLayer = source.details?.override ?? emptyLayer();
 				const prices: Prices = source.prices.override;
-				const states = source.capability_states;
-				this.contextEditable = states?.context_window?.editable ?? true;
-				this.maxInputEditable = states?.max_input?.editable ?? true;
-				this.maxOutputEditable = states?.max_output?.editable ?? true;
-				this.toolsEditable = states?.tools?.editable ?? true;
-				this.reasoningEditable = states?.reasoning?.editable ?? true;
-				this.visionEditable = states?.vision?.editable ?? true;
+				this.contextEditable = true;
+				this.maxInputEditable = true;
+				this.maxOutputEditable = true;
+				this.toolsEditable = true;
+				this.reasoningEditable = true;
+				this.visionEditable = true;
 				this.enabled = source.enabled;
 				this.name = layer.name ?? '';
 				this.description = layer.description ?? '';
 				this.category = layer.category ?? '';
-				this.contextWindow = sizeLabel(
-					this.contextEditable ? layer.context_window : source.context_window
-				);
-				this.maxInput = sizeLabel(this.maxInputEditable ? layer.max_input : source.max_input);
-				this.maxOutput = sizeLabel(this.maxOutputEditable ? layer.max_output : source.max_output);
-				this.tools = this.toolsEditable ? tri(layer.tools) : tri(source.capabilities.tools);
-				this.reasoning = this.reasoningEditable
-					? tri(layer.reasoning)
-					: tri(source.capabilities.reasoning);
-				this.vision = this.visionEditable ? tri(layer.vision) : tri(source.capabilities.vision);
+				this.contextWindow = sizeLabel(layer.context_window);
+				this.maxInput = sizeLabel(layer.max_input);
+				this.maxOutput = sizeLabel(layer.max_output);
+				this.tools = tri(layer.tools);
+				this.reasoning = tri(layer.reasoning);
+				this.vision = tri(layer.vision);
 				this.input = formatDollars(prices.input);
 				this.output = formatDollars(prices.output);
 				this.cacheRead = formatDollars(prices.cache_read);
@@ -642,6 +664,12 @@
 				<section class="space-y-3">
 					<div class="flex flex-wrap items-center gap-2">
 						<h3 class="section-heading">{$t('ui.pages.providersPage.models.overrides')}</h3>
+						<AllowOverridesButton
+							label={providerLabel || model.provider_id}
+							allowed={shown?.allow_overrides ?? model.allow_overrides}
+							busy={overrideBusy}
+							ontoggle={() => void toggleAllowOverrides()}
+						/>
 						{#if overrideEntries.length > 0}
 							<span class="badge bg-sunken text-muted-foreground">
 								{$t('ui.pages.providersPage.models.chipOverridden')}
@@ -679,6 +707,11 @@
 							</div>
 						{/each}
 					</dl>
+					{#if !(shown?.allow_overrides ?? model.allow_overrides)}
+						<p class="rounded-panel bg-muted/40 px-3 py-2 text-xs text-muted-foreground">
+							{$t('ui.pages.providersPage.override.dormantHint')}
+						</p>
+					{/if}
 				</section>
 
 				<div class="flex flex-wrap items-center gap-2 text-xs">
@@ -848,7 +881,20 @@
 					</section>
 
 					<section class="space-y-3">
-						<h3 class="section-heading">{$t('ui.pages.providersPage.models.editLimits')}</h3>
+						<div class="flex flex-wrap items-center gap-2">
+							<h3 class="section-heading">{$t('ui.pages.providersPage.models.editLimits')}</h3>
+							<AllowOverridesButton
+								label={providerLabel || model.provider_id}
+								allowed={shown?.allow_overrides ?? model.allow_overrides}
+								busy={overrideBusy}
+								ontoggle={() => void toggleAllowOverrides()}
+							/>
+						</div>
+						{#if !(shown?.allow_overrides ?? model.allow_overrides)}
+							<p class="rounded-panel bg-muted/40 px-3 py-2 text-xs text-muted-foreground">
+								{$t('ui.pages.providersPage.override.dormantHint')}
+							</p>
+						{/if}
 						<div class="field-grid">
 							<TokenSizeField
 								id="model-edit-context"

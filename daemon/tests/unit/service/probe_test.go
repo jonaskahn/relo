@@ -464,11 +464,11 @@ func TestProbeOpenCodeFreeKeepsFreeModels(t *testing.T) {
 	if !proxied {
 		t.Fatal("the free-tier listing did not ask for the proxy")
 	}
-	host, err := manager.CommitProbe(context.Background(), result.ProbeID, appcatalog.CommitProbeRequest{Label: "Opencode Free"})
+	host, err := manager.CommitProbe(context.Background(), result.ProbeID, appcatalog.CommitProbeRequest{Label: "OpenCode Zen Free"})
 	if err != nil {
 		t.Fatalf("CommitProbe() error = %v", err)
 	}
 	if !host.UseProxy {
-		t.Fatal("Opencode Free was saved with the proxy off")
+		t.Fatal("OpenCode Zen Free was saved with the proxy off")
 	}
 }

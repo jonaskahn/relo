@@ -39,6 +39,7 @@ func seedRow(t *testing.T, h *harness, row sqlite.ProviderRow) {
 	if row.PoolStrategy == "" {
 		row.PoolStrategy = sqlite.StrategyLeastLoaded
 	}
+	row.AllowOverrides = true
 	repo := sqlite.NewCatalogRepo(h.db)
 	if err := repo.SaveProvider(context.Background(), row); err != nil {
 		t.Fatalf("save provider %s: %v", row.ID, err)
@@ -791,7 +792,7 @@ func TestRefreshOpenCodeFreeKeepsTheFreeRosterWithoutCatalogPrices(t *testing.T)
 	}).URL)
 	seedRow(t, h, sqlite.ProviderRow{
 		ID: "opencode-free", TemplateID: catalog.OpenCodeFreeTemplate, Origin: string(catalog.OriginTemplate),
-		Label: "Opencode Free", Auth: string(catalog.AuthNone),
+		Label: "OpenCode Zen Free", Auth: string(catalog.AuthNone),
 		APIFormat: string(catalog.FormatOpenAIChat), BaseURL: listing.URL + "/v1",
 		ModelsSource: "listing", ModelsFormat: string(catalog.ModelsOpenAI), ModelsDevProviderID: "opencode",
 		Enabled: true, Rank: 100,

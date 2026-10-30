@@ -496,7 +496,9 @@
           "tagFree": "Grátis",
           "tagExperimental": "Experimental",
           "tagPayAsYouGo": "Pay as you go",
-          "tagPaidPlan": "Paid plan"
+          "tagPaidPlan": "Paid plan",
+          "groupFree": "Conexões gratuitas",
+          "freeAvailable": "Grátis disponível"
         },
         "status": {
           "ready": "Pronta",
@@ -918,7 +920,13 @@
           "forceSignInBody": "{process} (pid {pid}) está usando a porta que este login precisa. Encerrá-lo libera a porta.",
           "signInPortBusy": "{process} está usando a porta que este login precisa",
           "next": "Avançar",
-          "chooseHint": "Escolha um provedor"
+          "chooseHint": "Escolha um provedor",
+          "groupHintFree": "Sem conta nem chave de API",
+          "freeOffHint": "As conexões gratuitas ficam ocultas até você ativá-las.",
+          "filterAll": "Tudo",
+          "filterFree": "Grátis",
+          "filterLabel": "Filtrar conexões",
+          "freeAlreadyAdded": "Esta conexão gratuita já foi adicionada."
         },
         "verify": {
           "title": "Verificar a conexão",
@@ -968,7 +976,15 @@
           "commitFailed": "Não foi possível adicionar o provedor: {detail}",
           "keyAdded": "Chave adicionada a {label}.",
           "legend": "Preço por 1M de tokens, entrada / saída",
-          "retainsPrompts": "Este pool gratuito não exige conta. Os prompts enviados podem ser registrados pelo provedor."
+          "retainsPrompts": "Este pool gratuito não exige conta. Os prompts enviados podem ser registrados pelo provedor.",
+          "freeBadge": "Grátis",
+          "freeOnly": "Somente grátis",
+          "noFreeModels": "Nenhum modelo grátis",
+          "bulkLabel": "Estados dos modelos",
+          "freeOnlyLabel": "Somente grátis",
+          "freeOnlyLabelPattern": "{label} (somente grátis)",
+          "turnOnFree": "Ativar todos os grátis",
+          "turnOffFree": "Desativar todos os grátis"
         },
         "format": {
           "openaiChat": "OpenAI Chat Completions; funciona com a maioria dos clientes e gateways",
@@ -981,6 +997,18 @@
           "kiro": "A API CodeWhisperer do Kiro por meio de uma sessão do Kiro CLI",
           "cloudCode": "Google Cloud Code Assist, usado nos logins do Antigravity",
           "unsupported": "O Relo ainda não fala esse formato"
+        },
+        "freeConsent": {
+          "title": "Uso por sua conta e risco",
+          "body": "OpenCode Zen Free e Kilo Code Free são gateways de terceiros, não serviços do Relo. Eles permitem acesso apenas por meio de seus agentes de programação oficiais; o Relo não é um deles. O uso pode violar os termos deles ou a lei, e o Relo não os endossa. Os provedores podem reter ou usar seus prompts e código, então nunca envie informações confidenciais. Modelos, limites e disponibilidade podem mudar ou desaparecer sem aviso. Na medida permitida por lei, o Relo e seus mantenedores não oferecem garantia e não se responsabilizam. Ao ativar as conexões gratuitas, você assume total responsabilidade pelo uso e por quaisquer consequências legais.",
+          "confirm": "Aceito a responsabilidade e quero ativar",
+          "enabledToast": "Conexões gratuitas ativadas"
+        },
+        "override": {
+          "allowFor": "Permitir substituições para {connection}",
+          "blockedFor": "Substituições desativadas para {connection}",
+          "dormantHint": "As substituições do modelo continuam salvas, mas são ignoradas enquanto esta conexão não as permitir.",
+          "failed": "Não foi possível alterar a configuração de substituições: {detail}"
         }
       },
       "keys": {
@@ -1953,7 +1981,11 @@
       "failoverLabel": "Failover wait",
       "failoverHint": "Por quanto tempo uma conta ou membro de rota recusado fica fora do rodízio depois de um limite de taxa ou falha do servidor, e como a espera cresce a cada nova falha. Um sucesso zera a espera. “Nenhum” começa sem espera: a primeira recusa já pode ser usada de novo.",
       "retryHint": "Espera aleatória antes de cada tentativa, em segundos. Um Retry-After mais longo do provedor vence.",
-      "jumpLabel": "Ir para a seção"
+      "jumpLabel": "Ir para a seção",
+      "freeConnectionsLabel": "Conexões gratuitas",
+      "freeConnectionsHint": "As conexões gratuitas ficam ocultas até você ativá-las e aceitar o aviso de risco. Desativá-las oculta as conexões e impede novas solicitações; os dados salvos são mantidos.",
+      "freeConnectionsDisabledToast": "Conexões gratuitas desativadas",
+      "sectionOthers": "Outros"
     },
     "updateDialog": {
       "title": "Atualizar o Relo",

@@ -247,3 +247,50 @@ describe('page messages', () => {
 		expectCovered(namespaceKeysUsed('ui.settingsPage'));
 	});
 });
+
+describe('free-pool consent copy', () => {
+	it('ships a notice in each language rather than falling back to English', () => {
+		for (const [tag, catalog] of Object.entries(catalogs)) {
+			if (tag === 'en') continue;
+			for (const key of ['title', 'body', 'confirm', 'enabledToast']) {
+				const path = 'ui.pages.providersPage.freeConsent.' + key;
+				expect(valueOf(catalog, path).trim(), tag + ' ' + key).not.toBe('');
+				expect(valueOf(catalog, path), tag + ' ' + key).not.toBe(valueOf(en, path));
+			}
+			const body = valueOf(catalog, 'ui.pages.providersPage.freeConsent.body');
+			expect(body, tag).toContain('OpenCode Zen Free');
+			expect(body, tag).toContain('Kilo Code Free');
+			expect(body, tag).not.toMatch(/OpenCode Zen(?! Free)/);
+			for (const path of [
+				'ui.pages.providersPage.add.freeOffHint',
+				'ui.settingsPage.sectionOthers',
+				'ui.settingsPage.freeConnectionsHint'
+			]) {
+				expect(valueOf(catalog, path), tag + ' ' + path).not.toBe(valueOf(en, path));
+			}
+		}
+	});
+
+	it('ships the free-availability and review controls in every language', () => {
+		const longForm = [
+			'ui.pages.providersPage.list.freeAvailable',
+			'ui.pages.providersPage.add.filterFree',
+			'ui.pages.providersPage.add.freeAlreadyAdded',
+			'ui.pages.providersPage.review.bulkLabel',
+			'ui.pages.providersPage.review.turnOnFree',
+			'ui.pages.providersPage.review.turnOffFree',
+			'ui.pages.providersPage.review.freeBadge',
+			'ui.pages.providersPage.review.freeOnly',
+			'ui.pages.providersPage.review.noFreeModels',
+			'ui.pages.providersPage.review.freeOnlyLabelPattern'
+		];
+		for (const [tag, catalog] of Object.entries(catalogs)) {
+			for (const path of longForm) {
+				expect(valueOf(catalog, path).trim(), tag + ' ' + path).not.toBe('');
+				if (tag !== 'en') {
+					expect(valueOf(catalog, path), tag + ' ' + path).not.toBe(valueOf(en, path));
+				}
+			}
+		}
+	});
+});

@@ -6,6 +6,7 @@
 	import { Switch } from 'bits-ui';
 	import { providerStatus, type ProviderStatusName } from '$lib/provider-status';
 	import BillingChip from './billing-chip.svelte';
+	import FreeAvailableChip from './free-available-chip.svelte';
 
 	interface Props {
 		provider: Provider;
@@ -66,6 +67,7 @@
 				<span class="flex min-w-0 items-center gap-1.5">
 					<span class="truncate text-sm font-medium leading-5">{provider.label}</span>
 					<BillingChip {provider} />
+					<FreeAvailableChip {provider} />
 				</span>
 				<span class="block truncate font-mono text-[0.7rem] text-muted-foreground"
 					>{provider.id}</span

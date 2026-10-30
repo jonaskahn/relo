@@ -118,7 +118,7 @@ func factsFor(providerID, modelID string, m catalog.ModelsDevModel) catalog.Fact
 		SupportsVision: m.SupportsVision, ReasoningEfforts: m.ReasoningEfforts,
 		ReasoningToggle: statedBool(m.ReasoningToggle), ReasoningBudget: statedBool(m.ReasoningBudget),
 		ReasoningBudgetMin: m.ReasoningBudgetMin, ReasoningBudgetMax: m.ReasoningBudgetMax,
-		Prices: toPrices(m.Prices).row(),
+		Prices: toPrices(catalog.FreePrices(m.Prices, m.IsFree)).row(),
 	}
 }
 

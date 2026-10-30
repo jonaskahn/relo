@@ -77,6 +77,9 @@ type ConnectionRecord struct {
 	// relay does not always retry; nil is the shipped default, which does.
 	SwitchOn4xx *bool
 	SwitchOn5xx *bool
+	// AllowOverrides lets an operator's manual capability values supersede the
+	// account, provider, and models.dev layers. It is on unless turned off.
+	AllowOverrides bool
 }
 
 // ModelRecord is one stored model.

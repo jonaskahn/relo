@@ -19,8 +19,8 @@ import {
 import { providerOf, signInTemplate, templateOf } from './provider-fixtures';
 
 describe('provider sections', () => {
-	test('lists the sections account, cloud, local, then the long key list', () => {
-		expect(SECTION_ORDER).toEqual(['account', 'cloud', 'local', 'key']);
+	test('starts with free pools and ends with the long key list', () => {
+		expect(SECTION_ORDER).toEqual(['free', 'account', 'cloud', 'local', 'key']);
 	});
 
 	test('files a kind under its section, and an unknown kind under keys', () => {
@@ -95,6 +95,23 @@ describe('provider sections', () => {
 			'endpoint'
 		);
 		expect(visibleTemplateRows(customTyped).map((group) => group.section)).toEqual(['local']);
+	});
+
+	test('the Free filter keeps keyless free rows and paid connections with free models', () => {
+		const rows = buildTemplateRows(
+			[
+				templateOf({ id: 'openai', label: 'OpenAI', free_models: 2 }),
+				templateOf({ id: 'paid', label: 'Paid', free_models: 0 }),
+				templateOf({ id: 'opencode-free', label: 'OpenCode Zen Free' })
+			],
+			new Set(),
+			'',
+			true,
+			true
+		);
+		expect(rows.free.map((row) => row.id)).toEqual(['opencode-free']);
+		expect(rows.key.map((row) => row.id)).toEqual(['openai']);
+		expect(rows.local).toEqual([]);
 	});
 
 	test('matches a search on the label and on the id', () => {
@@ -256,4 +273,31 @@ test('files a Command Code key template under keys', () => {
 		new Set()
 	);
 	expect(rows.key.map((row) => row.id)).toEqual(['command-code']);
+});
+
+describe('free-pool opt-in', () => {
+	test('hides both pools while leaving paid and local options usable', () => {
+		const templates = [
+			templateOf({ id: 'openai' }),
+			templateOf({ id: 'opencode-free' }),
+			templateOf({ id: 'kilo-free' })
+		];
+		const rows = buildTemplateRows(templates, new Set(), '', false);
+		expect(rows.free).toEqual([]);
+		expect(visibleTemplateRows(rows).some((group) => group.section === 'free')).toBe(false);
+		expect(rows.key.map((row) => row.id)).toEqual(['openai']);
+		expect(buildTemplateRows(templates, new Set(), '', true).free.map((row) => row.id)).toEqual([
+			'opencode-free',
+			'kilo-free'
+		]);
+	});
+	test('search removes an empty free section', () => {
+		const rows = buildTemplateRows(
+			[templateOf({ id: 'opencode-free', label: 'OpenCode Zen Free' })],
+			new Set(),
+			'missing',
+			false
+		);
+		expect(visibleTemplateRows(rows)).toEqual([]);
+	});
 });

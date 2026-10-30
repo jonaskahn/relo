@@ -25,6 +25,8 @@
 		// that carries a state worth naming at the top.
 		titleAside?: Snippet;
 		dismissible?: boolean;
+		// layer="above" stacks a consent dialog over the modal that opened it.
+		layer?: 'base' | 'above';
 		children?: Snippet;
 		footer?: Snippet;
 		class?: string;
@@ -53,6 +55,7 @@
 		description,
 		titleAside,
 		dismissible = true,
+		layer = 'base',
 		children,
 		footer,
 		class: className,
@@ -62,6 +65,8 @@
 		placement = 'center',
 		headerNav
 	}: Props = $props();
+
+	const layerClass = $derived(layer === 'above' ? 'z-[60]' : 'z-50');
 
 	const maxWidth: Record<ModalSize, string> = {
 		compact: 'max-w-lg',
@@ -174,7 +179,10 @@
 	}}
 >
 	<Dialog.Portal>
-		<Dialog.Overlay forceMount class={cn('fixed inset-0 z-50 bg-[var(--scrim)]', chrome.overlay)}>
+		<Dialog.Overlay
+			forceMount
+			class={cn('fixed inset-0 bg-[var(--scrim)]', layerClass, chrome.overlay)}
+		>
 			{#snippet child({ props, open: overlayOpen })}
 				{#if overlayOpen}
 					<div {...props} data-reduced-motion-fade transition:fade={{ duration: 140 }}></div>
@@ -186,8 +194,9 @@
 			interactOutsideBehavior={dismissible ? 'close' : 'ignore'}
 			class={cn(
 				placement === 'drawer'
-					? 'fixed inset-y-0 end-0 z-50 flex h-full w-[min(1040px,94vw)] max-w-none translate-x-0 translate-y-0 flex-col overflow-hidden rounded-none bg-surface text-ink shadow-modal outline-none max-sm:inset-x-0 max-sm:bottom-0 max-sm:top-auto max-sm:h-[92dvh] max-sm:w-full max-sm:rounded-t-card'
-					: 'fixed left-1/2 top-1/2 z-50 flex w-[calc(100%-1.5rem)] -translate-x-1/2 -translate-y-1/2 flex-col overflow-hidden rounded-card bg-surface text-ink shadow-modal outline-none',
+					? 'fixed inset-y-0 end-0 flex h-full w-[min(1040px,94vw)] max-w-none translate-x-0 translate-y-0 flex-col overflow-hidden rounded-none bg-surface text-ink shadow-modal outline-none max-sm:inset-x-0 max-sm:bottom-0 max-sm:top-auto max-sm:h-[92dvh] max-sm:w-full max-sm:rounded-t-card'
+					: 'fixed left-1/2 top-1/2 flex w-[calc(100%-1.5rem)] -translate-x-1/2 -translate-y-1/2 flex-col overflow-hidden rounded-card bg-surface text-ink shadow-modal outline-none',
+				layerClass,
 				placement === 'center' && 'max-h-[min(90dvh,800px)]',
 				placement === 'center' &&
 					'max-sm:inset-x-0 max-sm:bottom-0 max-sm:top-auto max-sm:w-full max-sm:max-w-none max-sm:translate-x-0 max-sm:translate-y-0 max-sm:rounded-b-none max-sm:rounded-t-card max-sm:max-h-[92dvh]',

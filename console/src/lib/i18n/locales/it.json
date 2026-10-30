@@ -496,7 +496,9 @@
           "tagFree": "Gratuito",
           "tagExperimental": "Sperimentale",
           "tagPayAsYouGo": "A consumo",
-          "tagPaidPlan": "Piano a pagamento"
+          "tagPaidPlan": "Piano a pagamento",
+          "groupFree": "Connessioni gratuite",
+          "freeAvailable": "Gratuito disponibile"
         },
         "status": {
           "ready": "Pronto",
@@ -918,7 +920,13 @@
           "forceSignInBody": "{process} (pid {pid}) sta usando la porta di cui questo accesso ha bisogno. Terminarlo libera la porta.",
           "signInPortBusy": "{process} sta usando la porta di cui questo accesso ha bisogno",
           "next": "Avanti",
-          "chooseHint": "Scegli un provider"
+          "chooseHint": "Scegli un provider",
+          "groupHintFree": "Senza account né chiave API",
+          "freeOffHint": "Le connessioni gratuite restano nascoste finché non le attivi.",
+          "filterAll": "Tutti",
+          "filterFree": "Gratuito",
+          "filterLabel": "Filtra connessioni",
+          "freeAlreadyAdded": "Questa connessione gratuita è già aggiunta."
         },
         "verify": {
           "title": "Verifica la connessione",
@@ -968,7 +976,15 @@
           "commitFailed": "Impossibile aggiungere il provider: {detail}",
           "keyAdded": "Chiave aggiunta a {label}.",
           "legend": "Prezzo per 1M token, input / output",
-          "retainsPrompts": "Questo pool gratuito non richiede un account. Le richieste che invii possono essere registrate dal provider."
+          "retainsPrompts": "Questo pool gratuito non richiede un account. Le richieste che invii possono essere registrate dal provider.",
+          "freeBadge": "Gratuito",
+          "freeOnly": "Solo gratuito",
+          "noFreeModels": "Nessun modello gratuito",
+          "bulkLabel": "Stati dei modelli",
+          "freeOnlyLabel": "Solo gratuito",
+          "freeOnlyLabelPattern": "{label} (solo gratuito)",
+          "turnOnFree": "Attiva tutti i gratuiti",
+          "turnOffFree": "Disattiva tutti i gratuiti"
         },
         "format": {
           "openaiChat": "OpenAI Chat Completions; funziona con la maggior parte dei client e dei gateway",
@@ -981,6 +997,18 @@
           "kiro": "API CodeWhisperer di Kiro, tramite una sessione Kiro CLI",
           "cloudCode": "Google Cloud Code Assist, usato dagli accessi Antigravity",
           "unsupported": "Relo non parla ancora questo formato"
+        },
+        "freeConsent": {
+          "title": "Utilizzo sotto la tua responsabilità",
+          "body": "OpenCode Zen Free e Kilo Code Free sono gateway di terze parti, non servizi Relo. Consentono l’accesso solo tramite i loro agenti di programmazione ufficiali; Relo non è uno di essi. L’uso può violare i loro termini o la legge e Relo non li approva. I fornitori possono conservare o usare i tuoi prompt e il tuo codice, quindi non inviare mai informazioni riservate. Modelli, limiti e disponibilità possono cambiare o scomparire senza preavviso. Nei limiti consentiti dalla legge, Relo e i suoi maintainer non forniscono alcuna garanzia e non assumono alcuna responsabilità. Attivando le connessioni gratuite accetti la piena responsabilità del loro uso e di ogni conseguenza legale.",
+          "confirm": "Accetto la responsabilità e attivo",
+          "enabledToast": "Connessioni gratuite attivate"
+        },
+        "override": {
+          "allowFor": "Consenti sostituzioni per {connection}",
+          "blockedFor": "Sostituzioni disattivate per {connection}",
+          "dormantHint": "Le sostituzioni del modello restano salvate ma vengono ignorate finché questa connessione non le consente.",
+          "failed": "Impossibile modificare l’impostazione delle sostituzioni: {detail}"
         }
       },
       "keys": {
@@ -1953,7 +1981,11 @@
       "failoverLabel": "Attesa del failover",
       "failoverHint": "Quanto resta fuori rotazione un account o un membro della route rifiutato dopo un limite di frequenza o un guasto del server, e quanto cresce l’attesa a ogni errore successivo. Un successo la riporta a zero. Con «Nessuno» non c’è attesa: il primo rifiuto è subito di nuovo utilizzabile.",
       "retryHint": "Attesa casuale prima di ogni tentativo, in secondi. Un Retry-After del provider più lungo ha la precedenza.",
-      "jumpLabel": "Vai alla sezione"
+      "jumpLabel": "Vai alla sezione",
+      "freeConnectionsLabel": "Connessioni gratuite",
+      "freeConnectionsHint": "Le connessioni gratuite restano nascoste finché non le attivi e accetti l’avviso sui rischi. Disattivarle le nasconde e blocca le nuove richieste; i dati salvati vengono conservati.",
+      "freeConnectionsDisabledToast": "Connessioni gratuite disattivate",
+      "sectionOthers": "Altro"
     },
     "updateDialog": {
       "title": "Aggiorna Relo",

@@ -73,3 +73,8 @@
   # The console edits this list.
   [ui.usage]
     overview_metrics = ["requests", "tokens_total", "spend", "plan_usage", "success_rate", "error_rate", "duration_avg", "retried", "cache_read"]
+
+# ── Free connections: third-party pools used at your own risk ────────────────
+[connections]
+  free = false  # fresh installs require opt-in and consent in the add-connection modal
+                # existing files without this key keep true for upgrade compatibility

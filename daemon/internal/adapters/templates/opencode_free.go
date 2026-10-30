@@ -10,7 +10,7 @@ import (
 
 var freeTemplates = []Template{
 	{
-		ID: catalog.OpenCodeFreeTemplate, Label: "Opencode Free", Kind: KindKey,
+		ID: catalog.OpenCodeFreeTemplate, Label: "OpenCode Zen Free", Kind: KindKey,
 		Origin: catalog.OriginTemplate, Auth: catalog.AuthNone, KeyHeader: catalog.KeyHeaderNone,
 		DefaultFormat: catalog.FormatOpenAIChat, DefaultBaseURL: "https://opencode.ai/zen/v1",
 		ModelsSource: "listing", ModelsFormat: catalog.ModelsOpenAI, ModelsDevProviderID: "opencode",

@@ -63,6 +63,7 @@ func newProviderRow(t catalog.Template, id string) catalog.ConnectionRecord {
 		Enabled:             true,
 		Rank:                100,
 		PoolStrategy:        "least-loaded",
+		AllowOverrides:      true,
 		CreatedAtMs:         now,
 		UpdatedAtMs:         now,
 	}
@@ -103,6 +104,9 @@ type RefreshResult struct {
 // commits the roster it publishes. The catalog is reloaded once the attempt is
 // over either way, because a listing that failed still records why.
 func (s *Service) RefreshProviderModels(ctx context.Context, providerID string) (RefreshResult, error) {
+	if err := s.checkFreeConnection(ctx, "", providerID); err != nil {
+		return RefreshResult{}, err
+	}
 	defer func() { _ = s.reload(ctx) }()
 	return s.refreshProvider(ctx, providerID)
 }
@@ -376,7 +380,7 @@ func factsForRefresh(providerID string, entry rosterEntry, mdModel catalog.Model
 		Name:          stringPtrOrNil(entry.Name),
 		ContextWindow: entry.ContextWindow,
 		MaxOutput:     entry.MaxOutput,
-		Prices:        provPrices.row(),
+		Prices:        toPrices(catalog.FreePrices(provPrices.catalog(), entry.IsFree)).row(),
 	}
 	providerFact.SupportsTools = entry.SupportsTools
 	providerFact.SupportsReasoning = entry.SupportsReasoning

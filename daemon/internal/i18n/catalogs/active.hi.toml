@@ -672,3 +672,11 @@ other = "Relo बंद होने के बाद Windows यह फ़ा�
 [tray.menu.quitting]
 description = "Tray quit action while final records are saved"
 other = "बाहर निकलें — प्रक्रिया जारी है…"
+
+[api.connections.free_connections_disabled]
+description = "Inference refusal when a configured free connection is reached with consent off"
+other = "मुफ़्त कनेक्शन के लिए आपकी सहमति आवश्यक है। उनका उपयोग करने से पहले मुफ़्त कनेक्शन सक्षम करें और ज़िम्मेदारी की सूचना स्वीकार करें।"
+
+[api.connections.free_connection_exists]
+description = "Management refusal when a second keyless free connection is requested"
+other = "यह मुफ़्त कनेक्शन पहले से जोड़ा गया है।"

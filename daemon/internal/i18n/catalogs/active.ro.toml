@@ -693,3 +693,11 @@ other = "Windows va șterge acest fișier după ce Relo se închide: {{.Path}}"
 [tray.menu.quitting]
 description = "Tray quit action while final records are saved"
 other = "Închidere — în curs…"
+
+[api.connections.free_connections_disabled]
+description = "Inference refusal when a configured free connection is reached with consent off"
+other = "Conexiunile gratuite necesită consimțământul tău. Activează conexiunile gratuite și acceptă notificarea de responsabilitate înainte de a le folosi."
+
+[api.connections.free_connection_exists]
+description = "Management refusal when a second keyless free connection is requested"
+other = "Această conexiune gratuită este deja adăugată."

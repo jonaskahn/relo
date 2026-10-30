@@ -108,6 +108,9 @@ type Provider struct {
 	// status of that class. An unset option reads as true: Relo switches.
 	SwitchOn4xx bool
 	SwitchOn5xx bool
+	// AllowOverrides applies an operator's manual capability values over the
+	// account, provider, and models.dev layers.
+	AllowOverrides bool
 }
 
 // PriceSource names where each resolved rate came from: the operator, the
@@ -218,10 +221,16 @@ type Model struct {
 	PricesProvider       Prices
 	PricesModelsDev      Prices
 	PriceSources         PriceSource
-	FactsOverride        Facts
-	FactsProvider        Facts
-	FactsModelsDev       Facts
-	FactSources          FactSource
+	// IsFree reports a conversational model that costs nothing: a provider or
+	// listing mark, explicit zero input and output rates, or a free id token.
+	IsFree bool
+	// AllowOverrides reports whether this model's manual capability values may
+	// supersede the account, provider, and models.dev layers.
+	AllowOverrides bool
+	FactsOverride  Facts
+	FactsProvider  Facts
+	FactsModelsDev Facts
+	FactSources    FactSource
 	// Overridden reports whether an operator changed anything about the
 	// model, which is what the console lists under its overrides.
 	Overridden       bool
@@ -292,6 +301,9 @@ type Snapshot struct {
 	Providers []Provider
 	Groups    []Group
 	accounts  Accounts
+	// freeConnections reports the operator's consent. A nil reads as enabled,
+	// which keeps embedded and test callers unchanged.
+	freeConnectionsEnabled func() bool
 	// advertised holds the conservative capability view shared by every
 	// enabled account behind a model. A missing entry means no account facts
 	// narrowed the shared definition.
@@ -379,13 +391,23 @@ type Catalog struct {
 	reader   Reader
 	accounts Accounts
 	formats  Formats
-	current  atomic.Pointer[Snapshot]
+	// freeConnections reports the operator's consent. A nil reads as enabled,
+	// which keeps embedded and test callers unchanged.
+	freeConnections func() bool
+	current         atomic.Pointer[Snapshot]
 }
 
 // New wires a catalog over its row reader and live account state, empty
 // until the first reload.
 func New(reader Reader, accounts Accounts, formats Formats) *Catalog {
 	return &Catalog{reader: reader, accounts: accounts, formats: formats}
+}
+
+// WithFreeConnections returns a catalog that hides disabled free connections
+// from the model lists it publishes.
+func (c *Catalog) WithFreeConnections(enabled func() bool) *Catalog {
+	c.freeConnections = enabled
+	return c
 }
 
 // Reload rebuilds the resolved snapshot from stored rows, so routing and
@@ -430,7 +452,12 @@ func (c *Catalog) build(ctx context.Context) (*Snapshot, error) {
 			return nil, fmt.Errorf("read account capabilities: %w", err)
 		}
 	}
-	return newSnapshot(snapshotInputs{providers: providers, models: models, facts: facts, groups: groups, accounts: c.accounts, formats: c.formats, accountFacts: accountFacts})
+	snapshot, err := newSnapshot(snapshotInputs{providers: providers, models: models, facts: facts, groups: groups, accounts: c.accounts, formats: c.formats, accountFacts: accountFacts})
+	if err != nil {
+		return nil, err
+	}
+	snapshot.freeConnectionsEnabled = c.freeConnections
+	return snapshot, nil
 }
 
 func indexSnapshotProviders(snapshot *Snapshot, providers []ConnectionRecord, accounts Accounts, formats Formats) {
@@ -709,6 +736,7 @@ func providerIdentity(row ConnectionRecord) Provider {
 		LastRefreshedAtMs:   row.LastRefreshedAtMs,
 		LastRefreshError:    row.LastRefreshError,
 		Variables:           row.Variables,
+		AllowOverrides:      row.AllowOverrides,
 	}
 }
 
@@ -727,15 +755,17 @@ func finishProviderFrom(host *Provider, row ConnectionRecord, formats Formats) {
 }
 
 func resolveModel(m ModelRecord, facts map[string]FactsRecord, host Provider, formats Formats) Model {
-	ov := facts["override"]
-	pr := facts["provider"]
-	md := facts["modelsdev"]
+	layers := factLayers{
+		override: facts["override"],
+		provider: facts["provider"],
+		models:   facts["modelsdev"],
+	}
 
-	res := resolvedIdentity(m, host, ov, pr, md)
-	resolveModelWindows(&res, ov, pr, md)
-	resolveModelCapabilities(&res, host, ov, pr, md)
-	resolveModelPricing(&res, ov, pr, md)
-	finishResolvedModel(&res, m, host, formats, factLayers{override: ov, provider: pr, models: md})
+	res := resolvedIdentity(m, host, layers.override, layers.provider, layers.models)
+	resolveModelWindows(&res, host, layers)
+	resolveModelCapabilities(&res, host, layers)
+	resolveModelPricing(&res, layers.override, layers.provider, layers.models)
+	finishResolvedModel(&res, m, host, formats, layers)
 	return res
 }
 
@@ -776,8 +806,11 @@ func resolveModelEndpoint(m ModelRecord, host Provider) (APIFormat, string) {
 	return apiFmt, baseURL
 }
 
-func resolveModelWindows(res *Model, ov, pr, md FactsRecord) {
-	resolution := ResolveCapabilities(CapabilityInputs{Provider: pr, ModelsDev: md, Manual: ov})
+func resolveModelWindows(res *Model, host Provider, layers factLayers) {
+	resolution := ResolveCapabilities(CapabilityInputs{
+		Provider: layers.provider, ModelsDev: layers.models,
+		Manual: layers.override, AllowOverrides: host.AllowOverrides,
+	})
 	res.ContextWindow = resolution.ContextWindow
 	res.MaxInput = resolution.MaxInput
 	res.MaxOutput = resolution.MaxOutput
@@ -786,8 +819,11 @@ func resolveModelWindows(res *Model, ov, pr, md FactsRecord) {
 	res.FactSources.MaxOutput = resolution.Sources.MaxOutput
 }
 
-func resolveModelCapabilities(res *Model, host Provider, ov, pr, md FactsRecord) {
-	resolution := ResolveCapabilities(CapabilityInputs{Provider: pr, ModelsDev: md, Manual: ov})
+func resolveModelCapabilities(res *Model, host Provider, layers factLayers) {
+	resolution := ResolveCapabilities(CapabilityInputs{
+		Provider: layers.provider, ModelsDev: layers.models,
+		Manual: layers.override, AllowOverrides: host.AllowOverrides,
+	})
 	res.SupportsTools = resolution.SupportsTools
 	res.SupportsReasoning = resolution.SupportsReasoning
 	res.SupportsVision = resolution.SupportsVision
@@ -806,20 +842,25 @@ func resolveModelCapabilities(res *Model, host Provider, ov, pr, md FactsRecord)
 	res.FactSources.ReasoningBudgetMin = resolution.Sources.ReasoningBudgetMin
 	res.FactSources.ReasoningBudgetMax = resolution.Sources.ReasoningBudgetMax
 	res.FactSources.Vision = resolution.Sources.Vision
-	if host.ModelsFormat == ModelsAntigravity && ClaudeAntigravityPassthrough(res.ID) {
-		// Claude reaches the wire under its own id with no thinking, so a
-		// ladder inherited from the model index or an operator override
-		// must not surface as thinking controls.
-		no := false
-		res.SupportsReasoning = &no
-		res.ReasoningEfforts = []string{}
-		res.ReasoningToggle = false
-		res.ReasoningToggleKnown = true
-		res.ReasoningBudget = false
-		res.ReasoningBudgetKnown = true
-		res.ReasoningBudgetMin = nil
-		res.ReasoningBudgetMax = nil
+	suppressAntigravityThinking(res, host)
+}
+
+func suppressAntigravityThinking(res *Model, host Provider) {
+	if host.ModelsFormat != ModelsAntigravity || !ClaudeAntigravityPassthrough(res.ID) {
+		return
 	}
+	// Claude reaches the wire under its own id with no thinking, so a ladder
+	// inherited from the model index or an operator override must not surface
+	// as thinking controls.
+	no := false
+	res.SupportsReasoning = &no
+	res.ReasoningEfforts = []string{}
+	res.ReasoningToggle = false
+	res.ReasoningToggleKnown = true
+	res.ReasoningBudget = false
+	res.ReasoningBudgetKnown = true
+	res.ReasoningBudgetMin = nil
+	res.ReasoningBudgetMax = nil
 }
 
 func resolveModelPricing(res *Model, ov, pr, md FactsRecord) {
@@ -839,12 +880,14 @@ type factLayers struct {
 
 func finishResolvedModel(res *Model, m ModelRecord, host Provider, formats Formats, layers factLayers) {
 	ov, pr, md := layers.override, layers.provider, layers.models
+	res.IsFree = IsFreeModel(FreeModelFacts{ID: res.ID, Prices: res.Prices, Category: res.Category})
+	res.AllowOverrides = host.AllowOverrides
 	res.Routable = routableModel(*res, host, formats)
 	res.UnroutableReason = unroutableModelReason(*res, host)
 	res.FactsOverride = factsOf(ov)
 	res.FactsProvider = factsOf(pr)
 	res.FactsModelsDev = factsOf(md)
-	res.FactSources = factSources(ov, pr, md)
+	res.FactSources = factSources(host, ov, pr, md)
 	res.Overridden = overridden(ov, m)
 }
 
@@ -860,8 +903,8 @@ func factsOf(f FactsRecord) Facts {
 	}
 }
 
-func factSources(ov, pr, md FactsRecord) FactSource {
-	capabilities := ResolveCapabilities(CapabilityInputs{Provider: pr, ModelsDev: md, Manual: ov})
+func factSources(host Provider, ov, pr, md FactsRecord) FactSource {
+	capabilities := ResolveCapabilities(CapabilityInputs{Provider: pr, ModelsDev: md, Manual: ov, AllowOverrides: host.AllowOverrides})
 	return FactSource{
 		Name:               pickSource(ov.Name, pr.Name, md.Name),
 		Description:        pickSource(ov.Description, pr.Description, md.Description),

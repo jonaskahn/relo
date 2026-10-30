@@ -157,8 +157,8 @@ func TestModelsDevCapabilitiesFollowTheAccountKind(t *testing.T) {
 	on := true
 	if _, err := manager.PatchModel(ctx, "groq", "live-1", appcatalog.ModelPatch{
 		Override: &appcatalog.ModelOverride{Reasoning: &on},
-	}); err == nil {
-		t.Fatal("PatchModel() error = nil, want the models.dev reasoning definition protected")
+	}); err != nil {
+		t.Fatalf("PatchModel() error = %v, want a manual override saved over the catalog", err)
 	}
 	if _, err := manager.RefreshProviderModels(ctx, "groq"); err != nil {
 		t.Fatalf("RefreshProviderModels() error = %v", err)
@@ -173,8 +173,8 @@ func TestModelsDevCapabilitiesFollowTheAccountKind(t *testing.T) {
 	if !capabilityOn(overridden.Capabilities.Tools) || !capabilityOn(overridden.Capabilities.Vision) {
 		t.Fatalf("capabilities = %+v, want models.dev to keep the flags the override did not set", overridden.Capabilities)
 	}
-	if overridden.CapabilityOverride.Tools != nil || overridden.CapabilityOverride.Reasoning != nil || overridden.CapabilityOverride.Vision != nil {
-		t.Fatalf("override = %+v, want the refused write to leave no stored completion", overridden.CapabilityOverride)
+	if overridden.CapabilityOverride.Reasoning == nil || !*overridden.CapabilityOverride.Reasoning {
+		t.Fatalf("override = %+v, want the stored reasoning completion", overridden.CapabilityOverride)
 	}
 
 	seedRow(t, h, sqlite.ProviderRow{

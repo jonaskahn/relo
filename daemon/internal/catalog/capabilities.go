@@ -53,8 +53,7 @@ type CapabilitySources struct {
 }
 
 // CapabilityEditability reports which protected fields remain open to manual
-// completion. A field is editable only when no higher-priority source states
-// it. Account editability is measured separately from model editability.
+// completion. Account editability is measured separately from model editability.
 type CapabilityEditability struct {
 	ContextWindow bool
 	MaxInput      bool
@@ -87,14 +86,16 @@ type CapabilityResolution struct {
 // first. Account is optional because model-level definitions have no single
 // credential.
 type CapabilityInputs struct {
-	Account   *FactsRecord
-	Provider  FactsRecord
-	ModelsDev FactsRecord
-	Manual    FactsRecord
+	Account        *FactsRecord
+	Provider       FactsRecord
+	ModelsDev      FactsRecord
+	Manual         FactsRecord
+	AllowOverrides bool
 }
 
-// ResolveCapabilities applies the authority order account, provider,
-// models.dev, then manual completion. Reasoning is resolved as one family: a
+// ResolveCapabilities applies manual values first when the connection allows
+// them, then account, provider, and models.dev. A disabled manual layer never
+// takes part. Reasoning is resolved as one family: a
 // layer that states any reasoning control supplies every reasoning control,
 // so a toggle-only provider cannot inherit an effort ladder from below.
 func ResolveCapabilities(in CapabilityInputs) CapabilityResolution {
@@ -107,15 +108,8 @@ func ResolveCapabilities(in CapabilityInputs) CapabilityResolution {
 	res.SupportsVision = pickCapabilityBool(layer, func(f FactsRecord) *bool { return f.SupportsVision }, &res.Sources.Vision)
 	res.SupportsReasoning = pickCapabilityBool(layer, func(f FactsRecord) *bool { return f.SupportsReasoning }, &res.Sources.Reasoning)
 	applyReasoningFamily(&res, layer)
-	res.Editable = editableCapabilities(layer)
-	var manual FactsRecord
-	for _, entry := range layer {
-		if entry.name == "override" {
-			manual = entry.facts
-			break
-		}
-	}
-	res.ManualInactive = inactiveManuals(manual, res.Sources)
+	res.Editable = editableCapabilities()
+	res.ManualInactive = inactiveManuals(in.Manual, res.Sources)
 	return res
 }
 
@@ -126,13 +120,15 @@ type namedCapabilityLayer struct {
 
 func capabilityLayers(in CapabilityInputs) []namedCapabilityLayer {
 	layers := make([]namedCapabilityLayer, 0, 4)
+	if in.AllowOverrides {
+		layers = append(layers, namedCapabilityLayer{name: "override", facts: in.Manual})
+	}
 	if in.Account != nil {
 		layers = append(layers, namedCapabilityLayer{name: "account", facts: *in.Account})
 	}
 	return append(layers,
 		namedCapabilityLayer{name: "provider", facts: in.Provider},
 		namedCapabilityLayer{name: "modelsdev", facts: in.ModelsDev},
-		namedCapabilityLayer{name: "override", facts: in.Manual},
 	)
 }
 
@@ -159,6 +155,9 @@ func pickCapabilityBool(layers []namedCapabilityLayer, pick func(FactsRecord) *b
 func applyReasoningFamily(res *CapabilityResolution, layers []namedCapabilityLayer) {
 	chosen := -1
 	for index, layer := range layers {
+		if layer.name == "override" {
+			continue
+		}
 		if statesReasoning(layer.facts) {
 			chosen = index
 			break
@@ -168,6 +167,33 @@ func applyReasoningFamily(res *CapabilityResolution, layers []namedCapabilityLay
 		return
 	}
 	applyReasoningLayer(res, layers[chosen])
+	applyManualReasoning(res, layers)
+}
+
+func applyManualReasoning(res *CapabilityResolution, layers []namedCapabilityLayer) {
+	// The manual layer states only the on/off capability. Its ladder, toggle,
+	// and budget keep the definition every other layer agrees on.
+	for _, layer := range layers {
+		if layer.name != "override" || layer.facts.SupportsReasoning == nil {
+			continue
+		}
+		res.SupportsReasoning = layer.facts.SupportsReasoning
+		res.Sources.Reasoning = layer.name
+		if *layer.facts.SupportsReasoning {
+			return
+		}
+		res.ReasoningEfforts = []string{}
+		res.ReasoningToggle = boolPointer(false)
+		res.ReasoningBudget = boolPointer(false)
+		res.ReasoningBudgetMin = nil
+		res.ReasoningBudgetMax = nil
+		res.Sources.ReasoningEfforts = layer.name
+		res.Sources.ReasoningToggle = layer.name
+		res.Sources.ReasoningBudget = layer.name
+		res.Sources.ReasoningBudgetMin = layer.name
+		res.Sources.ReasoningBudgetMax = layer.name
+		return
+	}
 }
 
 // nolint:funlen
@@ -220,20 +246,8 @@ func statesReasoning(f FactsRecord) bool {
 		f.ReasoningBudgetMin != nil || f.ReasoningBudgetMax != nil
 }
 
-func editableCapabilities(layers []namedCapabilityLayer) CapabilityEditability {
-	editable := CapabilityEditability{ContextWindow: true, MaxInput: true, MaxOutput: true, Tools: true, Reasoning: true, Vision: true}
-	for _, layer := range layers {
-		if layer.name == "override" {
-			continue
-		}
-		editable.ContextWindow = editable.ContextWindow && layer.facts.ContextWindow == nil
-		editable.MaxInput = editable.MaxInput && layer.facts.MaxInput == nil
-		editable.MaxOutput = editable.MaxOutput && layer.facts.MaxOutput == nil
-		editable.Tools = editable.Tools && layer.facts.SupportsTools == nil
-		editable.Reasoning = editable.Reasoning && !statesReasoning(layer.facts)
-		editable.Vision = editable.Vision && layer.facts.SupportsVision == nil
-	}
-	return editable
+func editableCapabilities() CapabilityEditability {
+	return CapabilityEditability{ContextWindow: true, MaxInput: true, MaxOutput: true, Tools: true, Reasoning: true, Vision: true}
 }
 
 func cloneEfforts(efforts []string) []string {
@@ -261,7 +275,7 @@ func inactiveManuals(manual FactsRecord, sources CapabilitySources) CapabilityEd
 // route candidates never mutate the catalog snapshot.
 func ApplyAccountCapabilities(model Model, account FactsRecord) Model {
 	res := ResolveCapabilities(CapabilityInputs{
-		Account: &account, Provider: model.FactsProvider.factsRecord(),
+		Account: &account, Provider: model.FactsProvider.factsRecord(), AllowOverrides: model.AllowOverrides,
 		ModelsDev: model.FactsModelsDev.factsRecord(), Manual: model.FactsOverride.factsRecord(),
 	})
 	applyCapabilityResolution(&model, res)

@@ -58,3 +58,37 @@ func TestProviderUpstreamWaitRoundTrip(t *testing.T) {
 		t.Fatalf("stored = %+v, want the cleared overrides to read NULL again", stored)
 	}
 }
+
+func TestProviderAllowOverridesRoundTrip(t *testing.T) {
+	ctx := context.Background()
+	repo := sqlite.NewCatalogRepo(testkit.OpenTestDB(t))
+	row := sqlite.ProviderRow{ID: "openai", Origin: "custom", Label: "OpenAI", Auth: "api_key"}
+	if err := repo.SaveProvider(ctx, row); err != nil {
+		t.Fatalf("SaveProvider() error = %v", err)
+	}
+	stored, err := repo.GetProvider(ctx, "openai")
+	if err != nil {
+		t.Fatalf("GetProvider() error = %v", err)
+	}
+	if stored.AllowOverrides {
+		t.Fatal("a default provider allowed overrides")
+	}
+	row.AllowOverrides = true
+	if err := repo.SaveProvider(ctx, row); err != nil {
+		t.Fatalf("SaveProvider(override) error = %v", err)
+	}
+	stored, err = repo.GetProvider(ctx, "openai")
+	if err != nil {
+		t.Fatalf("GetProvider() error = %v", err)
+	}
+	if !stored.AllowOverrides {
+		t.Fatal("AllowOverrides was not stored")
+	}
+	connections, err := repo.ListConnections(ctx)
+	if err != nil {
+		t.Fatalf("ListConnections() error = %v", err)
+	}
+	if len(connections) != 1 || !connections[0].AllowOverrides {
+		t.Fatalf("ListConnections() = %+v, want the stored override", connections)
+	}
+}

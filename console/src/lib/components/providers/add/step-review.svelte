@@ -1,11 +1,11 @@
 <script lang="ts">
 	import { t } from 'svelte-i18n';
 	import type { ProbeResult } from '$lib/types';
-	import Button from '$lib/components/ui/button.svelte';
 	import Input from '$lib/components/ui/input.svelte';
 	import Label from '$lib/components/ui/label.svelte';
 	import Icon from '$lib/components/ui/icon.svelte';
 	import BillingChip from '$lib/components/providers/billing-chip.svelte';
+	import IconAction from '$lib/components/ui/icon-action.svelte';
 	import { formatUnitPrice } from '$lib/format';
 	import type { BillingInput } from '$lib/provider-billing';
 
@@ -63,6 +63,42 @@
 	// The keyless pool takes no account and logs what it is sent, so the
 	// operator reads that beside the models they are about to route to it.
 	const retainsPrompts = $derived(templateId === 'kilo-free');
+	const freeModels = $derived((probe?.models ?? []).filter((model) => model.is_free));
+	const freeIds = $derived(freeModels.map((model) => model.id));
+	const paidIds = $derived(
+		(probe?.models ?? []).filter((model) => !model.is_free).map((model) => model.id)
+	);
+	const allIds = $derived((probe?.models ?? []).map((model) => model.id));
+	const allOn = $derived(disabled.length === 0);
+	const allOff = $derived(allIds.length > 0 && disabled.length === allIds.length);
+	const freeOnly = $derived(
+		freeIds.length > 0 &&
+			paidIds.length > 0 &&
+			paidIds.every((id) => disabled.includes(id)) &&
+			freeIds.every((id) => !disabled.includes(id))
+	);
+	const paidOnly = $derived(
+		freeIds.length > 0 &&
+			paidIds.length > 0 &&
+			freeIds.every((id) => disabled.includes(id)) &&
+			paidIds.every((id) => !disabled.includes(id))
+	);
+
+	function turnOnAll() {
+		onchange({ disabled: [] });
+	}
+
+	function turnOffAll() {
+		onchange({ disabled: allIds });
+	}
+
+	function turnOnFree() {
+		onchange({ disabled: paidIds });
+	}
+
+	function turnOffFree() {
+		onchange({ disabled: freeIds });
+	}
 
 	function toggle(id: string, on: boolean) {
 		onchange({ disabled: on ? disabled.filter((entry) => entry !== id) : [...disabled, id] });
@@ -128,18 +164,42 @@
 				aria-label={$t('ui.pages.providersPage.review.search')}
 				bind:value={search}
 			/>
-			<Button variant="outline" size="sm" onclick={() => onchange({ disabled: [] })}>
-				<Icon name="check" size={14} />
-				{$t('ui.pages.providersPage.review.turnAllOn')}
-			</Button>
-			<Button
-				variant="outline"
-				size="sm"
-				onclick={() => onchange({ disabled: (probe?.models ?? []).map((model) => model.id) })}
+			<div
+				class="flex items-center gap-1"
+				role="group"
+				aria-label={$t('ui.pages.providersPage.review.bulkLabel')}
 			>
-				<Icon name="circle-off" size={14} />
-				{$t('ui.pages.providersPage.review.turnAllOff')}
-			</Button>
+				<IconAction
+					icon="power"
+					label={$t('ui.pages.providersPage.review.turnAllOn')}
+					pressed={allOn}
+					onclick={turnOnAll}
+				/>
+				<IconAction
+					icon="circle-off"
+					label={$t('ui.pages.providersPage.review.turnAllOff')}
+					pressed={allOff}
+					onclick={turnOffAll}
+				/>
+				<IconAction
+					icon="sparkles"
+					label={freeIds.length === 0
+						? $t('ui.pages.providersPage.review.noFreeModels')
+						: $t('ui.pages.providersPage.review.turnOnFree')}
+					pressed={freeOnly}
+					disabled={freeIds.length === 0}
+					onclick={turnOnFree}
+				/>
+				<IconAction
+					icon="sparkles-off"
+					label={freeIds.length === 0
+						? $t('ui.pages.providersPage.review.noFreeModels')
+						: $t('ui.pages.providersPage.review.turnOffFree')}
+					pressed={paidOnly}
+					disabled={freeIds.length === 0}
+					onclick={turnOffFree}
+				/>
+			</div>
 		</div>
 
 		<p class="text-xs text-muted-foreground">{$t('ui.pages.providersPage.review.legend')}</p>
@@ -179,6 +239,16 @@
 						{#if model.prices.effective.input === null && model.prices.effective.output === null}
 							<span class="badge shrink-0 bg-warn/10 text-warn">
 								{$t('ui.pages.providersPage.models.tagUnpriced')}
+							</span>
+						{/if}
+						{#if model.is_free}
+							<span data-free-model-badge class="badge shrink-0 bg-accent-soft text-accent-ink">
+								{$t('ui.pages.providersPage.review.freeBadge')}
+							</span>
+						{/if}
+						{#if freeOnly}
+							<span data-free-only-chip class="badge shrink-0 bg-ok/10 text-ok">
+								{$t('ui.pages.providersPage.review.freeOnly')}
 							</span>
 						{/if}
 						<span class="badge shrink-0 bg-sunken text-muted-foreground">

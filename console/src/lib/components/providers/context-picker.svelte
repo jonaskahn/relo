@@ -10,8 +10,7 @@
 		CONTEXT_PRESETS,
 		CONTEXT_SOURCE_KEY,
 		contextLabel,
-		contextMark,
-		hasContextOverride
+		contextMark
 	} from '$lib/context-window';
 	import { formatTokens } from '$lib/format';
 
@@ -42,12 +41,16 @@
 	);
 	const source = $derived(output ? model.max_output_source : model.context_source);
 	const current = $derived(output ? model.max_output : model.context_window);
-	const custom = $derived(hasContextOverride(layers));
+	const custom = $derived(
+		output
+			? model.capability_states?.max_output?.manual_active === true
+			: model.capability_states?.context_window?.manual_active === true
+	);
 	const label = $derived(contextLabel(current) || $t('ui.pages.providersPage.context.unset'));
 	// The cell is read, not changed, on hover: one character says where the
 	// value came from, and a context above the model's own maximum input is
 	// marked rather than hidden, because the daemon stores it either way.
-	const mark = $derived(contextMark(layers, output ? null : model.max_input));
+	const mark = $derived(custom ? contextMark(layers, output ? null : model.max_input) : '');
 	const editable = $derived(
 		output
 			? model.capability_states?.max_output?.editable !== false

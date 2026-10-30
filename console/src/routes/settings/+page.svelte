@@ -9,6 +9,7 @@
 	import ConsoleCard from '$lib/components/settings/console-card.svelte';
 	import DaemonCard from '$lib/components/settings/daemon-card.svelte';
 	import NetworkCard from '$lib/components/settings/network-card.svelte';
+	import FreeConnectionsCard from '$lib/components/settings/free-connections-card.svelte';
 	import ProvidersCard from '$lib/components/settings/providers-card.svelte';
 	import ReclaimCard from '$lib/components/settings/reclaim-card.svelte';
 	import RestartBanner from '$lib/components/settings/restart-banner.svelte';
@@ -109,7 +110,8 @@
 		{ href: '#settings-providers', label: $t('ui.settingsPage.sectionProviders') },
 		{ href: '#settings-daemon', label: $t('ui.settingsPage.sectionDaemon') },
 		{ href: '#settings-retention', label: $t('ui.settingsPage.sectionRetention') },
-		{ href: '#settings-console', label: $t('ui.settingsPage.sectionConsole') }
+		{ href: '#settings-console', label: $t('ui.settingsPage.sectionConsole') },
+		{ href: '#settings-others', label: $t('ui.settingsPage.sectionOthers') }
 	]);
 </script>
 
@@ -152,6 +154,12 @@
 			<ReclaimCard />
 			<div class="xl:col-span-2"><ConsoleCard /></div>
 		</div>
+		<section class="flex flex-col gap-3" aria-labelledby="settings-others">
+			<h2 id="settings-others" class="section-heading">
+				{$t('ui.settingsPage.sectionOthers')}
+			</h2>
+			<FreeConnectionsCard value={settings.connections.free_enabled} />
+		</section>
 	{:else}
 		<div
 			class="section-surface flat-surface flex min-h-48 items-center justify-center"

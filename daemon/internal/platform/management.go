@@ -119,7 +119,9 @@ func (w *managementWiring) foundation() error {
 
 func (w *managementWiring) catalog() error {
 	w.templateSettings = sqlite.NewTemplateSettings(w.db)
-	w.models = catalog.New(sqlite.NewCatalogReader(w.db), NewPoolDirectory(w.pools), wireformats.New())
+	w.models = catalog.New(freeGate{CatalogReader: sqlite.NewCatalogReader(w.db)}, NewPoolDirectory(w.pools), wireformats.New()).WithFreeConnections(func() bool {
+		return config.ReadFreeConnections(config.ConfigPath(w.home))
+	})
 	return w.models.Reload(w.ctx)
 }
 
@@ -157,9 +159,10 @@ func (w *managementWiring) newManagementCatalog(edges *AccountEdges) *appcatalog
 		Store: sqlite.NewCatalogRepo(w.db), Catalog: w.models, Pools: w.pools,
 		Entries: w.credRepo, Accounts: w.accounts, Secrets: NewQuietSecrets(w.secrets),
 		Credentials: w.credentials, Direct: upstream.Direct,
-		Discover:  discovery.New(NewHTTPClient()),
-		ModelsDev: modelsdev.NewDirectoryWithSeed(filepath.Join(w.home, "cache"), w.cfg.Catalog.ModelsDevURL, nil, seed),
-		Templates: TemplateRegistry{},
+		Discover:        discovery.New(NewHTTPClient()),
+		ModelsDev:       modelsdev.NewDirectoryWithSeed(filepath.Join(w.home, "cache"), w.cfg.Catalog.ModelsDevURL, nil, seed),
+		Templates:       TemplateRegistry{},
+		FreeConnections: func() bool { return config.ReadFreeConnections(config.ConfigPath(w.home)) },
 		TemplatePrefixes: func(ctx context.Context, templateID string) ([]string, bool) {
 			prefixes, found, err := w.templateSettings.Prefixes(ctx, templateID)
 			if err != nil || !found {

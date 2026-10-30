@@ -1,5 +1,11 @@
 import type { Model, ModelPrices, Prices } from '$lib/types';
 
+/** Reports whether one model row is free. The daemon's resolved mark wins;
+ *  the id fallback keeps older rows and test fixtures readable. */
+export function isFreeModelRow(model: Pick<Model, 'model_id' | 'is_free'>): boolean {
+	return model.is_free === true || isFreeModel(model.model_id);
+}
+
 // The filters the model list offers: a search, a category, a status choice,
 // one label, and, on routers that list both, one paid/free choice. Each
 // starts on “all”, so an untouched list shows everything rather than a
@@ -68,8 +74,8 @@ export function filterModels(models: Model[], filters: ModelFilters): Model[] {
 		if (filters.label === 'unavailable' && model.available !== false) return false;
 		if (filters.status === 'on' && !model.enabled) return false;
 		if (filters.status === 'off' && model.enabled) return false;
-		if (filters.pricing === 'free' && !isFreeModel(model.model_id)) return false;
-		if (filters.pricing === 'paid' && isFreeModel(model.model_id)) return false;
+		if (filters.pricing === 'free' && !isFreeModelRow(model)) return false;
+		if (filters.pricing === 'paid' && isFreeModelRow(model)) return false;
 		return true;
 	});
 }
@@ -105,7 +111,7 @@ export function modelCounts(models: Model[]): ModelCounts {
 		if (!isPriced(model.prices)) counts.unpriced++;
 		if (model.overridden) counts.overridden++;
 		if (model.available === false) counts.unavailable++;
-		if (isFreeModel(model.model_id)) counts.free++;
+		if (isFreeModelRow(model)) counts.free++;
 		else counts.paid++;
 	}
 	return counts;

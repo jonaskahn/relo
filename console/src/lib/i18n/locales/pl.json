@@ -496,7 +496,9 @@
           "tagFree": "Bezpłatne",
           "tagExperimental": "Eksperymentalne",
           "tagPayAsYouGo": "Płatność za zużycie",
-          "tagPaidPlan": "Płatny plan"
+          "tagPaidPlan": "Płatny plan",
+          "groupFree": "Bezpłatne połączenia",
+          "freeAvailable": "Dostępne bezpłatnie"
         },
         "status": {
           "ready": "Gotowe",
@@ -918,7 +920,13 @@
           "forceSignInBody": "{process} (pid {pid}) zajmuje port potrzebny do tego logowania. Zakończenie go zwalnia port.",
           "signInPortBusy": "{process} zajmuje port potrzebny do tego logowania",
           "next": "Dalej",
-          "chooseHint": "Wybierz dostawcę"
+          "chooseHint": "Wybierz dostawcę",
+          "groupHintFree": "Bez konta i klucza API",
+          "freeOffHint": "Bezpłatne połączenia są ukryte, dopóki ich nie włączysz.",
+          "filterAll": "Wszystkie",
+          "filterFree": "Bezpłatne",
+          "filterLabel": "Filtruj połączenia",
+          "freeAlreadyAdded": "To bezpłatne połączenie zostało już dodane."
         },
         "verify": {
           "title": "Sprawdź połączenie",
@@ -968,7 +976,15 @@
           "commitFailed": "Nie udało się dodać dostawcy: {detail}",
           "keyAdded": "Dodano klucz do {label}.",
           "legend": "Cena za 1 mln tokenów, wejście / wyjście",
-          "retainsPrompts": "Ta darmowa pula nie wymaga konta. Wysyłane do niej prompty może zapisywać dostawca."
+          "retainsPrompts": "Ta darmowa pula nie wymaga konta. Wysyłane do niej prompty może zapisywać dostawca.",
+          "freeBadge": "Bezpłatny",
+          "freeOnly": "Tylko bezpłatne",
+          "noFreeModels": "Brak bezpłatnych modeli",
+          "bulkLabel": "Stany modeli",
+          "freeOnlyLabel": "Tylko bezpłatne",
+          "freeOnlyLabelPattern": "{label} (tylko bezpłatne)",
+          "turnOnFree": "Włącz wszystkie bezpłatne",
+          "turnOffFree": "Wyłącz wszystkie bezpłatne"
         },
         "format": {
           "openaiChat": "OpenAI Chat Completions; działa z większością klientów i bram",
@@ -981,6 +997,18 @@
           "kiro": "API CodeWhisperer Kiro przez sesję Kiro CLI",
           "cloudCode": "Google Cloud Code Assist, używane przez logowania Antigravity",
           "unsupported": "Relo nie obsługuje jeszcze tego formatu"
+        },
+        "freeConsent": {
+          "title": "Korzystasz na własną odpowiedzialność",
+          "body": "OpenCode Zen Free i Kilo Code Free to bramy zewnętrznych dostawców, a nie usługi Relo. Dostęp umożliwiają wyłącznie przez swoich oficjalnych agentów programistycznych; Relo nie jest jednym z nich. Korzystanie może naruszać ich regulamin lub prawo, a Relo ich nie popiera. Dostawcy mogą przechowywać lub wykorzystywać Twoje prompty i kod, dlatego nigdy nie wysyłaj informacji poufnych. Modele, limity i dostępność mogą zmienić się lub zniknąć bez powiadomienia. W zakresie dozwolonym przez prawo Relo i jego opiekunowie nie udzielają żadnej gwarancji i nie ponoszą odpowiedzialności. Włączając bezpłatne połączenia, przyjmujesz pełną odpowiedzialność za ich używanie i wszelkie skutki prawne.",
+          "confirm": "Przyjmuję odpowiedzialność i włączam",
+          "enabledToast": "Włączono bezpłatne połączenia"
+        },
+        "override": {
+          "allowFor": "Zezwalaj na nadpisania dla {connection}",
+          "blockedFor": "Nadpisania wyłączone dla {connection}",
+          "dormantHint": "Zapisane nadpisania modelu pozostają, ale są ignorowane, dopóki to połączenie na nie nie pozwala.",
+          "failed": "Nie udało się zmienić ustawienia nadpisań: {detail}"
         }
       },
       "keys": {
@@ -1953,7 +1981,11 @@
       "failoverLabel": "Odczekanie po odmowie",
       "failoverHint": "Jak długo odrzucone konto albo członek trasy zostaje poza rotacją po limicie żądań lub awarii serwera i jak ta przerwa rośnie z każdą kolejną odmową. Udane żądanie ją zeruje. Opcja „Brak” nie czeka wcale: pierwsza odmowa od razu nadaje się do ponownego użycia.",
       "retryHint": "Losowa przerwa przed każdą próbą, w sekundach. Dłuższy Retry-After dostawcy ma pierwszeństwo.",
-      "jumpLabel": "Przejdź do sekcji"
+      "jumpLabel": "Przejdź do sekcji",
+      "freeConnectionsLabel": "Bezpłatne połączenia",
+      "freeConnectionsHint": "Bezpłatne połączenia pozostają ukryte, dopóki ich nie włączysz i nie zaakceptujesz informacji o ryzyku. Wyłączenie ukrywa połączenia i wstrzymuje nowe żądania; zapisane dane pozostają.",
+      "freeConnectionsDisabledToast": "Wyłączono bezpłatne połączenia",
+      "sectionOthers": "Inne"
     },
     "updateDialog": {
       "title": "Zaktualizuj Relo",

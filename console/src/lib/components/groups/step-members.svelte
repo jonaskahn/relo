@@ -4,6 +4,7 @@
 	import { modelPrice, moveMember, providerLabel } from '$lib/catalog';
 	import { similarModels, groupSuggestions } from '$lib/group-suggestions';
 	import BillingChip from '$lib/components/providers/billing-chip.svelte';
+	import FreeAvailableChip from '$lib/components/providers/free-available-chip.svelte';
 	import {
 		displayMembers,
 		memberKind,
@@ -320,6 +321,9 @@
 											/>
 											<span class="truncate">{model.name || model.model_id}</span>
 											<BillingChip provider={providers.find((p) => p.id === model.provider_id)!} />
+											<FreeAvailableChip
+												provider={providers.find((p) => p.id === model.provider_id)!}
+											/>
 										</button>
 									{/each}
 								</div>

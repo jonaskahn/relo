@@ -160,6 +160,9 @@ func (s *Snapshot) Listed() []Model {
 		if !host.Configured {
 			continue
 		}
+		if s.freeHidden(host) {
+			continue
+		}
 		for _, model := range s.byProviderM[host.ID] {
 			name := ClientModelID(model.ProviderID, model.ID)
 			if !listable(model) || seen[name] {
@@ -170,6 +173,20 @@ func (s *Snapshot) Listed() []Model {
 		}
 	}
 	return listed
+}
+
+// freeHidden reports a keyless free connection the operator has not consented
+// to. The snapshot keeps its rows for the routing consent check, while every
+// published model list hides them.
+func (s *Snapshot) freeHidden(host Provider) bool {
+	return s.freeConnectionsEnabled != nil && !s.freeConnectionsEnabled() && IsFreeTemplate(host.TemplateID)
+}
+
+// ProviderVisible reports whether management projections may show one
+// connection. A disabled keyless-free connection stays resolvable for routing
+// but is hidden from the management API.
+func (s *Snapshot) ProviderVisible(host Provider) bool {
+	return !s.freeHidden(host)
 }
 
 func listable(model Model) bool {
@@ -196,11 +213,31 @@ func (s *Snapshot) ListedGroups() []Group {
 		if !group.Enabled || !group.Listed {
 			continue
 		}
-		if len(s.eligibleMembers(group, Requirements{})) > 0 {
+		if len(s.eligibleMembers(group, Requirements{})) > 0 && s.groupVisible(group) {
 			listed = append(listed, group)
 		}
 	}
 	return listed
+}
+
+// groupVisible hides a route whose every member is a disabled free
+// connection from the published model list. A mixed route stays visible and
+// lets the relay skip its blocked free member.
+func (s *Snapshot) groupVisible(group Group) bool {
+	for _, member := range group.Members {
+		if member.ProviderID != "" {
+			if host, found := s.byProvider[member.ProviderID]; !found || !s.freeHidden(host) {
+				return true
+			}
+			continue
+		}
+		for _, model := range s.ModelsNamed(member.ModelID) {
+			if host, found := s.byProvider[model.ProviderID]; found && !s.freeHidden(host) {
+				return true
+			}
+		}
+	}
+	return false
 }
 
 // ClaudeSubscription reports whether a connection is a Claude.ai sign-in.

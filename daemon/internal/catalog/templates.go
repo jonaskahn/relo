@@ -39,6 +39,9 @@ type LoginKind string
 // OpenCodeFreeTemplate is the signed-out OpenCode Zen connection.
 const OpenCodeFreeTemplate = "opencode-free"
 
+// IsFreeTemplate reports the keyless pools that require opt-in.
+func IsFreeTemplate(id string) bool { return id == OpenCodeFreeTemplate || id == KiloFreeTemplate }
+
 // OpenCodeGoTemplate is the paid OpenCode Go connection, which shares the
 // gateway's tool-name limit with the signed-out lane.
 const OpenCodeGoTemplate = "opencode-go"
@@ -108,6 +111,9 @@ type Template struct {
 	// lists, which the add list shows as a size hint. It is filled in when
 	// the templates are read, because it depends on the saved copy.
 	ModelsDevModels int
+	// FreeModels is how many conversational models in the template's models.dev
+	// entry are free. It is filled in when the templates are read.
+	FreeModels int
 	// FilterModels narrows the ids a roster keeps when the provider's list
 	// carries entries the connection does not serve. It takes the whole entry
 	// because a provider may mark an entry free or paid in a field its name
