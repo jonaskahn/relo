@@ -36,7 +36,7 @@ describe('the free consent gate in the picker', () => {
 		expect(html).not.toContain('OpenCode Zen Free');
 	});
 
-	it('keeps the spinning accent glow only while consent is on', () => {
+	it('keeps the tracing accent glow in both consent states', () => {
 		const base = {
 			templates: [templateOf({ id: 'opencode-free', label: 'OpenCode Zen Free' })],
 			freeBusy: false,
@@ -50,8 +50,10 @@ describe('the free consent gate in the picker', () => {
 		};
 		const off = render(StepProvider, { props: { ...base, freeEnabled: false } }).body;
 		const on = render(StepProvider, { props: { ...base, freeEnabled: true } }).body;
-		expect(off).not.toContain('free-heading-glow');
+		expect(off).toContain('free-heading-glow');
 		expect(on).toContain('free-heading-glow');
+		expect(off).toContain('free-glow-line');
+		expect(on).toContain('free-glow-line');
 		expect(on).toContain('data-free-toggle');
 	});
 });

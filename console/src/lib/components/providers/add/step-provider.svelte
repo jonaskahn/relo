@@ -246,11 +246,16 @@
 )}
 	<div
 		{@attach flattenWhenStuck}
-		class="free-heading min-h-11 sticky top-0 z-10 flex flex-wrap items-center gap-2 rounded-lg border-b border-line bg-surface px-2 py-2 data-[stuck=true]:rounded-t-none {free &&
-		freeEnabled
+		class="free-heading min-h-11 sticky top-0 z-10 flex flex-wrap items-center gap-2 rounded-lg border-b border-line bg-surface px-2 py-2 data-[stuck=true]:rounded-t-none {free
 			? 'free-heading-glow'
 			: ''}"
 	>
+		{#if free}
+			<svg class="free-glow" aria-hidden="true" focusable="false">
+				<rect pathLength="100" rx="7" class="free-glow-blur" />
+				<rect pathLength="100" rx="7" class="free-glow-line" />
+			</svg>
+		{/if}
 		<span class="text-[0.9375rem] font-semibold text-ink">{label}</span>
 		<span class="text-[0.7rem] text-muted-foreground">{count}</span>
 		<span class="text-[0.7rem] text-muted-foreground">{hint}</span>
@@ -369,53 +374,54 @@
 </div>
 
 <style>
-	/* The free heading glows only while consent is on. The border is a conic
-	   accent ring behind the solid surface; reduced motion keeps a static
-	   accent border instead of the sweep. */
+	/* A short accent dash traces the free heading border continuously. The
+	   normalized pathLength lets the dash length stay proportional to the
+	   heading width. Reduced motion keeps the full accent border static. */
 	.free-heading-glow {
 		position: relative;
 		isolation: isolate;
+		--free-glow-line-length: 18;
 	}
-	.free-heading-glow::before {
-		content: '';
+	.free-glow {
+		pointer-events: none;
 		position: absolute;
-		inset: -2px;
-		z-index: -1;
-		border-radius: calc(var(--radius-panel) + 1px);
-		padding: 2px;
-		background: conic-gradient(
-			from var(--free-glow-angle, 0deg),
-			transparent 0deg 330deg,
-			var(--accent-glow) 338deg,
-			var(--accent) 345deg,
-			var(--accent-glow) 352deg,
-			transparent 360deg
-		);
-		-webkit-mask:
-			linear-gradient(#000 0 0) content-box,
-			linear-gradient(#000 0 0);
-		-webkit-mask-composite: xor;
-		mask:
-			linear-gradient(#000 0 0) content-box,
-			linear-gradient(#000 0 0);
-		mask-composite: exclude;
-		filter: drop-shadow(0 0 5px var(--accent-glow));
-		animation: free-glow-spin 2.6s linear infinite;
+		inset: 0;
+		width: 100%;
+		height: 100%;
+		overflow: visible;
 	}
-	@keyframes free-glow-spin {
+	.free-glow rect {
+		x: 1px;
+		y: 1px;
+		width: calc(100% - 2px);
+		height: calc(100% - 2px);
+		fill: none;
+		stroke-linecap: round;
+		stroke-dasharray: var(--free-glow-line-length) calc(100 - var(--free-glow-line-length));
+		animation: free-glow-trace 2.6s linear infinite;
+	}
+	.free-glow-line {
+		stroke: var(--accent);
+		stroke-width: 1.5px;
+	}
+	.free-glow-blur {
+		stroke: var(--accent-glow);
+		stroke-width: 5px;
+		filter: blur(3px);
+	}
+	@keyframes free-glow-trace {
 		to {
-			--free-glow-angle: 360deg;
+			stroke-dashoffset: -100;
 		}
 	}
-	@property --free-glow-angle {
-		syntax: '<angle>';
-		inherits: false;
-		initial-value: 0deg;
-	}
 	@media (prefers-reduced-motion: reduce) {
-		.free-heading-glow::before {
+		.free-glow rect {
 			animation: none;
-			background: var(--accent-border);
+			stroke-dasharray: none;
+			stroke: var(--accent-border);
+		}
+		.free-glow-blur {
+			display: none;
 		}
 	}
 </style>
