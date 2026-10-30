@@ -13,9 +13,9 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-// TestPublishedLimitsFollowTheProvider checks that a client catalog receives
-// the provider-authoritative limits. A manual completion cannot supersede the
-// provider, and a model that states neither limit publishes no invented ceiling.
+// TestPublishedLimitsFollowTheOverride checks that a client catalog receives
+// the operator's manual limits while the connection allows overrides, and a
+// model that states neither limit publishes no invented ceiling.
 func TestPublishedLimitsFollowTheOverride(t *testing.T) {
 	db := testkit.OpenTestDB(t)
 	upstream := testkit.MockUpstream(t, map[string]string{})
@@ -42,8 +42,8 @@ func TestPublishedLimitsFollowTheOverride(t *testing.T) {
 
 	published := indexModels(t, service.publishedModels())
 	got := published["relo-openai-gpt-4o"]
-	if got.ContextWindow == nil || *got.ContextWindow != providerWindow || got.MaxOutput == nil || *got.MaxOutput != providerOutput {
-		t.Fatalf("published = %+v, want the provider limits", got)
+	if got.ContextWindow == nil || *got.ContextWindow != overrideWindow || got.MaxOutput == nil || *got.MaxOutput != overrideOutput {
+		t.Fatalf("published = %+v, want the manual limits", got)
 	}
 	// A model no layer describes keeps both limits unknown.
 	if bare := published["relo-openai-bare"]; bare.ContextWindow != nil ||
@@ -56,10 +56,10 @@ func TestPublishedLimitsFollowTheOverride(t *testing.T) {
 		if err != nil {
 			t.Fatalf("MergeKind(%s) error = %v", kind, err)
 		}
-		if !strings.Contains(merged, "200000") || !strings.Contains(merged, "8192") {
-			t.Fatalf("%s catalog = %s, want the provider limits", kind, merged)
+		if !strings.Contains(merged, "400000") || !strings.Contains(merged, "32000") {
+			t.Fatalf("%s catalog = %s, want the manual limits", kind, merged)
 		}
-		for _, stale := range []string{"100000", "400000", "4096", "32000"} {
+		for _, stale := range []string{"100000", "200000", "4096", "8192"} {
 			if strings.Contains(merged, stale) {
 				t.Fatalf("%s catalog = %s, want %s left out", kind, merged, stale)
 			}

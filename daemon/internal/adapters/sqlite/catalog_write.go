@@ -24,7 +24,7 @@ func (r *CatalogRepo) SaveProvider(ctx context.Context, p ProviderRow) error {
 		keyEnv, loginFlows, variables, p.Enabled, p.Rank, p.PoolStrategy,
 		nullInt(p.LastRefreshedAtMs), p.LastRefreshError, p.CreatedAtMs, p.UpdatedAtMs, bit(p.UseProxy),
 		nullIntValue(p.TimeoutSeconds), nullIntValue(p.RetryAttempts),
-		nullBool(p.SwitchOn4xx), nullBool(p.SwitchOn5xx))
+		nullBool(p.SwitchOn4xx), nullBool(p.SwitchOn5xx), bit(p.AllowOverrides))
 	if err != nil {
 		return fmt.Errorf("save provider %s: %w", p.ID, err)
 	}
@@ -106,7 +106,7 @@ func (r *CatalogRepo) DeleteProvider(ctx context.Context, id string) error {
 
 func providerUpsertQuery() string {
 	return "INSERT INTO providers (" + providerColumns + ") VALUES (" +
-		placeholders(28) + ") ON CONFLICT (id) DO UPDATE SET " +
+		placeholders(29) + ") ON CONFLICT (id) DO UPDATE SET " +
 		"template_id = excluded.template_id, origin = excluded.origin, label = excluded.label, " +
 		"auth = excluded.auth, api_format = excluded.api_format, key_header = excluded.key_header, " +
 		"base_url = excluded.base_url, models_source = excluded.models_source, " +
@@ -117,7 +117,8 @@ func providerUpsertQuery() string {
 		"last_refreshed_at = excluded.last_refreshed_at, last_refresh_error = excluded.last_refresh_error, " +
 		"updated_at = excluded.updated_at, use_proxy = excluded.use_proxy, " +
 		"timeout_seconds = excluded.timeout_seconds, retry_attempts = excluded.retry_attempts, " +
-		"switch_on_4xx = excluded.switch_on_4xx, switch_on_5xx = excluded.switch_on_5xx"
+		"switch_on_4xx = excluded.switch_on_4xx, switch_on_5xx = excluded.switch_on_5xx, " +
+		"allow_overrides = excluded.allow_overrides"
 }
 
 func modelFactsQuery() string {
@@ -352,7 +353,7 @@ func saveProbeProvider(ctx context.Context, tx *sql.Tx, p ProviderRow) error {
 		keyEnv, loginFlows, variables, p.Enabled, p.Rank, p.PoolStrategy,
 		nullInt(p.LastRefreshedAtMs), p.LastRefreshError, p.CreatedAtMs, p.UpdatedAtMs, bit(p.UseProxy),
 		nullIntValue(p.TimeoutSeconds), nullIntValue(p.RetryAttempts),
-		nullBool(p.SwitchOn4xx), nullBool(p.SwitchOn5xx)); err != nil {
+		nullBool(p.SwitchOn4xx), nullBool(p.SwitchOn5xx), bit(p.AllowOverrides)); err != nil {
 		return fmt.Errorf("save provider: %w", err)
 	}
 	return nil

@@ -332,7 +332,7 @@ func (h *harness) saveMockProvider() {
 		ID: "openai", Origin: string(catalog.OriginCustom), Label: "OpenAI",
 		Auth: string(catalog.AuthAPIKey), APIFormat: string(catalog.FormatOpenAIChat),
 		BaseURL: h.upstream.URL(), ModelsFormat: string(catalog.ModelsNone),
-		Enabled: true, Rank: 100, PoolStrategy: "least-loaded",
+		Enabled: true, Rank: 100, PoolStrategy: "least-loaded", AllowOverrides: true,
 	}); err != nil {
 		h.t.Fatalf("save the mock provider: %v", err)
 	}

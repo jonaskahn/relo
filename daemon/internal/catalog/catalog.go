@@ -108,6 +108,9 @@ type Provider struct {
 	// status of that class. An unset option reads as true: Relo switches.
 	SwitchOn4xx bool
 	SwitchOn5xx bool
+	// AllowOverrides applies an operator's manual capability values over the
+	// account, provider, and models.dev layers.
+	AllowOverrides bool
 }
 
 // PriceSource names where each resolved rate came from: the operator, the
@@ -218,10 +221,13 @@ type Model struct {
 	PricesProvider       Prices
 	PricesModelsDev      Prices
 	PriceSources         PriceSource
-	FactsOverride        Facts
-	FactsProvider        Facts
-	FactsModelsDev       Facts
-	FactSources          FactSource
+	// AllowOverrides reports whether this model's manual capability values may
+	// supersede the account, provider, and models.dev layers.
+	AllowOverrides bool
+	FactsOverride  Facts
+	FactsProvider  Facts
+	FactsModelsDev Facts
+	FactSources    FactSource
 	// Overridden reports whether an operator changed anything about the
 	// model, which is what the console lists under its overrides.
 	Overridden       bool
@@ -709,6 +715,7 @@ func providerIdentity(row ConnectionRecord) Provider {
 		LastRefreshedAtMs:   row.LastRefreshedAtMs,
 		LastRefreshError:    row.LastRefreshError,
 		Variables:           row.Variables,
+		AllowOverrides:      row.AllowOverrides,
 	}
 }
 
@@ -732,7 +739,7 @@ func resolveModel(m ModelRecord, facts map[string]FactsRecord, host Provider, fo
 	md := facts["modelsdev"]
 
 	res := resolvedIdentity(m, host, ov, pr, md)
-	resolveModelWindows(&res, ov, pr, md)
+	resolveModelWindows(&res, host, ov, pr, md)
 	resolveModelCapabilities(&res, host, ov, pr, md)
 	resolveModelPricing(&res, ov, pr, md)
 	finishResolvedModel(&res, m, host, formats, factLayers{override: ov, provider: pr, models: md})
@@ -776,8 +783,8 @@ func resolveModelEndpoint(m ModelRecord, host Provider) (APIFormat, string) {
 	return apiFmt, baseURL
 }
 
-func resolveModelWindows(res *Model, ov, pr, md FactsRecord) {
-	resolution := ResolveCapabilities(CapabilityInputs{Provider: pr, ModelsDev: md, Manual: ov})
+func resolveModelWindows(res *Model, host Provider, ov, pr, md FactsRecord) {
+	resolution := ResolveCapabilities(CapabilityInputs{Provider: pr, ModelsDev: md, Manual: ov, AllowOverrides: host.AllowOverrides})
 	res.ContextWindow = resolution.ContextWindow
 	res.MaxInput = resolution.MaxInput
 	res.MaxOutput = resolution.MaxOutput
@@ -787,7 +794,7 @@ func resolveModelWindows(res *Model, ov, pr, md FactsRecord) {
 }
 
 func resolveModelCapabilities(res *Model, host Provider, ov, pr, md FactsRecord) {
-	resolution := ResolveCapabilities(CapabilityInputs{Provider: pr, ModelsDev: md, Manual: ov})
+	resolution := ResolveCapabilities(CapabilityInputs{Provider: pr, ModelsDev: md, Manual: ov, AllowOverrides: host.AllowOverrides})
 	res.SupportsTools = resolution.SupportsTools
 	res.SupportsReasoning = resolution.SupportsReasoning
 	res.SupportsVision = resolution.SupportsVision
@@ -839,12 +846,13 @@ type factLayers struct {
 
 func finishResolvedModel(res *Model, m ModelRecord, host Provider, formats Formats, layers factLayers) {
 	ov, pr, md := layers.override, layers.provider, layers.models
+	res.AllowOverrides = host.AllowOverrides
 	res.Routable = routableModel(*res, host, formats)
 	res.UnroutableReason = unroutableModelReason(*res, host)
 	res.FactsOverride = factsOf(ov)
 	res.FactsProvider = factsOf(pr)
 	res.FactsModelsDev = factsOf(md)
-	res.FactSources = factSources(ov, pr, md)
+	res.FactSources = factSources(host, ov, pr, md)
 	res.Overridden = overridden(ov, m)
 }
 
@@ -860,8 +868,8 @@ func factsOf(f FactsRecord) Facts {
 	}
 }
 
-func factSources(ov, pr, md FactsRecord) FactSource {
-	capabilities := ResolveCapabilities(CapabilityInputs{Provider: pr, ModelsDev: md, Manual: ov})
+func factSources(host Provider, ov, pr, md FactsRecord) FactSource {
+	capabilities := ResolveCapabilities(CapabilityInputs{Provider: pr, ModelsDev: md, Manual: ov, AllowOverrides: host.AllowOverrides})
 	return FactSource{
 		Name:               pickSource(ov.Name, pr.Name, md.Name),
 		Description:        pickSource(ov.Description, pr.Description, md.Description),

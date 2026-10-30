@@ -46,6 +46,7 @@ func insertCustomProvider(t testing.TB, repo *sqlite.CatalogRepo, upstream Upstr
 		BaseURL: upstream.BaseURL, ModelsFormat: string(upstream.ModelsFormat),
 		Headers: map[string]string{}, Variables: map[string]string{},
 		Enabled: true, Rank: 100, PoolStrategy: sqlite.StrategyLeastLoaded,
+		AllowOverrides: true,
 	}
 	if host.ModelsFormat == "" {
 		host.ModelsFormat = string(catalog.ModelsNone)

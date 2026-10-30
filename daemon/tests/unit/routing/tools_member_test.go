@@ -28,7 +28,7 @@ func newToolRoute(t *testing.T) *toolRoute {
 		Auth: string(catalog.AuthAPIKey), APIFormat: string(catalog.FormatOpenAIChat),
 		BaseURL: "https://openai.example/v1", ModelsFormat: string(catalog.ModelsNone),
 		Headers: map[string]string{}, Variables: map[string]string{},
-		Enabled: true, Rank: 100, PoolStrategy: sqlite.StrategyLeastLoaded,
+		Enabled: true, Rank: 100, PoolStrategy: sqlite.StrategyLeastLoaded, AllowOverrides: true,
 	}); err != nil {
 		t.Fatalf("SaveProvider() error = %v", err)
 	}
