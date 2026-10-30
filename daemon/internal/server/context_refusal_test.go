@@ -6,9 +6,12 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"github.com/jonaskahn/relo/internal/adapters/wire/formats"
+	appcatalog "github.com/jonaskahn/relo/internal/application/catalog"
+	featurecatalog "github.com/jonaskahn/relo/internal/catalog"
 )
 
 func TestAnthropicContextMessage(t *testing.T) {
@@ -135,5 +138,63 @@ func TestUpstreamRefusalKeepsItsOwnCode(t *testing.T) {
 	}
 	if payload.Error.Code != "upstream_error" {
 		t.Fatalf("code = %q, want upstream_error for a provider answer", payload.Error.Code)
+	}
+}
+
+func TestFreeConsentRefusalKeepsBothClientVocabularies(t *testing.T) {
+	server := New(Options{Formats: formats.New()})
+	for _, test := range []struct {
+		name      string
+		anthropic bool
+		code      string
+		body      string
+	}{
+		{name: "openai", code: "free_connections_disabled", body: "free_connections_disabled"},
+		{name: "anthropic", anthropic: true, code: "permission_error"},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			recorder := httptest.NewRecorder()
+			server.freeConsentRefusal(recorder, httptest.NewRequest(http.MethodPost, "/", nil), test.anthropic)
+			if recorder.Code != http.StatusForbidden {
+				t.Fatalf("status = %d, want 403", recorder.Code)
+			}
+			if !strings.Contains(recorder.Body.String(), test.code) {
+				t.Fatalf("body = %s, want %q", recorder.Body, test.code)
+			}
+			if test.body != "" && !strings.Contains(recorder.Body.String(), test.body) {
+				t.Fatalf("body = %s, want %q", recorder.Body, test.body)
+			}
+		})
+	}
+}
+
+func TestFailInferenceMapsFreeConsentToForbidden(t *testing.T) {
+	server := New(Options{Formats: formats.New()})
+	for _, anthropic := range []bool{false, true} {
+		recorder := httptest.NewRecorder()
+		server.failInference(recorder, httptest.NewRequest(http.MethodPost, "/", nil), appcatalog.ErrFreeConnectionsDisabled, anthropic)
+		if recorder.Code != http.StatusForbidden {
+			t.Fatalf("anthropic=%v: status = %d, want 403", anthropic, recorder.Code)
+		}
+	}
+}
+
+func TestWriteUnwrittenKeepsTheFreeConsentRefusalLocal(t *testing.T) {
+	server := New(Options{Formats: formats.New()})
+	driver := &sendDriver{s: server, w: httptest.NewRecorder(), r: httptest.NewRequest(http.MethodPost, "/", nil)}
+	server.writeUnwritten(driver, 0, appcatalog.ErrFreeConnectionsDisabled)
+	if driver.w.(*httptest.ResponseRecorder).Code != http.StatusForbidden {
+		t.Fatalf("status = %d, want 403", driver.w.(*httptest.ResponseRecorder).Code)
+	}
+}
+
+func TestFreeConsentBlockReadsOnlyALoadedConsentSnapshot(t *testing.T) {
+	server := New(Options{})
+	if server.freeConsentBlocked("anything") {
+		t.Fatal("a server without a catalog blocked a request")
+	}
+	server = New(Options{Catalog: featurecatalog.New(nil, nil, nil)})
+	if server.freeConsentBlocked("anything") {
+		t.Fatal("an unloaded catalog blocked a request")
 	}
 }

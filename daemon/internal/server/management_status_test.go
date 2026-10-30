@@ -2,6 +2,7 @@ package server
 
 import (
 	"net/http"
+	"net/http/httptest"
 	"testing"
 
 	"github.com/jonaskahn/relo/internal/activity"
@@ -37,5 +38,20 @@ func TestServiceStatusMapsRecoverableFailures(t *testing.T) {
 				t.Fatalf("serviceStatus() = %d, %q; want %d, %q", status, code, test.status, test.code)
 			}
 		})
+	}
+}
+
+func TestFreeConsentSurvivesARequestThatRanOutOfMembers(t *testing.T) {
+	server := New(Options{})
+	for _, anthropic := range []bool{false, true} {
+		driver := &sendDriver{
+			s: server, w: httptest.NewRecorder(), r: httptest.NewRequest(http.MethodPost, "/", nil),
+			anthropic: anthropic, outcome: &requestOutcome{},
+		}
+		driver.last = appcatalog.ErrFreeConnectionsDisabled
+		driver.run()
+		if recorder := driver.w.(*httptest.ResponseRecorder); recorder.Code != http.StatusForbidden {
+			t.Fatalf("anthropic=%v: status = %d, want the consent refusal", anthropic, recorder.Code)
+		}
 	}
 }
