@@ -50,7 +50,7 @@
 
 {#if status.name !== 'ready'}
 	<div
-		class="flex flex-wrap items-center rounded-control gap-3 border-amber-500/40 bg-amber-500/5 py-2 px-2 mb-1 text-sm"
+		class="flex flex-wrap items-center rounded-control gap-3 border-amber-500/40 bg-amber-500/5 py-2 px-2 mb-2 text-sm"
 		role="status"
 	>
 		<Icon name="alert-triangle" size={15} class="shrink-0 text-amber-700 dark:text-amber-400" />
