@@ -55,6 +55,29 @@ describe('the review step', () => {
 		expect(html).toContain('No free models');
 	});
 
+	it('stretches the model toolbar across the pane with outline icon buttons', () => {
+		const html = render(StepReview, {
+			props: {
+				probe: {
+					...probe,
+					models: [probeModel('free-model', true), probeModel('paid-model', false)]
+				},
+				onchange: () => {}
+			}
+		}).body;
+
+		expect(html).toContain('sm:flex-row');
+		expect(html).not.toContain('max-w-xs');
+		for (const label of ['Turn all on', 'Turn all off', 'Turn on all free', 'Turn off all free']) {
+			const button = html
+				.split('<button')
+				.find((chunk) => chunk.includes('aria-label="' + label + '"'));
+			expect(button).toBeDefined();
+			expect(button).toContain('shadow-float-2');
+			expect(button).toContain('max-sm:flex-1');
+		}
+	});
+
 	// The keyless pool is free because the provider logs what it is sent, so an
 	// operator reads that where they choose what routes to it.
 	it('warns that the keyless pool may log prompts', () => {
