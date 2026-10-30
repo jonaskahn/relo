@@ -1,5 +1,5 @@
 {
-  "generated": "2026-10-30T17:59:29Z",
+  "generated": "2026-10-30T17:59:41Z",
   "latest": "v0.2.0",
   "latest_beta": "v0.2.0-beta.58.66e534d7",
   "install": {
@@ -337,7 +337,7 @@
       "draft": false,
       "published_at": "2026-10-29T14:11:22Z",
       "page": "https://github.com/jonaskahn/relo/releases/tag/v0.1.14",
-      "notes": "## 🚀 v0.1.14\r\n\r\n### ✨ Improvements\r\n\r\n- More accurate provider-specific model capabilities, context limits, and reasoning settings—including models with on/off thinking.\r\n- Console now displays provider-defined capability state.\r\n- Bundled models.dev data provides a fallback when live data is unavailable.\r\n\r\n### 🐛 Fixes\r\n\r\n- Cursor: Fixed tool-call arguments, conversation replay, missing token usage, and retries for prematurely closed connections.\r\n- Antigravity: Fixed Anthropic billing-stamp compatibility and respected provider-requested waits.\r\n- Context handling: Prevented inflated image token estimates, fitted oversized output budgets to context limits, and returned client-compatible overflow errors.\r\n- Tool requests: Removed tool_choice when no tools are declared, avoiding upstream failures during compaction.\r\n- Windows npm installer: Fixed command-shim detection, terminal handling, and prompts stalling after the first question.\r\n\r\n### 🧪 Quality\r\n\r\n- Expanded regression coverage and enforced an 80% patch-coverage threshold.",
+      "notes": "## 🚀 v0.1.14\n\n### ✨ Improvements\n\n- More accurate provider-specific model capabilities, context limits, and reasoning settings—including models with on/off thinking.\n- Console now displays provider-defined capability state.\n- Bundled models.dev data provides a fallback when live data is unavailable.\n\n### 🐛 Fixes\n\n- Cursor: Fixed tool-call arguments, conversation replay, missing token usage, and retries for prematurely closed connections.\n- Antigravity: Fixed Anthropic billing-stamp compatibility and respected provider-requested waits.\n- Context handling: Prevented inflated image token estimates, fitted oversized output budgets to context limits, and returned client-compatible overflow errors.\n- Tool requests: Removed tool_choice when no tools are declared, avoiding upstream failures during compaction.\n- Windows npm installer: Fixed command-shim detection, terminal handling, and prompts stalling after the first question.\n\n### 🧪 Quality\n\n- Expanded regression coverage and enforced an 80% patch-coverage threshold.\n",
       "install": {
         "script": "curl -fsSL https://relo.ifelse.one/install.sh | sh -s -- --version 0.1.14",
         "powershell": "& ([scriptblock]::Create((irm https://relo.ifelse.one/install.ps1))) -Version 0.1.14",
@@ -889,7 +889,7 @@
       "draft": false,
       "published_at": "2026-10-28T04:16:02Z",
       "page": "https://github.com/jonaskahn/relo/releases/tag/v0.1.13",
-      "notes": "## What's Changed\r\n* Fix: cursor run stream teardown by @jonaskahn in https://github.com/jonaskahn/relo/pull/86\r\n* test: cover integration error paths by @jonaskahn in https://github.com/jonaskahn/relo/pull/84\r\n* chore: bump to 0.1.13 by @github-actions[bot] in https://github.com/jonaskahn/relo/pull/85\r\n\r\n\r\n**Full Changelog**: https://github.com/jonaskahn/relo/compare/v0.1.12...v0.1.13",
+      "notes": "# 🚀 v0.1.13 — 2026-10-28\n\n### ✨ Improvements\n\n- 💓 Cursor: heartbeats, a bounded silent run stream, and native execs handed to the calling client.\n\n### 🐛 Fixes\n\n- 🔚 Cursor: run response body closes when a turn ends; tool results resume on a fresh conversation.\n- 🧯 Streamed upstream failures terminate cleanly.\n\n### 🧪 Quality\n\n- ✅ Added coverage for integration error paths.\n",
       "install": {
         "script": "curl -fsSL https://relo.ifelse.one/install.sh | sh -s -- --version 0.1.13",
         "powershell": "& ([scriptblock]::Create((irm https://relo.ifelse.one/install.ps1))) -Version 0.1.13",
@@ -1121,7 +1121,7 @@
       "draft": false,
       "published_at": "2026-10-27T09:43:54Z",
       "page": "https://github.com/jonaskahn/relo/releases/tag/v0.1.12",
-      "notes": "## What's Changed\r\n* Fix/agent harness failures by @jonaskahn in https://github.com/jonaskahn/relo/pull/83\r\n* chore: bump to 0.1.12 by @github-actions[bot] in https://github.com/jonaskahn/relo/pull/82\r\n\r\n\r\n**Full Changelog**: https://github.com/jonaskahn/relo/compare/v0.1.11...v0.1.12",
+      "notes": "# 🚀 v0.1.12 — 2026-10-27\n\n### 🐛 Fixes\n\n- 🛡️ One failed agent no longer blanks the whole roster.\n- 🔢 Each model id is listed once.\n- 🔑 Integration lists are keyed by position.\n",
       "install": {
         "script": "curl -fsSL https://relo.ifelse.one/install.sh | sh -s -- --version 0.1.12",
         "powershell": "& ([scriptblock]::Create((irm https://relo.ifelse.one/install.ps1))) -Version 0.1.12",
@@ -1353,7 +1353,7 @@
       "draft": false,
       "published_at": "2026-10-27T07:37:01Z",
       "page": "https://github.com/jonaskahn/relo/releases/tag/v0.1.11",
-      "notes": "## What's Changed\r\n* Fix/xiaomi tool call text by @jonaskahn in https://github.com/jonaskahn/relo/pull/78\r\n* Feat/cursor wire inline images by @jonaskahn in https://github.com/jonaskahn/relo/pull/77\r\n* Feat/accent board 2026 by @jonaskahn in https://github.com/jonaskahn/relo/pull/79\r\n* Fix/agent notices restart flag by @jonaskahn in https://github.com/jonaskahn/relo/pull/80\r\n\r\n\r\n**Full Changelog**: https://github.com/jonaskahn/relo/compare/v0.1.10...v0.1.11",
+      "notes": "# 🚀 v0.1.11 — 2026-10-27\n\n### ✨ Improvements\n\n- 🖼️ Cursor wire family carries inline images.\n- 🩺 Agents explain why they need repair or a restart, in every language.\n- 🎨 20-slot 2026 accent board with a radar.\n- 🧰 Freeform tools are described with a string argument; text-tool dialect is profiled per connection.\n\n### 🐛 Fixes\n\n- 📱 Recover tool calls a serving template wrote as text (Xiaomi).\n- 🚫 A pre-flight codec refusal is no longer reported as an upstream failure.\n",
       "install": {
         "script": "curl -fsSL https://relo.ifelse.one/install.sh | sh -s -- --version 0.1.11",
         "powershell": "& ([scriptblock]::Create((irm https://relo.ifelse.one/install.ps1))) -Version 0.1.11",
@@ -1745,7 +1745,7 @@
       "draft": false,
       "published_at": "2026-10-26T14:47:23Z",
       "page": "https://github.com/jonaskahn/relo/releases/tag/v0.1.10",
-      "notes": "## What's Changed\r\n* Fix/provider picker sticky heading by @jonaskahn in https://github.com/jonaskahn/relo/pull/73\r\n\r\n\r\n**Full Changelog**: https://github.com/jonaskahn/relo/compare/v0.1.9...v0.1.10",
+      "notes": "# 🚀 v0.1.10 — 2026-10-26\n\n### 🐛 Fixes\n\n- 📌 Provider picker heading squares off while stuck; modal bodies start flush with the pane top.\n- 📦 npm pins the binary to the installed package version.\n",
       "install": {
         "script": "curl -fsSL https://relo.ifelse.one/install.sh | sh -s -- --version 0.1.10",
         "powershell": "& ([scriptblock]::Create((irm https://relo.ifelse.one/install.ps1))) -Version 0.1.10",
