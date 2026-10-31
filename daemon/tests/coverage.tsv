@@ -28,7 +28,7 @@ internal/adapters/quota	tests/unit/quota/...	79
 internal/adapters/secrets	tests/unit/secrets/...	85
 internal/adapters/sqlite	tests/unit/sqlite/...	63
 internal/adapters/upstream	internal/adapters/upstream/...,tests/unit/upstream/...	37
-internal/adapters/wire	internal/adapters/wire/...,tests/unit/wire/...	12
+internal/adapters/wire	internal/adapters/wire/...,tests/unit/wire/...	90
 internal/adapters/wire/anthropic	internal/adapters/wire/anthropic/...,tests/unit/wire/anthropic/...
 internal/adapters/wire/bedrock	internal/adapters/wire/bedrock/...	56
 internal/adapters/wire/eventstream	internal/adapters/wire/eventstream/...	69
