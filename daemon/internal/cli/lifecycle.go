@@ -60,6 +60,7 @@ func runStart(cmd *cobra.Command, _ []string, localized ui) error {
 	port := flagPort(cmd)
 	if published, running := platform.RunningInstanceOn(ctx, home, port); running {
 		_, _ = fmt.Fprintln(out, localized.text("cli.daemon.start.already", map[string]any{"Addr": published.Address}))
+		openCommandDashboard(cmd, published.Address)
 		return nil
 	}
 	published, startupLog, err := platform.StartOrAttach(ctx, home, port)
@@ -69,6 +70,7 @@ func runStart(cmd *cobra.Command, _ []string, localized ui) error {
 	}
 	if startupLog == "" {
 		_, _ = fmt.Fprintln(out, localized.text("cli.daemon.start.already", map[string]any{"Addr": published.Address}))
+		openCommandDashboard(cmd, published.Address)
 		return nil
 	}
 	_, _ = fmt.Fprintln(out, localized.text("cli.daemon.start.started", map[string]any{"Addr": published.Address}))
@@ -134,6 +136,9 @@ func runRestart(cmd *cobra.Command, _ []string, localized ui) error {
 		return startFailure(localized, home, err)
 	}
 	_, _ = fmt.Fprintln(out, localized.text("cli.daemon.restart.restarted", map[string]any{"Addr": restarted.Address}))
+	if startupLog == "" {
+		openCommandDashboard(cmd, restarted.Address)
+	}
 	return nil
 }
 

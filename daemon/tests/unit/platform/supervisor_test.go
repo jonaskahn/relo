@@ -104,7 +104,10 @@ func TestSupervisorFollowsAnotherRun(t *testing.T) {
 	serving, _ := startSupervisor(t, home)
 
 	logger, _ := testkit.TestLogger(t)
-	follower := platform.NewSupervisor(platform.SupervisorOptions{Home: home, Logger: logger})
+	follower := platform.NewSupervisor(platform.SupervisorOptions{
+		Home: home, Logger: logger,
+		OnStarted: func(string) { t.Error("follower reported an owned start") },
+	})
 	owned, err := follower.Start()
 	if err != nil {
 		t.Fatalf("Start() error = %v, want the follower to bow out quietly", err)
@@ -126,13 +129,22 @@ func TestSupervisorReportsAFailedStart(t *testing.T) {
 	// which is the shape of a start an operator has to fix.
 	writeBrokenPortConfig(t, home)
 	logger, _ := testkit.TestLogger(t)
-	supervisor := platform.NewSupervisor(platform.SupervisorOptions{Home: home, Logger: logger})
+	supervisor := platform.NewSupervisor(platform.SupervisorOptions{
+		Home: home, Logger: logger,
+		OnStarted: func(string) { t.Error("failed start opened the dashboard") },
+	})
 	owned, err := supervisor.Start()
 	if err == nil {
 		t.Fatal("Start() error = nil, want the configuration failure")
 	}
 	if owned {
 		t.Fatal("Start() owned = true for a run that never served")
+	}
+	if err := supervisor.Restart(); err == nil {
+		t.Fatal("Restart() error = nil for invalid config")
+	}
+	if err := supervisor.ForceRestart(); err == nil {
+		t.Fatal("ForceRestart() error = nil for invalid config")
 	}
 	state, _, lastErr := supervisor.State()
 	if state != platform.StateFailed || lastErr == nil {
@@ -231,5 +243,54 @@ func TestQuitWinsAgainstRestart(t *testing.T) {
 		if state, _, _ := supervisor.State(); state != platform.StateStopped {
 			t.Fatalf("restart survived quit: %v", state)
 		}
+	}
+}
+
+func TestSupervisorReportsReadyStarts(t *testing.T) {
+	home := testkit.TempHome(t)
+	port := freeLoopbackPort(t)
+	writeIsolatedPorts(t, home, port)
+	logger, _ := testkit.TestLogger(t)
+	var addresses []string
+	var supervisor *platform.Supervisor
+	supervisor = platform.NewSupervisor(platform.SupervisorOptions{
+		Home: home, Port: port, Logger: logger,
+		OnStarted: func(address string) {
+			state, addr, err := supervisor.State()
+			if state != platform.StateRunning || addr != address || err != nil {
+				t.Errorf("OnStarted saw state %v, address %q, error %v", state, addr, err)
+			}
+			addresses = append(addresses, address)
+		},
+	})
+	t.Cleanup(func() { _ = supervisor.Stop() })
+	if owned, err := supervisor.Start(); !owned || err != nil {
+		t.Fatalf("Start() = %v, %v", owned, err)
+	}
+	if err := supervisor.Restart(); err != nil {
+		t.Fatal(err)
+	}
+	if err := supervisor.ForceRestart(); err != nil {
+		t.Fatal(err)
+	}
+	if len(addresses) != 3 {
+		t.Fatalf("OnStarted called %d times, want 3", len(addresses))
+	}
+	for _, address := range addresses {
+		if address != net.JoinHostPort("127.0.0.1", strconv.Itoa(port)) {
+			t.Fatalf("address = %q", address)
+		}
+	}
+	if err := supervisor.Stop(); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := supervisor.Start(); err != nil {
+		t.Fatal(err)
+	}
+	if err := supervisor.Restart(); err != nil {
+		t.Fatal(err)
+	}
+	if len(addresses) != 3 {
+		t.Fatalf("terminal supervisor opened dashboard: %v", addresses)
 	}
 }
