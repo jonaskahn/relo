@@ -43,7 +43,7 @@ internal/adapters/antigravity	tests/unit/quota/...,internal/adapters/antigravity
 internal/adapters/cursor	internal/adapters/cursor/...	78
 internal/platform	tests/unit/cli/...,tests/unit/platform/...,internal/platform/...	53
 internal/catalog	internal/catalog/...,tests/unit/routing/...,tests/unit/service/...,tests/unit/sqlite/...	70
-internal/cli	tests/unit/cli/...	77
+internal/cli	internal/cli,tests/unit/cli/...	77
 internal/clock	tests/unit/clock/...
 internal/config	tests/unit/config/...	85
 internal/dashboard	tests/unit/dashboard/...

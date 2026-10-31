@@ -60,6 +60,11 @@ func serveTray(cmd *cobra.Command, home string, serving *serveSession, localized
 		Home: home, Port: serving.port, Language: language,
 		Version: version, StartupLog: startupLog, Logger: serving.logger,
 		OnStopping: shutdownHook(cmd),
+		OnStarted: func(address string) {
+			openDashboard(address, func(err error) {
+				serving.logger.Warn("could not open the dashboard", "error", err)
+			})
+		},
 	})
 	signalStop := context.AfterFunc(ctx, func() { _ = supervisor.Stop() })
 	defer signalStop()
@@ -69,6 +74,9 @@ func serveTray(cmd *cobra.Command, home string, serving *serveSession, localized
 		return err
 	}
 	if !owned {
+		if published, running := platform.RunningInstanceOn(ctx, home, serving.port); running {
+			openCommandDashboard(cmd, published.Address)
+		}
 		// Another process already serves this home; a second icon would only
 		// fight it for the menu bar.
 		return nil

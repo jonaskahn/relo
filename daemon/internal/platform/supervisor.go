@@ -48,6 +48,8 @@ type SupervisorOptions struct {
 	StartupLog string
 	// Logger receives the run's log lines. A nil logger opens the daemon log.
 	Logger *slog.Logger
+	// OnStarted receives the ready listener address after each owned start.
+	OnStarted func(string)
 	// OnStopping arms the executable's final exit deadline.
 	OnStopping func()
 }
@@ -355,10 +357,15 @@ func (s *Supervisor) recordRunning(addr string) {
 	s.running, s.addr, s.lastErr = true, addr, nil
 	fn := s.onState
 	s.mu.Unlock()
-	if already || fn == nil {
+	if already {
 		return
 	}
-	fn()
+	if fn != nil {
+		fn()
+	}
+	if s.opts.OnStarted != nil && !s.isTerminal() {
+		s.opts.OnStarted(addr)
+	}
 }
 
 func (s *Supervisor) record(err error) {
