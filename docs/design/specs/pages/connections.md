@@ -220,8 +220,10 @@ summary shows "`N` models found"; the primary stays disabled until the credentia
 
 Two panes: left, the summary card — connection id (editable `.mono-data`), label (editable), provider, base URL, API
 format, account, source (listing or manual); right, "Models this connection will serve" — row-cards with the enabled
-switch, name, `.mono-data` id, price in/out, source chip and a `Free` badge on free models. One icon-only toolbar group
-offers four canonical states: turn on all, turn off all, turn on all free, and turn off all free (paid-only). Each
+switch, name, `.mono-data` id, price in/out, source chip and a `Free` badge on free models. One outline icon-button
+toolbar group offers four canonical states: turn on all, turn off all, turn on all free, and turn off all free (paid-only).
+The search fills the row beside the group. Below 640px the search takes its own full-width row and the four buttons
+share the next row. Each
 control has a localized tooltip and accessible name, uses a distinct power / circle-off / sparkles / sparkles-off icon,
 and at most one is pressed. Manual per-model toggles may leave none pressed. The free controls stay visible but disabled
 with a "No free models" explanation when the probe found none. Free-only mode shows a `Free only` chip and appends

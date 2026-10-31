@@ -157,47 +157,55 @@
 				<span>{$t('ui.pages.providersPage.review.retainsPrompts')}</span>
 			</p>
 		{/if}
-		<div class="flex flex-wrap items-center gap-2">
+		<div class="flex flex-col gap-2 sm:flex-row sm:items-center">
 			<Input
-				class="max-w-xs"
+				class="w-full sm:flex-1"
 				placeholder={$t('ui.pages.providersPage.review.search')}
 				aria-label={$t('ui.pages.providersPage.review.search')}
 				bind:value={search}
 			/>
 			<div
-				class="flex items-center gap-1"
+				class="flex w-full items-center gap-2 sm:w-auto sm:shrink-0"
 				role="group"
 				aria-label={$t('ui.pages.providersPage.review.bulkLabel')}
 			>
 				<IconAction
 					icon="power"
 					label={$t('ui.pages.providersPage.review.turnAllOn')}
+					variant="outline"
 					pressed={allOn}
 					onclick={turnOnAll}
+					class="max-sm:flex-1"
 				/>
 				<IconAction
 					icon="circle-off"
 					label={$t('ui.pages.providersPage.review.turnAllOff')}
+					variant="outline"
 					pressed={allOff}
 					onclick={turnOffAll}
+					class="max-sm:flex-1"
 				/>
 				<IconAction
 					icon="sparkles"
 					label={freeIds.length === 0
 						? $t('ui.pages.providersPage.review.noFreeModels')
 						: $t('ui.pages.providersPage.review.turnOnFree')}
+					variant="outline"
 					pressed={freeOnly}
 					disabled={freeIds.length === 0}
 					onclick={turnOnFree}
+					class="max-sm:flex-1"
 				/>
 				<IconAction
 					icon="sparkles-off"
 					label={freeIds.length === 0
 						? $t('ui.pages.providersPage.review.noFreeModels')
 						: $t('ui.pages.providersPage.review.turnOffFree')}
+					variant="outline"
 					pressed={paidOnly}
 					disabled={freeIds.length === 0}
 					onclick={turnOffFree}
+					class="max-sm:flex-1"
 				/>
 			</div>
 		</div>
