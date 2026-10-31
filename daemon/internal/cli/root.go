@@ -90,7 +90,11 @@ func Execute() error { return ExecuteWithShutdown(nil) }
 func ExecuteWithShutdown(onStopping func()) error {
 	// A Windows launch from Explorer, a shortcut, or the login item owns no
 	// console; attaching the parent one first keeps terminal output visible.
-	EnsureConsole()
+	// The daemon a command spawned stays off the terminal that started it, or
+	// closing that terminal would end the daemon with it.
+	if !spawnedDaemon(os.Args[1:]) {
+		EnsureConsole()
+	}
 	// Explorer starts this binary from the shortcut and the login item, and
 	// cobra's guard would answer that launch by printing a hint to a console
 	// that does not exist and exiting after five seconds.

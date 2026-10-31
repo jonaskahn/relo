@@ -15,12 +15,14 @@ import { spawnSync } from 'node:child_process';
 
 import { quiesce, reloHome } from './daemon.mjs';
 import { target } from './platform.mjs';
+import { removeDesktopShortcut } from './shortcut.mjs';
 
 const packageRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const binary = resolve(packageRoot, 'bin', target().name);
 const home = reloHome();
 
 try {
+	removeDesktopShortcut();
 	if (existsSync(binary)) {
 		spawnSync(binary, ['--home', home, 'uninstall', '--prepare'], { stdio: 'inherit' });
 	} else {

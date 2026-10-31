@@ -42,6 +42,7 @@ import {
 	warn
 } from './progress.mjs';
 import { target } from './platform.mjs';
+import { createDesktopShortcut } from './shortcut.mjs';
 import { assets, checksumsUrl, pinnedTag, selectBundle, tagFromArgs, url } from './release.mjs';
 import { extractBinary } from './archive.mjs';
 
@@ -211,6 +212,11 @@ try {
 	done(`${label('CONFLICT')}  no other relo install`);
 
 	const destination = await fromRelease(tag, asset, startedAt);
+	if (createDesktopShortcut(destination)) {
+		done(`${label('SHORTCUT')}  Desktop\\Relo`);
+	} else if (asset.os === 'windows') {
+		note('no Desktop shortcut was created; run: relo daemon restart --force');
+	}
 	if (startNow === 'yes') {
 		closeScreen();
 		// The daemon's error goes into the result block rather than through

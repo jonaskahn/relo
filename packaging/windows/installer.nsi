@@ -1,6 +1,7 @@
 ; The Relo-Setup Windows installer: one relo.exe carrying the daemon and the
 ; tray, beside the relo.cmd shim the command line runs, with a Start Menu
-; shortcut and a quiet autostart entry. The packaging script passes VERSION,
+; shortcut, a Desktop shortcut that restarts the daemon without opening a
+; terminal, and a quiet autostart entry. The packaging script passes VERSION,
 ; BINARY, SHIMCMD, SHIMSH, ICON, and OUTFILE through /D defines.
 ;
 ; The install is per user: files under $LOCALAPPDATA, the uninstall entry
@@ -128,6 +129,9 @@ Section "Relo" SEC_MAIN
   ; shortcut, so the working directory is always writable.
   StrCpy $OUTDIR "%USERPROFILE%"
   CreateShortCut "$SMPROGRAMS\Relo\Relo.lnk" "$INSTDIR\relo.exe" "daemon start" "$INSTDIR\relo.exe" 0
+  ; relo.exe owns no console, so the Desktop shortcut restarts the daemon
+  ; without opening a terminal, and works whether or not one is running.
+  CreateShortCut "$DESKTOP\Relo.lnk" "$INSTDIR\relo.exe" "daemon restart --force" "$INSTDIR\relo.exe" 0
   StrCpy $OUTDIR "$INSTDIR"
 
   ; The start command spawns the daemon detached, which is what the app also
@@ -171,6 +175,7 @@ Section "Uninstall"
   RMDir "$INSTDIR"
   Delete "$SMPROGRAMS\Relo\Relo.lnk"
   RMDir "$SMPROGRAMS\Relo"
+  Delete "$DESKTOP\Relo.lnk"
   DeleteRegValue HKCU "${RUN_KEY}" "Relo"
   ; The daemon login item is written at runtime, not by this installer, so
   ; uninstalling has to remove it itself.

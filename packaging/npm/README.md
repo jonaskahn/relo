@@ -41,6 +41,8 @@ that output under the install: npm otherwise runs it in the background and
 shows nothing until the command ends, which makes a slow download look stuck.
 
 State lives in `~/.relo` (`$RELO_HOME`), shared with every other installer.
+On Windows the install also adds a Desktop "Relo" shortcut that restarts the
+daemon without opening a terminal.
 Never installed twice: if another Relo is on your PATH, this one refuses and
 tells you where it found it.
 

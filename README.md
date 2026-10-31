@@ -60,6 +60,9 @@ ports Relo serves, and starts the daemon. The npm install downloads the same 13 
 download bar showing the rate and the time left; `--foreground-scripts` keeps that output under the install instead of
 hiding it.
 
+On Windows, the setup installer and the npm install add a Desktop "Relo" shortcut that runs
+`relo daemon restart --force` without opening a terminal.
+
 ## ▓ START
 
 ```shell
