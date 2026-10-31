@@ -11,7 +11,8 @@ requires: [modal-and-dialogs, form-controls, cards-and-quota]
 Three or four steps in a row under the modal header: circle (26px) plus label, connected by a 2px line that fills
 `--accent` as steps complete.
 Current: `--accent` fill, `--on-accent` number. Done: `--accent-50` fill, accent check, clickable to go back. Upcoming:
-`--line` circle, `--faint` label, disabled. Below 640px only the current label shows. The numbers are real order, so
+`--line` circle, `--faint` label, disabled. Below 640px the markers and connectors take one compact row and the current
+label sits under them, so the header never widens the modal. The numbers are real order, so
 numbered markers are correct here.
 Add connection steps: Provider, Connect, Verify, Review. Group editor (new): Name it, Billing, Pick members,
 Preview. Group editor (edit): Name it, Pick members, Preview.
