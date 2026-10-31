@@ -49,6 +49,7 @@
 		"lib/platform.mjs",
 		"lib/progress.mjs",
 		"lib/release.mjs",
+		"lib/shortcut.mjs",
 		"lib/uninstall.mjs",
 		"README.md"
 	],
