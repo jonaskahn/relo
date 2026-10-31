@@ -1,6 +1,6 @@
 {
 	"name": "@jonaskahn/relo",
-	"version": "0.2.1",
+	"version": "0.2.2",
 	"description": "One local proxy that lets Codex, Claude Code, Cursor and Grok, etc. Talk to any model, any provider with no config changes",
 	"license": "AGPL-3.0-only",
 	"type": "module",
