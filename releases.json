@@ -1,6 +1,6 @@
 {
-  "generated": "2026-10-31T04:15:34Z",
-  "latest": "v0.2.0",
+  "generated": "2026-10-31T04:46:04Z",
+  "latest": "v0.2.1",
   "latest_beta": "v0.2.1-beta.61.b8586e68",
   "install": {
     "stable": {
@@ -17,6 +17,158 @@
     }
   },
   "releases": [
+    {
+      "tag": "v0.2.1",
+      "version": "0.2.1",
+      "name": "v0.2.1 - Rocky 🍪",
+      "channel": "stable",
+      "draft": false,
+      "published_at": "2026-10-31T04:45:55Z",
+      "page": "https://github.com/jonaskahn/relo/releases/tag/v0.2.1",
+      "notes": "## What's Changed\r\n* Fix windows installer issue",
+      "install": {
+        "script": "curl -fsSL https://relo.ifelse.one/install.sh | sh -s -- --version 0.2.1",
+        "powershell": "& ([scriptblock]::Create((irm https://relo.ifelse.one/install.ps1))) -Version 0.2.1",
+        "npm": "npm i -g @jonaskahn/relo@0.2.1"
+      },
+      "files": [
+        {
+          "name": "checksums.txt",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.2.1/checksums.txt",
+          "size": 582,
+          "os": "any",
+          "arch": "any",
+          "kind": "checksums",
+          "format": "txt"
+        },
+        {
+          "name": "Relo-0.2.1-arm64.zip",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.2.1/Relo-0.2.1-arm64.zip",
+          "size": 15879635,
+          "os": "macos",
+          "arch": "arm64",
+          "kind": "app",
+          "format": "zip"
+        },
+        {
+          "name": "relo-0.2.1-darwin-amd64.tar.gz",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.2.1/relo-0.2.1-darwin-amd64.tar.gz",
+          "size": 15012225,
+          "os": "macos",
+          "arch": "amd64",
+          "kind": "archive",
+          "format": "tar.gz"
+        },
+        {
+          "name": "relo-0.2.1-darwin-arm64.tar.gz",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.2.1/relo-0.2.1-darwin-arm64.tar.gz",
+          "size": 14601531,
+          "os": "macos",
+          "arch": "arm64",
+          "kind": "archive",
+          "format": "tar.gz"
+        },
+        {
+          "name": "relo-0.2.1-linux-amd64.tar.gz",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.2.1/relo-0.2.1-linux-amd64.tar.gz",
+          "size": 14707530,
+          "os": "linux",
+          "arch": "amd64",
+          "kind": "archive",
+          "format": "tar.gz"
+        },
+        {
+          "name": "relo-0.2.1-linux-arm64.tar.gz",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.2.1/relo-0.2.1-linux-arm64.tar.gz",
+          "size": 13940805,
+          "os": "linux",
+          "arch": "arm64",
+          "kind": "archive",
+          "format": "tar.gz"
+        },
+        {
+          "name": "Relo-0.2.1-universal.zip",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.2.1/Relo-0.2.1-universal.zip",
+          "size": 31264531,
+          "os": "macos",
+          "arch": "universal",
+          "kind": "app",
+          "format": "zip"
+        },
+        {
+          "name": "relo-0.2.1-windows-amd64.tar.gz",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.2.1/relo-0.2.1-windows-amd64.tar.gz",
+          "size": 14654163,
+          "os": "windows",
+          "arch": "amd64",
+          "kind": "archive",
+          "format": "tar.gz"
+        },
+        {
+          "name": "relo-0.2.1-windows-arm64.tar.gz",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.2.1/relo-0.2.1-windows-arm64.tar.gz",
+          "size": 13792791,
+          "os": "windows",
+          "arch": "arm64",
+          "kind": "archive",
+          "format": "tar.gz"
+        },
+        {
+          "name": "Relo-Setup-0.2.1-amd64.deb",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.2.1/Relo-Setup-0.2.1-amd64.deb",
+          "size": 14973358,
+          "os": "linux",
+          "arch": "amd64",
+          "kind": "installer",
+          "format": "deb"
+        },
+        {
+          "name": "Relo-Setup-0.2.1-amd64.exe",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.2.1/Relo-Setup-0.2.1-amd64.exe",
+          "size": 10828504,
+          "os": "windows",
+          "arch": "amd64",
+          "kind": "installer",
+          "format": "exe"
+        },
+        {
+          "name": "Relo-Setup-0.2.1-amd64.rpm",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.2.1/Relo-Setup-0.2.1-amd64.rpm",
+          "size": 14939499,
+          "os": "linux",
+          "arch": "amd64",
+          "kind": "installer",
+          "format": "rpm"
+        },
+        {
+          "name": "Relo-Setup-0.2.1-arm64.deb",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.2.1/Relo-Setup-0.2.1-arm64.deb",
+          "size": 14276054,
+          "os": "linux",
+          "arch": "arm64",
+          "kind": "installer",
+          "format": "deb"
+        },
+        {
+          "name": "Relo-Setup-0.2.1-arm64.exe",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.2.1/Relo-Setup-0.2.1-arm64.exe",
+          "size": 9800838,
+          "os": "windows",
+          "arch": "arm64",
+          "kind": "installer",
+          "format": "exe"
+        },
+        {
+          "name": "Relo-Setup-0.2.1-arm64.rpm",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.2.1/Relo-Setup-0.2.1-arm64.rpm",
+          "size": 14222582,
+          "os": "linux",
+          "arch": "arm64",
+          "kind": "installer",
+          "format": "rpm"
+        }
+      ]
+    },
     {
       "tag": "v0.2.1-beta.61.b8586e68",
       "version": "0.2.1-beta.61.b8586e68",
