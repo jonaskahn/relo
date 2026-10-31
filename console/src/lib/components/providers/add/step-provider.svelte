@@ -317,7 +317,7 @@
 				)}
 				{#if freeEnabled && rows.free.length > 0}
 					<div
-						class="grid gap-2 sm:grid-cols-2"
+						class="grid grid-cols-1 gap-2 sm:grid-cols-2"
 						role="radiogroup"
 						aria-label={$t(SECTION_LABEL_KEY.free)}
 					>
@@ -339,7 +339,7 @@
 						)
 					)}
 					<div
-						class="grid gap-2 sm:grid-cols-2"
+						class="grid grid-cols-1 gap-2 sm:grid-cols-2"
 						role="radiogroup"
 						aria-label={$t(SECTION_LABEL_KEY[group.section])}
 					>

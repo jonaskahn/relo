@@ -51,6 +51,14 @@ describe('the free connection picker', () => {
 		expect(html).toContain('Kilo Code Free');
 	});
 
+	it('stacks provider rows in a shrinkable single column on a phone', () => {
+		const html = renderPicker(true);
+
+		const grids = html.match(/class="grid[^"]*sm:grid-cols-2[^"]*"/g) ?? [];
+		expect(grids.length).toBeGreaterThan(0);
+		for (const grid of grids) expect(grid).toContain('grid-cols-1');
+	});
+
 	it('counts the free rows a search leaves', () => {
 		const html = render(StepProvider, {
 			props: {
