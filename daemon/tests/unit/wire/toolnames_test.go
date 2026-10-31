@@ -91,3 +91,40 @@ func TestRestoreToolNamesPassesThroughALaneThatShortenedNothing(t *testing.T) {
 		t.Fatal("empty originals wrapped the codec, want it passed through")
 	}
 }
+
+type bindingNamedCodec struct {
+	namedCodec
+	request **inference.Request
+	opts    *wire.CodecOpts
+}
+
+func (c bindingNamedCodec) Bind(req *inference.Request, opts wire.CodecOpts) wire.CodecModule {
+	*c.request, *c.opts = req, opts
+	return namedCodec{name: "alias"}
+}
+
+func TestRestoreToolNamesPreservesAttemptBinding(t *testing.T) {
+	var boundRequest *inference.Request
+	var boundOpts wire.CodecOpts
+	inner := bindingNamedCodec{namedCodec: namedCodec{name: "unbound"}, request: &boundRequest, opts: &boundOpts}
+	module := wire.RestoreToolNames(inner, map[string]string{"alias": "original"})
+	req := &inference.Request{}
+	opts := wire.CodecOpts{SessionID: "conversation"}
+	bound := module.(wire.RequestBinder).Bind(req, opts)
+	if boundRequest != req || boundOpts.SessionID != opts.SessionID {
+		t.Fatal("binding lost the attempt context")
+	}
+	events, err := bound.DecodeResponse(nil)
+	if err != nil || len(events) != 1 || events[0].ToolCall.Name != "original" {
+		t.Fatalf("bound response = %+v, %v", events, err)
+	}
+}
+
+func TestRestoreToolNamesBindsAnUnscopedCodecWithoutChangingUnknownNames(t *testing.T) {
+	module := wire.RestoreToolNames(namedCodec{name: "read"}, map[string]string{"alias": "original"})
+	bound := module.(wire.RequestBinder).Bind(&inference.Request{}, wire.CodecOpts{})
+	events, err := bound.DecodeResponse(nil)
+	if err != nil || len(events) != 1 || events[0].ToolCall.Name != "read" {
+		t.Fatalf("bound response = %+v, %v", events, err)
+	}
+}
