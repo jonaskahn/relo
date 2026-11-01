@@ -1,15 +1,13 @@
 import { describe, expect, it } from 'vitest';
 
 import {
-	attemptChain,
 	hasQuota,
 	memberState,
 	overflowMembers,
 	orderMembers,
-	resetMinutes,
 	selectCurrentMember,
 	selectNextMember,
-	windowMinutes
+	windowSpan
 } from './route-inspector';
 import type { GroupMember, QuotaWindow, RouteCandidate, UsageAttemptRow } from './types';
 
@@ -67,12 +65,6 @@ describe('routing inspector decisions', () => {
 		expect(selectNextMember(members, [])).toBe(-1);
 	});
 
-	it('rounds windows and resets up to whole minutes', () => {
-		const window = { window_seconds: 18_060 } as QuotaWindow;
-		expect(windowMinutes(window)).toBe(301);
-		expect(resetMinutes(61_000, 0)).toBe(2);
-	});
-
 	it('marks a member limited when any account is limited', () => {
 		const accounts = [
 			{
@@ -101,10 +93,11 @@ describe('routing inspector decisions', () => {
 		expect(hasQuota([{ used_percent: 0 } as QuotaWindow])).toBe(true);
 	});
 
-	it('renders a failover chain', () => {
-		expect(attemptChain([{ ...attempt(1, 429, 'claude') }, { ...attempt(2, 200, 'gpt-5') }])).toBe(
-			'#1 429 → #2 200'
-		);
+	it('reads a window length in hours and days, not raw minutes', () => {
+		expect(windowSpan(43_200)).toBe('12h 0m');
+		expect(windowSpan(604_800)).toBe('7d 0h');
+		expect(windowSpan(18_000)).toBe('5h 0m');
+		expect(windowSpan(0)).toBe('');
 	});
 
 	it('collapses everything beyond nine members', () => {

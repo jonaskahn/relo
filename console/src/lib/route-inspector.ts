@@ -1,7 +1,8 @@
 // Read-only routing-inspector decisions: ordering, serving state, quota readings, and the
-// compact views the SVG and recent-route list render.
+// compact labels the recent-route table renders.
 
 import type { Account, GroupMember, QuotaWindow, RouteCandidate, UsageAttemptRow } from './types';
+import { formatCountdown } from './dashboard';
 
 export type MemberState =
 	'ready' | 'limited' | 'paused' | 'needsSignIn' | 'unavailable' | 'cooling';
@@ -19,12 +20,10 @@ export interface CurrentMember {
 	accountLabel: string;
 }
 
-export interface RouteChain {
-	eventID: number;
-	timestampMs: number;
-	status: number;
-	durationMs: number;
-	chain: string;
+/** Renders a stored window length against the largest unit that keeps it short. */
+export function windowSpan(seconds: number): string {
+	if (!Number.isFinite(seconds) || seconds <= 0) return '';
+	return formatCountdown(seconds * 1000);
 }
 
 /** Orders members by the preview's candidate sequence, then keeps any member the preview did not
@@ -80,16 +79,6 @@ export function selectNextMember(
 	);
 }
 
-/** Rounds a window length up to the whole minute a compact reading can show. */
-export function windowMinutes(window: QuotaWindow): number {
-	return Math.max(1, Math.ceil(window.window_seconds / 60));
-}
-
-/** Rounds a reset deadline up to the whole minutes remaining. */
-export function resetMinutes(resetAtMs: number, nowMs: number): number {
-	return Math.max(0, Math.ceil((resetAtMs - nowMs) / 60_000));
-}
-
 /** Aggregates every account behind one member into the state the card shows. */
 export function memberState(
 	accounts: readonly Account[],
@@ -115,7 +104,7 @@ export function memberState(
 	return 'ready';
 }
 
-/** Renders one request's attempts as the compact chain the recent list shows. */
+/** Renders one request's attempts as the compact chain the recent-route table shows. */
 export function attemptChain(attempts: readonly UsageAttemptRow[]): string {
 	return attempts.map((attempt) => `#${attempt.Ordinal} ${attempt.Status}`).join(' → ');
 }
@@ -134,20 +123,6 @@ export function memberCoverage(member: GroupMember): { serving: number; active: 
 		serving: member.serving_accounts ?? 0,
 		active: member.active_accounts ?? 0
 	};
-}
-
-/** Builds the five compact chains the bottom strip and recent list share. */
-export function recentRouteChains(
-	requests: readonly { ID: number; TimestampMs: number; Status: number; DurationMs: number }[],
-	attemptsByRequest: ReadonlyMap<number, readonly UsageAttemptRow[]>
-): RouteChain[] {
-	return requests.slice(0, 5).map((request) => ({
-		eventID: request.ID,
-		timestampMs: request.TimestampMs,
-		status: request.Status,
-		durationMs: request.DurationMs,
-		chain: attemptChain(attemptsByRequest.get(request.ID) ?? []) || `— ${request.Status}`
-	}));
 }
 
 /** Reports the two reading states an inspector must never confuse: no quota was reported, versus

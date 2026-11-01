@@ -43,10 +43,11 @@ then opens the confirmation.
 ## Routing inspector (`xl`)
 
 The route icon on a group card opens a read-only inspector. It shows the request reaching the group, the ordered member
-fan-out, the current/last-served member, the next preview candidate, quota windows with used percent and reset minutes,
-and the last five request chains. The diagram is one accessible inline SVG; quota and account failures degrade to `No
-quota reported` or an unavailable state. Recent rows link to the request log, and the footer offers Refresh, Open latest
-request's log, and Close. The inspector never mutates rotation, pins, or random state.
+fan-out, the current/last-served member, the next preview candidate, quota windows with used percent, window length,
+and reset time in hours or days. The diagram is one accessible inline SVG; quota and account failures degrade to `No
+quota reported` or an unavailable state. Recent requests stay in the table below the diagram, linked to their request
+log, and the footer offers Refresh, Open latest request's log, and Close. The inspector never mutates rotation, pins,
+or random state.
 
 ## Editor (`xl`)
 

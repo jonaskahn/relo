@@ -2,15 +2,14 @@
 	import { t } from 'svelte-i18n';
 
 	import { providerLogoSrc } from '$lib/provider-logo';
+	import { formatCountdown } from '$lib/dashboard';
 	import {
 		hasQuota,
 		memberCoverage,
 		memberState,
-		resetMinutes,
-		windowMinutes,
+		windowSpan,
 		type MemberState,
-		type MemberView,
-		type RouteChain
+		type MemberView
 	} from '$lib/route-inspector';
 
 	interface Props {
@@ -20,7 +19,6 @@
 		current: number;
 		next: number;
 		hidden: number;
-		chains: readonly RouteChain[];
 		nowMs?: number;
 	}
 
@@ -31,7 +29,6 @@
 		current,
 		next,
 		hidden,
-		chains,
 		nowMs = Date.now()
 	}: Props = $props();
 
@@ -39,8 +36,7 @@
 	const CARD_WIDTH = 560;
 	const ROW_HEIGHT = 112;
 	const TOP = 24;
-	const chainTop = $derived(TOP + members.length * ROW_HEIGHT + (hidden > 0 ? ROW_HEIGHT : 0) + 22);
-	const height = $derived(chainTop + Math.max(1, chains.length) * 24 + 20);
+	const height = $derived(TOP + members.length * ROW_HEIGHT + (hidden > 0 ? ROW_HEIGHT : 0));
 
 	const stateKeys: Record<MemberState, string> = {
 		ready: 'ui.pages.groupsPage.inspector.ready',
@@ -68,6 +64,10 @@
 		if (percent >= 100) return 'var(--danger)';
 		if (percent >= 90) return 'var(--warn)';
 		return 'var(--accent)';
+	}
+
+	function resetIn(resetAtMs: number): string {
+		return resetAtMs > 0 ? formatCountdown(resetAtMs - nowMs) : '';
 	}
 
 	function fit(value: string, length: number): string {
@@ -193,10 +193,11 @@
 						{@const percent = Math.max(0, Math.round(window.used_percent))}
 						{@const barY = y + 48 + windowIndex * 17}
 						<text x={CARD_X + 18} y={barY + 8} fill="var(--muted)" class="text-[10px]">
-							{window.window} · {percent}% · {windowMinutes(window)}m · {resetMinutes(
-								window.reset_at_ms,
-								nowMs
-							)}m
+							{window.window} · {percent}% · {windowSpan(window.window_seconds)}{resetIn(
+								window.reset_at_ms
+							)
+								? ' · ' + resetIn(window.reset_at_ms)
+								: ''}
 						</text>
 						<rect x={CARD_X + 350} y={barY} width="170" height="7" rx="3.5" class="fill-sunken"
 						></rect>
@@ -224,17 +225,6 @@
 			<text x={CARD_X + 18} y={y + 32} fill="var(--muted)" class="text-[12px]">
 				{$t('ui.pages.groupsPage.inspector.overflow', { values: { count: hidden } })}
 			</text>
-		{/if}
-
-		{#if chains.length > 0}
-			<text x="24" y={chainTop} fill="var(--muted)" class="text-[11px] font-semibold">
-				{$t('ui.pages.groupsPage.inspector.recent')}
-			</text>
-			{#each chains as chain, index (chain.eventID)}
-				<text x="24" y={chainTop + 22 + index * 22} class="fill-ink text-[11px]">
-					{chain.chain}
-				</text>
-			{/each}
 		{/if}
 	</svg>
 </div>

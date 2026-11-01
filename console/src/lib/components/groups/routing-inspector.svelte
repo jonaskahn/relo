@@ -8,7 +8,6 @@
 		attemptChain,
 		orderMembers,
 		overflowMembers,
-		recentRouteChains,
 		selectCurrentMember,
 		selectNextMember,
 		type CurrentMember,
@@ -56,7 +55,6 @@
 	const members = $derived(routeGroup?.members ?? []);
 	const ordered = $derived(orderMembers(members, candidates));
 	const next = $derived(selectNextMember(ordered, candidates));
-	const recentChains = $derived(recentRouteChains(recent, attempts));
 	const latest = $derived(recent[0] ?? null);
 	const overflow = $derived(overflowMembers(memberViews(ordered)));
 
@@ -232,7 +230,6 @@
 					current={current.index}
 					{next}
 					hidden={overflow.hidden}
-					chains={recentChains}
 				/>
 			{/if}
 

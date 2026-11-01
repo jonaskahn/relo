@@ -34,8 +34,7 @@ describe('the routing-flow diagram', () => {
 				],
 				current: 0,
 				next: 0,
-				hidden: 0,
-				chains: []
+				hidden: 0
 			}
 		}).body;
 		expect(html).toContain('role="img"');
@@ -65,8 +64,7 @@ describe('the routing-flow diagram', () => {
 				],
 				current: 0,
 				next: 0,
-				hidden: 0,
-				chains: []
+				hidden: 0
 			}
 		}).body;
 		expect(html).toContain('fill="var(--muted)"');
