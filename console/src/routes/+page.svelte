@@ -8,6 +8,7 @@
 	import PageHeader from '$lib/components/ui/page-header.svelte';
 	import RoutingUniverse from '$lib/components/dashboard/routing-universe.svelte';
 	import ActivityCalendar from '$lib/components/dashboard/activity-calendar.svelte';
+	import ActivityHighlights from '$lib/components/dashboard/activity-highlights.svelte';
 	import AttentionBand from '$lib/components/dashboard/attention-band.svelte';
 	import DoctorChecks from '$lib/components/dashboard/doctor-checks.svelte';
 	import RecentRequests from '$lib/components/dashboard/recent-requests.svelte';
@@ -20,13 +21,7 @@
 	import Segmented from '$lib/components/ui/segmented.svelte';
 	import Button from '$lib/components/ui/button.svelte';
 	import Icon, { type IconName } from '$lib/components/ui/icon.svelte';
-	import {
-		formatCost,
-		formatCount,
-		formatTokens,
-		formatTokensExact,
-		formatUptime
-	} from '$lib/format';
+	import { formatCost, formatTokens, formatTokensExact, formatUptime } from '$lib/format';
 	import {
 		accountAttention,
 		activityStats,
@@ -48,7 +43,7 @@
 	import { browserStorage } from '$lib/filter-panel';
 	import { mergeRollups, providerReadChunks } from '$lib/usage-filters';
 	import type { TunnelTraffic } from '$lib/route-tunnel';
-	import { bucketDays, heatmapCells, shortDay, type ChartMetric } from '$lib/usage-charts';
+	import { bucketDays, heatmapCells, type ChartMetric } from '$lib/usage-charts';
 	import type {
 		AccessKey,
 		Account,
@@ -634,38 +629,13 @@
 		</div>
 		<div class="flex min-w-0 flex-col gap-[var(--grid-gap)] md:col-span-2">
 			<div class="min-h-0 flex-1 [&>div]:h-full">
-				<KpiTile
-					icon="trending-up"
-					labelKey="ui.pages.dashboard.activityBusiest"
+				<ActivityHighlights
+					busiest={activityFigures.busiest}
+					longest={activityFigures.longest}
+					current={activityFigures.current}
 					loading={contentLoading}
 					pending={processing}
-				>
-					<span class="mono-data text-[1.625rem] leading-none font-medium tabular-nums text-ink">
-						{activityFigures.busiest ? formatCount(activityFigures.busiest.value) : '—'}
-					</span>
-					<p class="mt-1 text-xs text-muted-foreground">
-						{activityFigures.busiest
-							? shortDay(activityFigures.busiest.key) +
-								' · ' +
-								$t('ui.pages.usagePage.unitRequests')
-							: $t('ui.pages.dashboard.noData')}
-					</p>
-				</KpiTile>
-			</div>
-			<div class="min-h-0 flex-1 [&>div]:h-full">
-				<KpiTile
-					icon="activity"
-					labelKey="ui.pages.dashboard.activityStreak"
-					loading={contentLoading}
-					pending={processing}
-				>
-					<span class="mono-data text-[1.625rem] leading-none font-medium tabular-nums text-ink">
-						{activityFigures.streak}
-					</span>
-					<p class="mt-1 text-xs text-muted-foreground">
-						{$t('ui.pages.dashboard.activityDayUnit')}
-					</p>
-				</KpiTile>
+				/>
 			</div>
 		</div>
 	</div>
