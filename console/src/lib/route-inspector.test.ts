@@ -94,9 +94,11 @@ describe('routing inspector decisions', () => {
 	});
 
 	it('reads a window length in hours and days, not raw minutes', () => {
-		expect(windowSpan(43_200)).toBe('12h 0m');
-		expect(windowSpan(604_800)).toBe('7d 0h');
-		expect(windowSpan(18_000)).toBe('5h 0m');
+		expect(windowSpan(43_200)).toBe('12h');
+		expect(windowSpan(604_800)).toBe('7d');
+		expect(windowSpan(18_000)).toBe('5h');
+		expect(windowSpan(2_592_000)).toBe('30d');
+		expect(windowSpan(3_900)).toBe('1h 5m');
 		expect(windowSpan(0)).toBe('');
 	});
 

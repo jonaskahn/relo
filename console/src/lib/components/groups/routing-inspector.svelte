@@ -5,7 +5,6 @@
 	import { formatDateTime } from '$lib/format';
 	import { coalesceReload } from '$lib/refresh';
 	import {
-		attemptChain,
 		orderMembers,
 		overflowMembers,
 		selectCurrentMember,
@@ -228,6 +227,7 @@
 					requestLabel={routeGroup?.client_id || routeGroup?.id || ''}
 					members={overflow.visible}
 					current={current.index}
+					currentAccount={current.accountLabel}
 					{next}
 					hidden={overflow.hidden}
 				/>
@@ -244,28 +244,57 @@
 						{$t('ui.pages.groupsPage.inspector.noRecent')}
 					</p>
 				{:else}
-					<ul class="mt-2 overflow-hidden rounded-card bg-surface shadow-float-1">
-						{#each recent as request (request.ID)}
-							<li
-								class="flex flex-wrap items-center gap-x-3 gap-y-1 border-b border-border px-4 py-2.5 text-xs last:border-b-0"
-							>
-								<span class="mono-data text-muted-foreground"
-									>{formatDateTime(request.TimestampMs)}</span
+					<div class="mt-3 overflow-x-auto rounded-card bg-surface shadow-float-1">
+						<table class="w-full min-w-[720px] text-left text-xs">
+							<thead>
+								<tr
+									class="border-b border-border text-[0.6875rem] font-semibold tracking-wider text-muted-foreground uppercase"
 								>
-								<a
-									class="mono-data text-accent-deep hover:underline"
-									href={`/logs?section=agent&request=${request.ID}`}
-									>{request.RequestID || request.ID}</a
-								>
-								<span class="min-w-0 flex-1 truncate">{chosenLabel(request)}</span>
-								<span class="mono-data text-muted-foreground"
-									>{attemptChain(attempts.get(request.ID) ?? []) || '—'}</span
-								>
-								<span class="mono-data">{request.Status}</span>
-								<span class="mono-data text-muted-foreground">{request.DurationMs}ms</span>
-							</li>
-						{/each}
-					</ul>
+									<th class="px-3.5 py-2">{$t('ui.common.status')}</th>
+									<th class="px-3.5 py-2">{$t('ui.pages.logsPage.columnTime')}</th>
+									<th class="px-3.5 py-2">{$t('ui.pages.groupsPage.inspector.request')}</th>
+									<th class="px-3.5 py-2">{$t('ui.pages.logsPage.columnModel')}</th>
+									<th class="px-3.5 py-2">{$t('ui.pages.chatPage.target')}</th>
+									<th class="px-3.5 py-2 text-right">{$t('ui.pages.logsPage.columnDuration')}</th>
+								</tr>
+							</thead>
+							<tbody>
+								{#each recent as request (request.ID)}
+									<tr class="border-b border-border last:border-b-0">
+										<td class="px-3.5 py-2.5">
+											<span
+												class="mono-data inline-flex rounded-full px-2 py-0.5 text-[0.6875rem] font-semibold {request.Status <
+												400
+													? 'bg-ok/10 text-ok'
+													: 'bg-danger/10 text-danger'}">{request.Status}</span
+											>
+										</td>
+										<td class="mono-data px-3.5 py-2.5 whitespace-nowrap text-muted-foreground">
+											{formatDateTime(request.TimestampMs)}
+										</td>
+										<td class="px-3.5 py-2.5">
+											<a
+												class="mono-data text-accent-deep hover:underline"
+												href={`/logs?section=agent&request=${request.ID}`}
+												>{request.RequestID || request.ID}</a
+											>
+										</td>
+										<td class="mono-data max-w-[220px] truncate px-3.5 py-2.5">
+											{request.RequestedModel || request.Model}
+										</td>
+										<td
+											class="mono-data max-w-[220px] truncate px-3.5 py-2.5 text-muted-foreground"
+										>
+											{chosenLabel(request)}
+										</td>
+										<td class="mono-data px-3.5 py-2.5 text-right whitespace-nowrap font-medium">
+											{request.DurationMs}ms
+										</td>
+									</tr>
+								{/each}
+							</tbody>
+						</table>
+					</div>
 				{/if}
 			</div>
 		</div>
