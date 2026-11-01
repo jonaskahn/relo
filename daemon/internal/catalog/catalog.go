@@ -183,14 +183,19 @@ type Model struct {
 	// identifier the provider knows.
 	UpstreamID string
 	// ClonedFrom names the model a clone was copied from, empty otherwise.
-	ClonedFrom        string
-	Source            string
-	Name              string
-	Description       string
-	Family            string
-	Category          Category
-	APIFormat         APIFormat
-	BaseURL           string
+	ClonedFrom  string
+	Source      string
+	Name        string
+	Description string
+	Family      string
+	Category    Category
+	APIFormat   APIFormat
+	BaseURL     string
+
+	// ToolCallDialect names a serving template that renders tool calls as
+	// text rather than structured deltas. A connection's own dialect wins;
+	// this carries the template the model's family uses on every gateway.
+	ToolCallDialect   string
 	ModelsDevRef      string
 	Match             string
 	ContextWindow     *int64
@@ -771,6 +776,7 @@ func resolveModel(m ModelRecord, facts map[string]FactsRecord, host Provider, fo
 	res := resolvedIdentity(m, host, layers.override, layers.provider, layers.models)
 	resolveModelWindows(&res, host, layers)
 	resolveModelCapabilities(&res, host, layers)
+	res.ToolCallDialect = mimoToolCallDialect(res)
 	resolveModelPricing(&res, layers.override, layers.provider, layers.models)
 	finishResolvedModel(&res, m, host, formats, layers)
 	return res
@@ -850,6 +856,7 @@ func resolveModelCapabilities(res *Model, host Provider, layers factLayers) {
 	res.FactSources.ReasoningBudgetMax = resolution.Sources.ReasoningBudgetMax
 	res.FactSources.Vision = resolution.Sources.Vision
 	suppressAntigravityThinking(res, host)
+	applyMimoFamily(res)
 }
 
 func suppressAntigravityThinking(res *Model, host Provider) {

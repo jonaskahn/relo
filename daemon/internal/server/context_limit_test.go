@@ -1,14 +1,18 @@
 package server
 
 import (
+	"context"
 	"errors"
 	"strings"
 	"testing"
 
+	"github.com/jonaskahn/relo/internal/adapters/sqlite"
 	"github.com/jonaskahn/relo/internal/adapters/wire"
+	"github.com/jonaskahn/relo/internal/adapters/wire/formats"
 	"github.com/jonaskahn/relo/internal/catalog"
 	"github.com/jonaskahn/relo/internal/inference"
 	"github.com/jonaskahn/relo/internal/routing"
+	"github.com/jonaskahn/relo/tests/testkit"
 )
 
 func TestAttemptRejectsExplicitlyUnsupportedCapabilities(t *testing.T) {
@@ -43,6 +47,55 @@ func TestAttemptValidatesEffortsForToggleOnlyModels(t *testing.T) {
 	request := &inference.Request{Reasoning: &inference.ReasoningConfig{Effort: "high"}}
 	if err := server.validateOutboundRequest(noEffort, request); !errors.Is(err, wire.ErrUnsupportedFeature) {
 		t.Fatalf("validateOutboundRequest(high) = %v, want an explicit no-effort model to refuse it", err)
+	}
+}
+
+// TestOpencodeMiMoAcceptsAnyEffort pins the gateway the catalog rule was
+// written for: its facts state an empty ladder and no toggle, which used to
+// refuse every positive effort. The rule now makes it toggle-only, so a
+// client can ask for high and the codec turns it on.
+func TestOpencodeMiMoAcceptsAnyEffort(t *testing.T) {
+	ctx := context.Background()
+	db := testkit.OpenTestDB(t)
+	repo := sqlite.NewCatalogRepo(db)
+	yes := true
+	if err := repo.SaveProvider(ctx, sqlite.ProviderRow{
+		ID: "opencode-go", TemplateID: "opencode-go", Origin: "template",
+		Label: "OpenCode Go", Auth: "api_key",
+	}); err != nil {
+		t.Fatalf("SaveProvider() error = %v", err)
+	}
+	if err := repo.SaveModel(ctx, sqlite.ModelRow{
+		ProviderID: "opencode-go", ModelID: "mimo-v2.6-pro", Source: "listing",
+	}); err != nil {
+		t.Fatalf("SaveModel() error = %v", err)
+	}
+	if err := repo.SaveModelFacts(ctx, sqlite.ModelFactsRow{
+		ProviderID: "opencode-go", ModelID: "mimo-v2.6-pro", Layer: "modelsdev",
+		SupportsReasoning: &yes, ReasoningEfforts: []string{},
+	}); err != nil {
+		t.Fatalf("SaveModelFacts() error = %v", err)
+	}
+	built := catalog.New(sqlite.NewCatalogReader(db), nil, formats.New())
+	if err := built.Reload(ctx); err != nil {
+		t.Fatalf("Reload() error = %v", err)
+	}
+	snapshot, found := built.Snapshot()
+	if !found {
+		t.Fatal("Reload() stored no snapshot")
+	}
+	model, ok := snapshot.Model("opencode-go", "mimo-v2.6-pro")
+	if !ok {
+		t.Fatal("the resolved MiMo model is missing")
+	}
+
+	server := New(Options{})
+	spec := attemptSpec{candidate: routing.Candidate{Model: model}}
+	for _, effort := range []string{"none", "low", "high", "max"} {
+		request := &inference.Request{Reasoning: &inference.ReasoningConfig{Effort: effort}}
+		if err := server.validateOutboundRequest(spec, request); err != nil {
+			t.Fatalf("validateOutboundRequest(%s) = %v, want the resolved model to accept it", effort, err)
+		}
 	}
 }
 
