@@ -9,6 +9,7 @@
 	import GroupCard from '$lib/components/groups/group-card.svelte';
 	import GroupDetail from '$lib/components/groups/group-detail.svelte';
 	import RouteStepper from '$lib/components/groups/route-stepper.svelte';
+	import RoutingInspector from '$lib/components/groups/routing-inspector.svelte';
 	import Button from '$lib/components/ui/button.svelte';
 	import { exposedName, groupMembersOf } from '$lib/catalog';
 	import { consoleState } from '$lib/console-state.svelte';
@@ -48,6 +49,8 @@
 	let detailing = $state<Group | null>(null);
 	let removing = $state<Group | null>(null);
 	let removeOpen = $state(false);
+	let inspecting = $state<Group | null>(null);
+	let inspectOpen = $state(false);
 
 	// A connection a group can point at is one that routes and serves models.
 	const configured = $derived(
@@ -129,6 +132,11 @@
 	function openDetail(group: Group) {
 		detailing = group;
 		detailOpen = true;
+	}
+
+	function openInspector(group: Group) {
+		inspecting = group;
+		inspectOpen = true;
 	}
 
 	function editFromDetail(group: Group) {
@@ -289,7 +297,14 @@
 	{:else}
 		<div class={cardLayoutGrid(consoleState.settings.cardLayout)}>
 			{#each searched as group (group.id)}
-				<GroupCard {group} {providers} onopen={openDetail} onedit={openEdit} onremove={askRemove} />
+				<GroupCard
+					{group}
+					{providers}
+					onopen={openDetail}
+					onedit={openEdit}
+					onremove={askRemove}
+					oninspect={openInspector}
+				/>
 			{/each}
 			<AddTile
 				label={$t('ui.pages.groupsPage.create')}
@@ -308,6 +323,8 @@
 	onedit={editFromDetail}
 	ondelete={removeFromDetail}
 />
+
+<RoutingInspector bind:open={inspectOpen} group={inspecting} {providers} {meta} />
 
 <RouteStepper
 	bind:open={editorOpen}

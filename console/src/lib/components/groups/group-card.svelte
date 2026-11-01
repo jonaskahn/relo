@@ -38,9 +38,10 @@
 		onopen: (group: Group) => void;
 		onedit: (group: Group) => void;
 		onremove: (group: Group) => void;
+		oninspect: (group: Group) => void;
 	}
 
-	let { group, providers, onopen, onedit, onremove }: Props = $props();
+	let { group, providers, onopen, onedit, onremove, oninspect }: Props = $props();
 
 	const members = $derived(groupMembersOf(group));
 	const chips = $derived(groupSetupChips(group));
@@ -278,6 +279,12 @@
 
 		<div class="mt-auto flex items-center justify-between border-t border-border pt-3 gap-2">
 			<div class="flex items-center gap-1">
+				<IconAction
+					icon="route"
+					label={$t('ui.pages.groupsPage.inspectRouting')}
+					variant="outline"
+					onclick={() => oninspect(group)}
+				/>
 				<IconAction
 					icon="eye"
 					label={$t('ui.pages.groupsPage.preview')}
