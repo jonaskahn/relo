@@ -144,6 +144,10 @@ other = "Jalankan proxy Relo di latar depan"
 description = "Usage of the daemon run --port flag"
 other = "timpa port listener"
 
+[cli.daemon.silent]
+description = "Usage of the daemon run, start, and restart --silent flag"
+other = "jangan buka dasbor di browser"
+
 [cli.autostart.short]
 description = "One-line summary of relo autostart"
 other = "Kelola apakah Relo berjalan saat login"

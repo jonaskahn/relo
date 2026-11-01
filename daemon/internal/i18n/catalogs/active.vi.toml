@@ -146,6 +146,10 @@ other = "Chạy proxy Relo ở tiền cảnh"
 description = "Usage of the daemon run --port flag"
 other = "ghi đè cổng nghe"
 
+[cli.daemon.silent]
+description = "Usage of the daemon run, start, and restart --silent flag"
+other = "không mở bảng điều khiển trong trình duyệt"
+
 [cli.autostart.short]
 description = "One-line summary of relo autostart"
 other = "Quản lý việc Relo có tự chạy khi đăng nhập hay không"

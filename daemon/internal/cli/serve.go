@@ -25,6 +25,7 @@ func newRunCommand(localized ui) *cobra.Command {
 		},
 	}
 	cmd.Flags().Int("port", 0, localized.text("cli.daemon.run.port", nil))
+	cmd.Flags().Bool("silent", false, localized.text("cli.daemon.silent", nil))
 	cmd.Flags().String("startup-log", "", "boot transcript this run tees its boot lines into")
 	_ = cmd.Flags().MarkHidden("startup-log")
 	return cmd
@@ -56,16 +57,19 @@ func runServe(cmd *cobra.Command, _ []string, localized ui) error {
 func serveTray(cmd *cobra.Command, home string, serving *serveSession, localized ui, startupLog, language string) error {
 	ctx, stop := signal.NotifyContext(cmd.Context(), syscall.SIGINT, syscall.SIGTERM)
 	defer stop()
-	supervisor := platform.NewSupervisor(platform.SupervisorOptions{
+	options := platform.SupervisorOptions{
 		Home: home, Port: serving.port, Language: language,
 		Version: version, StartupLog: startupLog, Logger: serving.logger,
 		OnStopping: shutdownHook(cmd),
-		OnStarted: func(address string) {
+	}
+	if !flagBool(cmd, "silent") {
+		options.OnStarted = func(address string) {
 			openDashboard(address, func(err error) {
 				serving.logger.Warn("could not open the dashboard", "error", err)
 			})
-		},
-	})
+		}
+	}
+	supervisor := platform.NewSupervisor(options)
 	signalStop := context.AfterFunc(ctx, func() { _ = supervisor.Stop() })
 	defer signalStop()
 	owned, err := supervisor.Start()

@@ -145,6 +145,10 @@ other = "Avvia il proxy Relo in primo piano"
 description = "Usage of the daemon run --port flag"
 other = "sostituisce la porta di ascolto"
 
+[cli.daemon.silent]
+description = "Usage of the daemon run, start, and restart --silent flag"
+other = "non aprire la dashboard nel browser"
+
 [cli.autostart.short]
 description = "One-line summary of relo autostart"
 other = "Gestisci se Relo si avvia all’accesso"

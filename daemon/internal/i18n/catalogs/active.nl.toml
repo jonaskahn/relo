@@ -146,6 +146,10 @@ other = "de Relo-proxy op de voorgrond starten"
 description = "Usage of the daemon run --port flag"
 other = "de luisterpoort overschrijven"
 
+[cli.daemon.silent]
+description = "Usage of the daemon run, start, and restart --silent flag"
+other = "het dashboard niet in de browser openen"
+
 [cli.autostart.short]
 description = "One-line summary of relo autostart"
 other = "instellen of Relo bij het inloggen start"

@@ -50,3 +50,32 @@ func TestStartOpensOnlyWhenAttaching(t *testing.T) {
 		t.Fatalf("browser failure changed lifecycle result: stdout %q, stderr %q, error %v", stdout, stderr, err)
 	}
 }
+
+func TestSilentNeverOpensTheDashboard(t *testing.T) {
+	if runtime.GOOS != "linux" {
+		t.Skip("uses a Linux browser launcher stub")
+	}
+	home, port := startedHome(t)
+	dir := t.TempDir()
+	output := filepath.Join(dir, "opened")
+	t.Setenv("RELO_TEST_BROWSER_OUTPUT", output)
+	t.Setenv("PATH", dir+string(os.PathListSeparator)+os.Getenv("PATH"))
+	if err := os.WriteFile(filepath.Join(dir, "xdg-open"), []byte("#!/bin/sh\nprintf '%s\\n' \"$1\" >> \"$RELO_TEST_BROWSER_OUTPUT\"\n"), 0o700); err != nil {
+		t.Fatal(err)
+	}
+	base := []string{"--home", home, "daemon"}
+	for _, args := range [][]string{
+		{"start", "--silent", "--port", strconv.Itoa(port)},
+		{"start", "--silent", "--port", strconv.Itoa(port)},
+		{"restart", "--silent"},
+		{"restart", "--silent"},
+	} {
+		if _, _, err := run(t, nil, append(append([]string{}, base...), args...)...); err != nil {
+			t.Fatalf("daemon %v error = %v", args, err)
+		}
+	}
+	time.Sleep(100 * time.Millisecond)
+	if _, err := os.Stat(output); !os.IsNotExist(err) {
+		t.Fatalf("a silent command opened the dashboard: %v", err)
+	}
+}

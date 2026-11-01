@@ -144,6 +144,10 @@ other = "Reloプロキシをフォアグラウンドで起動"
 description = "Usage of the daemon run --port flag"
 other = "リッスンポートを上書き"
 
+[cli.daemon.silent]
+description = "Usage of the daemon run, start, and restart --silent flag"
+other = "ダッシュボードをブラウザで開かない"
+
 [cli.autostart.short]
 description = "One-line summary of relo autostart"
 other = "Reloをログイン時に起動するかどうかを管理"

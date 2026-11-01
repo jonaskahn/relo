@@ -202,6 +202,10 @@ other = "ukončit běžící proces a spustit nový daemon"
 description = "Confirmation after a restart"
 other = "Relo běží na {{.Addr}}"
 
+[cli.daemon.silent]
+description = "Usage of the daemon run, start, and restart --silent flag"
+other = "neotevírat dashboard v prohlížeči"
+
 [cli.autostart.short]
 description = "One-line summary of relo autostart"
 other = "Spravovat, zda se Relo spouští při přihlášení"

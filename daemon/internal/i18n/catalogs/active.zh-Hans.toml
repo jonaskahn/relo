@@ -200,6 +200,10 @@ other = "结束当前进程并启动新的守护进程"
 description = "Confirmation after a restart"
 other = "Relo 正在 {{.Addr}} 运行"
 
+[cli.daemon.silent]
+description = "Usage of the daemon run, start, and restart --silent flag"
+other = "不在浏览器中打开仪表盘"
+
 [cli.autostart.short]
 description = "One-line summary of relo autostart"
 other = "管理 Relo 是否随登录启动"

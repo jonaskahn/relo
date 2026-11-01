@@ -200,6 +200,10 @@ other = "laufenden Prozess beenden und einen neuen Daemon starten"
 description = "Confirmation after a restart"
 other = "Relo läuft auf {{.Addr}}"
 
+[cli.daemon.silent]
+description = "Usage of the daemon run, start, and restart --silent flag"
+other = "das Dashboard nicht im Browser öffnen"
+
 [cli.autostart.short]
 description = "One-line summary of relo autostart"
 other = "Verwalten, ob Relo bei der Anmeldung startet"

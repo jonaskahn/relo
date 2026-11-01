@@ -12,6 +12,9 @@ import (
 )
 
 func openCommandDashboard(cmd *cobra.Command, address string) {
+	if flagBool(cmd, "silent") {
+		return
+	}
 	openDashboard(address, func(err error) {
 		_, _ = fmt.Fprintf(cmd.ErrOrStderr(), "could not open the dashboard: %v\n", err)
 	})

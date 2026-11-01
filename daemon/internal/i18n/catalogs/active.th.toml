@@ -144,6 +144,10 @@ other = "เริ่มพร็อกซีของ Relo ในเบื้�
 description = "Usage of the daemon run --port flag"
 other = "เปลี่ยนพอร์ตที่รับฟัง"
 
+[cli.daemon.silent]
+description = "Usage of the daemon run, start, and restart --silent flag"
+other = "ไม่เปิดแดชบอร์ดในเบราว์เซอร์"
+
 [cli.autostart.short]
 description = "One-line summary of relo autostart"
 other = "จัดการว่า Relo จะเริ่มทำงานเมื่อเข้าสู่ระบบหรือไม่"

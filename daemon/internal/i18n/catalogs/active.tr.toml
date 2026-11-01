@@ -146,6 +146,10 @@ other = "Relo proxy'sini ön planda başlat"
 description = "Usage of the daemon run --port flag"
 other = "dinleme portunu geçersiz kıl"
 
+[cli.daemon.silent]
+description = "Usage of the daemon run, start, and restart --silent flag"
+other = "dashboard'u tarayıcıda açma"
+
 [cli.autostart.short]
 description = "One-line summary of relo autostart"
 other = "Relo'nun oturum açılışında başlayıp başlamayacağını yönet"

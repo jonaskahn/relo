@@ -144,6 +144,10 @@ other = "Relo प्रॉक्सी को फ़ोरग्राउंड 
 description = "Usage of the daemon run --port flag"
 other = "लिसन पोर्ट बदलें"
 
+[cli.daemon.silent]
+description = "Usage of the daemon run, start, and restart --silent flag"
+other = "डैशबोर्ड को ब्राउज़र में न खोलें"
+
 [cli.autostart.short]
 description = "One-line summary of relo autostart"
 other = "तय करें कि Relo लॉगिन पर शुरू हो या नहीं"

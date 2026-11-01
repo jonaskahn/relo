@@ -202,6 +202,10 @@ other = "zabij działający proces i uruchom nowego demona"
 description = "Confirmation after a restart"
 other = "Relo działa pod adresem {{.Addr}}"
 
+[cli.daemon.silent]
+description = "Usage of the daemon run, start, and restart --silent flag"
+other = "nie otwieraj dashboardu w przeglądarce"
+
 [cli.autostart.short]
 description = "One-line summary of relo autostart"
 other = "Zarządzaj uruchamianiem Relo przy logowaniu"

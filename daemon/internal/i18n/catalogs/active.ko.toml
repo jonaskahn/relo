@@ -144,6 +144,10 @@ other = "Relo 프록시를 포그라운드에서 실행"
 description = "Usage of the daemon run --port flag"
 other = "수신 포트 재지정"
 
+[cli.daemon.silent]
+description = "Usage of the daemon run, start, and restart --silent flag"
+other = "대시보드를 브라우저에서 열지 않음"
+
 [cli.autostart.short]
 description = "One-line summary of relo autostart"
 other = "로그인 시 Relo 자동 시작 여부 관리"

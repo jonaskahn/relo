@@ -142,6 +142,10 @@ other = "Запустить прокси Relo на переднем плане"
 description = "Usage of the daemon run --port flag"
 other = "переопределить порт прослушивания"
 
+[cli.daemon.silent]
+description = "Usage of the daemon run, start, and restart --silent flag"
+other = "не открывать панель в браузере"
+
 [cli.autostart.short]
 description = "One-line summary of relo autostart"
 other = "Управлять запуском Relo при входе"

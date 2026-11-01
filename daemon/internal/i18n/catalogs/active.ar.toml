@@ -146,6 +146,10 @@ other = "شغّل بروكسي Relo في المقدمة"
 description = "Usage of the daemon run --port flag"
 other = "غيّر منفذ الاستماع"
 
+[cli.daemon.silent]
+description = "Usage of the daemon run, start, and restart --silent flag"
+other = "لا تفتح لوحة التحكم في المتصفح"
+
 [cli.autostart.short]
 description = "One-line summary of relo autostart"
 other = "أدر ما إذا كان Relo يبدأ عند تسجيل الدخول"

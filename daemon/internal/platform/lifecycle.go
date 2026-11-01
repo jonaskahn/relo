@@ -81,7 +81,7 @@ func HoldingDaemon(home string) (Runtime, bool) {
 // one. The startup log path is empty when an existing daemon was attached.
 // The other login agent is waited out: whichever process binds first keeps
 // the service.
-func StartOrAttach(ctx context.Context, home string, port int) (Runtime, string, error) {
+func StartOrAttach(ctx context.Context, home string, port int, silent bool) (Runtime, string, error) {
 	if published, running := RunningInstanceOn(ctx, home, port); running {
 		return published, "", nil
 	}
@@ -96,7 +96,7 @@ func StartOrAttach(ctx context.Context, home string, port int) (Runtime, string,
 	if err := ForeignListener(home, port); err != nil {
 		return Runtime{}, "", err
 	}
-	return startAttachedDaemon(ctx, home, port)
+	return startAttachedDaemon(ctx, home, port, silent)
 }
 
 func waitForClaimedDaemon(ctx context.Context, home string, port int) (Runtime, string, bool) {
@@ -109,8 +109,8 @@ func waitForClaimedDaemon(ctx context.Context, home string, port int) (Runtime, 
 	return Runtime{}, "", false
 }
 
-func startAttachedDaemon(ctx context.Context, home string, port int) (Runtime, string, error) {
-	startupLog, err := SpawnDaemon(home, port)
+func startAttachedDaemon(ctx context.Context, home string, port int, silent bool) (Runtime, string, error) {
+	startupLog, err := SpawnDaemon(home, port, silent)
 	if err != nil {
 		if published, running := RunningInstanceOn(context.Background(), home, port); running {
 			return published, startupLog, nil
@@ -205,10 +205,13 @@ func StopRunning(ctx context.Context, home string, published Runtime) error {
 // ongoing JSONL to the daemon log itself. The returned path is that
 // transcript. The child is left running: the caller waits for the runtime
 // file it publishes rather than for the process.
-func daemonCommand(home string, port int, executable, startupPath string, startupFile *os.File) *exec.Cmd {
+func daemonCommand(home string, port int, silent bool, executable, startupPath string, startupFile *os.File) *exec.Cmd {
 	args := []string{"daemon", "run", "--home", home}
 	if port > 0 {
 		args = append(args, "--port", strconv.Itoa(port))
+	}
+	if silent {
+		args = append(args, "--silent")
 	}
 	args = append(args, "--startup-log", startupPath)
 	command := exec.Command(executable, args...)
@@ -219,8 +222,9 @@ func daemonCommand(home string, port int, executable, startupPath string, startu
 }
 
 // SpawnDaemon starts the daemon detached from this process and returns the
-// boot transcript it writes while starting.
-func SpawnDaemon(home string, port int) (string, error) {
+// boot transcript it writes while starting. A silent daemon never opens the
+// dashboard.
+func SpawnDaemon(home string, port int, silent bool) (string, error) {
 	if err := config.EnsureReloHome(home); err != nil {
 		return "", err
 	}
@@ -232,7 +236,7 @@ func SpawnDaemon(home string, port int) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	command := daemonCommand(home, port, executable, startupPath, startupFile)
+	command := daemonCommand(home, port, silent, executable, startupPath, startupFile)
 	if err := command.Start(); err != nil {
 		return startupPath, recordSpawnFailure(startupFile, err)
 	}

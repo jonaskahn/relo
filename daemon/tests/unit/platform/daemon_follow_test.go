@@ -131,7 +131,7 @@ func TestStartOrAttachWaitsForTheOtherProcess(t *testing.T) {
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
-	published, startupLog, err := platform.StartOrAttach(ctx, home, port)
+	published, startupLog, err := platform.StartOrAttach(ctx, home, port, false)
 	if err != nil {
 		t.Fatalf("StartOrAttach() error = %v", err)
 	}

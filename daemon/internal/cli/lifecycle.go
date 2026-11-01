@@ -20,6 +20,7 @@ func newStartCommand(localized ui) *cobra.Command {
 		},
 	}
 	cmd.Flags().Int("port", 0, localized.text("cli.daemon.start.port", nil))
+	cmd.Flags().Bool("silent", false, localized.text("cli.daemon.silent", nil))
 	return cmd
 }
 
@@ -47,6 +48,7 @@ func newRestartCommand(localized ui) *cobra.Command {
 	}
 	cmd.Flags().Int("port", 0, localized.text("cli.daemon.restart.port", nil))
 	cmd.Flags().Bool("force", false, localized.text("cli.daemon.restart.force", nil))
+	cmd.Flags().Bool("silent", false, localized.text("cli.daemon.silent", nil))
 	return cmd
 }
 
@@ -58,12 +60,13 @@ func runStart(cmd *cobra.Command, _ []string, localized ui) error {
 	ctx := cmd.Context()
 	out := cmd.OutOrStdout()
 	port := flagPort(cmd)
+	silent := flagBool(cmd, "silent")
 	if published, running := platform.RunningInstanceOn(ctx, home, port); running {
 		_, _ = fmt.Fprintln(out, localized.text("cli.daemon.start.already", map[string]any{"Addr": published.Address}))
 		openCommandDashboard(cmd, published.Address)
 		return nil
 	}
-	published, startupLog, err := platform.StartOrAttach(ctx, home, port)
+	published, startupLog, err := platform.StartOrAttach(ctx, home, port, silent)
 	if err != nil {
 		recordStartFailure(home, startupLog, err)
 		return startFailure(localized, home, err)
@@ -130,7 +133,7 @@ func runRestart(cmd *cobra.Command, _ []string, localized ui) error {
 			return err
 		}
 	}
-	restarted, startupLog, err := platform.StartOrAttach(ctx, home, port)
+	restarted, startupLog, err := platform.StartOrAttach(ctx, home, port, flagBool(cmd, "silent"))
 	if err != nil {
 		recordStartFailure(home, startupLog, err)
 		return startFailure(localized, home, err)

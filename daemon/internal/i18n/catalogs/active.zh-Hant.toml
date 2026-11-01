@@ -144,6 +144,10 @@ other = "在前景啟動 Relo 代理"
 description = "Usage of the daemon run --port flag"
 other = "覆寫監聽埠"
 
+[cli.daemon.silent]
+description = "Usage of the daemon run, start, and restart --silent flag"
+other = "不在瀏覽器中開啟儀表板"
+
 [cli.autostart.short]
 description = "One-line summary of relo autostart"
 other = "管理 Relo 是否在登入時啟動"
