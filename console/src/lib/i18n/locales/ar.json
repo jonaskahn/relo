@@ -334,6 +334,9 @@
         "activityBusiest": "أكثر يوم انشغالًا",
         "activityStreak": "أطول سلسلة",
         "activityDayUnit": "أيام",
+        "activityCurrentStreak": "السلسلة الحالية",
+        "activityStreakSince": "منذ {date}",
+        "activityNoStreak": "لا توجد سلسلة نشطة",
         "trendsTitle": "الاتجاهات"
       },
       "doctor": {

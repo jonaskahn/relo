@@ -334,6 +334,9 @@
         "activityBusiest": "Flitigaste dagen",
         "activityStreak": "Längsta sviten",
         "activityDayUnit": "dagar",
+        "activityCurrentStreak": "Nuvarande svit",
+        "activityStreakSince": "sedan {date}",
+        "activityNoStreak": "Ingen aktiv svit",
         "trendsTitle": "Trender"
       },
       "doctor": {

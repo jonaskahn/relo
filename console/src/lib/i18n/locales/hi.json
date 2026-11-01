@@ -334,6 +334,9 @@
         "activityBusiest": "सबसे व्यस्त दिन",
         "activityStreak": "सबसे लंबा सिलसिला",
         "activityDayUnit": "दिन",
+        "activityCurrentStreak": "वर्तमान सिलसिला",
+        "activityStreakSince": "{date} से",
+        "activityNoStreak": "कोई सक्रिय सिलसिला नहीं",
         "trendsTitle": "रुझान"
       },
       "doctor": {

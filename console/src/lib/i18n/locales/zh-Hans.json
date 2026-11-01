@@ -334,6 +334,9 @@
         "activityBusiest": "最忙的一天",
         "activityStreak": "最长连续天数",
         "activityDayUnit": "天",
+        "activityCurrentStreak": "当前连续天数",
+        "activityStreakSince": "自 {date} 起",
+        "activityNoStreak": "没有活跃的连续记录",
         "trendsTitle": "趋势"
       },
       "doctor": {

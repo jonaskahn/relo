@@ -334,6 +334,9 @@
         "activityBusiest": "가장 바쁜 날",
         "activityStreak": "최장 연속 기록",
         "activityDayUnit": "일",
+        "activityCurrentStreak": "현재 연속 기록",
+        "activityStreakSince": "{date}부터",
+        "activityNoStreak": "활성 연속 기록 없음",
         "trendsTitle": "추이"
       },
       "doctor": {

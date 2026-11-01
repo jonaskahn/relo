@@ -334,6 +334,9 @@
         "activityBusiest": "Самый активный день",
         "activityStreak": "Самая длинная серия",
         "activityDayUnit": "дн.",
+        "activityCurrentStreak": "Текущая серия",
+        "activityStreakSince": "с {date}",
+        "activityNoStreak": "Нет активной серии",
         "trendsTitle": "Тренды"
       },
       "doctor": {

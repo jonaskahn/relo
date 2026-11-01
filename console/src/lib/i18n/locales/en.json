@@ -334,7 +334,10 @@
         "activityDesc": "Requests per day over the last year.",
         "activityBusiest": "Busiest day",
         "activityStreak": "Longest streak",
-        "activityDayUnit": "days"
+        "activityDayUnit": "days",
+        "activityCurrentStreak": "Current streak",
+        "activityStreakSince": "since {date}",
+        "activityNoStreak": "No active streak"
       },
       "doctor": {
         "title": "Doctor",

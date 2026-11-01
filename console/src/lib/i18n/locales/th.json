@@ -334,6 +334,9 @@
         "activityBusiest": "วันที่ยุ่งที่สุด",
         "activityStreak": "ช่วงต่อเนื่องยาวที่สุด",
         "activityDayUnit": "วัน",
+        "activityCurrentStreak": "ช่วงต่อเนื่องปัจจุบัน",
+        "activityStreakSince": "ตั้งแต่ {date}",
+        "activityNoStreak": "ไม่มีช่วงต่อเนื่องที่ใช้งานอยู่",
         "trendsTitle": "แนวโน้ม"
       },
       "doctor": {

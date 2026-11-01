@@ -334,6 +334,9 @@
         "activityBusiest": "Найжвавіший день",
         "activityStreak": "Найдовша серія",
         "activityDayUnit": "днів",
+        "activityCurrentStreak": "Поточна серія",
+        "activityStreakSince": "з {date}",
+        "activityNoStreak": "Немає активної серії",
         "trendsTitle": "Тренди"
       },
       "doctor": {

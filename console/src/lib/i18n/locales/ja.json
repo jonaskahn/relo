@@ -334,6 +334,9 @@
         "activityBusiest": "最も多い日",
         "activityStreak": "連続記録",
         "activityDayUnit": "日",
+        "activityCurrentStreak": "現在の連続記録",
+        "activityStreakSince": "{date} から",
+        "activityNoStreak": "有効な連続記録なし",
         "trendsTitle": "推移"
       },
       "doctor": {

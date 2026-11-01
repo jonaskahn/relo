@@ -334,6 +334,9 @@
         "activityBusiest": "Drukste dag",
         "activityStreak": "Langste reeks",
         "activityDayUnit": "dagen",
+        "activityCurrentStreak": "Huidige reeks",
+        "activityStreakSince": "sinds {date}",
+        "activityNoStreak": "Geen actieve reeks",
         "trendsTitle": "Trends"
       },
       "doctor": {

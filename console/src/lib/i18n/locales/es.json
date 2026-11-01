@@ -334,6 +334,9 @@
         "activityBusiest": "Día con más actividad",
         "activityStreak": "Racha más larga",
         "activityDayUnit": "días",
+        "activityCurrentStreak": "Racha actual",
+        "activityStreakSince": "desde {date}",
+        "activityNoStreak": "Sin racha activa",
         "trendsTitle": "Tendencias"
       },
       "doctor": {

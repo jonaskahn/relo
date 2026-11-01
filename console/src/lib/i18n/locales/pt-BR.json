@@ -334,6 +334,9 @@
         "activityBusiest": "Busiest day",
         "activityStreak": "Longest streak",
         "activityDayUnit": "days",
+        "activityCurrentStreak": "Current streak",
+        "activityStreakSince": "since {date}",
+        "activityNoStreak": "No active streak",
         "trendsTitle": "Tendências"
       },
       "doctor": {
