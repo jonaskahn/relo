@@ -42,12 +42,17 @@ then opens the confirmation.
 
 ## Routing inspector (`xl`)
 
-The route icon on a group card opens a read-only inspector. It shows the request reaching the group, the ordered member
-fan-out, the current/last-served member, the next preview candidate, quota windows with used percent, window length,
-and reset time in hours or days. The diagram is one accessible inline SVG; quota and account failures degrade to `No
-quota reported` or an unavailable state. Recent requests stay in the table below the diagram, linked to their request
-log, and the footer offers Refresh, Open latest request's log, and Close. The inspector never mutates rotation, pins,
-or random state.
+The route icon on a group card opens a read-only inspector. It shows the request reaching the group, a dotted routing
+canvas, the ordered member fan-out, the current/last-served member, the next preview candidate, quota windows with used
+percent, window length, and reset time in hours or days. Member cards carry the rank, provider logo, model, state,
+account coverage, and up to two quota rows; the current member takes the accent border and the next start takes the
+accent outline. Connectors are orthogonal and drawn beneath the cards. Quota and account failures degrade to `No quota
+reported` or an unavailable state. Recent requests stay in a table below the diagram with Status, Time, Request, Model,
+Target, and Duration columns, linked to their request log. The table never prints raw attempt-chain ordinals; the
+Target cell already names the member that served. The footer offers Refresh, Open latest request's log, and
+Close. The inspector never mutates rotation, pins, or random state. Every colour comes from console theme tokens, so
+the canvas, cards, chips, quota bars, and legend are correct in light and dark mode. The SVG keeps a minimum width and
+scrolls horizontally on phones.
 
 ## Editor (`xl`)
 
