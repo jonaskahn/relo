@@ -240,6 +240,7 @@ describe('the routing-flow diagram', () => {
 		}).body;
 		expect(html).toMatch(/data-route-current[^>]*d="M [^"]* C /);
 		expect(html.match(/<animateMotion/g)).toHaveLength(1);
+		expect(html).toMatch(/<animateMotion path="M 148 /);
 		expect(html).toContain('route-moving-dot');
 		const source = readFileSync(new URL('./routing-flow.svelte', import.meta.url), 'utf8');
 		expect(source).toContain('@media (prefers-reduced-motion: reduce)');

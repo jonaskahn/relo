@@ -65,6 +65,11 @@
 	const currentPath = $derived(
 		current >= 0 && current < layout.branches.length ? (layout.branches[current]?.path ?? '') : ''
 	);
+	const currentMotionPath = $derived(
+		current >= 0 && current < layout.branches.length
+			? (layout.branches[current]?.motionPath ?? '')
+			: ''
+	);
 	const nextPath = $derived(
 		next >= 0 && next < layout.branches.length ? (layout.branches[next]?.path ?? '') : ''
 	);
@@ -211,7 +216,7 @@
 				{#if currentPath}
 					{#key current}
 						<circle class="route-moving-dot" r="4" fill="var(--accent)">
-							<animateMotion path={currentPath} dur="2.4s" repeatCount="indefinite" />
+							<animateMotion path={currentMotionPath} dur="2.4s" repeatCount="indefinite" />
 						</circle>
 					{/key}
 				{/if}

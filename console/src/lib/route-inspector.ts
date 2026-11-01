@@ -38,6 +38,7 @@ export interface RoutingRect {
 export interface RoutingBranch {
 	readonly index: number;
 	readonly path: string;
+	readonly motionPath: string;
 }
 
 /** The diagram geometry for the width the inspector currently has.
@@ -123,9 +124,11 @@ function wideLayout(width: number, members: number, hidden: number): RoutingLayo
 		? (cards[0].y + cardHeight / 2 + (lastCard?.y ?? cards[0].y) + cardHeight / 2) / 2
 		: top + nodeHeight / 2;
 	const nodeY = centerY - nodeHeight / 2;
+	const motionStartX = requestX + nodeWidth;
 	const branches = cards.map((card, index) => ({
 		index,
-		path: `M ${groupRight} ${centerY} C ${groupRight + 44} ${centerY}, ${cardX - 60} ${card.y + cardHeight / 2}, ${cardX} ${card.y + cardHeight / 2}`
+		path: `M ${groupRight} ${centerY} C ${groupRight + 44} ${centerY}, ${cardX - 60} ${card.y + cardHeight / 2}, ${cardX} ${card.y + cardHeight / 2}`,
+		motionPath: `M ${motionStartX} ${centerY} H ${groupRight} C ${groupRight + 44} ${centerY}, ${cardX - 60} ${card.y + cardHeight / 2}, ${cardX} ${card.y + cardHeight / 2}`
 	}));
 	const overflowBranch = overflow
 		? `M ${groupRight} ${centerY} C ${groupRight + 44} ${centerY}, ${cardX - 60} ${overflow.y + overflow.height / 2}, ${cardX} ${overflow.y + overflow.height / 2}`
@@ -169,9 +172,12 @@ function compactLayout(width: number, members: number, hidden: number): RoutingL
 		: (lastCard?.y ?? cardTop) + cardHeight + pad;
 	const startX = groupX + nodeWidth / 2;
 	const startY = top + nodeHeight;
+	const motionStartX = requestX + nodeWidth;
+	const motionStartY = top + nodeHeight / 2;
 	const branches = cards.map((card, index) => ({
 		index,
-		path: `M ${startX} ${startY} C ${startX} ${card.y + cardHeight / 2 - 16}, ${cardX - 42} ${card.y + cardHeight / 2}, ${cardX} ${card.y + cardHeight / 2}`
+		path: `M ${startX} ${startY} C ${startX} ${card.y + cardHeight / 2 - 16}, ${cardX - 42} ${card.y + cardHeight / 2}, ${cardX} ${card.y + cardHeight / 2}`,
+		motionPath: `M ${motionStartX} ${motionStartY} H ${startX} V ${startY} C ${startX} ${card.y + cardHeight / 2 - 16}, ${cardX - 42} ${card.y + cardHeight / 2}, ${cardX} ${card.y + cardHeight / 2}`
 	}));
 	const overflowBranch = overflow
 		? `M ${startX} ${startY} C ${startX} ${overflow.y + overflow.height / 2 - 16}, ${cardX - 42} ${overflow.y + overflow.height / 2}, ${cardX} ${overflow.y + overflow.height / 2}`

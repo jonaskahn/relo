@@ -147,6 +147,9 @@ describe('routing layout', () => {
 		expect(layout.branches).toHaveLength(4);
 		expect(layout.branches[0].path).toContain(' C ');
 		expect(layout.branches[0].path).toContain(` ${layout.cards[0].x} `);
+		expect(
+			layout.branches[0].motionPath.startsWith(`M ${layout.request.x + layout.request.width} `)
+		).toBe(true);
 		expect(layout.overflowBranch).toContain(' C ');
 		inside(layout);
 	});
@@ -159,6 +162,11 @@ describe('routing layout', () => {
 		expect(tablet.cards[0].x).toBeLessThan(tablet.request.x + 100);
 		expect(tablet.branches[0].path).toContain(' C ');
 		expect(tablet.branches[0].path).toContain(` ${tablet.cards[0].x} `);
+		expect(
+			tablet.branches[0].motionPath.startsWith(
+				`M ${tablet.request.x + tablet.request.width} ${tablet.request.y + tablet.request.height / 2}`
+			)
+		).toBe(true);
 		inside(tablet);
 		inside(phone);
 	});
