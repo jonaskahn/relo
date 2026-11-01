@@ -1,8 +1,11 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
+	import { tick } from 'svelte';
 	import { t } from 'svelte-i18n';
 	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
+
+	import { api } from '$lib/api';
 
 	import Button from '$lib/components/ui/button.svelte';
 	import Input from '$lib/components/ui/input.svelte';
@@ -24,6 +27,7 @@
 		FILTER_PANEL_KEYS
 	} from '$lib/filter-panel';
 	import { parseLogSection, type DaemonLevel, type LogSection } from '$lib/process-logs';
+	import { resolveLinkedRequest } from '$lib/route-inspector';
 	import { prefersReducedMotion, tabDirection, tabPaneIn, tabPaneOut } from '$lib/tab-motion';
 	import type { TransitionConfig } from 'svelte/transition';
 	import type { UsageLogRow } from '$lib/types';
@@ -63,6 +67,17 @@
 
 	let selected = $state<UsageLogRow | null>(null);
 	let agentRows = $state<UsageLogRow[]>([]);
+	const deepLink = $derived(page.url.searchParams.get('request'));
+	let openedDeepLink = false;
+	let deepLinkAttempted = false;
+
+	// The agent section reads its first page after mount, so the page waits one
+	// tick for the rows it reports and then opens the deep-linked request.
+	$effect(() => {
+		const rows = agentRows;
+		if (rows.length === 0) return;
+		void openDeepLink(rows);
+	});
 
 	function chooseSection(next: LogSection) {
 		if (next === section) return;
@@ -113,9 +128,30 @@
 	onMount(() => {
 		section = parseLogSection(page.url.searchParams.get('section'));
 		// A deep link names a request, which lives on the agent section.
-		if (page.url.searchParams.get('request')) section = 'agent';
+		if (deepLink) section = 'agent';
 		daemonFiltersOpen = readPanelOpen(browserStorage(), FILTER_PANEL_KEYS.logsDaemon);
 	});
+
+	async function openDeepLink(rows: UsageLogRow[]) {
+		const wanted = deepLink;
+		if (!wanted || openedDeepLink || deepLinkAttempted) return;
+		deepLinkAttempted = true;
+		let row = resolveLinkedRequest(rows, wanted);
+		if (row === null) {
+			try {
+				const data = await api<{ items: UsageLogRow[] }>(
+					'/activity/requests?request_id=' + encodeURIComponent(wanted) + '&limit=1'
+				);
+				row = resolveLinkedRequest(data.items ?? [], wanted);
+			} catch {
+				row = null;
+			}
+		}
+		if (row === null) return;
+		openedDeepLink = true;
+		await tick();
+		requestAnimationFrame(() => (selected = row));
+	}
 </script>
 
 <svelte:head><title>{$t('ui.pages.logs.title')} · Relo</title></svelte:head>

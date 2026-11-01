@@ -1,4 +1,5 @@
 import { render } from 'svelte/server';
+import { readFileSync } from 'node:fs';
 import { addMessages, init } from 'svelte-i18n';
 import { beforeAll, describe, expect, it } from 'vitest';
 
@@ -21,5 +22,12 @@ describe('the failed request report action', () => {
 	it('appears only when the request failed', () => {
 		expect(markup(429)).toContain('data-report-issue-button');
 		expect(markup(200)).not.toContain('data-report-issue-button');
+	});
+
+	it('renders the request detail as a trailing drawer', () => {
+		const source = readFileSync(new URL('./request-detail-modal.svelte', import.meta.url), 'utf8');
+		expect(source).toContain('placement="drawer"');
+		expect(source).toContain('<RequestDetailOverview {row} />');
+		expect(source).not.toContain('request body');
 	});
 });

@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { onDestroy, onMount } from 'svelte';
 	import { t } from 'svelte-i18n';
-	import { page } from '$app/state';
 
 	import { api } from '$lib/api';
 	import Button from '$lib/components/ui/button.svelte';
@@ -117,14 +116,6 @@
 
 	onMount(async () => {
 		await load(true);
-		// A dashboard row links straight to its own request, so the detail
-		// opens once the first page has arrived. A request the log does not
-		// hold (a filter moved the window) leaves it as it loaded.
-		const wanted = page.url.searchParams.get('request');
-		if (wanted) {
-			const row = logs.find((entry) => String(entry.ID) === wanted || entry.RequestID === wanted);
-			if (row) onopen(row);
-		}
 	});
 
 	// A filter the page changed re-reads from the start. The mount read above
