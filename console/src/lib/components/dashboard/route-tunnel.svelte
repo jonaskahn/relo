@@ -4,7 +4,7 @@
 
 	import AnimatedNumber from '$lib/components/ui/animated-number.svelte';
 	import { reducedMotion } from '$lib/card-layout-motion';
-	import TunnelMark from './tunnel-mark.svelte';
+	import TunnelMark from '$lib/components/ui/tunnel-mark.svelte';
 	import { tunnelGeometry, type RouteTunnel, type TunnelPlacement } from '$lib/route-tunnel';
 
 	// RouteTunnel is the map of the last routes: the agents on one rail, Relo in the

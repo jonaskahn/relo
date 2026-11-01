@@ -4,7 +4,7 @@
 	import { t } from 'svelte-i18n';
 
 	import RailLabel from './rail-label.svelte';
-	import TunnelMark from './tunnel-mark.svelte';
+	import TunnelMark from '$lib/components/ui/tunnel-mark.svelte';
 	import AnimatedNumber from '$lib/components/ui/animated-number.svelte';
 	import { reducedMotion } from '$lib/card-layout-motion';
 	import { railShares, type RouteTunnel } from '$lib/route-tunnel';
