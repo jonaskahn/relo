@@ -86,7 +86,7 @@
       "signOut": "Wyloguj się",
       "signingOut": "Wylogowywanie…",
       "reportIssue": "Zgłoś problem",
-      "reportIssueHint": "Otwórz wydanie Relo w GitHub"
+      "reportIssueHint": "Otwórz zgłoszenie Relo na GitHubie"
     },
     "palette": {
       "placeholder": "Szukaj stron i działań…",
@@ -550,7 +550,7 @@
           "tabAccounts": "Konta",
           "tabSettings": "Ustawienia",
           "notFound": "Tego dostawcy już nie ma.",
-          "openDashboard": "Otwórz pulpit nawigacyjny",
+          "openDashboard": "Otwórz dashboard",
           "openDashboardLabel": "Otwórz panel {provider}"
         },
         "models": {
@@ -1321,11 +1321,11 @@
         "previousRequest": "Poprzednie żądanie",
         "nextRequest": "Następne żądanie",
         "reportIssue": "Zgłoś problem",
-        "reportIssueHint": "Dołącz bezpieczną diagnostykę Relo do zgłoszenia w serwisie GitHub",
+        "reportIssueHint": "Dołącz bezpieczną diagnostykę Relo do zgłoszenia na GitHubie",
         "reportPreparing": "Przygotowywanie raportu o problemie…",
-        "reportBundleDownloaded": "Pobrano dziennik demona w formacie ZIP. Dołącz go do problemu.",
-        "reportPopupBlocked": "Przeglądarka zablokowała kartę problemów GitHub. Zezwól na wyskakujące okienka dla tej konsoli i spróbuj ponownie.",
-        "reportFailed": "Nie można otworzyć formularza zgłoszenia GitHub."
+        "reportBundleDownloaded": "Pobrano ZIP z dziennikiem daemon. Dołącz go do zgłoszenia.",
+        "reportPopupBlocked": "Przeglądarka zablokowała kartę zgłoszenia GitHub. Zezwól na wyskakujące okienka dla tej konsoli i spróbuj ponownie.",
+        "reportFailed": "Nie można otworzyć formularza zgłoszenia na GitHubie."
       },
       "usage": {
         "title": "Zużycie",
@@ -2001,7 +2001,7 @@
       "sweepDoneToast": "Miejsce zwolnione: {before} → {after}.",
       "sweepReportDays": "Zarchiwizowane dni",
       "sweepReportRows": "Usunięte żądania",
-      "sweepReportCaptures": "Usunięte treści przechwyceń",
+      "sweepReportCaptures": "Usunięto przechwycone treści",
       "sweepReportSize": "Rozmiar bazy danych",
       "sweepNotCompacted": "Ruch był duży, więc baza danych nie została jeszcze skompaktowana; zrobi to sama przy najbliższej ciszy.",
       "themeLabel": "Motyw",
@@ -2018,7 +2018,7 @@
       "timeoutLabel": "Czas oczekiwania",
       "timeoutHint": "Nagłówki muszą dotrzeć, a treść musi wysłać bajt, w tym oknie. Przerwy między próbami są osobne.",
       "retryLabel": "Przerwy między próbami",
-      "failoverLabel": "Odczekanie po odmowie",
+      "failoverLabel": "Czas oczekiwania failover",
       "failoverHint": "Jak długo odrzucone konto albo członek trasy zostaje poza rotacją po limicie żądań lub awarii serwera i jak ta przerwa rośnie z każdą kolejną odmową. Udane żądanie ją zeruje. Opcja „Brak” nie czeka wcale: pierwsza odmowa od razu nadaje się do ponownego użycia.",
       "retryHint": "Losowa przerwa przed każdą próbą, w sekundach. Dłuższy Retry-After dostawcy ma pierwszeństwo.",
       "jumpLabel": "Przejdź do sekcji",

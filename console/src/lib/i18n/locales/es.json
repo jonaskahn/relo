@@ -1323,8 +1323,8 @@
         "reportIssue": "Informar problema",
         "reportIssueHint": "Incluir diagnósticos seguros de Relo en un problema de GitHub",
         "reportPreparing": "Preparando el informe de problemas…",
-        "reportBundleDownloaded": "Archivo ZIP del registro del demonio descargado. Adjúntelo al problema.",
-        "reportPopupBlocked": "El navegador bloqueó la pestaña de problemas de GitHub. Permita ventanas emergentes para esta consola y vuelva a intentarlo.",
+        "reportBundleDownloaded": "Archivo ZIP del registro del daemon descargado. Adjúntalo al problema.",
+        "reportPopupBlocked": "El navegador bloqueó la pestaña de problemas de GitHub. Permite ventanas emergentes para esta consola y vuelve a intentarlo.",
         "reportFailed": "No se pudo abrir el formulario de problema de GitHub."
       },
       "usage": {

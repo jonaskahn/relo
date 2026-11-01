@@ -1323,7 +1323,7 @@
         "reportIssue": "Rapportera problem",
         "reportIssueHint": "Inkludera säker Relo-diagnostik i ett GitHub-problem",
         "reportPreparing": "Förbereder problemrapporten…",
-        "reportBundleDownloaded": "Daemon log ZIP har laddats ned. Bifoga den till frågan.",
+        "reportBundleDownloaded": "ZIP för daemonloggen har laddats ned. Bifoga den till ärendet.",
         "reportPopupBlocked": "Webbläsaren blockerade GitHub-problemfliken. Tillåt popup-fönster för den här konsolen och försök igen.",
         "reportFailed": "Det gick inte att öppna GitHub-problemformuläret."
       },

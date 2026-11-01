@@ -550,7 +550,7 @@
           "tabAccounts": "الحسابات",
           "tabSettings": "الإعدادات",
           "notFound": "لم يعد هذا المزوّد موجودًا.",
-          "openDashboard": "افتح لوحة القيادة",
+          "openDashboard": "افتح لوحة التحكم",
           "openDashboardLabel": "فتح لوحة تحكم {provider}"
         },
         "models": {
@@ -1323,7 +1323,7 @@
         "reportIssue": "الإبلاغ عن مشكلة",
         "reportIssueHint": "قم بتضمين تشخيصات Relo الآمنة في مشكلة GitHub",
         "reportPreparing": "جارٍ إعداد تقرير المشكلة…",
-        "reportBundleDownloaded": "تم تنزيل Daemon log ZIP. إرفاقه بالمسألة.",
+        "reportBundleDownloaded": "تم تنزيل ملف ZIP لسجل الخادم. أرفقه بالمشكلة.",
         "reportPopupBlocked": "قام المتصفح بحظر علامة تبويب مشكلة GitHub. اسمح بالنوافذ المنبثقة لوحدة التحكم هذه وحاول مرة أخرى.",
         "reportFailed": "تعذر فتح نموذج مشكلة GitHub."
       },
@@ -1674,7 +1674,7 @@
         "inspector": {
           "description": "كيف تقوم هذه المجموعة بتوجيه الطلب التالي وما يمكن أن يقدمه أعضاؤها.",
           "loading": "جارٍ تحميل تفاصيل التوجيه",
-          "empty": "لا يوجد عضو متاح لتوجيهه.",
+          "empty": "لا يوجد عضو متاح للتوجيه.",
           "current": "قيد الاستخدام",
           "next": "البداية التالية",
           "noQuota": "لم يتم الإبلاغ عن أي حصة",
@@ -1683,7 +1683,7 @@
           "noRecent": "لا توجد طلبات حديثة من خلال هذه المجموعة.",
           "request": "طلب",
           "refresh": "تحديث",
-          "openLogs": "افتح سجل الطلب الأخير",
+          "openLogs": "افتح سجل آخر طلب",
           "ready": "جاهز",
           "limited": "محدود",
           "paused": "متوقف مؤقتًا",

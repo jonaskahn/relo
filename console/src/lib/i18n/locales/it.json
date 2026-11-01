@@ -1323,7 +1323,7 @@
         "reportIssue": "Segnala il problema",
         "reportIssueHint": "Includere la diagnostica Relo sicura in un problema di GitHub",
         "reportPreparing": "Preparazione del rapporto sul problema…",
-        "reportBundleDownloaded": "ZIP del registro del demone scaricato. Allegalo al problema.",
+        "reportBundleDownloaded": "ZIP del registro del daemon scaricato. Allegalo al problema.",
         "reportPopupBlocked": "Il browser ha bloccato la scheda dei problemi di GitHub. Consenti popup per questa console e riprova.",
         "reportFailed": "Impossibile aprire il modulo di problema GitHub."
       },
@@ -1875,7 +1875,7 @@
         "format": "Formato",
         "formatChat": "OpenAI Chat Completions",
         "formatResponses": "OpenAI Responses",
-        "formatMessages": "Messaggi Anthropic",
+        "formatMessages": "Anthropic Messages",
         "system": "Prompt di sistema",
         "maxTokens": "Token massimi",
         "stream": "Streaming",

@@ -343,6 +343,60 @@ const NATIVE_HOMOGRAPH_ALLOWLIST: Record<string, readonly string[]> = {
 	]
 };
 
+// Product and wire-protocol names read as names in every language. Translating
+// them makes a format label look like a different format, so they stay exact.
+const PROTOCOL_VALUES = new Map<string, string>([
+	['ui.pages.chatPage.formatChat', 'OpenAI Chat Completions'],
+	['ui.pages.chatPage.formatResponses', 'OpenAI Responses'],
+	['ui.pages.chatPage.formatMessages', 'Anthropic Messages'],
+	['ui.filter.wire.openaiChat', 'OpenAI Chat'],
+	['ui.filter.wire.openaiResponses', 'OpenAI Responses'],
+	['ui.filter.wire.anthropicMessages', 'Anthropic Messages'],
+	['ui.filter.wire.googleGemini', 'Google Gemini']
+]);
+
+// These read as machine translation, not as a technical term a native speaker
+// would choose. Each one also names the native replacement expected instead.
+const TRANSLATION_REGRESSIONS: Record<string, Record<string, string>> = {
+	nl: {
+		'ui.pages.providersPage.context.presets': 'Voorinstellingen',
+		'ui.pages.providersPage.models.override': 'Override',
+		'ui.pages.providersPage.models.columnOverride': 'Override',
+		'ui.pages.providersPage.models.overrides': 'Overrides'
+	},
+	ro: {
+		'ui.pages.logsPage.reportIssue': 'Raportează problema',
+		'ui.pages.groupsPage.inspector.needsSignIn': 'Necesită autentificare',
+		'ui.pages.groupsPage.inspector.paused': 'În pauză'
+	},
+	id: {
+		'ui.pages.dashboard.activityStreak': 'Rentetan terpanjang',
+		'ui.pages.dashboard.activityCurrentStreak': 'Rentetan saat ini',
+		'ui.pages.dashboard.activityNoStreak': 'Tidak ada rentetan aktif',
+		'ui.pages.usagePage.searchGroups': 'Cari grup'
+	},
+	'pt-BR': {
+		'ui.pages.logsPage.reportIssue': 'Relatar problema',
+		'ui.pages.groupsPage.inspector.current': 'Em uso'
+	},
+	cs: {
+		'ui.pages.providersPage.pane.openDashboard': 'Otevřít dashboard',
+		'ui.pages.logsPage.reportBundleDownloaded':
+			'ZIP s protokolem daemonu stažen. Připoj ho k problému.'
+	},
+	tr: {
+		'ui.pages.logsPage.reportIssue': 'Sorunu bildir'
+	},
+	fr: {
+		'ui.pages.groupsPage.inspector.recent': 'Routes récentes',
+		'ui.pages.chatPage.route': 'Route'
+	},
+	vi: {
+		'ui.pages.logsPage.reportIssue': 'Báo cáo sự cố',
+		'ui.pages.usagePage.sortRequests': 'Nhiều yêu cầu nhất'
+	}
+};
+
 describe('native rewrite audit', () => {
 	it('keeps the eight rewritten catalogs free of English prose', () => {
 		const englishWords =
@@ -363,6 +417,22 @@ describe('native rewrite audit', () => {
 			if (tag === 'en') continue;
 			for (const key of REWRITTEN_NEW_KEYS) {
 				expect(valueOf(catalogs[tag], key), tag + ' ' + key).not.toBe(valueOf(en, key));
+			}
+		}
+	});
+
+	it('keeps product and protocol names exact in every language', () => {
+		for (const [tag, catalog] of Object.entries(catalogs)) {
+			for (const [key, want] of PROTOCOL_VALUES) {
+				expect(valueOf(catalog, key), tag + ' ' + key).toBe(want);
+			}
+		}
+	});
+
+	it('does not regress to the known machine-translation wording', () => {
+		for (const [tag, entries] of Object.entries(TRANSLATION_REGRESSIONS)) {
+			for (const [key, want] of Object.entries(entries)) {
+				expect(valueOf(catalogs[tag], key), tag + ' ' + key).toBe(want);
 			}
 		}
 	});

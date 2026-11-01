@@ -1323,7 +1323,7 @@
         "reportIssue": "報告問題",
         "reportIssueHint": "在 GitHub 問題中包含安全的 Relo 診斷",
         "reportPreparing": "準備問題報告…",
-        "reportBundleDownloaded": "下載守護程序日誌 ZIP。將其附加到問題中。",
+        "reportBundleDownloaded": "已下載守護程序日誌 ZIP，請將其附加到問題中。",
         "reportPopupBlocked": "瀏覽器屏蔽了 GitHub 問題標籤。允許此控制台彈出窗口，然後重試。",
         "reportFailed": "無法開啟 GitHub 問題表單。"
       },

@@ -1323,7 +1323,7 @@
         "reportIssue": "报告问题",
         "reportIssueHint": "在 GitHub 问题中包含安全的 Relo 诊断",
         "reportPreparing": "准备问题报告…",
-        "reportBundleDownloaded": "下载守护程序日志 ZIP。将其附加到问题中。",
+        "reportBundleDownloaded": "已下载守护进程日志 ZIP，请将其附加到问题中。",
         "reportPopupBlocked": "浏览器屏蔽了 GitHub 问题选项卡。允许此控制台弹出窗口，然后重试。",
         "reportFailed": "无法打开 GitHub 问题表单。"
       },
