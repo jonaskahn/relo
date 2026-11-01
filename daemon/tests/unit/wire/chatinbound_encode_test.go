@@ -1,6 +1,7 @@
 package codec_test
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"github.com/jonaskahn/relo/internal/inference"
@@ -8,8 +9,12 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/jonaskahn/relo/internal/adapters/sqlite"
 	"github.com/jonaskahn/relo/internal/adapters/wire"
+	"github.com/jonaskahn/relo/internal/adapters/wire/formats"
 	"github.com/jonaskahn/relo/internal/adapters/wire/openaichat"
+	"github.com/jonaskahn/relo/internal/catalog"
+	"github.com/jonaskahn/relo/tests/testkit"
 )
 
 func TestChatCompletionsEncodeTextFrames(t *testing.T) {
@@ -478,6 +483,67 @@ func TestChatEffortFollowsTheModelLadder(t *testing.T) {
 			t.Fatalf("thinking_budget = %v, want the declared max", body["thinking_budget"])
 		}
 	})
+}
+
+// TestOpencodeMiMoEncodesTheThinkingToggle runs a resolved OpenCode MiMo
+// model through the encoder: the catalog rule makes it toggle-only, so the
+// request carries thinking on or off and never an effort the vendor rejects.
+func TestOpencodeMiMoEncodesTheThinkingToggle(t *testing.T) {
+	ctx := context.Background()
+	db := testkit.OpenTestDB(t)
+	repo := sqlite.NewCatalogRepo(db)
+	yes := true
+	if err := repo.SaveProvider(ctx, sqlite.ProviderRow{
+		ID: "opencode-go", TemplateID: "opencode-go", Origin: "template",
+		Label: "OpenCode Go", Auth: "api_key", APIFormat: string(catalog.FormatOpenAIChat),
+	}); err != nil {
+		t.Fatalf("SaveProvider() error = %v", err)
+	}
+	if err := repo.SaveModel(ctx, sqlite.ModelRow{
+		ProviderID: "opencode-go", ModelID: "mimo-v2.6-flash-free", Source: "listing",
+	}); err != nil {
+		t.Fatalf("SaveModel() error = %v", err)
+	}
+	if err := repo.SaveModelFacts(ctx, sqlite.ModelFactsRow{
+		ProviderID: "opencode-go", ModelID: "mimo-v2.6-flash-free", Layer: "modelsdev",
+		SupportsReasoning: &yes, ReasoningEfforts: []string{},
+	}); err != nil {
+		t.Fatalf("SaveModelFacts() error = %v", err)
+	}
+	built := catalog.New(sqlite.NewCatalogReader(db), nil, formats.New())
+	if err := built.Reload(ctx); err != nil {
+		t.Fatalf("Reload() error = %v", err)
+	}
+	snapshot, found := built.Snapshot()
+	if !found {
+		t.Fatal("Reload() stored no snapshot")
+	}
+	model, ok := snapshot.Model("opencode-go", "mimo-v2.6-flash-free")
+	if !ok {
+		t.Fatal("the resolved MiMo model is missing")
+	}
+
+	for _, test := range []struct{ effort, thinking string }{
+		{"none", "disabled"},
+		{"high", "enabled"},
+	} {
+		request := &inference.Request{
+			Model:     model.UpstreamID,
+			Messages:  []inference.Message{{Role: inference.RoleUser, Content: []inference.ContentPart{{Type: inference.ContentTypeText, Text: "hi"}}}},
+			Reasoning: &inference.ReasoningConfig{Effort: test.effort},
+		}
+		body := encodeChatOpts(t, request, wire.CodecOpts{
+			CredentialRef: "sk-test", AuthMethod: wire.AuthAPIKey,
+			ReasoningEfforts: model.ReasoningEfforts, ReasoningToggle: model.ReasoningToggle,
+		})
+		thinking, _ := body["thinking"].(map[string]any)
+		if thinking["type"] != test.thinking {
+			t.Fatalf("%s body = %v, want thinking %s", test.effort, body, test.thinking)
+		}
+		if _, present := body["reasoning_effort"]; present {
+			t.Fatalf("%s body = %v, want no effort on a toggle-only model", test.effort, body)
+		}
+	}
 }
 
 func TestDeepSeekReasoningReplay(t *testing.T) {
