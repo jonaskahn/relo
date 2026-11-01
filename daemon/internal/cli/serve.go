@@ -62,13 +62,7 @@ func serveTray(cmd *cobra.Command, home string, serving *serveSession, localized
 		Version: version, StartupLog: startupLog, Logger: serving.logger,
 		OnStopping: shutdownHook(cmd),
 	}
-	if !flagBool(cmd, "silent") {
-		options.OnStarted = func(address string) {
-			openDashboard(address, func(err error) {
-				serving.logger.Warn("could not open the dashboard", "error", err)
-			})
-		}
-	}
+	options.OnStarted = dashboardOpener(cmd, serving)
 	supervisor := platform.NewSupervisor(options)
 	signalStop := context.AfterFunc(ctx, func() { _ = supervisor.Stop() })
 	defer signalStop()
@@ -88,6 +82,17 @@ func serveTray(cmd *cobra.Command, home string, serving *serveSession, localized
 	err = serving.runDesktop(ctx, home, supervisor, localized, startupLog, language)
 	stopErr := supervisor.Stop()
 	return errors.Join(err, stopErr)
+}
+
+func dashboardOpener(cmd *cobra.Command, serving *serveSession) func(string) {
+	if flagBool(cmd, "silent") {
+		return nil
+	}
+	return func(address string) {
+		openDashboard(address, func(err error) {
+			serving.logger.Warn("could not open the dashboard", "error", err)
+		})
+	}
 }
 
 func (s *serveSession) runDesktop(ctx context.Context, home string, supervisor *platform.Supervisor, localized ui, startupLog, language string) error {
