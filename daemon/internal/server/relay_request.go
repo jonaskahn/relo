@@ -364,6 +364,10 @@ type attemptCodecInputs struct {
 func (s *Server) attemptCodecOptions(spec attemptSpec, in attemptCodecInputs) wire.CodecOpts {
 	candidate, outcome, host, authorized := spec.candidate, spec.outcome, spec.host, spec.authorized
 	anchor := s.conversationAnchor(outcome, spec.request)
+	dialect := host.ToolCallDialect
+	if dialect == "" {
+		dialect = candidate.Model.ToolCallDialect
+	}
 	return wire.CodecOpts{
 		BaseURL:                endpointBase(candidate, authorized),
 		CredentialRef:          authorized.Token,
@@ -387,7 +391,7 @@ func (s *Server) attemptCodecOptions(spec attemptSpec, in attemptCodecInputs) wi
 		ReasoningBudgetMin:     candidate.Model.ReasoningBudgetMin,
 		ReasoningBudgetMax:     candidate.Model.ReasoningBudgetMax,
 		TemplateID:             host.TemplateID,
-		ToolCallDialect:        host.ToolCallDialect,
+		ToolCallDialect:        dialect,
 		LongContext:            outcome.longContext,
 		NativeMillion:          outcome.nativeMillion,
 		UpstreamModel:          candidate.Model.UpstreamID,
