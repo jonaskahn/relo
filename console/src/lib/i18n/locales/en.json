@@ -547,7 +547,9 @@
           "tabModels": "Models",
           "tabAccounts": "Accounts",
           "tabSettings": "Settings",
-          "notFound": "That provider is gone."
+          "notFound": "That provider is gone.",
+          "openDashboard": "Open dashboard",
+          "openDashboardLabel": "Open dashboard for {provider}"
         },
         "models": {
           "search": "Search models",

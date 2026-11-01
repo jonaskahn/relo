@@ -399,3 +399,23 @@ func TestCommandCodeKeyTemplate(t *testing.T) {
 		t.Errorf("doc url = %q, want the Command Code provider docs", held.DocURL)
 	}
 }
+
+func TestDashboardURLs(t *testing.T) {
+	openDesign, ok := Get("open-design", nil)
+	if !ok {
+		t.Fatal("open-design template not found")
+	}
+	if openDesign.DashboardURL != "https://open-design.ai/cloud/dashboard" {
+		t.Fatalf("dashboard URL = %q, want the curated address", openDesign.DashboardURL)
+	}
+	ollama, ok := Get("ollama", nil)
+	if !ok {
+		t.Fatal("ollama template not found")
+	}
+	if ollama.DashboardURL != "" {
+		t.Fatalf("local dashboard URL = %q, want empty", ollama.DashboardURL)
+	}
+	if DashboardURL("unknown") != "" {
+		t.Fatal("an unknown template reported a dashboard URL")
+	}
+}

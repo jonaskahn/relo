@@ -43,6 +43,7 @@ func All(idx *modelsdev.Index) []Template {
 		t.Normalize()
 		t.ModelsDevModels = modelsDevModelCount(idx, t.ModelsDevProviderID)
 		t.FreeModels = modelsDevFreeModelCount(idx, t.ModelsDevProviderID)
+		t.DashboardURL = dashboardURLFor(t.ID)
 		list = append(list, t)
 	}
 
@@ -65,6 +66,7 @@ func dynamicTemplates(idx *modelsdev.Index, seen map[string]bool) []Template {
 		t.Normalize()
 		t.ModelsDevModels = len(p.Models)
 		t.FreeModels = p.FreeModels()
+		t.DashboardURL = dashboardURLFor(t.ID)
 		dyn = append(dyn, t)
 	}
 	sort.Slice(dyn, func(i, j int) bool {
@@ -80,6 +82,7 @@ func Get(id string, idx *modelsdev.Index) (Template, bool) {
 			t.Normalize()
 			t.ModelsDevModels = modelsDevModelCount(idx, t.ModelsDevProviderID)
 			t.FreeModels = modelsDevFreeModelCount(idx, t.ModelsDevProviderID)
+			t.DashboardURL = dashboardURLFor(t.ID)
 			return t, true
 		}
 	}
@@ -93,6 +96,7 @@ func Get(id string, idx *modelsdev.Index) (Template, bool) {
 			t.Normalize()
 			t.ModelsDevModels = len(p.Models)
 			t.FreeModels = p.FreeModels()
+			t.DashboardURL = dashboardURLFor(t.ID)
 			return t, true
 		}
 	}
@@ -108,10 +112,16 @@ func Curated(id string) (Template, bool) {
 	for _, t := range curatedTemplates {
 		if t.ID == id {
 			t.Normalize()
+			t.DashboardURL = dashboardURLFor(t.ID)
 			return t, true
 		}
 	}
 	return Template{}, false
+}
+
+// DashboardURL returns the curated provider dashboard for one template.
+func DashboardURL(templateID string) string {
+	return dashboardURLFor(templateID)
 }
 
 // Authorizer returns the authorizer function for a sign-in provider.

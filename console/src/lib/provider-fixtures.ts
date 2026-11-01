@@ -81,6 +81,7 @@ export function providerOf(patch: Partial<Provider> = {}): Provider {
 		modelsdev_provider_id: 'openai',
 		base_url: 'https://api.openai.com/v1',
 		doc_url: '',
+		dashboard_url: '',
 		key_env: [],
 		login_flows: [],
 		headers: {},

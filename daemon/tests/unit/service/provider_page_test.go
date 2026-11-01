@@ -130,6 +130,12 @@ func TestProviderResponsesCarryTheirKindAndFormats(t *testing.T) {
 	if len(bedrock.VariableDefs) == 0 {
 		t.Fatal("variable definitions are empty, want the region the base URL asks for")
 	}
+	if host.DashboardURL != "https://platform.deepseek.com/usage" {
+		t.Fatalf("dashboard URL = %q, want the DeepSeek usage page", host.DashboardURL)
+	}
+	if bedrock.DashboardURL != "https://console.aws.amazon.com/bedrock/" {
+		t.Fatalf("bedrock dashboard URL = %q, want the AWS console", bedrock.DashboardURL)
+	}
 }
 
 func TestProviderResponsesCountPausedAndReauthAccounts(t *testing.T) {

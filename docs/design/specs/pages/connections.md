@@ -64,8 +64,10 @@ report reads, a connection's chip and its spend bucket never disagree.
 
 ## Connection pane
 
-Header: 46px logo tile, name, and (640px and up) the status word with its refresh age, e.g. `Ready (Refreshed 54
-minutes ago)`; a stale quota reading shows its clock beside the status, opening Accounts. One toolbar row: **Back**
+Header: 46px logo tile, name with the curated **Open dashboard** chip beside it when the template has a known
+dashboard address, and (640px and up) the status word with its refresh age, e.g. `Ready (Refreshed 54
+minutes ago)`; the chip wraps below the name on a narrow pane and never appears for a custom or local connection. A
+stale quota reading shows its clock beside the status, opening Accounts. One toolbar row: **Back**
 with a contextual control (left, returns to the grid) — model search with the one
 filter menu on the Models tab — the Models / Accounts / Settings strip centred with the card-layout More/Less toggle
 beside it on the Accounts tab when accounts exist, and pause/enable (pause icon while on,

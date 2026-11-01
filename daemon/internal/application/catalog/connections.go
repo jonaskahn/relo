@@ -84,9 +84,10 @@ type ProviderCounts struct {
 
 // Provider is one connection as a console reads it: settings, roster totals, and health.
 type Provider struct {
-	ID         string
-	TemplateID string
-	Label      string
+	ID           string
+	TemplateID   string
+	Label        string
+	DashboardURL string
 	// Kind is the group a console lists this provider under, and
 	// AvailableFormats is every shape it may be switched to. VariableDefs is
 	// what its base URL still needs.
@@ -462,6 +463,7 @@ func providerIdentityView(s *Service, host catalog.Provider, models []catalog.Mo
 		ID:                  host.ID,
 		TemplateID:          host.TemplateID,
 		Label:               host.Label,
+		DashboardURL:        s.DashboardURL(host.TemplateID),
 		Origin:              string(host.Origin),
 		Auth:                string(host.Auth),
 		APIFormat:           string(host.APIFormat),
@@ -959,6 +961,14 @@ func (s *Service) Templates(ctx context.Context) ([]catalog.Template, catalog.Mo
 	all := s.templates.All(idx)
 	st := s.modelsDev.CurrentState()
 	return all, st, err
+}
+
+// DashboardURL returns the curated provider dashboard for one template.
+func (s *Service) DashboardURL(templateID string) string {
+	if s.templates == nil {
+		return ""
+	}
+	return s.templates.DashboardURL(templateID)
 }
 
 func (s *Service) reload(ctx context.Context) error {

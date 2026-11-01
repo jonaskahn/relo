@@ -150,6 +150,7 @@ type providerResponse struct {
 	ID                  string                 `json:"id"`
 	TemplateID          string                 `json:"template_id"`
 	Label               string                 `json:"label"`
+	DashboardURL        string                 `json:"dashboard_url"`
 	Kind                string                 `json:"kind"`
 	AvailableFormats    []formatOptionResponse `json:"available_formats"`
 	VariableDefs        []variableResponse     `json:"variable_defs"`
@@ -192,7 +193,8 @@ type providerResponse struct {
 func toProviderResponse(provider appcatalog.Provider) providerResponse {
 	return providerResponse{
 		ID: provider.ID, TemplateID: provider.TemplateID, Label: provider.Label,
-		Kind: provider.Kind, AvailableFormats: toFormatOptionList(provider.AvailableFormats),
+		DashboardURL: provider.DashboardURL,
+		Kind:         provider.Kind, AvailableFormats: toFormatOptionList(provider.AvailableFormats),
 		VariableDefs: toVariableList(provider.VariableDefs),
 		Origin:       provider.Origin, Auth: provider.Auth,
 		APIFormat: provider.APIFormat, APIFormats: provider.APIFormats,
@@ -570,6 +572,7 @@ func toGroupList(groups []appcatalog.Group) []groupResponse {
 type templateResponse struct {
 	ID                     string                 `json:"id"`
 	Label                  string                 `json:"label"`
+	DashboardURL           string                 `json:"dashboard_url"`
 	Kind                   catalog.Kind           `json:"kind"`
 	Origin                 catalog.Origin         `json:"origin"`
 	Auth                   catalog.Auth           `json:"auth"`
@@ -595,7 +598,8 @@ type templateResponse struct {
 
 func toTemplateResponse(template catalog.Template) templateResponse {
 	return templateResponse{
-		ID: template.ID, Label: template.Label, Kind: template.Kind,
+		ID: template.ID, Label: template.Label, DashboardURL: template.DashboardURL,
+		Kind:   template.Kind,
 		Origin: template.Origin, Auth: template.Auth,
 		KeyHeader: template.KeyHeader, DefaultFormat: template.DefaultFormat,
 		AvailableFormats:       toFormatOptionList(template.AvailableFormats),

@@ -76,6 +76,7 @@ type Templates interface {
 	Get(id string, idx *catalog.ModelsDevIndex) (catalog.Template, bool)
 	All(idx *catalog.ModelsDevIndex) []catalog.Template
 	Curated(id string) (catalog.Template, bool)
+	DashboardURL(templateID string) string
 	RewrittenLabel(templateID, stored string) (string, bool)
 }
 

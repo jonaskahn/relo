@@ -39,6 +39,12 @@ domain field does not expose it on the API until the handler maps it.
 conversational models only. The values are derived; they do not add config
 fields or stored rows.
 
+**Connections carry their curated dashboard.** Every `GET /api/v1/connections`
+item, its detail read, and each `GET /api/v1/templates` item carries
+`dashboard_url`. The value comes from the curated template, so an unknown,
+custom, or local connection reports an empty string and a changed curated URL
+applies without a migration.
+
 **Two free refusals are stable.** A probe or commit that would create a second
 keyless free connection answers `409 free_connection_exists` and writes
 nothing. Inference that reaches a configured free connection while the opt-in is

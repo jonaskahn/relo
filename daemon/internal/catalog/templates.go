@@ -100,6 +100,7 @@ type Template struct {
 	ModelsFormat        ModelsFormat
 	ModelsDevProviderID string
 	DocURL              string
+	DashboardURL        string
 	KeyEnv              []string
 	LoginFlows          []string
 	// LoginMethods is how an operator signs in, which LoginFlows is

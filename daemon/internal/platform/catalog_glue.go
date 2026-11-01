@@ -180,6 +180,11 @@ func (TemplateRegistry) Curated(id string) (catalog.Template, bool) {
 	return templates.Curated(id)
 }
 
+// DashboardURL returns the curated provider dashboard for one template.
+func (TemplateRegistry) DashboardURL(templateID string) string {
+	return templates.DashboardURL(templateID)
+}
+
 // RewrittenLabel reports the current default for a stored label that still
 // matches a retired template name.
 func (TemplateRegistry) RewrittenLabel(templateID, stored string) (string, bool) {

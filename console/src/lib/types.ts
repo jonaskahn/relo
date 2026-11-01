@@ -91,6 +91,7 @@ export interface Provider {
 	readonly modelsdev_provider_id: string;
 	readonly base_url: string;
 	readonly doc_url: string;
+	readonly dashboard_url?: string;
 	readonly key_env: string[];
 	readonly login_flows: string[];
 	readonly login_methods?: LoginMethod[];
@@ -170,6 +171,7 @@ export interface ProviderTemplate {
 	readonly models_format: string;
 	readonly modelsdev_provider_id?: string;
 	readonly doc_url?: string;
+	readonly dashboard_url?: string;
 	readonly key_env?: string[];
 	readonly login_flows?: string[];
 	readonly headers?: Record<string, string>;
