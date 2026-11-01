@@ -19,7 +19,7 @@ func TestCatalogMergeKeepsTheRestOfTheFile(t *testing.T) {
 		want     string
 		address  string
 	}{
-		{codingclients.FilePi, `{"theme":"dark","providers":{"openai":{"api":"openai"}}}` + "\n", "RELO_PI_API_KEY", base + "/v1"},
+		{codingclients.FilePi, `{"theme":"dark","providers":{"openai":{"api":"openai"}}}` + "\n", "$RELO_PI_API_KEY", base + "/v1"},
 		{codingclients.FileZCode, `{"providers":{"other":{}}}` + "\n", "$RELO_ZCODE_API_KEY", base + "/v1"},
 		{codingclients.FileClineProviders, `{"providers":{"openai":{"settings":{}}}}` + "\n", "$RELO_CLINE_API_KEY", base},
 		{codingclients.FileClineModels, "", "Relo", base},
@@ -111,7 +111,7 @@ func TestPiAndOMPNameTheKeyVariable(t *testing.T) {
 		kind string
 		want string
 	}{
-		{codingclients.FilePi, "RELO_PI_API_KEY"},
+		{codingclients.FilePi, "$RELO_PI_API_KEY"},
 		{codingclients.FileOMP, "RELO_OMP_API_KEY"},
 	}
 	for _, testCase := range cases {
@@ -124,17 +124,12 @@ func TestPiAndOMPNameTheKeyVariable(t *testing.T) {
 			if key != testCase.want {
 				t.Fatalf("apiKey = %q, want %q", key, testCase.want)
 			}
-			if strings.ContainsAny(key, "${}$") {
-				t.Fatalf("apiKey = %q, want a bare variable name", key)
-			}
 		})
 	}
 }
 
-// catalogKey reads the key one client catalog names for Relo. A client
-// resolves that value as the name of an environment variable, a shell
-// command, or a literal, so a template reaches the upstream as the secret
-// itself and every request is refused.
+// catalogKey reads the key one client catalog names for Relo. Pi resolves
+// only a $NAME reference; Oh My Pi reads a bare environment-variable name.
 func catalogKey(t *testing.T, kind, merged string) string {
 	t.Helper()
 	type provider struct {

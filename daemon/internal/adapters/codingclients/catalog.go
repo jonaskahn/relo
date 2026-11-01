@@ -253,10 +253,9 @@ func braceKey(kind string) string {
 	return "${" + EnvKeyName(kindClient(kind)) + "}"
 }
 
-// envKeyName is the bare name of the variable one client reads its key from.
-// Pi and Oh My Pi resolve a configured key as the name of an environment
-// variable, a shell command, or a literal — never as a ${VAR} template — so a
-// template reaches the upstream as the secret itself and every request is
+// envKeyName is the bare name of the variable Oh My Pi reads its key from.
+// Pi expands only a $NAME reference, a !command, or a literal, so handing it
+// the bare name sends that name upstream as the bearer and every request is
 // refused.
 func envKeyName(kind string) string {
 	return EnvKeyName(kindClient(kind))
@@ -297,7 +296,7 @@ func piProvider(address string, models []ModelRef, withKey bool) string {
 		`"api":"openai-completions"`,
 	}
 	if withKey {
-		fields = append(fields, `"apiKey":`+jsonString(envKeyName(FilePi)))
+		fields = append(fields, `"apiKey":`+jsonString(dollarKey(FilePi)))
 	}
 	fields = append(fields, `"models":`+piModels(models))
 	return "{" + strings.Join(fields, ",") + "}"
