@@ -1,5 +1,5 @@
 {
-  "generated": "2026-11-01T05:16:26Z",
+  "generated": "2026-11-01T05:34:08Z",
   "latest": "v0.2.2",
   "latest_beta": "v0.2.2-beta.67.30dc06b2",
   "install": {
@@ -25,7 +25,7 @@
       "draft": false,
       "published_at": "2026-11-01T05:16:05Z",
       "page": "https://github.com/jonaskahn/relo/releases/tag/v0.2.2",
-      "notes": "## What's Changed\r\n* chore: bump to 0.2.2 by @github-actions[bot] in https://github.com/jonaskahn/relo/pull/100\r\n\r\n\r\n**Full Changelog**: https://github.com/jonaskahn/relo/compare/v0.2.1...v0.2.2",
+      "notes": "# 🚀 v0.2.2 — 2026-11-01\r\n\r\nChanges from `v0.2.1`.\r\n\r\n## ✨ Highlights\r\n\r\n- **Automatic dashboard opening:** `daemon run`, `daemon start`, and `daemon restart` now open the dashboard after a successful start or when attaching to an already-running instance.\r\n- **Quiet startup:** Added `--silent` to `daemon run`, `daemon start`, and `daemon restart` to prevent the browser from opening.\r\n- **Silent autostart:** Login items and installer startup entries now launch Relo silently. Existing autostart registrations are upgraded to include `--silent`.\r\n\r\n## 🐛 Fixes\r\n\r\n- **MiMo thinking on every provider:** MiMo chat models now resolve as an on/off thinking toggle across all providers, not only Xiaomi-hosted connections. Provider-declared effort ladders and reasoning opt-outs remain respected, while speech and image variants are excluded.\r\n- **MiMo tool calls on every provider:** The correct tool-call dialect now follows the resolved MiMo model when a gateway has no connection-level dialect, fixing tool calls being treated as prose on non-Xiaomi providers. Connection-level settings still take precedence.\r\n\r\n## 🧪 Quality\r\n\r\n- Added regression coverage for dashboard lifecycle behavior, silent autostart, MiMo catalog and relay handling, wire credentials/tool names, and stored roster refiltering.\r\n- Documented and localized the new `--silent` flag.\r\n- Extracted the tray dashboard opener to keep CLI lint checks within complexity limits.\r\n\r\n**Full Changelog:** https://github.com/jonaskahn/relo/compare/v0.2.1...v0.2.2",
       "install": {
         "script": "curl -fsSL https://relo.ifelse.one/install.sh | sh -s -- --version 0.2.2",
         "powershell": "& ([scriptblock]::Create((irm https://relo.ifelse.one/install.ps1))) -Version 0.2.2",
