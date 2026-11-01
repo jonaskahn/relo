@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { t } from 'svelte-i18n';
+	import { goto } from '$app/navigation';
 
 	import { api, ApiError } from '$lib/api';
 	import { formatDateTime } from '$lib/format';
@@ -173,13 +174,24 @@
 
 	function openLatestLog() {
 		if (!latest) return;
-		window.location.assign('/logs?section=agent&request=' + latest.ID);
+		void openRequestLog(latest);
+	}
+
+	async function openRequestLog(request: UsageLogRow) {
+		const linked = request.RequestID || String(request.ID);
+		const url = '/logs?section=agent&request=' + encodeURIComponent(linked);
+		try {
+			await goto(url);
+		} catch {
+			window.location.assign(url);
+		}
 	}
 </script>
 
 <CenteredModal
 	bind:open
 	size="xl"
+	bodyClass="min-w-0 max-w-full"
 	title={routeGroup?.label || routeGroup?.id || group?.label || group?.id || ''}
 	description={routeGroup
 		? routeGroup.id + ' · ' + $t('ui.pages.groupsPage.strategyName.' + routeGroup.strategy)
@@ -216,7 +228,7 @@
 			</Button>
 		</div>
 	{:else}
-		<div class="flex flex-col gap-5">
+		<div class="flex min-w-0 max-w-full flex-col gap-5">
 			{#if ordered.length === 0}
 				<p class="empty-panel border-dashed text-sm text-muted-foreground">
 					{$t('ui.pages.groupsPage.inspector.empty')}
@@ -224,7 +236,6 @@
 			{:else}
 				<RoutingFlow
 					groupLabel={routeGroup?.label || routeGroup?.id || ''}
-					requestLabel={routeGroup?.client_id || routeGroup?.id || ''}
 					members={overflow.visible}
 					current={current.index}
 					currentAccount={current.accountLabel}
@@ -244,24 +255,36 @@
 						{$t('ui.pages.groupsPage.inspector.noRecent')}
 					</p>
 				{:else}
-					<div class="mt-3 overflow-x-auto rounded-card bg-surface shadow-float-1">
-						<table class="w-full min-w-[720px] text-left text-xs">
+					<div class="mt-3 rounded-card bg-surface shadow-float-1">
+						<table class="w-full table-fixed text-left text-xs">
 							<thead>
 								<tr
-									class="border-b border-border text-[0.6875rem] font-semibold tracking-wider text-muted-foreground uppercase"
+									class="border-b border-border text-[0.6875rem] font-semibold text-muted-foreground"
 								>
-									<th class="px-3.5 py-2">{$t('ui.common.status')}</th>
-									<th class="px-3.5 py-2">{$t('ui.pages.logsPage.columnTime')}</th>
-									<th class="px-3.5 py-2">{$t('ui.pages.groupsPage.inspector.request')}</th>
-									<th class="px-3.5 py-2">{$t('ui.pages.logsPage.columnModel')}</th>
-									<th class="px-3.5 py-2">{$t('ui.pages.chatPage.target')}</th>
-									<th class="px-3.5 py-2 text-right">{$t('ui.pages.logsPage.columnDuration')}</th>
+									<th class="w-[18%] px-2 py-2 lg:w-[5rem] lg:px-3">
+										{$t('ui.common.status')}
+									</th>
+									<th class="w-[22%] px-2 py-2 lg:w-[7rem] lg:px-3">
+										{$t('ui.pages.logsPage.columnTime')}
+									</th>
+									<th class="w-[38%] px-2 py-2 lg:w-auto lg:px-3">
+										{$t('ui.pages.groupsPage.inspector.request')}
+									</th>
+									<th class="w-[9rem] px-3 py-2 max-lg:hidden">
+										{$t('ui.pages.logsPage.columnModel')}
+									</th>
+									<th class="w-[9rem] px-3 py-2 max-lg:hidden">
+										{$t('ui.pages.chatPage.target')}
+									</th>
+									<th class="w-[22%] px-2 py-2 text-right lg:w-[6rem] lg:px-3">
+										{$t('ui.pages.logsPage.columnDuration')}
+									</th>
 								</tr>
 							</thead>
 							<tbody>
 								{#each recent as request (request.ID)}
 									<tr class="border-b border-border last:border-b-0">
-										<td class="px-3.5 py-2.5">
+										<td class="px-2 py-2.5 lg:px-3">
 											<span
 												class="mono-data inline-flex rounded-full px-2 py-0.5 text-[0.6875rem] font-semibold {request.Status <
 												400
@@ -269,25 +292,43 @@
 													: 'bg-danger/10 text-danger'}">{request.Status}</span
 											>
 										</td>
-										<td class="mono-data px-3.5 py-2.5 whitespace-nowrap text-muted-foreground">
+										<td
+											class="mono-data truncate px-2 py-2.5 text-muted-foreground lg:px-3"
+											title={formatDateTime(request.TimestampMs)}
+										>
 											{formatDateTime(request.TimestampMs)}
 										</td>
-										<td class="px-3.5 py-2.5">
+										<td class="min-w-0 px-2 py-2.5 lg:px-3">
 											<a
-												class="mono-data text-accent-deep hover:underline"
-												href={`/logs?section=agent&request=${request.ID}`}
-												>{request.RequestID || request.ID}</a
+												class="mono-data block truncate text-accent-deep hover:underline"
+												href={`/logs?section=agent&request=${encodeURIComponent(request.RequestID || String(request.ID))}`}
+												title={request.RequestID || String(request.ID)}
+												onclick={(event) => {
+													event.preventDefault();
+													void openRequestLog(request);
+												}}>{request.RequestID || request.ID}</a
 											>
+											<span
+												class="mt-0.5 block truncate text-[0.65rem] text-muted-foreground lg:hidden"
+											>
+												{request.RequestedModel || request.Model} · {chosenLabel(request)}
+											</span>
 										</td>
-										<td class="mono-data max-w-[220px] truncate px-3.5 py-2.5">
+										<td
+											class="mono-data truncate px-3 py-2.5 max-lg:hidden"
+											title={request.RequestedModel || request.Model}
+										>
 											{request.RequestedModel || request.Model}
 										</td>
 										<td
-											class="mono-data max-w-[220px] truncate px-3.5 py-2.5 text-muted-foreground"
+											class="mono-data truncate px-3 py-2.5 text-muted-foreground max-lg:hidden"
+											title={chosenLabel(request)}
 										>
 											{chosenLabel(request)}
 										</td>
-										<td class="mono-data px-3.5 py-2.5 text-right whitespace-nowrap font-medium">
+										<td
+											class="mono-data px-2 py-2.5 text-right whitespace-nowrap font-medium lg:px-3"
+										>
 											{request.DurationMs}ms
 										</td>
 									</tr>

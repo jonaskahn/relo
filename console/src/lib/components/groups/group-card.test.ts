@@ -39,6 +39,7 @@ describe('the group routing inspector action', () => {
 			}
 		}).body;
 		expect(html).toContain('aria-label="Inspect routing"');
+		expect(html).toContain('max-sm:hidden');
 		expect(html.indexOf('Inspect routing')).toBeLessThan(html.indexOf('aria-label="Edit group"'));
 	});
 });

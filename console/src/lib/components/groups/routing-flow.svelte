@@ -2,19 +2,20 @@
 	import { t } from 'svelte-i18n';
 
 	import { formatCountdown } from '$lib/dashboard';
-	import { providerLogoSrc } from '$lib/provider-logo';
 	import {
 		hasQuota,
 		memberCoverage,
 		memberState,
+		routingLayout,
+		statePillWidth,
 		windowSpan,
 		type MemberState,
 		type MemberView
 	} from '$lib/route-inspector';
+	import TunnelMark from '$lib/components/ui/tunnel-mark.svelte';
 
 	interface Props {
 		groupLabel: string;
-		requestLabel: string;
 		members: readonly MemberView[];
 		current: number;
 		currentAccount?: string;
@@ -25,7 +26,6 @@
 
 	let {
 		groupLabel,
-		requestLabel,
 		members,
 		current,
 		currentAccount = '',
@@ -34,33 +34,24 @@
 		nowMs = Date.now()
 	}: Props = $props();
 
-	const WIDTH = 1120;
-	const PAD = 24;
-	const TOP = 12;
-	const REQUEST_X = 24;
-	const NODE_WIDTH = 128;
-	const GROUP_X = 184;
-	const GROUP_RIGHT = GROUP_X + NODE_WIDTH;
-	const TRUNK_X = 336;
-	const CARD_X = 368;
-	const CARD_WIDTH = WIDTH - CARD_X - PAD;
-	const CARD_HEIGHT = 88;
-	const ROW_HEIGHT = 100;
-	const OVERFLOW_HEIGHT = 52;
-	const NODE_HEIGHT = 64;
-	const QUOTA_X = CARD_X + 440;
+	const DEFAULT_WIDTH = 1120;
+	let host: HTMLDivElement | null = $state(null);
+	let measuredWidth = $state(0);
+	const layout = $derived(
+		routingLayout({ width: measuredWidth || DEFAULT_WIDTH, members: members.length, hidden })
+	);
 
-	const height = $derived(
-		TOP + members.length * ROW_HEIGHT + (hidden > 0 ? OVERFLOW_HEIGHT + 16 : 8)
-	);
-	const centerY = $derived(
-		members.length === 0 ? NODE_HEIGHT : (cardCenterY(0) + cardCenterY(members.length - 1)) / 2
-	);
-	const nodeY = $derived(centerY - NODE_HEIGHT / 2);
-	const trunkTop = $derived(members.length === 0 ? centerY : cardCenterY(0));
-	const trunkBottom = $derived(
-		hidden > 0 ? cardY(members.length) + OVERFLOW_HEIGHT / 2 : cardCenterY(members.length - 1)
-	);
+	$effect(() => {
+		if (host === null || typeof ResizeObserver === 'undefined') return;
+		const measure = () => {
+			const nextWidth = Math.floor(host?.clientWidth ?? 0);
+			if (nextWidth > 0) measuredWidth = nextWidth;
+		};
+		measure();
+		const observer = new ResizeObserver(measure);
+		observer.observe(host);
+		return () => observer.disconnect();
+	});
 
 	const stateKeys: Record<MemberState, string> = {
 		ready: 'ui.pages.groupsPage.inspector.ready',
@@ -71,28 +62,12 @@
 		cooling: 'ui.pages.groupsPage.inspector.cooling'
 	};
 
-	function rowY(index: number): number {
-		return TOP + index * ROW_HEIGHT;
-	}
-
-	function cardY(index: number): number {
-		return rowY(index);
-	}
-
-	function cardCenterY(index: number): number {
-		return cardY(index) + CARD_HEIGHT / 2;
-	}
-
-	function branch(index: number, accent: 'current' | 'next' | null = null): string {
-		const y = cardCenterY(index);
-		if (accent === null) return `M ${TRUNK_X} ${y} H ${CARD_X}`;
-		return `M ${GROUP_RIGHT} ${centerY} H ${TRUNK_X} V ${y} H ${CARD_X}`;
-	}
-
-	function overflowBranch(): string {
-		const y = cardY(members.length) + OVERFLOW_HEIGHT / 2;
-		return `M ${TRUNK_X} ${y} H ${CARD_X}`;
-	}
+	const currentPath = $derived(
+		current >= 0 && current < layout.branches.length ? (layout.branches[current]?.path ?? '') : ''
+	);
+	const nextPath = $derived(
+		next >= 0 && next < layout.branches.length ? (layout.branches[next]?.path ?? '') : ''
+	);
 
 	function usedTone(percent: number): string {
 		if (percent >= 100) return 'var(--danger)';
@@ -115,6 +90,10 @@
 		return value.length > length ? value.slice(0, length - 1) + '…' : value;
 	}
 
+	function charactersIn(width: number): number {
+		return Math.max(6, Math.floor(width / 7));
+	}
+
 	function stateTone(state: MemberState): { ink: string; fill: string } {
 		switch (state) {
 			case 'ready':
@@ -129,16 +108,22 @@
 		}
 	}
 
-	function pillWidth(label: string): number {
-		return label.length * 5.5 + 18;
+	function markerFor(index: number): string {
+		if (index === current) return $t('ui.pages.groupsPage.inspector.current');
+		if (index === next) return $t('ui.pages.groupsPage.inspector.next');
+		return '';
+	}
+
+	function quotaIsRight(cardWidth: number): boolean {
+		return layout.kind === 'wide' || cardWidth >= 620;
 	}
 </script>
 
-<div class="overflow-x-auto pb-1">
+<div bind:this={host} class="min-w-0 max-w-full pb-1">
 	<svg
-		class="block h-auto min-w-[1120px] rounded-panel"
-		width={WIDTH}
-		viewBox={`0 0 ${WIDTH} ${height}`}
+		class="block h-auto w-full max-w-full rounded-panel"
+		width={layout.width}
+		viewBox={`0 0 ${layout.width} ${layout.height}`}
 		role="img"
 		aria-labelledby="route-flow-title route-flow-desc"
 	>
@@ -150,140 +135,161 @@
 			</pattern>
 			<marker
 				id="route-arrow-idle"
-				viewBox="0 0 8 8"
-				refX="7"
-				refY="4"
-				markerWidth="6"
-				markerHeight="6"
+				viewBox="0 0 5 5"
+				refX="5"
+				refY="2.5"
+				markerWidth="5"
+				markerHeight="5"
+				markerUnits="userSpaceOnUse"
 				orient="auto-start-reverse"
 			>
-				<path d="M 0 0 L 8 4 L 0 8 z" fill="var(--muted)"></path>
+				<path d="M 0 0 L 5 2.5 L 0 5 z" fill="var(--muted)"></path>
 			</marker>
 			<marker
 				id="route-arrow-accent"
-				viewBox="0 0 8 8"
-				refX="7"
-				refY="4"
-				markerWidth="6"
-				markerHeight="6"
+				viewBox="0 0 5 5"
+				refX="5"
+				refY="2.5"
+				markerWidth="5"
+				markerHeight="5"
+				markerUnits="userSpaceOnUse"
 				orient="auto-start-reverse"
 			>
-				<path d="M 0 0 L 8 4 L 0 8 z" fill="var(--accent)"></path>
+				<path d="M 0 0 L 5 2.5 L 0 5 z" fill="var(--accent)"></path>
 			</marker>
 		</defs>
 
-		<rect x="0" y="0" width={WIDTH} {height} rx="14" fill="var(--sunken)"></rect>
-		<rect x="0" y="0" width={WIDTH} {height} rx="14" fill="url(#route-dots)"></rect>
+		<rect x="0" y="0" width={layout.width} height={layout.height} rx="14" fill="var(--sunken)"
+		></rect>
+		<rect x="0" y="0" width={layout.width} height={layout.height} rx="14" fill="url(#route-dots)"
+		></rect>
 
 		{#if members.length > 0}
-			<path
-				d={`M ${GROUP_RIGHT} ${centerY} H ${TRUNK_X}`}
-				stroke="var(--muted)"
-				stroke-width="1.5"
-				fill="none"
-			></path>
-			<path
-				d={`M ${TRUNK_X} ${trunkTop} V ${trunkBottom}`}
-				stroke="var(--muted)"
-				stroke-width="1.5"
-				stroke-dasharray="2 6"
-				stroke-linecap="round"
-				fill="none"
-			></path>
-			{#each members as _, index (members[index].member.provider_id + '/' + members[index].member.model_id)}
-				<path
-					d={branch(index)}
-					stroke="var(--muted)"
-					stroke-width="1.5"
-					stroke-dasharray="2 6"
-					stroke-linecap="round"
-					fill="none"
-					marker-end="url(#route-arrow-idle)"
-				></path>
-			{/each}
-			{#if hidden > 0}
-				<path
-					d={overflowBranch()}
-					stroke="var(--muted)"
-					stroke-width="1.5"
-					stroke-dasharray="2 6"
-					stroke-linecap="round"
-					fill="none"
-					marker-end="url(#route-arrow-idle)"
-				></path>
-			{/if}
-			{#if current >= 0}
-				<path
-					d={branch(current, 'current')}
-					stroke="var(--accent)"
-					stroke-width="2"
-					fill="none"
-					marker-end="url(#route-arrow-accent)"
-				></path>
-			{/if}
-			{#if next >= 0 && next !== current}
-				<path
-					d={branch(next, 'next')}
-					stroke="var(--accent)"
-					stroke-width="2"
-					stroke-dasharray="3 6"
-					fill="none"
-					marker-end="url(#route-arrow-accent)"
-				></path>
-			{/if}
+			<g aria-hidden="true">
+				{#each layout.branches as branch (branch.index)}
+					<path
+						d={branch.path}
+						stroke="var(--line-strong)"
+						stroke-width="1.5"
+						stroke-dasharray="2 6"
+						stroke-linecap="round"
+						fill="none"
+						marker-end="url(#route-arrow-idle)"
+					></path>
+				{/each}
+				{#if layout.overflowBranch}
+					<path
+						d={layout.overflowBranch}
+						stroke="var(--line-strong)"
+						stroke-width="1.5"
+						stroke-dasharray="2 6"
+						stroke-linecap="round"
+						fill="none"
+						marker-end="url(#route-arrow-idle)"
+					></path>
+				{/if}
+				{#if currentPath}
+					<path
+						data-route-current
+						d={currentPath}
+						stroke="var(--accent)"
+						stroke-width="2"
+						fill="none"
+						marker-end="url(#route-arrow-accent)"
+					></path>
+				{/if}
+				{#if nextPath && next !== current}
+					<path
+						d={nextPath}
+						stroke="var(--accent)"
+						stroke-width="2"
+						stroke-dasharray="3 6"
+						fill="none"
+						marker-end="url(#route-arrow-accent)"
+					></path>
+				{/if}
+				{#if currentPath}
+					{#key current}
+						<circle class="route-moving-dot" r="4" fill="var(--accent)">
+							<animateMotion path={currentPath} dur="2.4s" repeatCount="indefinite" />
+						</circle>
+					{/key}
+				{/if}
+			</g>
 		{/if}
 
 		<rect
-			x={REQUEST_X}
-			y={nodeY}
-			width={NODE_WIDTH}
-			height={NODE_HEIGHT}
+			x={layout.request.x}
+			y={layout.request.y}
+			width={layout.request.width}
+			height={layout.request.height}
 			rx="14"
 			fill="var(--surface)"
 			stroke="var(--line)"
 		></rect>
-		<text x={REQUEST_X + 14} y={nodeY + 24} fill="var(--muted)" class="text-[11px]"
-			>{$t('ui.pages.groupsPage.inspector.request')}</text
+		<text
+			x={layout.request.x + layout.request.width / 2}
+			y={layout.request.y + layout.request.height / 2 + 4}
+			text-anchor="middle"
+			fill="var(--ink)"
+			class="text-[13px] font-semibold"
 		>
-		<text x={REQUEST_X + 14} y={nodeY + 45} fill="var(--ink)" class="text-[13px] font-semibold">
-			{fit(requestLabel, 16)}
+			{$t('ui.sidebar.agents')}
 		</text>
 		<path
-			d={`M ${REQUEST_X + NODE_WIDTH} ${centerY} H ${GROUP_X}`}
+			d={layout.requestConnector}
 			stroke="var(--muted)"
 			stroke-width="1.5"
 			fill="none"
+			marker-end="url(#route-arrow-idle)"
 		></path>
-		<rect x={GROUP_X} y={nodeY} width={NODE_WIDTH} height={NODE_HEIGHT} rx="14" fill="var(--ink)"
+		<rect
+			x={layout.group.x}
+			y={layout.group.y}
+			width={layout.group.width}
+			height={layout.group.height}
+			rx="14"
+			fill="var(--ink)"
 		></rect>
-		<text x={GROUP_X + 14} y={nodeY + 24} fill="var(--canvas)" opacity="0.72" class="text-[11px]"
-			>{$t('ui.sidebar.groups')}</text
+		<text
+			x={layout.group.x + 14}
+			y={layout.group.y + 24}
+			fill="var(--canvas)"
+			opacity="0.72"
+			class="text-[11px]">{$t('ui.sidebar.groups')}</text
 		>
-		<text x={GROUP_X + 14} y={nodeY + 47} fill="var(--canvas)" class="text-[15px] font-semibold">
-			{fit(groupLabel, 14)}
+		<text
+			x={layout.group.x + 14}
+			y={layout.group.y + 47}
+			fill="var(--canvas)"
+			class="text-[15px] font-semibold"
+		>
+			<title>{groupLabel}</title>
+			{fit(groupLabel, charactersIn(layout.group.width - 28))}
 		</text>
 
 		{#each members as member, index (member.member.provider_id + '/' + member.member.model_id)}
-			{@const y = cardY(index)}
+			{@const card = layout.cards[index]}
 			{@const state = memberState(member.accounts, nowMs, member.windows)}
 			{@const stateText = $t(stateKeys[state])}
+			{@const stateWidth = statePillWidth(stateText)}
 			{@const tone = stateTone(state)}
 			{@const coverage = memberCoverage(member.member)}
-			{@const stateX = CARD_X + 210}
-			{@const stateWidth = pillWidth(stateText)}
-			{@const markerText =
-				index === current
-					? $t('ui.pages.groupsPage.inspector.current')
-					: index === next
-						? $t('ui.pages.groupsPage.inspector.next')
-						: ''}
-			{@const markerWidth = markerText === '' ? 0 : pillWidth(markerText)}
+			{@const markerText = markerFor(index)}
+			{@const markerWidth = markerText === '' ? 0 : statePillWidth(markerText)}
+			{@const markerX = card.x + card.width - 14 - markerWidth}
+			{@const chipX = card.x + 76}
+			{@const chipY = card.y + (layout.kind === 'wide' ? 50 : 58)}
+			{@const rightQuota = quotaIsRight(card.width)}
+			{@const quotaX = rightQuota ? card.x + card.width - 286 : card.x + 14}
+			{@const modelTitle = member.modelName || member.member.model_id}
+			{@const modelLimit = charactersIn(markerX - (card.x + 76) - 8)}
 			<g>
 				<rect
-					x={CARD_X}
-					{y}
-					width={CARD_WIDTH}
-					height={CARD_HEIGHT}
+					x={card.x}
+					y={card.y}
+					width={card.width}
+					height={card.height}
 					rx="14"
 					fill="var(--surface)"
 					stroke={index === current
@@ -294,8 +300,8 @@
 					stroke-width={index === current ? 2 : 1}
 				></rect>
 				<circle
-					cx={CARD_X + 28}
-					cy={y + 28}
+					cx={card.x + 28}
+					cy={card.y + 28}
 					r="12"
 					fill={index === current
 						? 'var(--accent)'
@@ -304,105 +310,105 @@
 							: 'var(--sunken)'}
 				></circle>
 				<text
-					x={CARD_X + 28}
-					y={y + 32}
+					x={card.x + 28}
+					y={card.y + 32}
 					text-anchor="middle"
 					fill={index === current ? 'var(--on-accent)' : 'var(--ink)'}
 					class="text-[11px] font-semibold">{index + 1}</text
 				>
-				{#if providerLogoSrc(member.member.provider_id)}
-					<image
-						href={providerLogoSrc(member.member.provider_id)}
-						x={CARD_X + 50}
-						y={y + 16}
-						width="24"
-						height="24"
-						preserveAspectRatio="xMidYMid meet"
-					></image>
-				{:else}
-					<text
-						x={CARD_X + 62}
-						y={y + 33}
-						text-anchor="middle"
-						fill="var(--ink)"
-						class="text-[12px] font-semibold">{member.providerLabel.slice(0, 1).toUpperCase()}</text
-					>
-				{/if}
-				<text x={CARD_X + 86} y={y + 27} fill="var(--ink)" class="text-[14px] font-semibold">
-					{fit(member.modelName || member.member.model_id, 33)}
+				<TunnelMark
+					markId={member.member.provider_id}
+					label={member.providerLabel}
+					x={card.x + 54}
+					y={card.y + 28}
+					size={24}
+				/>
+				<text x={card.x + 76} y={card.y + 27} fill="var(--ink)" class="text-[14px] font-semibold">
+					<title>{modelTitle}</title>
+					{fit(modelTitle, modelLimit)}
 				</text>
 				{#if markerText !== ''}
 					<rect
-						x={CARD_X + 330}
-						y={y + 14}
+						x={markerX}
+						y={card.y + 14}
 						width={markerWidth}
 						height="20"
 						rx="10"
 						fill={index === current ? 'var(--accent)' : 'var(--accent-soft)'}
 					></rect>
 					<text
-						x={CARD_X + 330 + markerWidth / 2}
-						y={y + 28}
+						x={markerX + markerWidth / 2}
+						y={card.y + 28}
 						text-anchor="middle"
 						fill={index === current ? 'var(--on-accent)' : 'var(--accent-ink)'}
 						class="text-[10px] font-semibold">{markerText}</text
 					>
 				{/if}
-				<text x={CARD_X + 86} y={y + 47} fill="var(--muted)" class="text-[11px]">
-					{fit(member.providerLabel, 18)}
+				<text x={card.x + 76} y={card.y + 45} fill="var(--muted)" class="text-[11px]">
+					<title>{member.providerLabel}</title>
+					{fit(member.providerLabel, charactersIn(card.width - 90))}
 				</text>
-				<rect
-					x={stateX}
-					y={y + 34}
-					width={stateWidth}
-					height="18"
-					rx="9"
-					fill={tone.fill}
-					fill-opacity="0.12"
-				></rect>
-				<circle cx={stateX + 9} cy={y + 43} r="2.5" fill={tone.ink}></circle>
-				<text x={stateX + 16} y={y + 47} fill={tone.ink} class="text-[10px] font-semibold">
-					{stateText}
-				</text>
+				<g>
+					<rect
+						x={chipX}
+						y={chipY}
+						width={stateWidth}
+						height="18"
+						rx="9"
+						fill={tone.fill}
+						fill-opacity="0.12"
+					></rect>
+					<circle cx={chipX + 8} cy={chipY + 9} r="2.5" fill={tone.ink}></circle>
+					<text x={chipX + 16} y={chipY + 13} fill={tone.ink} class="text-[10px] font-semibold">
+						{stateText}
+					</text>
+				</g>
 				<text
-					x={stateX + stateWidth + 8}
-					y={y + 47}
+					x={chipX + stateWidth + 8}
+					y={chipY + 13}
 					fill="var(--muted)"
 					class="mono-data text-[10px]"
 				>
 					{coverage.serving}/{coverage.active}
 				</text>
 				{#if index === current && currentAccount !== ''}
-					<text x={CARD_X + 86} y={y + 64} fill="var(--muted)" class="mono-data text-[10px]">
+					<text x={chipX} y={chipY + 30} fill="var(--muted)" class="mono-data text-[10px]">
+						<title>{currentAccount}</title>
 						{fit(currentAccount, 34)}
 					</text>
 				{/if}
 				{#if hasQuota(member.windows)}
 					{#each member.windows.slice(0, 2) as window, windowIndex (window.credential_id + window.window)}
 						{@const percent = Math.max(0, Math.round(window.used_percent))}
-						{@const quotaY = y + 21 + windowIndex * 24}
-						<text x={QUOTA_X} y={quotaY + 9} fill="var(--muted)" class="text-[10px]">
+						{@const quotaY = rightQuota
+							? card.y + 18 + windowIndex * 24
+							: card.y + 106 + windowIndex * 26}
+						{@const barX = rightQuota ? quotaX + 54 : quotaX + 46}
+						{@const barWidth = rightQuota ? 104 : Math.max(40, card.width - 230)}
+						{@const percentX = rightQuota ? quotaX + 204 : quotaX + card.width - 100}
+						{@const resetX = rightQuota ? quotaX + 272 : quotaX + card.width - 14}
+						<text x={quotaX} y={quotaY + 9} fill="var(--muted)" class="text-[10px]">
 							{fit(quotaLabel(window), 8)}
 						</text>
-						<rect x={QUOTA_X + 54} y={quotaY + 2} width="104" height="6" rx="3" fill="var(--sunken)"
+						<rect x={barX} y={quotaY + 2} width={barWidth} height="6" rx="3" fill="var(--sunken)"
 						></rect>
 						<rect
-							x={QUOTA_X + 54}
+							x={barX}
 							y={quotaY + 2}
-							width={(104 * Math.min(100, percent)) / 100}
+							width={(barWidth * Math.min(100, percent)) / 100}
 							height="6"
 							rx="3"
 							fill={usedTone(percent)}
 						></rect>
 						<text
-							x={QUOTA_X + 204}
+							x={percentX}
 							y={quotaY + 9}
 							text-anchor="end"
 							fill="var(--ink)"
 							class="mono-data text-[10px] font-semibold">{percent}%</text
 						>
 						<text
-							x={QUOTA_X + 272}
+							x={resetX}
 							y={quotaY + 9}
 							text-anchor="end"
 							fill="var(--muted)"
@@ -410,25 +416,34 @@
 						>
 					{/each}
 				{:else}
-					<text x={QUOTA_X} y={y + 46} fill="var(--muted)" class="text-[12px]">
+					<text
+						x={rightQuota ? quotaX : card.x + 76}
+						y={rightQuota ? card.y + 46 : card.y + 116}
+						fill="var(--muted)"
+						class="text-[12px]"
+					>
 						{$t('ui.pages.groupsPage.inspector.noQuota')}
 					</text>
 				{/if}
 			</g>
 		{/each}
 
-		{#if hidden > 0}
-			{@const y = cardY(members.length)}
+		{#if layout.overflow}
 			<rect
-				x={CARD_X}
-				{y}
-				width={CARD_WIDTH}
-				height={OVERFLOW_HEIGHT}
+				x={layout.overflow.x}
+				y={layout.overflow.y}
+				width={layout.overflow.width}
+				height={layout.overflow.height}
 				rx="12"
 				fill="var(--surface)"
 				stroke="var(--line)"
 			></rect>
-			<text x={CARD_X + 18} y={y + 31} fill="var(--muted)" class="text-[12px]">
+			<text
+				x={layout.overflow.x + 18}
+				y={layout.overflow.y + 31}
+				fill="var(--muted)"
+				class="text-[12px]"
+			>
 				{$t('ui.pages.groupsPage.inspector.overflow', { values: { count: hidden } })}
 			</text>
 		{/if}
@@ -439,8 +454,8 @@
 	<span class="flex items-center gap-2"
 		><span class="h-2 w-5 rounded-sm" style="background: var(--accent)"></span>{$t(
 			'ui.pages.groupsPage.inspector.legendCurrent'
-		)}</span
-	>
+		)}
+	</span>
 	<span class="flex items-center gap-2"
 		><span
 			class="h-2 w-5 rounded-sm"
@@ -450,11 +465,19 @@
 	<span class="flex items-center gap-2"
 		><span class="h-2 w-5 rounded-sm" style="background: var(--warn)"></span>{$t(
 			'ui.pages.groupsPage.inspector.legendLimited'
-		)}</span
-	>
+		)}
+	</span>
 	<span class="flex items-center gap-2"
 		><span class="h-2 w-5 rounded-sm" style="background: var(--faint)"></span>{$t(
 			'ui.pages.groupsPage.inspector.legendUnavailable'
-		)}</span
-	>
+		)}
+	</span>
 </div>
+
+<style>
+	@media (prefers-reduced-motion: reduce) {
+		.route-moving-dot {
+			display: none;
+		}
+	}
+</style>

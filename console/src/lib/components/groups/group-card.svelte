@@ -283,6 +283,7 @@
 					icon="route"
 					label={$t('ui.pages.groupsPage.inspectRouting')}
 					variant="outline"
+					class="max-sm:hidden"
 					onclick={() => oninspect(group)}
 				/>
 				<IconAction

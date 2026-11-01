@@ -1,4 +1,5 @@
 import { render } from 'svelte/server';
+import { readFileSync } from 'node:fs';
 import { addMessages, init } from 'svelte-i18n';
 import { beforeAll, describe, expect, it } from 'vitest';
 
@@ -16,7 +17,6 @@ describe('the routing-flow diagram', () => {
 		const html = render(RoutingFlow, {
 			props: {
 				groupLabel: 'Fast',
-				requestLabel: 'fast',
 				members: [
 					{
 						member: {
@@ -46,7 +46,6 @@ describe('the routing-flow diagram', () => {
 		const html = render(RoutingFlow, {
 			props: {
 				groupLabel: 'Fast',
-				requestLabel: 'fast',
 				members: [
 					{
 						member: {
@@ -81,7 +80,6 @@ describe('the routing-flow diagram', () => {
 		const html = render(RoutingFlow, {
 			props: {
 				groupLabel: 'Fast',
-				requestLabel: 'fast',
 				members: [
 					{
 						member: {
@@ -125,7 +123,6 @@ describe('the routing-flow diagram', () => {
 		const html = render(RoutingFlow, {
 			props: {
 				groupLabel: 'Fast',
-				requestLabel: 'fast',
 				members: [
 					{
 						member: {
@@ -181,7 +178,6 @@ describe('the routing-flow diagram', () => {
 		const html = render(RoutingFlow, {
 			props: {
 				groupLabel: 'Fast',
-				requestLabel: 'fast',
 				members: members.slice(0, 9),
 				current: 0,
 				next: 0,
@@ -189,5 +185,66 @@ describe('the routing-flow diagram', () => {
 			}
 		}).body;
 		expect(html).toContain('+2 more members');
+	});
+
+	it('names the Agent Harness node', () => {
+		const html = render(RoutingFlow, {
+			props: {
+				groupLabel: 'Fast',
+				members: [
+					{
+						member: {
+							provider_id: 'openai',
+							model_id: 'gpt-5',
+							weight: 1,
+							enabled: true,
+							eligible: true
+						},
+						providerLabel: 'OpenAI',
+						modelName: 'GPT-5',
+						accounts: [],
+						windows: []
+					}
+				],
+				current: 0,
+				next: 0,
+				hidden: 0
+			}
+		}).body;
+		expect(html).toContain('Agent Harness');
+	});
+
+	it('draws a smooth current path with one reduced-motion-aware moving dot', () => {
+		const html = render(RoutingFlow, {
+			props: {
+				groupLabel: 'Fast',
+				members: [
+					{
+						member: {
+							provider_id: 'openai',
+							model_id: 'gpt-5',
+							weight: 1,
+							enabled: true,
+							eligible: true
+						},
+						providerLabel: 'OpenAI',
+						modelName: 'GPT-5',
+						accounts: [],
+						windows: []
+					}
+				],
+				current: 0,
+				next: 0,
+				hidden: 0
+			}
+		}).body;
+		expect(html).toMatch(/data-route-current[^>]*d="M [^"]* C /);
+		expect(html.match(/<animateMotion/g)).toHaveLength(1);
+		expect(html).toContain('route-moving-dot');
+		const source = readFileSync(new URL('./routing-flow.svelte', import.meta.url), 'utf8');
+		expect(source).toContain('@media (prefers-reduced-motion: reduce)');
+		expect(source).toContain('.route-moving-dot');
+		expect(html).not.toContain('min-w-[1120px]');
+		expect(html).not.toContain('overflow-x-auto');
 	});
 });
