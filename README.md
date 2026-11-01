@@ -72,6 +72,8 @@ relo daemon start                 # console at http://127.0.0.1:10101
 `daemon start` runs the proxy in the background and shows the tray icon when a desktop session is available.
 `daemon run` keeps the same process in the foreground, which is what a terminal, a login item, and Relo.app use.
 
+`daemon run|start|restart --silent` never opens the dashboard in the browser, which is how a login item starts.
+
 Loopback only. `[admin] login = true` puts a sign-in in front, using `$RELO_HOME/admin-token`.
 
 ## ▓ SURFACES
