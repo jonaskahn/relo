@@ -58,6 +58,8 @@ function row(overrides: Partial<UsageLogRow> = {}): UsageLogRow {
 		ClientKeyName: 'Codex',
 		ClientApp: 'codex',
 		Origin: 'external',
+		Attempts: 1,
+		Retried: false,
 		...overrides
 	};
 }

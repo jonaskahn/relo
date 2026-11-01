@@ -808,6 +808,8 @@ export interface UsageLogRow {
 	// Origin names where a request came from: internal traffic the console's
 	// chat tester ran, or external traffic a client sent.
 	readonly Origin: string;
+	readonly Attempts: number;
+	readonly Retried: boolean;
 }
 
 /** One bucket of the usage report. */

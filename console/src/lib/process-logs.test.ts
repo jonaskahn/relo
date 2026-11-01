@@ -171,6 +171,8 @@ function request(patch: Partial<UsageLogRow> = {}): UsageLogRow {
 		ClientKeyName: '',
 		ClientApp: '',
 		Origin: '',
+		Attempts: 1,
+		Retried: false,
 		...patch
 	};
 }

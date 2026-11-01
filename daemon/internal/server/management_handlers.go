@@ -565,7 +565,7 @@ func (s *Server) handleRoutePreview(w http.ResponseWriter, r *http.Request) {
 			Code: "service_unavailable", Message: "api.service.unavailable"})
 		return
 	}
-	plan, err := s.opts.Router.Plan(r.Context(), routing.Request{
+	plan, err := s.opts.Router.Preview(r.Context(), routing.Request{
 		Model: r.URL.Query().Get("model"),
 		Needs: catalog.Requirements{
 			Images:       r.URL.Query().Get("images") == "true",
