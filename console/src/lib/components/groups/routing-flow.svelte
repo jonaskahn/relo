@@ -140,27 +140,27 @@
 			</pattern>
 			<marker
 				id="route-arrow-idle"
-				viewBox="0 0 5 5"
-				refX="5"
-				refY="2.5"
-				markerWidth="5"
-				markerHeight="5"
+				viewBox="0 0 7 7"
+				refX="7"
+				refY="3.5"
+				markerWidth="7"
+				markerHeight="7"
 				markerUnits="userSpaceOnUse"
 				orient="auto-start-reverse"
 			>
-				<path d="M 0 0 L 5 2.5 L 0 5 z" fill="var(--muted)"></path>
+				<path d="M 0 0 L 7 3.5 L 0 7 z" fill="var(--muted)"></path>
 			</marker>
 			<marker
 				id="route-arrow-accent"
-				viewBox="0 0 5 5"
-				refX="5"
-				refY="2.5"
-				markerWidth="5"
-				markerHeight="5"
+				viewBox="0 0 7 7"
+				refX="7"
+				refY="3.5"
+				markerWidth="7"
+				markerHeight="7"
 				markerUnits="userSpaceOnUse"
 				orient="auto-start-reverse"
 			>
-				<path d="M 0 0 L 5 2.5 L 0 5 z" fill="var(--accent)"></path>
+				<path d="M 0 0 L 7 3.5 L 0 7 z" fill="var(--accent)"></path>
 			</marker>
 		</defs>
 
