@@ -143,3 +143,117 @@ func sameEfforts(got, want []string) bool {
 	}
 	return true
 }
+
+// TestMiMoFamilyResolvesOnEveryProvider pins that the MiMo rules follow the
+// model id rather than the host: a gateway that states an empty ladder or no
+// facts at all still resolves thinking as an on/off switch, a gateway that
+// states a ladder keeps it, and every MiMo chat model carries the text
+// tool-call dialect.
+func TestMiMoFamilyResolvesOnEveryProvider(t *testing.T) {
+	ctx := context.Background()
+	db := testkit.OpenTestDB(t)
+	repo := sqlite.NewCatalogRepo(db)
+	on, off := true, false
+
+	providers := []sqlite.ProviderRow{
+		{ID: "opencode-go", TemplateID: "opencode-go", Origin: "template", Label: "OpenCode Go", Auth: "api_key"},
+		{ID: "opencode-free", TemplateID: "opencode-free", Origin: "template", Label: "OpenCode Free", Auth: "api_key"},
+		{ID: "open-design", TemplateID: "open-design", Origin: "template", Label: "OpenDesign", Auth: "api_key"},
+		{ID: "nano-gpt", Origin: "custom", Label: "nano-gpt", Auth: "api_key"},
+		{ID: "requesty", Origin: "custom", Label: "Requesty", Auth: "api_key"},
+	}
+	for _, provider := range providers {
+		if err := repo.SaveProvider(ctx, provider); err != nil {
+			t.Fatalf("SaveProvider(%s) error = %v", provider.ID, err)
+		}
+	}
+
+	models := []sqlite.ModelRow{
+		{ProviderID: "opencode-go", ModelID: "mimo-v2.6-pro", Source: "listing", UpdatedAtMs: 1},
+		{ProviderID: "opencode-go", ModelID: "mimo-asr", Source: "listing", UpdatedAtMs: 1},
+		{ProviderID: "opencode-go", ModelID: "gpt-5", Source: "listing", UpdatedAtMs: 1},
+		{ProviderID: "opencode-free", ModelID: "mimo-v2.6-flash-free", Source: "listing", UpdatedAtMs: 1},
+		{ProviderID: "open-design", ModelID: "mimo-v2.6-pro", Source: "listing", UpdatedAtMs: 1},
+		{ProviderID: "nano-gpt", ModelID: "xiaomi/mimo-v2.6-pro", Source: "listing", UpdatedAtMs: 1},
+		{ProviderID: "requesty", ModelID: "mimo-v2.6-pro", Source: "listing", UpdatedAtMs: 1},
+	}
+	for _, model := range models {
+		if err := repo.SaveModel(ctx, model); err != nil {
+			t.Fatalf("SaveModel(%s/%s) error = %v", model.ProviderID, model.ModelID, err)
+		}
+	}
+
+	facts := []sqlite.ModelFactsRow{
+		{ProviderID: "opencode-go", ModelID: "mimo-v2.6-pro", Layer: "modelsdev", SupportsReasoning: &on, ReasoningEfforts: []string{}},
+		{ProviderID: "opencode-go", ModelID: "mimo-asr", Layer: "modelsdev", SupportsReasoning: &off, ReasoningEfforts: []string{"low", "xhigh"}},
+		{ProviderID: "opencode-go", ModelID: "gpt-5", Layer: "modelsdev", SupportsReasoning: &on, ReasoningEfforts: []string{"low", "xhigh"}},
+		{ProviderID: "opencode-free", ModelID: "mimo-v2.6-flash-free", Layer: "modelsdev", SupportsReasoning: &on, ReasoningEfforts: []string{}},
+		{ProviderID: "nano-gpt", ModelID: "xiaomi/mimo-v2.6-pro", Layer: "modelsdev", SupportsReasoning: &on, ReasoningEfforts: []string{"none", "high"}},
+		{ProviderID: "requesty", ModelID: "mimo-v2.6-pro", Layer: "modelsdev", SupportsReasoning: &on, ReasoningEfforts: []string{"none", "low", "medium", "high", "max"}},
+	}
+	for _, layer := range facts {
+		if err := repo.SaveModelFacts(ctx, layer); err != nil {
+			t.Fatalf("SaveModelFacts(%s/%s) error = %v", layer.ProviderID, layer.ModelID, err)
+		}
+	}
+
+	built := catalog.New(sqlite.NewCatalogReader(db), nil, formats.New())
+	if err := built.Reload(ctx); err != nil {
+		t.Fatalf("Reload() error = %v", err)
+	}
+	snap, found := built.Snapshot()
+	if !found {
+		t.Fatal("Reload() stored no snapshot")
+	}
+
+	for _, id := range []struct{ provider, model string }{
+		{"opencode-go", "mimo-v2.6-pro"},
+		{"opencode-free", "mimo-v2.6-flash-free"},
+		{"open-design", "mimo-v2.6-pro"},
+	} {
+		model, ok := snap.Model(id.provider, id.model)
+		if !ok || model.ReasoningEfforts == nil || len(model.ReasoningEfforts) != 0 {
+			t.Fatalf("%s/%s efforts = %v, want a stated empty ladder", id.provider, id.model, model.ReasoningEfforts)
+		}
+		if model.SupportsReasoning == nil || !*model.SupportsReasoning || !model.ReasoningToggle || !model.ReasoningToggleKnown {
+			t.Fatalf("%s/%s = %+v, want a known toggle on a reasoning model", id.provider, id.model, model)
+		}
+		if model.ToolCallDialect != catalog.ToolCallDialectText {
+			t.Fatalf("%s/%s dialect = %q, want %q", id.provider, id.model, model.ToolCallDialect, catalog.ToolCallDialectText)
+		}
+	}
+
+	for _, id := range []struct {
+		provider, model string
+		want            []string
+	}{
+		{"nano-gpt", "xiaomi/mimo-v2.6-pro", []string{"none", "high"}},
+		{"requesty", "mimo-v2.6-pro", []string{"none", "low", "medium", "high", "max"}},
+	} {
+		model, ok := snap.Model(id.provider, id.model)
+		if !ok || !sameEfforts(model.ReasoningEfforts, id.want) {
+			t.Fatalf("%s/%s efforts = %v, want the stated ladder %v", id.provider, id.model, model.ReasoningEfforts, id.want)
+		}
+		if model.ReasoningToggle {
+			t.Fatalf("%s/%s toggle = true, want the stated ladder alone", id.provider, id.model)
+		}
+		if model.ToolCallDialect != catalog.ToolCallDialectText {
+			t.Fatalf("%s/%s dialect = %q, want %q", id.provider, id.model, model.ToolCallDialect, catalog.ToolCallDialectText)
+		}
+	}
+
+	speech, ok := snap.Model("opencode-go", "mimo-asr")
+	if !ok || speech.ReasoningToggle || !sameEfforts(speech.ReasoningEfforts, []string{}) {
+		t.Fatalf("opencode-go/mimo-asr = %+v, want no toggle", speech)
+	}
+	if speech.ToolCallDialect != "" {
+		t.Fatalf("opencode-go/mimo-asr dialect = %q, want none", speech.ToolCallDialect)
+	}
+	other, ok := snap.Model("opencode-go", "gpt-5")
+	if !ok || !sameEfforts(other.ReasoningEfforts, []string{"low", "xhigh"}) || other.ReasoningToggle {
+		t.Fatalf("opencode-go/gpt-5 = %+v, want the stored ladder left alone", other)
+	}
+	if other.ToolCallDialect != "" {
+		t.Fatalf("opencode-go/gpt-5 dialect = %q, want none", other.ToolCallDialect)
+	}
+}
