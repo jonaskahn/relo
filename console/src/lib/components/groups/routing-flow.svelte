@@ -100,20 +100,20 @@
 		</defs>
 
 		<rect x="24" y="24" width="180" height="44" rx="12" class="fill-surface stroke-line"></rect>
-		<text x="38" y="43" class="fill-muted text-[11px]"
+		<text x="38" y="43" fill="var(--muted)" class="text-[11px]"
 			>{$t('ui.pages.groupsPage.inspector.request')}</text
 		>
 		<text x="38" y="60" class="fill-ink text-[13px] font-semibold">{fit(requestLabel, 24)}</text>
-		<path d="M 204 46 H 250" class="stroke-muted" stroke-width="1.5" marker-end="url(#route-arrow)"
+		<path d="M 204 46 H 250" stroke="var(--muted)" stroke-width="1.5" marker-end="url(#route-arrow)"
 		></path>
 		<rect x="254" y="24" width="160" height="44" rx="12" class="fill-surface stroke-line"></rect>
-		<text x="268" y="43" class="fill-muted text-[11px]">{$t('ui.sidebar.groups')}</text>
+		<text x="268" y="43" fill="var(--muted)" class="text-[11px]">{$t('ui.sidebar.groups')}</text>
 		<text x="268" y="60" class="fill-ink text-[13px] font-semibold">{fit(groupLabel, 20)}</text>
 
 		{#each members as member, index (member.member.provider_id + '/' + member.member.model_id)}
 			<path
 				d={connector(index)}
-				class="stroke-muted"
+				stroke="var(--muted)"
 				fill="none"
 				stroke-width="1.5"
 				marker-end="url(#route-arrow)"
@@ -122,7 +122,7 @@
 		{#if hidden > 0}
 			<path
 				d={connector(members.length)}
-				class="stroke-muted"
+				stroke="var(--muted)"
 				fill="none"
 				stroke-width="1.5"
 				marker-end="url(#route-arrow)"
@@ -144,7 +144,7 @@
 					stroke={index === current ? 'var(--accent)' : 'var(--line)'}
 					stroke-width={index === current ? 2 : 1}
 				></rect>
-				<text x={CARD_X + 18} y={y + 22} class="fill-muted text-[11px] font-semibold"
+				<text x={CARD_X + 18} y={y + 22} fill="var(--muted)" class="text-[11px] font-semibold"
 					>#{index + 1}</text
 				>
 				{#if providerLogoSrc(member.member.provider_id)}
@@ -164,7 +164,7 @@
 				<text x={CARD_X + 78} y={y + 21} class="fill-ink text-[13px] font-semibold">
 					{fit(member.modelName || member.member.model_id, 38)}
 				</text>
-				<text x={CARD_X + 78} y={y + 39} class="fill-muted text-[11px]">
+				<text x={CARD_X + 78} y={y + 39} fill="var(--muted)" class="text-[11px]">
 					{member.providerLabel} · {$t(stateKeys[state])} · {coverage.serving}/{coverage.active}
 				</text>
 				{#if index === current}
@@ -172,7 +172,8 @@
 						x={CARD_X + CARD_WIDTH - 20}
 						y={y + 22}
 						text-anchor="end"
-						class="fill-accent text-[11px] font-semibold"
+						fill="var(--accent-ink)"
+						class="text-[11px] font-semibold"
 					>
 						{$t('ui.pages.groupsPage.inspector.current')}
 					</text>
@@ -181,7 +182,8 @@
 						x={CARD_X + CARD_WIDTH - 20}
 						y={y + 22}
 						text-anchor="end"
-						class="fill-accent text-[11px] font-semibold"
+						fill="var(--accent-ink)"
+						class="text-[11px] font-semibold"
 					>
 						{$t('ui.pages.groupsPage.inspector.next')}
 					</text>
@@ -190,7 +192,7 @@
 					{#each member.windows.slice(0, 2) as window, windowIndex (window.credential_id + window.window)}
 						{@const percent = Math.max(0, Math.round(window.used_percent))}
 						{@const barY = y + 48 + windowIndex * 17}
-						<text x={CARD_X + 18} y={barY + 8} class="fill-muted text-[10px]">
+						<text x={CARD_X + 18} y={barY + 8} fill="var(--muted)" class="text-[10px]">
 							{window.window} · {percent}% · {windowMinutes(window)}m · {resetMinutes(
 								window.reset_at_ms,
 								nowMs
@@ -208,7 +210,7 @@
 						></rect>
 					{/each}
 				{:else}
-					<text x={CARD_X + 18} y={y + 60} class="fill-muted text-[11px]">
+					<text x={CARD_X + 18} y={y + 60} fill="var(--muted)" class="text-[11px]">
 						{$t('ui.pages.groupsPage.inspector.noQuota')}
 					</text>
 				{/if}
@@ -219,13 +221,13 @@
 			{@const y = cardY(members.length)}
 			<rect x={CARD_X} {y} width={CARD_WIDTH} height="52" rx="12" class="fill-surface stroke-line"
 			></rect>
-			<text x={CARD_X + 18} y={y + 32} class="fill-muted text-[12px]">
+			<text x={CARD_X + 18} y={y + 32} fill="var(--muted)" class="text-[12px]">
 				{$t('ui.pages.groupsPage.inspector.overflow', { values: { count: hidden } })}
 			</text>
 		{/if}
 
 		{#if chains.length > 0}
-			<text x="24" y={chainTop} class="fill-muted text-[11px] font-semibold">
+			<text x="24" y={chainTop} fill="var(--muted)" class="text-[11px] font-semibold">
 				{$t('ui.pages.groupsPage.inspector.recent')}
 			</text>
 			{#each chains as chain, index (chain.eventID)}
@@ -239,14 +241,15 @@
 
 <div class="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-muted-foreground">
 	<span class="flex items-center gap-1.5"
-		><span class="h-2 w-4 rounded-sm bg-accent"></span>{$t(
+		><span class="h-2 w-4 rounded-sm" style="background: var(--accent)"></span>{$t(
 			'ui.pages.groupsPage.inspector.legendCurrent'
 		)}</span
 	>
 	<span class="flex items-center gap-1.5"
-		><span class="h-2 w-4 rounded-sm bg-accent-soft ring-1 ring-accent"></span>{$t(
-			'ui.pages.groupsPage.inspector.legendNext'
-		)}</span
+		><span
+			class="h-2 w-4 rounded-sm"
+			style="background: var(--accent-soft); box-shadow: inset 0 0 0 1px var(--accent)"
+		></span>{$t('ui.pages.groupsPage.inspector.legendNext')}</span
 	>
 	<span class="flex items-center gap-1.5"
 		><span class="h-2 w-4 rounded-sm bg-warn"></span>{$t(
