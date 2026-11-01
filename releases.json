@@ -1,7 +1,7 @@
 {
-  "generated": "2026-11-01T07:35:03Z",
+  "generated": "2026-11-01T07:52:32Z",
   "latest": "v0.2.2",
-  "latest_beta": "v0.2.3-beta.69.53ceaddc",
+  "latest_beta": "v0.2.3-beta.70.126f581e",
   "install": {
     "stable": {
       "script": "curl -fsSL https://relo.ifelse.one/install.sh | sh",
@@ -17,6 +17,86 @@
     }
   },
   "releases": [
+    {
+      "tag": "v0.2.3-beta.70.126f581e",
+      "version": "0.2.3-beta.70.126f581e",
+      "name": "v0.2.3-beta.70.126f581e",
+      "channel": "beta",
+      "draft": false,
+      "published_at": "2026-11-01T07:52:21Z",
+      "page": "https://github.com/jonaskahn/relo/releases/tag/v0.2.3-beta.70.126f581e",
+      "notes": "**Full Changelog**: https://github.com/jonaskahn/relo/compare/v0.2.3-beta.69.53ceaddc...v0.2.3-beta.70.126f581e",
+      "install": {
+        "script": "curl -fsSL https://relo.ifelse.one/install.sh | sh -s -- --version 0.2.3-beta.70.126f581e",
+        "powershell": "& ([scriptblock]::Create((irm https://relo.ifelse.one/install.ps1))) -Version 0.2.3-beta.70.126f581e",
+        "npm": "npm i -g @jonaskahn/relo@0.2.3-beta.70.126f581e"
+      },
+      "files": [
+        {
+          "name": "checksums.txt",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.2.3-beta.70.126f581e/checksums.txt",
+          "size": 684,
+          "os": "any",
+          "arch": "any",
+          "kind": "checksums",
+          "format": "txt"
+        },
+        {
+          "name": "relo-0.2.3-beta.70.126f581e-darwin-amd64.tar.gz",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.2.3-beta.70.126f581e/relo-0.2.3-beta.70.126f581e-darwin-amd64.tar.gz",
+          "size": 15018876,
+          "os": "macos",
+          "arch": "amd64",
+          "kind": "archive",
+          "format": "tar.gz"
+        },
+        {
+          "name": "relo-0.2.3-beta.70.126f581e-darwin-arm64.tar.gz",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.2.3-beta.70.126f581e/relo-0.2.3-beta.70.126f581e-darwin-arm64.tar.gz",
+          "size": 14610354,
+          "os": "macos",
+          "arch": "arm64",
+          "kind": "archive",
+          "format": "tar.gz"
+        },
+        {
+          "name": "relo-0.2.3-beta.70.126f581e-linux-amd64.tar.gz",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.2.3-beta.70.126f581e/relo-0.2.3-beta.70.126f581e-linux-amd64.tar.gz",
+          "size": 14724136,
+          "os": "linux",
+          "arch": "amd64",
+          "kind": "archive",
+          "format": "tar.gz"
+        },
+        {
+          "name": "relo-0.2.3-beta.70.126f581e-linux-arm64.tar.gz",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.2.3-beta.70.126f581e/relo-0.2.3-beta.70.126f581e-linux-arm64.tar.gz",
+          "size": 13959288,
+          "os": "linux",
+          "arch": "arm64",
+          "kind": "archive",
+          "format": "tar.gz"
+        },
+        {
+          "name": "relo-0.2.3-beta.70.126f581e-windows-amd64.tar.gz",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.2.3-beta.70.126f581e/relo-0.2.3-beta.70.126f581e-windows-amd64.tar.gz",
+          "size": 14669045,
+          "os": "windows",
+          "arch": "amd64",
+          "kind": "archive",
+          "format": "tar.gz"
+        },
+        {
+          "name": "relo-0.2.3-beta.70.126f581e-windows-arm64.tar.gz",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.2.3-beta.70.126f581e/relo-0.2.3-beta.70.126f581e-windows-arm64.tar.gz",
+          "size": 13797485,
+          "os": "windows",
+          "arch": "arm64",
+          "kind": "archive",
+          "format": "tar.gz"
+        }
+      ]
+    },
     {
       "tag": "v0.2.3-beta.69.53ceaddc",
       "version": "0.2.3-beta.69.53ceaddc",
