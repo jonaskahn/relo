@@ -429,6 +429,12 @@ describe('native rewrite audit', () => {
 		}
 	});
 
+	it('keeps the Agent Harness invariant in every language', () => {
+		for (const [tag, catalog] of Object.entries(catalogs)) {
+			expect(valueOf(catalog, 'ui.sidebar.agents'), tag).toBe('Agent Harness');
+		}
+	});
+
 	it('does not regress to the known machine-translation wording', () => {
 		for (const [tag, entries] of Object.entries(TRANSLATION_REGRESSIONS)) {
 			for (const [key, want] of Object.entries(entries)) {
