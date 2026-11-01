@@ -96,6 +96,16 @@ func (platformManager) Executable() (string, bool) {
 	return "", false
 }
 
+// Silent reports whether the LaunchAgent passes the silent flag.
+func (platformManager) Silent() bool {
+	home, err := os.UserHomeDir()
+	if err != nil {
+		return false
+	}
+	raw, err := os.ReadFile(filepath.Join(home, "Library", "LaunchAgents", agentFileName))
+	return err == nil && strings.Contains(string(raw), "<string>"+daemonSilentFlag+"</string>")
+}
+
 func (platformManager) retireLegacy() error {
 	home, err := os.UserHomeDir()
 	if err != nil {
@@ -121,7 +131,7 @@ func launchAgentsDir() (string, error) {
 }
 
 func agentPlist(exe string) string {
-	return launchAgentPlist(agentLabel, exe, "Interactive", daemonGroup, daemonRunCommand)
+	return launchAgentPlist(agentLabel, exe, "Interactive", daemonGroup, daemonRunCommand, daemonSilentFlag)
 }
 
 func launchAgentPlist(label, exe, processType string, args ...string) string {

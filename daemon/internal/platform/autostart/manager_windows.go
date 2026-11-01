@@ -5,6 +5,7 @@ package autostart
 import (
 	"errors"
 	"fmt"
+	"strings"
 	"syscall"
 
 	"golang.org/x/sys/windows/registry"
@@ -37,7 +38,7 @@ func (m platformManager) Enable(exe string) error {
 	defer func() { _ = key.Close() }()
 	// %q would double the backslashes of the path, and Executable reads the
 	// path back to notice a renamed binary.
-	command := fmt.Sprintf(`"%s" %s %s`, exe, daemonGroup, daemonStartCommand)
+	command := fmt.Sprintf(`"%s" %s %s %s`, exe, daemonGroup, daemonStartCommand, daemonSilentFlag)
 	if err := key.SetStringValue(valueName, command); err != nil {
 		return fmt.Errorf("write the Run registry value: %w", err)
 	}
@@ -78,6 +79,17 @@ func (platformManager) Executable() (string, bool) {
 		return "", false
 	}
 	return splitQuotedExecutable(value)
+}
+
+// Silent reports whether the Run value passes the silent flag.
+func (platformManager) Silent() bool {
+	key, err := openRunKey(registry.QUERY_VALUE)
+	if err != nil || key == 0 {
+		return false
+	}
+	defer func() { _ = key.Close() }()
+	value, _, err := key.GetStringValue(valueName)
+	return err == nil && strings.HasSuffix(value, " "+daemonSilentFlag)
 }
 
 func (platformManager) retireLegacy() error {

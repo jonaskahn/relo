@@ -25,3 +25,6 @@ func (platformManager) IsEnabled() bool { return false }
 
 // Executable is always unknown here.
 func (platformManager) Executable() (string, bool) { return "", false }
+
+// Silent is always false here.
+func (platformManager) Silent() bool { return false }

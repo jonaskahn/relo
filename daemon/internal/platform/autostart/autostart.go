@@ -17,6 +17,8 @@ const (
 	daemonGroup        = "daemon"
 	daemonRunCommand   = "run"
 	daemonStartCommand = "start"
+	// daemonSilentFlag keeps a login launch from opening the dashboard.
+	daemonSilentFlag = "--silent"
 
 	dirMode  = 0o755
 	fileMode = 0o644
@@ -34,14 +36,17 @@ type Manager interface {
 	// Executable reports the executable the registration starts, so a
 	// renamed binary is noticed instead of trusted.
 	Executable() (string, bool)
+	// Silent reports whether the registration launches without opening the
+	// dashboard, so a registration from before the flag is rewritten.
+	Silent() bool
 }
 
-// Reconcile registers the login item when it is missing or names another
-// executable. A renamed binary heals its own registration on the next start
-// instead of rotting at login.
+// Reconcile registers the login item when it is missing, names another
+// executable, or would open the dashboard at login. A renamed binary heals
+// its own registration on the next start instead of rotting at login.
 func Reconcile(exe string) error {
 	manager := New()
-	if current, ok := manager.Executable(); ok && current == exe {
+	if current, ok := manager.Executable(); ok && current == exe && manager.Silent() {
 		return nil
 	}
 	return manager.Enable(exe)

@@ -82,6 +82,16 @@ func (platformManager) Executable() (string, bool) {
 	return "", false
 }
 
+// Silent reports whether the autostart entry passes the silent flag.
+func (platformManager) Silent() bool {
+	home, err := os.UserHomeDir()
+	if err != nil {
+		return false
+	}
+	raw, err := os.ReadFile(filepath.Join(home, ".config", "autostart", xdgFileName))
+	return err == nil && strings.Contains(string(raw), " "+daemonSilentFlag)
+}
+
 func (platformManager) retireLegacy() error {
 	home, err := os.UserHomeDir()
 	if err != nil {
@@ -110,7 +120,7 @@ func xdgEntry(exe string) string {
 Type=Application
 Name=Relo
 Comment=Local AI proxy with multi-account credential pooling
-Exec="` + exe + `" ` + daemonGroup + ` ` + daemonRunCommand + `
+Exec="` + exe + `" ` + daemonGroup + ` ` + daemonRunCommand + ` ` + daemonSilentFlag + `
 Terminal=false
 X-GNOME-Autostart-enabled=true
 `

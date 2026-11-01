@@ -138,7 +138,7 @@ Section "Relo" SEC_MAIN
   ; registers for itself on first run; this covers the install that never
   ; starts it. relo.exe owns no console, so a login start stays quiet and
   ; the tray waits in the notification area.
-  WriteRegStr HKCU "${RUN_KEY}" "ReloDaemon" '"$INSTDIR\relo.exe" daemon start'
+  WriteRegStr HKCU "${RUN_KEY}" "ReloDaemon" '"$INSTDIR\relo.exe" daemon start --silent'
 
   ; Builds from before the tray moved into the daemon registered "Relo" with
   ; a desktop command that no longer exists. Left behind, it fails at every

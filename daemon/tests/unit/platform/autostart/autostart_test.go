@@ -94,7 +94,7 @@ func TestEnable(t *testing.T) {
 		if err != nil {
 			t.Fatalf("read the launch agent: %v", err)
 		}
-		for _, want := range []string{"<string>com.relo.daemon</string>", "daemon", "run", "RunAtLoad", "Interactive"} {
+		for _, want := range []string{"<string>com.relo.daemon</string>", "daemon", "run", "<string>--silent</string>", "RunAtLoad", "Interactive"} {
 			if !strings.Contains(string(body), want) {
 				t.Fatalf("the launch agent misses %q: %s", want, body)
 			}
@@ -135,7 +135,7 @@ func TestEnable(t *testing.T) {
 		if err != nil {
 			t.Fatalf("read the desktop entry: %v", err)
 		}
-		for _, want := range []string{"[Desktop Entry]", `Exec="/usr/bin/relo" daemon run`, "X-GNOME-Autostart-enabled=true"} {
+		for _, want := range []string{"[Desktop Entry]", `Exec="/usr/bin/relo" daemon run --silent`, "X-GNOME-Autostart-enabled=true"} {
 			if !strings.Contains(string(body), want) {
 				t.Fatalf("the desktop entry misses %q: %s", want, body)
 			}
@@ -183,6 +183,27 @@ func TestReconcile(t *testing.T) {
 		}
 		if exe, ok := autostart.New().Executable(); !ok || exe != "/opt/other/relo" {
 			t.Fatalf("Executable() = %q, %v, want %q, true", exe, ok, "/opt/other/relo")
+		}
+	})
+
+	t.Run("reconcile rewrites a registration that would open the dashboard", func(t *testing.T) {
+		home := tempHome(t)
+		path, _ := registrationPath(t, home)
+		if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
+			t.Fatalf("create the registration directory: %v", err)
+		}
+		loud := "Exec=\"/opt/relo/relo\" daemon run\n<array><string>/opt/relo/relo</string><string>daemon</string><string>run</string></array>\n"
+		if err := os.WriteFile(path, []byte(loud), 0o644); err != nil {
+			t.Fatalf("write the old registration: %v", err)
+		}
+		if autostart.New().Silent() {
+			t.Fatal("Silent() = true for a registration without the flag")
+		}
+		if err := autostart.Reconcile("/opt/relo/relo"); err != nil {
+			t.Fatalf("Reconcile() error = %v", err)
+		}
+		if !autostart.New().Silent() {
+			t.Fatal("Silent() = false after Reconcile()")
 		}
 	})
 }
