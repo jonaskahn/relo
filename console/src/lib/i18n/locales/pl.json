@@ -84,7 +84,9 @@
       "palette": "Szukaj",
       "breadcrumb": "Ścieżka nawigacji",
       "signOut": "Wyloguj się",
-      "signingOut": "Wylogowywanie…"
+      "signingOut": "Wylogowywanie…",
+      "reportIssue": "Zgłoś problem",
+      "reportIssueHint": "Otwórz wydanie Relo w GitHub"
     },
     "palette": {
       "placeholder": "Szukaj stron i działań…",
@@ -547,7 +549,9 @@
           "tabModels": "Modele",
           "tabAccounts": "Konta",
           "tabSettings": "Ustawienia",
-          "notFound": "Tego dostawcy już nie ma."
+          "notFound": "Tego dostawcy już nie ma.",
+          "openDashboard": "Otwórz pulpit nawigacyjny",
+          "openDashboardLabel": "Otwórz panel {provider}"
         },
         "models": {
           "search": "Szukaj modeli",
@@ -1315,7 +1319,13 @@
         "slowRequest": "Ponad 2 minuty",
         "browseRequests": "Przeglądaj żądania",
         "previousRequest": "Poprzednie żądanie",
-        "nextRequest": "Następne żądanie"
+        "nextRequest": "Następne żądanie",
+        "reportIssue": "Zgłoś problem",
+        "reportIssueHint": "Dołącz bezpieczną diagnostykę Relo do zgłoszenia w serwisie GitHub",
+        "reportPreparing": "Przygotowywanie raportu o problemie…",
+        "reportBundleDownloaded": "Pobrano dziennik demona w formacie ZIP. Dołącz go do problemu.",
+        "reportPopupBlocked": "Przeglądarka zablokowała kartę problemów GitHub. Zezwól na wyskakujące okienka dla tej konsoli i spróbuj ponownie.",
+        "reportFailed": "Nie można otworzyć formularza zgłoszenia GitHub."
       },
       "usage": {
         "title": "Zużycie",
@@ -1659,7 +1669,34 @@
         "switchOn4xx": "Przełącz przy 4xx",
         "switchOn4xxHint": "Próbuje następnego członka przy 4xx, którego pośrednik nie ponawia",
         "switchOn5xx": "Przełącz przy 5xx",
-        "switchOn5xxHint": "Próbuje następnego członka przy 5xx, którego pośrednik nie ponawia"
+        "switchOn5xxHint": "Próbuje następnego członka przy 5xx, którego pośrednik nie ponawia",
+        "inspectRouting": "Sprawdź routing",
+        "inspector": {
+          "description": "W jaki sposób ta grupa kieruje następne żądanie i co mogą obsłużyć jej członkowie.",
+          "loading": "Ładowanie szczegółów trasy",
+          "empty": "Żaden członek nie jest dostępny do trasowania.",
+          "current": "W użyciu",
+          "next": "Następny start",
+          "noQuota": "Nie zgłoszono żadnego limitu",
+          "overflow": "+{count} więcej członków",
+          "recent": "Ostatnie trasy",
+          "noRecent": "Brak niedawnych próśb w tej grupie.",
+          "request": "Żądanie",
+          "refresh": "Odśwież",
+          "openLogs": "Otwórz dziennik ostatniego żądania",
+          "ready": "Gotowy",
+          "limited": "Ograniczona",
+          "paused": "Wstrzymano",
+          "needsSignIn": "Wymaga zalogowania",
+          "unavailable": "Niedostępne",
+          "cooling": "Chłodzenie",
+          "svgTitle": "Przepływ routingu",
+          "svgDescription": "Żądanie trafia do tej grupy i jest rozdzielane między jej członków w ustalonej kolejności, wraz z limitami i statusem.",
+          "legendCurrent": "Aktualny",
+          "legendNext": "Następny początek",
+          "legendLimited": "Ograniczona",
+          "legendUnavailable": "Niedostępne"
+        }
       },
       "settings": {
         "title": "Ustawienia",

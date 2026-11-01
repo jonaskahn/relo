@@ -84,7 +84,9 @@
       "palette": "بحث",
       "breadcrumb": "مسار التنقل",
       "signOut": "تسجيل الخروج",
-      "signingOut": "جارٍ تسجيل الخروج…"
+      "signingOut": "جارٍ تسجيل الخروج…",
+      "reportIssue": "الإبلاغ عن مشكلة",
+      "reportIssueHint": "افتح مشكلة Relo على GitHub"
     },
     "palette": {
       "placeholder": "ابحث في الصفحات والإجراءات…",
@@ -547,7 +549,9 @@
           "tabModels": "النماذج",
           "tabAccounts": "الحسابات",
           "tabSettings": "الإعدادات",
-          "notFound": "لم يعد هذا المزوّد موجودًا."
+          "notFound": "لم يعد هذا المزوّد موجودًا.",
+          "openDashboard": "افتح لوحة القيادة",
+          "openDashboardLabel": "فتح لوحة تحكم {provider}"
         },
         "models": {
           "search": "ابحث في النماذج",
@@ -1315,7 +1319,13 @@
         "slowRequest": "أكثر من دقيقتين",
         "browseRequests": "تصفح الطلبات",
         "previousRequest": "الطلب السابق",
-        "nextRequest": "الطلب التالي"
+        "nextRequest": "الطلب التالي",
+        "reportIssue": "الإبلاغ عن مشكلة",
+        "reportIssueHint": "قم بتضمين تشخيصات Relo الآمنة في مشكلة GitHub",
+        "reportPreparing": "جارٍ إعداد تقرير المشكلة…",
+        "reportBundleDownloaded": "تم تنزيل Daemon log ZIP. إرفاقه بالمسألة.",
+        "reportPopupBlocked": "قام المتصفح بحظر علامة تبويب مشكلة GitHub. اسمح بالنوافذ المنبثقة لوحدة التحكم هذه وحاول مرة أخرى.",
+        "reportFailed": "تعذر فتح نموذج مشكلة GitHub."
       },
       "usage": {
         "title": "الاستخدام",
@@ -1659,7 +1669,34 @@
         "switchOn4xx": "التبديل عند 4xx",
         "switchOn4xxHint": "يجرّب العضو التالي عند رد 4xx لا يعيد المرحّل محاولته",
         "switchOn5xx": "التبديل عند 5xx",
-        "switchOn5xxHint": "يجرّب العضو التالي عند رد 5xx لا يعيد المرحّل محاولته"
+        "switchOn5xxHint": "يجرّب العضو التالي عند رد 5xx لا يعيد المرحّل محاولته",
+        "inspectRouting": "فحص التوجيه",
+        "inspector": {
+          "description": "كيف تقوم هذه المجموعة بتوجيه الطلب التالي وما يمكن أن يقدمه أعضاؤها.",
+          "loading": "جارٍ تحميل تفاصيل التوجيه",
+          "empty": "لا يوجد عضو متاح لتوجيهه.",
+          "current": "قيد الاستخدام",
+          "next": "البداية التالية",
+          "noQuota": "لم يتم الإبلاغ عن أي حصة",
+          "overflow": "+{count} المزيد من الأعضاء",
+          "recent": "الطرق الأخيرة",
+          "noRecent": "لا توجد طلبات حديثة من خلال هذه المجموعة.",
+          "request": "طلب",
+          "refresh": "تحديث",
+          "openLogs": "افتح سجل الطلب الأخير",
+          "ready": "جاهز",
+          "limited": "محدود",
+          "paused": "متوقف مؤقتًا",
+          "needsSignIn": "يحتاج إلى تسجيل الدخول",
+          "unavailable": "غير متاح",
+          "cooling": "في فترة تهدئة",
+          "svgTitle": "تدفق التوجيه",
+          "svgDescription": "يصل الطلب إلى هذه المجموعة ثم يتوزع على أعضائها بالترتيب، مع قراءات الحصة والحالة.",
+          "legendCurrent": "الحالي",
+          "legendNext": "البداية التالية",
+          "legendLimited": "محدود",
+          "legendUnavailable": "غير متاح"
+        }
       },
       "settings": {
         "title": "الإعدادات",

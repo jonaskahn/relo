@@ -84,7 +84,9 @@
       "palette": "खोजें",
       "breadcrumb": "ब्रेडक्रंब",
       "signOut": "लॉग आउट करें",
-      "signingOut": "लॉग आउट हो रहा है…"
+      "signingOut": "लॉग आउट हो रहा है…",
+      "reportIssue": "रिपोर्ट मुद्दा",
+      "reportIssueHint": "GitHub पर एक Relo इश्यू खोलें"
     },
     "palette": {
       "placeholder": "पृष्ठ और क्रियाएँ खोजें…",
@@ -547,7 +549,9 @@
           "tabModels": "मॉडल",
           "tabAccounts": "खाते",
           "tabSettings": "सेटिंग्स",
-          "notFound": "वह प्रदाता अब नहीं है।"
+          "notFound": "वह प्रदाता अब नहीं है।",
+          "openDashboard": "डैशबोर्ड खोलें",
+          "openDashboardLabel": "{provider} के लिए डैशबोर्ड खोलें"
         },
         "models": {
           "search": "मॉडल खोजें",
@@ -1315,7 +1319,13 @@
         "slowRequest": "2 मिनट से अधिक",
         "browseRequests": "अनुरोध देखें",
         "previousRequest": "पिछला अनुरोध",
-        "nextRequest": "अगला अनुरोध"
+        "nextRequest": "अगला अनुरोध",
+        "reportIssue": "रिपोर्ट मुद्दा",
+        "reportIssueHint": "GitHub अंक में सुरक्षित Relo डायग्नोस्टिक्स शामिल करें",
+        "reportPreparing": "समस्या रिपोर्ट तैयार की जा रही है…",
+        "reportBundleDownloaded": "डेमॉन लॉग ज़िप डाउनलोड किया गया। इसे मुद्दे के साथ संलग्न करें.",
+        "reportPopupBlocked": "ब्राउज़र ने GitHub समस्या टैब को ब्लॉक कर दिया। इस कंसोल के लिए पॉप-अप की अनुमति दें और पुनः प्रयास करें।",
+        "reportFailed": "GitHub समस्या प्रपत्र नहीं खुल सका."
       },
       "usage": {
         "title": "उपयोग",
@@ -1659,7 +1669,34 @@
         "switchOn4xx": "4xx पर बदलने दें",
         "switchOn4xxHint": "ऐसे 4xx पर अगला सदस्य आज़माता है जिसे रिले पहले से दोहराता नहीं",
         "switchOn5xx": "5xx पर बदलने दें",
-        "switchOn5xxHint": "ऐसे 5xx पर अगला सदस्य आज़माता है जिसे रिले पहले से दोहराता नहीं"
+        "switchOn5xxHint": "ऐसे 5xx पर अगला सदस्य आज़माता है जिसे रिले पहले से दोहराता नहीं",
+        "inspectRouting": "रूटिंग का निरीक्षण करें",
+        "inspector": {
+          "description": "यह समूह अगले अनुरोध को कैसे रूट करता है और इसके सदस्य क्या सेवा दे सकते हैं।",
+          "loading": "रूटिंग विवरण लोड हो रहा है",
+          "empty": "रूट करने के लिए कोई सदस्य उपलब्ध नहीं है.",
+          "current": "प्रयोग में है",
+          "next": "अगली शुरुआत",
+          "noQuota": "कोई कोटा रिपोर्ट नहीं किया गया",
+          "overflow": "+{count} और सदस्य",
+          "recent": "हाल के मार्ग",
+          "noRecent": "इस समूह के माध्यम से कोई हालिया अनुरोध नहीं।",
+          "request": "निवेदन",
+          "refresh": "ताज़ा करें",
+          "openLogs": "नवीनतम अनुरोध का लॉग खोलें",
+          "ready": "तैयार",
+          "limited": "सीमित",
+          "paused": "रुका हुआ",
+          "needsSignIn": "साइन-इन की आवश्यकता है",
+          "unavailable": "अनुपलब्ध",
+          "cooling": "ठंडा करना",
+          "svgTitle": "रूटिंग प्रवाह",
+          "svgDescription": "एक अनुरोध इस समूह तक पहुंचता है और इसके आदेशित सदस्यों को कोटा और स्थिति रीडिंग के साथ भेजता है।",
+          "legendCurrent": "वर्तमान",
+          "legendNext": "अगली शुरुआत",
+          "legendLimited": "सीमित",
+          "legendUnavailable": "अनुपलब्ध"
+        }
       },
       "settings": {
         "title": "सेटिंग्स",

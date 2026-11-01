@@ -84,7 +84,9 @@
       "palette": "搜尋",
       "breadcrumb": "麵包屑",
       "signOut": "登出",
-      "signingOut": "登出中…"
+      "signingOut": "登出中…",
+      "reportIssue": "報告問題",
+      "reportIssueHint": "在 GitHub 上開啟 Relo 問題"
     },
     "palette": {
       "placeholder": "搜尋頁面與動作…",
@@ -547,7 +549,9 @@
           "tabModels": "模型",
           "tabAccounts": "賬號",
           "tabSettings": "設定",
-          "notFound": "這個供應商已不存在。"
+          "notFound": "這個供應商已不存在。",
+          "openDashboard": "打開儀表板",
+          "openDashboardLabel": "開啟 {provider} 的儀表板"
         },
         "models": {
           "search": "搜尋模型",
@@ -1315,7 +1319,13 @@
         "slowRequest": "超過 2 分鐘",
         "browseRequests": "瀏覽請求",
         "previousRequest": "上一筆請求",
-        "nextRequest": "下一筆請求"
+        "nextRequest": "下一筆請求",
+        "reportIssue": "報告問題",
+        "reportIssueHint": "在 GitHub 問題中包含安全的 Relo 診斷",
+        "reportPreparing": "準備問題報告…",
+        "reportBundleDownloaded": "下載守護程序日誌 ZIP。將其附加到問題中。",
+        "reportPopupBlocked": "瀏覽器屏蔽了 GitHub 問題標籤。允許此控制台彈出窗口，然後重試。",
+        "reportFailed": "無法開啟 GitHub 問題表單。"
       },
       "usage": {
         "title": "用量",
@@ -1659,7 +1669,34 @@
         "switchOn4xx": "4xx 時切換",
         "switchOn4xxHint": "遇到中繼不會自己重試的 4xx 時，改用下一個成員",
         "switchOn5xx": "5xx 時切換",
-        "switchOn5xxHint": "遇到中繼不會自己重試的 5xx 時，改用下一個成員"
+        "switchOn5xxHint": "遇到中繼不會自己重試的 5xx 時，改用下一個成員",
+        "inspectRouting": "檢查路由",
+        "inspector": {
+          "description": "該群組如何路由下一個請求以及其成員可以提供什麼服務。",
+          "loading": "正在加載路線詳細信息",
+          "empty": "沒有成員可以路由。",
+          "current": "使用中",
+          "next": "下次開始",
+          "noQuota": "沒有報告配額",
+          "overflow": "+還有{count}個成員",
+          "recent": "最近的路線",
+          "noRecent": "最近沒有透過該群組提出請求。",
+          "request": "請求",
+          "refresh": "重新整理",
+          "openLogs": "打開最新請求的日誌",
+          "ready": "準備好",
+          "limited": "已達上限",
+          "paused": "已暫停",
+          "needsSignIn": "需要登入",
+          "unavailable": "不可用",
+          "cooling": "冷卻",
+          "svgTitle": "路由流程",
+          "svgDescription": "請求到達該群組後，依序分發給各成員，並顯示配額與狀態。",
+          "legendCurrent": "目前",
+          "legendNext": "下次開始",
+          "legendLimited": "已達上限",
+          "legendUnavailable": "不可用"
+        }
       },
       "settings": {
         "title": "設定",

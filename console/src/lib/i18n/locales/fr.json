@@ -64,7 +64,7 @@
       "shutdownStarted": "Arrêt du daemon."
     },
     "topbar": {
-      "menu": "Menu",
+      "menu": "Menus",
       "collapseMenu": "Réduire le menu",
       "expandMenu": "Déployer le menu",
       "health": "Daemon",
@@ -84,7 +84,9 @@
       "palette": "Recherche",
       "breadcrumb": "Fil d’Ariane",
       "signOut": "Se déconnecter",
-      "signingOut": "Déconnexion…"
+      "signingOut": "Déconnexion…",
+      "reportIssue": "Signaler un problème",
+      "reportIssueHint": "Ouvrir un problème Relo sur GitHub"
     },
     "palette": {
       "placeholder": "Rechercher des pages et des actions…",
@@ -276,7 +278,7 @@
         "universeEmpty": "Aucun provider configuré. Ajoutes-en un pour voir ton univers de routage.",
         "universeNoTraffic": "Aucune requête journalisée sur cette période.",
         "universeClients": "Clients",
-        "universeProviders": "Providers",
+        "universeProviders": "Fournisseurs",
         "universeLegend": "L’épaisseur des lignes indique le volume des requêtes. La ligne pointillée est la route de la requête la plus récente.",
         "universeRequests": "requêtes",
         "universeTotal": "{count, plural, one {# requête} many {# requêtes} other {# requêtes}}",
@@ -294,7 +296,7 @@
         "successTile": "Taux de réussite",
         "paidSpend": "Dépenses payantes",
         "paidSpendHint": "{count} connexions payantes",
-        "tokens": "Tokens",
+        "tokens": "Jetons",
         "accountsKpi": "Comptes",
         "latency": "Latence",
         "resumesIn": "reprend dans {time}",
@@ -320,7 +322,7 @@
         "spendFree": "Utilisation gratuite",
         "spendFreeDesc": "Le trafic des voies gratuites, évalué mais jamais facturé.",
         "spendFreeEmpty": "Aucune connexion gratuite sans clé sur cette période.",
-        "trendTokens": "Tokens",
+        "trendTokens": "Jetons",
         "doctorIssues": "{count, plural, one {1 problème} many {# problèmes} other {# problèmes}}",
         "attentionCount": "{count, plural, one {# à surveiller} many {# à surveiller} other {# à surveiller}}",
         "attentionReached": "a atteint sa limite de {window} et se réinitialise dans {time}",
@@ -344,7 +346,7 @@
         "description": "Les vérifications par lesquelles le daemon rend compte de son répertoire d’état et de ses secrets."
       },
       "providers": {
-        "title": "Providers",
+        "title": "Fournisseurs",
         "description": "Les providers en amont livrés avec ce binaire et leurs remplacements de routage."
       },
       "providersPage": {
@@ -547,7 +549,9 @@
           "tabModels": "Modèles",
           "tabAccounts": "Comptes",
           "tabSettings": "Paramètres",
-          "notFound": "Ce provider n’existe plus."
+          "notFound": "Ce provider n’existe plus.",
+          "openDashboard": "Ouvrir le tableau de bord",
+          "openDashboardLabel": "Ouvrir le tableau de bord de {provider}"
         },
         "models": {
           "search": "Rechercher des modèles",
@@ -1146,11 +1150,11 @@
         "customDuplicate": "Un modèle portant cet id existe déjà pour ce provider.",
         "customRemoveTitle": "Retirer ce modèle ?",
         "customRemoveBody": "Ce modèle est retiré de ton catalogue local. Ses alias et remplacements de prix sont conservés.",
-        "snapshotProviders": "providers",
+        "snapshotProviders": "fournisseurs",
         "syncAllPrices": "Synchroniser tous les prix depuis models.dev",
         "syncAllDesc": "Importer les prix de chaque entrée provider-modèle de l’instantané fourni. Les remplacements sont mis à jour ; les modèles hors instantané restent inchangés.",
         "syncEntries": "entrées de prix",
-        "syncProviders": "providers",
+        "syncProviders": "fournisseurs",
         "syncSearch": "Filtrer les entrées…",
         "syncWarning": "Cela écrit un remplacement de prix pour chaque modèle de l’instantané, en remplaçant les entrées déjà définies avec les tarifs de models.dev. Recharge pour voir l’onglet Prix.",
         "syncRun": "Importer {n} prix",
@@ -1250,7 +1254,7 @@
         "columnProvider": "Provider",
         "columnClient": "Clé client",
         "columnStatus": "Statut",
-        "columnTokens": "Tokens",
+        "columnTokens": "Jetons",
         "columnDuration": "Durée",
         "columnCost": "Coût",
         "columnType": "Type",
@@ -1315,7 +1319,13 @@
         "slowRequest": "Plus de 2 minutes",
         "browseRequests": "Parcourir les requêtes",
         "previousRequest": "Requête précédente",
-        "nextRequest": "Requête suivante"
+        "nextRequest": "Requête suivante",
+        "reportIssue": "Signaler un problème",
+        "reportIssueHint": "Inclure des diagnostics Relo sécurisés dans un problème GitHub",
+        "reportPreparing": "Préparation du rapport de problème…",
+        "reportBundleDownloaded": "Journal du daemon téléchargé au format ZIP. Joignez-le à l’issue.",
+        "reportPopupBlocked": "Le navigateur a bloqué l'onglet Problème GitHub. Autorisez les fenêtres contextuelles pour cette console et réessayez.",
+        "reportFailed": "Impossible d'ouvrir le formulaire de problème GitHub."
       },
       "usage": {
         "title": "Utilisation",
@@ -1370,7 +1380,7 @@
         "unitRequests": "requêtes",
         "unitErrors": "erreurs",
         "unitAttempts": "tentatives",
-        "unitTokens": "tokens",
+        "unitTokens": "jetons",
         "unitPerRequest": "par requête",
         "unitEstimated": "USD estimé",
         "unitPricedRequest": "par requête avec prix",
@@ -1409,7 +1419,7 @@
         "range30": "30 derniers jours",
         "rangeAll": "Depuis toujours",
         "summaryRequests": "Requêtes",
-        "summaryTokens": "Tokens",
+        "summaryTokens": "Jetons",
         "summaryTokensIn": "Entrée",
         "summaryTokensOut": "Sortie",
         "summarySpend": "Dépenses API",
@@ -1428,7 +1438,7 @@
         "compareTitle": "Top {count} par {metric}",
         "chart": {
           "requests": "Requêtes",
-          "tokens": "Tokens",
+          "tokens": "Jetons",
           "spend": "Dépenses API",
           "errors": "Erreurs",
           "latency": "Latence"
@@ -1536,7 +1546,7 @@
         "pickProvider": "Choisir une connexion",
         "searchModels": "Rechercher des modèles",
         "memberCount": "{eligible} sur {total} éligibles",
-        "providersUsed": "Providers",
+        "providersUsed": "Fournisseurs",
         "modelsUsed": "Modèles",
         "providerCount": "{count} providers",
         "modelCount": "{count} modèles",
@@ -1579,7 +1589,7 @@
         "flowFailed": "Le schéma n’a pas pu être dessiné. Le groupe est listé ci-dessous.",
         "coverage": "{serving} comptes sur {active}",
         "coverageNone": "aucun compte ne peut le servir",
-        "autoBadge": "Auto",
+        "autoBadge": "Automatique",
         "autoHint": "Suit toutes les connexions qui servent ce modèle.",
         "kind": "Type de membre",
         "kindModel": "Le modèle d’une connexion",
@@ -1659,7 +1669,34 @@
         "switchOn4xx": "Basculer sur les 4xx",
         "switchOn4xxHint": "Essaie le membre suivant sur un 4xx que le relais ne réessaie pas déjà",
         "switchOn5xx": "Basculer sur les 5xx",
-        "switchOn5xxHint": "Essaie le membre suivant sur un 5xx que le relais ne réessaie pas déjà"
+        "switchOn5xxHint": "Essaie le membre suivant sur un 5xx que le relais ne réessaie pas déjà",
+        "inspectRouting": "Inspecter le routage",
+        "inspector": {
+          "description": "Comment ce groupe achemine la requête suivante et ce que ses membres peuvent servir.",
+          "loading": "Chargement des détails du routage",
+          "empty": "Aucun membre n'est disponible pour l'acheminement.",
+          "current": "En cours d'utilisation",
+          "next": "Prochain démarrage",
+          "noQuota": "Aucun quota signalé",
+          "overflow": "+{count} membres supplémentaires",
+          "recent": "Itinéraires récents",
+          "noRecent": "Aucune demande récente via ce groupe.",
+          "request": "Demande",
+          "refresh": "Actualiser",
+          "openLogs": "Ouvrir le journal de la dernière requête",
+          "ready": "Prêt",
+          "limited": "Limité",
+          "paused": "En pause",
+          "needsSignIn": "Nécessite une connexion",
+          "unavailable": "Indisponible",
+          "cooling": "En refroidissement",
+          "svgTitle": "Flux de routage",
+          "svgDescription": "Une requête atteint ce groupe, puis est répartie entre ses membres dans l’ordre, avec le quota et l’état de chacun.",
+          "legendCurrent": "Actuel",
+          "legendNext": "Prochain démarrage",
+          "legendLimited": "Limité",
+          "legendUnavailable": "Indisponible"
+        }
       },
       "settings": {
         "title": "Paramètres",
@@ -1831,12 +1868,12 @@
         "modeFormat": "Format client",
         "target": "Cible",
         "targetModel": "Modèle du provider",
-        "targetRoute": "Route",
+        "targetRoute": "Itinéraire",
         "provider": "Connexion",
         "model": "Modèle",
-        "route": "Route",
+        "route": "Itinéraire",
         "format": "Format",
-        "formatChat": "OpenAI Chat Completions",
+        "formatChat": "Achèvements du chat OpenAI",
         "formatResponses": "OpenAI Responses",
         "formatMessages": "Anthropic Messages",
         "system": "Invite système",
@@ -1877,9 +1914,9 @@
         "locked": "Verrouillé",
         "searchThreads": "Rechercher des conversations",
         "searchNoMatch": "Aucune conversation ne correspond à cette recherche.",
-        "toolCall": "Tool call",
-        "toolResult": "Tool result",
-        "replayShownOnly": "Shown from the capture, not re-sent."
+        "toolCall": "Appel d’outil",
+        "toolResult": "Résultat d’outil",
+        "replayShownOnly": "Montré à partir de la capture, non renvoyé."
       }
     },
     "settings": {
@@ -1915,7 +1952,7 @@
       "networkSaved": "Réseau enregistré. Redémarre le daemon pour l’appliquer.",
       "portInvalid": "Utilise un port entre 0 et 65535.",
       "bindInvalid": "Saisis une adresse IP, par exemple 127.0.0.1.",
-      "sectionProviders": "Providers",
+      "sectionProviders": "Fournisseurs",
       "providersDescription": "Comment Relo atteint les providers et leur répertoire de modèles.",
       "catalogLabel": "Répertoire de modèles",
       "catalogHint": "Le document models.dev que lit le catalogue.",

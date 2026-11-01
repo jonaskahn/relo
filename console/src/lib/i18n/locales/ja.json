@@ -84,7 +84,9 @@
       "palette": "検索",
       "breadcrumb": "パンくずリスト",
       "signOut": "サインアウト",
-      "signingOut": "サインアウト中…"
+      "signingOut": "サインアウト中…",
+      "reportIssue": "問題を報告する",
+      "reportIssueHint": "GitHub で Relo の問題を開く"
     },
     "palette": {
       "placeholder": "ページや操作を検索…",
@@ -547,7 +549,9 @@
           "tabModels": "モデル",
           "tabAccounts": "アカウント",
           "tabSettings": "設定",
-          "notFound": "そのプロバイダーは見つかりません。"
+          "notFound": "そのプロバイダーは見つかりません。",
+          "openDashboard": "ダッシュボードを開く",
+          "openDashboardLabel": "{provider} のダッシュボードを開く"
         },
         "models": {
           "search": "モデルを検索",
@@ -1315,7 +1319,13 @@
         "slowRequest": "2分超",
         "browseRequests": "リクエストを移動",
         "previousRequest": "前のリクエスト",
-        "nextRequest": "次のリクエスト"
+        "nextRequest": "次のリクエスト",
+        "reportIssue": "問題を報告する",
+        "reportIssueHint": "GitHub の問題に安全な Relo 診断を含める",
+        "reportPreparing": "問題レポートを準備しています…",
+        "reportBundleDownloaded": "デーモン ログ ZIP がダウンロードされました。問題に添付してください。",
+        "reportPopupBlocked": "ブラウザーが GitHub の問題タブをブロックしました。このコンソールのポップアップを許可して、再試行してください。",
+        "reportFailed": "GitHub の問題フォームを開けませんでした。"
       },
       "usage": {
         "title": "使用量",
@@ -1659,7 +1669,34 @@
         "switchOn4xx": "4xx で切り替え",
         "switchOn4xxHint": "リレーが再試行しない 4xx のとき、次のメンバーを試す",
         "switchOn5xx": "5xx で切り替え",
-        "switchOn5xxHint": "リレーが再試行しない 5xx のとき、次のメンバーを試す"
+        "switchOn5xxHint": "リレーが再試行しない 5xx のとき、次のメンバーを試す",
+        "inspectRouting": "ルーティングを確認",
+        "inspector": {
+          "description": "このグループが次のリクエストをルーティングする方法と、そのメンバーが何を提供できるか。",
+          "loading": "ルーティングの詳細をロードしています",
+          "empty": "ルーティングできるメンバーがいません。",
+          "current": "使用中",
+          "next": "次のスタート",
+          "noQuota": "クォータは報告されていません",
+          "overflow": "メンバーがさらに {count} 人増えました",
+          "recent": "最近のルート",
+          "noRecent": "このグループを通じて最近リクエストはありません。",
+          "request": "リクエスト",
+          "refresh": "リフレッシュ",
+          "openLogs": "最新のリクエストのログを開く",
+          "ready": "準備完了",
+          "limited": "上限に達しています",
+          "paused": "一時停止中",
+          "needsSignIn": "サインインが必要です",
+          "unavailable": "利用不可",
+          "cooling": "冷却",
+          "svgTitle": "ルーティングフロー",
+          "svgDescription": "リクエストがこのグループに到達し、順序に従って各メンバーへ振り分けられます。クォータと状態も表示します。",
+          "legendCurrent": "現在",
+          "legendNext": "次のスタート",
+          "legendLimited": "上限に達しています",
+          "legendUnavailable": "利用不可"
+        }
       },
       "settings": {
         "title": "設定",

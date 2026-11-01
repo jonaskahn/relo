@@ -84,7 +84,9 @@
       "palette": "Cerca",
       "breadcrumb": "Percorso di navigazione",
       "signOut": "Esci",
-      "signingOut": "Uscita in corso…"
+      "signingOut": "Uscita in corso…",
+      "reportIssue": "Segnala il problema",
+      "reportIssueHint": "Apri un problema di Relo su GitHub"
     },
     "palette": {
       "placeholder": "Cerca pagine e azioni…",
@@ -547,7 +549,9 @@
           "tabModels": "Modelli",
           "tabAccounts": "Account",
           "tabSettings": "Impostazioni",
-          "notFound": "Questo provider non c’è più."
+          "notFound": "Questo provider non c’è più.",
+          "openDashboard": "Apri il cruscotto",
+          "openDashboardLabel": "Apri la dashboard di {provider}"
         },
         "models": {
           "search": "Cerca modelli",
@@ -1315,7 +1319,13 @@
         "slowRequest": "Oltre 2 minuti",
         "browseRequests": "Scorri le richieste",
         "previousRequest": "Richiesta precedente",
-        "nextRequest": "Richiesta successiva"
+        "nextRequest": "Richiesta successiva",
+        "reportIssue": "Segnala il problema",
+        "reportIssueHint": "Includere la diagnostica Relo sicura in un problema di GitHub",
+        "reportPreparing": "Preparazione del rapporto sul problema…",
+        "reportBundleDownloaded": "ZIP del registro del demone scaricato. Allegalo al problema.",
+        "reportPopupBlocked": "Il browser ha bloccato la scheda dei problemi di GitHub. Consenti popup per questa console e riprova.",
+        "reportFailed": "Impossibile aprire il modulo di problema GitHub."
       },
       "usage": {
         "title": "Utilizzo",
@@ -1659,7 +1669,34 @@
         "switchOn4xx": "Cambia sui 4xx",
         "switchOn4xxHint": "Prova il membro successivo su un 4xx che il relay non ritenta già",
         "switchOn5xx": "Cambia sui 5xx",
-        "switchOn5xxHint": "Prova il membro successivo su un 5xx che il relay non ritenta già"
+        "switchOn5xxHint": "Prova il membro successivo su un 5xx che il relay non ritenta già",
+        "inspectRouting": "Ispeziona instradamento",
+        "inspector": {
+          "description": "In che modo questo gruppo instrada la richiesta successiva e cosa possono servire i suoi membri.",
+          "loading": "Caricamento dei dettagli del percorso",
+          "empty": "Nessun membro è disponibile per l'instradamento.",
+          "current": "In uso",
+          "next": "Prossimo inizio",
+          "noQuota": "Nessuna quota segnalata",
+          "overflow": "+{count} altri membri",
+          "recent": "Percorsi recenti",
+          "noRecent": "Nessuna richiesta recente tramite questo gruppo.",
+          "request": "Richiesta",
+          "refresh": "Aggiorna",
+          "openLogs": "Apri il registro dell'ultima richiesta",
+          "ready": "Pronto",
+          "limited": "Limitato",
+          "paused": "In pausa",
+          "needsSignIn": "È necessario accedere",
+          "unavailable": "Non disponibile",
+          "cooling": "Raffreddamento",
+          "svgTitle": "Flusso di instradamento",
+          "svgDescription": "Una richiesta raggiunge questo gruppo e viene distribuita ai suoi membri in ordine, con quota e stato.",
+          "legendCurrent": "Corrente",
+          "legendNext": "Prossimo inizio",
+          "legendLimited": "Limitato",
+          "legendUnavailable": "Non disponibile"
+        }
       },
       "settings": {
         "title": "Impostazioni",

@@ -31,7 +31,7 @@
       "keys": "Clientsleutels",
       "groups": "Groepen",
       "dashboard": "Dashboard",
-      "logs": "Logs",
+      "logs": "Logboeken",
       "usage": "Verbruik",
       "settings": "Instellingen",
       "signOut": "Uitloggen",
@@ -84,7 +84,9 @@
       "palette": "Zoeken",
       "breadcrumb": "Kruimelpad",
       "signOut": "Uitloggen",
-      "signingOut": "Bezig met uitloggen…"
+      "signingOut": "Bezig met uitloggen…",
+      "reportIssue": "Probleem melden",
+      "reportIssueHint": "Een Relo-issue op GitHub openen"
     },
     "palette": {
       "placeholder": "Zoek pagina’s en acties…",
@@ -393,7 +395,7 @@
           "sourceNone": "Niet vermeld",
           "noLayers": "Noch de provider noch models.dev geeft een grootte op.",
           "currentValue": "Huidig",
-          "presets": "Presets",
+          "presets": "Ön ayarlar",
           "quickSet": "Contextvenster instellen op {value}",
           "edit": "Context-override instellen (nu {value})",
           "customTitle": "Aangepast · nu {value}",
@@ -498,7 +500,7 @@
           "filterOption": "{label} ({count})",
           "tagFree": "Gratis",
           "tagExperimental": "Experimenteel",
-          "tagPayAsYouGo": "Betalen per gebruik",
+          "tagPayAsYouGo": "Betalen naar gebruik",
           "tagPaidPlan": "Betaald abonnement",
           "groupFree": "Gratis verbindingen",
           "freeAvailable": "Gratis beschikbaar"
@@ -547,7 +549,9 @@
           "tabModels": "Modellen",
           "tabAccounts": "Accounts",
           "tabSettings": "Instellingen",
-          "notFound": "Die provider is verdwenen."
+          "notFound": "Die provider is verdwenen.",
+          "openDashboard": "Dashboard openen",
+          "openDashboardLabel": "Dashboard van {provider} openen"
         },
         "models": {
           "search": "Modellen zoeken",
@@ -630,7 +634,7 @@
           "pricedAsApply": "Deze gebruiken",
           "useAutomatic": "Automatische koppeling gebruiken",
           "pricedAsFailed": "Kon de prijsbron niet wijzigen: {detail}",
-          "override": "Override",
+          "override": "Geçersiz kılma",
           "overrideName": "Naam",
           "overrideDescription": "Beschrijving",
           "overrideCategory": "Categorie",
@@ -656,7 +660,7 @@
           "priceTable": "Prijs per miljoen tokens",
           "columnProvider": "Provider",
           "columnModelsDev": "models.dev",
-          "columnOverride": "Override",
+          "columnOverride": "Geçersiz kılma",
           "columnEffective": "Effectief",
           "cacheRead": "Cache lezen",
           "cacheWrite": "Cache schrijven",
@@ -673,7 +677,7 @@
           "editPricing": "Prijzen",
           "editLimits": "Limieten",
           "editCapabilities": "Mogelijkheden",
-          "overrides": "Overrides",
+          "overrides": "Geçersiz kılmalar",
           "overridesNone": "Geen overrides — het model volgt de provider en daarna models.dev.",
           "sourceAccount": "Bepaald door account",
           "sourceProvider": "Bepaald door verbinding",
@@ -1146,11 +1150,11 @@
         "customDuplicate": "Een model met dit id bestaat al voor deze provider.",
         "customRemoveTitle": "Dit model verwijderen?",
         "customRemoveBody": "Deze vermelding voor een aangepast model wordt verwijderd uit je lokale catalogus. Aliassen en prijs-overrides ervoor blijven bestaan.",
-        "snapshotProviders": "providers",
+        "snapshotProviders": "aanbieders",
         "syncAllPrices": "Alle prijzen synchroniseren vanuit models.dev",
         "syncAllDesc": "Prijzen importeren voor elke provider-modelvermelding in de meegeleverde snapshot. Bestaande overrides worden bijgewerkt; modellen die niet in de snapshot staan blijven onaangeroerd.",
         "syncEntries": "prijsvermeldingen",
-        "syncProviders": "providers",
+        "syncProviders": "aanbieders",
         "syncSearch": "Vermeldingen filteren…",
         "syncWarning": "Dit schrijft prijs-overrides voor elk model in de snapshot. Al ingestelde vermeldingen worden bijgewerkt met models.dev-tarieven. Ververs de pagina om het nieuwe tabblad Prijzen te zien.",
         "syncRun": "{n} prijzen importeren",
@@ -1315,7 +1319,13 @@
         "slowRequest": "Meer dan 2 minuten",
         "browseRequests": "Aanvragen doorlopen",
         "previousRequest": "Vorige aanvraag",
-        "nextRequest": "Volgende aanvraag"
+        "nextRequest": "Volgende aanvraag",
+        "reportIssue": "Probleem melden",
+        "reportIssueHint": "Neem veilige Relo-diagnostiek op in een GitHub-probleem",
+        "reportPreparing": "Het probleemrapport voorbereiden…",
+        "reportBundleDownloaded": "Daemonlog ZIP gedownload. Voeg het bestand toe aan het issue.",
+        "reportPopupBlocked": "De browser heeft het GitHub-issuevenster geblokkeerd. Sta pop-ups toe voor deze console en probeer het opnieuw.",
+        "reportFailed": "Kan het GitHub-probleemformulier niet openen."
       },
       "usage": {
         "title": "Verbruik",
@@ -1579,7 +1589,7 @@
         "flowFailed": "Het diagram kon niet worden getekend; de groep die het beschrijft staat hieronder.",
         "coverage": "{serving} van {active} accounts",
         "coverageNone": "geen account kan hem bedienen",
-        "autoBadge": "Auto",
+        "autoBadge": "Automatisch",
         "autoHint": "Volgt elke verbinding die dit model serveert.",
         "kind": "Lidsoort",
         "kindModel": "Het model van één verbinding",
@@ -1659,7 +1669,34 @@
         "switchOn4xx": "Overschakelen bij 4xx",
         "switchOn4xxHint": "Probeert het volgende lid bij een 4xx die de relay niet al opnieuw probeert",
         "switchOn5xx": "Overschakelen bij 5xx",
-        "switchOn5xxHint": "Probeert het volgende lid bij een 5xx die de relay niet al opnieuw probeert"
+        "switchOn5xxHint": "Probeert het volgende lid bij een 5xx die de relay niet al opnieuw probeert",
+        "inspectRouting": "Routering inspecteren",
+        "inspector": {
+          "description": "Hoe deze groep het volgende verzoek doorstuurt en wat haar leden kunnen leveren.",
+          "loading": "Routegegevens laden",
+          "empty": "Er is geen lid beschikbaar om te routeren.",
+          "current": "In gebruik",
+          "next": "Volgende start",
+          "noQuota": "Geen quota gemeld",
+          "overflow": "+{count} meer leden",
+          "recent": "Recente trajecten",
+          "noRecent": "Geen recente verzoeken via deze groep.",
+          "request": "Verzoek",
+          "refresh": "Vernieuwen",
+          "openLogs": "Open het log van de laatste aanvraag",
+          "ready": "Klaar",
+          "limited": "Beperkt",
+          "paused": "Gepauzeerd",
+          "needsSignIn": "Inloggen is vereist",
+          "unavailable": "Niet beschikbaar",
+          "cooling": "Afkoelen",
+          "svgTitle": "Routeringsstroom",
+          "svgDescription": "Een verzoek bereikt deze groep en wordt in volgorde over de leden verdeeld, met quota- en statusgegevens.",
+          "legendCurrent": "Huidig",
+          "legendNext": "Volgende start",
+          "legendLimited": "Beperkt",
+          "legendUnavailable": "Niet beschikbaar"
+        }
       },
       "settings": {
         "title": "Instellingen",
@@ -1879,7 +1916,7 @@
         "searchNoMatch": "Geen gesprek komt overeen met deze zoekopdracht.",
         "toolCall": "Tool call",
         "toolResult": "Tool result",
-        "replayShownOnly": "Shown from the capture, not re-sent."
+        "replayShownOnly": "Getoond uit de opname, niet opnieuw verzonden."
       }
     },
     "settings": {

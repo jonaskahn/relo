@@ -84,7 +84,9 @@
       "palette": "Sök",
       "breadcrumb": "Sökväg",
       "signOut": "Logga ut",
-      "signingOut": "Loggar ut…"
+      "signingOut": "Loggar ut…",
+      "reportIssue": "Rapportera problem",
+      "reportIssueHint": "Öppna ett Relo-problem på GitHub"
     },
     "palette": {
       "placeholder": "Sök sidor och åtgärder…",
@@ -547,7 +549,9 @@
           "tabModels": "Modeller",
           "tabAccounts": "Konton",
           "tabSettings": "Inställningar",
-          "notFound": "Den leverantören är borta."
+          "notFound": "Den leverantören är borta.",
+          "openDashboard": "Öppna instrumentpanelen",
+          "openDashboardLabel": "Öppna instrumentpanelen för {provider}"
         },
         "models": {
           "search": "Sök modeller",
@@ -1315,7 +1319,13 @@
         "slowRequest": "Över 2 minuter",
         "browseRequests": "Bläddra bland förfrågningar",
         "previousRequest": "Föregående förfrågan",
-        "nextRequest": "Nästa förfrågan"
+        "nextRequest": "Nästa förfrågan",
+        "reportIssue": "Rapportera problem",
+        "reportIssueHint": "Inkludera säker Relo-diagnostik i ett GitHub-problem",
+        "reportPreparing": "Förbereder problemrapporten…",
+        "reportBundleDownloaded": "Daemon log ZIP har laddats ned. Bifoga den till frågan.",
+        "reportPopupBlocked": "Webbläsaren blockerade GitHub-problemfliken. Tillåt popup-fönster för den här konsolen och försök igen.",
+        "reportFailed": "Det gick inte att öppna GitHub-problemformuläret."
       },
       "usage": {
         "title": "Användning",
@@ -1659,7 +1669,34 @@
         "switchOn4xx": "Tillåt växling vid 4xx",
         "switchOn4xxHint": "Provar nästa medlem vid en 4xx som reläet inte redan försöker igen",
         "switchOn5xx": "Tillåt växling vid 5xx",
-        "switchOn5xxHint": "Provar nästa medlem vid en 5xx som reläet inte redan försöker igen"
+        "switchOn5xxHint": "Provar nästa medlem vid en 5xx som reläet inte redan försöker igen",
+        "inspectRouting": "Inspektera dirigering",
+        "inspector": {
+          "description": "Hur den här gruppen dirigerar nästa förfrågan och vad dess medlemmar kan tjäna.",
+          "loading": "Laddar ruttdetaljer",
+          "empty": "Ingen medlem är tillgänglig att dirigera.",
+          "current": "I bruk",
+          "next": "Nästa start",
+          "noQuota": "Ingen kvot rapporterad",
+          "overflow": "+{count} medlemmar till",
+          "recent": "Senaste rutter",
+          "noRecent": "Inga nya förfrågningar via den här gruppen.",
+          "request": "Begäran",
+          "refresh": "Uppdatera",
+          "openLogs": "Öppna senaste begärans logg",
+          "ready": "Klar",
+          "limited": "Gräns nådd",
+          "paused": "Pausad",
+          "needsSignIn": "Behöver inloggning",
+          "unavailable": "Ej tillgänglig",
+          "cooling": "Kylning",
+          "svgTitle": "Dirigera flöde",
+          "svgDescription": "En begäran når den här gruppen och fördelas i ordning till medlemmarna, med kvot- och statusvärden.",
+          "legendCurrent": "Aktuell",
+          "legendNext": "Nästa start",
+          "legendLimited": "Gräns nådd",
+          "legendUnavailable": "Ej tillgänglig"
+        }
       },
       "settings": {
         "title": "Inställningar",

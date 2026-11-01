@@ -84,7 +84,9 @@
       "palette": "Suchen",
       "breadcrumb": "Navigationspfad",
       "signOut": "Abmelden",
-      "signingOut": "Abmelden…"
+      "signingOut": "Abmelden…",
+      "reportIssue": "Problem melden",
+      "reportIssueHint": "Ein Relo-Issue auf GitHub öffnen"
     },
     "palette": {
       "placeholder": "Seiten und Aktionen suchen…",
@@ -547,7 +549,9 @@
           "tabModels": "Modelle",
           "tabAccounts": "Konten",
           "tabSettings": "Einstellungen",
-          "notFound": "Diesen Anbieter gibt es nicht mehr."
+          "notFound": "Diesen Anbieter gibt es nicht mehr.",
+          "openDashboard": "Dashboard öffnen",
+          "openDashboardLabel": "Dashboard für {provider} öffnen"
         },
         "models": {
           "search": "Modelle suchen",
@@ -1315,7 +1319,13 @@
         "slowRequest": "Über 2 Minuten",
         "browseRequests": "Anfragen durchsehen",
         "previousRequest": "Vorherige Anfrage",
-        "nextRequest": "Nächste Anfrage"
+        "nextRequest": "Nächste Anfrage",
+        "reportIssue": "Problem melden",
+        "reportIssueHint": "Sichere Relo-Diagnose in ein GitHub-Issue aufnehmen",
+        "reportPreparing": "Vorbereiten des Problemberichts…",
+        "reportBundleDownloaded": "Daemon-Log als ZIP heruntergeladen. Hänge es dem Issue an.",
+        "reportPopupBlocked": "Der Browser hat das GitHub-Issue-Fenster blockiert. Erlaube Pop-ups für diese Konsole und versuche es erneut.",
+        "reportFailed": "Das GitHub-Problemformular konnte nicht geöffnet werden."
       },
       "usage": {
         "title": "Verbrauch",
@@ -1659,7 +1669,34 @@
         "switchOn4xx": "Bei 4xx umschalten",
         "switchOn4xxHint": "Versucht das nächste Mitglied bei einem 4xx, das der Relay nicht ohnehin wiederholt",
         "switchOn5xx": "Bei 5xx umschalten",
-        "switchOn5xxHint": "Versucht das nächste Mitglied bei einem 5xx, das der Relay nicht ohnehin wiederholt"
+        "switchOn5xxHint": "Versucht das nächste Mitglied bei einem 5xx, das der Relay nicht ohnehin wiederholt",
+        "inspectRouting": "Routing prüfen",
+        "inspector": {
+          "description": "Wie diese Gruppe die nächste Anfrage weiterleitet und was ihre Mitglieder bedienen können.",
+          "loading": "Routing-Details werden geladen",
+          "empty": "Für die Weiterleitung steht kein Mitglied zur Verfügung.",
+          "current": "Im Einsatz",
+          "next": "Nächster Start",
+          "noQuota": "Keine Quote gemeldet",
+          "overflow": "+{count} weitere Mitglieder",
+          "recent": "Aktuelle Routen",
+          "noRecent": "Keine aktuellen Anfragen über diese Gruppe.",
+          "request": "Anfrage",
+          "refresh": "Aktualisieren",
+          "openLogs": "Log der letzten Anfrage öffnen",
+          "ready": "Bereit",
+          "limited": "Limit erreicht",
+          "paused": "Angehalten",
+          "needsSignIn": "Anmeldung erforderlich",
+          "unavailable": "Nicht verfügbar",
+          "cooling": "Abkühlphase",
+          "svgTitle": "Routing-Fluss",
+          "svgDescription": "Eine Anfrage erreicht diese Gruppe und wird in der festgelegten Reihenfolge an ihre Mitglieder verteilt; dazu erscheinen Kontingent- und Statuswerte.",
+          "legendCurrent": "Aktuell",
+          "legendNext": "Nächster Start",
+          "legendLimited": "Limit erreicht",
+          "legendUnavailable": "Nicht verfügbar"
+        }
       },
       "settings": {
         "title": "Einstellungen",

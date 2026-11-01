@@ -84,7 +84,9 @@
       "palette": "Buscar",
       "breadcrumb": "Ruta de navegación",
       "signOut": "Cerrar sesión",
-      "signingOut": "Cerrando sesión…"
+      "signingOut": "Cerrando sesión…",
+      "reportIssue": "Informar problema",
+      "reportIssueHint": "Abrir una incidencia de Relo en GitHub"
     },
     "palette": {
       "placeholder": "Buscar páginas y acciones…",
@@ -547,7 +549,9 @@
           "tabModels": "Modelos",
           "tabAccounts": "Cuentas",
           "tabSettings": "Ajustes",
-          "notFound": "Ese provider ya no existe."
+          "notFound": "Ese provider ya no existe.",
+          "openDashboard": "Abrir panel",
+          "openDashboardLabel": "Abrir panel de {provider}"
         },
         "models": {
           "search": "Buscar modelos",
@@ -1315,7 +1319,13 @@
         "slowRequest": "Más de 2 minutos",
         "browseRequests": "Recorrer solicitudes",
         "previousRequest": "Solicitud anterior",
-        "nextRequest": "Solicitud siguiente"
+        "nextRequest": "Solicitud siguiente",
+        "reportIssue": "Informar problema",
+        "reportIssueHint": "Incluir diagnósticos seguros de Relo en un problema de GitHub",
+        "reportPreparing": "Preparando el informe de problemas…",
+        "reportBundleDownloaded": "Archivo ZIP del registro del demonio descargado. Adjúntelo al problema.",
+        "reportPopupBlocked": "El navegador bloqueó la pestaña de problemas de GitHub. Permita ventanas emergentes para esta consola y vuelva a intentarlo.",
+        "reportFailed": "No se pudo abrir el formulario de problema de GitHub."
       },
       "usage": {
         "title": "Uso",
@@ -1659,7 +1669,34 @@
         "switchOn4xx": "Cambiar en 4xx",
         "switchOn4xxHint": "Prueba el siguiente miembro ante un 4xx que el relé ya no reintenta",
         "switchOn5xx": "Cambiar en 5xx",
-        "switchOn5xxHint": "Prueba el siguiente miembro ante un 5xx que el relé ya no reintenta"
+        "switchOn5xxHint": "Prueba el siguiente miembro ante un 5xx que el relé ya no reintenta",
+        "inspectRouting": "Inspeccionar enrutamiento",
+        "inspector": {
+          "description": "Cómo este grupo dirige la siguiente solicitud y qué pueden atender sus miembros.",
+          "loading": "Cargando detalles de ruta",
+          "empty": "Ningún miembro está disponible para enrutar.",
+          "current": "En uso",
+          "next": "Próximo comienzo",
+          "noQuota": "No se informó ninguna cuota",
+          "overflow": "+{count} miembros más",
+          "recent": "Rutas recientes",
+          "noRecent": "No hay solicitudes recientes a través de este grupo.",
+          "request": "Solicitar",
+          "refresh": "Actualizar",
+          "openLogs": "Abrir el registro de la última solicitud",
+          "ready": "Listo",
+          "limited": "Limitado",
+          "paused": "En pausa",
+          "needsSignIn": "Necesita iniciar sesión",
+          "unavailable": "No disponible",
+          "cooling": "Enfriamiento",
+          "svgTitle": "Flujo de enrutamiento",
+          "svgDescription": "Una solicitud llega a este grupo y se distribuye entre sus miembros ordenados, con lecturas de cuota y estado.",
+          "legendCurrent": "Actual",
+          "legendNext": "Próximo comienzo",
+          "legendLimited": "Limitado",
+          "legendUnavailable": "No disponible"
+        }
       },
       "settings": {
         "title": "Ajustes",

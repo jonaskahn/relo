@@ -84,7 +84,9 @@
       "palette": "搜索",
       "breadcrumb": "面包屑",
       "signOut": "退出登录",
-      "signingOut": "正在退出…"
+      "signingOut": "正在退出…",
+      "reportIssue": "报告问题",
+      "reportIssueHint": "在 GitHub 上打开 Relo 问题"
     },
     "palette": {
       "placeholder": "搜索页面和操作…",
@@ -547,7 +549,9 @@
           "tabModels": "模型",
           "tabAccounts": "账号",
           "tabSettings": "设置",
-          "notFound": "该提供商已不存在。"
+          "notFound": "该提供商已不存在。",
+          "openDashboard": "打开仪表板",
+          "openDashboardLabel": "打开 {provider} 的仪表板"
         },
         "models": {
           "search": "搜索模型",
@@ -1315,7 +1319,13 @@
         "slowRequest": "超过 2 分钟",
         "browseRequests": "浏览请求",
         "previousRequest": "上一条请求",
-        "nextRequest": "下一条请求"
+        "nextRequest": "下一条请求",
+        "reportIssue": "报告问题",
+        "reportIssueHint": "在 GitHub 问题中包含安全的 Relo 诊断",
+        "reportPreparing": "准备问题报告…",
+        "reportBundleDownloaded": "下载守护程序日志 ZIP。将其附加到问题中。",
+        "reportPopupBlocked": "浏览器屏蔽了 GitHub 问题选项卡。允许此控制台弹出窗口，然后重试。",
+        "reportFailed": "无法打开 GitHub 问题表单。"
       },
       "usage": {
         "title": "用量",
@@ -1659,7 +1669,34 @@
         "switchOn4xx": "4xx 时切换",
         "switchOn4xxHint": "遇到 Relo 不会重试的 4xx 时，改用下一个成员",
         "switchOn5xx": "5xx 时切换",
-        "switchOn5xxHint": "遇到 Relo 不会重试的 5xx 时，改用下一个成员"
+        "switchOn5xxHint": "遇到 Relo 不会重试的 5xx 时，改用下一个成员",
+        "inspectRouting": "检查路由",
+        "inspector": {
+          "description": "该组如何路由下一个请求以及其成员可以提供什么服务。",
+          "loading": "正在加载路线详细信息",
+          "empty": "没有成员可以路由。",
+          "current": "使用中",
+          "next": "下次开始",
+          "noQuota": "没有报告配额",
+          "overflow": "+还有{count}个成员",
+          "recent": "最近的路线",
+          "noRecent": "最近没有通过该组提出请求。",
+          "request": "请求",
+          "refresh": "刷新",
+          "openLogs": "打开最新请求的日志",
+          "ready": "准备好",
+          "limited": "已达上限",
+          "paused": "已暂停",
+          "needsSignIn": "需要登录",
+          "unavailable": "不可用",
+          "cooling": "冷却",
+          "svgTitle": "路由流程",
+          "svgDescription": "请求到达该分组后，按顺序分发给各成员，并显示配额和状态。",
+          "legendCurrent": "当前",
+          "legendNext": "下次开始",
+          "legendLimited": "已达上限",
+          "legendUnavailable": "不可用"
+        }
       },
       "settings": {
         "title": "设置",

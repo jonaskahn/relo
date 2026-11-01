@@ -84,7 +84,9 @@
       "palette": "ค้นหา",
       "breadcrumb": "เส้นทาง",
       "signOut": "ออกจากระบบ",
-      "signingOut": "กำลังออกจากระบบ…"
+      "signingOut": "กำลังออกจากระบบ…",
+      "reportIssue": "รายงานปัญหา",
+      "reportIssueHint": "เปิดปัญหา Relo บน GitHub"
     },
     "palette": {
       "placeholder": "ค้นหาหน้าและคำสั่ง…",
@@ -547,7 +549,9 @@
           "tabModels": "โมเดล",
           "tabAccounts": "บัญชี",
           "tabSettings": "การตั้งค่า",
-          "notFound": "ไม่พบผู้ให้บริการนั้นแล้ว"
+          "notFound": "ไม่พบผู้ให้บริการนั้นแล้ว",
+          "openDashboard": "เปิดแดชบอร์ด",
+          "openDashboardLabel": "เปิดแดชบอร์ดของ {provider}"
         },
         "models": {
           "search": "ค้นหาโมเดล",
@@ -1315,7 +1319,13 @@
         "slowRequest": "เกิน 2 นาที",
         "browseRequests": "เรียกดูคำขอ",
         "previousRequest": "คำขอก่อนหน้า",
-        "nextRequest": "คำขอถัดไป"
+        "nextRequest": "คำขอถัดไป",
+        "reportIssue": "รายงานปัญหา",
+        "reportIssueHint": "รวมการวินิจฉัย Relo ที่ปลอดภัยไว้ในปัญหา GitHub",
+        "reportPreparing": "กำลังเตรียมรายงานปัญหา…",
+        "reportBundleDownloaded": "ดาวน์โหลด Daemon log ZIP แล้ว แนบไปกับประเด็น",
+        "reportPopupBlocked": "เบราว์เซอร์บล็อกแท็บปัญหา GitHub อนุญาตป๊อปอัปสำหรับคอนโซลนี้แล้วลองอีกครั้ง",
+        "reportFailed": "ไม่สามารถเปิดแบบฟอร์มปัญหา GitHub"
       },
       "usage": {
         "title": "การใช้งาน",
@@ -1659,7 +1669,34 @@
         "switchOn4xx": "สลับเมื่อ 4xx",
         "switchOn4xxHint": "ลองสมาชิกรายถัดไปเมื่อเจอ 4xx ที่รีเลย์ยังไม่ลองซ้ำ",
         "switchOn5xx": "สลับเมื่อ 5xx",
-        "switchOn5xxHint": "ลองสมาชิกรายถัดไปเมื่อเจอ 5xx ที่รีเลย์ยังไม่ลองซ้ำ"
+        "switchOn5xxHint": "ลองสมาชิกรายถัดไปเมื่อเจอ 5xx ที่รีเลย์ยังไม่ลองซ้ำ",
+        "inspectRouting": "ตรวจสอบเส้นทาง",
+        "inspector": {
+          "description": "กลุ่มนี้กำหนดเส้นทางคำขอถัดไปอย่างไร และสิ่งที่สมาชิกสามารถตอบสนองได้",
+          "loading": "กำลังโหลดรายละเอียดเส้นทาง",
+          "empty": "ไม่มีสมาชิกที่พร้อมสำหรับเส้นทาง",
+          "current": "ในการใช้งาน",
+          "next": "เริ่มต่อไป",
+          "noQuota": "ไม่มีการรายงานโควต้า",
+          "overflow": "สมาชิกเพิ่มอีก {count} คน",
+          "recent": "เส้นทางล่าสุด",
+          "noRecent": "ไม่มีคำขอล่าสุดผ่านกลุ่มนี้",
+          "request": "คำขอ",
+          "refresh": "รีเฟรช",
+          "openLogs": "เปิดบันทึกคำขอล่าสุด",
+          "ready": "พร้อม",
+          "limited": "จำกัด",
+          "paused": "หยุดชั่วคราว",
+          "needsSignIn": "จำเป็นต้องลงชื่อเข้าใช้",
+          "unavailable": "ไม่พร้อมใช้งาน",
+          "cooling": "ระบายความร้อน",
+          "svgTitle": "การไหลของเส้นทาง",
+          "svgDescription": "คำขอมาถึงกลุ่มนี้แล้วกระจายไปยังสมาชิกตามลำดับ พร้อมโควตาและสถานะของแต่ละราย",
+          "legendCurrent": "ปัจจุบัน",
+          "legendNext": "เริ่มต่อไป",
+          "legendLimited": "จำกัด",
+          "legendUnavailable": "ไม่พร้อมใช้งาน"
+        }
       },
       "settings": {
         "title": "การตั้งค่า",

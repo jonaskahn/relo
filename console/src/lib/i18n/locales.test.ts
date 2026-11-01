@@ -200,6 +200,174 @@ describe('console catalogs', () => {
 	});
 });
 
+const REWRITE_TAGS = ['nl', 'ro', 'id', 'pt-BR', 'cs', 'tr', 'fr', 'vi'] as const;
+const REWRITTEN_NEW_KEYS = [
+	'ui.pages.providersPage.pane.openDashboard',
+	'ui.pages.providersPage.pane.openDashboardLabel',
+	'ui.topbar.reportIssue',
+	'ui.topbar.reportIssueHint',
+	'ui.pages.logsPage.reportIssue',
+	'ui.pages.logsPage.reportIssueHint',
+	'ui.pages.logsPage.reportPreparing',
+	'ui.pages.logsPage.reportBundleDownloaded',
+	'ui.pages.logsPage.reportPopupBlocked',
+	'ui.pages.logsPage.reportFailed',
+	'ui.pages.groupsPage.inspectRouting',
+	...[
+		'description',
+		'loading',
+		'empty',
+		'current',
+		'next',
+		'noQuota',
+		'overflow',
+		'recent',
+		'noRecent',
+		'request',
+		'refresh',
+		'openLogs',
+		'ready',
+		'limited',
+		'paused',
+		'needsSignIn',
+		'unavailable',
+		'cooling',
+		'svgTitle',
+		'svgDescription',
+		'legendCurrent',
+		'legendNext',
+		'legendLimited',
+		'legendUnavailable'
+	].map((key) => 'ui.pages.groupsPage.inspector.' + key)
+];
+const INVARIANT_VALUES = new Set([
+	'Console',
+	'Dashboard',
+	'Agent Harness',
+	'Harness',
+	'Chat',
+	'GitHub',
+	'OAuth',
+	'OpenAI Chat',
+	'OpenAI Responses',
+	'Anthropic Messages',
+	'Google Gemini',
+	'OpenCode Free',
+	'models.dev',
+	'codex',
+	'codex-laptop',
+	'fast-coder',
+	'PowerShell',
+	'Homebrew',
+	'Terracotta',
+	'Matcha',
+	'Mocha',
+	'Cherry cola',
+	'Sage',
+	'Plum',
+	'Cobalt',
+	'Ocean',
+	'Graphite',
+	'HTTP requests',
+	'Context',
+	'Alias',
+	'Direct',
+	'Forward',
+	'Live',
+	'Manual',
+	'Cloud',
+	'Local',
+	'Status',
+	'Model',
+	'Provider',
+	'Agent',
+	'Filters',
+	'Trends',
+	'Tokens',
+	'Details',
+	'Project',
+	'Later',
+	'per Mtok',
+	'+ Alias',
+	'In $/Mtok',
+	'Trend',
+	'Prompt',
+	'Route',
+	'Experimental',
+	'Client',
+	'Catalog',
+	'Cost',
+	'Total',
+	'Format',
+	'Label',
+	'Streaming',
+	'Region',
+	'Auto',
+	'Stream',
+	'Pages',
+	'Actions',
+	'Vision',
+	'Rotation',
+	'Quota',
+	'Variables',
+	'Source',
+	'Pause',
+	'Surface',
+	'Date',
+	'Conversations',
+	'Mode',
+	'Daemon',
+	'Accent',
+	'4xx / 5xx',
+	'24 h',
+	'of total',
+	'providers',
+	'tokens'
+]);
+const NATIVE_HOMOGRAPH_ALLOWLIST: Record<string, readonly string[]> = {
+	nl: [
+		'De callback hoorde niet bij de aanmelding die Relo startte, of hij was al gebruikt.',
+		'Sluiten laat het model zoals het was.',
+		'De aanvraag werd onderbroken voordat deze was voltooid.',
+		'Die aanvraag kon niet worden nagebootst. Mogelijk is hij ouder dan het traffic-log, of was zijn body onleesbaar.',
+		'Het was druk, dus de database is nog niet gecomprimeerd; dat gebeurt zodra het even rustig is.'
+	],
+	ro: [
+		'Agent Harness are nevoie de reparație sau repornire',
+		'Un model are nevoie de un id.',
+		'Un ID de model are cel mult 256 de caractere.',
+		'Acest furnizor nu are nevoie de credențiale.',
+		'Acest fișier are deja un furnizor relo pe care Relo nu l-a scris.',
+		'Fișierul are deja un furnizor relo. Relo înlocuiește acel furnizor și lasă restul fișierului ca atare. Restaurarea readuce fișierul original.',
+		'Această conexiune are deja acel model.'
+	]
+};
+
+describe('native rewrite audit', () => {
+	it('keeps the eight rewritten catalogs free of English prose', () => {
+		const englishWords =
+			/(^|[\s(])(the|and|for|with|this|that|from|your|you|are|was|were|has|have|should|would|cannot|doesn't|don't)(?=$|[\s.,;:!?)])/g;
+		for (const tag of REWRITE_TAGS) {
+			const catalog = catalogs[tag];
+			const homographs = new Set(NATIVE_HOMOGRAPH_ALLOWLIST[tag] ?? []);
+			for (const key of keysOf(catalog)) {
+				const value = valueOf(catalog, key);
+				if (INVARIANT_VALUES.has(value) || homographs.has(value) || /[{}#]/.test(value)) continue;
+				expect(value, tag + ' ' + key).not.toMatch(englishWords);
+			}
+		}
+	});
+
+	it('translates every new message instead of falling back to English', () => {
+		for (const tag of Object.keys(catalogs)) {
+			if (tag === 'en') continue;
+			for (const key of REWRITTEN_NEW_KEYS) {
+				expect(valueOf(catalogs[tag], key), tag + ' ' + key).not.toBe(valueOf(en, key));
+			}
+		}
+	});
+});
+
 // Every message one console namespace asks for, as the dotted key and the
 // file that names it.
 function namespaceKeysUsed(namespace: string): Map<string, string> {

@@ -84,7 +84,9 @@
       "palette": "검색",
       "breadcrumb": "탐색 경로",
       "signOut": "로그아웃",
-      "signingOut": "로그아웃하는 중…"
+      "signingOut": "로그아웃하는 중…",
+      "reportIssue": "문제 신고",
+      "reportIssueHint": "GitHub에서 Relo 문제 열기"
     },
     "palette": {
       "placeholder": "페이지와 작업 검색…",
@@ -547,7 +549,9 @@
           "tabModels": "모델",
           "tabAccounts": "계정",
           "tabSettings": "설정",
-          "notFound": "해당 연결이 없어요."
+          "notFound": "해당 연결이 없어요.",
+          "openDashboard": "대시보드 열기",
+          "openDashboardLabel": "{provider} 대시보드 열기"
         },
         "models": {
           "search": "모델 검색",
@@ -1315,7 +1319,13 @@
         "slowRequest": "2분 초과",
         "browseRequests": "요청 이동",
         "previousRequest": "이전 요청",
-        "nextRequest": "다음 요청"
+        "nextRequest": "다음 요청",
+        "reportIssue": "문제 신고",
+        "reportIssueHint": "GitHub 문제에 안전한 Relo 진단 포함",
+        "reportPreparing": "이슈 보고서 준비 중…",
+        "reportBundleDownloaded": "데몬 로그 ZIP이 다운로드되었습니다. 문제에 첨부하세요.",
+        "reportPopupBlocked": "브라우저가 GitHub 문제 탭을 차단했습니다. 이 콘솔에 대한 팝업을 허용하고 다시 시도하십시오.",
+        "reportFailed": "GitHub 문제 양식을 열 수 없습니다."
       },
       "usage": {
         "title": "사용량",
@@ -1659,7 +1669,34 @@
         "switchOn4xx": "4xx에서 전환",
         "switchOn4xxHint": "릴레이가 아직 재시도하지 않는 4xx가 나면 다음 멤버를 시도해요",
         "switchOn5xx": "5xx에서 전환",
-        "switchOn5xxHint": "릴레이가 아직 재시도하지 않는 5xx가 나면 다음 멤버를 시도해요"
+        "switchOn5xxHint": "릴레이가 아직 재시도하지 않는 5xx가 나면 다음 멤버를 시도해요",
+        "inspectRouting": "라우팅 검사",
+        "inspector": {
+          "description": "이 그룹이 다음 요청을 라우팅하는 방법과 해당 구성원이 제공할 수 있는 내용입니다.",
+          "loading": "라우팅 세부정보 로드 중",
+          "empty": "라우팅할 수 있는 회원이 없습니다.",
+          "current": "사용 중",
+          "next": "다음 시작",
+          "noQuota": "보고된 할당량 없음",
+          "overflow": "+{count}명 이상의 회원",
+          "recent": "최근 경로",
+          "noRecent": "이 그룹을 통한 최근 요청이 없습니다.",
+          "request": "요청",
+          "refresh": "새로고침",
+          "openLogs": "최근 요청 로그 열기",
+          "ready": "준비",
+          "limited": "한도에 도달함",
+          "paused": "일시중지됨",
+          "needsSignIn": "로그인 필요",
+          "unavailable": "이용 불가",
+          "cooling": "냉각",
+          "svgTitle": "라우팅 흐름",
+          "svgDescription": "요청이 이 그룹에 도착한 뒤 정해진 순서대로 멤버에게 전달되며, 할당량과 상태를 함께 표시합니다.",
+          "legendCurrent": "현재",
+          "legendNext": "다음 시작",
+          "legendLimited": "한도에 도달함",
+          "legendUnavailable": "이용 불가"
+        }
       },
       "settings": {
         "title": "설정",
