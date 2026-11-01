@@ -7,6 +7,7 @@
 	import { navDrawer } from '$lib/nav-drawer.svelte';
 	import AppearancePopover from '$lib/components/shell/appearance-popover.svelte';
 	import HealthPill from '$lib/components/shell/health-pill.svelte';
+	import ReportIssueButton from '$lib/components/report-issue/report-issue-button.svelte';
 	import Icon from '$lib/components/ui/icon.svelte';
 	import Button from '$lib/components/ui/button.svelte';
 	import { DropdownMenu } from 'bits-ui';
@@ -67,6 +68,11 @@
 	<div class="flex-1"></div>
 
 	<HealthPill class="hidden sm:inline-flex" />
+	<ReportIssueButton
+		topbar
+		summary="Relo console issue"
+		details="Describe what happened in the Relo console."
+	/>
 
 	<DropdownMenu.Root>
 		<DropdownMenu.Trigger>

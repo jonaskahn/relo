@@ -8,7 +8,9 @@ export default defineConfig({
 		// SvelteKit owns this alias in the app, so a component test that
 		// renders one has to resolve it the same way.
 		alias: {
-			$lib: fileURLToPath(new URL('./src/lib', import.meta.url))
+			$lib: fileURLToPath(new URL('./src/lib', import.meta.url)),
+			'$app/navigation': fileURLToPath(new URL('./src/test/app-navigation.ts', import.meta.url)),
+			'$app/state': fileURLToPath(new URL('./src/test/app-state.ts', import.meta.url))
 		}
 	},
 	test: {

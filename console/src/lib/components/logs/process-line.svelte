@@ -4,6 +4,7 @@
 	import Icon from '$lib/components/ui/icon.svelte';
 	import StatusBadge from '$lib/components/ui/status-badge.svelte';
 	import Button from '$lib/components/ui/button.svelte';
+	import ReportIssueButton from '$lib/components/report-issue/report-issue-button.svelte';
 	import { formatDateTime } from '$lib/format';
 	import { daemonLevelTone, type DaemonLine } from '$lib/process-logs';
 
@@ -14,9 +15,10 @@
 	interface Props {
 		line: DaemonLine;
 		plain?: boolean;
+		reportable?: boolean;
 	}
 
-	let { line, plain = false }: Props = $props();
+	let { line, plain = false, reportable = true }: Props = $props();
 
 	const tone = $derived(daemonLevelTone(line.level));
 
@@ -54,6 +56,15 @@
 			{line.message || '—'}
 		</span>
 	</summary>
+	{#if reportable && tone === 'fail'}
+		<div class="px-5 pb-2.5 pl-11">
+			<ReportIssueButton
+				summary="Relo daemon error"
+				details={[line.message, line.detail].filter((part) => part !== '').join(' — ')}
+				includeLog
+			/>
+		</div>
+	{/if}
 	{#if line.detail}
 		<div class="flex items-start justify-between gap-3 pt-1.5 pl-5">
 			<p class="mono-data min-w-0 flex-1 text-muted-foreground wrap-break-word">{line.detail}</p>

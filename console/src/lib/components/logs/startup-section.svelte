@@ -6,6 +6,7 @@
 	import Button from '$lib/components/ui/button.svelte';
 	import Icon from '$lib/components/ui/icon.svelte';
 	import ProcessLine from '$lib/components/logs/process-line.svelte';
+	import ReportIssueButton from '$lib/components/report-issue/report-issue-button.svelte';
 	import StatusBadge from '$lib/components/ui/status-badge.svelte';
 	import { formatDateTime } from '$lib/format';
 	import { startupOutcomeTone, type DaemonLine, type StartupEntry } from '$lib/process-logs';
@@ -135,6 +136,15 @@
 							<StatusBadge kind="muted" label={$t('ui.pages.logsPage.startupCurrent')} />
 						{/if}
 					</summary>
+					{#if entry.outcome === 'failed'}
+						<div class="pb-2 pl-11">
+							<ReportIssueButton
+								summary="Relo startup failure"
+								details={entry.error || entry.name}
+								includeLog
+							/>
+						</div>
+					{/if}
 					<div class="flex flex-col gap-1.5 pt-2 pl-5">
 						{#if !transcript || transcript.loading}
 							<p class="text-sm text-muted-foreground">{$t('ui.common.loading')}</p>
@@ -144,7 +154,7 @@
 							<p class="text-sm text-muted-foreground">{$t('ui.pages.logsPage.transcriptEmpty')}</p>
 						{:else}
 							{#each transcript.lines as line (line.offset)}
-								<ProcessLine {line} />
+								<ProcessLine {line} reportable={false} />
 							{/each}
 						{/if}
 					</div>
