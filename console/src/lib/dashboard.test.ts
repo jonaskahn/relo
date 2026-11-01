@@ -594,14 +594,105 @@ describe('activityYearStart', () => {
 				{ key: '2026-09-05', value: 3 },
 				{ key: '2026-09-06', value: 4 }
 			])
-		).toEqual({ busiest: { key: '2026-09-02', value: 5 }, streak: 3 });
+		).toEqual({
+			busiest: { key: '2026-09-02', value: 5 },
+			longest: { days: 3, start: '2026-09-04', end: '2026-09-06' },
+			current: { days: 3, start: '2026-09-04', end: '2026-09-06' }
+		});
 	});
 
 	it('leaves a quiet year without a busy day or a streak', () => {
-		expect(activityStats([])).toEqual({ busiest: null, streak: 0 });
+		expect(activityStats([])).toEqual({ busiest: null, longest: null, current: null });
 		expect(activityStats([{ key: '2026-09-01', value: 0 }])).toEqual({
 			busiest: null,
-			streak: 0
+			longest: null,
+			current: null
+		});
+	});
+
+	it('keeps a streak alive through today', () => {
+		expect(
+			activityStats([
+				{ key: '2026-09-01', value: 2 },
+				{ key: '2026-09-02', value: 3 },
+				{ key: '2026-09-03', value: 1 }
+			])
+		).toEqual({
+			busiest: { key: '2026-09-02', value: 3 },
+			longest: { days: 3, start: '2026-09-01', end: '2026-09-03' },
+			current: { days: 3, start: '2026-09-01', end: '2026-09-03' }
+		});
+	});
+
+	it('keeps the current streak while yesterday carried traffic', () => {
+		expect(
+			activityStats([
+				{ key: '2026-09-01', value: 2 },
+				{ key: '2026-09-02', value: 3 },
+				{ key: '2026-09-03', value: 0 }
+			])
+		).toEqual({
+			busiest: { key: '2026-09-02', value: 3 },
+			longest: { days: 2, start: '2026-09-01', end: '2026-09-02' },
+			current: { days: 2, start: '2026-09-01', end: '2026-09-02' }
+		});
+	});
+
+	it('ends the current streak after two quiet days', () => {
+		expect(
+			activityStats([
+				{ key: '2026-09-01', value: 2 },
+				{ key: '2026-09-02', value: 3 },
+				{ key: '2026-09-03', value: 0 },
+				{ key: '2026-09-04', value: 0 }
+			])
+		).toEqual({
+			busiest: { key: '2026-09-02', value: 3 },
+			longest: { days: 2, start: '2026-09-01', end: '2026-09-02' },
+			current: null
+		});
+	});
+
+	it('reads the longest and the current streak as the same run', () => {
+		expect(
+			activityStats([
+				{ key: '2026-09-01', value: 1 },
+				{ key: '2026-09-02', value: 1 },
+				{ key: '2026-09-04', value: 9 },
+				{ key: '2026-09-05', value: 9 },
+				{ key: '2026-09-06', value: 9 },
+				{ key: '2026-09-07', value: 9 }
+			])
+		).toMatchObject({
+			longest: { days: 4, start: '2026-09-04', end: '2026-09-07' },
+			current: { days: 4, start: '2026-09-04', end: '2026-09-07' }
+		});
+	});
+
+	it('prefers the most recent run when the longest streak ties', () => {
+		expect(
+			activityStats([
+				{ key: '2026-09-01', value: 1 },
+				{ key: '2026-09-02', value: 1 },
+				{ key: '2026-09-04', value: 1 },
+				{ key: '2026-09-05', value: 1 }
+			])
+		).toMatchObject({ longest: { days: 2, start: '2026-09-04', end: '2026-09-05' } });
+	});
+
+	it('reads runs across gaps between quiet days', () => {
+		expect(
+			activityStats([
+				{ key: '2026-09-01', value: 1 },
+				{ key: '2026-09-02', value: 0 },
+				{ key: '2026-09-03', value: 0 },
+				{ key: '2026-09-04', value: 1 },
+				{ key: '2026-09-05', value: 1 },
+				{ key: '2026-09-06', value: 1 }
+			])
+		).toMatchObject({
+			longest: { days: 3, start: '2026-09-04', end: '2026-09-06' },
+			current: { days: 3, start: '2026-09-04', end: '2026-09-06' }
 		});
 	});
 });

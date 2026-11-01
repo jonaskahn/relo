@@ -424,27 +424,47 @@ export interface ActivityDay {
 	value: number;
 }
 
-/** The two figures beside the calendar: the busiest day of the year and the longest run of
- *  consecutive days that carried any traffic. A quiet year has neither. */
+/** One run of consecutive days that carried traffic, bounded by its first and last day. */
+export interface ActivityStreak {
+	days: number;
+	start: string;
+	end: string;
+}
+
+/** The three figures beside the calendar: the busiest day of the year, the longest run of
+ *  consecutive days that carried any traffic, and the run still alive today. A quiet year has
+ *  none of them. */
 export function activityStats(days: readonly ActivityDay[]): {
 	busiest: ActivityDay | null;
-	streak: number;
+	longest: ActivityStreak | null;
+	current: ActivityStreak | null;
 } {
 	const ordered = [...days].sort((a, b) => (a.key < b.key ? -1 : a.key > b.key ? 1 : 0));
 	let busiest: ActivityDay | null = null;
-	let streak = 0;
-	let run = 0;
-	let previous: string | null = null;
+	const runs: ActivityStreak[] = [];
 	for (const day of ordered) {
 		if (day.value > 0 && (!busiest || day.value > busiest.value)) busiest = day;
-		const consecutive =
-			previous !== null &&
-			Date.parse(day.key + 'T00:00:00Z') - Date.parse(previous + 'T00:00:00Z') === 86_400_000;
-		run = day.value > 0 ? (consecutive ? run + 1 : 1) : 0;
-		if (run > streak) streak = run;
-		previous = day.key;
+		if (day.value <= 0) continue;
+		const last = runs[runs.length - 1];
+		const previousDay = Date.parse(day.key + 'T00:00:00Z') - 86_400_000;
+		if (last && Date.parse(last.end + 'T00:00:00Z') === previousDay) {
+			last.days += 1;
+			last.end = day.key;
+		} else runs.push({ days: 1, start: day.key, end: day.key });
 	}
-	return { busiest, streak };
+	let longest: ActivityStreak | null = null;
+	for (const run of runs) {
+		if (longest === null || run.days >= longest.days) longest = run;
+	}
+	const lastKey = ordered[ordered.length - 1]?.key;
+	const dayBeforeLast = lastKey
+		? new Date(Date.parse(lastKey + 'T00:00:00Z') - 86_400_000).toISOString().slice(0, 10)
+		: undefined;
+	const current =
+		runs.find((run) => run.end === lastKey) ??
+		runs.find((run) => run.end === dayBeforeLast) ??
+		null;
+	return { busiest, longest, current };
 }
 
 /** Bounds the selected summary period and the window before it, so one number means the same
