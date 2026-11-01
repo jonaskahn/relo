@@ -18,7 +18,7 @@ func TestRequestLogFiltersByNameAndClient(t *testing.T) {
 	harness := newHarness(t)
 	ctx := context.Background()
 	events := []sqlite.UsageEvent{
-		{RequestID: "a", Timestamp: 1_000, Provider: "openai", Model: "gpt-4o", Status: 200, ClientKeyID: "key-codex", ClientKeyName: "codex-key", ClientApp: "codex"},
+		{RequestID: "a", Timestamp: 1_000, Provider: "openai", Model: "gpt-4o", GroupID: "fast", Status: 200, ClientKeyID: "key-codex", ClientKeyName: "codex-key", ClientApp: "codex", Attempts: 2, Retried: true},
 		{RequestID: "b", Timestamp: 2_000, Provider: "openai", Model: "gpt-4o", Status: 200, ClientKeyID: "key-cursor", ClientKeyName: "cursor-key", ClientApp: "cursor"},
 	}
 	for _, event := range events {
@@ -30,6 +30,9 @@ func TestRequestLogFiltersByNameAndClient(t *testing.T) {
 	list := func(t *testing.T, query string) []struct {
 		RequestID     string
 		ClientKeyName string
+		GroupID       string
+		Attempts      int
+		Retried       bool
 	} {
 		t.Helper()
 		response := harness.management(http.MethodGet, "/api/v1/activity/requests?"+query, adminToken, nil)
@@ -40,6 +43,9 @@ func TestRequestLogFiltersByNameAndClient(t *testing.T) {
 			Items []struct {
 				RequestID     string
 				ClientKeyName string
+				GroupID       string
+				Attempts      int
+				Retried       bool
 			}
 		}{}
 		if err := json.Unmarshal(response.Body.Bytes(), &body); err != nil {
@@ -59,6 +65,16 @@ func TestRequestLogFiltersByNameAndClient(t *testing.T) {
 		rows := list(t, "client_app=codex")
 		if len(rows) != 1 || rows[0].RequestID != "a" {
 			t.Fatalf("rows = %+v, want the request made with a codex key", rows)
+		}
+	})
+
+	t.Run("by group", func(t *testing.T) {
+		rows := list(t, "group=fast")
+		if len(rows) != 1 || rows[0].RequestID != "a" {
+			t.Fatalf("rows = %+v, want the request routed through fast", rows)
+		}
+		if rows[0].GroupID != "fast" || rows[0].Attempts != 2 || !rows[0].Retried {
+			t.Fatalf("routing history = %+v, want the stored group and attempts", rows[0])
 		}
 	})
 

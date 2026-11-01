@@ -3,6 +3,7 @@ package storage_test
 import (
 	"context"
 	"reflect"
+	"strings"
 	"testing"
 	"time"
 
@@ -243,6 +244,22 @@ func TestArchiveDoesNotAnswerWhatItKeeps(t *testing.T) {
 	}
 	if kept.Requests != 1 {
 		t.Fatalf("summary by a retained request id = %+v, want the one request", kept)
+	}
+}
+
+func TestArchiveRefusesAGroupFilter(t *testing.T) {
+	db := testkit.OpenTestDB(t)
+	archivedDays(t, db)
+	query := sqlite.NewUsageQuery(db)
+	archiveFinalize(t, db)
+	archiveRetention(t, db, 3)
+
+	_, err := query.Rollup(context.Background(), activity.RollupQuery{
+		GroupBy: activity.GroupByProvider,
+		Filter:  activity.UsageFilter{Group: "fast"},
+	})
+	if err == nil || !strings.Contains(err.Error(), "filter.group") {
+		t.Fatalf("Rollup(group) error = %v, want the archive refusal", err)
 	}
 }
 

@@ -86,6 +86,7 @@ func appendEquals(clauses []string, args []any, f activity.UsageFilter) ([]strin
 		{"credential_id", f.CredentialID},
 		{"surface", f.Surface},
 		{"route_provider", f.RouteProvider},
+		{"group_id", f.Group},
 		{"request_id", f.RequestID},
 		{"client_key_id", f.ClientKeyID},
 		{"origin", f.Origin},
@@ -272,6 +273,9 @@ func (q *UsageQuery) Rollup(ctx context.Context, query activity.RollupQuery) ([]
 	}
 	groups := map[string]activity.UsageRollupRow{}
 	if archived && query.Filter.ReachesArchive(rawFrom) {
+		if query.Filter.Group != "" {
+			return nil, activity.InvalidFilter("filter.group", "cannot read archived usage")
+		}
 		rows, err := q.archiveRollup(ctx, query.GroupBy, query.Filter, activity.LastClosedDay(rawFrom), limit)
 		if err != nil {
 			return nil, err
@@ -483,15 +487,21 @@ func scanLogRow(rows *sql.Rows) (activity.UsageLogRow, error) {
 		clientName sql.NullString
 		clientApp  sql.NullString
 		origin     sql.NullString
+		group      sql.NullString
 		extra      sql.NullString
+		attempts   int
+		retried    int
 	)
 	err := rows.Scan(&event.ID, &request, &event.TimestampMs, &event.Provider, &event.Model,
 		&label, &credential, &surface, &event.Status, &event.DurationMs, &event.InputTokens,
 		&event.OutputTokens, &event.CacheReadTokens, &event.CacheWriteTokens,
-		&cost, &route, &reason, &client, &clientName, &clientApp, &origin, &extra)
+		&cost, &route, &reason, &client, &clientName, &clientApp, &origin, &group, &attempts, &retried, &extra)
 	if err != nil {
 		return activity.UsageLogRow{}, fmt.Errorf("scan usage event: %w", err)
 	}
+	event.GroupID = group.String
+	event.Attempts = attempts
+	event.Retried = retried != 0
 	return finishLogRow(event, request, label, credential, surface, route, reason, client, clientName, clientApp, origin, extra, cost), nil
 }
 
@@ -591,7 +601,8 @@ func scanPlan(rows *sql.Rows) ([]string, error) {
 
 const logSelect = `SELECT id, request_id, timestamp, provider, model, credential_label, credential_id, surface, status,
 	duration_ms, input_tokens, output_tokens, cache_read_tokens, cache_write_tokens,
-	estimated_cost_micros, route_provider, route_reason, client_key_id, client_key_name, client_app, origin, extra
+	estimated_cost_micros, route_provider, route_reason, client_key_id, client_key_name, client_app, origin,
+	group_id, attempts, retried, extra
 FROM usage_events`
 
 const logOrder = `

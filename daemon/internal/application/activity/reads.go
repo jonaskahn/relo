@@ -48,6 +48,7 @@ type UsageQuery struct {
 	Account       string
 	Surface       string
 	RouteProvider string
+	Group         string
 	RequestID     string
 	Client        string
 	// AccessClient names the coding client a key was issued for, which the
@@ -74,6 +75,7 @@ type LogQuery struct {
 	Account       string
 	Surface       string
 	RouteProvider string
+	Group         string
 	RequestID     string
 	Client        string
 	// AccessClient names the coding client a key was issued for, which the
@@ -192,7 +194,7 @@ func (q UsageQuery) filter() (act.UsageFilter, error) {
 		SinceMs: q.SinceMs, UntilMs: q.UntilMs, Provider: q.Provider, Providers: q.Providers, Model: q.Model,
 		CredentialLabel: q.Credential, CredentialID: q.Account, Surface: q.Surface, RouteProvider: q.RouteProvider,
 		RequestID: q.RequestID, ClientKeyID: q.Client, Status: status,
-		AccessClient: q.AccessClient, Origin: q.Origin,
+		AccessClient: q.AccessClient, Origin: q.Origin, Group: q.Group,
 	}, nil
 }
 
@@ -201,7 +203,7 @@ func (q LogQuery) filter() (act.UsageFilter, error) {
 		SinceMs: q.SinceMs, UntilMs: q.UntilMs, Provider: q.Provider, Providers: q.Providers, Model: q.Model,
 		Credential: q.Credential, Account: q.Account, Surface: q.Surface, RouteProvider: q.RouteProvider,
 		RequestID: q.RequestID, Client: q.Client, AccessClient: q.AccessClient, Status: q.Status,
-		Origin: q.Origin,
+		Origin: q.Origin, Group: q.Group,
 	}.filter()
 }
 

@@ -74,6 +74,7 @@ type UsageFilter struct {
 	CredentialID  string
 	Surface       string
 	RouteProvider string
+	Group         string
 	RequestID     string
 	ClientKeyID   string
 	// AccessClient narrows the read to the requests made with a key an
@@ -120,6 +121,7 @@ type UsageLogRow struct {
 	RouteProvider       string
 	RouteReason         string
 	Origin              string
+	GroupID             string
 	ClientKeyID         string
 	ClientKeyName       string
 	// ClientApp names the coding client the inbound key was issued for, so a
@@ -127,6 +129,8 @@ type UsageLogRow struct {
 	ClientApp string
 	// Warnings are the advisory notes this request carried.
 	Warnings []string
+	Attempts int
+	Retried  bool
 }
 
 // LogPage is one page of usage events, oldest page last.
@@ -261,6 +265,7 @@ func validateFilterText(f UsageFilter) error {
 		{"filter.account", f.CredentialID},
 		{"filter.surface", f.Surface},
 		{"filter.route_provider", f.RouteProvider},
+		{"filter.group", f.Group},
 		{"filter.request_id", f.RequestID},
 		{"filter.client", f.ClientKeyID},
 		{"filter.client_app", f.AccessClient},

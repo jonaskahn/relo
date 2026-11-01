@@ -76,6 +76,7 @@ func TestUsageQueryFilterValidation(t *testing.T) {
 		{"long credential", activity.LogQuery{Filter: activity.UsageFilter{CredentialLabel: strings.Repeat("x", 257)}}, "filter.credential"},
 		{"long surface", activity.LogQuery{Filter: activity.UsageFilter{Surface: strings.Repeat("x", 257)}}, "filter.surface"},
 		{"long route provider", activity.LogQuery{Filter: activity.UsageFilter{RouteProvider: strings.Repeat("x", 257)}}, "filter.route_provider"},
+		{"long group", activity.LogQuery{Filter: activity.UsageFilter{Group: strings.Repeat("x", 257)}}, "filter.group"},
 		{"long client app", activity.LogQuery{Filter: activity.UsageFilter{AccessClient: strings.Repeat("x", 257)}}, "filter.client_app"},
 		{"limit too large", activity.LogQuery{Limit: activity.MaxLogLimit + 1}, "limit"},
 		{"negative limit", activity.LogQuery{Limit: -1}, "limit"},
@@ -171,7 +172,7 @@ func TestUsageQueryLogsFilters(t *testing.T) {
 	events := []sqlite.UsageEvent{
 		{RequestID: "a", Timestamp: 1_000, Provider: "openai", Model: "gpt-4o", CredentialLabel: "default", Surface: "chat-completions", Status: 200, DurationMs: 10},
 		{RequestID: "b", Timestamp: 2_000, Provider: "anthropic", Model: "claude", CredentialLabel: "work", Surface: "messages", Status: 500, DurationMs: 20},
-		{RequestID: "c", Timestamp: 3_000, Provider: "openai", Model: "gpt-4o-mini", CredentialLabel: "work", Surface: "responses", Status: 200, DurationMs: 30, RouteProvider: "openai", RouteReason: "alias"},
+		{RequestID: "c", Timestamp: 3_000, Provider: "openai", Model: "gpt-4o-mini", GroupID: "fast", CredentialLabel: "work", Surface: "responses", Status: 200, DurationMs: 30, RouteProvider: "openai", RouteReason: "alias", Attempts: 3, Retried: true},
 		{RequestID: "d", Timestamp: 4_000, Provider: "openai", Model: "gpt-4o", CredentialLabel: "work", Surface: "chat-completions", Status: 429, DurationMs: 40},
 	}
 	for _, event := range events {
@@ -188,6 +189,7 @@ func TestUsageQueryLogsFilters(t *testing.T) {
 		{"credential", activity.UsageFilter{CredentialLabel: "work"}, []string{"d", "c", "b"}},
 		{"surface", activity.UsageFilter{Surface: "responses"}, []string{"c"}},
 		{"route provider", activity.UsageFilter{RouteProvider: "openai"}, []string{"c"}},
+		{"group", activity.UsageFilter{Group: "fast"}, []string{"c"}},
 		{"one code", activity.UsageFilter{Status: []activity.StatusRange{{Low: 500, High: 500}}}, []string{"b"}},
 		{"one class", activity.UsageFilter{Status: []activity.StatusRange{{Low: 500, High: 599}}}, []string{"b"}},
 		{"two classes", activity.UsageFilter{Status: []activity.StatusRange{{Low: 400, High: 499}, {Low: 500, High: 599}}}, []string{"d", "b"}},
@@ -343,7 +345,7 @@ func TestUsageQueryLogsRow(t *testing.T) {
 		CredentialLabel: "default", Surface: "chat-completions", Status: 200,
 		DurationMs: 10, InputTokens: 100, OutputTokens: 40, CacheReadTokens: 5,
 		CacheWriteTokens: 2, EstimatedCostMicros: &cost, RouteProvider: "openai",
-		RouteReason: "catalog",
+		RouteReason: "catalog", GroupID: "fast", Attempts: 2, Retried: true,
 	})
 	page, err := query.Logs(context.Background(), activity.LogQuery{})
 	if err != nil {
@@ -364,6 +366,9 @@ func TestUsageQueryLogsRow(t *testing.T) {
 	}
 	if row.TimestampMs != 1_000 || row.DurationMs != 10 || row.Status != 200 {
 		t.Fatalf("row timing = %+v", row)
+	}
+	if row.GroupID != "fast" || row.Attempts != 2 || !row.Retried {
+		t.Fatalf("row routing history = %+v", row)
 	}
 	if row.EstimatedCostMicros == nil || *row.EstimatedCostMicros != cost {
 		t.Fatalf("row cost = %v, want %d", row.EstimatedCostMicros, cost)
