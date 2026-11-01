@@ -122,6 +122,7 @@ func (s *Server) registerActivityRoutes(mux *http.ServeMux) {
 	mux.HandleFunc("GET "+apiPrefix+"activity/requests/{id}/captures", s.handleCaptures)
 	mux.HandleFunc("GET "+apiPrefix+"activity/requests/{id}/captures/{capture}/body", s.handleCaptureBody)
 	mux.HandleFunc("GET "+apiPrefix+"logs/daemon", s.handleDaemonLogs)
+	mux.HandleFunc("GET "+apiPrefix+"logs/daemon/export", s.handleDaemonLogExport)
 	mux.HandleFunc("GET "+apiPrefix+"logs/startups", s.handleStartupList)
 	mux.HandleFunc("GET "+apiPrefix+"logs/startups/{name}", s.handleStartupTranscript)
 }
@@ -481,6 +482,7 @@ func logsQuery(r *http.Request) (appactivity.LogQuery, error) {
 		// key was issued for; the console offers one filter of each.
 		Client: query.Get("client"), AccessClient: query.Get("client_app"),
 		Origin: query.Get("origin"),
+		Group:  query.Get("group"),
 		// The status filter names codes and classes (4xx), which the service
 		// reads so the console and the API accept the same spellings.
 		Status: query.Get("status"), Cursor: query.Get("cursor"), Limit: limit,

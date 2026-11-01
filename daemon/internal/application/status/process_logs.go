@@ -9,6 +9,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"sort"
@@ -24,6 +25,9 @@ var (
 	ErrInvalidLogQuery = errors.New("invalid log query")
 	// ErrLogNotFound reports a transcript no start left behind.
 	ErrLogNotFound = errors.New("log not found")
+	// ErrDaemonLogNotFound reports an install that has no current daemon log
+	// to read or export.
+	ErrDaemonLogNotFound = errors.New("daemon log not found")
 )
 
 const (
@@ -145,6 +149,22 @@ func openDaemonLog(home string) (*os.File, int64, bool, error) {
 		return nil, 0, false, err
 	}
 	return file, info.Size(), false, nil
+}
+
+// OpenDaemonLog opens the current daemon log for a caller that consumes it as
+// a stream. Rotated archives are not part of this read.
+func (s *Service) OpenDaemonLog() (io.ReadCloser, error) {
+	if s.home == "" {
+		return nil, ErrDaemonLogNotFound
+	}
+	file, _, empty, err := openDaemonLog(s.home)
+	if err != nil {
+		return nil, err
+	}
+	if file == nil || empty {
+		return nil, ErrDaemonLogNotFound
+	}
+	return file, nil
 }
 
 // Startups lists every boot transcript, newest first. A missing logs

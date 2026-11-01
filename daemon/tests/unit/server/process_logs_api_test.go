@@ -1,10 +1,14 @@
 package server_test
 
 import (
+	"archive/zip"
+	"bytes"
 	"encoding/json"
+	"io"
 	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/jonaskahn/relo/internal/adapters/sqlite"
@@ -72,6 +76,53 @@ func TestDaemonLogsEndpoint(t *testing.T) {
 	bad := harness.managementOn(served, http.MethodGet, "/api/v1/logs/daemon?level=verbose", adminToken, nil)
 	if bad.Code != http.StatusBadRequest {
 		t.Fatalf("status = %d, want 400 (%s)", bad.Code, bad.Body.String())
+	}
+}
+
+func TestDaemonLogExportStreamsAZip(t *testing.T) {
+	harness := newHarness(t)
+	home := t.TempDir()
+	const content = "{\"level\":\"error\",\"msg\":\"failed\"}\n"
+	writeLogFile(t, home, "daemon.log", content)
+	served := processLogServer(t, harness, home)
+
+	response := harness.managementOn(served, http.MethodGet, "/api/v1/logs/daemon/export", adminToken, nil)
+	if response.Code != http.StatusOK {
+		t.Fatalf("status = %d, want 200 (%s)", response.Code, response.Body.String())
+	}
+	if got := response.Header().Get("Content-Type"); got != "application/zip" {
+		t.Fatalf("Content-Type = %q, want application/zip", got)
+	}
+	if got := response.Header().Get("Cache-Control"); got != "no-store" {
+		t.Fatalf("Cache-Control = %q, want no-store", got)
+	}
+	if got := response.Header().Get("Content-Disposition"); !strings.Contains(got, "relo-daemon-log-") || !strings.Contains(got, ".zip") {
+		t.Fatalf("Content-Disposition = %q, want a timestamped ZIP attachment", got)
+	}
+	archive, err := zip.NewReader(bytes.NewReader(response.Body.Bytes()), int64(response.Body.Len()))
+	if err != nil {
+		t.Fatalf("open the exported ZIP: %v", err)
+	}
+	if len(archive.File) != 1 || archive.File[0].Name != "daemon.log" {
+		t.Fatalf("archive files = %+v, want daemon.log", archive.File)
+	}
+	reader, err := archive.File[0].Open()
+	if err != nil {
+		t.Fatalf("open daemon.log in the archive: %v", err)
+	}
+	exported, err := io.ReadAll(reader)
+	_ = reader.Close()
+	if err != nil {
+		t.Fatalf("read daemon.log from the archive: %v", err)
+	}
+	if string(exported) != content {
+		t.Fatalf("exported log = %q, want %q", exported, content)
+	}
+
+	empty := processLogServer(t, newHarness(t), t.TempDir())
+	missing := harness.managementOn(empty, http.MethodGet, "/api/v1/logs/daemon/export", adminToken, nil)
+	if missing.Code != http.StatusNotFound || !strings.Contains(missing.Body.String(), "daemon log not found") {
+		t.Fatalf("missing log = %d %s, want a clear 404", missing.Code, missing.Body.String())
 	}
 }
 
