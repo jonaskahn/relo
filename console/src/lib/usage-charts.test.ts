@@ -400,12 +400,11 @@ describe('barGeom', () => {
 
 describe('shortDay', () => {
 	it('names a day the way a chart axis reads it', () => {
-		expect(shortDay('2026-09-03')).toBe(
-			new Date('2026-09-03T00:00:00Z').toLocaleDateString('en', {
-				month: 'short',
-				day: 'numeric'
-			})
-		);
+		expect(shortDay('2026-09-03')).toBe('Sep 3');
+	});
+
+	it('names a UTC day whatever timezone the runner reads it in', () => {
+		expect(shortDay('2026-10-23')).toBe('Oct 23');
 	});
 
 	it('names a key that is not a day as it arrived', () => {
