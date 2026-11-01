@@ -5,11 +5,20 @@ import {
 	memberState,
 	overflowMembers,
 	orderMembers,
+	resolveLinkedRequest,
+	routingLayout,
 	selectCurrentMember,
 	selectNextMember,
+	statePillWidth,
 	windowSpan
 } from './route-inspector';
-import type { GroupMember, QuotaWindow, RouteCandidate, UsageAttemptRow } from './types';
+import type {
+	GroupMember,
+	QuotaWindow,
+	RouteCandidate,
+	UsageAttemptRow,
+	UsageLogRow
+} from './types';
 
 const members: GroupMember[] = [
 	{ provider_id: 'openai', model_id: 'gpt-5', weight: 1, enabled: true, eligible: true },
@@ -111,5 +120,102 @@ describe('routing inspector decisions', () => {
 
 	it('keeps disabled and empty previews distinct', () => {
 		expect(selectNextMember([], [])).toBe(-1);
+	});
+});
+
+describe('routing layout', () => {
+	function inside(layout: ReturnType<typeof routingLayout>) {
+		const boxes = [
+			layout.request,
+			layout.group,
+			...layout.cards,
+			...(layout.overflow ? [layout.overflow] : [])
+		];
+		for (const box of boxes) {
+			expect(box.x).toBeGreaterThanOrEqual(0);
+			expect(box.y).toBeGreaterThanOrEqual(0);
+			expect(box.x + box.width).toBeLessThanOrEqual(layout.width);
+			expect(box.y + box.height).toBeLessThanOrEqual(layout.height);
+		}
+	}
+
+	it('fans members right of the group on a wide viewport', () => {
+		const layout = routingLayout({ width: 1280, members: 4, hidden: 2 });
+		expect(layout.kind).toBe('wide');
+		expect(layout.cards).toHaveLength(4);
+		expect(layout.overflow).not.toBeNull();
+		expect(layout.branches).toHaveLength(4);
+		expect(layout.branches[0].path).toContain(' C ');
+		expect(layout.branches[0].path).toContain(` ${layout.cards[0].x} `);
+		expect(layout.overflowBranch).toContain(' C ');
+		inside(layout);
+	});
+
+	it('stacks members on a tablet and keeps the compact layout below the phone breakpoint', () => {
+		const tablet = routingLayout({ width: 768, members: 5, hidden: 1 });
+		const phone = routingLayout({ width: 390, members: 5, hidden: 1 });
+		expect(tablet.kind).toBe('compact');
+		expect(phone.kind).toBe('compact');
+		expect(tablet.cards[0].x).toBeLessThan(tablet.request.x + 100);
+		expect(tablet.branches[0].path).toContain(' C ');
+		expect(tablet.branches[0].path).toContain(` ${tablet.cards[0].x} `);
+		inside(tablet);
+		inside(phone);
+	});
+
+	it('keeps a usable width for the smallest viewport', () => {
+		const layout = routingLayout({ width: 100, members: 2, hidden: 0 });
+		expect(layout.width).toBeGreaterThanOrEqual(240);
+		inside(layout);
+	});
+});
+
+describe('state pill width', () => {
+	it('covers English, long German, and CJK labels with dot and padding', () => {
+		expect(statePillWidth('Ready')).toBeGreaterThanOrEqual(5 + 4 + 16 + 5 * 6);
+		expect(statePillWidth('Anmeldung erforderlich')).toBeGreaterThanOrEqual(
+			5 + 4 + 16 + 'Anmeldung erforderlich'.length * 6
+		);
+		expect(statePillWidth('需要登录')).toBeGreaterThanOrEqual(5 + 4 + 16 + 4 * 9.5);
+		expect(statePillWidth('')).toBeGreaterThanOrEqual(44);
+	});
+});
+
+function logRow(patch: Partial<UsageLogRow> = {}): UsageLogRow {
+	return {
+		ID: 1,
+		RequestID: 'req-1',
+		TimestampMs: 0,
+		Provider: 'openai',
+		Model: 'gpt-5',
+		RequestedModel: 'gpt-5',
+		GroupID: null,
+		CredentialLabel: '',
+		Surface: '',
+		Status: 200,
+		DurationMs: 0,
+		InputTokens: 0,
+		OutputTokens: 0,
+		CacheReadTokens: 0,
+		CacheWriteTokens: 0,
+		EstimatedCostMicros: null,
+		RouteProvider: '',
+		RouteReason: '',
+		ClientKeyID: '',
+		ClientKeyName: '',
+		ClientApp: '',
+		Origin: '',
+		Attempts: 1,
+		Retried: false,
+		...patch
+	};
+}
+
+describe('deep-linked requests', () => {
+	it('prefers the stored request id and falls back to the numeric row id', () => {
+		const rows = [logRow({ ID: 7, RequestID: 'stored-7' }), logRow({ ID: 8, RequestID: '' })];
+		expect(resolveLinkedRequest(rows, 'stored-7')?.ID).toBe(7);
+		expect(resolveLinkedRequest(rows, '8')?.ID).toBe(8);
+		expect(resolveLinkedRequest(rows, 'missing')).toBeNull();
 	});
 });
