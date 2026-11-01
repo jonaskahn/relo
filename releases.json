@@ -1,6 +1,6 @@
 {
-  "generated": "2026-11-01T18:15:40Z",
-  "latest": "v0.2.2",
+  "generated": "2026-11-01T18:36:07Z",
+  "latest": "v0.2.3",
   "latest_beta": "v0.2.3-beta.77.27813f88",
   "install": {
     "stable": {
@@ -17,6 +17,158 @@
     }
   },
   "releases": [
+    {
+      "tag": "v0.2.3",
+      "version": "0.2.3",
+      "name": "v0.2.3 - Strongbow 🍻",
+      "channel": "stable",
+      "draft": false,
+      "published_at": "2026-11-01T18:35:56Z",
+      "page": "https://github.com/jonaskahn/relo/releases/tag/v0.2.3",
+      "notes": "# 🚀 2026-11-02\r\n\r\n### ✨ Highlights\r\n\r\n- 🧭 Redesigned routing inspector — routing history, quota limits, responsive layouts, and clearer route visualization.\r\n- 📊 Activity insights — busiest day plus longest and current streaks in one card; request filtering by routing group.\r\n- 🩺 Console reporting — report failures directly from request details and the top bar.\r\n- 🗂️ Log export — download the daemon log as a zip.\r\n- 🔗 Curated dashboard links for connections.\r\n- 🌍 New UI strings localized across all 23 languages.\r\n\r\n### 🐛 Fixes\r\n\r\n- 🔑 Corrected Pi API key reference handling.\r\n- 🕒 Activity day labels now consistently use UTC.\r\n- 👁️ Route previews are read-only.\r\n- 🔍 Deep-linked requests now open correctly in the drawer.\r\n- 🎨 Improved routing inspector contrast and arrow rendering.\r\n\r\n### 🧰 Under the hood\r\n\r\n- 🎨 Shared themed provider marks.\r\n- 🛡️ Preserved invariant product terminology across locales.\r\n- ✅ Added tests for routing, reports, activity runs, and log export.",
+      "install": {
+        "script": "curl -fsSL https://relo.ifelse.one/install.sh | sh -s -- --version 0.2.3",
+        "powershell": "& ([scriptblock]::Create((irm https://relo.ifelse.one/install.ps1))) -Version 0.2.3",
+        "npm": "npm i -g @jonaskahn/relo@0.2.3"
+      },
+      "files": [
+        {
+          "name": "checksums.txt",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.2.3/checksums.txt",
+          "size": 582,
+          "os": "any",
+          "arch": "any",
+          "kind": "checksums",
+          "format": "txt"
+        },
+        {
+          "name": "Relo-0.2.3-arm64.zip",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.2.3/Relo-0.2.3-arm64.zip",
+          "size": 15933174,
+          "os": "macos",
+          "arch": "arm64",
+          "kind": "app",
+          "format": "zip"
+        },
+        {
+          "name": "relo-0.2.3-darwin-amd64.tar.gz",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.2.3/relo-0.2.3-darwin-amd64.tar.gz",
+          "size": 15067656,
+          "os": "macos",
+          "arch": "amd64",
+          "kind": "archive",
+          "format": "tar.gz"
+        },
+        {
+          "name": "relo-0.2.3-darwin-arm64.tar.gz",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.2.3/relo-0.2.3-darwin-arm64.tar.gz",
+          "size": 14656387,
+          "os": "macos",
+          "arch": "arm64",
+          "kind": "archive",
+          "format": "tar.gz"
+        },
+        {
+          "name": "relo-0.2.3-linux-amd64.tar.gz",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.2.3/relo-0.2.3-linux-amd64.tar.gz",
+          "size": 14764982,
+          "os": "linux",
+          "arch": "amd64",
+          "kind": "archive",
+          "format": "tar.gz"
+        },
+        {
+          "name": "relo-0.2.3-linux-arm64.tar.gz",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.2.3/relo-0.2.3-linux-arm64.tar.gz",
+          "size": 13998927,
+          "os": "linux",
+          "arch": "arm64",
+          "kind": "archive",
+          "format": "tar.gz"
+        },
+        {
+          "name": "Relo-0.2.3-universal.zip",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.2.3/Relo-0.2.3-universal.zip",
+          "size": 31370396,
+          "os": "macos",
+          "arch": "universal",
+          "kind": "app",
+          "format": "zip"
+        },
+        {
+          "name": "relo-0.2.3-windows-amd64.tar.gz",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.2.3/relo-0.2.3-windows-amd64.tar.gz",
+          "size": 14707484,
+          "os": "windows",
+          "arch": "amd64",
+          "kind": "archive",
+          "format": "tar.gz"
+        },
+        {
+          "name": "relo-0.2.3-windows-arm64.tar.gz",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.2.3/relo-0.2.3-windows-arm64.tar.gz",
+          "size": 13847589,
+          "os": "windows",
+          "arch": "arm64",
+          "kind": "archive",
+          "format": "tar.gz"
+        },
+        {
+          "name": "Relo-Setup-0.2.3-amd64.deb",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.2.3/Relo-Setup-0.2.3-amd64.deb",
+          "size": 15025444,
+          "os": "linux",
+          "arch": "amd64",
+          "kind": "installer",
+          "format": "deb"
+        },
+        {
+          "name": "Relo-Setup-0.2.3-amd64.exe",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.2.3/Relo-Setup-0.2.3-amd64.exe",
+          "size": 10869660,
+          "os": "windows",
+          "arch": "amd64",
+          "kind": "installer",
+          "format": "exe"
+        },
+        {
+          "name": "Relo-Setup-0.2.3-amd64.rpm",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.2.3/Relo-Setup-0.2.3-amd64.rpm",
+          "size": 14993653,
+          "os": "linux",
+          "arch": "amd64",
+          "kind": "installer",
+          "format": "rpm"
+        },
+        {
+          "name": "Relo-Setup-0.2.3-arm64.deb",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.2.3/Relo-Setup-0.2.3-arm64.deb",
+          "size": 14335458,
+          "os": "linux",
+          "arch": "arm64",
+          "kind": "installer",
+          "format": "deb"
+        },
+        {
+          "name": "Relo-Setup-0.2.3-arm64.exe",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.2.3/Relo-Setup-0.2.3-arm64.exe",
+          "size": 9845718,
+          "os": "windows",
+          "arch": "arm64",
+          "kind": "installer",
+          "format": "exe"
+        },
+        {
+          "name": "Relo-Setup-0.2.3-arm64.rpm",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.2.3/Relo-Setup-0.2.3-arm64.rpm",
+          "size": 14271070,
+          "os": "linux",
+          "arch": "arm64",
+          "kind": "installer",
+          "format": "rpm"
+        }
+      ]
+    },
     {
       "tag": "v0.2.3-beta.77.27813f88",
       "version": "0.2.3-beta.77.27813f88",
