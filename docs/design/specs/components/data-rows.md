@@ -65,5 +65,5 @@ it carries data.
   stays quiet. Cells are bare tone blocks: a quiet day is `--sunken`, never an outlined box.
 - Dashboard activity: the trailing year in the same Monday-first grid and accent ladder, without day numbers or a
   weekday gutter — 53 week columns stretched across the card as 10px-tall rectangles, month abbreviations spanning
-  the weeks they cover, and a hover readout. Two small tiles beside it state the busiest day and the longest streak.
-  The row is hidden below 640px.
+  the weeks they cover, and a hover readout. One highlights card beside it states the busiest day and the longest and
+  current streaks, each with the date it refers to. The row is hidden below 640px.

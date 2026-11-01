@@ -10,10 +10,11 @@ requires: [data-rows, status-and-banners, motion]
 2. **One row of six KPI tiles** (see `data-rows`): requests, success rate, paid spend, tokens, latency, ready accounts.
    Two a row on a phone, three on a tablet, six on a wide screen.
 3. **One row, two cards**: the **Activity** calendar takes ten of twelve columns, and one narrow column beside it
-   holds the **Busiest day** tile above the **Longest streak** tile. The calendar is a compact GitHub-style year of daily
-   request cells: 53 Monday-first week columns stretched across the card, each day a 10px-tall rectangle, the month
-   named under the weeks it covers, and the accent ladder from quiet to busy. It reads the trailing year whatever
-   window the page control selects. The row is hidden below 640px, where a phone reads the figures alone.
+   holds the **activity highlights** card: **Busiest day**, **Longest streak** and **Current streak**, one divided row
+   each. The calendar is a compact GitHub-style year of daily request cells: 53 Monday-first week columns stretched
+   across the card, each day a 10px-tall rectangle, the month named under the weeks it covers, and the accent ladder
+   from quiet to busy. It reads the trailing year whatever window the page control selects. The row is hidden below
+   640px, where a phone reads the figures alone.
 4. **One row, two columns**: the **Routing Universe** on the wider two thirds, a narrow third beside it holding the
    **seven-day trend** (bar chart, `--accent-200` history, `--accent` today) on top and the **token mix** below. The two
    charts take the room the map leaves them, so the map's height is the trend's plus the mix's. Below the wide
@@ -32,9 +33,12 @@ spanning the weeks it covers. There is no weekday gutter. Each day is a rounded 
 accent ladder, stretched to fill the card's height; hovering a cell names the day and its request count, and the
 top-right chip states the year's total. At rest the readout names the range. The year is trailing, not the page
 window, so the card keeps its shape while the controls above it change. Today is the last filled cell and the rest of
-its week stays quiet. Beside the calendar, **Busiest day** states the year's peak request count and its date, and
-**Longest streak** counts the longest run of consecutive days that carried traffic; their stacked height is the
-calendar's height. The row is hidden below 640px.
+its week stays quiet. Beside the calendar, one highlights card states three figures, each with the date it refers to:
+**Busiest day** names the year's peak request count and its day; **Longest streak** counts the longest run of
+consecutive days that carried traffic and names its first and last day (one date for a one-day run); **Current streak**
+counts the run still alive, naming the day it began (`since Oct 19`), and reads 0 with `No active streak` once two
+quiet days have passed. A quiet year shows `—` and `No data yet.` The card stretches to the calendar's height, and the
+row is hidden below 640px.
 
 The header states the range on the title's row (`Oct 3 – Oct 25`) and swaps it for the hovered cell's day and count
 (`Oct 20 · 2.6k requests`); the total sits as an accent-soft chip at the header's end.
