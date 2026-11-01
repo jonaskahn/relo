@@ -26,7 +26,7 @@ Top to bottom:
 5. **Connection logos**: circular 32px logos, each with the model count from that connection at the lower right (16px
    badge). Show up to five logos on More layout and seven on Less; extra connections collapse into one circular overflow
    mark with three dots.
-6. **Actions**: Preview and Edit as outline buttons, Delete on the right with the same outline icon button in
+6. **Actions**: **Inspect routing**, Preview and Edit as outline buttons, Delete on the right with the same outline icon button in
    `--danger`. Delete opens an AlertDialog.
 
 Clicking anywhere on the card opens the Preview modal; preview, edit, remove and copy keep their own jobs. The label
@@ -39,6 +39,14 @@ coverage; and, resolved live from the daemon on open, the ordered candidates a r
 would skip and why (see the resolution path in `wizard-and-pickers`). A name that resolves to nothing reads as an
 absence ("No member can serve this name"). Footer hands off to **Edit** or **Delete**; Delete closes the modal first,
 then opens the confirmation.
+
+## Routing inspector (`xl`)
+
+The route icon on a group card opens a read-only inspector. It shows the request reaching the group, the ordered member
+fan-out, the current/last-served member, the next preview candidate, quota windows with used percent and reset minutes,
+and the last five request chains. The diagram is one accessible inline SVG; quota and account failures degrade to `No
+quota reported` or an unavailable state. Recent rows link to the request log, and the footer offers Refresh, Open latest
+request's log, and Close. The inspector never mutates rotation, pins, or random state.
 
 ## Editor (`xl`)
 

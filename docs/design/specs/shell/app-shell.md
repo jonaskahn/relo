@@ -39,7 +39,7 @@ its own lighter `--stage` (see `surfaces-borders`).
 ## Top bar
 
 - 60px, `.chrome`, breadcrumb on the left (`Relo / Page`, last segment `--ink` 600, earlier ones `--muted`).
-- Right cluster, 38px controls, 8px gap: daemon pill, quick add `+`, appearance button (opens `appearance-popover`).
+- Right cluster, 38px controls, 8px gap: daemon pill, **Report issue** (GitHub bug form), quick add `+`, appearance button (opens `appearance-popover`). The report control is icon-only below `sm` and keeps an accessible name.
 - Daemon pill: `--surface`, full `--line` border, `--radius-control` corners (matches the buttons beside it), 8px dot
   (`--ok`, soft ring pulse while running), text "Daemon running" in sentence case, version in `.mono-data` `--muted`.
   Stopped = `--faint` dot, no pulse, text says what is wrong and offers the next action.

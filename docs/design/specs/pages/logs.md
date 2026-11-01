@@ -56,6 +56,11 @@ to match, never colour alone), the message sentence, and the flattened fields un
   answers inline with the reason and a Retry action, never as a toast.
 - **Empty**: "The daemon has not written a log yet." Missing is a dash; the section never invents rows.
 
+An effective `error` line carries **Report issue**. A failed startup row and a request drawer whose status is 400 or
+higher carry the same action. The report includes only safe request metadata and the current daemon log; it never sends
+headers, cookies, request bodies, or response bodies. A small report is prefilled into GitHub. A report too large for a
+safe URL downloads `relo-daemon-log-<UTC timestamp>.zip` and tells the operator to attach it.
+
 ## Startup
 
 One row per boot transcript (`startup-*.log`), newest first. A row carries the outcome pill (`Started` settled,
@@ -76,6 +81,7 @@ no-store`:
   marker.
 - `GET /api/v1/logs/startups/{name}` — one transcript in full. The name is a file name, never a path; anything else
   is a 400 and a missing transcript a 404.
+- `GET /api/v1/logs/daemon/export` — a ZIP stream containing the current `daemon.log`, with `Cache-Control: no-store`.
 
 The reads live in `application/status` beside the home directory it already holds; the handlers map them to DTOs the
 way the activity reads do. Rotated daemon archives (`.gz`) stay out: the section reads the current log.

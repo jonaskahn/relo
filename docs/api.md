@@ -45,6 +45,14 @@ item, its detail read, and each `GET /api/v1/templates` item carries
 custom, or local connection reports an empty string and a changed curated URL
 applies without a migration.
 
+**Activity request rows carry routing history.** `GET /api/v1/activity/requests`
+accepts a `group` query parameter and returns `GroupID`, `Attempts`, and
+`Retried` on each row. The group filter reads retained request rows; archived
+daily totals have no group dimension and refuse the filter.
+
+**The daemon log can be exported.** `GET /api/v1/logs/daemon/export` streams a
+ZIP containing the current `daemon.log` as `relo-daemon-log-<UTC timestamp>.zip`.
+
 **Two free refusals are stable.** A probe or commit that would create a second
 keyless free connection answers `409 free_connection_exists` and writes
 nothing. Inference that reaches a configured free connection while the opt-in is
