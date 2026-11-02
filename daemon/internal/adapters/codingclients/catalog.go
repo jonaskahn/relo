@@ -16,7 +16,7 @@ import (
 func CatalogAgent(id string) bool {
 	switch id {
 	case ClientPi, ClientZCode, ClientCline,
-		ClientOMP, ClientDSH, ClientMCode, ClientRaycast, ClientKimi:
+		ClientOMP, ClientDSH, ClientMCode, ClientRaycast, ClientKimi, ClientCodeBuddy:
 		return true
 	default:
 		return false
@@ -27,7 +27,8 @@ func CatalogAgent(id string) bool {
 func CatalogKind(kind string) bool {
 	switch kind {
 	case FilePi, FileZCode, FileClineProviders, FileClineModels,
-		FileOMP, FileDSH, FileDSHHeadless, FileDSHDesktop, FileMCode, FileRaycast, FileKimi:
+		FileOMP, FileDSH, FileDSHHeadless, FileDSHDesktop, FileMCode, FileRaycast, FileKimi,
+		FileCodeBuddy, FileWorkBuddy:
 		return true
 	default:
 		return false
@@ -94,6 +95,8 @@ func mergeSpecialKind(kind, existing, address string, models []ModelRef) (string
 		return mergeRaycast(existing, address, models)
 	case FileKimi:
 		return mergeKimi(existing, address, models)
+	case FileCodeBuddy, FileWorkBuddy:
+		return mergeCodeBuddy(existing, address, models)
 	default:
 		return "", fmt.Errorf("%s: %w", kind, ErrUnrecognisedFile)
 	}
@@ -118,6 +121,8 @@ func StripKind(kind, existing string) (string, error) {
 		stripped, err = stripRaycast(existing)
 	case FileKimi:
 		stripped, err = stripKimi(existing)
+	case FileCodeBuddy, FileWorkBuddy:
+		stripped, err = stripCodeBuddy(existing)
 	default:
 		return "", fmt.Errorf("%s: %w", kind, ErrUnrecognisedFile)
 	}
@@ -145,6 +150,8 @@ func KindHasRelo(kind, existing string) (bool, error) {
 		return raycastHas(existing)
 	case FileKimi:
 		return kimiHas(existing)
+	case FileCodeBuddy, FileWorkBuddy:
+		return codeBuddyHasRelo(existing)
 	default:
 		return false, fmt.Errorf("%s: %w", kind, ErrUnrecognisedFile)
 	}
@@ -197,6 +204,8 @@ func specialKindPointsAt(kind, existing, address string, models []ModelRef) bool
 		return raycastPointsAt(existing, address, models)
 	case FileKimi:
 		return kimiPointsAt(existing, address, models)
+	case FileCodeBuddy, FileWorkBuddy:
+		return codeBuddyPointsAt(existing, address, models)
 	default:
 		return false
 	}
@@ -215,7 +224,7 @@ func catalogAddress(kind, baseURL string) (string, error) {
 
 func catalogUsesV1(kind string) bool {
 	switch kind {
-	case FilePi, FileOMP, FileKimi, FileZCode:
+	case FilePi, FileOMP, FileKimi, FileZCode, FileCodeBuddy, FileWorkBuddy:
 		return true
 	default:
 		return false
@@ -240,6 +249,8 @@ func kindClient(kind string) string {
 		return ClientRaycast
 	case FileKimi:
 		return ClientKimi
+	case FileCodeBuddy, FileWorkBuddy:
+		return ClientCodeBuddy
 	default:
 		return ""
 	}

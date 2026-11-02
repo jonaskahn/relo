@@ -115,3 +115,27 @@ func TestProfilesAreCopies(t *testing.T) {
 		t.Fatal("ClientProfiles() shares its storage with callers")
 	}
 }
+
+func TestCodeBuddyStepsNameBothProductsAndTheSharedKey(t *testing.T) {
+	profile, found := access.ClientProfileFor("codebuddy")
+	if !found {
+		t.Fatal("ClientProfileFor(codebuddy) not found")
+	}
+	fill := access.SetupFill{Token: "relo_test", BaseURL: "http://127.0.0.1:10101/inference", Model: "relo-openai-gpt-4o"}
+	joined := strings.Join(append(profile.Instructions(fill), profile.Verification(fill)), "\n")
+	for _, want := range []string{
+		"~/.codebuddy/models.json",
+		"~/.workbuddy-ai/models.json",
+		"${RELO_CODEBUDDY_API_KEY}",
+		"/v1/chat/completions",
+		"Restart WorkBuddy",
+		"availableModels",
+	} {
+		if !strings.Contains(joined, want) {
+			t.Fatalf("codebuddy steps = %q, want %s", joined, want)
+		}
+	}
+	if strings.Contains(joined, fill.Token) {
+		t.Fatalf("codebuddy steps = %q, want the environment reference rather than the secret", joined)
+	}
+}

@@ -36,17 +36,18 @@ type Agent struct {
 // the reference project's export clients, so a machine already wired with one
 // of them keeps the same name here.
 const (
-	ClientOpenCode = "opencode"
-	ClientPi       = "pi"
-	ClientOMP      = "omp"
-	ClientHermes   = "hermes"
-	ClientOpenClaw = "openclaw"
-	ClientKimi     = "kimi"
-	ClientDSH      = "dsh"
-	ClientMCode    = "mcode"
-	ClientZCode    = "zcode"
-	ClientRaycast  = "raycast"
-	ClientCline    = "cline"
+	ClientOpenCode  = "opencode"
+	ClientPi        = "pi"
+	ClientOMP       = "omp"
+	ClientHermes    = "hermes"
+	ClientOpenClaw  = "openclaw"
+	ClientKimi      = "kimi"
+	ClientDSH       = "dsh"
+	ClientMCode     = "mcode"
+	ClientZCode     = "zcode"
+	ClientRaycast   = "raycast"
+	ClientCline     = "cline"
+	ClientCodeBuddy = "codebuddy"
 )
 
 // Agents is every integration this build knows, in the order a console lists
@@ -97,6 +98,8 @@ var agents = []Agent{
 		Summary: "Point ZCode at Relo with a custom provider block", ManagesFiles: true, EnvKey: EnvKeyName(ClientZCode)},
 	{ID: ClientRaycast, Client: ClientRaycast, Protocol: inference.ProtocolOpenAI, Label: "Raycast",
 		Summary: "Point Raycast AI at Relo with a custom provider entry", ManagesFiles: true, EnvKey: EnvKeyName(ClientRaycast)},
+	{ID: ClientCodeBuddy, Client: ClientCodeBuddy, Protocol: inference.ProtocolOpenAI, Label: "WorkBuddy/CodeBuddy",
+		Summary: "Point WorkBuddy or CodeBuddy at Relo with a custom model catalog", ManagesFiles: true, EnvKey: EnvKeyName(ClientCodeBuddy)},
 }
 
 // AgentFor returns the agent with the given identifier.

@@ -307,6 +307,27 @@ var clientProfiles = []ClientProfile{
 		},
 		Verify: "Select the Relo model in Raycast AI and send one message.",
 	},
+	{
+		ID:       "codebuddy",
+		Name:     "WorkBuddy/CodeBuddy",
+		Summary:  "Add Relo's models to WorkBuddy or CodeBuddy's custom model catalog",
+		Protocol: inference.ProtocolOpenAI,
+		Steps: []string{
+			"CodeBuddy Code reads ~/.codebuddy/models.json. Add:",
+			"",
+			"{\"models\": [{ \"id\": \"{{model}}\", \"name\": \"{{model}}\", \"vendor\": \"Relo\",",
+			"  \"url\": \"{{base_url}}/v1/chat/completions\", \"apiKey\": \"${RELO_CODEBUDDY_API_KEY}\",",
+			"  \"useCustomProtocol\": false }]}",
+			"",
+			"WorkBuddy reads ~/.workbuddy-ai/models.json. Add the same entry there,",
+			"either in that object or as a top-level array of entries:",
+			"",
+			"[{ \"id\": \"{{model}}\", \"name\": \"{{model}}\", \"vendor\": \"Relo\",",
+			"  \"url\": \"{{base_url}}/v1/chat/completions\", \"apiKey\": \"${RELO_CODEBUDDY_API_KEY}\",",
+			"  \"useCustomProtocol\": false }]",
+		},
+		Verify: "Restart WorkBuddy after setup, because the app reads RELO_CODEBUDDY_API_KEY from the environment it launched with. If the file sets availableModels, add the Relo model ids there. The Relo models then appear in the custom section of the model picker.",
+	},
 }
 
 // ClientProfileFor returns the profile with the given identifier.

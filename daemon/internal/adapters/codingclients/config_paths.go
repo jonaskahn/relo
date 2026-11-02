@@ -39,6 +39,11 @@ const (
 	FileRaycast = "raycast-providers"
 	// FileKimi is Kimi Code's configuration file.
 	FileKimi = "kimi-config"
+	// FileCodeBuddy is CodeBuddy Code's custom model catalog.
+	FileCodeBuddy = "codebuddy-models"
+	// FileWorkBuddy is the WorkBuddy app's custom model catalog. It is a
+	// separate kind because a file record is keyed by integration and kind.
+	FileWorkBuddy = "workbuddy-models"
 )
 
 // ConfigTarget is the file one agent reads and the directory that has to
@@ -173,6 +178,60 @@ func absolutePath(raw, home, name string) (string, error) {
 	}
 }
 
+// codeBuddyTargets lists the custom-model files of whichever of the two
+// products is installed. Both files are named by their own directory
+// overrides; without one, only a directory that already exists is written,
+// because writeCatalog creates every target directory and listing both would
+// leave a stray one for the product the operator does not have.
+func (p Paths) codeBuddyTargets() ([]ConfigTarget, error) {
+	products := []struct {
+		kind, env, name string
+	}{
+		{FileWorkBuddy, "WORKBUDDY_CONFIG_DIR", ".workbuddy-ai"},
+		{FileCodeBuddy, "CODEBUDDY_CONFIG_DIR", ".codebuddy"},
+	}
+	overridden := strings.TrimSpace(os.Getenv("WORKBUDDY_CONFIG_DIR")) != "" ||
+		strings.TrimSpace(os.Getenv("CODEBUDDY_CONFIG_DIR")) != ""
+	targets := make([]ConfigTarget, 0, 2)
+	seen := make(map[string]bool, 2)
+	for _, product := range products {
+		target, found, err := p.codeBuddyTarget(product.kind, product.env, product.name, overridden)
+		if err != nil {
+			return nil, err
+		}
+		if !found || seen[target.Dir] {
+			continue
+		}
+		seen[target.Dir] = true
+		targets = append(targets, target)
+	}
+	if len(targets) == 0 {
+		dir := filepath.Join(p.Home, ".codebuddy")
+		targets = append(targets, ConfigTarget{Kind: FileCodeBuddy, Path: filepath.Join(dir, "models.json"), Dir: dir})
+	}
+	return targets, nil
+}
+
+// codeBuddyTarget resolves one product's directory. An override names it
+// outright; otherwise the directory has to exist already.
+func (p Paths) codeBuddyTarget(kind, env, name string, overridden bool) (ConfigTarget, bool, error) {
+	raw := strings.TrimSpace(os.Getenv(env))
+	if overridden && raw == "" {
+		return ConfigTarget{}, false, nil
+	}
+	dir := filepath.Join(p.Home, name)
+	if raw != "" {
+		resolved, err := absolutePath(raw, p.Home, env)
+		if err != nil {
+			return ConfigTarget{}, false, err
+		}
+		dir = resolved
+	} else if _, err := os.Stat(dir); err != nil {
+		return ConfigTarget{}, false, nil
+	}
+	return ConfigTarget{Kind: kind, Path: filepath.Join(dir, "models.json"), Dir: dir}, true, nil
+}
+
 // ConfigTargets lists every client file Relo merges a provider block into.
 func (p Paths) ConfigTargets(id string) ([]ConfigTarget, error) {
 	switch id {
@@ -190,6 +249,8 @@ func (p Paths) ConfigTargets(id string) ([]ConfigTarget, error) {
 		return fixedTarget(FileRaycast, filepath.Join(p.Home, ".config", "raycast", "ai", "providers.yaml")), nil
 	case ClientKimi:
 		return fixedTarget(FileKimi, filepath.Join(p.Home, ".kimi-code", "config.toml")), nil
+	case ClientCodeBuddy:
+		return p.codeBuddyTargets()
 	default:
 		return p.specialConfigTargets(id)
 	}

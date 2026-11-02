@@ -28,6 +28,8 @@ func TestCatalogMergeKeepsTheRestOfTheFile(t *testing.T) {
 		{codingclients.FileMCode, "editor: vim\n", "${RELO_MCODE_API_KEY}", base},
 		{codingclients.FileRaycast, "providers:\n  - id: openai\n    name: OpenAI\n", "Relo", base},
 		{codingclients.FileKimi, "[providers.other]\nbase_url = \"http://example\"\n", "${RELO_KIMI_API_KEY}", base + "/v1"},
+		{codingclients.FileCodeBuddy, `{"availableModels":["user-model"],"models":[{"id":"user-model","vendor":"Someone"}]}` + "\n", "${RELO_CODEBUDDY_API_KEY}", base + "/v1"},
+		{codingclients.FileWorkBuddy, `[{"id":"user-model","vendor":"Someone"}]` + "\n", "${RELO_CODEBUDDY_API_KEY}", base + "/v1"},
 	}
 	for _, testCase := range cases {
 		t.Run(testCase.kind, func(t *testing.T) {
@@ -392,7 +394,7 @@ func catalogLimits(t *testing.T, kind, merged string) map[string]writtenLimit {
 }
 
 func siblingMarker(existing string) string {
-	for _, marker := range []string{"dark", "openai", "local", "other", "vim", "example"} {
+	for _, marker := range []string{"dark", "openai", "local", "other", "vim", "example", "user-model"} {
 		if strings.Contains(existing, marker) {
 			return marker
 		}
