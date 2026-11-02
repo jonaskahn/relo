@@ -170,6 +170,9 @@ func (p *Pool) Select(ctx Selection) (PoolEntry, error) {
 		candidates = servable
 	}
 	if pinned, found := p.pinned(ctx.ConversationID, candidates); found {
+		// Using the pin renews it, so an active conversation never loses its
+		// account to the pin's age.
+		p.pins.Pin(ctx.ConversationID, pinned.ID)
 		return pinned, nil
 	}
 	if sticky, found := p.stickyEntry(candidates); found {

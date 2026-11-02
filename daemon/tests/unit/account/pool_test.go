@@ -11,6 +11,7 @@ import (
 
 	"github.com/jonaskahn/relo/internal/account"
 	"github.com/jonaskahn/relo/internal/adapters/secrets"
+	"github.com/jonaskahn/relo/tests/testkit"
 )
 
 func TestPoolSelection(t *testing.T) {
@@ -674,4 +675,30 @@ func TestApplyStrategy(t *testing.T) {
 			t.Fatalf("ApplyStrategy() error = %v, want ErrUnknownStrategy", err)
 		}
 	})
+}
+
+// TestPoolRenewsAConversationPinOnUse pins that an active conversation keeps
+// its account past the pin's age, because every use renews the pin.
+func TestPoolRenewsAConversationPinOnUse(t *testing.T) {
+	clock := testkit.NewFakeClock(time.Now())
+	pooled := account.NewPoolWithOptions("openai", account.Options{
+		Clock: clock, Pins: account.NewPinCache(0, time.Hour, clock),
+	})
+	pooled.Add(entry("a", account.StatusActive))
+	pooled.Add(entry("b", account.StatusActive))
+	selection := account.Selection{ConversationID: "conversation-1"}
+	first, err := pooled.Select(selection)
+	if err != nil {
+		t.Fatalf("Select() error = %v", err)
+	}
+	for range 3 {
+		clock.Add(40 * time.Minute)
+		again, err := pooled.Select(selection)
+		if err != nil {
+			t.Fatalf("Select() error = %v", err)
+		}
+		if again.ID != first.ID {
+			t.Fatalf("Select() = %q after renewals, want the pinned %q", again.ID, first.ID)
+		}
+	}
 }
