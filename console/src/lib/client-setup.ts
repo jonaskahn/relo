@@ -58,6 +58,13 @@ export const CLIENT_OPTIONS: ClientOption[] = [
 	{ id: 'mcode', label: 'Mcode', kind: 'agent', protocol: 'openai', logoId: 'mcode' },
 	{ id: 'zcode', label: 'Zcode', kind: 'agent', protocol: 'openai', logoId: 'zcode' },
 	{ id: 'raycast', label: 'Raycast', kind: 'agent', protocol: 'openai', logoId: 'raycast' },
+	{
+		id: 'codebuddy',
+		label: 'WorkBuddy/CodeBuddy',
+		kind: 'agent',
+		protocol: 'openai',
+		logoId: 'codebuddy'
+	},
 	// The last two are not clients at all: "Other" stands in for a client the
 	// operator names by hand, and "Shared" is a key reusable across clients. Both
 	// take a mark so the row reads as a choice rather than a gap in the list.

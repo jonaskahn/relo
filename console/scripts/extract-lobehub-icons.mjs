@@ -90,6 +90,7 @@ const uncovered = [
 	'gajae',
 	'prime',
 	'raycast',
+	'codebuddy',
 	'aside',
 	'zcode'
 ];

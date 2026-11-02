@@ -216,7 +216,8 @@ describe('providerLogoPath', () => {
 			'shared',
 			'google-antigravity',
 			'zcode',
-			'raycast'
+			'raycast',
+			'codebuddy'
 		]) {
 			expect(providerLogoSrc(id), id).not.toBeNull();
 			expect(providerLogoPath(id), id).toBeNull();
@@ -263,6 +264,7 @@ describe('providerLogoPath', () => {
 		expect(providerLogoSrc('claude-code')).toBe('/provider-logos/claude-code.svg');
 		expect(providerLogoSrc('grok-build')).toBe('/provider-logos/grok-build.svg');
 		expect(providerLogoSrc('claude-desktop')).toBe('/provider-logos/anthropic.svg');
+		expect(providerLogoSrc('codebuddy')).toBe('/provider-logos/codebuddy.svg');
 	});
 
 	// Oh My Pi is Pi's mark inside a ring: the ring is the O. The Pi glyph has

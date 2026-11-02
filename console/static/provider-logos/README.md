@@ -118,6 +118,13 @@ purpose-drawn silhouette of the same mark, which is what the console draws.
   `1.17 1.17 27.66 27.65` viewBox, so the Z takes the tile's ink in both themes.
 - `raycast.svg` — reduced through `scripts/reduce-mark.mjs` from Raycast's own
   mark: one path, one ink, the published `fill-rule:evenodd` kept.
+- `codebuddy.svg` — supplied by the project for WorkBuddy/CodeBuddy. The vendor
+  mark is a green plate, a blurred disc, and gradients; the console masks on
+  alpha, so only the outlined body with its cutout and the two white strokes are
+  kept as `currentColor`. The body runs past the original 24×24 plate, so the
+  viewBox is the glyph's measured bounds (`1.1994 1.7991 29.054 27.4933`) rather
+  than the plate, and the mark is not cropped. `@lobehub/icons` publishes a
+  different CodeBuddy glyph and it is not used.
 - `omp.svg` — "Oh My Pi", composed from `pi.svg` rather than drawn: the Pi glyph
   at `scale(0.6)` inside a `currentColor` ring, the ring being the O. A lockup
   reading "O" then "Pi" side by side was rejected because it stops being legible

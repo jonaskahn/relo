@@ -91,6 +91,8 @@ owners and are shown only to identify the provider. See
 | [models.dev](https://github.com/anomalyco/models.dev)     | MIT     |
 | [`@lobehub/icons`](https://github.com/lobehub/lobe-icons) | MIT     |
 
+`codebuddy.svg` is supplied by the WorkBuddy/CodeBuddy project.
+
 ## macOS updater
 
 `Relo.app` embeds [Sparkle](https://sparkle-project.org) 2.x for updates.
