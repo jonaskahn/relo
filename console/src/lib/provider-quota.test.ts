@@ -91,6 +91,14 @@ describe('quotaWindowLabelKey', () => {
 			'ui.pages.providersPage.accounts.quotaWindowBalance'
 		);
 		expect(quotaWindowLabelKey('spent')).toBe('ui.pages.providersPage.accounts.quotaWindowSpent');
+		expect(quotaWindowLabelKey('Cla')).toBe('ui.pages.providersPage.accounts.quotaWindowClaude');
+		expect(quotaWindowLabelKey('Gem')).toBe('ui.pages.providersPage.accounts.quotaWindowGemini');
+		expect(quotaWindowLabelKey('Cla (Weekly)')).toBe(
+			'ui.pages.providersPage.accounts.quotaWindowClaudeWeekly'
+		);
+		expect(quotaWindowLabelKey('Gem (Weekly)')).toBe(
+			'ui.pages.providersPage.accounts.quotaWindowGeminiWeekly'
+		);
 		expect(quotaWindowLabelKey('Sonnet')).toBe('');
 	});
 });

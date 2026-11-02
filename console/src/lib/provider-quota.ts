@@ -99,9 +99,21 @@ export function ringDash(percent: number, circumference: number): number {
 	return circumference * (1 - share);
 }
 
+/** Names the pool an Antigravity account reports: the Claude and Gemini pools, each with a
+ *  session window and an optional weekly one. */
+function antigravityPool(window: string): string {
+	if (window === 'Cla') return 'ui.pages.providersPage.accounts.quotaWindowClaude';
+	if (window === 'Gem') return 'ui.pages.providersPage.accounts.quotaWindowGemini';
+	if (window === 'Cla (Weekly)') return 'ui.pages.providersPage.accounts.quotaWindowClaudeWeekly';
+	if (window === 'Gem (Weekly)') return 'ui.pages.providersPage.accounts.quotaWindowGeminiWeekly';
+	return '';
+}
+
 /** Names the window a provider publishes. An account usually reports a short burst window and a
  *  weekly one; anything else keeps the tag the provider used. */
 export function quotaWindowLabelKey(window: string): string {
+	const pool = antigravityPool(window);
+	if (pool !== '') return pool;
 	if (window === 'balance' || window.startsWith('balance-')) {
 		return 'ui.pages.providersPage.accounts.quotaWindowBalance';
 	}
