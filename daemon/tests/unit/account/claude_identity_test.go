@@ -7,17 +7,10 @@ import (
 	"github.com/jonaskahn/relo/internal/account"
 )
 
-func TestClaudeSessionID(t *testing.T) {
-	t.Run("a native uuid passes through", func(t *testing.T) {
-		id := "fcb4e0be-b97b-42f9-ac38-522c1444bd98"
-		if got := account.ClaudeSessionID("claude", id); got != id {
-			t.Fatalf("session = %q, want the native id", got)
-		}
-	})
-
-	t.Run("one anchor always maps to one session", func(t *testing.T) {
-		first := account.ClaudeSessionID("claude", "ses_ed417ca14ffe1y0NFcyusdkUpM")
-		again := account.ClaudeSessionID("claude", "ses_ed417ca14ffe1y0NFcyusdkUpM")
+func TestAccountSessionID(t *testing.T) {
+	t.Run("one conversation on one account always maps to one session", func(t *testing.T) {
+		first := account.AccountSessionID("claude", "a", "ses_ed417ca14ffe1y0NFcyusdkUpM")
+		again := account.AccountSessionID("claude", "a", "ses_ed417ca14ffe1y0NFcyusdkUpM")
 		if first != again {
 			t.Fatalf("sessions = %q and %q, want one stable id", first, again)
 		}
@@ -26,12 +19,29 @@ func TestClaudeSessionID(t *testing.T) {
 		}
 	})
 
-	t.Run("separate anchors and namespaces stay separate", func(t *testing.T) {
-		if got := account.ClaudeSessionID("claude", "ses_one"); got == account.ClaudeSessionID("claude", "ses_two") {
+	t.Run("a conversation keeps a separate id on each account", func(t *testing.T) {
+		onA := account.AccountSessionID("claude", "a", "ses_one")
+		onB := account.AccountSessionID("claude", "b", "ses_one")
+		if onA == onB {
+			t.Fatalf("accounts share session %q", onA)
+		}
+		if back := account.AccountSessionID("claude", "a", "ses_one"); back != onA {
+			t.Fatalf("session = %q after switching back, want the id %q the account knew", back, onA)
+		}
+	})
+
+	t.Run("separate anchors and connections stay separate", func(t *testing.T) {
+		if got := account.AccountSessionID("claude", "a", "ses_one"); got == account.AccountSessionID("claude", "a", "ses_two") {
 			t.Fatalf("sessions collide at %q", got)
 		}
-		if got := account.ClaudeSessionID("claude", "ses_one"); got == account.ClaudeSessionID("other", "ses_one") {
-			t.Fatalf("namespaces collide at %q", got)
+		if got := account.AccountSessionID("claude", "a", "ses_one"); got == account.AccountSessionID("other", "a", "ses_one") {
+			t.Fatalf("connections collide at %q", got)
+		}
+	})
+
+	t.Run("no conversation yields no session", func(t *testing.T) {
+		if got := account.AccountSessionID("claude", "a", " "); got != "" {
+			t.Fatalf("session = %q, want none", got)
 		}
 	})
 }

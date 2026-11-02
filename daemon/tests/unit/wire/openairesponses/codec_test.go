@@ -206,6 +206,21 @@ func TestToolResultEncoding(t *testing.T) {
 	})
 }
 
+func TestCodexSessionFollowsTheAccountScopedID(t *testing.T) {
+	request := newTestRequest(t, canonicalRequest(true), wire.CodecOpts{
+		BaseURL:       "https://chatgpt.com/backend-api/codex",
+		CredentialRef: "token",
+		AuthMethod:    wire.AuthOAuth,
+		SessionAnchor: "session-1",
+		SessionID:     "account-session-1",
+	})
+	for _, name := range []string{"session_id", "conversation_id", "x-client-request-id", "session-id"} {
+		if request.Header.Get(name) != "account-session-1" {
+			t.Fatalf("%s = %q, want the account-scoped session", name, request.Header.Get(name))
+		}
+	}
+}
+
 func TestCodexHeaders(t *testing.T) {
 	token := testJWT(t, map[string]any{
 		"https://api.openai.com/auth": map[string]any{

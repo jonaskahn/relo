@@ -378,7 +378,7 @@ func (s *Server) attemptCodecOptions(spec attemptSpec, in attemptCodecInputs) wi
 		Project:                authorized.Project,
 		AccountID:              authorized.AccountID,
 		DeviceID:               s.deviceID(authorized.AccountID),
-		SessionID:              account.ClaudeSessionID(candidate.ProviderID, anchor),
+		SessionID:              account.AccountSessionID(candidate.ProviderID, authorized.CredentialID, anchor),
 		NativeBody:             s.nativeBody(outcome, candidate),
 		RequestID:              outcome.requestID,
 		SessionAnchor:          anchor,

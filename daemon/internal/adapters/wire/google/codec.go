@@ -147,7 +147,7 @@ func (c *Codec) Bind(req *inference.Request, opts wire.CodecOpts) wire.CodecModu
 	bound.cfg.Mode = ModeCloudCodeAssist
 	bound.replay = replayScope{
 		model:   req.Model,
-		session: sessionID(sessionPreimage(opts.SessionAnchor, req)),
+		session: sessionID(sessionPreimage(conversationOf(opts), req)),
 		record:  geminiWire(req.Model),
 	}
 	return &bound
@@ -225,8 +225,15 @@ func (c *Codec) settings(opts wire.CodecOpts) settings {
 	return settings{
 		project:       firstOf(opts.Project, c.cfg.Project),
 		baseURL:       firstOf(opts.BaseURL, c.cfg.BaseURL),
-		sessionAnchor: opts.SessionAnchor,
+		sessionAnchor: conversationOf(opts),
 	}
+}
+
+// conversationOf is the identity a Cloud Code Assist attempt keys its session
+// on: the account-scoped id when the caller resolved one, otherwise the
+// anchor the client named.
+func conversationOf(opts wire.CodecOpts) string {
+	return firstOf(opts.SessionID, opts.SessionAnchor)
 }
 
 func firstOf(value, fallback string) string {

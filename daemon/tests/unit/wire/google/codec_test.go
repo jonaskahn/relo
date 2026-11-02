@@ -1623,6 +1623,11 @@ func TestCloudCodeAssistSendMatchesTheClient(t *testing.T) {
 		if openCode["sessionId"] != again["sessionId"] || openCode["sessionId"] == first["sessionId"] {
 			t.Fatalf("opencode session = %v, codex session = %v, want each client stable and distinct", openCode["sessionId"], first["sessionId"])
 		}
+		onA := assistBody(t, canonicalRequest(false), wire.CodecOpts{CredentialRef: "token", Project: "p", SessionAnchor: codex, SessionID: "account-a"})
+		onB := assistBody(t, canonicalRequest(false), wire.CodecOpts{CredentialRef: "token", Project: "p", SessionAnchor: codex, SessionID: "account-b"})
+		if onA["sessionId"] == onB["sessionId"] || onA["sessionId"] == first["sessionId"] {
+			t.Fatalf("session = %v on a, %v on b, want each account its own", onA["sessionId"], onB["sessionId"])
+		}
 		fromText := assistBody(t, canonicalRequest(false), wire.CodecOpts{CredentialRef: "token", Project: "p"})
 		fromTextAgain := assistBody(t, canonicalRequest(false), wire.CodecOpts{CredentialRef: "token", Project: "p"})
 		if fromText["sessionId"] != fromTextAgain["sessionId"] {

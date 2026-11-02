@@ -7,16 +7,18 @@ import (
 	"strings"
 )
 
-// ClaudeSessionID resolves the conversation id a Claude request sends. A
-// native UUID passes through unchanged; any other anchor maps
-// deterministically into UUID shape, so the same client conversation keeps
-// the same provider session across requests, retries, and restarts.
-func ClaudeSessionID(namespace, anchor string) string {
+// AccountSessionID resolves the conversation id an account sends upstream.
+// It is derived from the connection, the account, and the conversation, so
+// one conversation keeps one id on an account across requests, retries, and
+// restarts, a conversation that moves to another account is a different
+// conversation there, and moving back finds the id the account already knew.
+// An empty anchor names no conversation and yields no id.
+func AccountSessionID(providerID, credentialID, anchor string) string {
 	trimmed := strings.TrimSpace(anchor)
-	if isUUID(trimmed) {
-		return trimmed
+	if trimmed == "" {
+		return ""
 	}
-	sum := sha256.Sum256([]byte("relo-claude-session-v1\x00" + namespace + "\x00" + trimmed))
+	sum := sha256.Sum256([]byte("relo-account-session-v1\x00" + providerID + "\x00" + credentialID + "\x00" + trimmed))
 	return formatSessionUUID(sum)
 }
 
@@ -26,24 +28,6 @@ func ClaudeSessionID(namespace, anchor string) string {
 func ClaudeDeviceID(seed, accountID string) string {
 	sum := sha256.Sum256([]byte("relo-claude-device-id-v1\x00" + seed + "\x00" + accountID))
 	return hex.EncodeToString(sum[:])
-}
-
-func isUUID(value string) bool {
-	if len(value) != 36 {
-		return false
-	}
-	for index, char := range value {
-		switch {
-		case index == 8 || index == 13 || index == 18 || index == 23:
-			if char != '-' {
-				return false
-			}
-		case char >= '0' && char <= '9' || char >= 'a' && char <= 'f' || char >= 'A' && char <= 'F':
-		default:
-			return false
-		}
-	}
-	return true
 }
 
 func formatSessionUUID(raw [sha256.Size]byte) string {

@@ -50,7 +50,10 @@ func applyCodexHeaders(request *http.Request, req *inference.Request, opts wire.
 }
 
 func codexSession(opts wire.CodecOpts) string {
-	session := opts.SessionAnchor
+	session := opts.SessionID
+	if session == "" {
+		session = opts.SessionAnchor
+	}
 	if session == "" {
 		session = opts.RequestID
 	}
