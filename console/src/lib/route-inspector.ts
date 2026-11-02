@@ -19,11 +19,16 @@ export interface MemberView {
 	modelName: string;
 	accounts: readonly Account[];
 	windows: readonly QuotaWindow[];
+	/** The account the windows belong to, empty when they are not one account's. */
+	quotaAccount?: string;
+	/** Every window the member's accounts reported, which decides its state. */
+	reported?: readonly QuotaWindow[];
 }
 
 export interface CurrentMember {
 	index: number;
 	accountLabel: string;
+	credentialId?: string;
 }
 
 /** One box in the routing diagram, in viewBox coordinates. */
@@ -257,7 +262,8 @@ export function selectCurrentMember(
 	}
 	return {
 		index,
-		accountLabel: serving?.CredentialLabel ?? ''
+		accountLabel: serving?.CredentialLabel ?? '',
+		credentialId: serving?.CredentialID ?? ''
 	};
 }
 
@@ -274,29 +280,77 @@ export function selectNextMember(
 	);
 }
 
-/** Aggregates every account behind one member into the state the card shows. */
+function accountLimited(account: Account, nowMs: number, windows: readonly QuotaWindow[]): boolean {
+	return (
+		account.limit_state === 'limited' ||
+		(account.limited_until_ms ?? 0) > nowMs ||
+		windows.some((window) => window.used_percent >= 100)
+	);
+}
+
+function windowsOf(account: Account, windows: readonly QuotaWindow[]): QuotaWindow[] {
+	return windows.filter((window) => window.credential_id === account.id);
+}
+
+/** Aggregates every account behind one member into the state the card shows. A member is limited
+ *  only when every active account is, since any other account can still take the request. */
 export function memberState(
 	accounts: readonly Account[],
 	nowMs: number,
 	windows: readonly QuotaWindow[] = []
 ): MemberState {
 	if (accounts.some((account) => account.status === 'needs_reauth')) return 'needsSignIn';
+	const active = accounts.filter((account) => account.status === 'active');
 	if (
-		accounts.some(
-			(account) =>
-				account.limit_state === 'limited' ||
-				(account.limited_until_ms ?? 0) > nowMs ||
-				windows.some((window) => window.used_percent >= 100)
-		)
+		active.length > 0 &&
+		active.every((account) => accountLimited(account, nowMs, windowsOf(account, windows)))
 	) {
 		return 'limited';
 	}
-	if (accounts.length === 0 || accounts.every((account) => account.status !== 'active')) {
+	if (accounts.length === 0 || active.length === 0) {
 		return accounts.some((account) => account.status === 'paused') ? 'paused' : 'unavailable';
 	}
 	if (accounts.some((account) => account.status === 'paused')) return 'paused';
 	if (accounts.some((account) => account.limit_state === 'probing')) return 'cooling';
 	return 'ready';
+}
+
+/** Picks the one account whose quota a member card shows. The account that served the newest
+ *  request wins; otherwise the account with the most headroom, so a limited account never hides
+ *  one that can still serve. When every account is limited the soonest reset wins. Windows that
+ *  belong to no listed account pass through unlabeled. */
+export function pickQuotaAccount(
+	accounts: readonly Account[],
+	windows: readonly QuotaWindow[],
+	nowMs: number,
+	servingCredentialId = ''
+): { label: string; windows: readonly QuotaWindow[] } {
+	const candidates = accounts
+		.map((account) => ({ account, own: windowsOf(account, windows) }))
+		.filter((candidate) => candidate.own.length > 0);
+	if (candidates.length === 0) return { label: '', windows };
+	const headroom = (own: readonly QuotaWindow[]) =>
+		100 - Math.max(...own.map((window) => window.used_percent));
+	const resetAt = (own: readonly QuotaWindow[]) => {
+		const times = own.map((window) => window.reset_at_ms).filter((time) => time > 0);
+		return times.length > 0 ? Math.min(...times) : Number.MAX_SAFE_INTEGER;
+	};
+	const serving = candidates.find((candidate) => candidate.account.id === servingCredentialId);
+	const open = candidates.filter(
+		(candidate) =>
+			candidate.account.status === 'active' &&
+			!accountLimited(candidate.account, nowMs, candidate.own)
+	);
+	const best = serving
+		? serving
+		: open.length > 0
+			? open.reduce((a, b) => {
+					const gap = headroom(b.own) - headroom(a.own);
+					if (gap !== 0) return gap > 0 ? b : a;
+					return b.account.priority < a.account.priority ? b : a;
+				})
+			: candidates.reduce((a, b) => (resetAt(b.own) < resetAt(a.own) ? b : a));
+	return { label: best.account.label, windows: best.own };
 }
 
 /** Renders one request's attempts as the compact chain the recent-route table shows. */

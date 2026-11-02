@@ -5,6 +5,7 @@ import {
 	memberState,
 	overflowMembers,
 	orderMembers,
+	pickQuotaAccount,
 	resolveLinkedRequest,
 	routingLayout,
 	selectCurrentMember,
@@ -13,6 +14,7 @@ import {
 	windowSpan
 } from './route-inspector';
 import type {
+	Account,
 	GroupMember,
 	QuotaWindow,
 	RouteCandidate,
@@ -40,6 +42,33 @@ function attempt(ordinal: number, status: number, model: string): UsageAttemptRo
 	};
 }
 
+function account(id: string, extra: Partial<Account> = {}): Account {
+	return {
+		id,
+		provider_id: 'openai',
+		kind: 'api_key',
+		label: id,
+		status: 'active',
+		priority: 1,
+		...extra
+	};
+}
+
+function win(credential: string, used: number, resetAt = 0): QuotaWindow {
+	return {
+		credential_id: credential,
+		connection_id: 'openai',
+		label: 'Week',
+		window: '7d',
+		window_seconds: 604_800,
+		used_percent: used,
+		reset_at_ms: resetAt,
+		source: 'probe',
+		observed_at_ms: 0,
+		stale: false
+	};
+}
+
 describe('routing inspector decisions', () => {
 	it('orders members by the preview candidates', () => {
 		const candidates: RouteCandidate[] = [
@@ -57,13 +86,14 @@ describe('routing inspector decisions', () => {
 			attempt(1, 429, 'claude'),
 			attempt(2, 200, 'gpt-5')
 		]);
-		expect(current).toEqual({ index: 0, accountLabel: 'work' });
+		expect(current).toEqual({ index: 0, accountLabel: 'work', credentialId: 'cred-2' });
 	});
 
 	it('falls back to the first attempt when none served', () => {
 		expect(selectCurrentMember(members, [attempt(1, 500, 'claude')])).toEqual({
 			index: 1,
-			accountLabel: ''
+			accountLabel: '',
+			credentialId: ''
 		});
 	});
 
@@ -74,27 +104,44 @@ describe('routing inspector decisions', () => {
 		expect(selectNextMember(members, [])).toBe(-1);
 	});
 
-	it('marks a member limited when any account is limited', () => {
-		const accounts = [
-			{
-				id: 'a',
-				provider_id: 'openai',
-				kind: 'api_key',
-				label: 'a',
-				status: 'active',
-				priority: 1
-			},
-			{
-				id: 'b',
-				provider_id: 'openai',
-				kind: 'api_key',
-				label: 'b',
-				status: 'active',
-				priority: 1,
-				limit_state: 'limited'
-			}
-		];
-		expect(memberState(accounts, 1)).toBe('limited');
+	it('keeps a member ready while another account can still serve', () => {
+		const accounts = [account('a'), account('b', { limit_state: 'limited' })];
+		expect(memberState(accounts, 1)).toBe('ready');
+		expect(memberState(accounts, 1, [win('a', 20), win('b', 100)])).toBe('ready');
+	});
+
+	it('marks a member limited only when every active account is limited', () => {
+		const accounts = [account('a'), account('b', { limit_state: 'limited' })];
+		expect(memberState([account('a', { limit_state: 'limited' }), accounts[1]], 1)).toBe('limited');
+		expect(memberState(accounts, 1, [win('a', 100)])).toBe('limited');
+	});
+
+	it('shows the account with the most headroom, not the first one', () => {
+		const accounts = [account('a'), account('b')];
+		const picked = pickQuotaAccount(accounts, [win('a', 100), win('b', 20)], 1);
+		expect(picked.label).toBe('b');
+		expect(picked.windows.map((window) => window.credential_id)).toEqual(['b']);
+	});
+
+	it('shows the serving account even when another has more headroom', () => {
+		const accounts = [account('a'), account('b')];
+		expect(pickQuotaAccount(accounts, [win('a', 60), win('b', 5)], 1, 'a').label).toBe('a');
+	});
+
+	it('skips a limited account while a ready one reports quota', () => {
+		const accounts = [account('a', { limit_state: 'limited' }), account('b')];
+		expect(pickQuotaAccount(accounts, [win('a', 10), win('b', 90)], 1).label).toBe('b');
+	});
+
+	it('shows the soonest reset when every account is limited', () => {
+		const accounts = [account('a'), account('b')];
+		const picked = pickQuotaAccount(accounts, [win('a', 100, 9_000), win('b', 100, 5_000)], 1);
+		expect(picked.label).toBe('b');
+	});
+
+	it('passes windows of no listed account through unlabeled', () => {
+		const windows = [win('gone', 40)];
+		expect(pickQuotaAccount([account('a')], windows, 1)).toEqual({ label: '', windows });
 	});
 
 	it('keeps no quota distinct from a measured zero', () => {
