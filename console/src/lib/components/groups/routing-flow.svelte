@@ -282,13 +282,17 @@
 			{@const coverage = memberCoverage(member.member)}
 			{@const markerText = markerFor(index)}
 			{@const markerWidth = markerText === '' ? 0 : statePillWidth(markerText)}
-			{@const markerX = card.x + card.width - 14 - markerWidth}
-			{@const chipX = card.x + 76}
+			{@const textX = card.x + 50}
+			{@const chipX = textX}
 			{@const chipY = card.y + (layout.kind === 'wide' ? 50 : 58)}
 			{@const rightQuota = quotaIsRight(card.width)}
 			{@const quotaX = rightQuota ? card.x + card.width - 286 : card.x + 14}
 			{@const modelTitle = member.modelName || member.member.model_id}
-			{@const modelLimit = charactersIn(markerX - (card.x + 76) - 8)}
+			{@const modelLimit = charactersIn(
+				card.x + card.width - 14 - markerWidth - (markerWidth === 0 ? 0 : 8) - textX
+			)}
+			{@const modelText = fit(modelTitle, modelLimit)}
+			{@const markerX = textX + modelText.length * 7 + 8}
 			<g>
 				<rect
 					x={card.x}
@@ -304,33 +308,16 @@
 							: 'var(--line)'}
 					stroke-width={index === current ? 2 : 1}
 				></rect>
-				<circle
-					cx={card.x + 28}
-					cy={card.y + 28}
-					r="12"
-					fill={index === current
-						? 'var(--accent)'
-						: index === next
-							? 'var(--accent-soft)'
-							: 'var(--sunken)'}
-				></circle>
-				<text
-					x={card.x + 28}
-					y={card.y + 32}
-					text-anchor="middle"
-					fill={index === current ? 'var(--on-accent)' : 'var(--ink)'}
-					class="text-[11px] font-semibold">{index + 1}</text
-				>
 				<TunnelMark
 					markId={member.member.provider_id}
 					label={member.providerLabel}
-					x={card.x + 54}
+					x={card.x + 28}
 					y={card.y + 28}
 					size={24}
 				/>
-				<text x={card.x + 76} y={card.y + 27} fill="var(--ink)" class="text-[14px] font-semibold">
+				<text x={textX} y={card.y + 27} fill="var(--ink)" class="text-[14px] font-semibold">
 					<title>{modelTitle}</title>
-					{fit(modelTitle, modelLimit)}
+					{modelText}
 				</text>
 				{#if markerText !== ''}
 					<rect
@@ -349,9 +336,9 @@
 						class="text-[10px] font-semibold">{markerText}</text
 					>
 				{/if}
-				<text x={card.x + 76} y={card.y + 45} fill="var(--muted)" class="text-[11px]">
+				<text x={textX} y={card.y + 45} fill="var(--muted)" class="text-[11px]">
 					<title>{member.providerLabel}</title>
-					{fit(member.providerLabel, charactersIn(card.width - 90))}
+					{fit(member.providerLabel, charactersIn(card.width - 64))}
 				</text>
 				<g>
 					<rect
@@ -422,7 +409,7 @@
 					{/each}
 				{:else}
 					<text
-						x={rightQuota ? quotaX : card.x + 76}
+						x={rightQuota ? quotaX : textX}
 						y={rightQuota ? card.y + 46 : card.y + 116}
 						fill="var(--muted)"
 						class="text-[12px]"

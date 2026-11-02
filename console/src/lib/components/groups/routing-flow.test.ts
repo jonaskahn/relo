@@ -117,6 +117,7 @@ describe('the routing-flow diagram', () => {
 		expect(html).toContain('In use');
 		expect(html).toContain('Next start');
 		expect(html).toContain('work');
+		expect(html).not.toContain('text-[11px] font-semibold">1</text>');
 	});
 
 	it('renders readable quota windows and no attempt ordinals', () => {
