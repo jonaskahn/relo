@@ -160,7 +160,6 @@ type Router struct {
 	latency  map[string]float64
 	pins     *account.PinCache
 	failover *Failover
-	sticky   map[string]string
 }
 
 // New returns a router over the given catalog and pools.
@@ -174,7 +173,6 @@ func New(options Options) *Router {
 		rotation: map[string]int{}, latency: map[string]float64{},
 		pins:     account.NewPinCache(options.PinsLimit, 0, nil),
 		failover: NewFailover(options.Clock, options.FailoverBackoff),
-		sticky:   map[string]string{},
 	}
 }
 
@@ -371,7 +369,6 @@ func (r *Router) fromGroup(snapshot *catalog.Snapshot, request Request, preview 
 		r.addGroupMember(snapshot, &plan, member, request.Needs)
 	}
 	plan.Candidates = r.orderGroup(group, plan.Candidates, preview)
-	plan.Candidates = r.stickyFirst(group, plan.Candidates)
 	plan.Candidates = r.pinned(request.Conversation, prefixGroup(group.ID), plan.Candidates, preview)
 	return plan, true
 }

@@ -335,7 +335,7 @@ func (d *sendDriver) stepAttempt(candidate routing.Candidate, lastCandidate bool
 		d.s.opts.Router.Record(candidate, result.HeaderLatency)
 		d.s.opts.Router.Pin(d.s.conversationAnchor(d.outcome, d.r), routing.PinPrefix(d.plan), candidate)
 		d.s.opts.Router.MarkSucceeded(candidate)
-		d.s.opts.Router.MarkGroupSucceeded(d.plan, candidate)
+		d.s.opts.Router.MarkGroupSucceeded(d.plan)
 		d.s.markConnectionServed(candidate.ProviderID, result.CredentialID)
 		d.s.record(context.WithoutCancel(d.r.Context()), d.outcome, result)
 		return walkAnswered

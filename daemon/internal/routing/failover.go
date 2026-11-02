@@ -7,7 +7,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/jonaskahn/relo/internal/catalog"
 	"github.com/jonaskahn/relo/internal/clock"
 )
 
@@ -174,39 +173,12 @@ func (r *Router) MarkGroupFailed(plan Plan) {
 	r.failover.MarkFailed(groupKey(plan.GroupID))
 }
 
-// MarkGroupSucceeded makes the member that answered the first one the group
-// tries, and ends the group's cooldown walk.
-func (r *Router) MarkGroupSucceeded(plan Plan, candidate Candidate) {
-	if r == nil || plan.GroupID == "" {
+// MarkGroupSucceeded ends the group's cooldown walk after a member answered.
+func (r *Router) MarkGroupSucceeded(plan Plan) {
+	if r == nil || r.failover == nil || plan.GroupID == "" {
 		return
 	}
-	r.mu.Lock()
-	r.sticky[plan.GroupID] = candidateKey(candidate)
-	r.mu.Unlock()
-	if r.failover != nil {
-		r.failover.MarkSucceeded(groupKey(plan.GroupID))
-	}
-}
-
-// stickyFirst moves the member that last served a priority group to the
-// front. A group an operator spread by another strategy keeps that order.
-func (r *Router) stickyFirst(group catalog.Group, candidates []Candidate) []Candidate {
-	if group.Strategy != catalog.StrategyPriority || len(candidates) < 2 {
-		return candidates
-	}
-	r.mu.Lock()
-	key := r.sticky[group.ID]
-	r.mu.Unlock()
-	for index, candidate := range candidates {
-		if candidateKey(candidate) != key {
-			continue
-		}
-		reordered := make([]Candidate, 0, len(candidates))
-		reordered = append(reordered, candidate)
-		reordered = append(reordered, candidates[:index]...)
-		return append(reordered, candidates[index+1:]...)
-	}
-	return candidates
+	r.failover.MarkSucceeded(groupKey(plan.GroupID))
 }
 
 func groupKey(groupID string) string {

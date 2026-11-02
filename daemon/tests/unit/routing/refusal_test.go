@@ -99,7 +99,7 @@ func TestGroupFailureLadderWalksLikeAMembers(t *testing.T) {
 	}
 
 	router.MarkGroupFailed(plan)
-	router.MarkGroupSucceeded(plan, plan.Candidates[0])
+	router.MarkGroupSucceeded(plan)
 	if _, err := router.Plan(ctx, routing.Request{Model: "alias"}); err != nil {
 		t.Fatalf("Plan() error = %v, want a member answering to end the walk", err)
 	}
@@ -163,14 +163,10 @@ func TestFailoverKeepsALoneCandidate(t *testing.T) {
 func TestRouterWithoutAFailoverRefusesNothing(t *testing.T) {
 	ctx := context.Background()
 	router, _ := newRouter(t, catalog.StrategyPriority)
-	plan, err := router.Preview(ctx, routing.Request{Model: "alias"})
-	if err != nil {
-		t.Fatalf("Preview() error = %v", err)
-	}
 
 	// A plan that named no route has no group to keep out of the next plans.
 	router.MarkGroupFailed(routing.Plan{})
-	router.MarkGroupSucceeded(routing.Plan{}, plan.Candidates[0])
+	router.MarkGroupSucceeded(routing.Plan{})
 	router.MarkFailed(routing.Candidate{})
 	router.MarkSucceeded(routing.Candidate{})
 	router.SetFailoverBackoff([]time.Duration{time.Hour})

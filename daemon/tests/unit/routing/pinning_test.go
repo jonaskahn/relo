@@ -116,26 +116,35 @@ func TestPinAndUnpinIgnoreAConversationWithNoName(t *testing.T) {
 	router.Unpin("", prefix)
 }
 
-// TestStickyMemberLeadsAPriorityRoute pins the member that last served a
-// priority route: the next request starts there, which is what makes a
-// conversation's provider stick without the route being rewritten.
-func TestStickyMemberLeadsAPriorityRoute(t *testing.T) {
+// TestServedMemberDoesNotLeadANewSession pins that a priority route follows its
+// stored order for every request that has no pinned conversation: a member
+// answering one session must not pull other sessions onto it.
+func TestServedMemberDoesNotLeadANewSession(t *testing.T) {
 	ctx := context.Background()
 	router, _ := newRouter(t, catalog.StrategyPriority)
 
-	first, err := router.Plan(ctx, routing.Request{Model: "alias"})
+	first, err := router.Plan(ctx, routing.Request{Model: "alias", Conversation: "one"})
 	if err != nil {
 		t.Fatalf("Plan() error = %v", err)
 	}
 	served := first.Candidates[1]
-	router.MarkGroupSucceeded(first, served)
+	router.Pin("one", routing.PinPrefix(first), served)
+	router.MarkGroupSucceeded(first)
 
-	next, err := router.Plan(ctx, routing.Request{Model: "alias"})
+	same, err := router.Plan(ctx, routing.Request{Model: "alias", Conversation: "one"})
 	if err != nil {
 		t.Fatalf("Plan() error = %v", err)
 	}
-	if next.Candidates[0].ModelID != served.ModelID {
-		t.Fatalf("Plan() started at %q, want the member that served last at %q",
-			next.Candidates[0].ModelID, served.ModelID)
+	if same.Candidates[0].ModelID != served.ModelID {
+		t.Fatalf("Plan() started at %q, want the pinned session kept on %q",
+			same.Candidates[0].ModelID, served.ModelID)
+	}
+	other, err := router.Plan(ctx, routing.Request{Model: "alias", Conversation: "two"})
+	if err != nil {
+		t.Fatalf("Plan() error = %v", err)
+	}
+	if other.Candidates[0].ModelID != first.Candidates[0].ModelID {
+		t.Fatalf("Plan() started at %q, want a new session on the route's first member %q",
+			other.Candidates[0].ModelID, first.Candidates[0].ModelID)
 	}
 }
