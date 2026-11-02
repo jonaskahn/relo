@@ -21,11 +21,14 @@ const (
 )
 
 // SessionKey identifies the client a lease belongs to: which client, which of
-// its client keys, and which upstream credential it is talking to.
+// its client keys, which upstream credential it is talking to, and which of
+// its conversations. Conversation is a fingerprint of how the conversation
+// opened; empty keeps every conversation of the client on one lease.
 type SessionKey struct {
-	ClientKind string
-	ClientKey  string
-	Credential string
+	ClientKind   string
+	ClientKey    string
+	Credential   string
+	Conversation string
 }
 
 // SessionLeases hands out one synthetic session id per (client, key,

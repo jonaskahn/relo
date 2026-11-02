@@ -7,6 +7,7 @@ import (
 
 	"github.com/jonaskahn/relo/internal/account"
 	"github.com/jonaskahn/relo/internal/catalog"
+	"github.com/jonaskahn/relo/internal/inference"
 	"github.com/jonaskahn/relo/internal/routing"
 )
 
@@ -145,6 +146,45 @@ func TestNativeBodyFollowsTheWireFamily(t *testing.T) {
 	t.Run("a request without a native body rebuilds", func(t *testing.T) {
 		if got := server.nativeBody(&requestOutcome{requested: "claude-sonnet-5-5"}, messages); got != nil {
 			t.Fatalf("native body = %q, want no reuse without one", got)
+		}
+	})
+}
+
+func TestConversationAnchorSeparatesUnlabelledConversations(t *testing.T) {
+	opened := func(system, user string) *inference.Request {
+		messages := []inference.Message{{Role: inference.RoleUser, Content: []inference.ContentPart{{Type: inference.ContentTypeText, Text: user}}}}
+		if system != "" {
+			messages = append([]inference.Message{{Role: inference.RoleSystem, Content: []inference.ContentPart{{Type: inference.ContentTypeText, Text: system}}}}, messages...)
+		}
+		return &inference.Request{Messages: messages}
+	}
+	anchorOf := func(server *Server, request *inference.Request) string {
+		return server.conversationAnchor(&requestOutcome{requestID: "req", request: request},
+			httptest.NewRequest(http.MethodPost, "/", nil))
+	}
+
+	t.Run("conversations that open differently get different sessions", func(t *testing.T) {
+		server := &Server{opts: Options{SessionLeases: account.NewSessionLeases(0, 0, nil)}}
+		if one, two := anchorOf(server, opened("rules", "fix the bug")), anchorOf(server, opened("rules", "write a test")); one == two {
+			t.Fatalf("anchors = %q and %q, want one session per conversation", one, two)
+		}
+	})
+
+	t.Run("one conversation keeps its session as it grows", func(t *testing.T) {
+		server := &Server{opts: Options{SessionLeases: account.NewSessionLeases(0, 0, nil)}}
+		first := opened("rules", "fix the bug")
+		grown := opened("rules", "fix the bug")
+		grown.Messages = append(grown.Messages, inference.Message{Role: inference.RoleAssistant,
+			Content: []inference.ContentPart{{Type: inference.ContentTypeText, Text: "done"}}})
+		if one, again := anchorOf(server, first), anchorOf(server, grown); one != again {
+			t.Fatalf("anchors = %q and %q, want one stable session", one, again)
+		}
+	})
+
+	t.Run("a request with no text stays on the client lease", func(t *testing.T) {
+		server := &Server{opts: Options{SessionLeases: account.NewSessionLeases(0, 0, nil)}}
+		if one, again := anchorOf(server, &inference.Request{}), anchorOf(server, nil); one != again {
+			t.Fatalf("anchors = %q and %q, want one client lease", one, again)
 		}
 	})
 }

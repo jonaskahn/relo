@@ -4,6 +4,7 @@ package server
 import (
 	"context"
 	"crypto/rand"
+	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
 	"errors"
@@ -12,6 +13,7 @@ import (
 	"net/http"
 	"slices"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/jonaskahn/relo/internal/account"
@@ -943,9 +945,41 @@ func (s *Server) conversationAnchor(outcome *requestOutcome, r *http.Request) st
 		keyID, _, _ := describeClient(r.Context())
 		outcome.sessionLease = s.opts.SessionLeases.Lease(account.SessionKey{
 			ClientKind: wire.ClientKind(r.Header), ClientKey: keyID,
+			Conversation: conversationFingerprint(outcome.request),
 		})
 	}
 	return outcome.sessionLease
+}
+
+// conversationFingerprint names a conversation by how it opened: its system
+// prompt and first user message, which every later turn repeats. Two
+// conversations that open identically share a fingerprint, which is the same
+// assumption the Google codec makes of the first user text. A request with
+// neither gives no fingerprint, leaving the client on one lease.
+func conversationFingerprint(request *inference.Request) string {
+	if request == nil {
+		return ""
+	}
+	system, user := firstTextOf(request.Messages, inference.RoleSystem), firstTextOf(request.Messages, inference.RoleUser)
+	if system == "" && user == "" {
+		return ""
+	}
+	sum := sha256.Sum256([]byte(system + "\x00" + user))
+	return hex.EncodeToString(sum[:16])
+}
+
+func firstTextOf(messages []inference.Message, role string) string {
+	for _, message := range messages {
+		if message.Role != role {
+			continue
+		}
+		for _, part := range message.Content {
+			if part.Type == inference.ContentTypeText && strings.TrimSpace(part.Text) != "" {
+				return part.Text
+			}
+		}
+	}
+	return ""
 }
 
 func (s *Server) deviceID(accountID string) string {
