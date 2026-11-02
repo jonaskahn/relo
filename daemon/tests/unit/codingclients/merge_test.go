@@ -74,6 +74,114 @@ func TestMergeCodexConfigKeepsTheOperatorsFile(t *testing.T) {
 	}
 }
 
+// TestMergeCodexConfigTakesOverAnUnmarkedReloProvider is the repair an
+// operator needs after the managed markers are gone: the stale provider table
+// is replaced by Relo's own, not duplicated beside it.
+func TestMergeCodexConfigTakesOverAnUnmarkedReloProvider(t *testing.T) {
+	existing := strings.Join([]string{
+		"# my codex config",
+		"approval_policy = \"never\"",
+		"",
+		"[mcp_servers.codegraph]",
+		"command = \"codegraph\"",
+		"",
+		"[model_providers.relo]",
+		"name = \"Stale Relo\"",
+		"base_url = \"http://127.0.0.1:1/v1\"",
+		"env_key = \"RELO_API_KEY\"",
+		"",
+		"[model_providers.relo.auth]",
+		"command = \"/old/helper\"",
+		"args = []",
+		"",
+		"[model_providers.relo.limits]",
+		"requests = 1",
+		"",
+		"[model_providers.relo2]",
+		"name = \"Not Relo\"",
+		"base_url = \"https://example.test/v1\"",
+		"",
+	}, "\n")
+
+	merged, err := codingclients.MergeCodexConfig(existing, baseURL, "", helperFile, true)
+	if err != nil {
+		t.Fatalf("MergeCodexConfig() error = %v", err)
+	}
+	if got := strings.Count(merged, "[model_providers.relo]"); got != 1 {
+		t.Fatalf("model_providers.relo headers = %d, want one\n%s", got, merged)
+	}
+	if strings.Contains(merged, "Stale Relo") || strings.Contains(merged, "RELO_API_KEY") ||
+		strings.Contains(merged, "[model_providers.relo.limits]") || strings.Contains(merged, "/old/helper") {
+		t.Fatalf("the stale Relo provider survived the takeover:\n%s", merged)
+	}
+	if !strings.Contains(merged, "# my codex config") || !strings.Contains(merged, "approval_policy = \"never\"") ||
+		!strings.Contains(merged, "[mcp_servers.codegraph]") || !strings.Contains(merged, "command = \"codegraph\"") {
+		t.Fatalf("the operator's unrelated content was dropped:\n%s", merged)
+	}
+
+	document := map[string]any{}
+	if err := toml.Unmarshal([]byte(merged), &document); err != nil {
+		t.Fatalf("the merged file does not parse: %v\n%s", err, merged)
+	}
+	providers := document["model_providers"].(map[string]any)
+	relo := providers["relo"].(map[string]any)
+	if relo["name"] != "Relo" || relo["base_url"] != baseURL+"/v1" || relo["requires_openai_auth"] != false {
+		t.Fatalf("relo = %v, want the canonical provider", relo)
+	}
+	if _, found := relo["env_key"]; found {
+		t.Fatalf("relo = %v, want the stale env_key dropped", relo)
+	}
+	auth := relo["auth"].(map[string]any)
+	if !strings.Contains(fmt.Sprint(auth["command"], auth["args"]), helperFile) ||
+		auth["timeout_ms"] != int64(35000) || auth["refresh_interval_ms"] != int64(300000) {
+		t.Fatalf("auth = %v, want the canonical helper settings", auth)
+	}
+	if _, found := relo["limits"]; found {
+		t.Fatalf("relo = %v, want the stale descendant table dropped", relo)
+	}
+	other := providers["relo2"].(map[string]any)
+	if other["name"] != "Not Relo" || other["base_url"] != "https://example.test/v1" {
+		t.Fatalf("relo2 = %v, want the operator's provider untouched", other)
+	}
+
+	again, err := codingclients.MergeCodexConfig(merged, baseURL, "", helperFile, true)
+	if err != nil {
+		t.Fatalf("MergeCodexConfig() again error = %v", err)
+	}
+	if again != merged {
+		t.Fatalf("a second merge changed the file:\n%s\n---\n%s", merged, again)
+	}
+}
+
+// TestMergeCodexConfigFindsQuotedReloTableHeaders keeps the takeover working
+// when a formatter writes the provider id as a quoted key.
+func TestMergeCodexConfigFindsQuotedReloTableHeaders(t *testing.T) {
+	existing := strings.Join([]string{
+		"[ model_providers . \"relo\" ]",
+		"name = \"Stale Relo\"",
+		"",
+		"[model_providers.'relo'.auth]",
+		"command = \"/old/helper\"",
+		"",
+		"[model_providers.relo2]",
+		"name = \"Not Relo\"",
+		"",
+	}, "\n")
+	merged, err := codingclients.MergeCodexConfig(existing, baseURL, "", helperFile, true)
+	if err != nil {
+		t.Fatalf("MergeCodexConfig() error = %v", err)
+	}
+	if strings.Contains(merged, "Stale Relo") || strings.Contains(merged, "/old/helper") {
+		t.Fatalf("a quoted Relo provider survived the takeover:\n%s", merged)
+	}
+	if got := strings.Count(merged, "[model_providers.relo]"); got != 1 {
+		t.Fatalf("model_providers.relo headers = %d, want one\n%s", got, merged)
+	}
+	if !strings.Contains(merged, "[model_providers.relo2]") {
+		t.Fatalf("relo2 was removed:\n%s", merged)
+	}
+}
+
 // TestMergeCodexConfigIsIdempotent is what makes a repair safe: merging a file
 // Relo already wrote changes nothing.
 func TestMergeCodexConfigIsIdempotent(t *testing.T) {

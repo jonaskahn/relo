@@ -503,6 +503,71 @@ func fileOf(view integration.View, kind string) integration.FileView {
 	return integration.FileView{}
 }
 
+// TestRepairTakesOverAnUnmarkedReloProvider fixes the file a Codex update
+// leaves behind: the provider tables survive without the managed markers, so
+// Repair must adopt them instead of appending a duplicate.
+func TestRepairTakesOverAnUnmarkedReloProvider(t *testing.T) {
+	h := newHarness(t, dataPlane)
+	configPath := h.paths.CodexConfig()
+	if err := os.MkdirAll(filepath.Dir(configPath), 0o755); err != nil {
+		t.Fatalf("create the codex directory: %v", err)
+	}
+	unmarked := strings.Join([]string{
+		"approval_policy = \"never\"",
+		"",
+		"[mcp_servers.codegraph]",
+		"command = \"codegraph\"",
+		"",
+		"[model_providers.relo]",
+		"name = \"Stale Relo\"",
+		"base_url = \"http://127.0.0.1:1/v1\"",
+		"env_key = \"RELO_API_KEY\"",
+		"",
+		"[model_providers.relo.auth]",
+		"command = \"/old/helper\"",
+		"args = []",
+		"",
+	}, "\n")
+	if err := os.WriteFile(configPath, []byte(unmarked), 0o644); err != nil {
+		t.Fatalf("seed the unmarked codex config: %v", err)
+	}
+
+	view, err := h.manager.Repair(context.Background(), "codex", "rlo_ak_test")
+	if err != nil {
+		t.Fatalf("Repair() error = %v", err)
+	}
+	if view.State != integration.StateOn || !view.Enabled {
+		t.Fatalf("Repair() state = %q enabled = %v, want on", view.State, view.Enabled)
+	}
+	config := readFile(t, configPath)
+	if got := strings.Count(config, "[model_providers.relo]"); got != 1 {
+		t.Fatalf("model_providers.relo headers = %d, want one\n%s", got, config)
+	}
+	if strings.Contains(config, "Stale Relo") || strings.Contains(config, "RELO_API_KEY") || strings.Contains(config, "/old/helper") {
+		t.Fatalf("Repair() kept the stale Relo provider:\n%s", config)
+	}
+	for _, want := range []string{"approval_policy = \"never\"", "[mcp_servers.codegraph]", h.paths.HelperFile("codex")} {
+		if !strings.Contains(config, want) {
+			t.Fatalf("Repair() dropped %s:\n%s", want, config)
+		}
+	}
+
+	disabled, err := h.manager.Disable(context.Background(), "codex")
+	if err != nil {
+		t.Fatalf("Disable() error = %v", err)
+	}
+	if disabled.Enabled || disabled.State != integration.StateOff {
+		t.Fatalf("Disable() state = %q enabled = %v, want off", disabled.State, disabled.Enabled)
+	}
+	config = readFile(t, configPath)
+	if strings.Contains(config, "relo") {
+		t.Fatalf("disabled config = %q, want Relo gone", config)
+	}
+	if !strings.Contains(config, "approval_policy") || !strings.Contains(config, "[mcp_servers.codegraph]") {
+		t.Fatalf("disabled config = %q, want the operator's content kept", config)
+	}
+}
+
 // TestInspectReportsDrift is what tells an operator an edit replaced the key
 // helper Relo wrote, and Repair puts it back.
 func TestInspectReportsDrift(t *testing.T) {

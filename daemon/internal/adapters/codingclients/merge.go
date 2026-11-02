@@ -79,9 +79,12 @@ func tomlArray(values []string) string {
 // MergeCodexConfig returns a Codex configuration with Relo's provider in it
 // and the top-level model_provider pointing at that provider. A model_provider
 // the operator set is rewritten rather than duplicated, because two top-level
-// assignments would make the whole file unreadable. wideContext writes the
-// 1M window when those root keys are absent, and takes Relo's defaults back
-// out when it is off. A value the operator chose is left either way.
+// assignments would make the whole file unreadable. An explicit
+// model_providers.relo table is taken over even when the managed markers are
+// absent: the provider id is reserved, so its stale keys are discarded.
+// wideContext writes the 1M window when those root keys are absent, and takes
+// Relo's defaults back out when it is off. A value the operator chose is left
+// either way.
 func MergeCodexConfig(existing, baseURL, catalogPath, helperFile string, wideContext bool) (string, error) {
 	if strings.TrimSpace(baseURL) == "" {
 		return "", fmt.Errorf("codex: %w (no address is served for the OpenAI surface)", ErrUnrecognisedFile)
@@ -95,6 +98,7 @@ func MergeCodexConfig(existing, baseURL, catalogPath, helperFile string, wideCon
 	}
 	lines := splitLines(existing)
 	lines = removeBlock(lines)
+	lines = dropCodexProviderTables(lines)
 	lines = setModelProvider(lines)
 	lines = setModelCatalog(lines, catalogPath)
 	lines = dropStaleModel(lines, catalogPath)
@@ -207,6 +211,139 @@ func removeBlock(lines []string) []string {
 		}
 	}
 	return kept
+}
+
+func dropCodexProviderTables(lines []string) []string {
+	kept := make([]string, 0, len(lines))
+	dropping := false
+	for _, line := range lines {
+		if path, found := tomlTablePath(line); found {
+			dropping = codexProviderPath(path)
+		}
+		if !dropping {
+			kept = append(kept, line)
+		}
+	}
+	return kept
+}
+
+func codexProviderPath(path []string) bool {
+	return len(path) >= 2 && path[0] == "model_providers" && path[1] == reloProviderID
+}
+
+func tomlTablePath(line string) ([]string, bool) {
+	trimmed := strings.TrimSpace(line)
+	if !strings.HasPrefix(trimmed, "[") {
+		return nil, false
+	}
+	array := strings.HasPrefix(trimmed, "[[")
+	start := 1
+	if array {
+		start = 2
+	}
+	end := tableHeaderEnd(trimmed[start:], array)
+	if end < 0 {
+		return nil, false
+	}
+	width := 1
+	if array {
+		width = 2
+	}
+	if rest := strings.TrimSpace(trimmed[start+end+width:]); rest != "" && !strings.HasPrefix(rest, "#") {
+		return nil, false
+	}
+	return tomlKeyPath(trimmed[start : start+end])
+}
+
+func tableHeaderEnd(content string, array bool) int {
+	quotes := tomlQuotes{}
+	for index := 0; index < len(content); index++ {
+		character := content[index]
+		quotes.consume(character)
+		if quotes.inside() || character != ']' {
+			continue
+		}
+		if !array || index+1 < len(content) && content[index+1] == ']' {
+			return index
+		}
+	}
+	return -1
+}
+
+func tomlKeyPath(content string) ([]string, bool) {
+	segments := []string{}
+	start := 0
+	quotes := tomlQuotes{}
+	for index := 0; index < len(content); index++ {
+		character := content[index]
+		quotes.consume(character)
+		if quotes.inside() || character != '.' {
+			continue
+		}
+		segment, ok := tomlKeySegment(content[start:index])
+		if !ok {
+			return nil, false
+		}
+		segments = append(segments, segment)
+		start = index + 1
+	}
+	segment, ok := tomlKeySegment(content[start:])
+	if !ok {
+		return nil, false
+	}
+	return append(segments, segment), true
+}
+
+type tomlQuotes struct {
+	basic, literal, escaped bool
+}
+
+func (q *tomlQuotes) inside() bool {
+	return q.basic || q.literal
+}
+
+func (q *tomlQuotes) consume(character byte) {
+	switch {
+	case q.escaped:
+		q.escaped = false
+	case q.basic && character == '\\':
+		q.escaped = true
+	case q.basic && character == '"':
+		q.basic = false
+	case q.literal && character == '\'':
+		q.literal = false
+	case !q.literal && character == '"':
+		q.basic = true
+	case !q.basic && character == '\'':
+		q.literal = true
+	}
+}
+
+func tomlKeySegment(raw string) (string, bool) {
+	segment := strings.TrimSpace(raw)
+	if len(segment) >= 2 && segment[0] == '"' && segment[len(segment)-1] == '"' {
+		decoded, err := strconv.Unquote(segment)
+		return decoded, err == nil
+	}
+	if len(segment) >= 2 && segment[0] == '\'' && segment[len(segment)-1] == '\'' {
+		return segment[1 : len(segment)-1], true
+	}
+	if segment == "" {
+		return "", false
+	}
+	for _, character := range segment {
+		if !tomlBareKeyRune(character) {
+			return "", false
+		}
+	}
+	return segment, true
+}
+
+func tomlBareKeyRune(character rune) bool {
+	return character == '_' || character == '-' ||
+		character >= '0' && character <= '9' ||
+		character >= 'A' && character <= 'Z' ||
+		character >= 'a' && character <= 'z'
 }
 
 func setModelProvider(lines []string) []string {
