@@ -275,7 +275,7 @@
 
 		{#each members as member, index (member.member.provider_id + '/' + member.member.model_id)}
 			{@const card = layout.cards[index]}
-			{@const state = memberState(member.accounts, nowMs, member.windows)}
+			{@const state = memberState(member.accounts, nowMs, member.reported ?? member.windows)}
 			{@const stateText = $t(stateKeys[state])}
 			{@const stateWidth = statePillWidth(stateText)}
 			{@const tone = stateTone(state)}
@@ -407,6 +407,19 @@
 							class="mono-data text-[10px]">{resetIn(window.reset_at_ms)}</text
 						>
 					{/each}
+					{#if member.quotaAccount}
+						<text
+							x={quotaX}
+							y={rightQuota
+								? card.y + 18 + Math.min(2, member.windows.length) * 24 + 4
+								: card.y + 106 + Math.min(2, member.windows.length) * 26 + 4}
+							fill="var(--muted)"
+							class="mono-data text-[10px]"
+						>
+							<title>{member.quotaAccount}</title>
+							{fit(member.quotaAccount, 34)}
+						</text>
+					{/if}
 				{:else}
 					<text
 						x={rightQuota ? quotaX : textX}

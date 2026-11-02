@@ -162,6 +162,48 @@ describe('the routing-flow diagram', () => {
 		expect(html).not.toMatch(/#\d+ \d{3}/);
 	});
 
+	it('names the account whose quota a multi-account member shows', () => {
+		const html = render(RoutingFlow, {
+			props: {
+				groupLabel: 'Fast',
+				members: [
+					{
+						member: {
+							provider_id: 'openai',
+							model_id: 'gpt-5',
+							weight: 1,
+							enabled: true,
+							eligible: true
+						},
+						providerLabel: 'OpenAI',
+						modelName: 'GPT-5',
+						accounts: [],
+						quotaAccount: 'spare',
+						windows: [
+							{
+								credential_id: 'b',
+								connection_id: 'openai',
+								label: 'Week',
+								window: '7d',
+								window_seconds: 604_800,
+								used_percent: 12,
+								reset_at_ms: 0,
+								source: 'probe',
+								observed_at_ms: 0,
+								stale: false
+							}
+						]
+					}
+				],
+				current: 0,
+				next: 0,
+				hidden: 0
+			}
+		}).body;
+		expect(html).toContain('12%');
+		expect(html).toContain('spare');
+	});
+
 	it('collapses more than nine members into an overflow row', () => {
 		const members = Array.from({ length: 11 }, (_, index) => ({
 			member: {

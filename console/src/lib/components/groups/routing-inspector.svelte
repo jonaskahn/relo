@@ -8,6 +8,7 @@
 	import {
 		orderMembers,
 		overflowMembers,
+		pickQuotaAccount,
 		selectCurrentMember,
 		selectNextMember,
 		type CurrentMember,
@@ -59,20 +60,30 @@
 	const overflow = $derived(overflowMembers(memberViews(ordered)));
 
 	function memberViews(list: readonly GroupMember[]): MemberView[] {
-		return list.map((member) => {
+		const nowMs = Date.now();
+		return list.map((member, position) => {
 			const connection = providers.find((provider) => provider.id === member.provider_id);
 			const model = meta[member.provider_id + '/' + member.model_id];
 			const held = accounts.filter((account) => account.provider_id === member.provider_id);
 			const credentialIDs = new Set(held.map((account) => account.id));
+			const reported = quota.filter(
+				(window) =>
+					window.connection_id === member.provider_id || credentialIDs.has(window.credential_id)
+			);
+			const shown = pickQuotaAccount(
+				held,
+				reported,
+				nowMs,
+				position === current.index ? (current.credentialId ?? '') : ''
+			);
 			return {
 				member,
 				providerLabel: connection?.label || member.provider_id,
 				modelName: model?.name || member.model_id,
 				accounts: held,
-				windows: quota.filter(
-					(window) =>
-						window.connection_id === member.provider_id || credentialIDs.has(window.credential_id)
-				)
+				windows: shown.windows,
+				reported,
+				quotaAccount: held.length > 1 ? shown.label : ''
 			};
 		});
 	}
