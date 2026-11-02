@@ -318,6 +318,7 @@
 			<ProviderLogo id={provider.template_id || provider.id} label={provider.label} />
 			<div class="min-w-0">
 				<h2 class="flex min-w-0 flex-wrap items-center gap-1.5 text-base font-semibold">
+					<span class="truncate">{provider.label}</span>
 					<BillingChip {provider} />
 					<FreeAvailableChip {provider} />
 					{#if experimental}
@@ -328,7 +329,6 @@
 							{$t('ui.pages.providersPage.list.tagExperimental')}
 						</span>
 					{/if}
-					<span class="truncate">{provider.label}</span>
 					{#if provider.dashboard_url}
 						<a
 							data-dashboard-link
@@ -341,7 +341,6 @@
 							class="badge shrink-0 gap-1 bg-sunken text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
 						>
 							<Icon name="external-link" size={12} />
-							{$t('ui.pages.providersPage.pane.openDashboard')}
 						</a>
 					{/if}
 				</h2>

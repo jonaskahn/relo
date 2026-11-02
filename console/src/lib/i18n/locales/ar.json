@@ -550,7 +550,6 @@
           "tabAccounts": "الحسابات",
           "tabSettings": "الإعدادات",
           "notFound": "لم يعد هذا المزوّد موجودًا.",
-          "openDashboard": "افتح لوحة التحكم",
           "openDashboardLabel": "فتح لوحة تحكم {provider}"
         },
         "models": {

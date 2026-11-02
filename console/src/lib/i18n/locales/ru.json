@@ -550,7 +550,6 @@
           "tabAccounts": "Аккаунты",
           "tabSettings": "Настройки",
           "notFound": "Провайдера больше нет.",
-          "openDashboard": "Открыть панель управления",
           "openDashboardLabel": "Открыть панель {provider}"
         },
         "models": {

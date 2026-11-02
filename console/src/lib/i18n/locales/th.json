@@ -550,7 +550,6 @@
           "tabAccounts": "บัญชี",
           "tabSettings": "การตั้งค่า",
           "notFound": "ไม่พบผู้ให้บริการนั้นแล้ว",
-          "openDashboard": "เปิดแดชบอร์ด",
           "openDashboardLabel": "เปิดแดชบอร์ดของ {provider}"
         },
         "models": {

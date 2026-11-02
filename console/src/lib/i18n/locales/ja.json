@@ -550,7 +550,6 @@
           "tabAccounts": "アカウント",
           "tabSettings": "設定",
           "notFound": "そのプロバイダーは見つかりません。",
-          "openDashboard": "ダッシュボードを開く",
           "openDashboardLabel": "{provider} のダッシュボードを開く"
         },
         "models": {

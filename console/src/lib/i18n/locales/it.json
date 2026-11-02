@@ -550,7 +550,6 @@
           "tabAccounts": "Account",
           "tabSettings": "Impostazioni",
           "notFound": "Questo provider non c’è più.",
-          "openDashboard": "Apri il cruscotto",
           "openDashboardLabel": "Apri la dashboard di {provider}"
         },
         "models": {

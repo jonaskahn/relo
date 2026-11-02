@@ -550,7 +550,6 @@
           "tabAccounts": "Hesaplar",
           "tabSettings": "Ayarlar",
           "notFound": "O sağlayıcı artık yok.",
-          "openDashboard": "Kontrol panelini aç",
           "openDashboardLabel": "{provider} kontrol panelini aç"
         },
         "models": {

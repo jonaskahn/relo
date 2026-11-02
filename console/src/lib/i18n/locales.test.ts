@@ -202,7 +202,6 @@ describe('console catalogs', () => {
 
 const REWRITE_TAGS = ['nl', 'ro', 'id', 'pt-BR', 'cs', 'tr', 'fr', 'vi'] as const;
 const REWRITTEN_NEW_KEYS = [
-	'ui.pages.providersPage.pane.openDashboard',
 	'ui.pages.providersPage.pane.openDashboardLabel',
 	'ui.topbar.reportIssue',
 	'ui.topbar.reportIssueHint',
@@ -380,7 +379,6 @@ const TRANSLATION_REGRESSIONS: Record<string, Record<string, string>> = {
 		'ui.pages.groupsPage.inspector.current': 'Em uso'
 	},
 	cs: {
-		'ui.pages.providersPage.pane.openDashboard': 'Otevřít dashboard',
 		'ui.pages.logsPage.reportBundleDownloaded':
 			'ZIP s protokolem daemonu stažen. Připoj ho k problému.'
 	},

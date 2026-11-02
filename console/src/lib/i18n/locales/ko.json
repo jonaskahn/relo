@@ -550,7 +550,6 @@
           "tabAccounts": "계정",
           "tabSettings": "설정",
           "notFound": "해당 연결이 없어요.",
-          "openDashboard": "대시보드 열기",
           "openDashboardLabel": "{provider} 대시보드 열기"
         },
         "models": {

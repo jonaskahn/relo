@@ -38,13 +38,11 @@ describe('the connection pane dashboard chip', () => {
 		expect(html).toContain('href="https://open-design.ai/cloud/dashboard"');
 		expect(html).toContain('target="_blank"');
 		expect(html).toContain('rel="noopener noreferrer"');
-		expect(html).toContain('Open dashboard');
 		expect(html).toContain('Open dashboard for OpenDesign');
 	});
 
 	it('omits the chip when no dashboard is curated', () => {
 		const html = markup(providerOf({ id: 'ollama', template_id: 'ollama', label: 'Ollama' }));
 		expect(html).not.toContain('data-dashboard-link');
-		expect(html).not.toContain('Open dashboard');
 	});
 });

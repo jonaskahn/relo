@@ -550,7 +550,6 @@
           "tabAccounts": "Účty",
           "tabSettings": "Nastavení",
           "notFound": "Tento poskytovatel tu už není.",
-          "openDashboard": "Otevřít dashboard",
           "openDashboardLabel": "Otevřít dashboard {provider}"
         },
         "models": {

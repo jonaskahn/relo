@@ -550,7 +550,6 @@
           "tabAccounts": "Accounts",
           "tabSettings": "Instellingen",
           "notFound": "Die provider is verdwenen.",
-          "openDashboard": "Dashboard openen",
           "openDashboardLabel": "Dashboard van {provider} openen"
         },
         "models": {

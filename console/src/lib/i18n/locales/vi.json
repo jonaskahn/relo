@@ -550,7 +550,6 @@
           "tabAccounts": "Tài khoản",
           "tabSettings": "Cài đặt",
           "notFound": "Nhà cung cấp đó không còn nữa.",
-          "openDashboard": "Mở dashboard",
           "openDashboardLabel": "Mở dashboard của {provider}"
         },
         "models": {

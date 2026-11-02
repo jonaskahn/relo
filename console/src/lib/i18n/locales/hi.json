@@ -550,7 +550,6 @@
           "tabAccounts": "खाते",
           "tabSettings": "सेटिंग्स",
           "notFound": "वह प्रदाता अब नहीं है।",
-          "openDashboard": "डैशबोर्ड खोलें",
           "openDashboardLabel": "{provider} के लिए डैशबोर्ड खोलें"
         },
         "models": {

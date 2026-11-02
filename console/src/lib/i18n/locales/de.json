@@ -550,7 +550,6 @@
           "tabAccounts": "Konten",
           "tabSettings": "Einstellungen",
           "notFound": "Diesen Anbieter gibt es nicht mehr.",
-          "openDashboard": "Dashboard öffnen",
           "openDashboardLabel": "Dashboard für {provider} öffnen"
         },
         "models": {

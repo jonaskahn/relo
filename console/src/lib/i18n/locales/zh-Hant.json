@@ -550,7 +550,6 @@
           "tabAccounts": "賬號",
           "tabSettings": "設定",
           "notFound": "這個供應商已不存在。",
-          "openDashboard": "打開儀表板",
           "openDashboardLabel": "開啟 {provider} 的儀表板"
         },
         "models": {

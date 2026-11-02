@@ -550,7 +550,6 @@
           "tabAccounts": "Akun",
           "tabSettings": "Pengaturan",
           "notFound": "Penyedia itu sudah dihapus.",
-          "openDashboard": "Buka dasbor",
           "openDashboardLabel": "Buka dasbor {provider}"
         },
         "models": {

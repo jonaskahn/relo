@@ -550,7 +550,6 @@
           "tabAccounts": "Konta",
           "tabSettings": "Ustawienia",
           "notFound": "Tego dostawcy już nie ma.",
-          "openDashboard": "Otwórz dashboard",
           "openDashboardLabel": "Otwórz panel {provider}"
         },
         "models": {

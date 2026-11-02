@@ -550,7 +550,6 @@
           "tabAccounts": "Comptes",
           "tabSettings": "Paramètres",
           "notFound": "Ce provider n’existe plus.",
-          "openDashboard": "Ouvrir le tableau de bord",
           "openDashboardLabel": "Ouvrir le tableau de bord de {provider}"
         },
         "models": {

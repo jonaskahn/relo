@@ -550,7 +550,6 @@
           "tabAccounts": "Konton",
           "tabSettings": "Inställningar",
           "notFound": "Den leverantören är borta.",
-          "openDashboard": "Öppna instrumentpanelen",
           "openDashboardLabel": "Öppna instrumentpanelen för {provider}"
         },
         "models": {

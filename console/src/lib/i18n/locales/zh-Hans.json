@@ -550,7 +550,6 @@
           "tabAccounts": "账号",
           "tabSettings": "设置",
           "notFound": "该提供商已不存在。",
-          "openDashboard": "打开仪表板",
           "openDashboardLabel": "打开 {provider} 的仪表板"
         },
         "models": {

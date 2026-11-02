@@ -550,7 +550,6 @@
           "tabAccounts": "Conturi",
           "tabSettings": "Setări",
           "notFound": "Acel furnizor nu mai există.",
-          "openDashboard": "Deschide dashboardul",
           "openDashboardLabel": "Deschide dashboardul {provider}"
         },
         "models": {
