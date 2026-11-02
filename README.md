@@ -12,6 +12,8 @@
 
 <p><i>Let your harness agents talk to any model, any provider with no config changes.</i></p>
 
+<p><a href="README.md">English</a> · <a href="README.vi.md">Tiếng Việt</a> · <a href="README.zh-Hans.md">简体中文</a> · <a href="README.de.md">Deutsch</a> · <a href="README.hi.md">हिन्दी</a> · <a href="README.ko.md">한국어</a> · <a href="README.ja.md">日本語</a></p>
+
 </div>
 
 ---
