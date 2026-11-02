@@ -49,7 +49,7 @@ func KeyHelperScript(paths Paths, agentID string) string {
 		"#!/bin/sh",
 		"# " + helperMarker,
 		"if [ -n \"" + paths.Relo + "\" ] && [ -x \"" + paths.Relo + "\" ]; then",
-		"  \"" + paths.Relo + "\" --home \"" + paths.StateHome + "\" daemon start >/dev/null 2>&1 || true",
+		"  \"" + paths.Relo + "\" --home \"" + paths.StateHome + "\" daemon start --silent >/dev/null 2>&1 || true",
 		"fi",
 		"cat \"" + paths.KeyFile(agentID) + "\"",
 		"",
@@ -60,7 +60,7 @@ func windowsKeyHelper(paths Paths, agentID string) string {
 	return strings.Join([]string{
 		"@echo off",
 		"rem " + helperMarker,
-		"\"" + paths.Relo + "\" --home \"" + paths.StateHome + "\" daemon start >nul 2>nul",
+		"\"" + paths.Relo + "\" --home \"" + paths.StateHome + "\" daemon start --silent >nul 2>nul",
 		"type \"" + paths.KeyFile(agentID) + "\"",
 		"",
 	}, "\r\n")
