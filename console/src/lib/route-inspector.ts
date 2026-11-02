@@ -366,11 +366,25 @@ export function overflowMembers<T>(
 	return { visible: rows.slice(0, limit), hidden: Math.max(0, rows.length - limit) };
 }
 
-/** Counts the accounts that can serve over every active account behind a member. */
-export function memberCoverage(member: GroupMember): { serving: number; active: number } {
+/** Counts the accounts that can serve now over every active account behind a member. An account
+ *  that is limited or out of quota is active but not serving, so four accounts with two limited
+ *  read 2/4. The daemon's own count still caps it, since it knows which accounts serve the model. */
+export function memberCoverage(
+	member: GroupMember,
+	accounts: readonly Account[] = [],
+	nowMs = 0,
+	windows: readonly QuotaWindow[] = []
+): { serving: number; active: number } {
+	const active = accounts.filter((account) => account.status === 'active');
+	if (active.length === 0) {
+		return { serving: member.serving_accounts ?? 0, active: member.active_accounts ?? 0 };
+	}
+	const ready = active.filter(
+		(account) => !accountLimited(account, nowMs, windowsOf(account, windows))
+	);
 	return {
-		serving: member.serving_accounts ?? 0,
-		active: member.active_accounts ?? 0
+		serving: Math.min(member.serving_accounts ?? ready.length, ready.length),
+		active: active.length
 	};
 }
 

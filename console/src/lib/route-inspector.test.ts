@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import {
 	hasQuota,
+	memberCoverage,
 	memberState,
 	overflowMembers,
 	orderMembers,
@@ -114,6 +115,21 @@ describe('routing inspector decisions', () => {
 		const accounts = [account('a'), account('b', { limit_state: 'limited' })];
 		expect(memberState([account('a', { limit_state: 'limited' }), accounts[1]], 1)).toBe('limited');
 		expect(memberState(accounts, 1, [win('a', 100)])).toBe('limited');
+	});
+
+	it('counts only the accounts that can serve over every active account', () => {
+		const accounts = [
+			account('a'),
+			account('b'),
+			account('c', { limit_state: 'limited' }),
+			account('d')
+		];
+		const member = { ...members[0], serving_accounts: 4, active_accounts: 4 };
+		expect(memberCoverage(member, accounts, 1, [win('d', 100)])).toEqual({
+			serving: 2,
+			active: 4
+		});
+		expect(memberCoverage(member)).toEqual({ serving: 4, active: 4 });
 	});
 
 	it('shows the account with the most headroom, not the first one', () => {

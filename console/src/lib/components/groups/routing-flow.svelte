@@ -279,7 +279,12 @@
 			{@const stateText = $t(stateKeys[state])}
 			{@const stateWidth = statePillWidth(stateText)}
 			{@const tone = stateTone(state)}
-			{@const coverage = memberCoverage(member.member)}
+			{@const coverage = memberCoverage(
+				member.member,
+				member.accounts,
+				nowMs,
+				member.reported ?? member.windows
+			)}
 			{@const markerText = markerFor(index)}
 			{@const markerWidth = markerText === '' ? 0 : statePillWidth(markerText)}
 			{@const textX = card.x + 50}
