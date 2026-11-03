@@ -65,7 +65,7 @@ func TestSelectAntigravityAttempt(t *testing.T) {
 		}
 	})
 
-	t.Run("an ineligible account yields to the next one under the connection's signing contract", func(t *testing.T) {
+	t.Run("an absent band degrades on the serving account", func(t *testing.T) {
 		relay := &attemptStubRelay{accounts: []catalog.Authorization{first, second}}
 		server := attemptTestServer(relay, configs)
 		tried := map[string][]string{}
@@ -74,27 +74,14 @@ func TestSelectAntigravityAttempt(t *testing.T) {
 		if err != nil {
 			t.Fatalf("selectAntigravityAttempt() error = %v", err)
 		}
-		if spec.authorized.CredentialID != "cred-b" {
-			t.Fatalf("authorized = %q, want the serving account", spec.authorized.CredentialID)
+		if spec.authorized.CredentialID != "cred-a" {
+			t.Fatalf("authorized = %q, want the account that serves the group", spec.authorized.CredentialID)
 		}
-		if selection.WireModel != "gemini-3.8-flash" {
-			t.Fatalf("selection = %+v, want the medium SKU", selection)
+		if selection.WireModel != "gemini-3.8-flash-high" {
+			t.Fatalf("selection = %+v, want the nearest stronger SKU", selection)
 		}
-		if len(tried["antigravity"]) != 1 || tried["antigravity"][0] != "cred-a" {
-			t.Fatalf("tried = %v, want cred-a excluded", tried)
-		}
-		if len(relay.requests[0].Selection.Exclude) != 1 {
-			t.Fatalf("exclude = %v, want the account that just failed", relay.requests[0].Selection.Exclude)
-		}
-		// The renewal runs as the vendor whose Cloud Code credential is being
-		// read, so the attempt has to name where the key travels and which
-		// region and service the signer addresses.
-		request := relay.requests[0]
-		if request.Auth != catalog.AuthOAuth || request.KeyHeader != "x-goog-api-key" {
-			t.Fatalf("auth request = %+v, want the connection's signing contract", request)
-		}
-		if request.Region != "eu" || request.Service != "cloudaicompanion" {
-			t.Fatalf("region/service = %q/%q, want the connection's variables", request.Region, request.Service)
+		if len(tried["antigravity"]) != 0 || relay.calls != 0 {
+			t.Fatalf("tried = %v calls = %d, want no failover", tried, relay.calls)
 		}
 	})
 
@@ -113,7 +100,9 @@ func TestSelectAntigravityAttempt(t *testing.T) {
 	t.Run("no serving account fails the selection", func(t *testing.T) {
 		relay := &attemptStubRelay{accounts: []catalog.Authorization{first}}
 		server := attemptTestServer(relay, configs)
-		if _, err := server.selectAntigravityAttempt(context.Background(), antigravityTestSpec(first, "medium"), map[string][]string{}); err == nil {
+		spec := antigravityTestSpec(first, "medium")
+		spec.candidate.ModelID = "missing"
+		if _, err := server.selectAntigravityAttempt(context.Background(), spec, map[string][]string{}); err == nil {
 			t.Fatal("selectAntigravityAttempt() succeeded without a serving account")
 		}
 	})

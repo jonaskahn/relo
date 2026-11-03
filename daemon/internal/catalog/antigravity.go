@@ -4,6 +4,7 @@ package catalog
 
 import (
 	"encoding/json"
+	"slices"
 	"strings"
 
 	"github.com/jonaskahn/relo/internal/inference"
@@ -167,24 +168,48 @@ func DecodeAntigravityConfig(config ModelRequestConfig) (AntigravityVariant, boo
 // SelectAntigravityVariant resolves one requested effort to one account's exact
 // Antigravity configuration.
 func SelectAntigravityVariant(configs []AntigravityVariant, logicalID, effort string) (AntigravityVariant, bool) {
-	if effort == "" {
-		for _, config := range configs {
-			if config.LogicalID == logicalID && config.Default {
-				return config, true
-			}
-		}
-		for _, config := range configs {
-			if config.LogicalID == logicalID {
-				return config, true
-			}
-		}
+	selection, err := inference.ParseEffort(effort)
+	if err != nil {
 		return AntigravityVariant{}, false
 	}
-	normalized, ok := inference.NormalizeEffort(effort)
-	if !ok {
-		return AntigravityVariant{}, false
+	if selection.Kind == inference.EffortAuto || selection.Kind == inference.EffortDefault {
+		return defaultAntigravityVariant(configs, logicalID)
 	}
-	band := AntigravityBand(normalized)
+	if selection.Kind == inference.EffortOff || selection.Kind == inference.EffortOn {
+		return antigravityToggle(configs, logicalID, selection.Kind)
+	}
+	band := AntigravityBand(selection.Level)
+	if config, found := antigravityBand(configs, logicalID, band); found {
+		return config, true
+	}
+	if stronger, found := antigravityStronger(configs, logicalID, band); found {
+		return stronger, true
+	}
+	if highest, found := antigravityBand(configs, logicalID, AntigravityBandHigh); found {
+		return highest, true
+	}
+	return defaultAntigravityVariant(configs, logicalID)
+}
+
+func antigravityToggle(configs []AntigravityVariant, logicalID string, kind inference.EffortKind) (AntigravityVariant, bool) {
+	selection := "toggle"
+	band := AntigravityBandLow
+	if kind == inference.EffortOff {
+		selection = "off"
+	}
+	if config, found := antigravitySelection(configs, logicalID, selection); found {
+		return config, true
+	}
+	if kind == inference.EffortOn {
+		return defaultAntigravityVariant(configs, logicalID)
+	}
+	if config, found := antigravityBand(configs, logicalID, band); found {
+		return config, true
+	}
+	return antigravityStronger(configs, logicalID, band)
+}
+
+func antigravityBand(configs []AntigravityVariant, logicalID, band string) (AntigravityVariant, bool) {
 	for _, config := range configs {
 		if config.LogicalID == logicalID && config.Effort == band {
 			return config, true
@@ -192,6 +217,40 @@ func SelectAntigravityVariant(configs []AntigravityVariant, logicalID, effort st
 	}
 	for _, config := range configs {
 		if config.LogicalID == logicalID && config.Selection == band {
+			return config, true
+		}
+	}
+	return AntigravityVariant{}, false
+}
+
+func antigravitySelection(configs []AntigravityVariant, logicalID, selection string) (AntigravityVariant, bool) {
+	for _, config := range configs {
+		if config.LogicalID == logicalID && config.Selection == selection {
+			return config, true
+		}
+	}
+	return AntigravityVariant{}, false
+}
+
+func antigravityStronger(configs []AntigravityVariant, logicalID, band string) (AntigravityVariant, bool) {
+	order := AntigravityBands()
+	rank := slices.Index(order, band)
+	for index := rank + 1; index >= 0 && index < len(order); index++ {
+		if config, found := antigravityBand(configs, logicalID, order[index]); found {
+			return config, true
+		}
+	}
+	return AntigravityVariant{}, false
+}
+
+func defaultAntigravityVariant(configs []AntigravityVariant, logicalID string) (AntigravityVariant, bool) {
+	for _, config := range configs {
+		if config.LogicalID == logicalID && config.Default {
+			return config, true
+		}
+	}
+	for _, config := range configs {
+		if config.LogicalID == logicalID {
 			return config, true
 		}
 	}

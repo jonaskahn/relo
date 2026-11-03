@@ -84,10 +84,10 @@ func EffortOf(params []Param) string {
 	thinking := ""
 	for _, param := range params {
 		if param.ID == "thinking" {
-			thinking = strings.ToLower(param.Value)
+			thinking = strings.ToLower(strings.TrimSpace(param.Value))
 		}
 	}
-	if thinking == "false" || thinking == "off" || thinking == "none" {
+	if thinking == "false" || thinking == "off" || thinking == "none" || thinking == "disabled" || thinking == "disable" {
 		return SelectOff
 	}
 	for _, param := range params {
@@ -96,25 +96,27 @@ func EffortOf(params []Param) string {
 			return normalizeEffort(param.Value)
 		}
 	}
-	if thinking == "true" || thinking == "on" {
+	if thinking == "true" || thinking == "on" || thinking == "enabled" || thinking == "enable" {
 		return SelectToggle
 	}
 	return ""
 }
 
 func normalizeEffort(value string) string {
-	lowered := strings.ToLower(strings.TrimSpace(value))
-	if lowered == "none" || lowered == "off" || lowered == "disabled" {
-		return SelectOff
-	}
-	if lowered == "extra-high" {
-		lowered = "xhigh"
-	}
-	name, ok := inference.NormalizeEffort(lowered)
-	if !ok {
+	selection, err := inference.ParseEffort(value)
+	if err != nil {
 		return ""
 	}
-	return name
+	switch selection.Kind {
+	case inference.EffortOff:
+		return SelectOff
+	case inference.EffortOn:
+		return SelectToggle
+	case inference.EffortDefault, inference.EffortAuto:
+		return SelectDefault
+	default:
+		return selection.Level
+	}
 }
 
 // GroupVariants collapses provider-declared variants into selectable lanes.

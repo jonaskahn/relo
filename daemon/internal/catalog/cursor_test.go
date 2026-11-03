@@ -30,11 +30,12 @@ func TestSelectConfig(t *testing.T) {
 	if !ok || selected.DetailsID != "sonnet-off" {
 		t.Fatalf("Select(off) = %+v %v", selected, ok)
 	}
-	if _, ok := SelectCursorVariant(configs, "sonnet", "max"); ok {
-		t.Fatal("Select(max) succeeded without a max member in the lane")
+	selected, ok = SelectCursorVariant(configs, "sonnet", "max")
+	if !ok || selected.DetailsID != "sonnet-high" {
+		t.Fatalf("Select(max) = %+v %v, want the highest member", selected, ok)
 	}
-	if _, ok := SelectCursorVariant(configs, "sonnet-max", "low"); ok {
-		t.Fatal("Select(low) crossed into the max lane")
+	if selected, ok := SelectCursorVariant(configs, "sonnet-max", "low"); !ok || !selected.MaxMode || selected.DetailsID != "sonnet-max" {
+		t.Fatalf("Select(max low) = %+v %v, want the max lane's strongest member", selected, ok)
 	}
 	selected, ok = SelectCursorVariant(configs, "sonnet-max", "high")
 	if !ok || !selected.MaxMode {

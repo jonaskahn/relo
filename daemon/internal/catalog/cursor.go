@@ -3,6 +3,7 @@ package catalog
 
 import (
 	"encoding/json"
+	"strings"
 
 	"github.com/jonaskahn/relo/internal/inference"
 )
@@ -20,15 +21,27 @@ func RequestEffort(reasoning *inference.ReasoningConfig) (string, bool) {
 // off, toggle, default, or a canonical effort. It reports false for an
 // unknown value.
 func NormalizeCursorEffort(effort string) (string, bool) {
-	switch effort {
-	case CursorSelectOff, CursorSelectToggle, CursorSelectDefault:
-		return effort, true
-	case "none":
+	switch strings.ToLower(strings.TrimSpace(effort)) {
+	case CursorSelectOff:
 		return CursorSelectOff, true
-	case "extra-high":
-		return inference.NormalizeEffort("xhigh")
+	case CursorSelectToggle:
+		return CursorSelectToggle, true
+	case CursorSelectDefault:
+		return CursorSelectDefault, true
+	}
+	selection, err := inference.ParseEffort(effort)
+	if err != nil {
+		return "", false
+	}
+	switch selection.Kind {
+	case inference.EffortOff:
+		return CursorSelectOff, true
+	case inference.EffortOn:
+		return CursorSelectToggle, true
+	case inference.EffortAuto, inference.EffortDefault:
+		return CursorSelectDefault, true
 	default:
-		return inference.NormalizeEffort(effort)
+		return selection.Level, true
 	}
 }
 
@@ -37,35 +50,127 @@ func NormalizeCursorEffort(effort string) (string, bool) {
 // It reports false when the account serves the group but not the requested
 // selection, which is an unavailable selection rather than a missing model.
 func SelectCursorVariant(configs []CursorVariant, groupID, effort string) (CursorVariant, bool) {
-	if effort == "" {
-		for _, config := range configs {
-			if config.GroupID == groupID && config.Default {
-				return config, true
-			}
-		}
-		for _, config := range configs {
-			if config.GroupID == groupID {
-				return config, true
-			}
-		}
+	selection, err := inference.ParseEffort(effort)
+	if err != nil {
 		return CursorVariant{}, false
 	}
-	normalized, ok := NormalizeCursorEffort(effort)
-	if !ok {
-		return CursorVariant{}, false
+	if selection.Kind == inference.EffortAuto || selection.Kind == inference.EffortDefault {
+		return defaultCursorVariant(configs, groupID)
 	}
-	for _, config := range configs {
-		if config.GroupID == groupID && config.Selection == normalized {
-			return config, true
-		}
+	if selection.Kind == inference.EffortOff {
+		return cursorOffVariant(configs, groupID)
+	}
+	if selection.Kind == inference.EffortOn {
+		return cursorOnVariant(configs, groupID)
+	}
+	if member, found := cursorSelection(configs, groupID, selection.Level); found {
+		return member, true
+	}
+	if member, found := cursorCeiling(configs, groupID, selection.Level); found {
+		return member, true
 	}
 	// A group whose members are all defaults states no reasoning choice at
 	// all, so any requested effort resolves to that one member instead of
 	// reporting a selection the account does not have.
 	if !groupStatesReasoning(configs, groupID) {
-		return SelectCursorVariant(configs, groupID, "")
+		return defaultCursorVariant(configs, groupID)
+	}
+	if member, found := cursorHighest(configs, groupID); found {
+		return member, true
+	}
+	return defaultCursorVariant(configs, groupID)
+}
+
+func cursorOffVariant(configs []CursorVariant, groupID string) (CursorVariant, bool) {
+	if member, found := cursorSelection(configs, groupID, CursorSelectOff); found {
+		return member, true
+	}
+	return defaultCursorVariant(configs, groupID)
+}
+
+func cursorOnVariant(configs []CursorVariant, groupID string) (CursorVariant, bool) {
+	if member, found := cursorSelection(configs, groupID, CursorSelectToggle); found {
+		return member, true
+	}
+	return defaultCursorVariant(configs, groupID)
+}
+
+func cursorSelection(configs []CursorVariant, groupID, selection string) (CursorVariant, bool) {
+	for _, config := range configs {
+		if config.GroupID == groupID && config.Selection == selection {
+			return config, true
+		}
 	}
 	return CursorVariant{}, false
+}
+
+func defaultCursorVariant(configs []CursorVariant, groupID string) (CursorVariant, bool) {
+	for _, config := range configs {
+		if config.GroupID == groupID && config.Default {
+			return config, true
+		}
+	}
+	for _, config := range configs {
+		if config.GroupID == groupID {
+			return config, true
+		}
+	}
+	return CursorVariant{}, false
+}
+
+func cursorCeiling(configs []CursorVariant, groupID, level string) (CursorVariant, bool) {
+	rank, ranked := cursorRank(level)
+	if !ranked {
+		return CursorVariant{}, false
+	}
+	bestRank := -1
+	best := CursorVariant{}
+	for _, config := range configs {
+		if config.GroupID != groupID || config.Selection == CursorSelectOff || config.Selection == CursorSelectToggle {
+			continue
+		}
+		valueRank, ok := cursorRank(config.Selection)
+		if !ok || valueRank < rank {
+			continue
+		}
+		if bestRank < 0 || valueRank < bestRank {
+			bestRank, best = valueRank, config
+		}
+	}
+	return best, bestRank >= 0
+}
+
+func cursorHighest(configs []CursorVariant, groupID string) (CursorVariant, bool) {
+	bestRank := -1
+	best := CursorVariant{}
+	for _, config := range configs {
+		if config.GroupID != groupID {
+			continue
+		}
+		rank, ok := cursorRank(config.Selection)
+		if !ok {
+			continue
+		}
+		if rank > bestRank {
+			bestRank, best = rank, config
+		}
+	}
+	return best, bestRank >= 0
+}
+
+var cursorEffortOrder = []string{"none", "minimal", "low", "medium", "high", "xhigh", "max"}
+
+func cursorRank(value string) (int, bool) {
+	level, ok := inference.NormalizeEffort(value)
+	if !ok {
+		return 0, false
+	}
+	for rank, name := range cursorEffortOrder {
+		if name == level {
+			return rank, true
+		}
+	}
+	return 0, false
 }
 
 // groupStatesReasoning reports whether one group holds any member that

@@ -116,7 +116,7 @@ func TestSelectCursorAttempt(t *testing.T) {
 		}
 	})
 
-	t.Run("an ineligible account yields to the next one", func(t *testing.T) {
+	t.Run("an absent level degrades on the serving account", func(t *testing.T) {
 		relay := &attemptStubRelay{accounts: []catalog.Authorization{first, second}}
 		server := attemptTestServer(relay, configs)
 		tried := map[string][]string{}
@@ -125,14 +125,14 @@ func TestSelectCursorAttempt(t *testing.T) {
 		if err != nil {
 			t.Fatalf("selectCursorAttempt() error = %v", err)
 		}
-		if selection.DetailsID != "sonnet-medium" {
-			t.Fatalf("selection = %+v, want the medium tuple", selection)
+		if selection.DetailsID != "sonnet-high" {
+			t.Fatalf("selection = %+v, want the nearest stronger tuple", selection)
 		}
-		if spec.authorized.CredentialID != "cred-b" {
-			t.Fatalf("authorized = %q, want the serving account", spec.authorized.CredentialID)
+		if spec.authorized.CredentialID != "cred-a" {
+			t.Fatalf("authorized = %q, want the account that serves the group", spec.authorized.CredentialID)
 		}
-		if len(tried["cursor"]) != 1 || tried["cursor"][0] != "cred-a" {
-			t.Fatalf("tried = %v, want cred-a excluded", tried)
+		if len(tried["cursor"]) != 0 || relay.calls != 0 {
+			t.Fatalf("tried = %v calls = %d, want no failover", tried, relay.calls)
 		}
 	})
 
@@ -140,6 +140,7 @@ func TestSelectCursorAttempt(t *testing.T) {
 		relay := &attemptStubRelay{accounts: []catalog.Authorization{first}}
 		server := attemptTestServer(relay, configs)
 		spec := cursorTestSpec(first, "medium")
+		spec.candidate.ModelID = "missing"
 		if _, err := server.selectCursorAttempt(context.Background(), spec, map[string][]string{}); err == nil {
 			t.Fatal("selectCursorAttempt() succeeded without a serving account")
 		}

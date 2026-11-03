@@ -34,7 +34,7 @@ func Validate(req *inference.Request, selection *wire.CursorRequest) error {
 		return fmt.Errorf("cursor has no tool-choice control: %w", wire.ErrUnsupportedFeature)
 	}
 	if req.Reasoning != nil && req.Reasoning.Effort != "" {
-		if _, ok := NormalizeEffortRequest(req.Reasoning.Effort); !ok {
+		if _, err := inference.ParseEffort(req.Reasoning.Effort); err != nil {
 			return fmt.Errorf("cursor effort %q: %w", req.Reasoning.Effort, wire.ErrUnsupportedFeature)
 		}
 	}
@@ -43,13 +43,18 @@ func Validate(req *inference.Request, selection *wire.CursorRequest) error {
 
 // NormalizeEffortRequest maps a requested effort onto a Cursor selection.
 func NormalizeEffortRequest(effort string) (string, bool) {
-	switch effort {
-	case "off", "toggle", "default":
-		return effort, true
-	case "none":
+	selection, err := inference.ParseEffort(effort)
+	if err != nil {
+		return "", false
+	}
+	switch selection.Kind {
+	case inference.EffortOff:
 		return "off", true
+	case inference.EffortOn:
+		return "toggle", true
+	case inference.EffortAuto, inference.EffortDefault:
+		return "default", true
 	default:
-		name, ok := inference.NormalizeEffort(effort)
-		return name, ok
+		return selection.Level, true
 	}
 }
