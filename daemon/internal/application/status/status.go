@@ -23,8 +23,9 @@ const (
 	// CheckWarn is a doctor check that found something an operator should see.
 	CheckWarn = "warn"
 	// CheckFail is a doctor check that found something broken.
-	CheckFail = "fail"
-	modeNone  = "none"
+	CheckFail        = "fail"
+	modeNone         = "none"
+	trafficWarnBytes = 1 << 30
 )
 
 // Status is the daemon state the management API and the dashboard report.
@@ -89,6 +90,18 @@ type Quotas interface {
 	ListSnapshots(ctx context.Context, credentialID string) ([]activity.Snapshot, error)
 }
 
+// TrafficStats is what the traffic log holds on disk.
+type TrafficStats struct {
+	TodayBytes int64
+	TotalBytes int64
+}
+
+// TrafficLog reports whether the traffic log is on and how much it holds.
+type TrafficLog interface {
+	On() bool
+	Stats() (TrafficStats, error)
+}
+
 // Options configure the status use cases.
 type Options struct {
 	DB        Database
@@ -96,6 +109,7 @@ type Options struct {
 	Secrets   Secrets
 	Entries   pool.CredentialRepository
 	Quotas    Quotas
+	Traffic   TrafficLog
 	Keys      *appaccess.Keys
 	Accounts  *appaccount.Service
 	Catalog   *catalog.Catalog
@@ -112,6 +126,7 @@ type Service struct {
 	secrets    Secrets
 	entries    pool.CredentialRepository
 	quotas     Quotas
+	traffic    TrafficLog
 	keys       *appaccess.Keys
 	accounts   *appaccount.Service
 	catalog    *catalog.Catalog
@@ -125,7 +140,7 @@ func New(options Options) *Service {
 		db: options.DB, retention: options.Retention, secrets: options.Secrets,
 		entries: options.Entries, quotas: options.Quotas, keys: options.Keys,
 		accounts: options.Accounts, catalog: options.Catalog, home: options.Home,
-		startupLog: options.StartupLog,
+		startupLog: options.StartupLog, traffic: options.Traffic,
 	}
 }
 
@@ -202,7 +217,24 @@ func (s *Service) Doctor(ctx context.Context) []DoctorCheck {
 		s.checkCatalog(ctx),
 		s.checkAccessKeys(ctx),
 		s.checkRetention(ctx),
+		s.checkTraffic(ctx),
 	}
+}
+
+func (s *Service) checkTraffic(ctx context.Context) DoctorCheck {
+	const name = "Traffic log"
+	if s.traffic == nil || !s.traffic.On() {
+		return DoctorCheck{Name: name, Status: CheckPass, Detail: "off"}
+	}
+	stats, err := s.traffic.Stats()
+	if err != nil {
+		return DoctorCheck{Name: name, Status: CheckFail, Detail: err.Error()}
+	}
+	detail := fmt.Sprintf("today %s, %s retained", bytesOf(stats.TodayBytes), bytesOf(stats.TotalBytes))
+	if stats.TotalBytes > trafficWarnBytes {
+		return DoctorCheck{Name: name, Status: CheckWarn, Detail: detail + ": over the 1 GiB warning line"}
+	}
+	return DoctorCheck{Name: name, Status: CheckPass, Detail: detail}
 }
 
 func (s *Service) checkAccessKeys(ctx context.Context) DoctorCheck {

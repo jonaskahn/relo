@@ -109,6 +109,9 @@ func TestDoctor(t *testing.T) {
 	if check := byName["Model catalog"]; check.Status != appstatus.CheckPass {
 		t.Fatalf("Model catalog = %+v, want a pass", check)
 	}
+	if check := byName["Traffic log"]; check.Status != appstatus.CheckPass || check.Detail != "off" {
+		t.Fatalf("Traffic log = %+v, want a pass saying off", check)
+	}
 
 	t.Run("a set budget passes", func(t *testing.T) {
 		if _, err := harness.settings.SaveRetention(ctx, appsettings.RetentionSettings{
