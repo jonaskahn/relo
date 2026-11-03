@@ -221,29 +221,33 @@ func (s *Server) buildAttemptExchange(spec attemptSpec, module wire.CodecModule,
 	if err := s.validateOutboundRequest(spec, request); err != nil {
 		return Exchange{}, err
 	}
+	captureLimit, captureTail := s.captureBounds()
 	exchange := s.attemptExchange(spec, attemptExchangeInputs{
 		module: module, final: final, request: request, originals: originals, extra: extra,
-		template: template, templated: templated,
+		template: template, templated: templated, captureLimit: captureLimit, captureTail: captureTail,
 	})
 	s.attachAttemptHooks(&exchange, spec)
 	return exchange, nil
 }
 
 type attemptExchangeInputs struct {
-	module    wire.CodecModule
-	final     bool
-	request   *inference.Request
-	originals map[string]string
-	extra     map[string]string
-	template  catalog.Template
-	templated bool
+	module       wire.CodecModule
+	final        bool
+	request      *inference.Request
+	originals    map[string]string
+	extra        map[string]string
+	template     catalog.Template
+	templated    bool
+	captureLimit int64
+	captureTail  bool
 }
 
 func (s *Server) attemptExchange(spec attemptSpec, in attemptExchangeInputs) Exchange {
 	candidate, outcome, host, authorized := spec.candidate, spec.outcome, spec.host, spec.authorized
 	return Exchange{
 		ProviderID: candidate.ProviderID, Codec: wire.RestoreToolNames(in.module, in.originals),
-		CaptureLimit:   s.captureLimit(),
+		CaptureLimit:   in.captureLimit,
+		CaptureTail:    in.captureTail,
 		RequiresStream: in.templated && in.template.RequiresStream,
 		Options: s.attemptCodecOptions(spec, attemptCodecInputs{
 			request: in.request, extra: in.extra, template: in.template, templated: in.templated,

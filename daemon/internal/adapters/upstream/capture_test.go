@@ -27,7 +27,7 @@ func TestCaptureBytesKeepsTheLimitAndReportsTheRest(t *testing.T) {
 	for _, testCase := range cases {
 		t.Run(testCase.name, func(t *testing.T) {
 			body := bytes.Repeat([]byte("x"), testCase.size)
-			kept, truncated := CaptureBytes(body, testCase.limit)
+			kept, truncated := CaptureBytes(body, testCase.limit, false)
 			if len(kept) != testCase.wantLen {
 				t.Fatalf("kept %d bytes, want %d", len(kept), testCase.wantLen)
 			}
@@ -41,11 +41,19 @@ func TestCaptureBytesKeepsTheLimitAndReportsTheRest(t *testing.T) {
 	}
 }
 
+func TestCaptureBytesKeepsHeadAndTail(t *testing.T) {
+	body := []byte("0123456789abcdefghij")
+	kept, truncated := CaptureBytes(body, 10, true)
+	if !truncated || string(kept) != "01234fghij" {
+		t.Fatalf("CaptureBytes(tail) = %q, %v, want the head and tail", kept, truncated)
+	}
+}
+
 // TestCaptureSinkNeverHoldsTheStreamBack covers the tee a live reply is
 // captured through: every byte is reported written, so the relay is never
 // delayed or cut short by the cap.
 func TestCaptureSinkNeverHoldsTheStreamBack(t *testing.T) {
-	sink := newCaptureSink(8)
+	sink := newCaptureSink(8, false)
 	written, err := sink.Write([]byte("12345"))
 	if err != nil || written != 5 {
 		t.Fatalf("Write() = %d, %v, want 5 bytes reported", written, err)
@@ -76,7 +84,7 @@ func TestCaptureRequestLeavesTheSendUntouched(t *testing.T) {
 	request.Header.Set("Authorization", "Bearer sk-test")
 	request.Header.Set("Content-Type", "application/json")
 
-	captured, err := captureRequest(request, MaxCaptureBytes)
+	captured, err := captureRequest(request, MaxCaptureBytes, true)
 	if err != nil {
 		t.Fatalf("captureRequest() error = %v", err)
 	}
@@ -115,7 +123,7 @@ func TestCaptureRequestLeavesTheSendUntouched(t *testing.T) {
 func TestCaptureResponseKeepsStatusAndHeaders(t *testing.T) {
 	response := &http.Response{StatusCode: http.StatusTooManyRequests,
 		Header: http.Header{"Content-Type": []string{"application/json"}}}
-	sink := newCaptureSink(MaxCaptureBytes)
+	sink := newCaptureSink(MaxCaptureBytes, true)
 	if _, err := sink.Write([]byte("{\"error\":\"slow down\"}")); err != nil {
 		t.Fatalf("Write() error = %v", err)
 	}

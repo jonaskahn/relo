@@ -53,7 +53,7 @@ type streamRun struct {
 func openStreamRun(att attempt, response *http.Response, decoder wire.StreamDecoder, collector *usageCollector) *streamRun {
 	// The stream is teed into a bounded sink, so the reply is kept while the
 	// client reads it and the cap never cuts the stream short.
-	sink := newCaptureSink(att.exchange.captureLimit())
+	sink := newCaptureSink(att.exchange.captureLimit(), att.exchange.CaptureTail)
 	upstream := io.TeeReader(response.Body, sink)
 	if strings.Contains(response.Header.Get("Content-Type"), "eventstream") {
 		upstream = eventstream.NewAdapter(upstream)
@@ -156,7 +156,7 @@ func (e *Executor) relayAggregated(att attempt, response *http.Response) (Result
 		return e.fail(att, http.StatusBadGateway, "not_implemented", err)
 	}
 	// The whole body is read here anyway, so it is captured as it is read.
-	sink := newCaptureSink(att.exchange.captureLimit())
+	sink := newCaptureSink(att.exchange.captureLimit(), att.exchange.CaptureTail)
 	upstream := io.TeeReader(response.Body, sink)
 	if strings.Contains(response.Header.Get("Content-Type"), "eventstream") {
 		upstream = eventstream.NewAdapter(upstream)
@@ -245,7 +245,7 @@ func (e *Executor) relayComplete(att attempt, response *http.Response) (Result, 
 	if err != nil {
 		return e.failRead(att, "read upstream response", err)
 	}
-	att.capture.Response = capturedBody(response, body, att.exchange.captureLimit())
+	att.capture.Response = capturedBody(response, body, att.exchange.captureLimit(), att.exchange.CaptureTail)
 	events, err := att.exchange.Codec.DecodeResponse(body)
 	if err != nil {
 		return e.fail(att, http.StatusBadGateway, "bad_gateway", err)
@@ -279,7 +279,7 @@ func (e *Executor) relayRejection(att attempt, response *http.Response) (Result,
 		return e.fail(att, http.StatusBadGateway, "upstream_unavailable",
 			fmt.Errorf("%w: read error body: %v", ErrUpstreamFailed, err))
 	}
-	att.capture.Response = capturedBody(response, body, att.exchange.captureLimit())
+	att.capture.Response = capturedBody(response, body, att.exchange.captureLimit(), att.exchange.CaptureTail)
 	info := decodeRejection(att.exchange.Codec, response.StatusCode, body)
 	result := Result{
 		Status: response.StatusCode, Duration: time.Since(att.started), Model: att.exchange.Request.Model,

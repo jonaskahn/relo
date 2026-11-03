@@ -5,6 +5,8 @@ import (
 	"bytes"
 	"io"
 	"net/http"
+
+	capturelog "github.com/jonaskahn/relo/internal/capture"
 )
 
 // MaxCaptureBytes bounds one captured body. A larger body is kept up to the
@@ -12,7 +14,7 @@ import (
 // cut short because of the log. The cap is what keeps the state database
 // proportional to the request count rather than to the traffic: a capture
 // exists so an operator can see the shape of an exchange, not archive it.
-const MaxCaptureBytes = 16 << 10
+const MaxCaptureBytes = capturelog.MaxBytes
 
 // CapturedMessage is one HTTP message as the log keeps it: the method or the
 // status, the target, every header, and the body bytes.
@@ -33,13 +35,11 @@ type Capture struct {
 }
 
 type captureSink struct {
-	body      bytes.Buffer
-	limit     int64
-	truncated bool
+	inner *capturelog.Sink
 }
 
-func newCaptureSink(limit int64) *captureSink {
-	return &captureSink{limit: limit}
+func newCaptureSink(limit int64, tail bool) *captureSink {
+	return &captureSink{inner: capturelog.NewSink(limit, tail)}
 }
 
 // captureLimit is how much of one body the exchange keeps: the traffic-log
@@ -54,26 +54,14 @@ func (e Exchange) captureLimit() int64 {
 // Write collects the bytes of the stream and always reports them written, so
 // the relay it is teed from is unaffected by the cap.
 func (s *captureSink) Write(p []byte) (int, error) {
-	room := s.limit - int64(s.body.Len())
-	switch {
-	case room <= 0:
-		if len(p) > 0 {
-			s.truncated = true
-		}
-	case int64(len(p)) > room:
-		_, _ = s.body.Write(p[:room])
-		s.truncated = true
-	default:
-		_, _ = s.body.Write(p)
-	}
-	return len(p), nil
+	return s.inner.Write(p)
 }
 
 func (s *captureSink) bytes() ([]byte, bool) {
-	return s.body.Bytes(), s.truncated
+	return s.inner.Bytes()
 }
 
-func captureRequest(request *http.Request, limit int64) (*CapturedMessage, error) {
+func captureRequest(request *http.Request, limit int64, tail bool) (*CapturedMessage, error) {
 	message := &CapturedMessage{
 		Method: request.Method, URL: request.URL.String(), Headers: RedactHeaders(request.Header),
 	}
@@ -90,7 +78,7 @@ func captureRequest(request *http.Request, limit int64) (*CapturedMessage, error
 	request.GetBody = func() (io.ReadCloser, error) {
 		return io.NopCloser(bytes.NewReader(body)), nil
 	}
-	message.Body, message.Truncated = CaptureBytes(body, limit)
+	message.Body, message.Truncated = CaptureBytes(body, limit, tail)
 	message.Body = RedactBody(message.Body)
 	return message, nil
 }
@@ -103,22 +91,17 @@ func captureResponse(response *http.Response, sink *captureSink) *CapturedMessag
 	}
 }
 
-// CaptureBytes keeps at most limit bytes of one body, reporting whether more
-// had to be left out.
-func CaptureBytes(body []byte, limit int64) ([]byte, bool) {
-	if int64(len(body)) <= limit {
-		return body, false
+// CaptureBytes keeps the head of one body, or its head and tail when tail is
+// set, reporting whether more had to be left out.
+func CaptureBytes(body []byte, limit int64, tail bool) ([]byte, bool) {
+	if tail {
+		return capturelog.HeadTail(body, limit)
 	}
-	kept := make([]byte, limit)
-	copy(kept, body[:limit])
-	return kept, true
+	return capturelog.Bytes(body, limit)
 }
 
-func capturedBody(response *http.Response, body []byte, limit int64) *CapturedMessage {
-	kept, truncated := CaptureBytes(body, limit)
-	if !truncated && int64(len(body)) >= limit {
-		truncated = true
-	}
+func capturedBody(response *http.Response, body []byte, limit int64, tail bool) *CapturedMessage {
+	kept, truncated := CaptureBytes(body, limit, tail)
 	return &CapturedMessage{
 		Status: response.StatusCode, Headers: RedactHeaders(response.Header),
 		Body: RedactBody(kept), Truncated: truncated,

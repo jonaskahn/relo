@@ -37,7 +37,9 @@ func recordCursorFrame(att attempt) func([]byte) {
 		if att.capture == nil || att.capture.Request == nil {
 			return
 		}
-		att.capture.Request.Body = RedactBody(frame)
+		body, truncated := CaptureBytes(frame, att.exchange.captureLimit(), att.exchange.CaptureTail)
+		att.capture.Request.Body = RedactBody(body)
+		att.capture.Request.Truncated = truncated
 	}
 }
 

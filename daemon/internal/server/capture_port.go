@@ -13,6 +13,6 @@ type CaptureRedactor interface {
 	// RedactBody scrubs the secrets out of a captured body.
 	RedactBody(body []byte) []byte
 	// CaptureBytes keeps at most limit bytes of one body, reporting whether
-	// more had to be left out.
-	CaptureBytes(body []byte, limit int64) ([]byte, bool)
+	// more had to be left out. With tail set it keeps the head and the tail.
+	CaptureBytes(body []byte, limit int64, tail bool) ([]byte, bool)
 }

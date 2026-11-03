@@ -105,11 +105,11 @@ func (s *Server) relayClaudeAlias(w http.ResponseWriter, r *http.Request, surfac
 		ctx = withClientIdentity(ctx, identity)
 	}
 	r = r.WithContext(ctx)
-	limit := s.captureLimit()
-	captured := captureInbound(s.opts.CaptureRedactor, r, limit)
+	limit, tail := s.captureBounds()
+	captured := captureInbound(s.opts.CaptureRedactor, r, limit, tail)
 	// The answer is kept beside the request, as on the keyed path, so a
 	// Claude-login request shows both halves of its exchange.
-	answer := newAgentAnswer(w, s.opts.CaptureRedactor, limit)
+	answer := newAgentAnswer(w, s.opts.CaptureRedactor, limit, tail)
 	s.relay(relaySpec{writer: answer, request: r, surface: surface, inbound: inbound, canonical: request, origin: inference.OriginExternal, captured: captured, native: body})
 }
 

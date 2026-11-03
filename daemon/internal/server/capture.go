@@ -8,11 +8,12 @@ import (
 	"net/http"
 
 	"github.com/jonaskahn/relo/internal/activity"
+	capturelog "github.com/jonaskahn/relo/internal/capture"
 )
 
 const maxInboundRead = 64 << 20
 
-func captureInbound(redactor CaptureRedactor, r *http.Request, limit int64) *CapturedMessage {
+func captureInbound(redactor CaptureRedactor, r *http.Request, limit int64, tail bool) *CapturedMessage {
 	message := &CapturedMessage{
 		Method: r.Method, URL: inboundTarget(r), Headers: redactor.RedactHeaders(inboundHeaders(r)),
 	}
@@ -30,7 +31,7 @@ func captureInbound(redactor CaptureRedactor, r *http.Request, limit int64) *Cap
 	_ = r.Body.Close()
 	r.Body = io.NopCloser(bytes.NewReader(body))
 	r.ContentLength = int64(len(body))
-	kept, captureTruncated := redactor.CaptureBytes(body, limit)
+	kept, captureTruncated := redactor.CaptureBytes(body, limit, tail)
 	message.Body, message.Truncated = redactor.RedactBody(kept), readTruncated || captureTruncated
 	return message
 }
@@ -100,8 +101,8 @@ func (s *Server) appendAttemptCaptures(captures []activity.CaptureWrite, ordinal
 
 func (s *Server) captureRow(ordinal *int, kind string, message *CapturedMessage) activity.CaptureWrite {
 	// The traffic log raises the capture bound, so a body kept whole for the
-	// file on disk is cut back to the state cap here: what the state database
-	// holds stays the size it always was.
+	// file on disk is cut back to the state cap here: the database keeps the
+	// head and tail, which is enough to debug both ends of a large exchange.
 	kept, truncated := s.clampCapture(message.Body)
 	return activity.CaptureWrite{
 		Ordinal: ordinal, Kind: kind, Method: message.Method, URL: message.URL,
@@ -111,23 +112,21 @@ func (s *Server) captureRow(ordinal *int, kind string, message *CapturedMessage)
 }
 
 func (s *Server) clampCapture(body []byte) ([]byte, bool) {
-	return s.opts.CaptureRedactor.CaptureBytes(body, s.opts.CaptureRedactor.MaxCaptureBytes())
+	return s.opts.CaptureRedactor.CaptureBytes(body, s.opts.CaptureRedactor.MaxCaptureBytes(), true)
 }
 
 type agentAnswer struct {
 	http.ResponseWriter
-	redactor  CaptureRedactor
-	limit     int64
-	status    int
-	headers   map[string][]string
-	body      []byte
-	truncated bool
+	redactor CaptureRedactor
+	sink     *capturelog.Sink
+	status   int
+	headers  map[string][]string
 }
 
 var _ http.ResponseWriter = (*agentAnswer)(nil)
 
-func newAgentAnswer(w http.ResponseWriter, redactor CaptureRedactor, limit int64) *agentAnswer {
-	return &agentAnswer{ResponseWriter: w, redactor: redactor, limit: limit}
+func newAgentAnswer(w http.ResponseWriter, redactor CaptureRedactor, limit int64, tail bool) *agentAnswer {
+	return &agentAnswer{ResponseWriter: w, redactor: redactor, sink: capturelog.NewSink(limit, tail)}
 }
 
 // WriteHeader keeps the headers the reply was written with, once, and hands
@@ -142,25 +141,14 @@ func (a *agentAnswer) WriteHeader(status int) {
 	a.ResponseWriter.WriteHeader(status)
 }
 
-// Write keeps as much of the answer as the limit holds, marks the rest
+// Write keeps as much of the answer as the capture shape holds, marks the rest
 // truncated, and always reports the bytes written, so the cap never cuts a
 // reply short.
 func (a *agentAnswer) Write(data []byte) (int, error) {
 	if a.status == 0 {
 		a.WriteHeader(http.StatusOK)
 	}
-	room := a.limit - int64(len(a.body))
-	switch {
-	case room <= 0:
-		if len(data) > 0 {
-			a.truncated = true
-		}
-	case int64(len(data)) > room:
-		a.body = append(a.body, data[:room]...)
-		a.truncated = true
-	default:
-		a.body = append(a.body, data...)
-	}
+	_, _ = a.sink.Write(data)
 	return a.ResponseWriter.Write(data)
 }
 
@@ -176,8 +164,9 @@ func (a *agentAnswer) captured() (*CapturedMessage, bool) {
 	if a.status == 0 {
 		return nil, false
 	}
+	body, truncated := a.sink.Bytes()
 	return &CapturedMessage{
-		Status: a.status, Headers: a.headers, Body: a.redactor.RedactBody(a.body),
-		Truncated: a.truncated,
+		Status: a.status, Headers: a.headers, Body: a.redactor.RedactBody(body),
+		Truncated: truncated,
 	}, true
 }

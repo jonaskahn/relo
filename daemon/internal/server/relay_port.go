@@ -91,6 +91,9 @@ type Exchange struct {
 	// CaptureLimit overrides how much of each provider body the attempt
 	// keeps. Zero keeps the state-sized cap.
 	CaptureLimit int64
+	// CaptureTail keeps both ends of a body that outgrows CaptureLimit, which
+	// is how the state rows show the beginning and the end of a large body.
+	CaptureTail bool
 	// RequiresStream reports that the connection's upstream only answers a
 	// streamed request, so a client that asked for one complete body is
 	// served by reassembling the stream rather than by a one-shot request the

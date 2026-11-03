@@ -99,11 +99,11 @@ func (s *Server) handleInference(surface inferenceSurface) http.HandlerFunc {
 		}
 		// The agent's own request is read before the codec consumes it, which
 		// is what keeps a body Relo cannot decode readable in the log.
-		limit := s.captureLimit()
-		captured := captureInbound(s.opts.CaptureRedactor, r, limit)
+		limit, tail := s.captureBounds()
+		captured := captureInbound(s.opts.CaptureRedactor, r, limit, tail)
 		// The answer is kept beside the request it answers, so the log holds
 		// both halves of the exchange an operator debugs.
-		answer := newAgentAnswer(w, s.opts.CaptureRedactor, limit)
+		answer := newAgentAnswer(w, s.opts.CaptureRedactor, limit, tail)
 		inbound, found := s.inboundFor(surface)
 		if !found {
 			s.handleNotImplemented(w, r)

@@ -72,6 +72,10 @@ type Exchange struct {
 	// the traffic log raises so the state rows stay small while the file on
 	// disk holds the exchange whole.
 	CaptureLimit int64
+	// CaptureTail keeps both ends of a body that outgrows CaptureLimit. The
+	// traffic log leaves it false, so its file keeps the head of a body it
+	// could not hold whole, the way it always did.
+	CaptureTail bool
 	// RequiresStream reports that the connection's upstream only answers a
 	// streamed request, so a client that asked for one complete body is
 	// served by reassembling the stream rather than by a one-shot request the
@@ -288,7 +292,7 @@ func (e *Executor) dispatchOnce(ctx context.Context, pass dispatchPass, num int)
 		return false, true, result, err
 	}
 	if num == 0 {
-		if message, captureErr := captureRequest(outbound, ex.captureLimit()); captureErr == nil {
+		if message, captureErr := captureRequest(outbound, ex.captureLimit(), ex.CaptureTail); captureErr == nil {
 			pass.state.capture.Request = message
 		}
 	}

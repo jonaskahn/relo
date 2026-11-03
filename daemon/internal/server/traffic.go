@@ -102,13 +102,13 @@ func (s *Server) trafficOn() bool {
 	return s.opts.Traffic != nil && s.opts.Settings != nil && s.opts.Settings.LogTraffic()
 }
 
-// captureLimit is how much of one body this request keeps: the whole body
-// while the traffic log is on, and the state-sized cap otherwise.
-func (s *Server) captureLimit() int64 {
+// captureBounds is how much of one body this request keeps: the whole body
+// while the traffic log is on, and the state-sized head and tail otherwise.
+func (s *Server) captureBounds() (int64, bool) {
 	if s.trafficOn() {
-		return trafficCaptureBytes
+		return trafficCaptureBytes, false
 	}
-	return s.opts.CaptureRedactor.MaxCaptureBytes()
+	return s.opts.CaptureRedactor.MaxCaptureBytes(), true
 }
 
 // trafficCaptureBytes bounds one body kept for the traffic log. It matches the

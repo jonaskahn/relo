@@ -61,6 +61,7 @@ func relayExchange(exchange server.Exchange) upstream.Exchange {
 		Inbound: exchange.Inbound, Surface: exchange.Surface,
 		RequestID:       exchange.RequestID,
 		CaptureLimit:    exchange.CaptureLimit,
+		CaptureTail:     exchange.CaptureTail,
 		RequiresStream:  exchange.RequiresStream,
 		CredentialLabel: exchange.CredentialLabel, CallWait: exchange.CallWait,
 		Final: exchange.Final,
@@ -130,8 +131,8 @@ func (CaptureRedactor) RedactBody(body []byte) []byte {
 
 // CaptureBytes keeps at most limit bytes of one body, reporting whether more
 // had to be left out.
-func (CaptureRedactor) CaptureBytes(body []byte, limit int64) ([]byte, bool) {
-	return upstream.CaptureBytes(body, limit)
+func (CaptureRedactor) CaptureBytes(body []byte, limit int64, tail bool) ([]byte, bool) {
+	return upstream.CaptureBytes(body, limit, tail)
 }
 
 // TemplateSource resolves the curated connection shapes the relay branches
