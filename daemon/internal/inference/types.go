@@ -127,16 +127,25 @@ type ReasoningConfig struct {
 	EncryptedContent []byte `json:"encrypted_content,omitempty"`
 }
 
-// NormalizeEffort maps a client effort onto the ladder a provider wire can
-// carry. An unrecognised effort omits the field. ultra is sent as max.
-// none is a real level meaning thinking off. minimal stays distinct so a
-// token budget can give it its own size.
+// NormalizeEffort maps a concrete client level onto the canonical ladder a
+// provider wire can carry. An unrecognised value omits the field. Parsing the
+// auto/default/on/off vocabulary belongs to ParseEffort.
 func NormalizeEffort(effort string) (string, bool) {
 	switch strings.ToLower(strings.TrimSpace(effort)) {
-	case "ultra":
+	case "none":
+		return "none", true
+	case "minimal", "min":
+		return "minimal", true
+	case "low":
+		return "low", true
+	case "medium":
+		return "medium", true
+	case "high":
+		return "high", true
+	case "xhigh", "x-high", "extra-high", "extra_high", "extra high":
+		return "xhigh", true
+	case "max", "maximum", "highest", "ultra":
 		return "max", true
-	case "none", "minimal", "low", "medium", "high", "xhigh", "max":
-		return strings.ToLower(strings.TrimSpace(effort)), true
 	default:
 		return "", false
 	}
