@@ -18,64 +18,11 @@ var effortBudgets = map[string]int{
 	"max":     32000,
 }
 
-// ChooseThinking maps a requested effort onto one model's ladder.
-// level is the effort name to send. off is true when the model turns
-// thinking off with a toggle and no effort name should be sent.
-// A nil ladder passes the normalized name through. An empty ladder has
-// no effort values.
-func ChooseThinking(effort string, ladder []string, toggle bool) (level string, off bool) {
-	name, ok := NormalizeEffort(effort)
-	if !ok {
-		return "", false
-	}
-	if ladder == nil {
-		return name, false
-	}
-	if name == "none" {
-		return chooseOff(ladder, toggle)
-	}
-	if len(ladder) == 0 {
-		return "", false
-	}
-	if match, found := listedEffort(ladder, name); found {
-		return match, false
-	}
-	if ceiling, found := ceilingEffort(ladder, effortRank(name)); found {
-		return ceiling, false
-	}
-	if highest, found := extremeEffort(ladder, true); found {
-		return highest, false
-	}
-	return "", false
-}
-
 // ToggleOnly reports a model whose canonical facts state an empty effort
 // ladder and an on/off thinking switch. Such a model has no effort intensity;
 // presentation layers project a synthetic choice onto it instead.
 func ToggleOnly(ladder []string, toggle bool) bool {
 	return ladder != nil && len(ladder) == 0 && toggle
-}
-
-// AcceptsEffort reports whether one model accepts a requested effort. An
-// unstated ladder keeps the current pass-through. A toggle-only model accepts
-// every known effort because the request only chooses thinking on or off. A
-// non-toggle model with an explicit empty ladder accepts no effort.
-func AcceptsEffort(effort string, ladder []string, toggle bool) bool {
-	if ladder == nil {
-		return true
-	}
-	name, ok := NormalizeEffort(effort)
-	if !ok {
-		return false
-	}
-	if ToggleOnly(ladder, toggle) {
-		return true
-	}
-	if len(ladder) == 0 {
-		return name == "none"
-	}
-	_, found := listedEffort(ladder, name)
-	return found
 }
 
 // EffortBudget reports the token budget a canonical effort stands for.
@@ -129,22 +76,6 @@ func ClampBudget(budget int, min, max *int64) int {
 		budget = int(*max)
 	}
 	return budget
-}
-
-func chooseOff(ladder []string, toggle bool) (string, bool) {
-	if match, found := listedEffort(ladder, "none"); found {
-		return match, false
-	}
-	if match, found := listedEffort(ladder, "minimal"); found {
-		return match, false
-	}
-	if toggle {
-		return "", true
-	}
-	if lowest, found := extremeEffort(ladder, false); found {
-		return lowest, false
-	}
-	return "", false
 }
 
 func listedEffort(ladder []string, name string) (string, bool) {

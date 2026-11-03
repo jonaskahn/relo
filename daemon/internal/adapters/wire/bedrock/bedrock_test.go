@@ -105,6 +105,50 @@ func TestEncodeRequestCarriesThinking(t *testing.T) {
 	}
 }
 
+// TestBedrockCoercesTheEffortOntoTheLadder covers both families this wire
+// serves: a Claude model moves the output-config effort, and every other
+// model moves the reasoning-effort field.
+func TestBedrockCoercesTheEffortOntoTheLadder(t *testing.T) {
+	c := NewCodec("https://bedrock-runtime.us-east-1.amazonaws.com")
+	messages := []inference.Message{{Role: "user", Content: []inference.ContentPart{{Type: inference.ContentTypeText, Text: "Hello"}}}}
+	claude := &inference.Request{
+		Model: "anthropic.claude-opus-4-7", Messages: messages,
+		Reasoning: &inference.ReasoningConfig{Effort: "medium"},
+	}
+	fields := bedrockAdditionalFields(t, c, claude, wire.CodecOpts{ReasoningEfforts: []string{"low", "high"}})
+	if fields["output_config"].(map[string]any)["effort"] != "high" {
+		t.Fatalf("fields = %v, want the stronger rung", fields)
+	}
+
+	plain := &inference.Request{
+		Model: "amazon.nova-pro", Messages: messages,
+		Reasoning: &inference.ReasoningConfig{Effort: "medium"},
+	}
+	fields = bedrockAdditionalFields(t, c, plain, wire.CodecOpts{ReasoningEfforts: []string{"low", "high"}})
+	if fields["reasoning_effort"] != "high" {
+		t.Fatalf("fields = %v, want the stronger rung", fields)
+	}
+
+	plain.Reasoning = &inference.ReasoningConfig{Effort: "auto"}
+	if fields := bedrockAdditionalFields(t, c, plain, wire.CodecOpts{ReasoningEfforts: []string{"low", "high"}}); fields != nil {
+		t.Fatalf("fields = %v, want no reasoning control for auto", fields)
+	}
+}
+
+func bedrockAdditionalFields(t *testing.T, c *Codec, req *inference.Request, opts wire.CodecOpts) map[string]any {
+	t.Helper()
+	httpReq, err := c.EncodeRequest(req, opts)
+	if err != nil {
+		t.Fatalf("EncodeRequest() error = %v", err)
+	}
+	var body map[string]any
+	if err := json.NewDecoder(httpReq.Body).Decode(&body); err != nil {
+		t.Fatalf("decode body: %v", err)
+	}
+	fields, _ := body["additionalModelRequestFields"].(map[string]any)
+	return fields
+}
+
 func TestDecodeResponse(t *testing.T) {
 	c := NewCodec("")
 	body := []byte(`{

@@ -725,6 +725,30 @@ func TestResponsesEffortCeilingsOntoTheLadder(t *testing.T) {
 	}
 }
 
+// TestResponsesCoercesTheEffortOntoTheLadder pins the reported case: a client
+// asking for a level the model does not publish gets the nearest stronger one
+// rather than a refusal, and an absent control leaves the replay state alone.
+func TestResponsesCoercesTheEffortOntoTheLadder(t *testing.T) {
+	request := &inference.Request{
+		Model:     "gpt-5",
+		Messages:  []inference.Message{{Role: inference.RoleUser, Content: []inference.ContentPart{{Type: inference.ContentTypeText, Text: "hi"}}}},
+		Reasoning: &inference.ReasoningConfig{Effort: "medium"},
+	}
+	body := decodeBody(t, newTestRequest(t, request, wire.CodecOpts{CredentialRef: "sk-test", ReasoningEfforts: []string{"low", "high"}}))
+	if body["reasoning"].(map[string]any)["effort"] != "high" {
+		t.Fatalf("reasoning = %v, want the stronger rung", body["reasoning"])
+	}
+
+	request.Reasoning = &inference.ReasoningConfig{Effort: "auto", ID: "rs_1", EncryptedContent: []byte("state")}
+	body = decodeBody(t, newTestRequest(t, request, wire.CodecOpts{CredentialRef: "sk-test", ReasoningEfforts: []string{"low", "high"}}))
+	if _, present := body["reasoning"]; present {
+		t.Fatalf("reasoning = %v, want no new control", body["reasoning"])
+	}
+	if items := body["input"].([]any); findItem(items, "reasoning") == nil {
+		t.Fatalf("input = %v, want the replay state kept", items)
+	}
+}
+
 func encodeBody(t *testing.T, request *inference.Request) map[string]any {
 	t.Helper()
 	return decodeBody(t, newTestRequest(t, request, wire.CodecOpts{CredentialRef: "sk-test"}))

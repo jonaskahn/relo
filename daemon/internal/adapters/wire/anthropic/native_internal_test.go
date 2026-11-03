@@ -156,3 +156,32 @@ func TestRebaseNativeBodyEnforcesProviderBudgetAndThinking(t *testing.T) {
 		t.Fatalf("body = %s, want the provider budget and thinking tuple", rebuilt)
 	}
 }
+
+// TestRebaseNativeBodyEnforcesOrDropsBothReasoningControls pins that a reused
+// client body cannot bypass the attempt's resolution: a level rewrites both
+// thinking and output_config, and an omitted control removes both.
+func TestRebaseNativeBodyEnforcesOrDropsBothReasoningControls(t *testing.T) {
+	body := `{"model":"m","thinking":{"type":"enabled","budget_tokens":1024},` +
+		`"output_config":{"effort":"low"},"messages":[{"role":"user","content":[]}]}`
+	rebuilt, ok := rebaseNativeBody([]byte(body), "claude-sonnet-5-5", nil, nativeOverride{
+		Thinking: &thinkingDef{Type: "adaptive"}, OutputConfig: &outputConfig{Effort: "high"},
+		EnforceThinking: true,
+	})
+	if !ok {
+		t.Fatal("want the body retargeted")
+	}
+	if !strings.Contains(string(rebuilt), `"output_config":{"effort":"high"}`) ||
+		!strings.Contains(string(rebuilt), `"thinking":{"type":"adaptive"}`) {
+		t.Fatalf("body = %s, want both controls rewritten", rebuilt)
+	}
+
+	dropped, ok := rebaseNativeBody([]byte(body), "claude-sonnet-5-5", nil, nativeOverride{
+		EnforceThinking: true, DropReasoning: true,
+	})
+	if !ok {
+		t.Fatal("want the body retargeted")
+	}
+	if strings.Contains(string(dropped), "thinking") || strings.Contains(string(dropped), "output_config") {
+		t.Fatalf("body = %s, want both reasoning controls removed", dropped)
+	}
+}

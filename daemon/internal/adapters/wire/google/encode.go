@@ -294,17 +294,28 @@ func thinkingFor(reasoning *inference.ReasoningConfig, opts wire.CodecOpts) *thi
 	if reasoning == nil {
 		return nil
 	}
-	level, off := inference.ChooseThinking(reasoning.Effort, opts.ReasoningEfforts, opts.ReasoningToggle)
-	if off {
+	decision := inference.ResolveEffortString(reasoning.Effort, opts.ReasoningEfforts, opts.ReasoningToggle, nil)
+	switch decision.Action {
+	case inference.EffortOmit:
+		return nil
+	case inference.EffortDisable:
 		return geminiOff(opts)
+	case inference.EffortEnable:
+		return &thinkingConfig{IncludeThoughts: true}
 	}
+	level := decision.Level
 	if len(opts.ReasoningEfforts) > 0 && level != "" {
 		return &thinkingConfig{ThinkingLevel: level, IncludeThoughts: true}
 	}
+	return thinkingBudget(decision, opts)
+}
+
+func thinkingBudget(decision inference.EffortDecision, opts wire.CodecOpts) *thinkingConfig {
+	level := decision.Level
 	name := level
 	if name == "" {
 		var ok bool
-		name, ok = inference.NormalizeEffort(reasoning.Effort)
+		name, ok = inference.NormalizeEffort(decision.Requested)
 		if !ok || (opts.ReasoningEfforts != nil && !opts.ReasoningBudget) {
 			return nil
 		}

@@ -208,6 +208,30 @@ func TestEncodeRequest(t *testing.T) {
 		}
 	})
 
+	t.Run("a level coerces onto a declared ladder", func(t *testing.T) {
+		request := canonicalRequest(false)
+		request.Model = "claude-sonnet-5-5"
+		request.Reasoning = &inference.ReasoningConfig{Effort: "medium"}
+		body := encodeBody(t, request, wire.CodecOpts{
+			CredentialRef: "sk-ant", ReasoningEfforts: []string{"low", "high"},
+		})
+		output, _ := body["output_config"].(map[string]any)
+		if output["effort"] != "high" {
+			t.Fatalf("output_config = %v, want the stronger rung", body["output_config"])
+		}
+	})
+
+	t.Run("auto emits no reasoning control", func(t *testing.T) {
+		request := canonicalRequest(false)
+		request.Reasoning = &inference.ReasoningConfig{Effort: "auto"}
+		body := encodeBody(t, request, wire.CodecOpts{
+			CredentialRef: "sk-ant", ReasoningEfforts: []string{"low", "high"},
+		})
+		if body["thinking"] != nil || body["output_config"] != nil {
+			t.Fatalf("body = %v, want no thinking or output config", body)
+		}
+	})
+
 	t.Run("an empty text part is left out", func(t *testing.T) {
 		request := canonicalRequest(false)
 		request.Messages = append(request.Messages, inference.Message{

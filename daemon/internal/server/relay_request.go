@@ -394,6 +394,7 @@ func (s *Server) attemptCodecOptions(spec attemptSpec, in attemptCodecInputs) wi
 		ReasoningBudget:        candidate.Model.ReasoningBudget,
 		ReasoningBudgetMin:     candidate.Model.ReasoningBudgetMin,
 		ReasoningBudgetMax:     candidate.Model.ReasoningBudgetMax,
+		ReasoningResolved:      true,
 		TemplateID:             host.TemplateID,
 		ToolCallDialect:        dialect,
 		LongContext:            outcome.longContext,
@@ -674,7 +675,8 @@ func (s *Server) modelRequest(spec attemptSpec, template catalog.Template, templ
 }
 
 // validateOutboundRequest rejects a request the selected account explicitly
-// cannot serve. It never drops tools, images, or reasoning to make a turn fit.
+// cannot serve and resolves reasoning onto what the model can express. It
+// never drops tools or images to make a turn fit.
 // nolint:funlen
 func (s *Server) validateOutboundRequest(spec attemptSpec, request *inference.Request) error {
 	if request == nil {
@@ -687,14 +689,7 @@ func (s *Server) validateOutboundRequest(spec attemptSpec, request *inference.Re
 	if needsImages(request) && model.SupportsVision != nil && !*model.SupportsVision {
 		return fmt.Errorf("images are not supported by %s: %w", model.ID, wire.ErrUnsupportedFeature)
 	}
-	if effort, stated := catalog.RequestEffort(request.Reasoning); stated && effort != "" {
-		if model.SupportsReasoning != nil && !*model.SupportsReasoning {
-			return fmt.Errorf("reasoning is not supported by %s: %w", model.ID, wire.ErrUnsupportedFeature)
-		}
-		if !inference.AcceptsEffort(effort, model.ReasoningEfforts, model.ReasoningToggle) {
-			return fmt.Errorf("reasoning effort %s is not supported by %s: %w", effort, model.ID, wire.ErrUnsupportedFeature)
-		}
-	}
+	s.resolveAttemptEffort(spec, request)
 	// The estimate is character-derived, so keep a conservative allowance for
 	// multi-byte text while never using it to enlarge the provider's capacity.
 	promptTokens := int64(s.estimateRequestTokens(request))
@@ -717,6 +712,46 @@ func (s *Server) validateOutboundRequest(spec attemptSpec, request *inference.Re
 		}
 	}
 	return nil
+}
+
+// resolveAttemptEffort rewrites the attempt-local reasoning control to what
+// the selected model can express. The request is the attempt's own copy, so a
+// coercion never changes what a retry or another route member receives.
+func (s *Server) resolveAttemptEffort(spec attemptSpec, request *inference.Request) {
+	if request == nil || request.Reasoning == nil {
+		return
+	}
+	model := spec.candidate.Model
+	reasoning := request.Reasoning
+	selection, err := inference.ParseEffort(reasoning.Effort)
+	if err != nil {
+		// The relay entry point already refused unknown vocabulary. An
+		// internal caller that skipped it gets no reasoning control.
+		request.Reasoning = nil
+		return
+	}
+	decision := inference.ResolveEffort(selection, model.ReasoningEfforts, model.ReasoningToggle, model.SupportsReasoning)
+	requested := reasoning.Effort
+	if decision.Action == inference.EffortOmit {
+		// An auto or empty request keeps the opaque replay state a family
+		// needs; every other omitted control is dropped whole. A model that
+		// cannot reason carries none of it.
+		if model.SupportsReasoning != nil && !*model.SupportsReasoning {
+			request.Reasoning = nil
+		} else if selection.Kind == inference.EffortAuto {
+			reasoning.Effort = ""
+		} else {
+			request.Reasoning = nil
+		}
+	} else {
+		reasoning.Effort = decision.Effective
+	}
+	if s.opts.Logger != nil && (decision.Coerced || selection.Kind != inference.EffortLevel) {
+		s.opts.Logger.Debug("resolved the reasoning effort",
+			"provider", spec.candidate.ProviderID, "model", model.ID,
+			"requested", requested, "effective", decision.Effective,
+			"action", decision.Action, "reason", decision.Reason)
+	}
 }
 
 func needsImages(request *inference.Request) bool {
@@ -768,6 +803,10 @@ func openCodeGatewayLane(candidate routing.Candidate, authorized catalog.Authori
 func modelRequest(request *inference.Request, modelID string) *inference.Request {
 	copied := *request
 	copied.Model = modelID
+	if request.Reasoning != nil {
+		reasoning := *request.Reasoning
+		copied.Reasoning = &reasoning
+	}
 	return &copied
 }
 

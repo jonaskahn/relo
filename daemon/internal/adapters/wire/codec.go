@@ -102,6 +102,10 @@ type CodecOpts struct {
 	ReasoningBudget    bool
 	ReasoningBudgetMin *int64
 	ReasoningBudgetMax *int64
+	// ReasoningResolved reports that the relay already resolved the request's
+	// reasoning value against the selected model. A native-body rewrite then
+	// enforces or drops the client's controls instead of trusting them.
+	ReasoningResolved bool
 	// TemplateID is the connection template. A chat codec uses it when that
 	// template's API names thinking with its own fields.
 	TemplateID string

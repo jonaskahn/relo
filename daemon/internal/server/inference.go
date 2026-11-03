@@ -155,10 +155,13 @@ func (s *Server) relay(spec relaySpec) *requestOutcome {
 		outcome.answer = answer
 	}
 	s.traceAgentRequest(outcome)
+	anthropic := spec.surface.name == inference.SurfaceMessages
+	if s.refuseUnknownEffort(spec, outcome, anthropic) {
+		return outcome
+	}
 	plan, err := s.opts.Router.Plan(r.Context(), routing.Request{
 		Model: request.Model, Conversation: s.conversationAnchor(outcome, r), Needs: needsOf(request),
 	})
-	anthropic := spec.surface.name == inference.SurfaceMessages
 	if err != nil {
 		return s.relayUnrouted(spec, outcome, request, err, anthropic)
 	}
@@ -168,6 +171,32 @@ func (s *Server) relay(spec relaySpec) *requestOutcome {
 	outcome.nativeMillion = plan.NativeMillion
 	s.send(spec, plan, outcome, anthropic)
 	return outcome
+}
+
+// refuseUnknownEffort answers an unknown reasoning value locally, before the
+// router picks a model, and records the refusal as the client's own mistake.
+func (s *Server) refuseUnknownEffort(spec relaySpec, outcome *requestOutcome, anthropic bool) bool {
+	err := validateEffort(spec.canonical)
+	if err == nil {
+		return false
+	}
+	outcome.kind = routing.Kind("bad_request")
+	if s.opts.Logger != nil {
+		s.opts.Logger.Debug("refused an unknown reasoning effort", "model", spec.canonical.Model, "error", err)
+	}
+	s.failInference(spec.writer, spec.request, err, anthropic)
+	s.record(context.WithoutCancel(spec.request.Context()), outcome, Result{Status: failureStatus(err)})
+	return true
+}
+
+// validateEffort checks the client's reasoning vocabulary before routing, so
+// an unknown value never reaches an account or a provider.
+func validateEffort(request *inference.Request) error {
+	if request == nil || request.Reasoning == nil {
+		return nil
+	}
+	_, err := inference.ParseEffort(request.Reasoning.Effort)
+	return err
 }
 
 func (s *Server) relayUnrouted(spec relaySpec, outcome *requestOutcome, request *inference.Request, err error, anthropic bool) *requestOutcome {
@@ -799,6 +828,10 @@ func (s *Server) writeAnthropicRefusal(w http.ResponseWriter, status int, cause 
 		s.writeAnthropicDocument(w, status, anthropicRefusalCode, anthropicContextMessage(cause))
 		return
 	}
+	if errors.Is(cause, inference.ErrUnknownEffort) {
+		s.writeAnthropicDocument(w, status, anthropicRefusalCode, cause.Error())
+		return
+	}
 	s.writeAnthropicError(w, status, cause.Error())
 }
 
@@ -843,6 +876,8 @@ func failureStatus(cause error) int {
 	switch {
 	case errors.Is(cause, appcatalog.ErrFreeConnectionsDisabled):
 		return http.StatusForbidden
+	case errors.Is(cause, inference.ErrUnknownEffort):
+		return http.StatusBadRequest
 	case errors.Is(cause, routing.ErrModelRequired):
 		return http.StatusBadRequest
 	case errors.Is(cause, errContextLimitExceeded):
@@ -860,6 +895,8 @@ func failureCode(cause error) string {
 	switch {
 	case errors.Is(cause, appcatalog.ErrFreeConnectionsDisabled):
 		return "free_connections_disabled"
+	case errors.Is(cause, inference.ErrUnknownEffort):
+		return "bad_request"
 	case errors.Is(cause, routing.ErrModelRequired):
 		return "model_required"
 	case errors.Is(cause, errContextLimitExceeded):

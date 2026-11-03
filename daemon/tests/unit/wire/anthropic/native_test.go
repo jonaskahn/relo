@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/jonaskahn/relo/internal/adapters/wire"
+	"github.com/jonaskahn/relo/internal/inference"
 )
 
 func TestNativeBodyReuse(t *testing.T) {
@@ -134,5 +135,40 @@ func TestNativeBodyKeepsTheClientsBytes(t *testing.T) {
 			t.Fatalf("body = %s, want the client's member order kept", raw)
 		}
 		previous = at
+	}
+}
+
+// TestNativeBodyFollowsTheResolvedReasoning pins that a same-family attempt
+// cannot bypass resolution: a rewritten level replaces both native controls,
+// and a control the attempt dropped removes both from the client's body.
+func TestNativeBodyFollowsTheResolvedReasoning(t *testing.T) {
+	native := `{"model":"claude-relo","max_tokens":4096,` +
+		`"thinking":{"type":"enabled","budget_tokens":1024},` +
+		`"output_config":{"effort":"low"},` +
+		`"messages":[{"role":"user","content":[{"type":"text","text":"hi"}]}]}`
+
+	coerced := canonicalRequest(true)
+	coerced.Model = "claude-sonnet-5-5"
+	coerced.Reasoning = &inference.ReasoningConfig{Effort: "high"}
+	raw := rawBody(t, newTestRequest(t, coerced, wire.CodecOpts{
+		CredentialRef: "oauth-token", AuthMethod: "oauth", NativeBody: []byte(native),
+		ReasoningEfforts: []string{"low", "high"}, ReasoningResolved: true,
+	}))
+	if !strings.Contains(raw, `"output_config":{"effort":"high"}`) {
+		t.Fatalf("body = %s, want the resolved effort on the native body", raw)
+	}
+	if strings.Contains(raw, `"budget_tokens":1024`) {
+		t.Fatalf("body = %s, want the client's stale thinking budget replaced", raw)
+	}
+
+	omitted := canonicalRequest(true)
+	omitted.Model = "claude-sonnet-5-5"
+	omitted.Reasoning = &inference.ReasoningConfig{Effort: "auto"}
+	raw = rawBody(t, newTestRequest(t, omitted, wire.CodecOpts{
+		CredentialRef: "oauth-token", AuthMethod: "oauth", NativeBody: []byte(native),
+		ReasoningEfforts: []string{"low", "high"}, ReasoningResolved: true,
+	}))
+	if strings.Contains(raw, "thinking") || strings.Contains(raw, "output_config") {
+		t.Fatalf("body = %s, want both reasoning controls removed", raw)
 	}
 }

@@ -19,7 +19,11 @@ import (
 type nativeOverride struct {
 	MaxTokens       int
 	Thinking        *thinkingDef
+	OutputConfig    *outputConfig
 	EnforceThinking bool
+	// DropReasoning removes both native reasoning controls, which is what an
+	// attempt sends when resolution decided the model expresses no reasoning.
+	DropReasoning bool
 }
 
 func rebaseNativeBody(raw []byte, model string, metadata *metadataDef, override nativeOverride) ([]byte, bool) {
@@ -31,9 +35,17 @@ func rebaseNativeBody(raw []byte, model string, metadata *metadataDef, override 
 	if !written {
 		rebuilt = append(rebuilt, member{key: "model", value: modelValue(model)})
 	}
+	if override.DropReasoning {
+		rebuilt = dropMembers(rebuilt, "thinking", "output_config")
+	}
 	rebuilt = dropToolChoiceWithoutTools(rebuilt)
-	if override.EnforceThinking && override.Thinking != nil && !hasMember(rebuilt, "thinking") {
-		rebuilt = append(rebuilt, member{key: "thinking", value: thinkingValue(override.Thinking)})
+	if override.EnforceThinking {
+		if override.Thinking != nil && !hasMember(rebuilt, "thinking") {
+			rebuilt = append(rebuilt, member{key: "thinking", value: thinkingValue(override.Thinking)})
+		}
+		if override.OutputConfig != nil && !hasMember(rebuilt, "output_config") {
+			rebuilt = append(rebuilt, member{key: "output_config", value: outputConfigValue(override.OutputConfig)})
+		}
 	}
 	encoded, err := encodeMembers(rebuilt)
 	if err != nil {
@@ -61,18 +73,53 @@ func rewriteNativeMembers(members []member, model string, metadata *metadataDef,
 			}
 			current.value = metadataValue(metadata)
 		case "thinking":
-			if override.EnforceThinking {
-				if override.Thinking == nil {
-					continue
-				}
-				current.value = thinkingValue(override.Thinking)
-			} else {
-				current.value = normalizeThinkingDisplay(current.value)
+			if !applyRewrittenThinking(&current, override) {
+				continue
+			}
+		case "output_config":
+			if !applyRewrittenOutputConfig(&current, override) {
+				continue
 			}
 		}
 		rebuilt = append(rebuilt, current)
 	}
 	return rebuilt, written
+}
+
+func applyRewrittenThinking(current *member, override nativeOverride) bool {
+	keep, value := rewrittenThinking(current.value, override)
+	if keep {
+		current.value = value
+	}
+	return keep
+}
+
+func applyRewrittenOutputConfig(current *member, override nativeOverride) bool {
+	keep, value := rewrittenOutputConfig(current.value, override)
+	if keep {
+		current.value = value
+	}
+	return keep
+}
+
+func rewrittenThinking(current json.RawMessage, override nativeOverride) (bool, json.RawMessage) {
+	if !override.EnforceThinking {
+		return true, normalizeThinkingDisplay(current)
+	}
+	if override.Thinking == nil {
+		return false, nil
+	}
+	return true, thinkingValue(override.Thinking)
+}
+
+func rewrittenOutputConfig(current json.RawMessage, override nativeOverride) (bool, json.RawMessage) {
+	if !override.EnforceThinking {
+		return true, current
+	}
+	if override.OutputConfig == nil {
+		return false, nil
+	}
+	return true, outputConfigValue(override.OutputConfig)
 }
 
 func hasMember(members []member, name string) bool {
@@ -82,6 +129,21 @@ func hasMember(members []member, name string) bool {
 		}
 	}
 	return false
+}
+
+func dropMembers(members []member, names ...string) []member {
+	dropped := make(map[string]bool, len(names))
+	for _, name := range names {
+		dropped[name] = true
+	}
+	kept := make([]member, 0, len(members))
+	for _, current := range members {
+		if dropped[current.key] {
+			continue
+		}
+		kept = append(kept, current)
+	}
+	return kept
 }
 
 // dropToolChoiceWithoutTools removes a choice with nothing to choose, which
@@ -118,6 +180,11 @@ func intValue(value int) json.RawMessage {
 
 func thinkingValue(thinking *thinkingDef) json.RawMessage {
 	encoded, _ := json.Marshal(thinking)
+	return encoded
+}
+
+func outputConfigValue(config *outputConfig) json.RawMessage {
+	encoded, _ := json.Marshal(config)
 	return encoded
 }
 

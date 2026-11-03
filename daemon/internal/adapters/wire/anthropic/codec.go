@@ -103,10 +103,19 @@ func (c *Codec) encodePayload(req *inference.Request, oauth bool, opts wire.Code
 		return encoded, err
 	}
 	override := nativeOverride{MaxTokens: request.MaxTokens}
-	if opts.ReasoningEfforts != nil || opts.ReasoningToggle || opts.ReasoningBudget ||
+	if opts.ReasoningResolved {
+		// The relay's request already carries the attempt's resolved reasoning,
+		// so the native body is held to it: both controls are rewritten to the
+		// canonical decision, or removed when it decided on none.
+		override.EnforceThinking = true
+		override.Thinking = request.Thinking
+		override.OutputConfig = request.OutputConfig
+		override.DropReasoning = req.Reasoning == nil
+	} else if opts.ReasoningEfforts != nil || opts.ReasoningToggle || opts.ReasoningBudget ||
 		opts.ReasoningBudgetMin != nil || opts.ReasoningBudgetMax != nil {
 		override.EnforceThinking = true
 		override.Thinking = request.Thinking
+		override.OutputConfig = request.OutputConfig
 	}
 	if rebased, ok := rebaseNativeBody(opts.NativeBody, req.Model, request.Metadata, override); ok {
 		return rebased, nil

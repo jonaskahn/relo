@@ -123,25 +123,42 @@ func (p *requestPayload) applyReasoning(reasoning *inference.ReasoningConfig, op
 		return
 	}
 	if inference.ToggleOnly(opts.ReasoningEfforts, opts.ReasoningToggle) {
-		name, ok := inference.NormalizeEffort(reasoning.Effort)
-		if !ok {
-			return
-		}
-		if name == "minimal" {
-			name = "low"
-		}
-		p.Reasoning = &reasoningDef{Effort: name}
+		p.applyToggleReasoning(reasoning.Effort)
 		return
 	}
-	level, off := inference.ChooseThinking(reasoning.Effort, opts.ReasoningEfforts, opts.ReasoningToggle)
-	if off {
+	decision := inference.ResolveEffortString(reasoning.Effort, opts.ReasoningEfforts, opts.ReasoningToggle, nil)
+	level := decision.Level
+	switch decision.Action {
+	case inference.EffortDisable:
 		level = "none"
+	case inference.EffortOmit, inference.EffortEnable:
+		return
+	}
+	if level == "minimal" {
+		level = "low"
 	}
 	if level == "" && len(reasoning.EncryptedContent) == 0 {
 		return
 	}
 	p.Reasoning = &reasoningDef{Effort: level, Summary: summaryAuto}
 	p.Include = []string{encryptedReasoningKey}
+}
+
+func (p *requestPayload) applyToggleReasoning(effort string) {
+	selection, err := inference.ParseEffort(effort)
+	if err != nil {
+		return
+	}
+	switch selection.Kind {
+	case inference.EffortOff, inference.EffortDefault:
+		p.Reasoning = &reasoningDef{Effort: "none"}
+	case inference.EffortLevel:
+		level := selection.Level
+		if level == "minimal" {
+			level = "low"
+		}
+		p.Reasoning = &reasoningDef{Effort: level}
+	}
 }
 
 func placeReasoning(items []inputItem, reasoning *inference.ReasoningConfig) []inputItem {

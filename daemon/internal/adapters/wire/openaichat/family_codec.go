@@ -234,52 +234,54 @@ func applyChatThinking(payload *chatRequestPayload, req *inference.Request, opts
 	if req.Reasoning == nil {
 		return
 	}
-	if applyToggleOnlyChatThinking(payload, req.Reasoning.Effort, opts) {
+	decision := inference.ResolveEffortString(req.Reasoning.Effort, opts.ReasoningEfforts, opts.ReasoningToggle, nil)
+	if applyChatDecision(payload, decision, opts) {
 		return
 	}
-	level, off := inference.ChooseThinking(req.Reasoning.Effort, opts.ReasoningEfforts, opts.ReasoningToggle)
-	if qwenThinking(opts.TemplateID) {
-		applyQwenThinking(payload, req.Reasoning.Effort, level, off, opts)
-		return
-	}
-	if off {
-		payload.Thinking = &chatThinking{Type: "disabled"}
-		return
-	}
+	level := decision.Level
 	if level == "" && budgetOnly(opts) {
-		if name, ok := inference.NormalizeEffort(req.Reasoning.Effort); ok && name != "none" {
+		if name, ok := inference.NormalizeEffort(decision.Requested); ok && name != "none" {
 			level = name
 		}
 	}
 	if level != "" {
 		payload.ReasoningEffort = level
 	}
-	if opts.ReasoningToggle && level != "none" && !off {
+	if opts.ReasoningToggle && level != "none" {
 		payload.Thinking = &chatThinking{Type: "enabled"}
 	}
 }
 
-// applyToggleOnlyChatThinking renders a model with no effort intensity as its
-// native thinking switch, and reports whether it handled the request.
-func applyToggleOnlyChatThinking(payload *chatRequestPayload, effort string, opts wire.CodecOpts) bool {
-	if !inference.ToggleOnly(opts.ReasoningEfforts, opts.ReasoningToggle) {
-		return false
-	}
-	name, ok := inference.NormalizeEffort(effort)
-	if !ok {
+// applyChatDecision renders an action that replaces the effort field, and
+// reports whether it handled the request.
+func applyChatDecision(payload *chatRequestPayload, decision inference.EffortDecision, opts wire.CodecOpts) bool {
+	switch decision.Action {
+	case inference.EffortOmit:
 		return true
-	}
-	if name == "none" {
+	case inference.EffortDisable:
+		if qwenThinking(opts.TemplateID) {
+			applyQwenThinking(payload, false, "", opts)
+			return true
+		}
 		payload.Thinking = &chatThinking{Type: "disabled"}
 		return true
+	case inference.EffortEnable:
+		if qwenThinking(opts.TemplateID) {
+			applyQwenThinking(payload, true, "", opts)
+			return true
+		}
+		payload.Thinking = &chatThinking{Type: "enabled"}
+		return true
 	}
-	payload.Thinking = &chatThinking{Type: "enabled"}
-	return true
+	if qwenThinking(opts.TemplateID) {
+		applyQwenThinking(payload, true, decision.Level, opts)
+		return true
+	}
+	return false
 }
 
-func applyQwenThinking(payload *chatRequestPayload, effort, level string, off bool, opts wire.CodecOpts) {
-	name, recognized := inference.NormalizeEffort(effort)
-	if off || (recognized && name == "none" && level == "") {
+func applyQwenThinking(payload *chatRequestPayload, enabled bool, level string, opts wire.CodecOpts) {
+	if !enabled {
 		disabled := false
 		payload.EnableThinking = &disabled
 		return
@@ -287,15 +289,12 @@ func applyQwenThinking(payload *chatRequestPayload, effort, level string, off bo
 	if level != "" {
 		payload.ReasoningEffort = level
 	}
-	enabled := true
-	payload.EnableThinking = &enabled
+	flag := true
+	payload.EnableThinking = &flag
 	if !opts.ReasoningBudget {
 		return
 	}
 	budgetName := level
-	if budgetName == "" {
-		budgetName = name
-	}
 	budget, ok := inference.EffortBudget(budgetName)
 	if !ok {
 		return
@@ -320,8 +319,8 @@ func replayDeepSeekReasoning(baseURL string, req *inference.Request, opts wire.C
 	if req.Reasoning == nil {
 		return true
 	}
-	_, off := inference.ChooseThinking(req.Reasoning.Effort, opts.ReasoningEfforts, opts.ReasoningToggle)
-	return !off
+	decision := inference.ResolveEffortString(req.Reasoning.Effort, opts.ReasoningEfforts, opts.ReasoningToggle, nil)
+	return decision.Action != inference.EffortDisable && decision.Level != "none"
 }
 
 func encodeMessages(messages []inference.Message, replayReasoning bool) []chatMessage {

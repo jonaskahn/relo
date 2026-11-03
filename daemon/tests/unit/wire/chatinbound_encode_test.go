@@ -457,15 +457,15 @@ func TestChatEffortFollowsTheModelLadder(t *testing.T) {
 		}
 	})
 
-	t.Run("a toggle turns none off without an effort", func(t *testing.T) {
+	t.Run("an off request uses the lowest rung when the ladder names none", func(t *testing.T) {
 		request.Reasoning.Effort = "none"
 		body := encodeChatOpts(t, request, wire.CodecOpts{
 			CredentialRef: "sk-test", AuthMethod: wire.AuthAPIKey,
 			ReasoningEfforts: []string{"low", "high", "max"}, ReasoningToggle: true,
 		})
 		thinking, _ := body["thinking"].(map[string]any)
-		if _, present := body["reasoning_effort"]; present || thinking["type"] != "disabled" {
-			t.Fatalf("body = %v, want thinking disabled and no effort", body)
+		if body["reasoning_effort"] != "low" || thinking["type"] != "enabled" {
+			t.Fatalf("body = %v, want the lowest rung and thinking enabled", body)
 		}
 	})
 
@@ -483,6 +483,29 @@ func TestChatEffortFollowsTheModelLadder(t *testing.T) {
 			t.Fatalf("thinking_budget = %v, want the declared max", body["thinking_budget"])
 		}
 	})
+}
+
+// TestChatCoercesTheEffortOntoTheLadder pins the reported DeepSeek case: a
+// client asking for medium against a low/high ladder sends high.
+func TestChatCoercesTheEffortOntoTheLadder(t *testing.T) {
+	request := &inference.Request{
+		Model:     "deepseek-v4.1-flash",
+		Messages:  []inference.Message{{Role: inference.RoleUser, Content: []inference.ContentPart{{Type: inference.ContentTypeText, Text: "hi"}}}},
+		Reasoning: &inference.ReasoningConfig{Effort: "medium"},
+	}
+	body := encodeBodyWithEfforts(t, request, []string{"low", "high"})
+	if body["reasoning_effort"] != "high" {
+		t.Fatalf("body = %v, want high, the nearest stronger rung", body)
+	}
+
+	request.Reasoning.Effort = "auto"
+	body = encodeBodyWithEfforts(t, request, []string{"low", "high"})
+	if _, present := body["reasoning_effort"]; present {
+		t.Fatalf("body = %v, want no effort for auto", body)
+	}
+	if _, present := body["thinking"]; present {
+		t.Fatalf("body = %v, want no thinking control for auto", body)
+	}
 }
 
 // TestOpencodeMiMoEncodesTheThinkingToggle runs a resolved OpenCode MiMo
@@ -608,7 +631,7 @@ func TestDeepSeekReasoningReplay(t *testing.T) {
 		request.Reasoning = &inference.ReasoningConfig{Effort: "none"}
 		body := encodeChatOpts(t, request, wire.CodecOpts{
 			BaseURL: "https://api.deepseek.com/v1", ReasoningToggle: true,
-			ReasoningEfforts: []string{"low", "high", "max"},
+			ReasoningEfforts: []string{"none", "low", "high", "max"},
 		})
 		if _, present := messageMap(t, body, 0)["reasoning_content"]; present {
 			t.Fatalf("messages = %v, want no reasoning_content", body["messages"])

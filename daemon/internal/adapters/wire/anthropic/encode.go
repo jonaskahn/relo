@@ -375,23 +375,18 @@ func applyThinking(payload *requestPayload, req *inference.Request, opts wire.Co
 	if req.Reasoning == nil {
 		return
 	}
-	if inference.ToggleOnly(opts.ReasoningEfforts, opts.ReasoningToggle) {
-		name, ok := inference.NormalizeEffort(req.Reasoning.Effort)
-		if !ok {
-			return
-		}
-		if name == "none" {
-			payload.Thinking = &thinkingDef{Type: "disabled"}
-			return
-		}
+	decision := inference.ResolveEffortString(req.Reasoning.Effort, opts.ReasoningEfforts, opts.ReasoningToggle, nil)
+	switch decision.Action {
+	case inference.EffortOmit:
+		return
+	case inference.EffortDisable:
+		payload.Thinking = &thinkingDef{Type: "disabled"}
+		return
+	case inference.EffortEnable:
 		payload.Thinking = &thinkingDef{Type: "enabled"}
 		return
 	}
-	level, off := inference.ChooseThinking(req.Reasoning.Effort, opts.ReasoningEfforts, opts.ReasoningToggle)
-	if off {
-		payload.Thinking = &thinkingDef{Type: "disabled"}
-		return
-	}
+	level := decision.Level
 	if level == "" {
 		return
 	}

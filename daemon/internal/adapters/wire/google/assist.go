@@ -552,10 +552,20 @@ func applyAssistThinking(payload *requestPayload, req *inference.Request, turn a
 		payload.ToolConfig = assistToolConfig(req)
 	case geminiWire(req.Model):
 		payload.GenerationConfig.ThinkingConfig = assistGeminiThinking(turn.variant)
+		if selection, err := inference.ParseEffort(effortOfRequest(req)); req.Reasoning != nil && err == nil && selection.Kind == inference.EffortAuto {
+			payload.GenerationConfig.ThinkingConfig = nil
+		}
 		if payload.ToolConfig == nil {
 			payload.ToolConfig = assistToolConfig(req)
 		}
 	}
+}
+
+func effortOfRequest(req *inference.Request) string {
+	if req == nil || req.Reasoning == nil {
+		return ""
+	}
+	return req.Reasoning.Effort
 }
 
 // assistGeminiThinking gives a Gemini turn the thinking shape Cloud Code

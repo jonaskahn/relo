@@ -253,6 +253,30 @@ func TestEncodePayload(t *testing.T) {
 		}
 	})
 
+	t.Run("a level coerces onto a declared ladder", func(t *testing.T) {
+		request := canonicalRequest(false)
+		request.Model = "gemini-3.1-pro"
+		request.Reasoning = &inference.ReasoningConfig{Effort: "medium"}
+		config := encodeBody(t, request, wire.CodecOpts{
+			CredentialRef: "api-key-1", ReasoningEfforts: []string{"low", "high"},
+		})["generationConfig"].(map[string]any)
+		thinking := config["thinkingConfig"].(map[string]any)
+		if thinking["thinkingLevel"] != "high" {
+			t.Fatalf("thinkingConfig = %v, want the stronger rung", thinking)
+		}
+	})
+
+	t.Run("auto omits the thinking config", func(t *testing.T) {
+		request := canonicalRequest(false)
+		request.Reasoning = &inference.ReasoningConfig{Effort: "auto"}
+		config := encodeBody(t, request, wire.CodecOpts{
+			CredentialRef: "api-key-1", ReasoningEfforts: []string{"low", "high"},
+		})["generationConfig"].(map[string]any)
+		if config["thinkingConfig"] != nil {
+			t.Fatalf("generationConfig = %v, want no thinking config", config)
+		}
+	})
+
 	t.Run("an unknown effort is omitted and max keeps its budget", func(t *testing.T) {
 		request := canonicalRequest(false)
 		request.Reasoning = &inference.ReasoningConfig{Effort: "turbo"}
@@ -274,8 +298,8 @@ func TestEncodePayload(t *testing.T) {
 			CredentialRef: "api-key-1", ReasoningEfforts: []string{"low", "high"}, ReasoningToggle: true,
 		})["generationConfig"].(map[string]any)
 		thinking := config["thinkingConfig"].(map[string]any)
-		if thinking["thinkingLevel"] != "minimal" || thinking["thinkingBudget"] != nil {
-			t.Fatalf("thinkingConfig = %v, want the minimal level", thinking)
+		if thinking["thinkingLevel"] != "low" || thinking["thinkingBudget"] != nil {
+			t.Fatalf("thinkingConfig = %v, want the lowest compressible level", thinking)
 		}
 	})
 

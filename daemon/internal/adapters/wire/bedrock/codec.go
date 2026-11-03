@@ -213,30 +213,44 @@ func applyBedrockThinking(body map[string]any, req *inference.Request, opts wire
 	if req.Reasoning == nil {
 		return
 	}
-	level, off := inference.ChooseThinking(req.Reasoning.Effort, opts.ReasoningEfforts, opts.ReasoningToggle)
+	decision := inference.ResolveEffortString(req.Reasoning.Effort, opts.ReasoningEfforts, opts.ReasoningToggle, nil)
+	if decision.Action == inference.EffortOmit {
+		return
+	}
 	fields := map[string]any{}
 	if claudeBedrock(req.Model) {
-		switch {
-		case off || (level == "none" && len(opts.ReasoningEfforts) == 0):
-			fields["thinking"] = map[string]any{"type": "disabled"}
-		case level != "" && len(opts.ReasoningEfforts) > 0:
-			fields["output_config"] = map[string]any{"effort": level}
-		case level != "":
-			budget, _ := inference.EffortBudget(level)
-			fields["thinking"] = map[string]any{"type": "enabled", "budget_tokens": budget}
-		}
+		applyClaudeBedrockThinking(fields, decision, opts)
 	} else {
-		switch {
-		case off:
-			fields["thinking"] = map[string]any{"type": "disabled"}
-		case level != "":
-			fields["reasoning_effort"] = level
-		case opts.ReasoningToggle:
-			fields["thinking"] = map[string]any{"type": "enabled"}
-		}
+		applyPlainBedrockThinking(fields, decision)
 	}
 	if len(fields) > 0 {
 		body["additionalModelRequestFields"] = fields
+	}
+}
+
+func applyClaudeBedrockThinking(fields map[string]any, decision inference.EffortDecision, opts wire.CodecOpts) {
+	level := decision.Level
+	switch {
+	case decision.Action == inference.EffortDisable:
+		fields["thinking"] = map[string]any{"type": "disabled"}
+	case decision.Action == inference.EffortEnable:
+		fields["thinking"] = map[string]any{"type": "enabled"}
+	case level != "" && len(opts.ReasoningEfforts) > 0:
+		fields["output_config"] = map[string]any{"effort": level}
+	case level != "":
+		budget, _ := inference.EffortBudget(level)
+		fields["thinking"] = map[string]any{"type": "enabled", "budget_tokens": budget}
+	}
+}
+
+func applyPlainBedrockThinking(fields map[string]any, decision inference.EffortDecision) {
+	switch {
+	case decision.Action == inference.EffortDisable:
+		fields["thinking"] = map[string]any{"type": "disabled"}
+	case decision.Action == inference.EffortEnable:
+		fields["thinking"] = map[string]any{"type": "enabled"}
+	case decision.Level != "":
+		fields["reasoning_effort"] = decision.Level
 	}
 }
 
