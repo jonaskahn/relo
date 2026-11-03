@@ -223,6 +223,15 @@ func startServeWorkers(ctx context.Context, wired wired) {
 	startDiscovery(ctx, wired.deps)
 	startQuota(ctx, wired.deps)
 	warnOnMissingClientKeys(ctx, wired.deps)
+	refreshOutdatedFiles(ctx, wired.deps)
+}
+
+// refreshOutdatedFiles heals the client files an upgrade left outdated, so the
+// first run of a new build needs no catalog change to do it.
+func refreshOutdatedFiles(ctx context.Context, built deps) {
+	if built.integrations != nil {
+		go built.integrations.RefreshOutdatedFiles(ctx)
+	}
 }
 
 func serveWired(ctx context.Context, wired wired, cfg *config.Config, logger *slog.Logger, cause *signalCause) error {

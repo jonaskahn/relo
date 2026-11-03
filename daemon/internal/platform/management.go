@@ -203,6 +203,7 @@ func (w *managementWiring) managementRefresher() func(context.Context) {
 		integrations.RefreshClaudeGateway(ctx)
 		integrations.RefreshCodexCatalog(ctx)
 		integrations.RefreshClaudeDesktop(ctx)
+		integrations.RefreshOutdatedFiles(ctx)
 	}
 }
 

@@ -278,6 +278,7 @@ func (w *wiring) integrations() {
 		integrationSvc.RefreshClaudeGateway(ctx)
 		integrationSvc.RefreshCodexCatalog(ctx)
 		integrationSvc.RefreshClaudeDesktop(ctx)
+		integrationSvc.RefreshOutdatedFiles(ctx)
 	}
 	w.built.integrations = integrationSvc
 }
