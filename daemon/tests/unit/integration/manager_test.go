@@ -19,6 +19,7 @@ import (
 type store struct {
 	records map[string]integration.Record
 	files   map[string][]integration.FileRecord
+	ops     []integration.OpRecord
 }
 
 func newStore() *store {
@@ -69,6 +70,7 @@ func (s *store) DeleteFile(_ context.Context, id, kind string) error {
 }
 
 func (s *store) AppendOp(_ context.Context, op integration.OpRecord) error {
+	s.ops = append(s.ops, op)
 	return nil
 }
 
