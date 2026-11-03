@@ -9,6 +9,7 @@ type testPaths struct {
 	PathResolver
 	home          string
 	anthropicBase string
+	desktopLib    string
 }
 
 func (p testPaths) Home() string {
@@ -24,6 +25,10 @@ func (p testPaths) BaseURL(protocol string) string {
 
 func (p testPaths) ClaudeConfigDir() string {
 	return p.home
+}
+
+func (p testPaths) DesktopLibrary() string {
+	return p.desktopLib
 }
 
 type testFiles struct {

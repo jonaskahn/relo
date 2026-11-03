@@ -393,6 +393,16 @@ func (m *Manager) modelsStale(agent Agent, record Record, files []FileRecord) bo
 		return !m.files.CodexCatalogLists(m.files.CodexCatalogPath(m.paths.CodexConfig()), models)
 	case "claude-code":
 		return !m.files.GatewayCacheLists(m.paths.ClaudeConfigDir(), m.paths.BaseURL(agent.Protocol), models)
+	case "claude-desktop":
+		// The rendered profile decides, because a behavior mapping can change
+		// without the published roster changing.
+		content, err := os.ReadFile(m.files.DesktopProfilePath(m.paths.DesktopLibrary()))
+		if err != nil {
+			// A missing profile is reported as its own reason, not as a
+			// model change; rewriting it stays an explicit Repair.
+			return false
+		}
+		return !m.files.DesktopProfileLists(string(content), m.paths.BaseURL(agent.Protocol), models)
 	}
 	// The stored digest is only a hint for the other clients: a fingerprint
 	// written by an older Relo can differ while the file on disk already
@@ -565,15 +575,11 @@ func (m *Manager) RefreshOutdatedFiles(ctx context.Context, id, token string) er
 	if err != nil || !view.Enabled {
 		return err
 	}
-	outdated := false
-	for _, file := range view.Files {
-		if file.Drifted || !file.Present {
-			return nil
-		}
-		outdated = outdated || file.Outdated
-	}
-	if !outdated {
+	if !refreshable(view.Files) {
 		return nil
+	}
+	if agent.ID == "claude-desktop" {
+		return m.refreshClaudeDesktopModels(ctx, agent)
 	}
 	if err := m.provisionAgentFiles(ctx, agent, token, EnableOptions{}); err != nil {
 		return err
@@ -582,6 +588,58 @@ func (m *Manager) RefreshOutdatedFiles(ctx context.Context, id, token string) er
 		return err
 	}
 	m.appendOp(ctx, id, "refresh", "")
+	return nil
+}
+
+// refreshable reports whether every file Relo wrote is still in place and at
+// least one of them is what this build would write differently. One edited or
+// missing file leaves the whole agent alone.
+func refreshable(files []FileView) bool {
+	outdated := false
+	for _, file := range files {
+		if file.Drifted || !file.Present {
+			return false
+		}
+		outdated = outdated || file.Outdated
+	}
+	return outdated
+}
+
+// refreshClaudeDesktopModels adds behavior metadata to a profile Relo already
+// manages without replacing it: the credential and unrelated settings stay,
+// and the profile selection is not touched. Only the managed model rows and
+// the gateway address are rewritten.
+func (m *Manager) refreshClaudeDesktopModels(ctx context.Context, agent Agent) error {
+	base := m.paths.BaseURL(agent.Protocol)
+	content, err := m.files.UpdateDesktopModels(m.paths.DesktopLibrary(), base, m.claudeModelList())
+	if err != nil || content == nil {
+		return err
+	}
+	if err := m.rememberDesktopProfileDigest(ctx, agent.ID, content); err != nil {
+		return err
+	}
+	if err := m.rememberModels(ctx, agent); err != nil {
+		return err
+	}
+	m.appendOp(ctx, agent.ID, "refresh", "")
+	return nil
+}
+
+// rememberDesktopProfileDigest records the bytes a model-only refresh wrote,
+// so the next inspection sees Relo's own output rather than a drift.
+func (m *Manager) rememberDesktopProfileDigest(ctx context.Context, id string, content []byte) error {
+	files, err := m.store.Files(ctx, id)
+	if err != nil {
+		return err
+	}
+	for _, file := range files {
+		if file.Kind != KindClaudeDesktop {
+			continue
+		}
+		file.Digest = m.files.Digest(string(content))
+		file.UpdatedAtMs = m.now().UnixMilli()
+		return m.store.SaveFile(ctx, file)
+	}
 	return nil
 }
 
@@ -594,6 +652,8 @@ func (m *Manager) contributionDrifted(agent Agent, file FileRecord, content stri
 		return !m.files.ClaudeSettingsPointAt(content, m.paths.BaseURL(agent.Protocol), m.paths.HelperFile(agent.ID), installHelper)
 	case FileOpenCode, FileHermes, FileOpenClaw:
 		return !m.files.ProviderPointsAt(agent.ID, content, m.paths.BaseURL(agent.Protocol), m.modelList())
+	case KindClaudeDesktop:
+		return !m.files.DesktopProfileLists(content, m.paths.BaseURL(agent.Protocol), m.claudeModelList())
 	default:
 		if m.files.CatalogKind(file.Kind) {
 			return !m.files.KindPointsAt(file.Kind, content, m.paths.BaseURL(agent.Protocol), m.modelList())

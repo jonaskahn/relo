@@ -9,6 +9,7 @@ import (
 	"io"
 	"log/slog"
 	"net/http"
+	"os"
 	"path/filepath"
 	"strings"
 	"sync"
@@ -1218,7 +1219,8 @@ func (s *Service) RefreshOutdatedFiles(ctx context.Context) {
 }
 
 // RefreshClaudeDesktop rewrites the model list in the gateway profile when
-// the integration is on. The key already in the profile stays there.
+// the integration is on and the profile still holds what Relo wrote. The key
+// already in the profile stays there, and an edited profile waits for Repair.
 func (s *Service) RefreshClaudeDesktop(ctx context.Context) {
 	if s.store == nil || s.catalog == nil {
 		return
@@ -1232,10 +1234,25 @@ func (s *Service) RefreshClaudeDesktop(ctx context.Context) {
 		return
 	}
 	models := s.claudePickerModels()
-	if record.ModelsDigest == s.files.ModelsDigest(models) {
+	library := s.paths.DesktopLibrary()
+	content, err := os.ReadFile(s.files.DesktopProfilePath(library))
+	if err != nil {
 		return
 	}
-	content, err := s.files.UpdateDesktopModels(s.paths.DesktopLibrary(), base, models)
+	if s.files.DesktopProfileLists(string(content), base, models) {
+		return
+	}
+	files, filesErr := s.store.Files(ctx, "claude-desktop")
+	if filesErr != nil || desktopProfileDrifted(s.files, files, string(content)) {
+		return
+	}
+	s.updateDesktopModels(ctx, library, base, models)
+}
+
+// updateDesktopModels rewrites a managed profile Relo still owns and records
+// the bytes it wrote, so the next check sees its own output.
+func (s *Service) updateDesktopModels(ctx context.Context, library, base string, models []ModelRef) {
+	content, err := s.files.UpdateDesktopModels(library, base, models)
 	if err != nil {
 		if s.logger != nil {
 			s.logger.Warn("refresh the Claude Desktop model list", "error", err)
@@ -1247,6 +1264,18 @@ func (s *Service) RefreshClaudeDesktop(ctx context.Context) {
 	}
 	s.rememberDesktopProfile(ctx, content)
 	s.rememberModelsDigest(ctx, "claude-desktop", models)
+}
+
+// desktopProfileDrifted reports whether the profile on disk was edited after
+// Relo wrote it. A profile Relo does not own is left for an explicit Repair.
+func desktopProfileDrifted(files ClientFiles, records []FileRecord, content string) bool {
+	for _, file := range records {
+		if file.Kind != KindClaudeDesktop {
+			continue
+		}
+		return files.Digest(content) != file.Digest
+	}
+	return true
 }
 
 // CodexCatalogRows is the catalog GET /v1/models returns: the same rows Relo
