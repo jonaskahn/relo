@@ -271,7 +271,7 @@ func desktopModels(models []ModelRef) []desktopModel {
 		seen[name] = true
 		row := desktopModel{
 			Name: name, LabelOverride: codexDisplayName(model),
-			AnthropicFamilyTier: "opus",
+			AnthropicFamilyTier: "opus", BehavesAs: desktopBehavesAs(model),
 		}
 		if model.ContextWindow != nil && *model.ContextWindow >= desktopSupports1M {
 			row.Supports1m = true
@@ -289,6 +289,7 @@ type desktopModel struct {
 	Name                string `json:"name"`
 	LabelOverride       string `json:"labelOverride"`
 	AnthropicFamilyTier string `json:"anthropicFamilyTier"`
+	BehavesAs           string `json:"behavesAs"`
 	IsFamilyDefault     bool   `json:"isFamilyDefault,omitempty"`
 	Supports1m          bool   `json:"supports1m,omitempty"`
 	Prefer1m            bool   `json:"prefer1m,omitempty"`
