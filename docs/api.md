@@ -53,6 +53,15 @@ daily totals have no group dimension and refuse the filter.
 **The daemon log can be exported.** `GET /api/v1/logs/daemon/export` streams a
 ZIP containing the current `daemon.log` as `relo-daemon-log-<UTC timestamp>.zip`.
 
+**The event stream is long-lived.** `GET
+/api/v1/events/logs,quota,status` stays open for as long as the console is
+visible. A browser allows about six HTTP/1.1 connections per origin, so every
+open stream counts against the same pool as the console's bundles and API
+reads. Keep one stream per browser, close it while the tab is hidden, and do
+not open one per tab. Outside debugging, leave `[system.logging] traffic` at
+`false`: `true` writes every agent and provider exchange in full and can grow
+the traffic log by gigabytes per day.
+
 **Two free refusals are stable.** A probe or commit that would create a second
 keyless free connection answers `409 free_connection_exists` and writes
 nothing. Inference that reaches a configured free connection while the opt-in is
