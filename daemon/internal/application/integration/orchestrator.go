@@ -1188,6 +1188,35 @@ func (s *Service) RefreshCodexCatalog(ctx context.Context) {
 	s.rememberModelsDigest(ctx, "codex", models)
 }
 
+// RefreshOutdatedFiles rewrites the client files Relo wrote that nobody has
+// edited but this build would write differently, so an upgrade needs no
+// Repair. An agent without a stored key is skipped, because a refresh never
+// mints one.
+func (s *Service) RefreshOutdatedFiles(ctx context.Context) {
+	if s.store == nil || s.catalog == nil {
+		return
+	}
+	manager, err := s.manager()
+	if err != nil {
+		return
+	}
+	for _, agent := range s.agents.Agents() {
+		token, err := s.storedIntegrationToken(agent.ID)
+		if err != nil || token == "" {
+			continue
+		}
+		release, err := s.begin("refresh", agent.ID)
+		if err != nil {
+			continue
+		}
+		err = manager.RefreshOutdatedFiles(ctx, agent.ID, token)
+		release()
+		if err != nil && s.logger != nil {
+			s.logger.Warn("refresh the outdated client files", "integration", agent.ID, "error", err)
+		}
+	}
+}
+
 // RefreshClaudeDesktop rewrites the model list in the gateway profile when
 // the integration is on. The key already in the profile stays there.
 func (s *Service) RefreshClaudeDesktop(ctx context.Context) {

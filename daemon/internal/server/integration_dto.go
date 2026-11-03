@@ -34,13 +34,14 @@ type fileViewResponse struct {
 	Path     string `json:"path"`
 	Present  bool   `json:"present"`
 	Drifted  bool   `json:"drifted"`
+	Outdated bool   `json:"outdated,omitempty"`
 	Snapshot string `json:"snapshot_path,omitempty"`
 }
 
 func toFileViewResponse(file appintegration.FileView) fileViewResponse {
 	return fileViewResponse{
 		Kind: file.Kind, Path: file.Path, Present: file.Present,
-		Drifted: file.Drifted, Snapshot: file.Snapshot,
+		Drifted: file.Drifted, Outdated: file.Outdated, Snapshot: file.Snapshot,
 	}
 }
 

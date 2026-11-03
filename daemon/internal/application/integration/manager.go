@@ -177,10 +177,15 @@ func New(options Options) *Manager {
 
 // FileView is one file an integration owns as a console reads it.
 type FileView struct {
-	Kind     string
-	Path     string
-	Present  bool
-	Drifted  bool
+	Kind    string
+	Path    string
+	Present bool
+	// Drifted is true when the file was edited after Relo wrote it and no
+	// longer carries what Relo would write.
+	Drifted bool
+	// Outdated is true when nobody edited the file but this build would write
+	// it differently, so Relo refreshes it without asking.
+	Outdated bool
 	Snapshot string
 }
 
@@ -530,7 +535,10 @@ func (m *Manager) inspectFiles(agent Agent, files []FileRecord, view View) View 
 			entry.Present = false
 		default:
 			entry.Present = true
-			entry.Drifted = m.contributionDrifted(agent, file, string(content))
+			if m.contributionDrifted(agent, file, string(content)) {
+				entry.Outdated = m.files.Digest(string(content)) == file.Digest
+				entry.Drifted = !entry.Outdated
+			}
 		}
 		if entry.Drifted && view.State == StateOn {
 			view.State = StateDrifted
@@ -538,6 +546,43 @@ func (m *Manager) inspectFiles(agent Agent, files []FileRecord, view View) View 
 		view.Files = append(view.Files, entry)
 	}
 	return view
+}
+
+// RefreshOutdatedFiles rewrites the files Relo wrote that nobody edited but
+// this build would write differently, such as after an upgrade. One edited or
+// missing file leaves the whole agent alone, so Relo never rewrites a file
+// beside one the operator changed. It publishes no env, mints no key, and
+// never touches the client's process.
+func (m *Manager) RefreshOutdatedFiles(ctx context.Context, id, token string) error {
+	agent, found := m.agents.AgentFor(id)
+	if !found {
+		return fmt.Errorf("%s: %w", id, ErrUnknownAgent)
+	}
+	if !agent.ManagesFiles {
+		return nil
+	}
+	view, err := m.Inspect(ctx, id)
+	if err != nil || !view.Enabled {
+		return err
+	}
+	outdated := false
+	for _, file := range view.Files {
+		if file.Drifted || !file.Present {
+			return nil
+		}
+		outdated = outdated || file.Outdated
+	}
+	if !outdated {
+		return nil
+	}
+	if err := m.provisionAgentFiles(ctx, agent, token, EnableOptions{}); err != nil {
+		return err
+	}
+	if err := m.rememberModels(ctx, agent); err != nil {
+		return err
+	}
+	m.appendOp(ctx, id, "refresh", "")
+	return nil
 }
 
 func (m *Manager) contributionDrifted(agent Agent, file FileRecord, content string) bool {
