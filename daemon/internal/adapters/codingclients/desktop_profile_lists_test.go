@@ -22,6 +22,12 @@ func TestDesktopProfileListsComparesRenderedValues(t *testing.T) {
 	if DesktopProfileLists(string(content), base, []ModelRef{{ID: "claude-relo-a--gpt-5.5-mini", Upstream: "gpt-5.5-mini"}}) {
 		t.Fatal("a different model roster was accepted")
 	}
+	if DesktopProfileLists(string(content), "", models) {
+		t.Fatal("an empty gateway base was accepted")
+	}
+	if DesktopProfileLists(string(content), base, nil) {
+		t.Fatal("a profile with more models than requested was accepted")
+	}
 	if DesktopProfileLists("not json", base, models) {
 		t.Fatal("a malformed profile was accepted")
 	}
