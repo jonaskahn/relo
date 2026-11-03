@@ -103,6 +103,12 @@ describe('the integration actions', () => {
 				files: [{ kind: 'config', path: '/config', drifted: true, present: true }]
 			})
 		).toBe(true);
+		expect(
+			needsAttention({
+				...agent,
+				files: [{ kind: 'config', path: '/config', drifted: false, outdated: true, present: true }]
+			})
+		).toBe(false);
 		expect(needsAttention({ ...agent, enabled: false, restart_needed: true })).toBe(false);
 		expect(needsAttention(agent)).toBe(false);
 	});

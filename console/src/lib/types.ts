@@ -632,6 +632,8 @@ export interface IntegrationFile {
 	readonly path: string;
 	readonly present: boolean;
 	readonly drifted: boolean;
+	/** Untouched since Relo wrote it but written differently by this build; Relo refreshes it silently. */
+	readonly outdated?: boolean;
 	readonly snapshot_path?: string;
 }
 
