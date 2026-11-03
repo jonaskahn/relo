@@ -1342,6 +1342,12 @@ func (s *Service) claudePickerModels() []ModelRef {
 func claudeModelRefs(snap *catalog.Snapshot, model catalog.Model) []ModelRef {
 	ref := claudeNamedRef(snap, model)
 	ref.Connection = connectionLabel(snap, model.ProviderID)
+	// The picker id is an alias; the behavior mapping needs the model the
+	// connection actually serves, which a clone's local name does not name.
+	ref.Upstream = model.UpstreamID
+	if strings.TrimSpace(ref.Upstream) == "" {
+		ref.Upstream = model.ID
+	}
 	_, paired := catalog.StandardContext(ref.ContextWindow, snap.OffersLongContext(model))
 	if !paired {
 		if snap.OffersSuffixed(model) {

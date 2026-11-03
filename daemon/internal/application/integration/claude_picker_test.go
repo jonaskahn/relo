@@ -277,6 +277,33 @@ func indexModels(t *testing.T, models []ModelRef) map[string]ModelRef {
 	return indexed
 }
 
+// TestClaudePickerKeepsTheUpstreamIdentity pins the identity the Desktop
+// behavior mapping reads: the picker id is an alias, and a clone's local name
+// must not hide the model its connection actually serves.
+func TestClaudePickerKeepsTheUpstreamIdentity(t *testing.T) {
+	db := testkit.OpenTestDB(t)
+	upstream := testkit.MockUpstream(t, map[string]string{})
+	testkit.CustomProvider(t, db, testkit.Upstream{
+		ID: "openai", Label: "Pro Gateway", APIFormat: catalog.FormatOpenAIChat,
+		BaseURL: upstream.URL, Auth: catalog.AuthAPIKey,
+		Models: []string{"gpt-5.5-pro", "gpt-5.5-nano"}, ModelsFormat: catalog.ModelsNone, ContextWindow: 128_000,
+	})
+	service := NewService(ServiceOptions{Catalog: testkit.ReloadCatalog(t, db, activeAccounts{})})
+
+	claude := indexModels(t, service.claudePickerModels())
+	for id, want := range map[string]string{
+		"claude-relo-openai--gpt-5.5-pro":  "gpt-5.5-pro",
+		"claude-relo-openai--gpt-5.5-nano": "gpt-5.5-nano",
+	} {
+		if got := claude[id].Upstream; got != want {
+			t.Fatalf("%s upstream = %q, want %q", id, got, want)
+		}
+		if claude[id].ID != id {
+			t.Fatalf("%s kept its routing alias, got %q", id, claude[id].ID)
+		}
+	}
+}
+
 type claudeEnabled struct{}
 
 func (claudeEnabled) Integration(_ context.Context, id string) (Record, bool, error) {
