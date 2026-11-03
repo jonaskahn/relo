@@ -450,6 +450,12 @@ func (ClientFiles) UpdateDesktopModels(library, baseURL string, models []appinte
 	return result, fileError(err)
 }
 
+// DesktopProfileLists reports whether a profile carries the models Relo
+// publishes now, including each row's behavior mapping.
+func (ClientFiles) DesktopProfileLists(content, baseURL string, models []appintegration.ModelRef) bool {
+	return codingclients.DesktopProfileLists(content, baseURL, clientModelRefs(models))
+}
+
 // RemoveDesktopProfile removes the gateway profile from a library dir.
 func (ClientFiles) RemoveDesktopProfile(library string) error {
 	return fileError(codingclients.RemoveDesktopProfile(library))

@@ -27,6 +27,32 @@ func TestClientFilesReportWhetherTheGatewayCacheListsTheModels(t *testing.T) {
 	}
 }
 
+// TestClientFilesForwardTheDesktopBehaviorComparison pins the port the
+// integration workflows read: the rendered rows, including behavesAs, decide
+// whether a profile is current.
+func TestClientFilesForwardTheDesktopBehaviorComparison(t *testing.T) {
+	const base = "http://127.0.0.1:10202"
+	files := platform.NewClientFiles(codingclients.Paths{Home: t.TempDir()})
+	models := []appintegration.ModelRef{{
+		ID: "claude-relo-openai--gpt-5.5-pro", Name: "GPT Pro",
+		Connection: "OpenAI", Upstream: "gpt-5.5-pro",
+	}}
+	content, err := files.DesktopProfileContent(base, "rlo_ak_test", models)
+	if err != nil {
+		t.Fatalf("DesktopProfileContent() error = %v", err)
+	}
+	if !files.DesktopProfileLists(string(content), base, models) {
+		t.Fatal("DesktopProfileLists() = false for the profile just rendered")
+	}
+	changed := []appintegration.ModelRef{{
+		ID: "claude-relo-openai--gpt-5.5-mini", Name: "GPT Mini",
+		Connection: "OpenAI", Upstream: "gpt-5.5-mini",
+	}}
+	if files.DesktopProfileLists(string(content), base, changed) {
+		t.Fatal("DesktopProfileLists() = true for a different model roster")
+	}
+}
+
 func TestAgentProcessesDriveTheOpenCodeLauncher(t *testing.T) {
 	binDir := t.TempDir()
 	marker := filepath.Join(t.TempDir(), "ran")

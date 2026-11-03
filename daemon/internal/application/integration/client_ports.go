@@ -234,6 +234,9 @@ type ClientFiles interface {
 	SelectDesktopProfile(library string) error
 	// UpdateDesktopModels rewrites the model list in the gateway profile.
 	UpdateDesktopModels(library, baseURL string, models []ModelRef) ([]byte, error)
+	// DesktopProfileLists reports whether a profile carries the gateway and
+	// model rows Relo publishes now, including each row's behavior mapping.
+	DesktopProfileLists(content, baseURL string, models []ModelRef) bool
 	// RemoveDesktopProfile removes the gateway profile from a library dir.
 	RemoveDesktopProfile(library string) error
 	// KeyHelperScript renders the key helper for one agent.
