@@ -228,6 +228,9 @@ type seed struct {
 	Models []string
 	// ModelRows is the stored roster, which a test needs to state per model.
 	ModelRows []seedModel
+	// Facts are extra capability rows stored beside the roster rows, which a
+	// test needs to state a ladder the seeded model serves.
+	Facts []sqlite.ModelFactsRow
 	// Account is the secret the provider's single credential holds. An empty
 	// value means the connection keeps none, which is what a keyless
 	// connection serves.
@@ -284,6 +287,11 @@ func startDaemonSeeded(t *testing.T, s seed) daemon {
 			Name: &name, Category: &category, Status: &status,
 		}); err != nil {
 			t.Fatalf("save model facts %s: %v", model.ID, err)
+		}
+	}
+	for _, facts := range s.Facts {
+		if err := repo.SaveModelFacts(ctx, facts); err != nil {
+			t.Fatalf("save model facts %s: %v", facts.ModelID, err)
 		}
 	}
 
