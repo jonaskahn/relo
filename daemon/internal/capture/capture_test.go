@@ -41,6 +41,17 @@ func TestSinkHeadTailAcrossChunkBoundaries(t *testing.T) {
 	}
 }
 
+func TestSinkKeepsABodyAtTheLimitWhole(t *testing.T) {
+	body := []byte("0123456789")
+	sink := NewSink(10, true)
+	_, _ = sink.Write(body[:4])
+	_, _ = sink.Write(body[4:])
+	kept, truncated := sink.Bytes()
+	if truncated || !bytes.Equal(kept, body) {
+		t.Fatalf("Bytes() = %q, %v, want the whole body at the limit", kept, truncated)
+	}
+}
+
 func TestSinkHeadOnlyNeverKeepsTheTail(t *testing.T) {
 	sink := NewSink(5, false)
 	_, _ = sink.Write([]byte("abcdefghij"))

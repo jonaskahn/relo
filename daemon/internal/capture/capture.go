@@ -31,8 +31,7 @@ func HeadTail(body []byte, limit int64) ([]byte, bool) {
 	if int64(len(body)) <= limit {
 		return body, false
 	}
-	head := limit / 2
-	tail := limit - head
+	head, tail := headTailBytes(limit)
 	kept := make([]byte, 0, limit)
 	kept = append(kept, body[:head]...)
 	kept = append(kept, body[int64(len(body))-tail:]...)
@@ -98,8 +97,8 @@ func (s *Sink) writeHead(p []byte) {
 func (s *Sink) startHeadTail() {
 	s.overflow = true
 	body := s.body.Bytes()
-	headLen := s.limit / 2
-	s.ring = make([]byte, s.limit-headLen)
+	headLen, tailLen := headTailBytes(s.limit)
+	s.ring = make([]byte, tailLen)
 	if int64(len(body)) <= headLen {
 		s.head = append([]byte(nil), body...)
 		return
@@ -111,7 +110,8 @@ func (s *Sink) startHeadTail() {
 }
 
 func (s *Sink) writeTail(p []byte) {
-	room := int(s.limit/2) - len(s.head)
+	headLen, _ := headTailBytes(s.limit)
+	room := int(headLen) - len(s.head)
 	if room > 0 {
 		kept := min(room, len(p))
 		s.head = append(s.head, p[:kept]...)
@@ -120,6 +120,13 @@ func (s *Sink) writeTail(p []byte) {
 	for _, b := range p {
 		s.pushTail(b)
 	}
+}
+
+// headTailBytes splits a head-and-tail bound so both ends of a body cut in two
+// agree, including an odd bound.
+func headTailBytes(limit int64) (int64, int64) {
+	head := limit / 2
+	return head, limit - head
 }
 
 func (s *Sink) pushTail(b byte) {

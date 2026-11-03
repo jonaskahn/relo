@@ -71,6 +71,19 @@ func TestCaptureSinkNeverHoldsTheStreamBack(t *testing.T) {
 	}
 }
 
+func TestCaptureSinkKeepsBothEndsAcrossChunks(t *testing.T) {
+	sink := newCaptureSink(10, true)
+	for _, chunk := range []string{"012", "3456789", "abcdefghij"} {
+		if written, err := sink.Write([]byte(chunk)); err != nil || written != len(chunk) {
+			t.Fatalf("Write(%q) = %d, %v, want every byte reported", chunk, written, err)
+		}
+	}
+	body, truncated := sink.bytes()
+	if !truncated || string(body) != "01234fghij" {
+		t.Fatalf("bytes() = %q, %v, want the head and tail across chunks", body, truncated)
+	}
+}
+
 // TestCaptureRequestLeavesTheSendUntouched covers the copy an attempt keeps:
 // the body is still complete after it is read, the length is set, and the
 // credential the provider is sent is not the one the capture holds.
