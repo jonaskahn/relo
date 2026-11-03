@@ -1968,7 +1968,7 @@
       "logLevelLabel": "日志级别",
       "logLevelHint": "守护进程写入日志的详细程度。重启后生效。",
       "trafficLogLabel": "流量日志",
-      "trafficLogHint": "把代理的每个请求和与提供商的每次往返完整写入 logs/traffic-YYYYMMDD.log，每天一个文件，保留两周。凭据仍会被遮盖。保存后生效。",
+      "trafficLogHint": "把代理的每个请求和与提供商的每次往返完整写入 logs/traffic-YYYYMMDD.log，每天一个文件。保留窗口和大小预算同样适用。凭据仍会被遮盖。保存后生效。",
       "updatesURL": "Appcast 地址",
       "updatesURLHint": "Relo 用于查找新版本的更新源。留空则关闭检查。",
       "updatesDownload": "下载页面",

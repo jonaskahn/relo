@@ -60,7 +60,17 @@ open stream counts against the same pool as the console's bundles and API
 reads. Keep one stream per browser, close it while the tab is hidden, and do
 not open one per tab. Outside debugging, leave `[system.logging] traffic` at
 `false`: `true` writes every agent and provider exchange in full and can grow
-the traffic log by gigabytes per day.
+the traffic log by gigabytes per day. The traffic log follows the Retention
+budget: its whole daily files age out by `usage_days` and the folder is pruned
+oldest-first to `max_bytes`, while `max_events` stays database-only. The
+database capture beside each request keeps the first and last 8 KiB of a body
+over 16 KiB; the request detail reads the whole body back from the traffic log
+when that file still holds the request.
+
+**The doctor reports the traffic log.** `GET /api/v1/doctor` includes a
+`Traffic log` check. It passes and says the log is off when the switch is off;
+when on, it reports today's file size and the retained total, warns above
+1 GiB, and fails only when those sizes cannot be read.
 
 **Two free refusals are stable.** A probe or commit that would create a second
 keyless free connection answers `409 free_connection_exists` and writes

@@ -1968,7 +1968,7 @@
       "logLevelLabel": "Nível de log",
       "logLevelHint": "Quanto o daemon escreve no log. Vale após reiniciar.",
       "trafficLogLabel": "Registro de tráfego",
-      "trafficLogHint": "Grava cada solicitação do agente e cada troca com o provedor inteira em logs/traffic-YYYYMMDD.log, um arquivo por dia, guardado por duas semanas. As credenciais continuam mascaradas. Aplicado ao salvar.",
+      "trafficLogHint": "Grava cada solicitação do agente e cada troca com o provedor inteira em logs/traffic-YYYYMMDD.log, um arquivo por dia. A janela de retenção e o orçamento de tamanho também se aplicam. As credenciais continuam mascaradas. Aplicado ao salvar.",
       "updatesURL": "URL do appcast",
       "updatesURLHint": "O feed que o Relo lê para achar versões novas. Vazio desliga a verificação.",
       "updatesDownload": "Página de download",

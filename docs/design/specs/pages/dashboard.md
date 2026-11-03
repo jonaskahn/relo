@@ -102,7 +102,9 @@ connection reads as its mark, its name and what it cost.
 - The routing universe reads the window the page's control selects, states when it last read it, and takes new traffic
   in place: no spinner, no emptied card, no jump.
 - Empty lists say what is missing; no fictitious data.
-- Doctor checks are status rows: pill, check name, result, and the fix when failing.
+- Doctor checks are status rows: pill, check name, result, and the fix when failing. The `Traffic log` check says the
+  log is off, or reports today's file size and the retained total; it warns above 1 GiB and fails only when the sizes
+  cannot be read.
 - Recent requests are dense row-cards linking to the Logs detail modal: nineteen rows, scrolling inside a card that
   stops at half the height they would take. The live control is the shared equalizer button the Logs page uses.
 - The doctor's list scrolls when the card is shorter than its checks.

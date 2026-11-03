@@ -1968,7 +1968,7 @@
       "logLevelLabel": "Niveau de journal",
       "logLevelHint": "Combien le daemon écrit dans son journal. S’applique après un redémarrage.",
       "trafficLogLabel": "Journal de trafic",
-      "trafficLogHint": "Écrit chaque requête de l’agent et chaque échange avec le provider en entier dans logs/traffic-YYYYMMDD.log, un fichier par jour, conservé deux semaines. Les identifiants restent masqués. Appliqué à l’enregistrement.",
+      "trafficLogHint": "Écrit chaque requête de l’agent et chaque échange avec le provider en entier dans logs/traffic-YYYYMMDD.log, un fichier par jour. La fenêtre de rétention et le budget de taille s’appliquent aussi. Les identifiants restent masqués. Appliqué à l’enregistrement.",
       "updatesURL": "URL de l’appcast",
       "updatesURLHint": "Le flux que Relo lit pour les nouvelles versions. Vide désactive la vérification.",
       "updatesDownload": "Page de téléchargement",

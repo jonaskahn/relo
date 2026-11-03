@@ -1968,7 +1968,7 @@
       "logLevelLabel": "Mức log",
       "logLevelHint": "Daemon ghi vào log bao nhiêu. Áp dụng sau khi khởi động lại.",
       "trafficLogLabel": "Nhật ký lưu lượng",
-      "trafficLogHint": "Ghi toàn bộ yêu cầu của agent và trao đổi với nhà cung cấp vào logs/traffic-YYYYMMDD.log, mỗi ngày một tệp, giữ trong vòng hai tuần. Thông tin đăng nhập vẫn được che. Áp dụng khi lưu.",
+      "trafficLogHint": "Ghi toàn bộ yêu cầu của agent và trao đổi với nhà cung cấp vào logs/traffic-YYYYMMDD.log, mỗi ngày một tệp. Cửa sổ lưu trữ và hạn mức dung lượng cũng được áp dụng. Thông tin đăng nhập vẫn được che. Áp dụng khi lưu.",
       "updatesURL": "URL appcast",
       "updatesURLHint": "Nguồn Relo đọc để tìm bản dựng mới. Để trống sẽ tắt kiểm tra.",
       "updatesDownload": "Trang tải xuống",

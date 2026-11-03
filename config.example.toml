@@ -8,7 +8,8 @@
 
   [system.logging]
     level = "info"    # debug | info | warn | error
-    traffic = false   # true also writes every agent and provider exchange, in full, to logs/traffic-YYYYMMDD.log
+    traffic = false   # true also writes every agent and provider exchange, in full, to logs/traffic-YYYYMMDD.log;
+                      # the Retention window and size budget apply, and database captures keep the head and tail
 
   [system.updates]
     url = "https://jonaskahn.github.io/relo/appcast.xml"          # empty turns the version check off

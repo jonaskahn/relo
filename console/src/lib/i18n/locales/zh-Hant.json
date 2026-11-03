@@ -1968,7 +1968,7 @@
       "logLevelLabel": "日誌層級",
       "logLevelHint": "常駐程式寫入日誌的詳細程度。重新啟動後生效。",
       "trafficLogLabel": "流量日誌",
-      "trafficLogHint": "把代理的每個請求和與供應商的每次往返完整寫進 logs/traffic-YYYYMMDD.log，一天一個檔案，保留兩週。憑證仍會遮蔽。儲存後生效。",
+      "trafficLogHint": "把代理的每個請求和與供應商的每次往返完整寫進 logs/traffic-YYYYMMDD.log，一天一個檔案。保留時間範圍和大小預算同樣適用。憑證仍會遮蔽。儲存後生效。",
       "updatesURL": "Appcast 網址",
       "updatesURLHint": "Relo 檢查新版本的來源。留空就關閉檢查。",
       "updatesDownload": "下載頁面",

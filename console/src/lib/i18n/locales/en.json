@@ -1968,7 +1968,7 @@
       "logLevelLabel": "Log level",
       "logLevelHint": "How much the daemon writes to its log. Applies after a restart.",
       "trafficLogLabel": "Traffic log",
-      "trafficLogHint": "Writes every agent request and provider exchange in full to logs/traffic-YYYYMMDD.log, one file per day, kept for a fortnight. Credentials are still masked. Applied when you save.",
+      "trafficLogHint": "Writes every agent request and provider exchange in full to logs/traffic-YYYYMMDD.log, one file per day. The Retention window and size budget also apply. Credentials are still masked. Applied when you save.",
       "updatesURL": "Appcast URL",
       "updatesURLHint": "The feed Relo reads for newer builds. Empty turns the check off.",
       "updatesDownload": "Download page",

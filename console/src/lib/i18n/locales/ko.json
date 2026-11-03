@@ -1968,7 +1968,7 @@
       "logLevelLabel": "로그 수준",
       "logLevelHint": "데몬이 로그에 얼마나 남길지예요. 다시 시작한 뒤에 적용돼요.",
       "trafficLogLabel": "트래픽 로그",
-      "trafficLogHint": "에이전트 요청과 제공업체 교환을 logs/traffic-YYYYMMDD.log에 하루 한 파일씩 2주 동안 그대로 기록해요. 인증 정보는 여전히 가려져요. 저장할 때 적용돼요.",
+      "trafficLogHint": "에이전트 요청과 제공업체 교환을 logs/traffic-YYYYMMDD.log에 하루 한 파일씩 그대로 기록해요. 보존 기간과 크기 예산도 적용돼요. 인증 정보는 여전히 가려져요. 저장할 때 적용돼요.",
       "updatesURL": "Appcast URL",
       "updatesURLHint": "Relo가 새 빌드를 확인하는 피드예요. 비우면 확인을 꺼요.",
       "updatesDownload": "다운로드 페이지",

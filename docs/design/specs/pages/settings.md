@@ -89,9 +89,15 @@ The banner enters with the shared fade + 6px rise.
 
 Retention edits save with an explicit Save. The three budget values — usage history, maximum events, maximum size — are
 rows on the shared grid; the floor rule rides on the usage-history row as its helper text, and a rejected value reports
-under its own input. **Preview** asks what the draft would prune without changing a row and reports the count and the
+under its own input. The usage window and maximum size also govern the traffic log: whole daily files outside the window
+are removed, and the oldest closed files go until the traffic-log folder fits the size budget; maximum events stays
+database-only. **Preview** asks what the draft would prune without changing a row and reports the count and the
 estimated space beside the button; **Clean up now** applies the stored budget and answers as a toast. Both sit with Save
 on the value column. Usage totals and request records survive the cleanup.
+
+The Daemon card's traffic-log hint states that the Retention window and size budget apply to those files. Database
+captures keep the head and tail of a body over the capture bound, while the traffic file keeps it whole up to its own
+ceiling.
 
 ## Reclaim card
 
