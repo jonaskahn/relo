@@ -158,15 +158,19 @@ type Options struct {
 	// platform's login items. It is best-effort: the wiring logs a failure
 	// rather than failing a save whose configuration is already stored.
 	ApplyAutostart func(enabled bool)
+	// OnRetentionSaved applies a newly stored budget to the traffic log at
+	// once, so its files do not wait for the next maintenance tick.
+	OnRetentionSaved func(budget activity.RetentionBudget)
 }
 
 // Service is the settings use cases.
 type Service struct {
-	retention      RetentionStore
-	quotaDisplay   QuotaDisplayStore
-	configPath     string
-	clock          clock.Clock
-	applyAutostart func(enabled bool)
+	retention        RetentionStore
+	quotaDisplay     QuotaDisplayStore
+	configPath       string
+	clock            clock.Clock
+	applyAutostart   func(enabled bool)
+	onRetentionSaved func(budget activity.RetentionBudget)
 }
 
 // New returns the settings use cases over the given stores.
@@ -178,7 +182,7 @@ func New(options Options) *Service {
 	return &Service{
 		retention: options.Retention, quotaDisplay: options.QuotaDisplay,
 		configPath: options.ConfigPath, clock: clk,
-		applyAutostart: options.ApplyAutostart,
+		applyAutostart: options.ApplyAutostart, onRetentionSaved: options.OnRetentionSaved,
 	}
 }
 
@@ -406,11 +410,15 @@ func (s *Service) SaveLanguage(tag string) error {
 // SaveRetention stores the usage-log budget the maintenance pass applies.
 func (s *Service) SaveRetention(ctx context.Context, budget RetentionSettings) (RetentionSettings, error) {
 	now := s.clock.Now().UnixMilli()
-	if err := s.retention.SaveBudget(ctx, activity.RetentionBudget{
+	stored := activity.RetentionBudget{
 		UsageDays: budget.UsageDays, MaxEvents: budget.MaxEvents,
 		MaxBytes: budget.MaxBytes, UpdatedAtMs: now,
-	}); err != nil {
+	}
+	if err := s.retention.SaveBudget(ctx, stored); err != nil {
 		return RetentionSettings{}, err
+	}
+	if s.onRetentionSaved != nil {
+		s.onRetentionSaved(stored)
 	}
 	return budget, nil
 }

@@ -1,7 +1,7 @@
 // The traffic log is the file of JSON lines that holds the halves of every
 // exchange when the operator turns the traffic log on. A half is appended the
-// moment it exists, one file per day, pruned with the daemon log's own
-// retention.
+// moment it exists, one file per day, pruned with the operator's retention
+// budget.
 //
 // Reading one request back is the call the request detail makes every time an
 // operator opens a drawer, and a day file holds whole bodies of up to the
@@ -25,15 +25,15 @@ import (
 	"sync"
 	"time"
 
+	"github.com/jonaskahn/relo/internal/activity"
+	appstatus "github.com/jonaskahn/relo/internal/application/status"
+	"github.com/jonaskahn/relo/internal/config"
 	"github.com/jonaskahn/relo/internal/server"
 )
 
 const (
 	trafficLogPrefix = "traffic-"
 	trafficLogSuffix = ".log"
-	// trafficLogKeep is the fortnight the daemon log keeps, applied here so
-	// both files in the logs folder age out together.
-	trafficLogKeep = daemonLogKeep
 
 	// requestIDPrefix is the head of every line, which is what lets an index
 	// read a request id without decoding the line behind it.
@@ -80,12 +80,17 @@ type dayChunk struct {
 // trafficLog is the writer for the state's logs folder and the offset index
 // that makes reading one request back cheap.
 type trafficLog struct {
-	dir string
-	now func() time.Time
+	dir        string
+	configPath string
+	now        func() time.Time
 
 	mu   sync.Mutex
 	file *os.File
 	day  string
+	// usageDays and maxBytes are the operator's retention budget, refreshed by
+	// the composition root at startup, on a save, and on the maintenance tick.
+	usageDays int
+	maxBytes  int64
 	// size is how many bytes the open file holds, which is the offset the next
 	// appended line begins at.
 	size int64
@@ -96,7 +101,10 @@ type trafficLog struct {
 	closed []closedIndex
 }
 
-var _ server.TrafficLog = (*trafficLog)(nil)
+var (
+	_ server.TrafficLog    = (*trafficLog)(nil)
+	_ appstatus.TrafficLog = (*trafficLog)(nil)
+)
 
 // newTrafficLog opens the writer for the state's logs folder.
 func newTrafficLog(home string) (*trafficLog, error) {
@@ -107,7 +115,9 @@ func newTrafficLog(home string) (*trafficLog, error) {
 	if err := os.MkdirAll(dir, 0o700); err != nil {
 		return nil, fmt.Errorf("open the traffic log: %w", err)
 	}
-	return &trafficLog{dir: dir, now: time.Now}, nil
+	return &trafficLog{
+		dir: dir, configPath: config.ConfigPath(home), now: time.Now,
+	}, nil
 }
 
 // AppendHalf writes one half of an exchange to today's file, opening the day's
@@ -130,7 +140,7 @@ func (t *trafficLog) AppendHalf(half server.TrafficHalf) error {
 	}
 	t.lines[half.RequestID] = append(t.lines[half.RequestID], t.size)
 	t.size += int64(len(line))
-	return nil
+	return t.enforceLocked(t.now())
 }
 
 func (t *trafficLog) open() error {
@@ -147,9 +157,6 @@ func (t *trafficLog) open() error {
 	if err := os.MkdirAll(t.dir, 0o700); err != nil {
 		return fmt.Errorf("open the traffic log: %w", err)
 	}
-	if err := pruneAged(t.dir, trafficLogPrefix, trafficLogKeep, t.now()); err != nil {
-		return err
-	}
 	path := filepath.Join(t.dir, trafficLogPrefix+day+trafficLogSuffix)
 	file, err := os.OpenFile(path, os.O_CREATE|os.O_RDWR|os.O_APPEND, 0o600)
 	if err != nil {
@@ -164,7 +171,124 @@ func (t *trafficLog) open() error {
 		return fmt.Errorf("stat the traffic log: %w", err)
 	}
 	t.file, t.day, t.size, t.lines = file, day, info.Size(), map[string][]int64{}
+	return t.enforceLocked(t.now())
+}
+
+// On reports whether the operator asked for the traffic log.
+func (t *trafficLog) On() bool {
+	if t == nil || t.configPath == "" {
+		return false
+	}
+	on, err := config.ReadLogTraffic(t.configPath)
+	return err == nil && on
+}
+
+// SetBudget stores the retention budget and applies it to the files on disk.
+func (t *trafficLog) SetBudget(budget activity.RetentionBudget) error {
+	t.mu.Lock()
+	defer t.mu.Unlock()
+	t.usageDays, t.maxBytes = budget.UsageDays, budget.MaxBytes
+	return t.enforceLocked(t.now())
+}
+
+// Budget returns the retention budget the writer currently applies.
+func (t *trafficLog) Budget() activity.RetentionBudget {
+	t.mu.Lock()
+	defer t.mu.Unlock()
+	return activity.RetentionBudget{UsageDays: t.usageDays, MaxBytes: t.maxBytes}
+}
+
+// Stats reports today's file size and every retained traffic file's size.
+func (t *trafficLog) Stats() (appstatus.TrafficStats, error) {
+	t.mu.Lock()
+	defer t.mu.Unlock()
+	files, err := t.trafficFiles()
+	if err != nil {
+		return appstatus.TrafficStats{}, err
+	}
+	today := t.now().Format("20060102")
+	stats := appstatus.TrafficStats{}
+	for _, file := range files {
+		stats.TotalBytes += file.size
+		if file.day == today {
+			stats.TodayBytes = file.size
+		}
+	}
+	return stats, nil
+}
+
+// enforceLocked applies the age and size budget to whole daily files. Today's
+// file is never removed, so a single day larger than the byte budget stays
+// until the next rollover.
+func (t *trafficLog) enforceLocked(now time.Time) error {
+	files, err := t.trafficFiles()
+	if err != nil {
+		return err
+	}
+	today := now.Format("20060102")
+	removed := map[string]bool{}
+	if t.usageDays > 0 {
+		cutoff := now.Add(-time.Duration(t.usageDays-1) * 24 * time.Hour).Format("20060102")
+		for _, file := range files {
+			if file.day < cutoff && file.day != today {
+				if err := t.remove(file, removed); err != nil {
+					return err
+				}
+			}
+		}
+	}
+	if t.maxBytes > 0 {
+		if err := t.enforceBytes(files, today, removed); err != nil {
+			return err
+		}
+	}
+	t.forgetClosed(removed)
 	return nil
+}
+
+func (t *trafficLog) enforceBytes(files []trafficFile, today string, removed map[string]bool) error {
+	total := int64(0)
+	for _, file := range files {
+		if !removed[file.path] {
+			total += file.size
+		}
+	}
+	for index := len(files) - 1; index >= 0; index-- {
+		if total <= t.maxBytes {
+			return nil
+		}
+		file := files[index]
+		if file.day == today || removed[file.path] {
+			continue
+		}
+		if err := t.remove(file, removed); err != nil {
+			return err
+		}
+		total -= file.size
+	}
+	return nil
+}
+
+func (t *trafficLog) remove(file trafficFile, removed map[string]bool) error {
+	if err := os.Remove(file.path); err != nil && !errors.Is(err, os.ErrNotExist) {
+		return err
+	}
+	removed[file.path] = true
+	return nil
+}
+
+// forgetClosed drops the memory index of every removed day.
+func (t *trafficLog) forgetClosed(removed map[string]bool) {
+	if len(removed) == 0 {
+		return
+	}
+	kept := t.closed[:0]
+	for _, day := range t.closed {
+		if !removed[day.path] {
+			kept = append(kept, day)
+		}
+	}
+	t.closed = kept
 }
 
 // Halves returns every half the log kept of one request. The open day is read
@@ -308,13 +432,31 @@ func indexFile(path string, size int64) (map[string][]int64, error) {
 }
 
 // dayFiles lists the day's files newest first, so a request that ran today is
-// found without reading the whole fortnight.
+// found without reading every retained day.
 func (t *trafficLog) dayFiles() ([]string, error) {
+	files, err := t.trafficFiles()
+	if err != nil {
+		return nil, err
+	}
+	paths := make([]string, 0, len(files))
+	for _, file := range files {
+		paths = append(paths, file.path)
+	}
+	return paths, nil
+}
+
+// trafficFile is one daily traffic log and its size.
+type trafficFile struct {
+	path string
+	day  string
+	size int64
+}
+
+// trafficFiles lists the daily files newest first, which is the order both
+// retention and lookup walk.
+func (t *trafficLog) trafficFiles() ([]trafficFile, error) {
 	entries, err := os.ReadDir(t.dir)
 	if err != nil {
-		if os.IsNotExist(err) {
-			return nil, nil
-		}
 		return nil, err
 	}
 	names := make([]string, 0, len(entries))
@@ -326,11 +468,22 @@ func (t *trafficLog) dayFiles() ([]string, error) {
 		names = append(names, name)
 	}
 	sort.Sort(sort.Reverse(sort.StringSlice(names)))
-	paths := make([]string, 0, len(names))
+	files := make([]trafficFile, 0, len(names))
 	for _, name := range names {
-		paths = append(paths, filepath.Join(t.dir, name))
+		info, err := os.Stat(filepath.Join(t.dir, name))
+		if err != nil {
+			if os.IsNotExist(err) {
+				continue
+			}
+			return nil, err
+		}
+		files = append(files, trafficFile{
+			path: filepath.Join(t.dir, name),
+			day:  strings.TrimSuffix(strings.TrimPrefix(name, trafficLogPrefix), trafficLogSuffix),
+			size: info.Size(),
+		})
 	}
-	return paths, nil
+	return files, nil
 }
 
 // indexDay records where each request's lines begin in one finished day. It

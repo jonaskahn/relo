@@ -92,7 +92,7 @@ func newManagement(ctx context.Context, home string, db *sqlite.DB, logger *slog
 	return &Management{
 		catalog: w.catalogSvc, accounts: w.accounts,
 		keys:     appaccess.NewKeys(sqlite.NewAccessKeyStore(db), w.clk),
-		settings: newSettings(db, home, w.clk, logger, nil), db: db,
+		settings: newSettings(db, home, w.clk, logger, nil, nil), db: db,
 	}, nil
 }
 

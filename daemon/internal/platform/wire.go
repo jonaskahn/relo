@@ -76,6 +76,7 @@ type deps struct {
 	settings         *appsettings.Service
 	templateSettings *apptemplates.Service
 	events           *server.EventBus
+	traffic          *trafficLog
 	login            server.LoginRunner
 	callbacks        *oauth.CallbackBroker
 	adminToken       string
@@ -285,15 +286,19 @@ func (w *wiring) integrations() {
 
 func (w *wiring) statusLayer() error {
 	drain := &lateDrain{}
+	traffic := openTrafficLog(w.options.Home)
+	retention := sqlite.NewRetention(w.db, sqlite.RetentionOptions{
+		Logger: w.logger, Now: w.clk.Now,
+	})
+	refreshTrafficBudget(w.ctx, deps{traffic: traffic, logger: w.logger}, retention)
 	statuses := appstatus.New(appstatus.Options{
-		DB: w.db, Retention: sqlite.NewRetention(w.db, sqlite.RetentionOptions{
-			Logger: w.logger, Now: w.clk.Now,
-		}),
+		DB: w.db, Retention: retention,
 		Secrets: NewSecretView(w.built.secrets), Entries: w.credRepo, Quotas: NewQuotaStore(w.db),
 		Keys: w.built.keys, Accounts: w.built.accounts, Catalog: w.models, Home: w.options.Home,
-		StartupLog: w.options.StartupLog,
+		StartupLog: w.options.StartupLog, Traffic: traffic,
 	})
-	settings := newSettings(w.db, w.options.Home, w.clk, w.logger, drain)
+	w.built.traffic = traffic
+	settings := newSettings(w.db, w.options.Home, w.clk, w.logger, drain, traffic)
 	templateAPI := newTemplateSettings(w.templateSettings, w.models, w.clk)
 	catalogs, err := i18n.Load()
 	if err != nil {
@@ -311,7 +316,7 @@ func (w *wiring) statusLayer() error {
 
 type seedAdapter struct{}
 
-func newSettings(db *sqlite.DB, home string, clk clock.Clock, logger *slog.Logger, drain sqlite.DrainProbe) *appsettings.Service {
+func newSettings(db *sqlite.DB, home string, clk clock.Clock, logger *slog.Logger, drain sqlite.DrainProbe, traffic *trafficLog) *appsettings.Service {
 	return appsettings.New(appsettings.Options{
 		Retention: sqlite.NewRetentionSettings(db, sqlite.RetentionOptions{
 			Logger: logger, Now: clk.Now, Drain: drain,
@@ -321,6 +326,9 @@ func newSettings(db *sqlite.DB, home string, clk clock.Clock, logger *slog.Logge
 		Clock:        clk,
 		ApplyAutostart: func(enabled bool) {
 			applyAutostart(home, logger, enabled)
+		},
+		OnRetentionSaved: func(budget activity.RetentionBudget) {
+			applyTrafficBudget(traffic, budget, logger)
 		},
 	})
 }
@@ -525,12 +533,36 @@ func startMaintenance(ctx context.Context, daemon *server.Server, built deps) {
 	retention := sqlite.NewRetention(built.db, sqlite.RetentionOptions{
 		Logger: built.logger, Drain: daemon,
 	})
+	refreshTrafficBudget(ctx, built, retention)
 	go func() {
 		retention.MaintainOnce(ctx)
-		if err := retention.Run(ctx, maintenanceInterval); err != nil {
+		if err := retention.Run(ctx, maintenanceInterval, func() { refreshTrafficBudget(ctx, built, retention) }); err != nil {
 			built.logger.Warn("retention stopped", "error", err)
 		}
 	}()
+}
+
+// refreshTrafficBudget applies the stored retention budget to the traffic log
+// at startup and on every maintenance tick.
+func refreshTrafficBudget(ctx context.Context, built deps, retention *sqlite.Retention) {
+	if built.traffic == nil {
+		return
+	}
+	budget, _, err := retention.Budget(ctx)
+	if err != nil {
+		built.logger.Warn("read the traffic-log budget", "error", err)
+		return
+	}
+	applyTrafficBudget(built.traffic, budget, built.logger)
+}
+
+func applyTrafficBudget(traffic *trafficLog, budget activity.RetentionBudget, logger *slog.Logger) {
+	if traffic == nil {
+		return
+	}
+	if err := traffic.SetBudget(budget); err != nil {
+		logger.Warn("apply the traffic-log retention budget", "error", err)
+	}
 }
 
 type lateDrain struct {
@@ -608,7 +640,7 @@ func coreServerOptions(built deps, captures *sqlite.CaptureStore) server.Options
 		Relay:           NewRelay(built.credentials, upstream.NewExecutor(NewInferenceClient(), built.logger)),
 		Templates:       NewTemplateSource(),
 		CaptureRedactor: NewCaptureRedactor(),
-		Traffic:         openTrafficLog(built.home),
+		Traffic:         built.traffic,
 		Pools:           built.pools,
 		Secrets:         secretModeSource(built.secrets),
 		Usage:           built.usage,

@@ -366,8 +366,9 @@ func (r *Retention) finalizeAll(ctx context.Context) (int, error) {
 
 // Run enforces the stored budget on every tick until ctx is cancelled. Each
 // tick is one maintenance pass: deletions, then a compaction of whatever
-// space the log no longer needs.
-func (r *Retention) Run(ctx context.Context, every time.Duration) error {
+// space the log no longer needs. OnTick, when set, runs after each pass so
+// budgets kept outside the database follow the same schedule.
+func (r *Retention) Run(ctx context.Context, every time.Duration, onTick func()) error {
 	if every <= 0 {
 		every = defaultRetentionInterval
 	}
@@ -379,6 +380,9 @@ func (r *Retention) Run(ctx context.Context, every time.Duration) error {
 			return nil
 		case <-ticker.C:
 			r.maintain(ctx)
+			if onTick != nil {
+				onTick()
+			}
 		}
 	}
 }

@@ -61,14 +61,14 @@ func TestTrafficLogOpensANewFileEachDay(t *testing.T) {
 	}
 }
 
-func TestTrafficLogPrunesTheFortnightAndLeavesTheDaemonLog(t *testing.T) {
+func TestTrafficLogPrunesTheUsageWindowAndLeavesTheDaemonLog(t *testing.T) {
 	home := t.TempDir()
 	day := time.Date(2026, 10, 11, 9, 0, 0, 0, time.UTC)
 	dir := logDir(home)
 	if err := os.MkdirAll(dir, 0o700); err != nil {
 		t.Fatal(err)
 	}
-	traffic := &trafficLog{dir: dir, now: func() time.Time { return day }}
+	traffic := &trafficLog{dir: dir, now: func() time.Time { return day }, usageDays: 3}
 
 	aged := filepath.Join(dir, "traffic-20260920"+trafficLogSuffix)
 	rotated := filepath.Join(dir, "daemon.log-20260920.gz")
@@ -76,7 +76,7 @@ func TestTrafficLogPrunesTheFortnightAndLeavesTheDaemonLog(t *testing.T) {
 		if err := os.WriteFile(path, nil, 0o600); err != nil {
 			t.Fatal(err)
 		}
-		stale := day.Add(-trafficLogKeep).Add(-time.Hour)
+		stale := day.Add(-3 * 24 * time.Hour).Add(-time.Hour)
 		if err := os.Chtimes(path, stale, stale); err != nil {
 			t.Fatal(err)
 		}

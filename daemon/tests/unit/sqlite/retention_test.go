@@ -349,6 +349,31 @@ func TestRunOnceRunsOnePassAtATime(t *testing.T) {
 	}
 }
 
+func TestRetentionRunCallsTheTickHook(t *testing.T) {
+	db := testkit.OpenTestDB(t)
+	retention := newRetention(t, db)
+	ctx, cancel := context.WithCancel(context.Background())
+	ticks := make(chan struct{}, 1)
+	done := make(chan error, 1)
+	go func() {
+		done <- retention.Run(ctx, time.Millisecond, func() {
+			select {
+			case ticks <- struct{}{}:
+			default:
+			}
+		})
+	}()
+	select {
+	case <-ticks:
+	case <-time.After(2 * time.Second):
+		t.Fatal("Run() never called its tick hook")
+	}
+	cancel()
+	if err := <-done; err != nil {
+		t.Fatalf("Run() error = %v", err)
+	}
+}
+
 // TestLateMidnightRequestCountsOnce is the race between recording and
 // finalizing: a request that started before midnight lands its row and its
 // day total while a pass is closing that day, and the archive counts it
@@ -649,7 +674,7 @@ func TestRetentionRun(t *testing.T) {
 	done := make(chan error, 1)
 	go func() {
 		close(inMaintenance)
-		done <- retention.Run(ctx, 5*time.Millisecond)
+		done <- retention.Run(ctx, 5*time.Millisecond, nil)
 	}()
 	<-inMaintenance
 	waitForRows(t, db, 8)
@@ -669,7 +694,7 @@ func TestRetentionRun(t *testing.T) {
 		quiet := newRetention(t, fresh)
 		ctx, cancel := context.WithTimeout(context.Background(), 40*time.Millisecond)
 		defer cancel()
-		if err := quiet.Run(ctx, 5*time.Millisecond); err != nil {
+		if err := quiet.Run(ctx, 5*time.Millisecond, nil); err != nil {
 			t.Fatalf("Run() error = %v", err)
 		}
 		if left := countRows(t, fresh, "usage_events"); left != 4 {
@@ -774,7 +799,7 @@ func TestRetentionRunSurvivesFailures(t *testing.T) {
 		t.Fatalf("Close() error = %v", err)
 	}
 	done := make(chan error, 1)
-	go func() { done <- retention.Run(ctx, time.Millisecond) }()
+	go func() { done <- retention.Run(ctx, time.Millisecond, nil) }()
 	time.Sleep(30 * time.Millisecond)
 	cancel()
 	select {
