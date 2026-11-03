@@ -1,6 +1,6 @@
 {
-  "generated": "2026-11-03T05:12:10Z",
-  "latest": "v0.2.5",
+  "generated": "2026-11-03T07:04:23Z",
+  "latest": "v0.2.6",
   "latest_beta": "v0.2.6-beta.93.c3987a3f",
   "install": {
     "stable": {
@@ -17,6 +17,158 @@
     }
   },
   "releases": [
+    {
+      "tag": "v0.2.6",
+      "version": "0.2.6",
+      "name": "v0.2.6 -  No way home 🕷️",
+      "channel": "stable",
+      "draft": false,
+      "published_at": "2026-11-03T07:04:11Z",
+      "page": "https://github.com/jonaskahn/relo/releases/tag/v0.2.6",
+      "notes": "## 2026-11-03\r\n\r\n### Features\r\n\r\n- console: Reads the outdated file flag, so the console can show when a file is out of date.\r\n\r\n### Fixes\r\n\r\n- agents: Outdated files are now refreshed at startup and on reload.\r\n- agents: Outdated files are now told apart from files you edited.\r\n- console: One event stream is now shared across tabs, instead of one per tab.\r\n\r\n### Tests and docs\r\n\r\n- agents: Added tests for the silent refresh of outdated files.\r\n- api: Documented the connection cost of the event stream.",
+      "install": {
+        "script": "curl -fsSL https://relo.ifelse.one/install.sh | sh -s -- --version 0.2.6",
+        "powershell": "& ([scriptblock]::Create((irm https://relo.ifelse.one/install.ps1))) -Version 0.2.6",
+        "npm": "npm i -g @jonaskahn/relo@0.2.6"
+      },
+      "files": [
+        {
+          "name": "checksums.txt",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.2.6/checksums.txt",
+          "size": 582,
+          "os": "any",
+          "arch": "any",
+          "kind": "checksums",
+          "format": "txt"
+        },
+        {
+          "name": "Relo-0.2.6-arm64.zip",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.2.6/Relo-0.2.6-arm64.zip",
+          "size": 15949325,
+          "os": "macos",
+          "arch": "arm64",
+          "kind": "app",
+          "format": "zip"
+        },
+        {
+          "name": "relo-0.2.6-darwin-amd64.tar.gz",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.2.6/relo-0.2.6-darwin-amd64.tar.gz",
+          "size": 15086215,
+          "os": "macos",
+          "arch": "amd64",
+          "kind": "archive",
+          "format": "tar.gz"
+        },
+        {
+          "name": "relo-0.2.6-darwin-arm64.tar.gz",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.2.6/relo-0.2.6-darwin-arm64.tar.gz",
+          "size": 14670936,
+          "os": "macos",
+          "arch": "arm64",
+          "kind": "archive",
+          "format": "tar.gz"
+        },
+        {
+          "name": "relo-0.2.6-linux-amd64.tar.gz",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.2.6/relo-0.2.6-linux-amd64.tar.gz",
+          "size": 14778705,
+          "os": "linux",
+          "arch": "amd64",
+          "kind": "archive",
+          "format": "tar.gz"
+        },
+        {
+          "name": "relo-0.2.6-linux-arm64.tar.gz",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.2.6/relo-0.2.6-linux-arm64.tar.gz",
+          "size": 14005605,
+          "os": "linux",
+          "arch": "arm64",
+          "kind": "archive",
+          "format": "tar.gz"
+        },
+        {
+          "name": "Relo-0.2.6-universal.zip",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.2.6/Relo-0.2.6-universal.zip",
+          "size": 31406983,
+          "os": "macos",
+          "arch": "universal",
+          "kind": "app",
+          "format": "zip"
+        },
+        {
+          "name": "relo-0.2.6-windows-amd64.tar.gz",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.2.6/relo-0.2.6-windows-amd64.tar.gz",
+          "size": 14719366,
+          "os": "windows",
+          "arch": "amd64",
+          "kind": "archive",
+          "format": "tar.gz"
+        },
+        {
+          "name": "relo-0.2.6-windows-arm64.tar.gz",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.2.6/relo-0.2.6-windows-arm64.tar.gz",
+          "size": 13865993,
+          "os": "windows",
+          "arch": "arm64",
+          "kind": "archive",
+          "format": "tar.gz"
+        },
+        {
+          "name": "Relo-Setup-0.2.6-amd64.deb",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.2.6/Relo-Setup-0.2.6-amd64.deb",
+          "size": 15037828,
+          "os": "linux",
+          "arch": "amd64",
+          "kind": "installer",
+          "format": "deb"
+        },
+        {
+          "name": "Relo-Setup-0.2.6-amd64.exe",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.2.6/Relo-Setup-0.2.6-amd64.exe",
+          "size": 10884372,
+          "os": "windows",
+          "arch": "amd64",
+          "kind": "installer",
+          "format": "exe"
+        },
+        {
+          "name": "Relo-Setup-0.2.6-amd64.rpm",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.2.6/Relo-Setup-0.2.6-amd64.rpm",
+          "size": 15002066,
+          "os": "linux",
+          "arch": "amd64",
+          "kind": "installer",
+          "format": "rpm"
+        },
+        {
+          "name": "Relo-Setup-0.2.6-arm64.deb",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.2.6/Relo-Setup-0.2.6-arm64.deb",
+          "size": 14336564,
+          "os": "linux",
+          "arch": "arm64",
+          "kind": "installer",
+          "format": "deb"
+        },
+        {
+          "name": "Relo-Setup-0.2.6-arm64.exe",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.2.6/Relo-Setup-0.2.6-arm64.exe",
+          "size": 9852155,
+          "os": "windows",
+          "arch": "arm64",
+          "kind": "installer",
+          "format": "exe"
+        },
+        {
+          "name": "Relo-Setup-0.2.6-arm64.rpm",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.2.6/Relo-Setup-0.2.6-arm64.rpm",
+          "size": 14280847,
+          "os": "linux",
+          "arch": "arm64",
+          "kind": "installer",
+          "format": "rpm"
+        }
+      ]
+    },
     {
       "tag": "v0.2.6-beta.93.c3987a3f",
       "version": "0.2.6-beta.93.c3987a3f",
