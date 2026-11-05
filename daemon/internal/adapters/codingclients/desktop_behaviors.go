@@ -33,6 +33,12 @@ var (
 	bedrockRegionPrefix = regexp.MustCompile(`^(us|eu|apac|ca|sa|me|af)\.`)
 	decimalVersion      = regexp.MustCompile(`([0-9])\.([0-9])`)
 	familyLevelBehavior = regexp.MustCompile(`^claude-(fable|mythos)-[0-9]+(?:-[0-9]+)?$`)
+	// desktopRefusedVendor mirrors the DS pattern of Claude Desktop 4.4212.0.
+	// Re-check it against a newer Desktop build; if it drifts, fall back to
+	// opaque ids only.
+	desktopRefusedVendor  = regexp.MustCompile(`ark-code|astron|command-r|deepseek|doubao|gemini|gemma|glm|gpt|grok|hermes|hy3|kimi|lfm|\bling\b|llama|longcat|mimo|minimax|mistral|mixtral|moonshot|nemotron|openai|phi-|qianfan|qwen|tc-code|\bunic\b|yi-|stepfun|step-3|seed-|bytedance|hunyuan|granite|amazon\.nova|nova-|devstral|ministral|ernie|codex|arcee|trinity|abab|phi\d|\bk2\.|\bm2\.|jamba|arctic|solar|mercury|zamba|kat-coder|\bds-|dpsk`)
+	desktopFamilyWord     = regexp.MustCompile(`sonnet|opus|haiku|fable|mythos`)
+	desktopVersionSegment = regexp.MustCompile(`(^|-)[0-9]{1,2}(-|$)`)
 )
 
 // claudeTrailingQualifiers are the variant words a provider appends after a
@@ -101,10 +107,29 @@ func modelPortion(raw string) string {
 	s := strings.TrimSpace(raw)
 	lowered := strings.ToLower(s)
 	if s == "" || strings.HasPrefix(lowered, catalog.DesktopAliasPrefix) ||
+		strings.HasPrefix(lowered, catalog.LegacyDesktopAliasPrefix) ||
 		strings.HasPrefix(lowered, catalog.ClientPrefix) {
 		return ""
 	}
 	return s
+}
+
+// desktopRowName is the id one row lists in Claude Desktop. Desktop ignores
+// behavesAs when a Claude name carries a version, so the exact picker id is
+// published only when Desktop cannot read a family or version into it; every
+// other row gets an opaque alias. The 1M marker stays in supports1m/prefer1m,
+// and the snapshot resolves the stripped name back to that entry.
+func desktopRowName(model ModelRef) string {
+	picker := gatewayPickerID(model)
+	name := catalog.StripContextMarker(picker)
+	lowered := strings.ToLower(name)
+	if strings.Contains(lowered, "claude") &&
+		!desktopRefusedVendor.MatchString(lowered) &&
+		!desktopFamilyWord.MatchString(lowered) &&
+		!desktopVersionSegment.MatchString(lowered) {
+		return name
+	}
+	return catalog.DesktopModelAlias(picker)
 }
 
 // claudeBehavior reads a recognizable Claude identity into its requested

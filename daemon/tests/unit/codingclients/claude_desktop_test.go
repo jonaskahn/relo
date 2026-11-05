@@ -255,7 +255,6 @@ func TestDesktopModelNamesAvoidTheVendorWordsDesktopRefuses(t *testing.T) {
 		"claude-relo-openai-codex--gpt-5.5",
 		"claude-relo-grok--grok-4.7",
 		"claude-relo-opencode-go--deepseek-flash[1m]",
-		"claude-reloc-smart-combo",
 		"claude-relo-anthropic--claude-opus-4-8",
 	}
 	models := make([]codingclients.ModelRef, 0, len(ids)+1)
@@ -276,7 +275,7 @@ func TestDesktopModelNamesAvoidTheVendorWordsDesktopRefuses(t *testing.T) {
 	if len(profile.Models) != len(ids) {
 		t.Fatalf("models = %d, want %d without the duplicate", len(profile.Models), len(ids))
 	}
-	shape := regexp.MustCompile(`^claude-opus-4-8-r[0-9a-f]{12}$`)
+	shape := regexp.MustCompile(`^claude-relo-[0-9a-f]{12}$`)
 	for _, row := range profile.Models {
 		name, _ := row["name"].(string)
 		if !shape.MatchString(name) || desktopVendorWords.MatchString(name) {
@@ -285,6 +284,23 @@ func TestDesktopModelNamesAvoidTheVendorWordsDesktopRefuses(t *testing.T) {
 		if row["supports1m"] != true || row["prefer1m"] != true {
 			t.Fatalf("row = %#v, want the 1M flags", row)
 		}
+	}
+}
+
+func TestDesktopKeepsAPickerIDDesktopCanReadExactly(t *testing.T) {
+	content, err := codingclients.DesktopProfileContent("http://127.0.0.1:10202", "rlo_ak_test",
+		[]codingclients.ModelRef{{ID: "claude-reloc-fast", Name: "Fast"}})
+	if err != nil {
+		t.Fatalf("DesktopProfileContent() error = %v", err)
+	}
+	var profile struct {
+		Models []map[string]any `json:"inferenceModels"`
+	}
+	if err := json.Unmarshal(content, &profile); err != nil {
+		t.Fatalf("decode profile: %v", err)
+	}
+	if len(profile.Models) != 1 || profile.Models[0]["name"] != "claude-reloc-fast" {
+		t.Fatalf("models = %#v, want the exact picker id", profile.Models)
 	}
 }
 

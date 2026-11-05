@@ -256,33 +256,58 @@ func desktopProfile(baseURL, apiKey string, models []ModelRef) ([]byte, error) {
 
 func desktopModels(models []ModelRef) []desktopModel {
 	rows := make([]desktopModel, 0, len(models))
-	seen := make(map[string]bool, len(models))
+	seen := make(map[string]int, len(models))
 	for _, model := range models {
 		if strings.TrimSpace(model.ID) == "" {
 			continue
 		}
-		// Desktop drops a name that carries another vendor's word, so it is
-		// given an opaque id the snapshot resolves back to the model. The
-		// million-token window is the supports1m flag, not part of the name.
-		name := catalog.DesktopModelAlias(gatewayPickerID(model))
-		if seen[name] {
-			continue
-		}
-		seen[name] = true
-		row := desktopModel{
-			Name: name, LabelOverride: codexDisplayName(model),
-			AnthropicFamilyTier: "opus", BehavesAs: desktopBehavesAs(model),
-		}
-		if model.ContextWindow != nil && *model.ContextWindow >= desktopSupports1M {
-			row.Supports1m = true
-			row.Prefer1m = true
-		}
-		rows = append(rows, row)
+		rows = appendDesktopRow(rows, seen, model)
 	}
-	if len(rows) > 0 {
-		rows[0].IsFamilyDefault = true
-	}
+	markFamilyDefaults(rows)
 	return rows
+}
+
+func appendDesktopRow(rows []desktopModel, seen map[string]int, model ModelRef) []desktopModel {
+	name := desktopRowName(model)
+	million := model.ContextWindow != nil && *model.ContextWindow >= desktopSupports1M
+	if index, found := seen[name]; found {
+		// A stripped 1M name collapses onto its base row, so the pair is
+		// offered as one entry that supports the larger window.
+		if million {
+			rows[index].Supports1m = true
+		}
+		return rows
+	}
+	seen[name] = len(rows)
+	behavior := desktopBehavesAs(model)
+	row := desktopModel{
+		Name: name, LabelOverride: codexDisplayName(model),
+		AnthropicFamilyTier: anthropicFamilyTier(behavior), BehavesAs: behavior,
+	}
+	if million {
+		row.Supports1m = true
+		row.Prefer1m = true
+	}
+	return append(rows, row)
+}
+
+// markFamilyDefaults puts one default on the first row of each tier, so every
+// tier Desktop offers can be selected.
+func markFamilyDefaults(rows []desktopModel) {
+	defaulted := make(map[string]bool, len(rows))
+	for index := range rows {
+		if !defaulted[rows[index].AnthropicFamilyTier] {
+			defaulted[rows[index].AnthropicFamilyTier] = true
+			rows[index].IsFamilyDefault = true
+		}
+	}
+}
+
+// anthropicFamilyTier is the family of the behavior a row carries, so Tier
+// follows behavesAs rather than forcing every row into one family.
+func anthropicFamilyTier(behavior string) string {
+	family, _, _ := strings.Cut(strings.TrimPrefix(behavior, catalog.ClaudePrefix), "-")
+	return family
 }
 
 type desktopModel struct {

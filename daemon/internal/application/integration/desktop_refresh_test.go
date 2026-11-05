@@ -83,7 +83,7 @@ func TestRefreshClaudeDesktopAddsBehavesAsWithAnUnchangedRoster(t *testing.T) {
 	models := service.claudePickerModels()
 	path := codingclients.DesktopProfilePath(library)
 	old := `{"inferenceGatewayApiKey":"rlo_ak_test","inferenceGatewayBaseUrl":"http://127.0.0.1:10202",` +
-		`"modelDiscoveryEnabled":false,"theme":"dark","inferenceModels":[{"name":"claude-opus-4-8-r000000000001",` +
+		`"modelDiscoveryEnabled":false,"theme":"dark","inferenceModels":[{"name":"claude-relo-000000000001",` +
 		`"labelOverride":"GPT Pro on OpenAI","anthropicFamilyTier":"opus","isFamilyDefault":true}]}`
 	if err := os.MkdirAll(filepath.Dir(path), 0o700); err != nil {
 		t.Fatalf("create the library: %v", err)
