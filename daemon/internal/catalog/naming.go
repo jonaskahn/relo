@@ -415,11 +415,17 @@ func AnthropicModelAlias(providerID, modelID string, window *int64) string {
 	return ClaudePrefix + ClientPrefix + provider + ClaudeAliasSeparator + model + ClientContextSuffix(window)
 }
 
-// DesktopAliasPrefix starts every id Relo gives Claude Desktop. Desktop drops a
-// gateway model whose name carries another vendor's word (gpt, grok, codex,
-// deepseek, and so on), so Desktop is offered an opaque Claude-shaped id and
-// the snapshot resolves it back to the model.
-const DesktopAliasPrefix = "claude-opus-4-8-r"
+// DesktopAliasPrefix starts every opaque id Relo gives Claude Desktop. Desktop
+// drops a gateway model whose name carries another vendor's word (gpt, grok,
+// codex, deepseek, and so on) or reads a family and version into it, so Desktop
+// is offered a version-free Claude-shaped id and the snapshot resolves it back
+// to the model.
+const DesktopAliasPrefix = "claude-relo-"
+
+// LegacyDesktopAliasPrefix starts the opaque ids earlier builds published.
+// They are still claimed so an existing Desktop session keeps resolving; drop
+// the legacy spelling a few releases after 0.2.8.
+const LegacyDesktopAliasPrefix = "claude-opus-4-8-r"
 
 // DesktopModelAlias is the id Claude Desktop lists for one Claude picker id.
 // It is a hash of that id, so it stays the same for the same model and holds
@@ -427,13 +433,23 @@ const DesktopAliasPrefix = "claude-opus-4-8-r"
 // it. The context marker remains in the hash seed so the default and 1M
 // entries stay distinct.
 func DesktopModelAlias(pickerID string) string {
+	return DesktopAliasPrefix + desktopAliasCode(pickerID)
+}
+
+// legacyDesktopModelAlias is the spelling an earlier release published for the
+// same picker id, so a profile written by that release still resolves.
+func legacyDesktopModelAlias(pickerID string) string {
+	return LegacyDesktopAliasPrefix + desktopAliasCode(pickerID)
+}
+
+func desktopAliasCode(pickerID string) string {
 	seed := strings.TrimSpace(pickerID)
 	for attempt := 0; ; attempt++ {
 		sum := sha256.Sum256([]byte(seed + "\x00" + strconv.Itoa(attempt)))
 		code := hex.EncodeToString(sum[:6])
 		// Desktop's vendor list holds "abab", the one word hex digits can spell.
 		if !strings.Contains(code, "abab") {
-			return DesktopAliasPrefix + code
+			return code
 		}
 	}
 }

@@ -695,9 +695,10 @@ func claimModelMillionAlias(snapshot *Snapshot, owner map[string]string, model M
 }
 
 func (s *Snapshot) claimDesktopAlias(pickerID string, target ClientTarget) {
-	alias := DesktopModelAlias(pickerID)
-	if _, taken := s.byDesktopAlias[alias]; !taken {
-		s.byDesktopAlias[alias] = target
+	for _, alias := range []string{DesktopModelAlias(pickerID), legacyDesktopModelAlias(pickerID)} {
+		if _, taken := s.byDesktopAlias[alias]; !taken {
+			s.byDesktopAlias[alias] = target
+		}
 	}
 }
 

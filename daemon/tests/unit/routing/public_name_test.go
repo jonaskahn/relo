@@ -330,6 +330,10 @@ func TestDesktopAliasesResolveToTheirModels(t *testing.T) {
 		if alias == defaultAlias {
 			t.Fatalf("1M alias %q equals default alias", alias)
 		}
+		legacyAlias := strings.Replace(defaultAlias, catalog.DesktopAliasPrefix, catalog.LegacyDesktopAliasPrefix, 1)
+		if target, found := snapshot.ResolveClientID(legacyAlias); !found || target.ProviderID != model.ProviderID || target.ModelID != model.ID {
+			t.Fatalf("legacy alias %q = %+v, %v, want %s/%s", legacyAlias, target, found, model.ProviderID, model.ID)
+		}
 		target, found := snapshot.ResolveClientID(defaultAlias)
 		if !found || target.ProviderID != model.ProviderID || target.ModelID != model.ID {
 			t.Fatalf("ResolveClientID(%q) = %+v, %v, want %s/%s", defaultAlias, target, found, model.ProviderID, model.ID)
