@@ -11,12 +11,13 @@ beforeAll(() => {
 	init({ fallbackLocale: 'en', initialLocale: 'en' });
 });
 
-describe('the top bar issue control', () => {
-	it('is labelled, carries the GitHub icon, and names itself for assistive technology', () => {
+describe('the top bar support control', () => {
+	it('is icon-only and accessible at every breakpoint', () => {
 		const html = render(Topbar).body;
-		expect(html).toContain('data-report-issue-button');
-		expect(html).toContain('Report issue');
-		expect(html).toContain('aria-label="Report issue"');
-		expect(html).toContain('title="Open a Relo issue on GitHub"');
+		expect(html).toContain('aria-label="Support"');
+		expect(html).toContain('title="Support"');
+		expect(html).not.toContain('data-report-issue-button');
+		expect(html).not.toContain('Report issue');
+		expect(html).not.toMatch(/>\s*Support\s*</);
 	});
 });

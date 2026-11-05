@@ -85,8 +85,10 @@
       "breadcrumb": "Fil d’Ariane",
       "signOut": "Se déconnecter",
       "signingOut": "Déconnexion…",
-      "reportIssue": "Signaler un problème",
-      "reportIssueHint": "Ouvrir un problème Relo sur GitHub"
+      "support": "Assistance",
+      "supportReportIssue": "Signaler un problème",
+      "supportRequestHarness": "Demander une nouvelle intégration d’agent",
+      "supportRequestConnection": "Demander une nouvelle connexion/fournisseur"
     },
     "palette": {
       "placeholder": "Rechercher des pages et des actions…",
@@ -1323,12 +1325,13 @@
         "browseRequests": "Parcourir les requêtes",
         "previousRequest": "Requête précédente",
         "nextRequest": "Requête suivante",
-        "reportIssue": "Signaler un problème",
-        "reportIssueHint": "Inclure des diagnostics Relo sécurisés dans un problème GitHub",
         "reportPreparing": "Préparation du rapport de problème…",
-        "reportBundleDownloaded": "Journal du daemon téléchargé au format ZIP. Joignez-le au problème.",
         "reportPopupBlocked": "Le navigateur a bloqué l’onglet des problèmes GitHub. Autorisez les fenêtres contextuelles pour cette console et réessayez.",
-        "reportFailed": "Impossible d’ouvrir le formulaire de problème GitHub."
+        "reportFailed": "Impossible d’ouvrir le formulaire de problème GitHub.",
+        "reportProviderError": "Signaler une erreur fournisseur",
+        "reportProviderErrorHint": "Inclut jusqu’à 8 KiB pour la requête et la réponse du fournisseur, avec les en-têtes masqués. Aucun corps d’agent inclus.",
+        "reportCopiedDownloaded": "Échange masqué copié et téléchargé. Collez-le ou joignez-le dans GitHub.",
+        "reportDownloadedOnly": "Téléchargement uniquement ; presse-papiers indisponible. Joignez le fichier dans GitHub."
       },
       "usage": {
         "title": "Utilisation",

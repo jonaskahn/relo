@@ -85,8 +85,10 @@
       "breadcrumb": "面包屑",
       "signOut": "退出登录",
       "signingOut": "正在退出…",
-      "reportIssue": "报告问题",
-      "reportIssueHint": "在 GitHub 上打开 Relo 问题"
+      "support": "支持",
+      "supportReportIssue": "报告问题",
+      "supportRequestHarness": "请求新增代理集成",
+      "supportRequestConnection": "请求新增连接/提供商"
     },
     "palette": {
       "placeholder": "搜索页面和操作…",
@@ -1323,12 +1325,13 @@
         "browseRequests": "浏览请求",
         "previousRequest": "上一条请求",
         "nextRequest": "下一条请求",
-        "reportIssue": "报告问题",
-        "reportIssueHint": "在 GitHub 问题中包含安全的 Relo 诊断",
         "reportPreparing": "准备问题报告…",
-        "reportBundleDownloaded": "已下载守护进程日志 ZIP，请将其附加到问题中。",
         "reportPopupBlocked": "浏览器屏蔽了 GitHub 问题选项卡。允许此控制台弹出窗口，然后重试。",
-        "reportFailed": "无法打开 GitHub 问题表单。"
+        "reportFailed": "无法打开 GitHub 问题表单。",
+        "reportProviderError": "报告提供商错误",
+        "reportProviderErrorHint": "包含提供商请求和响应各最多 8 KiB，标头已脱敏。绝不包含代理正文。",
+        "reportCopiedDownloaded": "已复制并下载脱敏后的交互。请在 GitHub 粘贴或附加。",
+        "reportDownloadedOnly": "仅已下载；剪贴板不可用。请在 GitHub 附加文件。"
       },
       "usage": {
         "title": "用量",

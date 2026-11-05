@@ -85,8 +85,10 @@
       "breadcrumb": "탐색 경로",
       "signOut": "로그아웃",
       "signingOut": "로그아웃하는 중…",
-      "reportIssue": "문제 신고",
-      "reportIssueHint": "GitHub에서 Relo 문제 열기"
+      "support": "지원",
+      "supportReportIssue": "문제 신고",
+      "supportRequestHarness": "새 에이전트 연동 요청",
+      "supportRequestConnection": "새 연결/공급자 요청"
     },
     "palette": {
       "placeholder": "페이지와 작업 검색…",
@@ -1323,12 +1325,13 @@
         "browseRequests": "요청 이동",
         "previousRequest": "이전 요청",
         "nextRequest": "다음 요청",
-        "reportIssue": "문제 신고",
-        "reportIssueHint": "GitHub 문제에 안전한 Relo 진단 포함",
         "reportPreparing": "이슈 보고서 준비 중…",
-        "reportBundleDownloaded": "데몬 로그 ZIP이 다운로드되었습니다. 문제에 첨부하세요.",
         "reportPopupBlocked": "브라우저가 GitHub 문제 탭을 차단했습니다. 이 콘솔에 대한 팝업을 허용하고 다시 시도하십시오.",
-        "reportFailed": "GitHub 문제 양식을 열 수 없습니다."
+        "reportFailed": "GitHub 문제 양식을 열 수 없습니다.",
+        "reportProviderError": "공급자 오류 신고",
+        "reportProviderErrorHint": "공급자 요청과 응답을 각각 최대 8 KiB 포함하며 헤더는 마스킹됩니다. 에이전트 본문은 포함되지 않습니다.",
+        "reportCopiedDownloaded": "마스킹된 교환을 복사하고 다운로드했습니다. GitHub에 붙여넣거나 첨부하세요.",
+        "reportDownloadedOnly": "다운로드만 완료했습니다. 클립보드를 사용할 수 없습니다. GitHub에 파일을 첨부하세요."
       },
       "usage": {
         "title": "사용량",

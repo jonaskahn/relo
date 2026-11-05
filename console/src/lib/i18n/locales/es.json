@@ -85,8 +85,10 @@
       "breadcrumb": "Ruta de navegación",
       "signOut": "Cerrar sesión",
       "signingOut": "Cerrando sesión…",
-      "reportIssue": "Informar problema",
-      "reportIssueHint": "Abrir una incidencia de Relo en GitHub"
+      "support": "Ayuda",
+      "supportReportIssue": "Informar de un problema",
+      "supportRequestHarness": "Solicitar un nuevo entorno de agente",
+      "supportRequestConnection": "Solicitar una nueva conexión/proveedor"
     },
     "palette": {
       "placeholder": "Buscar páginas y acciones…",
@@ -1323,12 +1325,13 @@
         "browseRequests": "Recorrer solicitudes",
         "previousRequest": "Solicitud anterior",
         "nextRequest": "Solicitud siguiente",
-        "reportIssue": "Informar problema",
-        "reportIssueHint": "Incluir diagnósticos seguros de Relo en un problema de GitHub",
         "reportPreparing": "Preparando el informe de problemas…",
-        "reportBundleDownloaded": "Archivo ZIP del registro del daemon descargado. Adjúntalo al problema.",
         "reportPopupBlocked": "El navegador bloqueó la pestaña de problemas de GitHub. Permite ventanas emergentes para esta consola y vuelve a intentarlo.",
-        "reportFailed": "No se pudo abrir el formulario de problema de GitHub."
+        "reportFailed": "No se pudo abrir el formulario de problema de GitHub.",
+        "reportProviderError": "Informar de un error del proveedor",
+        "reportProviderErrorHint": "Incluye hasta 8 KiB de la solicitud y respuesta del proveedor, con cabeceras ocultas. Nunca incluye cuerpos del agente.",
+        "reportCopiedDownloaded": "Intercambio ocultado copiado y descargado. Pégalo o adjúntalo en GitHub.",
+        "reportDownloadedOnly": "Solo descargado; portapapeles no disponible. Adjunta el archivo en GitHub."
       },
       "usage": {
         "title": "Uso",

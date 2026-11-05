@@ -85,8 +85,10 @@
       "breadcrumb": "เส้นทาง",
       "signOut": "ออกจากระบบ",
       "signingOut": "กำลังออกจากระบบ…",
-      "reportIssue": "รายงานปัญหา",
-      "reportIssueHint": "เปิดปัญหา Relo บน GitHub"
+      "support": "การสนับสนุน",
+      "supportReportIssue": "รายงานปัญหา",
+      "supportRequestHarness": "ขอการเชื่อมต่อเอเจนต์ใหม่",
+      "supportRequestConnection": "ขอการเชื่อมต่อ/ผู้ให้บริการใหม่"
     },
     "palette": {
       "placeholder": "ค้นหาหน้าและคำสั่ง…",
@@ -1323,12 +1325,13 @@
         "browseRequests": "เรียกดูคำขอ",
         "previousRequest": "คำขอก่อนหน้า",
         "nextRequest": "คำขอถัดไป",
-        "reportIssue": "รายงานปัญหา",
-        "reportIssueHint": "รวมการวินิจฉัย Relo ที่ปลอดภัยไว้ใน issue GitHub",
         "reportPreparing": "กำลังเตรียมรายงานปัญหา…",
-        "reportBundleDownloaded": "ดาวน์โหลดไฟล์ ZIP ของ log daemon แล้ว แนบไฟล์ดังกล่าวกับ issue",
         "reportPopupBlocked": "เบราว์เซอร์บล็อกแท็บ issue GitHub อนุญาตป๊อปอัปสำหรับคอนโซลนี้แล้วลองอีกครั้ง",
-        "reportFailed": "ไม่สามารถเปิดแบบฟอร์ม issue GitHub"
+        "reportFailed": "ไม่สามารถเปิดแบบฟอร์ม issue GitHub",
+        "reportProviderError": "รายงานข้อผิดพลาดผู้ให้บริการ",
+        "reportProviderErrorHint": "รวมคำขอและคำตอบจากผู้ให้บริการอย่างละไม่เกิน 8 KiB โดยปกปิดเฮดเดอร์ ไม่รวมเนื้อหาของเอเจนต์",
+        "reportCopiedDownloaded": "คัดลอกและดาวน์โหลดข้อมูลที่ปกปิดแล้ว วางหรือแนบใน GitHub",
+        "reportDownloadedOnly": "ดาวน์โหลดเท่านั้น คลิปบอร์ดไม่พร้อมใช้งาน แนบไฟล์ใน GitHub"
       },
       "usage": {
         "title": "การใช้งาน",

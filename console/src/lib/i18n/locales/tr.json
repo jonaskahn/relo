@@ -85,8 +85,10 @@
       "breadcrumb": "Gezinme yolu",
       "signOut": "Oturumu kapat",
       "signingOut": "Oturum kapatılıyor…",
-      "reportIssue": "Sorunu bildir",
-      "reportIssueHint": "GitHub’da bir Relo sorunu aç"
+      "support": "Destek",
+      "supportReportIssue": "Sorunu bildir",
+      "supportRequestHarness": "Yeni ajan entegrasyonu iste",
+      "supportRequestConnection": "Yeni bağlantı/sağlayıcı iste"
     },
     "palette": {
       "placeholder": "Sayfalarda ve eylemlerde ara…",
@@ -1323,12 +1325,13 @@
         "browseRequests": "İsteklerde gezin",
         "previousRequest": "Önceki istek",
         "nextRequest": "Sonraki istek",
-        "reportIssue": "Sorunu bildir",
-        "reportIssueHint": "GitHub sorununa güvenli Relo tanı bilgilerini ekle",
         "reportPreparing": "Sorun raporu hazırlanıyor…",
-        "reportBundleDownloaded": "Daemon günlüğünün ZIP’i indirildi. Soruna ekle.",
         "reportPopupBlocked": "Tarayıcı GitHub sorun sekmesini engelledi. Bu konsol için açılır pencerelere izin ver ve tekrar dene.",
-        "reportFailed": "GitHub sorun formu açılamadı."
+        "reportFailed": "GitHub sorun formu açılamadı.",
+        "reportProviderError": "Sağlayıcı hatası bildir",
+        "reportProviderErrorHint": "Başlıklar maskelenerek sağlayıcı isteği ve yanıtının her birinden en fazla 8 KiB içerir. Ajan gövdeleri asla dahil edilmez.",
+        "reportCopiedDownloaded": "Maskelenmiş alışveriş kopyalandı ve indirildi. GitHub’a yapıştırın veya ekleyin.",
+        "reportDownloadedOnly": "Yalnızca indirildi; pano kullanılamıyor. Dosyayı GitHub’a ekleyin."
       },
       "usage": {
         "title": "Kullanım",

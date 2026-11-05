@@ -85,8 +85,10 @@
       "breadcrumb": "Percorso di navigazione",
       "signOut": "Esci",
       "signingOut": "Uscita in corso…",
-      "reportIssue": "Segnala il problema",
-      "reportIssueHint": "Apri un problema di Relo su GitHub"
+      "support": "Assistenza",
+      "supportReportIssue": "Segnala un problema",
+      "supportRequestHarness": "Richiedi una nuova integrazione agente",
+      "supportRequestConnection": "Richiedi una nuova connessione/fornitore"
     },
     "palette": {
       "placeholder": "Cerca pagine e azioni…",
@@ -1323,12 +1325,13 @@
         "browseRequests": "Scorri le richieste",
         "previousRequest": "Richiesta precedente",
         "nextRequest": "Richiesta successiva",
-        "reportIssue": "Segnala il problema",
-        "reportIssueHint": "Includere la diagnostica Relo sicura in un problema di GitHub",
         "reportPreparing": "Preparazione del rapporto sul problema…",
-        "reportBundleDownloaded": "ZIP del registro del daemon scaricato. Allegalo al problema.",
         "reportPopupBlocked": "Il browser ha bloccato la scheda dei problemi di GitHub. Consenti popup per questa console e riprova.",
-        "reportFailed": "Impossibile aprire il modulo di problema GitHub."
+        "reportFailed": "Impossibile aprire il modulo di problema GitHub.",
+        "reportProviderError": "Segnala errore del fornitore",
+        "reportProviderErrorHint": "Include fino a 8 KiB ciascuno di richiesta e risposta del fornitore, con intestazioni mascherate. I corpi dell’agente sono esclusi.",
+        "reportCopiedDownloaded": "Scambio mascherato copiato e scaricato. Incollalo o allegalo su GitHub.",
+        "reportDownloadedOnly": "Solo scaricato; appunti non disponibili. Allega il file su GitHub."
       },
       "usage": {
         "title": "Utilizzo",

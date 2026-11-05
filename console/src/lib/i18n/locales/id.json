@@ -85,8 +85,10 @@
       "breadcrumb": "Breadcrumb",
       "signOut": "Keluar",
       "signingOut": "Sedang keluar…",
-      "reportIssue": "Laporkan masalah",
-      "reportIssueHint": "Buka issue Relo di GitHub"
+      "support": "Dukungan",
+      "supportReportIssue": "Laporkan masalah",
+      "supportRequestHarness": "Minta integrasi agen baru",
+      "supportRequestConnection": "Minta koneksi/penyedia baru"
     },
     "palette": {
       "placeholder": "Cari halaman dan tindakan…",
@@ -1323,12 +1325,13 @@
         "browseRequests": "Telusuri permintaan",
         "previousRequest": "Permintaan sebelumnya",
         "nextRequest": "Permintaan berikutnya",
-        "reportIssue": "Laporkan masalah",
-        "reportIssueHint": "Sertakan diagnostik Relo yang aman dalam issue GitHub",
         "reportPreparing": "Mempersiapkan laporan masalah…",
-        "reportBundleDownloaded": "ZIP log daemon telah diunduh. Lampirkan ke issue.",
         "reportPopupBlocked": "Browser memblokir tab issue GitHub. Izinkan pop-up untuk konsol ini dan coba lagi.",
-        "reportFailed": "Tidak dapat membuka formulir issue GitHub."
+        "reportFailed": "Tidak dapat membuka formulir issue GitHub.",
+        "reportProviderError": "Laporkan kesalahan penyedia",
+        "reportProviderErrorHint": "Menyertakan hingga 8 KiB masing-masing permintaan dan balasan penyedia dengan header disamarkan. Isi agen tidak pernah disertakan.",
+        "reportCopiedDownloaded": "Pertukaran tersamarkan disalin dan diunduh. Tempel atau lampirkan di GitHub.",
+        "reportDownloadedOnly": "Hanya diunduh; papan klip tidak tersedia. Lampirkan berkas di GitHub."
       },
       "usage": {
         "title": "Penggunaan",

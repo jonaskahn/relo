@@ -203,12 +203,12 @@ describe('console catalogs', () => {
 const REWRITE_TAGS = ['nl', 'ro', 'id', 'pt-BR', 'cs', 'tr', 'fr', 'vi'] as const;
 const REWRITTEN_NEW_KEYS = [
 	'ui.pages.providersPage.pane.openDashboardLabel',
-	'ui.topbar.reportIssue',
-	'ui.topbar.reportIssueHint',
-	'ui.pages.logsPage.reportIssue',
-	'ui.pages.logsPage.reportIssueHint',
+	'ui.topbar.supportReportIssue',
+	'ui.topbar.supportRequestHarness',
+	'ui.pages.logsPage.reportProviderError',
+	'ui.pages.logsPage.reportProviderErrorHint',
 	'ui.pages.logsPage.reportPreparing',
-	'ui.pages.logsPage.reportBundleDownloaded',
+	'ui.pages.logsPage.reportCopiedDownloaded',
 	'ui.pages.logsPage.reportPopupBlocked',
 	'ui.pages.logsPage.reportFailed',
 	'ui.pages.groupsPage.inspectRouting',
@@ -364,7 +364,7 @@ const TRANSLATION_REGRESSIONS: Record<string, Record<string, string>> = {
 		'ui.pages.providersPage.models.overrides': 'Overrides'
 	},
 	ro: {
-		'ui.pages.logsPage.reportIssue': 'Raportează problema',
+		'ui.topbar.supportReportIssue': 'Raportează problema',
 		'ui.pages.groupsPage.inspector.needsSignIn': 'Necesită autentificare',
 		'ui.pages.groupsPage.inspector.paused': 'În pauză'
 	},
@@ -375,22 +375,22 @@ const TRANSLATION_REGRESSIONS: Record<string, Record<string, string>> = {
 		'ui.pages.usagePage.searchGroups': 'Cari grup'
 	},
 	'pt-BR': {
-		'ui.pages.logsPage.reportIssue': 'Relatar problema',
+		'ui.topbar.supportReportIssue': 'Relatar problema',
 		'ui.pages.groupsPage.inspector.current': 'Em uso'
 	},
 	cs: {
-		'ui.pages.logsPage.reportBundleDownloaded':
-			'ZIP s protokolem daemonu stažen. Připoj ho k problému.'
+		'ui.pages.logsPage.reportCopiedDownloaded':
+			'Maskovaná výměna zkopírována a stažena. Vložte ji nebo přiložte na GitHub.'
 	},
 	tr: {
-		'ui.pages.logsPage.reportIssue': 'Sorunu bildir'
+		'ui.topbar.supportReportIssue': 'Sorunu bildir'
 	},
 	fr: {
 		'ui.pages.groupsPage.inspector.recent': 'Routes récentes',
 		'ui.pages.chatPage.route': 'Route'
 	},
 	vi: {
-		'ui.pages.logsPage.reportIssue': 'Báo cáo sự cố',
+		'ui.topbar.supportReportIssue': 'Báo cáo sự cố',
 		'ui.pages.usagePage.sortRequests': 'Nhiều yêu cầu nhất'
 	}
 };

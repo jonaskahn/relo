@@ -85,8 +85,10 @@
       "breadcrumb": "Kruimelpad",
       "signOut": "Uitloggen",
       "signingOut": "Bezig met uitloggen…",
-      "reportIssue": "Probleem melden",
-      "reportIssueHint": "Een Relo-issue op GitHub openen"
+      "support": "Ondersteuning",
+      "supportReportIssue": "Probleem melden",
+      "supportRequestHarness": "Nieuwe agentintegratie aanvragen",
+      "supportRequestConnection": "Nieuwe verbinding/provider aanvragen"
     },
     "palette": {
       "placeholder": "Zoek pagina’s en acties…",
@@ -1323,12 +1325,13 @@
         "browseRequests": "Aanvragen doorlopen",
         "previousRequest": "Vorige aanvraag",
         "nextRequest": "Volgende aanvraag",
-        "reportIssue": "Probleem melden",
-        "reportIssueHint": "Neem veilige Relo-diagnostiek op in een GitHub-issue",
         "reportPreparing": "Het probleemrapport voorbereiden…",
-        "reportBundleDownloaded": "ZIP met het daemonlog is gedownload. Voeg het bestand toe aan de issue.",
         "reportPopupBlocked": "De browser heeft het GitHub-issuevenster geblokkeerd. Sta pop-ups toe voor deze console en probeer het opnieuw.",
-        "reportFailed": "Kan het GitHub-issueformulier niet openen."
+        "reportFailed": "Kan het GitHub-issueformulier niet openen.",
+        "reportProviderError": "Providerfout melden",
+        "reportProviderErrorHint": "Bevat maximaal 8 KiB per provideraanvraag en -antwoord, met gemaskeerde headers. Agentinhoud wordt nooit opgenomen.",
+        "reportCopiedDownloaded": "Gemaskeerde uitwisseling gekopieerd en gedownload. Plak of voeg toe in GitHub.",
+        "reportDownloadedOnly": "Alleen gedownload; klembord niet beschikbaar. Voeg het bestand toe in GitHub."
       },
       "usage": {
         "title": "Verbruik",

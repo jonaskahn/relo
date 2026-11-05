@@ -85,8 +85,10 @@
       "breadcrumb": "Навигационная цепочка",
       "signOut": "Выйти",
       "signingOut": "Выход…",
-      "reportIssue": "Сообщить о проблеме",
-      "reportIssueHint": "Откройте issue Relo на GitHub."
+      "support": "Поддержка",
+      "supportReportIssue": "Сообщить о проблеме",
+      "supportRequestHarness": "Запросить новую интеграцию агента",
+      "supportRequestConnection": "Запросить новое подключение/провайдера"
     },
     "palette": {
       "placeholder": "Поиск страниц и действий…",
@@ -1323,12 +1325,13 @@
         "browseRequests": "Просмотр запросов",
         "previousRequest": "Предыдущий запрос",
         "nextRequest": "Следующий запрос",
-        "reportIssue": "Сообщить о проблеме",
-        "reportIssueHint": "Включите безопасную диагностику Relo в issue на GitHub.",
         "reportPreparing": "Подготовка отчета о проблеме…",
-        "reportBundleDownloaded": "ZIP-файл журнала демона загружен. Прикрепите его к issue.",
         "reportPopupBlocked": "Браузер заблокировал вкладку issue GitHub. Разрешите всплывающие окна для этой консоли и повторите попытку.",
-        "reportFailed": "Не удалось открыть форму issue GitHub."
+        "reportFailed": "Не удалось открыть форму issue GitHub.",
+        "reportProviderError": "Сообщить об ошибке провайдера",
+        "reportProviderErrorHint": "Включает до 8 KiB запроса и ответа провайдера с маскированными заголовками. Тела сообщений агента не включаются.",
+        "reportCopiedDownloaded": "Маскированный обмен скопирован и скачан. Вставьте или прикрепите его в GitHub.",
+        "reportDownloadedOnly": "Только скачано; буфер обмена недоступен. Прикрепите файл в GitHub."
       },
       "usage": {
         "title": "Использование",

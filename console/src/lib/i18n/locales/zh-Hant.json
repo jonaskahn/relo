@@ -85,8 +85,10 @@
       "breadcrumb": "麵包屑",
       "signOut": "登出",
       "signingOut": "登出中…",
-      "reportIssue": "報告問題",
-      "reportIssueHint": "在 GitHub 上開啟 Relo 問題"
+      "support": "支援",
+      "supportReportIssue": "回報問題",
+      "supportRequestHarness": "請求新增代理整合",
+      "supportRequestConnection": "請求新增連線/供應商"
     },
     "palette": {
       "placeholder": "搜尋頁面與動作…",
@@ -1323,12 +1325,13 @@
         "browseRequests": "瀏覽請求",
         "previousRequest": "上一筆請求",
         "nextRequest": "下一筆請求",
-        "reportIssue": "報告問題",
-        "reportIssueHint": "在 GitHub 問題中包含安全的 Relo 診斷",
         "reportPreparing": "準備問題報告…",
-        "reportBundleDownloaded": "已下載守護程序日誌 ZIP，請將其附加到問題中。",
         "reportPopupBlocked": "瀏覽器屏蔽了 GitHub 問題標籤。允許此控制台彈出窗口，然後重試。",
-        "reportFailed": "無法開啟 GitHub 問題表單。"
+        "reportFailed": "無法開啟 GitHub 問題表單。",
+        "reportProviderError": "回報供應商錯誤",
+        "reportProviderErrorHint": "包含供應商請求和回應各最多 8 KiB，標頭已遮蔽。絕不包含代理本文。",
+        "reportCopiedDownloaded": "已複製並下載遮蔽後的交換。請在 GitHub 貼上或附加。",
+        "reportDownloadedOnly": "僅已下載；剪貼簿無法使用。請在 GitHub 附加檔案。"
       },
       "usage": {
         "title": "用量",

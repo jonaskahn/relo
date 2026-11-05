@@ -85,8 +85,10 @@
       "breadcrumb": "Навігація",
       "signOut": "Вийти",
       "signingOut": "Вихід…",
-      "reportIssue": "Повідомити про проблему",
-      "reportIssueHint": "Відкрийте issue Relo на GitHub."
+      "support": "Підтримка",
+      "supportReportIssue": "Повідомити про проблему",
+      "supportRequestHarness": "Запросити нову інтеграцію агента",
+      "supportRequestConnection": "Запросити нове підключення/провайдера"
     },
     "palette": {
       "placeholder": "Пошук сторінок і дій…",
@@ -1323,12 +1325,13 @@
         "browseRequests": "Перегляд запитів",
         "previousRequest": "Попередній запит",
         "nextRequest": "Наступний запит",
-        "reportIssue": "Повідомити про проблему",
-        "reportIssueHint": "Додайте безпечну діагностику Relo до issue на GitHub.",
         "reportPreparing": "Підготовка звіту про проблему…",
-        "reportBundleDownloaded": "ZIP-архів журналу демона завантажено. Додайте його до issue.",
         "reportPopupBlocked": "Браузер заблокував вкладку issue GitHub. Дозвольте спливаючі вікна для цієї консолі та повторіть спробу.",
-        "reportFailed": "Не вдалося відкрити форму issue GitHub."
+        "reportFailed": "Не вдалося відкрити форму issue GitHub.",
+        "reportProviderError": "Повідомити про помилку провайдера",
+        "reportProviderErrorHint": "Містить до 8 KiB запиту та відповіді провайдера з прихованими заголовками. Тіла повідомлень агента не включаються.",
+        "reportCopiedDownloaded": "Прихований обмін скопійовано й завантажено. Вставте або прикріпіть його в GitHub.",
+        "reportDownloadedOnly": "Лише завантажено; буфер обміну недоступний. Прикріпіть файл у GitHub."
       },
       "usage": {
         "title": "Використання",

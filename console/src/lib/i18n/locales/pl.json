@@ -85,8 +85,10 @@
       "breadcrumb": "Ścieżka nawigacji",
       "signOut": "Wyloguj się",
       "signingOut": "Wylogowywanie…",
-      "reportIssue": "Zgłoś problem",
-      "reportIssueHint": "Otwórz zgłoszenie Relo na GitHubie"
+      "support": "Pomoc",
+      "supportReportIssue": "Zgłoś problem",
+      "supportRequestHarness": "Poproś o nową integrację agenta",
+      "supportRequestConnection": "Poproś o nowe połączenie/dostawcę"
     },
     "palette": {
       "placeholder": "Szukaj stron i działań…",
@@ -1323,12 +1325,13 @@
         "browseRequests": "Przeglądaj żądania",
         "previousRequest": "Poprzednie żądanie",
         "nextRequest": "Następne żądanie",
-        "reportIssue": "Zgłoś problem",
-        "reportIssueHint": "Dołącz bezpieczną diagnostykę Relo do zgłoszenia na GitHubie",
         "reportPreparing": "Przygotowywanie raportu o problemie…",
-        "reportBundleDownloaded": "Pobrano ZIP z dziennikiem daemon. Dołącz go do zgłoszenia.",
         "reportPopupBlocked": "Przeglądarka zablokowała kartę zgłoszenia GitHub. Zezwól na wyskakujące okienka dla tej konsoli i spróbuj ponownie.",
-        "reportFailed": "Nie można otworzyć formularza zgłoszenia na GitHubie."
+        "reportFailed": "Nie można otworzyć formularza zgłoszenia na GitHubie.",
+        "reportProviderError": "Zgłoś błąd dostawcy",
+        "reportProviderErrorHint": "Zawiera do 8 KiB żądania i odpowiedzi dostawcy z zamaskowanymi nagłówkami. Treść agenta nigdy nie jest dołączana.",
+        "reportCopiedDownloaded": "Zamaskowana wymiana skopiowana i pobrana. Wklej lub załącz w GitHub.",
+        "reportDownloadedOnly": "Tylko pobrano; schowek niedostępny. Załącz plik w GitHub."
       },
       "usage": {
         "title": "Zużycie",

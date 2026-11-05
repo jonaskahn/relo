@@ -6,7 +6,8 @@ import { beforeAll, describe, expect, it } from 'vitest';
 import en from '$lib/i18n/locales/en.json';
 import { usageRowOf } from '$lib/usage-fixtures';
 
-import RequestReportAction from './request-report-action.svelte';
+import ProviderErrorReport from './provider-error-report.svelte';
+import { hasProviderError } from '$lib/provider-report';
 
 beforeAll(() => {
 	addMessages('en', en);
@@ -15,13 +16,15 @@ beforeAll(() => {
 
 function markup(status: number) {
 	const row = usageRowOf({ Status: status });
-	return render(RequestReportAction, { props: { row } }).body;
+	return render(ProviderErrorReport, { props: { row } }).body;
 }
 
 describe('the failed request report action', () => {
-	it('appears only when the request failed', () => {
-		expect(markup(429)).toContain('data-report-issue-button');
-		expect(markup(200)).not.toContain('data-report-issue-button');
+	it('uses provider captures, not the final status, to gate the action', () => {
+		const source = readFileSync(new URL('./request-detail-modal.svelte', import.meta.url), 'utf8');
+		expect(source).toContain('!capturesLoading && hasProviderError(captures)');
+		expect(hasProviderError([])).toBe(false);
+		expect(markup(429)).toContain('Report provider error');
 	});
 
 	it('renders the request detail as a trailing drawer', () => {

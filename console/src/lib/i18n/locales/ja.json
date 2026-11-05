@@ -85,8 +85,10 @@
       "breadcrumb": "パンくずリスト",
       "signOut": "サインアウト",
       "signingOut": "サインアウト中…",
-      "reportIssue": "問題を報告する",
-      "reportIssueHint": "GitHub で Relo の問題を開く"
+      "support": "サポート",
+      "supportReportIssue": "問題を報告",
+      "supportRequestHarness": "新しいエージェント連携をリクエスト",
+      "supportRequestConnection": "新しい接続・プロバイダーをリクエスト"
     },
     "palette": {
       "placeholder": "ページや操作を検索…",
@@ -1323,12 +1325,13 @@
         "browseRequests": "リクエストを移動",
         "previousRequest": "前のリクエスト",
         "nextRequest": "次のリクエスト",
-        "reportIssue": "問題を報告する",
-        "reportIssueHint": "GitHub の問題に安全な Relo 診断を含める",
         "reportPreparing": "問題レポートを準備しています…",
-        "reportBundleDownloaded": "デーモン ログ ZIP がダウンロードされました。問題に添付してください。",
         "reportPopupBlocked": "ブラウザーが GitHub の問題タブをブロックしました。このコンソールのポップアップを許可して、再試行してください。",
-        "reportFailed": "GitHub の問題フォームを開けませんでした。"
+        "reportFailed": "GitHub の問題フォームを開けませんでした。",
+        "reportProviderError": "プロバイダーエラーを報告",
+        "reportProviderErrorHint": "プロバイダーのリクエストと応答を各最大8 KiB含み、ヘッダーはマスクされます。エージェントの本文は含みません。",
+        "reportCopiedDownloaded": "マスク済みの通信をコピーしてダウンロードしました。GitHubに貼り付けるか添付してください。",
+        "reportDownloadedOnly": "ダウンロードのみ完了しました。クリップボードは使用できません。GitHubにファイルを添付してください。"
       },
       "usage": {
         "title": "使用量",

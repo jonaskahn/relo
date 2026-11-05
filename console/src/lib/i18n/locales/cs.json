@@ -85,8 +85,10 @@
       "breadcrumb": "Drobečková navigace",
       "signOut": "Odhlásit se",
       "signingOut": "Odhlásení…",
-      "reportIssue": "Nahlásit problém",
-      "reportIssueHint": "Otevřít problém Relo na GitHubu"
+      "support": "Podpora",
+      "supportReportIssue": "Nahlásit problém",
+      "supportRequestHarness": "Požádat o novou integraci agenta",
+      "supportRequestConnection": "Požádat o nové připojení/poskytovatele"
     },
     "palette": {
       "placeholder": "Hledat stránky a akce…",
@@ -1323,12 +1325,13 @@
         "browseRequests": "Procházet požadavky",
         "previousRequest": "Předchozí požadavek",
         "nextRequest": "Další požadavek",
-        "reportIssue": "Nahlásit problém",
-        "reportIssueHint": "Zahrnout bezpečnou diagnostiku Relo do problému na GitHubu",
         "reportPreparing": "Připravuje se hlášení problému…",
-        "reportBundleDownloaded": "ZIP s protokolem daemonu stažen. Připoj ho k problému.",
         "reportPopupBlocked": "Prohlížeč zablokoval kartu s problémem na GitHubu. Povol vyskakovací okna pro tuto konzoli a zkus to znovu.",
-        "reportFailed": "Formulář problému na GitHubu se nepodařilo otevřít."
+        "reportFailed": "Formulář problému na GitHubu se nepodařilo otevřít.",
+        "reportProviderError": "Nahlásit chybu poskytovatele",
+        "reportProviderErrorHint": "Zahrnuje až 8 KiB požadavku a odpovědi poskytovatele s maskovanými hlavičkami. Těla agenta se nikdy nezahrnují.",
+        "reportCopiedDownloaded": "Maskovaná výměna zkopírována a stažena. Vložte ji nebo přiložte na GitHub.",
+        "reportDownloadedOnly": "Pouze staženo; schránka není dostupná. Přiložte soubor na GitHub."
       },
       "usage": {
         "title": "Využití",

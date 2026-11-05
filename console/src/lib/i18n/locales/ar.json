@@ -85,8 +85,10 @@
       "breadcrumb": "مسار التنقل",
       "signOut": "تسجيل الخروج",
       "signingOut": "جارٍ تسجيل الخروج…",
-      "reportIssue": "الإبلاغ عن مشكلة",
-      "reportIssueHint": "افتح مشكلة Relo على GitHub"
+      "support": "الدعم",
+      "supportReportIssue": "الإبلاغ عن مشكلة",
+      "supportRequestHarness": "طلب تكامل وكيل جديد",
+      "supportRequestConnection": "طلب اتصال/موفر جديد"
     },
     "palette": {
       "placeholder": "ابحث في الصفحات والإجراءات…",
@@ -1323,12 +1325,13 @@
         "browseRequests": "تصفح الطلبات",
         "previousRequest": "الطلب السابق",
         "nextRequest": "الطلب التالي",
-        "reportIssue": "الإبلاغ عن مشكلة",
-        "reportIssueHint": "قم بتضمين تشخيصات Relo الآمنة في مشكلة GitHub",
         "reportPreparing": "جارٍ إعداد تقرير المشكلة…",
-        "reportBundleDownloaded": "تم تنزيل ملف ZIP لسجل الخادم. أرفقه بالمشكلة.",
         "reportPopupBlocked": "قام المتصفح بحظر علامة تبويب مشكلة GitHub. اسمح بالنوافذ المنبثقة لوحدة التحكم هذه وحاول مرة أخرى.",
-        "reportFailed": "تعذر فتح نموذج مشكلة GitHub."
+        "reportFailed": "تعذر فتح نموذج مشكلة GitHub.",
+        "reportProviderError": "الإبلاغ عن خطأ الموفر",
+        "reportProviderErrorHint": "يتضمن حتى 8 KiB لكل من طلب الموفر وردّه مع إخفاء الترويسات. لا يتضمن محتوى الوكيل أبداً.",
+        "reportCopiedDownloaded": "تم نسخ التبادل المخفي وتنزيله. الصقه أو أرفقه في GitHub.",
+        "reportDownloadedOnly": "تم التنزيل فقط؛ الحافظة غير متاحة. أرفق الملف في GitHub."
       },
       "usage": {
         "title": "الاستخدام",

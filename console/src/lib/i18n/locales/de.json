@@ -85,8 +85,10 @@
       "breadcrumb": "Navigationspfad",
       "signOut": "Abmelden",
       "signingOut": "Abmelden…",
-      "reportIssue": "Problem melden",
-      "reportIssueHint": "Ein Relo-Issue auf GitHub öffnen"
+      "support": "Support",
+      "supportReportIssue": "Problem melden",
+      "supportRequestHarness": "Neue Agent-Anbindung anfragen",
+      "supportRequestConnection": "Neue Verbindung/Provider anfragen"
     },
     "palette": {
       "placeholder": "Seiten und Aktionen suchen…",
@@ -1323,12 +1325,13 @@
         "browseRequests": "Anfragen durchsehen",
         "previousRequest": "Vorherige Anfrage",
         "nextRequest": "Nächste Anfrage",
-        "reportIssue": "Problem melden",
-        "reportIssueHint": "Sichere Relo-Diagnose in ein GitHub-Issue aufnehmen",
         "reportPreparing": "Vorbereiten des Problemberichts…",
-        "reportBundleDownloaded": "Daemon-Log als ZIP heruntergeladen. Hänge es dem Issue an.",
         "reportPopupBlocked": "Der Browser hat das GitHub-Issue-Fenster blockiert. Erlaube Pop-ups für diese Konsole und versuche es erneut.",
-        "reportFailed": "Das GitHub-Problemformular konnte nicht geöffnet werden."
+        "reportFailed": "Das GitHub-Problemformular konnte nicht geöffnet werden.",
+        "reportProviderError": "Provider-Fehler melden",
+        "reportProviderErrorHint": "Enthält jeweils bis zu 8 KiB der Provider-Anfrage und -Antwort mit maskierten Headern. Agent-Inhalte sind nie enthalten.",
+        "reportCopiedDownloaded": "Maskierter Austausch kopiert und heruntergeladen. In GitHub einfügen oder anhängen.",
+        "reportDownloadedOnly": "Nur heruntergeladen; Zwischenablage nicht verfügbar. Datei in GitHub anhängen."
       },
       "usage": {
         "title": "Verbrauch",

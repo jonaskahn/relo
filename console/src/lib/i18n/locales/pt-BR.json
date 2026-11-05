@@ -85,8 +85,10 @@
       "breadcrumb": "Trilha de navegação",
       "signOut": "Sair",
       "signingOut": "Saindo…",
-      "reportIssue": "Relatar problema",
-      "reportIssueHint": "Abrir um problema do Relo no GitHub"
+      "support": "Suporte",
+      "supportReportIssue": "Relatar problema",
+      "supportRequestHarness": "Solicitar nova integração de agente",
+      "supportRequestConnection": "Solicitar nova conexão/provedor"
     },
     "palette": {
       "placeholder": "Buscar páginas e ações…",
@@ -1323,12 +1325,13 @@
         "browseRequests": "Percorrer solicitações",
         "previousRequest": "Solicitação anterior",
         "nextRequest": "Próxima solicitação",
-        "reportIssue": "Relatar problema",
-        "reportIssueHint": "Incluir diagnósticos seguros do Relo em um problema do GitHub",
         "reportPreparing": "Preparando o relatório do problema…",
-        "reportBundleDownloaded": "ZIP do log do daemon baixado. Anexe-o ao problema.",
         "reportPopupBlocked": "O navegador bloqueou a aba de problemas do GitHub. Permita pop-ups para este console e tente novamente.",
-        "reportFailed": "Não foi possível abrir o formulário de problema do GitHub."
+        "reportFailed": "Não foi possível abrir o formulário de problema do GitHub.",
+        "reportProviderError": "Relatar erro do provedor",
+        "reportProviderErrorHint": "Inclui até 8 KiB de cada solicitação e resposta do provedor, com cabeçalhos mascarados. Nunca inclui corpos do agente.",
+        "reportCopiedDownloaded": "Troca mascarada copiada e baixada. Cole ou anexe no GitHub.",
+        "reportDownloadedOnly": "Apenas baixada; área de transferência indisponível. Anexe o arquivo no GitHub."
       },
       "usage": {
         "title": "Uso",

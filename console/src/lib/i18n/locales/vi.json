@@ -85,8 +85,10 @@
       "breadcrumb": "Đường dẫn",
       "signOut": "Đăng xuất",
       "signingOut": "Đang đăng xuất…",
-      "reportIssue": "Báo cáo sự cố",
-      "reportIssueHint": "Mở một issue của Relo trên GitHub"
+      "support": "Hỗ trợ",
+      "supportReportIssue": "Báo cáo sự cố",
+      "supportRequestHarness": "Yêu cầu tích hợp tác tử mới",
+      "supportRequestConnection": "Yêu cầu kết nối/nhà cung cấp mới"
     },
     "palette": {
       "placeholder": "Tìm trang và thao tác…",
@@ -1323,12 +1325,13 @@
         "browseRequests": "Duyệt yêu cầu",
         "previousRequest": "Yêu cầu trước",
         "nextRequest": "Yêu cầu sau",
-        "reportIssue": "Báo cáo sự cố",
-        "reportIssueHint": "Kèm chẩn đoán Relo an toàn vào issue GitHub",
         "reportPreparing": "Đang chuẩn bị báo cáo sự cố…",
-        "reportBundleDownloaded": "Đã tải xuống ZIP nhật ký daemon. Hãy đính kèm vào issue.",
         "reportPopupBlocked": "Trình duyệt đã chặn tab issue GitHub. Cho phép cửa sổ bật lên cho bảng điều khiển này rồi thử lại.",
-        "reportFailed": "Không thể mở biểu mẫu issue GitHub."
+        "reportFailed": "Không thể mở biểu mẫu issue GitHub.",
+        "reportProviderError": "Báo lỗi nhà cung cấp",
+        "reportProviderErrorHint": "Bao gồm tối đa 8 KiB mỗi phần yêu cầu và phản hồi của nhà cung cấp, với header đã che. Không bao giờ gồm nội dung của tác tử.",
+        "reportCopiedDownloaded": "Đã sao chép và tải xuống trao đổi đã che. Dán hoặc đính kèm trên GitHub.",
+        "reportDownloadedOnly": "Chỉ tải xuống; không dùng được bộ nhớ tạm. Đính kèm tệp trên GitHub."
       },
       "usage": {
         "title": "Cách sử dụng",

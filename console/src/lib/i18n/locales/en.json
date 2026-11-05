@@ -71,8 +71,6 @@
       "healthRunning": "running",
       "healthDown": "unreachable",
       "updateAvailable": "Update available",
-      "reportIssue": "Report issue",
-      "reportIssueHint": "Open a Relo issue on GitHub",
       "quickAdd": "Add",
       "quickAddAccount": "Provider account",
       "quickAddKey": "Client key",
@@ -86,7 +84,11 @@
       "palette": "Search",
       "breadcrumb": "Breadcrumb",
       "signOut": "Sign out",
-      "signingOut": "Signing out…"
+      "signingOut": "Signing out…",
+      "support": "Support",
+      "supportReportIssue": "Report issue",
+      "supportRequestHarness": "Request new agent harness",
+      "supportRequestConnection": "Request new connection/provider"
     },
     "palette": {
       "placeholder": "Search pages and actions…",
@@ -1311,10 +1313,7 @@
         "copyRawRequest": "Copy raw JSON",
         "sectionLabel": "Log section",
         "requestsHidden": "Hidden",
-        "reportIssue": "Report issue",
-        "reportIssueHint": "Include safe Relo diagnostics in a GitHub issue",
         "reportPreparing": "Preparing the issue report…",
-        "reportBundleDownloaded": "Daemon log ZIP downloaded. Attach it to the issue.",
         "reportPopupBlocked": "The browser blocked the GitHub issue tab. Allow pop-ups for this console and try again.",
         "reportFailed": "Could not open the GitHub issue form.",
         "requestsShown": "Shown",
@@ -1328,7 +1327,11 @@
         "slowRequest": "Over 2 minutes",
         "browseRequests": "Browse requests",
         "previousRequest": "Previous request",
-        "nextRequest": "Next request"
+        "nextRequest": "Next request",
+        "reportProviderError": "Report provider error",
+        "reportProviderErrorHint": "Includes up to 8 KiB each of the provider request and reply, with headers masked. Agent bodies are never included.",
+        "reportCopiedDownloaded": "Masked exchange copied and downloaded. Paste or attach it in GitHub.",
+        "reportDownloadedOnly": "Masked exchange downloaded only; clipboard unavailable. Attach the file in GitHub."
       },
       "usage": {
         "title": "Usage",

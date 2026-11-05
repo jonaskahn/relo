@@ -85,8 +85,10 @@
       "breadcrumb": "Traseu de navigare",
       "signOut": "Deconectare",
       "signingOut": "Se deconectează…",
-      "reportIssue": "Raportează problema",
-      "reportIssueHint": "Deschide un issue Relo pe GitHub"
+      "support": "Asistență",
+      "supportReportIssue": "Raportează problema",
+      "supportRequestHarness": "Solicită o nouă integrare de agent",
+      "supportRequestConnection": "Solicită o nouă conexiune/furnizor"
     },
     "palette": {
       "placeholder": "Caută pagini și acțiuni…",
@@ -1323,12 +1325,13 @@
         "browseRequests": "Răsfoiește cererile",
         "previousRequest": "Cererea anterioară",
         "nextRequest": "Cererea următoare",
-        "reportIssue": "Raportează problema",
-        "reportIssueHint": "Include diagnostice Relo sigure într-un issue GitHub",
         "reportPreparing": "Se pregătește raportul problemei…",
-        "reportBundleDownloaded": "ZIP-ul jurnalului daemon a fost descărcat. Atașează-l la issue.",
         "reportPopupBlocked": "Browserul a blocat fila cu issue-ul GitHub. Permite ferestrele pop-up pentru această consolă și încearcă din nou.",
-        "reportFailed": "Nu s-a putut deschide formularul de issue GitHub."
+        "reportFailed": "Nu s-a putut deschide formularul de issue GitHub.",
+        "reportProviderError": "Raportează eroarea furnizorului",
+        "reportProviderErrorHint": "Include până la 8 KiB pentru cererea și răspunsul furnizorului, cu antete mascate. Corpurile agentului nu sunt incluse.",
+        "reportCopiedDownloaded": "Schimb mascat copiat și descărcat. Lipește sau atașează în GitHub.",
+        "reportDownloadedOnly": "Doar descărcat; clipboard indisponibil. Atașează fișierul în GitHub."
       },
       "usage": {
         "title": "Utilizare",

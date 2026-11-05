@@ -85,8 +85,10 @@
       "breadcrumb": "Sökväg",
       "signOut": "Logga ut",
       "signingOut": "Loggar ut…",
-      "reportIssue": "Rapportera problem",
-      "reportIssueHint": "Öppna ett Relo-problem på GitHub"
+      "support": "Support",
+      "supportReportIssue": "Rapportera problem",
+      "supportRequestHarness": "Begär ny agentintegration",
+      "supportRequestConnection": "Begär ny anslutning/leverantör"
     },
     "palette": {
       "placeholder": "Sök sidor och åtgärder…",
@@ -1323,12 +1325,13 @@
         "browseRequests": "Bläddra bland förfrågningar",
         "previousRequest": "Föregående förfrågan",
         "nextRequest": "Nästa förfrågan",
-        "reportIssue": "Rapportera problem",
-        "reportIssueHint": "Inkludera säker Relo-diagnostik i ett GitHub-problem",
         "reportPreparing": "Förbereder problemrapporten…",
-        "reportBundleDownloaded": "ZIP för daemonloggen har laddats ned. Bifoga den till ärendet.",
         "reportPopupBlocked": "Webbläsaren blockerade GitHub-problemfliken. Tillåt popup-fönster för den här konsolen och försök igen.",
-        "reportFailed": "Det gick inte att öppna GitHub-problemformuläret."
+        "reportFailed": "Det gick inte att öppna GitHub-problemformuläret.",
+        "reportProviderError": "Rapportera leverantörsfel",
+        "reportProviderErrorHint": "Inkluderar upp till 8 KiB vardera av leverantörens begäran och svar med maskerade headers. Agentinnehåll ingår aldrig.",
+        "reportCopiedDownloaded": "Maskerat utbyte kopierat och nedladdat. Klistra in eller bifoga på GitHub.",
+        "reportDownloadedOnly": "Endast nedladdat; urklipp saknas. Bifoga filen på GitHub."
       },
       "usage": {
         "title": "Användning",

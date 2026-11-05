@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { hasProviderError } from '$lib/provider-report';
 	import { t } from 'svelte-i18n';
 
 	import { api } from '$lib/api';
@@ -10,7 +11,7 @@
 	import RequestDetailExchange from '$lib/components/logs/request-detail-exchange.svelte';
 	import RequestDetailOverview from '$lib/components/logs/request-detail-overview.svelte';
 	import RequestDetailTokens from '$lib/components/logs/request-detail-tokens.svelte';
-	import RequestReportAction from '$lib/components/logs/request-report-action.svelte';
+	import ProviderErrorReport from '$lib/components/logs/provider-error-report.svelte';
 	import type { Model, UsageAttemptRow, UsageCapture, UsageLogRow } from '$lib/types';
 
 	// RequestDetailModal is one request, in full: its identity, what it cost,
@@ -136,7 +137,9 @@
 		{/if}
 	{/snippet}
 	{#snippet headerNav()}
-		{#if row}<RequestReportAction {row} />{/if}
+		{#if row && !capturesLoading && hasProviderError(captures)}
+			<ProviderErrorReport {row} />
+		{/if}
 		{#if traced && row}
 			<!-- The traffic log holds this request whole, so the Chat tester can
 			     send the same conversation again through Relo. Nothing is sent

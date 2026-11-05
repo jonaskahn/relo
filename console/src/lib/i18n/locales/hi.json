@@ -85,8 +85,10 @@
       "breadcrumb": "ब्रेडक्रंब",
       "signOut": "लॉग आउट करें",
       "signingOut": "लॉग आउट हो रहा है…",
-      "reportIssue": "समस्या रिपोर्ट करें",
-      "reportIssueHint": "GitHub पर Relo का issue खोलें"
+      "support": "सहायता",
+      "supportReportIssue": "समस्या रिपोर्ट करें",
+      "supportRequestHarness": "नया एजेंट एकीकरण माँगें",
+      "supportRequestConnection": "नया कनेक्शन/प्रदाता माँगें"
     },
     "palette": {
       "placeholder": "पृष्ठ और क्रियाएँ खोजें…",
@@ -1323,12 +1325,13 @@
         "browseRequests": "अनुरोध देखें",
         "previousRequest": "पिछला अनुरोध",
         "nextRequest": "अगला अनुरोध",
-        "reportIssue": "समस्या रिपोर्ट करें",
-        "reportIssueHint": "GitHub issue में सुरक्षित Relo डायग्नोस्टिक्स शामिल करें",
         "reportPreparing": "समस्या रिपोर्ट तैयार की जा रही है…",
-        "reportBundleDownloaded": "डेमॉन लॉग का ZIP डाउनलोड हो गया। इसे issue में संलग्न करें।",
         "reportPopupBlocked": "ब्राउज़र ने GitHub issue टैब को ब्लॉक कर दिया। इस कंसोल के लिए पॉप-अप की अनुमति दें और फिर से कोशिश करें।",
-        "reportFailed": "GitHub issue फ़ॉर्म खोल नहीं सका।"
+        "reportFailed": "GitHub issue फ़ॉर्म खोल नहीं सका।",
+        "reportProviderError": "प्रदाता त्रुटि रिपोर्ट करें",
+        "reportProviderErrorHint": "प्रदाता अनुरोध और उत्तर के अधिकतम 8 KiB प्रत्येक शामिल हैं, हेडर छिपाए जाते हैं। एजेंट की सामग्री कभी शामिल नहीं होती।",
+        "reportCopiedDownloaded": "छिपाया गया आदान-प्रदान कॉपी और डाउनलोड हुआ। GitHub में पेस्ट या संलग्न करें।",
+        "reportDownloadedOnly": "केवल डाउनलोड हुआ; क्लिपबोर्ड अनुपलब्ध है। GitHub में फ़ाइल संलग्न करें।"
       },
       "usage": {
         "title": "उपयोग",
