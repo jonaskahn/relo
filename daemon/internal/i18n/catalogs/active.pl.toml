@@ -705,3 +705,6 @@ other = "Bezpłatne połączenia wymagają Twojej zgody. Włącz bezpłatne poł
 [api.connections.free_connection_exists]
 description = "Management refusal when a second keyless free connection is requested"
 other = "To bezpłatne połączenie zostało już dodane."
+
+[api.logs.provider_error_missing]
+other = "Brak zapisu błędu dostawcy dla tego żądania."

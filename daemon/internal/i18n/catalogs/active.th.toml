@@ -703,3 +703,6 @@ other = "การเชื่อมต่อฟรีต้องได้ร�
 [api.connections.free_connection_exists]
 description = "Management refusal when a second keyless free connection is requested"
 other = "การเชื่อมต่อฟรีนี้ถูกเพิ่มแล้ว"
+
+[api.logs.provider_error_missing]
+other = "ไม่มีบันทึกข้อผิดพลาดผู้ให้บริการสำหรับคำขอนี้"

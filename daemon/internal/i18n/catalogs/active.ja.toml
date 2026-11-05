@@ -703,3 +703,6 @@ other = "無料接続には同意が必要です。使用する前に無料接�
 [api.connections.free_connection_exists]
 description = "Management refusal when a second keyless free connection is requested"
 other = "この無料接続はすでに追加されています。"
+
+[api.logs.provider_error_missing]
+other = "このリクエストのプロバイダーエラー記録はありません。"

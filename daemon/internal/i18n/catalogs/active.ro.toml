@@ -705,3 +705,6 @@ other = "Conexiunile gratuite necesită consimțământul tău. Activează conex
 [api.connections.free_connection_exists]
 description = "Management refusal when a second keyless free connection is requested"
 other = "Această conexiune gratuită este deja adăugată."
+
+[api.logs.provider_error_missing]
+other = "Nu există o captură de eroare a furnizorului pentru această cerere."

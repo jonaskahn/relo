@@ -703,3 +703,6 @@ other = "Les connexions gratuites nécessitent votre consentement. Activez les c
 [api.connections.free_connection_exists]
 description = "Management refusal when a second keyless free connection is requested"
 other = "Cette connexion gratuite est déjà ajoutée."
+
+[api.logs.provider_error_missing]
+other = "Aucune capture d’erreur fournisseur pour cette requête."

@@ -114,6 +114,7 @@ func (s *Server) registerRouteRoutes(mux *http.ServeMux) {
 }
 
 func (s *Server) registerActivityRoutes(mux *http.ServeMux) {
+	mux.HandleFunc("GET "+apiPrefix+"activity/requests/{id}/provider-report", s.handleProviderReport)
 	mux.HandleFunc("GET "+apiPrefix+"activity/usage", s.handleUsage)
 	mux.HandleFunc("GET "+apiPrefix+"activity/usage/summary", s.handleUsageSummary)
 	mux.HandleFunc("GET "+apiPrefix+"activity/quota", s.handleQuotas)

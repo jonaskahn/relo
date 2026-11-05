@@ -705,3 +705,6 @@ other = "Gratis verbindingen vereisen je toestemming. Schakel gratis verbindinge
 [api.connections.free_connection_exists]
 description = "Management refusal when a second keyless free connection is requested"
 other = "Deze gratis verbinding is al toegevoegd."
+
+[api.logs.provider_error_missing]
+other = "Geen providerfout vastgelegd voor dit verzoek."

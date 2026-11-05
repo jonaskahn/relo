@@ -705,3 +705,6 @@ other = "Free connections require consent. Enable Free connections and accept th
 [api.connections.free_connection_exists]
 description = "Management refusal when a second keyless free connection is requested"
 other = "This free connection is already added."
+
+[api.logs.provider_error_missing]
+other = "No provider error capture exists for this request."

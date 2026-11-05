@@ -703,3 +703,6 @@ other = "免费连接需要你的同意。使用前请启用免费连接并接�
 [api.connections.free_connection_exists]
 description = "Management refusal when a second keyless free connection is requested"
 other = "此免费连接已添加。"
+
+[api.logs.provider_error_missing]
+other = "此请求没有提供商错误捕获。"

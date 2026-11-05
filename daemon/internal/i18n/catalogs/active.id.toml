@@ -684,3 +684,6 @@ other = "Koneksi gratis memerlukan persetujuan Anda. Aktifkan koneksi gratis dan
 [api.connections.free_connection_exists]
 description = "Management refusal when a second keyless free connection is requested"
 other = "Koneksi gratis ini sudah ditambahkan."
+
+[api.logs.provider_error_missing]
+other = "Tidak ada rekaman kesalahan penyedia untuk permintaan ini."

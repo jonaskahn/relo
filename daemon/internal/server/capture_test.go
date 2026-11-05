@@ -78,10 +78,14 @@ func TestCaptureRowKeepsHeadAndTailOfEveryKind(t *testing.T) {
 		if !row.Truncated {
 			t.Fatalf("%s: Truncated = false, want the middle dropped", kind)
 		}
-		if len(row.Body) != upstream.MaxCaptureBytes {
-			t.Fatalf("%s: body = %d bytes, want the %d-byte cap", kind, len(row.Body), upstream.MaxCaptureBytes)
+		limit := upstream.MaxCaptureBytes
+		if kind == activity.CaptureProviderRequest || kind == activity.CaptureProviderResponse {
+			limit /= 2
 		}
-		want := append(append([]byte(nil), head...), tail...)
+		if len(row.Body) != limit {
+			t.Fatalf("%s: body = %d bytes, want the %d-byte cap", kind, len(row.Body), limit)
+		}
+		want := append(append([]byte(nil), head[:limit/2]...), tail[:limit/2]...)
 		if !bytes.Equal(row.Body, want) {
 			t.Fatalf("%s: body does not hold the head and tail", kind)
 		}

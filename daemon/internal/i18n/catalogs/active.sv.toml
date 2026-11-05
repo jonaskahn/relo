@@ -705,3 +705,6 @@ other = "Gratis anslutningar kräver ditt samtycke. Aktivera gratis anslutningar
 [api.connections.free_connection_exists]
 description = "Management refusal when a second keyless free connection is requested"
 other = "Den här gratisanslutningen är redan tillagd."
+
+[api.logs.provider_error_missing]
+other = "Ingen registrerad leverantörsfelrespons för denna begäran."

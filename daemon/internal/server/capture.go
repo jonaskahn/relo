@@ -103,7 +103,7 @@ func (s *Server) captureRow(ordinal *int, kind string, message *CapturedMessage)
 	// The traffic log raises the capture bound, so a body kept whole for the
 	// file on disk is cut back to the state cap here: the database keeps the
 	// head and tail, which is enough to debug both ends of a large exchange.
-	kept, truncated := s.clampCapture(message.Body)
+	kept, truncated := s.clampCapture(kind, message.Body)
 	return activity.CaptureWrite{
 		Ordinal: ordinal, Kind: kind, Method: message.Method, URL: message.URL,
 		Status: message.Status, Headers: message.Headers, Body: kept,
@@ -111,8 +111,12 @@ func (s *Server) captureRow(ordinal *int, kind string, message *CapturedMessage)
 	}
 }
 
-func (s *Server) clampCapture(body []byte) ([]byte, bool) {
-	return s.opts.CaptureRedactor.CaptureBytes(body, s.opts.CaptureRedactor.MaxCaptureBytes(), true)
+func (s *Server) clampCapture(kind string, body []byte) ([]byte, bool) {
+	limit := s.opts.CaptureRedactor.MaxCaptureBytes()
+	if kind == activity.CaptureProviderRequest || kind == activity.CaptureProviderResponse {
+		limit = capturelog.ProviderMaxBytes
+	}
+	return s.opts.CaptureRedactor.CaptureBytes(body, limit, true)
 }
 
 type agentAnswer struct {

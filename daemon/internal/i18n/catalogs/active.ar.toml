@@ -705,3 +705,6 @@ other = "تتطلب الاتصالات المجانية موافقتك. فعّل
 [api.connections.free_connection_exists]
 description = "Management refusal when a second keyless free connection is requested"
 other = "تمت إضافة هذا الاتصال المجاني بالفعل."
+
+[api.logs.provider_error_missing]
+other = "لا يوجد تسجيل لخطأ موفر لهذا الطلب."

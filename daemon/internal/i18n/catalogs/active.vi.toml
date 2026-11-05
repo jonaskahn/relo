@@ -705,3 +705,6 @@ other = "Kết nối miễn phí cần sự đồng ý của bạn. Hãy bật k
 [api.connections.free_connection_exists]
 description = "Management refusal when a second keyless free connection is requested"
 other = "Kết nối miễn phí này đã được thêm."
+
+[api.logs.provider_error_missing]
+other = "Không có bản ghi lỗi nhà cung cấp cho yêu cầu này."

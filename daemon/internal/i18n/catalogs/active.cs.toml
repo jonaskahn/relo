@@ -705,3 +705,6 @@ other = "Bezplatná připojení vyžadují tvůj souhlas. Zapni bezplatná přip
 [api.connections.free_connection_exists]
 description = "Management refusal when a second keyless free connection is requested"
 other = "Toto bezplatné připojení je již přidáno."
+
+[api.logs.provider_error_missing]
+other = "Pro tento požadavek není zachycena chyba poskytovatele."

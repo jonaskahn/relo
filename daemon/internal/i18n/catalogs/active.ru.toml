@@ -701,3 +701,6 @@ other = "Бесплатные подключения требуют вашего
 [api.connections.free_connection_exists]
 description = "Management refusal when a second keyless free connection is requested"
 other = "Это бесплатное подключение уже добавлено."
+
+[api.logs.provider_error_missing]
+other = "Для этого запроса нет записи ошибки провайдера."

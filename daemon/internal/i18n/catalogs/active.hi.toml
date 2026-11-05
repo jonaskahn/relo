@@ -684,3 +684,6 @@ other = "मुफ़्त कनेक्शन के लिए आपकी 
 [api.connections.free_connection_exists]
 description = "Management refusal when a second keyless free connection is requested"
 other = "यह मुफ़्त कनेक्शन पहले से जोड़ा गया है।"
+
+[api.logs.provider_error_missing]
+other = "इस अनुरोध के लिए प्रदाता त्रुटि कैप्चर नहीं है।"

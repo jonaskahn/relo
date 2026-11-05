@@ -705,3 +705,6 @@ other = "Ücretsiz bağlantılar onayınızı gerektirir. Kullanmadan önce ücr
 [api.connections.free_connection_exists]
 description = "Management refusal when a second keyless free connection is requested"
 other = "Bu ücretsiz bağlantı zaten eklenmiş."
+
+[api.logs.provider_error_missing]
+other = "Bu istek için sağlayıcı hata kaydı yok."

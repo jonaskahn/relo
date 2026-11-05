@@ -8,6 +8,9 @@ import "bytes"
 // its shape, small enough that the database grows with request count.
 const MaxBytes = 16 << 10
 
+// ProviderMaxBytes bounds provider bodies to 4 KiB head and 4 KiB tail.
+const ProviderMaxBytes = 8 << 10
+
 // Bytes keeps at most limit bytes from the head of one body, reporting whether
 // more had to be left out.
 func Bytes(body []byte, limit int64) ([]byte, bool) {
