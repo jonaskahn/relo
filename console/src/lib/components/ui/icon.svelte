@@ -82,12 +82,15 @@
 		| 'x'
 		| 'celebrate'
 		| 'world'
+		| 'robot'
 		| 'lifebuoy';
 
 	// paths holds one outline per icon, which is the whole icon set.
 	export const paths: Record<IconName, string> = {
 		lifebuoy:
 			'M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0M12 12m-4 0a4 4 0 1 0 8 0a4 4 0 1 0 -8 0M15 15l3.35 3.35M9 15l-3.35 3.35M5.65 5.65l3.35 3.35M18.35 5.65l-3.35 3.35',
+		robot:
+			'M6 6a2 2 0 0 1 2 -2h8a2 2 0 0 1 2 2v4a2 2 0 0 1 -2 2h-8a2 2 0 0 1 -2 -2l0 -4M12 2v2M9 12v9M15 12v9M5 16l4 -2M15 14l4 2M9 18h6M10 8v.01M14 8v.01',
 		activity: 'M3 12h4l3 8l4 -16l3 8h4',
 		'alert-triangle':
 			'M12 9v4M10.363 3.591l-8.106 13.534a1.914 1.914 0 0 0 1.636 2.871h16.214a1.914 1.914 0 0 0 1.636 -2.87l-8.106 -13.536a1.914 1.914 0 0 0 -3.274 0zM12 16h.01',

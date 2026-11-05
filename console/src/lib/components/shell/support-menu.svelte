@@ -12,7 +12,7 @@
 
 	const items: { key: string; template: string; icon: IconName }[] = [
 		{ key: 'supportReportIssue', template: 'bug_report.yml', icon: 'brand-github' },
-		{ key: 'supportRequestHarness', template: 'agent_harness_request.yml', icon: 'cpu' },
+		{ key: 'supportRequestHarness', template: 'agent_harness_request.yml', icon: 'robot' },
 		{ key: 'supportRequestConnection', template: 'provider_request.yml', icon: 'plug-connected' }
 	];
 
