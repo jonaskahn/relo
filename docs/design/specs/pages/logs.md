@@ -56,10 +56,16 @@ to match, never colour alone), the message sentence, and the flattened fields un
   answers inline with the reason and a Retry action, never as a toast.
 - **Empty**: "The daemon has not written a log yet." Missing is a dash; the section never invents rows.
 
-An effective `error` line carries **Report issue**. A failed startup row and a request drawer whose status is 400 or
-higher carry the same action. The report includes only safe request metadata and the current daemon log; it never sends
-headers, cookies, request bodies, or response bodies. A small report is prefilled into GitHub. A report too large for a
-safe URL downloads `relo-daemon-log-<UTC timestamp>.zip` and tells the operator to attach it.
+The request drawer offers **Report provider error** only after captures load and
+only when a captured provider response has status ≥ 400, including a provider
+error followed by Relo's own refusal. Daemon lines, failed startups, and local
+refusals without a provider reply never offer it. Reports include only the
+provider request and reply of failing attempts from SQLite. Headers are masked,
+URL queries stripped, and bodies cut to 4 KiB head + 4 KiB tail each. Agent bodies
+and account identities are never included. The exchange is copied and downloaded
+as relo-request-<requestId>.json; a short summary opens in GitHub.
+The user reviews and pastes the exchange or attaches the file. If the clipboard
+is unavailable, the download still works. Relo never submits an issue or exchange.
 
 ## Startup
 

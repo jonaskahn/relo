@@ -1,0 +1,49 @@
+name: Agent harness request
+description: Request support for another agent harness.
+title: "[Agent harness]: "
+labels:
+  - enhancement
+  - agent-harness
+body:
+  - type: input
+    id: harness
+    attributes:
+      label: Harness name
+    validations:
+      required: true
+  - type: input
+    id: website
+    attributes:
+      label: Website or repository
+    validations:
+      required: true
+  - type: textarea
+    id: custom-endpoint
+    attributes:
+      label: How does it connect to a custom endpoint?
+      description: Describe the environment variable, config file, or OAuth flow.
+    validations:
+      required: true
+  - type: dropdown
+    id: wire-format
+    attributes:
+      label: Wire format
+      options:
+        - OpenAI Chat
+        - OpenAI Responses
+        - Anthropic
+        - Gemini
+        - Unknown
+  - type: input
+    id: docs
+    attributes:
+      label: Documentation link
+  - type: textarea
+    id: configure
+    attributes:
+      label: What should Relo configure?
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: Relo version, OS, browser, console page, and locale.

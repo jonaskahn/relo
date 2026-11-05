@@ -63,8 +63,8 @@ not open one per tab. Outside debugging, leave `[system.logging] traffic` at
 the traffic log by gigabytes per day. The traffic log follows the Retention
 budget: its whole daily files age out by `usage_days` and the folder is pruned
 oldest-first to `max_bytes`, while `max_events` stays database-only. The
-database capture beside each request keeps the first and last 8 KiB of a body
-over 16 KiB; the request detail reads the whole body back from the traffic log
+database capture beside each request keeps the first and last 4 KiB of provider
+bodies over 8 KiB, and the first and last 8 KiB of agent bodies over 16 KiB; the request detail reads the whole body back from the traffic log
 when that file still holds the request.
 
 **The doctor reports the traffic log.** `GET /api/v1/doctor` includes a
@@ -79,3 +79,20 @@ off answers `403 free_connections_disabled`; the OpenAI-compatible and Responses
 surfaces use the management error envelope, while Anthropic uses
 `permission_error` and the same localized message. A route may skip that member
 and continue to a paid one.
+
+**Provider-error reports exclude agent captures.** GET
+/api/v1/activity/requests/{id}/provider-report reads SQLite only, not the traffic
+log. Here {id} is the numeric activity event ID. It returns request_id,
+relo_version, generated_at (RFC 3339 UTC), and attempts, ordered by ordinal.
+Only attempts with a captured provider response status ≥ 400 are included. Each
+attempt carries ordinal, provider, model, status, duration_ms, and its
+stored request and response if available. Messages carry headers, body,
+body_bytes (the exported UTF-8 byte count), and truncated; requests also carry
+method and url, and responses carry status. Headers and credential fields
+are masked again, URL queries and user info are removed, and each body is cut
+to 4 KiB head + 4 KiB tail before redaction. Stored truncation is preserved.
+Account identities and all agent messages are excluded. No captured provider
+error returns 404 not_found; a nonnumeric ID returns 400 bad_request.
+The response is Cache-Control: no-store. The console copies and downloads the
+exchange locally; only a short summary goes into a GitHub issue URL. The user
+reviews and pastes or attaches the exchange; Relo never submits it.

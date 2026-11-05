@@ -17,8 +17,8 @@ function line(level: string): DaemonLine {
 }
 
 describe('the daemon log report action', () => {
-	it('appears only on an error line', () => {
-		expect(render(ProcessLine, { props: { line: line('error') } }).body).toContain(
+	it('never appears on daemon lines', () => {
+		expect(render(ProcessLine, { props: { line: line('error') } }).body).not.toContain(
 			'data-report-issue-button'
 		);
 		expect(render(ProcessLine, { props: { line: line('info') } }).body).not.toContain(

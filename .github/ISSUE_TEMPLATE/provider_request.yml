@@ -1,0 +1,57 @@
+name: Connection request
+description: Request support for another connection or provider.
+title: "[Connection]: "
+labels:
+  - enhancement
+  - connection
+body:
+  - type: input
+    id: provider
+    attributes:
+      label: Provider name
+    validations:
+      required: true
+  - type: input
+    id: website
+    attributes:
+      label: Website or documentation
+    validations:
+      required: true
+  - type: input
+    id: base-url
+    attributes:
+      label: API base URL
+  - type: dropdown
+    id: auth-type
+    attributes:
+      label: Authentication type
+      options:
+        - API key
+        - OAuth
+        - AWS
+        - GCP service account
+        - Other
+  - type: dropdown
+    id: wire-format
+    attributes:
+      label: Wire format
+      options:
+        - OpenAI Chat
+        - OpenAI Responses
+        - Anthropic
+        - Gemini
+        - Unknown
+  - type: input
+    id: models-endpoint
+    attributes:
+      label: Models-list endpoint
+  - type: textarea
+    id: test-access
+    attributes:
+      label: Is a free tier or test account available?
+      description: Do not share credentials here.
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: Relo version, OS, browser, console page, and locale.

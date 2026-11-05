@@ -41,9 +41,15 @@ body:
     id: diagnostics
     attributes:
       label: Diagnostics
-      description: Relevant daemon log or error text, with secrets removed.
+      description: Relevant error text, with secrets removed.
       render: text
+  - type: textarea
+    id: provider_exchange
+    attributes:
+      label: Provider exchange (masked)
+      description: Paste the copied exchange or attach relo-request-*.json. Review it before sharing.
+      render: json
   - type: markdown
     attributes:
       value: |
-        If the diagnostics are too large to paste, attach the downloaded `relo-daemon-log-*.zip` file to this issue.
+        Relo does not send the exchange. Review it, then paste it above or attach the downloaded relo-request-*.json file yourself.
