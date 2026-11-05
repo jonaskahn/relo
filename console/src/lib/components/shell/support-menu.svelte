@@ -7,12 +7,13 @@
 	import type { StatusResponse } from '$lib/types';
 	import Button from '$lib/components/ui/button.svelte';
 	import Icon from '$lib/components/ui/icon.svelte';
+	import type { IconName } from '$lib/components/ui/icon.svelte';
 	import MenuPanel from '$lib/components/ui/menu-panel.svelte';
 
-	const items = [
-		{ key: 'supportReportIssue', template: 'bug_report.yml' },
-		{ key: 'supportRequestHarness', template: 'agent_harness_request.yml' },
-		{ key: 'supportRequestConnection', template: 'provider_request.yml' }
+	const items: { key: string; template: string; icon: IconName }[] = [
+		{ key: 'supportReportIssue', template: 'bug_report.yml', icon: 'brand-github' },
+		{ key: 'supportRequestHarness', template: 'agent_harness_request.yml', icon: 'cpu' },
+		{ key: 'supportRequestConnection', template: 'provider_request.yml', icon: 'plug-connected' }
 	];
 
 	async function open(template: string) {
@@ -61,6 +62,7 @@
 					class="flex min-h-control cursor-pointer items-center gap-2 rounded-control px-2.5 py-1.5 text-sm outline-none"
 					onSelect={() => void open(item.template)}
 				>
+					<Icon name={item.icon} size={15} />
 					{$t('ui.topbar.' + item.key)}
 				</DropdownMenu.Item>
 			{/each}
