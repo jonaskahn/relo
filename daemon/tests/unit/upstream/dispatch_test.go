@@ -767,3 +767,35 @@ func TestExecuteSwitchesAnUnlistedStatusOnTheConnectionsTerms(t *testing.T) {
 		})
 	}
 }
+
+// TestExecuteKeepsARoutesRateLimitToItself pins the route's own answer: a 429
+// an exchange promised to a route is reported to the walk even on the last
+// attempt, so no provider words reach the client before the route is spent.
+func TestExecuteKeepsARoutesRateLimitToItself(t *testing.T) {
+	const refusal = `{"error":{"message":"quota for this account is over","type":"rate_limit_error"}}`
+	origin := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		w.Header().Set("Retry-After", "7")
+		w.WriteHeader(http.StatusTooManyRequests)
+		_, _ = w.Write([]byte(refusal))
+	}))
+	t.Cleanup(origin.Close)
+
+	recorder := httptest.NewRecorder()
+	exchange := completeExchange(origin.URL)
+	exchange.HoldRateLimit = true
+	result, err := newExecutor(t).Execute(context.Background(), exchange, recorder)
+	if err == nil {
+		t.Fatal("Execute() error = nil, want the route's refusal")
+	}
+	if result.Status != http.StatusTooManyRequests || !result.Retryable || result.Wrote {
+		t.Fatalf("result = %+v, want a retryable 429 that wrote nothing", result)
+	}
+	if result.RetryAfter != 7*time.Second {
+		t.Fatalf("retry after = %v, want the provider's wait", result.RetryAfter)
+	}
+	if recorder.Body.Len() != 0 || recorder.Code == http.StatusTooManyRequests {
+		t.Fatalf("status = %d, body = %q, want nothing of the provider's refusal",
+			recorder.Code, recorder.Body.String())
+	}
+}

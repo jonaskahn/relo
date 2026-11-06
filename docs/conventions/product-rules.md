@@ -69,6 +69,13 @@ that says something about the account or the model — a 401, a 403, a model the
 may not use, or a status the connection's own switch made retryable — is not cured by
 asking the same account again, so it moves on at once.
 
+**A route keeps a rate limit to itself.** A 429 from a route member never reaches the
+client: the route moves on to its next member, and one attempt stays reserved for every
+member the walk has not reached. Only when every member is limited does the client read
+a Relo-authored 429 — `rate_limit_error` on the Messages surface, `group_exhausted`
+elsewhere — naming the route and, when a member named one, the wait. No provider
+message travels with it.
+
 **The account and the member that served stay first.** A success pins its connection to
 that account and its route to that member, so the next request starts where the last one
 worked instead of rotating onto another. A conversation that named itself still wins over

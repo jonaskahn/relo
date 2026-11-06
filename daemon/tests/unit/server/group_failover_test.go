@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/jonaskahn/relo/internal/account"
+	"github.com/jonaskahn/relo/internal/inference"
 )
 
 // thirdCredentialRef names the stored secret of the first member's third
@@ -78,5 +79,90 @@ func TestRouteWalksEveryAccountBeforeTheNextMember(t *testing.T) {
 	}
 	if healthy.requestCount() != 3 {
 		t.Fatalf("second member requests = %d, want one per request", healthy.requestCount())
+	}
+}
+
+// TestSpentRouteAnswersWithItsOwnRateLimit pins what a client reads once every
+// member of a route is limited: one Relo-authored 429 naming the route, never
+// a provider's message, with the wait the slowest member named.
+func TestSpentRouteAnswersWithItsOwnRateLimit(t *testing.T) {
+	h := newHarness(t)
+	saveAltConnection(t, h)
+	h.secrets[altCredentialRef] = "sk-alt"
+	h.server = h.newServerWithCredentials(h.cfg.Server.Port, defaultEntry(), altEntry())
+	saveComboMembers(t, h, true)
+	setRetryAttempts(t, h, "openai", 1)
+	setRetryAttempts(t, h, "openai-alt", 1)
+	h.upstream.status = http.StatusTooManyRequests
+	h.upstream.headers = map[string]string{"Retry-After": "9"}
+
+	body := `{"model":"reloc-combo","stream":true,"messages":[{"role":"user","content":"hi"}]}`
+	response := h.dataPlane(http.MethodPost, "/v1/chat/completions", dataPlaneToken, strings.NewReader(body))
+	if response.Code != http.StatusTooManyRequests {
+		t.Fatalf("status = %d, body = %s, want the route's own 429", response.Code, response.Body.String())
+	}
+	if got := response.Header().Get("Retry-After"); got != "9" {
+		t.Fatalf("Retry-After = %q, want the wait a member named", got)
+	}
+	if !strings.Contains(response.Body.String(), "group_exhausted") ||
+		!strings.Contains(response.Body.String(), "combo: every model in this group") {
+		t.Fatalf("body = %s, want the route named by Relo", response.Body.String())
+	}
+	if strings.Contains(response.Body.String(), "Hello") {
+		t.Fatalf("body = %s, want nothing of the provider's body", response.Body.String())
+	}
+	if !askedWith(h, "sk-test") || !askedWith(h, "sk-alt") {
+		t.Fatalf("authorizations = %v, want every member asked", authorizations(h))
+	}
+}
+
+// TestSpentRouteAnswersAnthropicClientsWithARateLimit covers the Messages
+// surface: the same spent route reads as the error type a Claude client
+// already retries, with no provider words in it.
+func TestSpentRouteAnswersAnthropicClientsWithARateLimit(t *testing.T) {
+	h := newHarness(t)
+	saveAltConnection(t, h)
+	h.secrets[altCredentialRef] = "sk-alt"
+	h.server = h.newServerWithCredentials(h.cfg.Server.Port, defaultEntry(), altEntry())
+	saveComboMembers(t, h, true)
+	setRetryAttempts(t, h, "openai", 1)
+	setRetryAttempts(t, h, "openai-alt", 1)
+	h.upstream.status = http.StatusTooManyRequests
+	h.upstream.headers = map[string]string{"Retry-After": "9"}
+
+	body := `{"model":"claude-reloc-combo","max_tokens":16,"stream":true,"messages":[{"role":"user","content":"hi"}]}`
+	response := h.dataPlaneOn(inference.ProtocolAnthropic, http.MethodPost, "/v1/messages", dataPlaneToken,
+		strings.NewReader(body))
+	if response.Code != http.StatusTooManyRequests {
+		t.Fatalf("status = %d, body = %s, want the route's own 429", response.Code, response.Body.String())
+	}
+	if !strings.Contains(response.Body.String(), `"rate_limit_error"`) {
+		t.Fatalf("body = %s, want an Anthropic rate limit", response.Body.String())
+	}
+	if strings.Contains(response.Body.String(), "Hello") {
+		t.Fatalf("body = %s, want nothing of the provider's body", response.Body.String())
+	}
+}
+
+// TestRouteKeepsTheLastMembersFaultAsItsOwnAnswer pins that only a rate limit
+// is held inside a route: a spent route whose last member reported a server
+// fault still answers the way it did before.
+func TestRouteKeepsTheLastMembersFaultAsItsOwnAnswer(t *testing.T) {
+	h := newHarness(t)
+	saveAltConnection(t, h)
+	h.secrets[altCredentialRef] = "sk-alt"
+	h.server = h.newServerWithCredentials(h.cfg.Server.Port, defaultEntry(), altEntry())
+	saveComboMembers(t, h, true)
+	setRetryAttempts(t, h, "openai", 1)
+	setRetryAttempts(t, h, "openai-alt", 1)
+	h.upstream.status = http.StatusServiceUnavailable
+
+	body := `{"model":"reloc-combo","stream":true,"messages":[{"role":"user","content":"hi"}]}`
+	response := h.dataPlane(http.MethodPost, "/v1/chat/completions", dataPlaneToken, strings.NewReader(body))
+	if response.Code != http.StatusServiceUnavailable {
+		t.Fatalf("status = %d, body = %s, want the provider's own 503", response.Code, response.Body.String())
+	}
+	if strings.Contains(response.Body.String(), "group_exhausted") {
+		t.Fatalf("body = %s, want no route-owned rate limit", response.Body.String())
 	}
 }
