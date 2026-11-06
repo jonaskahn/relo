@@ -108,6 +108,10 @@ type Exchange struct {
 	// Final reports that no further attempt follows, so a failure has to be
 	// written to the client rather than reported to the caller.
 	Final bool
+	// HoldRateLimit reports that a rate limit belongs to a route rather than
+	// to the caller: the attempt reports it so the next member may serve, and
+	// never writes the provider's own refusal.
+	HoldRateLimit bool
 	// Policy is the connection's own failover choice: which statuses the relay
 	// would otherwise hand back to the client are worth another account.
 	Policy Policy

@@ -45,6 +45,10 @@ func (e *Executor) runBidirectional(ctx context.Context, att attempt, started ti
 	if att.exchange.Request.Stream {
 		prepareStream(att.writer)
 		run.tracker = &streamWriter{ResponseWriter: att.writer}
+		// The 200 is already on the wire, so no other member can answer this
+		// request and a held rate limit would leave the client an empty
+		// stream. The refusal is written where the client is reading.
+		run.attempt.exchange.HoldRateLimit = false
 	}
 	events, err := e.converse(ctx, att, codec, run.emit)
 	if run.emitFailed && err == nil {

@@ -64,7 +64,7 @@ func relayExchange(exchange server.Exchange) upstream.Exchange {
 		CaptureTail:     exchange.CaptureTail,
 		RequiresStream:  exchange.RequiresStream,
 		CredentialLabel: exchange.CredentialLabel, CallWait: exchange.CallWait,
-		Final: exchange.Final,
+		Final: exchange.Final, HoldRateLimit: exchange.HoldRateLimit,
 		Policy: upstream.Policy{
 			SwitchOn4xx: exchange.Policy.SwitchOn4xx,
 			SwitchOn5xx: exchange.Policy.SwitchOn5xx,

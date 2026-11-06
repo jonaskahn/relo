@@ -44,6 +44,9 @@ type attemptSpec struct {
 	// account for it yet: a rate limit or server fault a retry may cure.
 	prefer string
 	hold   func(Result) bool
+	// holdRateLimit reports that this attempt belongs to a route, so a rate
+	// limit is answered by the next member rather than by the client.
+	holdRateLimit bool
 }
 
 func (s *Server) attempt(w http.ResponseWriter, spec attemptSpec, tried map[string][]string, final bool) (Result, error) {
@@ -255,7 +258,8 @@ func (s *Server) attemptExchange(spec attemptSpec, in attemptExchangeInputs) Exc
 		Request: in.request,
 		Inbound: spec.inbound, Surface: outcome.surface, RequestID: outcome.requestID,
 		CredentialLabel: authorized.Label, Final: in.final,
-		Policy: connectionPolicy(host),
+		HoldRateLimit: spec.holdRateLimit,
+		Policy:        connectionPolicy(host),
 	}
 }
 

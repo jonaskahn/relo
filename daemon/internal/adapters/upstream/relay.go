@@ -288,7 +288,8 @@ func (e *Executor) relayRejection(att attempt, response *http.Response) (Result,
 		ModelAccess: modelAccessRefusal(response.StatusCode, info, att.exchange.Request.Model),
 	}
 	switchable := att.exchange.Policy.Switchable(response.StatusCode)
-	if !att.exchange.Final && (Retryable(response.StatusCode) || result.ModelAccess || switchable) {
+	if retriedElsewhere(att.exchange, response.StatusCode, switchable) ||
+		(!att.exchange.Final && result.ModelAccess) {
 		result.Retryable = true
 		result.ClassSwitch = switchable
 		return result, fmt.Errorf("%w: %d %s", ErrUpstreamStatus, response.StatusCode, info.Message)

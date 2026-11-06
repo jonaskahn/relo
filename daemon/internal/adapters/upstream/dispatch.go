@@ -90,6 +90,10 @@ type Exchange struct {
 	// Final reports that no further attempt follows, so a failure has to be
 	// written to the client rather than reported to the caller.
 	Final bool
+	// HoldRateLimit reports that a rate limit is a refusal this exchange keeps
+	// to itself: a group answers it with its next member, so the attempt is
+	// never final and nothing of the provider's refusal reaches the client.
+	HoldRateLimit bool
 	// Policy is the connection's own failover choice: which statuses the relay
 	// would otherwise hand back to the client are worth another account.
 	Policy Policy
@@ -432,7 +436,7 @@ func (e *Executor) fail(att attempt, status int, code string, cause error) (Resu
 		Credential: ex.CredentialLabel, HeaderLatency: att.latency,
 	}
 	switchable := ex.Policy.Switchable(status)
-	if !ex.Final && (Retryable(status) || switchable) {
+	if retriedElsewhere(ex, status, switchable) {
 		result.Retryable = true
 		result.ClassSwitch = switchable
 		return result, cause
@@ -440,6 +444,20 @@ func (e *Executor) fail(att attempt, status int, code string, cause error) (Resu
 	writeFailure(att.writer, ex.Inbound, &inference.ErrorInfo{Code: code, Message: cause.Error(), Status: status}, nil)
 	result.Wrote = true
 	return result, cause
+}
+
+// retriedElsewhere reports a failure another attempt may still replace: one
+// the relay always retries, one the connection's own policy made switchable,
+// or a rate limit the exchange keeps inside its route.
+func retriedElsewhere(ex Exchange, status int, switchable bool) bool {
+	return !ex.Final && (Retryable(status) || switchable) || heldRateLimit(ex, status)
+}
+
+// heldRateLimit reports a 429 an exchange keeps inside its route. The walk
+// hears the refusal so another member may serve the request, and the client
+// hears nothing until the route answers with its own words.
+func heldRateLimit(ex Exchange, status int) bool {
+	return ex.HoldRateLimit && status == http.StatusTooManyRequests
 }
 
 // Retryable reports whether another candidate may still serve a request that
