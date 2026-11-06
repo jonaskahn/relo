@@ -236,6 +236,9 @@ type sendDriver struct {
 	cooldown       *routing.CoolingError
 	last           error
 	upstreamStatus int
+	// limitRetryAfter is the longest wait a member's rate limit named, which
+	// is what the route answers with once every member is spent.
+	limitRetryAfter time.Duration
 }
 
 type walkAction int
@@ -261,7 +264,7 @@ type memberWalk struct {
 
 func (d *sendDriver) run() {
 	for index, candidate := range d.plan.Candidates {
-		if !d.runMember(candidate, index == len(d.plan.Candidates)-1) {
+		if !d.runMember(candidate, index == len(d.plan.Candidates)-1, d.reserveAfter(index)) {
 			return
 		}
 	}
@@ -273,6 +276,11 @@ func (d *sendDriver) run() {
 	if d.attempts == 0 && d.cooldown != nil {
 		d.s.failInference(d.w, d.r, d.cooldown, d.anthropic)
 		d.s.record(context.WithoutCancel(d.r.Context()), d.outcome, Result{Status: http.StatusServiceUnavailable})
+		return
+	}
+	if d.groupLimited() {
+		d.s.writeGroupExhausted(d, d.groupExhausted())
+		d.s.record(context.WithoutCancel(d.r.Context()), d.outcome, Result{Status: http.StatusTooManyRequests})
 		return
 	}
 	if d.last == nil {
@@ -287,7 +295,17 @@ func (d *sendDriver) run() {
 	d.s.record(context.WithoutCancel(d.r.Context()), d.outcome, Result{Status: http.StatusServiceUnavailable})
 }
 
-func (d *sendDriver) runMember(candidate routing.Candidate, lastCandidate bool) bool {
+// reserveAfter keeps one attempt for every member the walk has not reached,
+// so a member spending its retries cannot leave a later member of the route
+// untried. A plan that is not a route has no members to keep.
+func (d *sendDriver) reserveAfter(index int) int {
+	if d.plan.Kind != routing.KindGroup {
+		return 0
+	}
+	return len(d.plan.Candidates) - index - 1
+}
+
+func (d *sendDriver) runMember(candidate routing.Candidate, lastCandidate bool, reserve int) bool {
 	if action := d.blockedMember(candidate, lastCandidate); action != walkContinue {
 		return action != walkAnswered
 	}
@@ -298,7 +316,8 @@ func (d *sendDriver) runMember(candidate routing.Candidate, lastCandidate bool) 
 	allowance := d.s.candidateAllowance(candidate)
 	walk := &memberWalk{maxRetries: d.s.retryAttempts(candidate.ProviderID)}
 	limit := allowance * (1 + walk.maxRetries)
-	for step := 0; step < limit && d.attempts < d.budget; step++ {
+	budget := d.budget - reserve
+	for step := 0; step < limit && d.attempts < budget; step++ {
 		action := d.stepAttempt(candidate, lastCandidate, allowance, walk)
 		if action == walkAnswered {
 			return false
@@ -348,6 +367,9 @@ func (d *sendDriver) stepAttempt(candidate routing.Candidate, lastCandidate bool
 	d.attempts++
 	spec := attemptSpec{
 		request: d.r, candidate: candidate, inbound: d.inbound, outcome: d.outcome,
+		// A rate limit inside a route belongs to the route: the attempt
+		// reports it and the next member answers, never the client.
+		holdRateLimit: d.plan.Kind == routing.KindGroup,
 		// A retry stays on its account. A failure this account will be asked
 		// again for is held back from its health until the retries are spent,
 		// while a refusal a retry cannot cure is reported at once.
@@ -400,6 +422,7 @@ type failedAttempt struct {
 
 func (d *sendDriver) handleAttemptFailure(failed failedAttempt, err error) walkAction {
 	d.last = err
+	d.rememberLimitWait(failed.result)
 	d.rotateWire(failed)
 	if retryAnotherCandidate(err) {
 		return d.tryAnotherCandidate(failed)
@@ -422,6 +445,17 @@ func (d *sendDriver) handleAttemptFailure(failed failedAttempt, err error) walkA
 		return walkContinue
 	}
 	return d.leaveAccount(failed)
+}
+
+// rememberLimitWait keeps the wait a rate-limited member named, so the
+// route's own refusal can name it without holding the request open.
+func (d *sendDriver) rememberLimitWait(result Result) {
+	if result.Status != http.StatusTooManyRequests || result.RetryAfter <= 0 {
+		return
+	}
+	if result.RetryAfter > d.limitRetryAfter {
+		d.limitRetryAfter = result.RetryAfter
+	}
 }
 
 func (d *sendDriver) tryAnotherCandidate(failed failedAttempt) walkAction {
@@ -596,7 +630,12 @@ func (s *Server) sendBudget(plan routing.Plan) int {
 	for _, candidate := range plan.Candidates {
 		total += s.candidateAllowance(candidate) * (1 + s.retryAttempts(candidate.ProviderID))
 	}
-	return min(max(total, 1), maxRequestAttempts)
+	ceiling := maxRequestAttempts
+	if plan.Kind == routing.KindGroup {
+		// Every member gets at least one attempt, however long the route is.
+		ceiling = max(ceiling, len(plan.Candidates))
+	}
+	return min(max(total, 1), ceiling)
 }
 
 func (s *Server) candidateAllowance(candidate routing.Candidate) int {
@@ -676,6 +715,10 @@ func (s *Server) waitBeforeRetry(ctx context.Context, retry int, retryAfter time
 func (s *Server) writeUnwritten(d *sendDriver, upstreamStatus int, cause error) {
 	// Leaving the handler without a write is an empty HTTP 200, which a
 	// streaming client reads as a stream that ended before any event.
+	if d.groupLimited() {
+		s.writeGroupExhausted(d, d.groupExhausted())
+		return
+	}
 	status := answeredStatus(upstreamStatus)
 	if upstreamStatus == 0 && (errors.Is(cause, errContextLimitExceeded) || errors.Is(cause, wire.ErrUnsupportedFeature)) {
 		status = failureStatus(cause)
@@ -694,6 +737,57 @@ func (s *Server) writeUnwritten(d *sendDriver, upstreamStatus int, cause error) 
 		return
 	}
 	s.fail(d.w, d.r, refusal{Status: status, Code: unwrittenCode(cause, local), Detail: cause})
+}
+
+// groupLimited reports a route whose every member answered with a rate
+// limit. The last answer is the one that says the route is spent.
+func (d *sendDriver) groupLimited() bool {
+	return d.plan.Kind == routing.KindGroup && d.upstreamStatus == http.StatusTooManyRequests
+}
+
+func (d *sendDriver) groupExhausted() error {
+	return &groupExhaustedError{group: d.plan.GroupID, retryAfter: d.routeWait()}
+}
+
+// routeWait is how long the route asks the caller to wait: the longest wait a
+// member named, or a cooling member's own end when that is later.
+func (d *sendDriver) routeWait() time.Duration {
+	wait := d.limitRetryAfter
+	if d.cooldown != nil {
+		if cooling := time.Until(d.cooldown.Until); cooling > wait {
+			wait = cooling
+		}
+	}
+	return wait
+}
+
+// writeGroupExhausted answers a spent route in the client surface's own words.
+// A rate limit is what every member named, so the client reads the status it
+// already handles; what it must not read is the provider's own message.
+func (s *Server) writeGroupExhausted(d *sendDriver, cause error) {
+	if wait := d.routeWait(); wait > 0 {
+		d.w.Header().Set("Retry-After", strconv.Itoa(max(1, int(wait.Seconds()+0.5))))
+	}
+	if d.anthropic {
+		s.writeAnthropicDocument(d.w, http.StatusTooManyRequests, "rate_limit_error", cause.Error())
+		return
+	}
+	s.fail(d.w, d.r, refusal{Status: http.StatusTooManyRequests, Code: "group_exhausted", Detail: cause})
+}
+
+// groupExhaustedError names a route every member of which refused for a
+// limit, which is the one refusal the caller may retry later.
+type groupExhaustedError struct {
+	group      string
+	retryAfter time.Duration
+}
+
+func (e *groupExhaustedError) Error() string {
+	message := fmt.Sprintf("%s: every model in this group is rate limited or out of quota", e.group)
+	if e.retryAfter > 0 {
+		return fmt.Sprintf("%s; try again in %s", message, e.retryAfter.Round(time.Second))
+	}
+	return message
 }
 
 // unwrittenCode names a failure that never reached the client. Only a
