@@ -105,12 +105,22 @@ func dialOpenCode(ctx context.Context, addr string) (net.Conn, error) {
 	if !strings.EqualFold(host, openCodeHost) {
 		return nil, fmt.Errorf("%w: %q", errOpenCodeHost, host)
 	}
+	return dialOpenCodeTLS(ctx, addr, &utls.Config{ServerName: openCodeHost})
+}
+
+// dialOpenCodeTLS dials addr and completes the fingerprint handshake with the
+// supplied uTLS config. The config carries the SNI and trust roots; the client
+// hello shape comes from openCodeSpec, so a test can pin trust to a loopback
+// certificate without changing the fingerprint. It is split from dialOpenCode
+// so the handshake can be driven locally, while dialOpenCode stays the one
+// host-locked entry point for live traffic.
+func dialOpenCodeTLS(ctx context.Context, addr string, config *utls.Config) (net.Conn, error) {
 	raw, err := (&net.Dialer{}).DialContext(ctx, "tcp", addr)
 	if err != nil {
 		return nil, err
 	}
-	conn := utls.UClient(raw, &utls.Config{ServerName: openCodeHost}, utls.HelloCustom)
-	if err := conn.ApplyPreset(openCodeSpec(openCodeHost)); err != nil {
+	conn := utls.UClient(raw, config, utls.HelloCustom)
+	if err := conn.ApplyPreset(openCodeSpec(config.ServerName)); err != nil {
 		_ = raw.Close()
 		return nil, err
 	}
