@@ -54,13 +54,26 @@ func seedRow(t *testing.T, h *harness, row sqlite.ProviderRow) {
 }
 
 // pageService is a harness whose models.dev catalog is served from this
-// process, so nothing in these tests reaches the network.
+// process, so nothing in these tests reaches the network. The catalog is
+// downloaded once here, the way daemon start does it, because no read below
+// ever downloads.
 func pageService(t *testing.T, h *harness, catalogURL string) *session {
 	t.Helper()
 	client := &http.Client{Timeout: 5 * time.Second}
-	return h.buildServiceWith(h.catalog, h.pools, testkit.SecretStore(h.secrets),
+	s := h.buildServiceWith(h.catalog, h.pools, testkit.SecretStore(h.secrets),
 		modelsdev.NewDirectory(filepath.Join(h.home, "cache"), catalogURL, client),
 		discovery.New(client))
+	downloadModelsDev(t, s)
+	return s
+}
+
+// downloadModelsDev saves the catalog the way daemon start and the update
+// button do, which is the only way a later read sees one.
+func downloadModelsDev(t *testing.T, s *session) {
+	t.Helper()
+	if err := s.FetchModelsDev(context.Background()); err != nil {
+		t.Fatalf("download models.dev: %v", err)
+	}
 }
 
 // catalogFixture is the trimmed models.dev document these tests read.

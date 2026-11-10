@@ -49,13 +49,17 @@ func catalogServer(t *testing.T, providers map[string]map[string]any) *httptest.
 }
 
 // probeService is a harness whose models.dev catalog and provider listings are
-// both served from this process, so a probe needs no network.
+// both served from this process, so a probe needs no network. The catalog is
+// downloaded once here, the way daemon start does it, because no read below
+// ever downloads.
 func probeService(t *testing.T, h *harness, catalogURL string) *session {
 	t.Helper()
 	client := &http.Client{Timeout: 5 * time.Second}
-	return h.buildServiceWith(h.catalog, h.pools, testkit.SecretStore(h.secrets),
+	s := h.buildServiceWith(h.catalog, h.pools, testkit.SecretStore(h.secrets),
 		modelsdev.NewDirectory(filepath.Join(h.home, "cache"), catalogURL, client),
 		discovery.New(client))
+	downloadModelsDev(t, s)
+	return s
 }
 
 // wireProbeRequest mirrors the probe body the handler decodes, so the tests
@@ -389,7 +393,9 @@ func TestProbeProviderKeepsASignInToWhatItLists(t *testing.T) {
 func TestProbeProviderTakesTheChosenFormatHeader(t *testing.T) {
 	h := newHarness(t)
 	listing := listingServer(t, http.StatusOK, `{"data":[{"id":"claude-fable-5-1","name":"Claude Fable 5.1"}]}`)
-	manager := probeService(t, h, catalogServer(t, map[string]map[string]any{}).URL)
+	// A curated template needs no catalog, and an empty one would fail the
+	// download this harness performs at startup.
+	manager := probeService(t, h, catalogServer(t, catalogFixture()).URL)
 
 	result, err := manager.ProbeProvider(context.Background(), probeJSON(t,
 		`{"template_id":"teamorouter","api_format":"anthropic","base_url":"`+listing.URL+

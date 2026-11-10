@@ -74,8 +74,8 @@ func TestSeedSuppliesTemplatesPricingAndRefresh(t *testing.T) {
 	}
 
 	templates, state, err := manager.Templates(ctx)
-	if err == nil {
-		t.Fatal("Templates() error = nil, want the failed fetch reported")
+	if err != nil {
+		t.Fatalf("Templates() error = %v, want a read to serve the seed without a download", err)
 	}
 	if len(templates) == 0 {
 		t.Fatal("Templates() = no templates, want the seed-backed registry")
@@ -135,11 +135,14 @@ func TestCacheSuppliesTemplatesPricingAndSearch(t *testing.T) {
 	}
 
 	_, state, err := manager.Templates(ctx)
-	if err == nil {
-		t.Fatal("Templates() error = nil, want the failed fetch reported")
+	if err != nil {
+		t.Fatalf("Templates() error = %v, want a read to serve the cache without a download", err)
 	}
-	if !state.Available || !state.Stale || state.Origin != catalog.ModelsDevOriginCache {
-		t.Fatalf("state = %+v, want the stale cache answering", state)
+	// A read never asks the network, so it cannot know the copy is stale: only
+	// a failed download marks it so, and only the scheduled one or the update
+	// button attempts a download.
+	if !state.Available || state.Origin != catalog.ModelsDevOriginCache {
+		t.Fatalf("state = %+v, want the cache answering", state)
 	}
 	hits, searchState := manager.SearchModelsDev(ctx, "deepseek", 20)
 	if len(hits) == 0 || !searchState.Available {
@@ -154,6 +157,9 @@ func TestCacheSuppliesTemplatesPricingAndSearch(t *testing.T) {
 	}
 }
 
+// TestNoLocalCopyLeavesTheStateUnavailable is the rule that a missing copy
+// refuses nothing: the add picker still opens, and only an explicit download
+// reports the network failure.
 func TestNoLocalCopyLeavesTheStateUnavailable(t *testing.T) {
 	ctx := context.Background()
 	h := newHarness(t)
@@ -162,11 +168,11 @@ func TestNoLocalCopyLeavesTheStateUnavailable(t *testing.T) {
 		discovery.New(nil))
 
 	_, state, err := manager.Templates(ctx)
-	if err == nil {
-		t.Fatal("Templates() error = nil, want the failed fetch reported")
+	if err != nil {
+		t.Fatalf("Templates() error = %v, want a read that never asks the network", err)
 	}
-	if state.Available || state.LastError == "" {
-		t.Fatalf("state = %+v, want an unavailable copy with its reason", state)
+	if state.Available || state.LastError != "" {
+		t.Fatalf("state = %+v, want an unavailable copy with no download error", state)
 	}
 	hits, searchState := manager.SearchModelsDev(ctx, "deepseek", 20)
 	if len(hits) != 0 || searchState.Available {

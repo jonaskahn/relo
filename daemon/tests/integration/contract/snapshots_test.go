@@ -1,6 +1,7 @@
 package contract_test
 
 import (
+	"context"
 	"encoding/json"
 	"flag"
 	"io"
@@ -150,6 +151,12 @@ func TestManagementContract(t *testing.T) {
 	// Every vendor read in this test answers from the fixed models.dev
 	// dataset, so no probe, refresh, or search ever reaches the network.
 	h.upstream.setFixture("modelsdev.json", false)
+	// Daemon start saves the dataset before it serves the first request, which
+	// is what the pages below read. Only the schedule and the update button
+	// download after this point.
+	if err := h.service.FetchModelsDev(context.Background()); err != nil {
+		t.Fatalf("download models.dev: %v", err)
+	}
 	dir := fixtureDir(t)
 	h.runSnapshots(t, dir, []snapshotCase{
 		{name: "healthz", method: http.MethodGet, path: "/healthz", wantStatus: http.StatusOK},
