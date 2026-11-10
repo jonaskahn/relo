@@ -316,11 +316,12 @@ type claudeModelChoiceResponse struct {
 }
 
 type claudeModelConfigResponse struct {
-	Model       string                      `json:"model"`
-	Effort      string                      `json:"effort"`
-	AutoCompact string                      `json:"auto_compact"`
-	Entries     []claudeModelEntryResponse  `json:"entries"`
-	Models      []claudeModelChoiceResponse `json:"models"`
+	Model         string                      `json:"model"`
+	SubagentModel string                      `json:"subagent_model"`
+	Effort        string                      `json:"effort"`
+	AutoCompact   string                      `json:"auto_compact"`
+	Entries       []claudeModelEntryResponse  `json:"entries"`
+	Models        []claudeModelChoiceResponse `json:"models"`
 }
 
 func toClaudeModelConfigResponse(config appintegration.ClaudeModelConfig) claudeModelConfigResponse {
@@ -339,7 +340,7 @@ func toClaudeModelConfigResponse(config appintegration.ClaudeModelConfig) claude
 		})
 	}
 	return claudeModelConfigResponse{
-		Model: config.Model, Effort: config.Effort, AutoCompact: config.AutoCompact,
-		Entries: entries, Models: models,
+		Model: config.Model, SubagentModel: config.SubagentModel, Effort: config.Effort,
+		AutoCompact: config.AutoCompact, Entries: entries, Models: models,
 	}
 }

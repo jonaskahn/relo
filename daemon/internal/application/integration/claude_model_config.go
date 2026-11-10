@@ -69,7 +69,7 @@ func (s *Service) SetClaudeModelConfig(ctx context.Context, id string, update Cl
 	if err != nil {
 		return ClaudeModelConfig{}, err
 	}
-	if err := validateClaudeModel(update, current.Model, s.claudePickerModels()); err != nil {
+	if err := validateClaudeModel(update, current, s.claudePickerModels()); err != nil {
 		return ClaudeModelConfig{}, err
 	}
 	finish, err := s.begin("model-config", id)
@@ -78,8 +78,8 @@ func (s *Service) SetClaudeModelConfig(ctx context.Context, id string, update Cl
 	}
 	defer finish()
 	saved, err := manager.WriteClaudePreferences(ctx, ClaudePreferenceUpdate{
-		Model: strings.TrimSpace(update.Model), Effort: strings.TrimSpace(update.Effort),
-		AutoCompact: compactOrAuto(update.AutoCompact),
+		Model: strings.TrimSpace(update.Model), SubagentModel: strings.TrimSpace(update.SubagentModel),
+		Effort: strings.TrimSpace(update.Effort), AutoCompact: compactOrAuto(update.AutoCompact),
 	})
 	if err != nil {
 		return ClaudeModelConfig{}, err
@@ -146,12 +146,29 @@ func validateClaudeShape(update ClaudePreferenceUpdate) error {
 	return nil
 }
 
-func validateClaudeModel(update ClaudePreferenceUpdate, current string, models []ModelRef) error {
+func validateClaudeModel(update ClaudePreferenceUpdate, current ClaudePreferences, models []ModelRef) error {
 	model := strings.TrimSpace(update.Model)
-	if model == "" || claudeModelAllowed(model, current, models) {
-		return nil
+	if model != "" && !claudeModelAllowed(model, current.Model, models) {
+		return preferenceError{message: "model is not available"}
 	}
-	return preferenceError{message: "model is not available"}
+	subagent := strings.TrimSpace(update.SubagentModel)
+	if subagent != "" && !claudeModelAllowed(subagent, current.SubagentModel, models) && !claudeSubagentAlias(subagent) {
+		return preferenceError{message: "subagent model is not available"}
+	}
+	return nil
+}
+
+// claudeSubagentAlias reports a value Claude Code documents for
+// CLAUDE_CODE_SUBAGENT_MODEL: an alias, not the special default value and not
+// inherit. inherit belongs to an agent definition, which still wins over this
+// setting.
+func claudeSubagentAlias(model string) bool {
+	switch model {
+	case "best", "fable", "sonnet", "opus", "haiku", "sonnet[1m]", "opus[1m]", "opusplan":
+		return true
+	default:
+		return false
+	}
 }
 
 func claudeModelAllowed(model, current string, models []ModelRef) bool {

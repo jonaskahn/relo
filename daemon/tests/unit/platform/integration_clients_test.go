@@ -4,6 +4,7 @@ import (
 	"context"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/jonaskahn/relo/internal/adapters/codingclients"
@@ -50,6 +51,30 @@ func TestClientFilesForwardTheDesktopBehaviorComparison(t *testing.T) {
 	}}
 	if files.DesktopProfileLists(string(content), base, changed) {
 		t.Fatal("DesktopProfileLists() = true for a different model roster")
+	}
+}
+
+func TestClientFilesRoundTripClaudePreferences(t *testing.T) {
+	files := platform.NewClientFiles(codingclients.Paths{Home: t.TempDir()})
+	updated, err := files.UpdateClaudePreferences(`{"env":{"CLAUDE_CODE_SUBAGENT_MODEL":"haiku"}}`+"\n", appintegration.ClaudePreferenceUpdate{
+		Model: "opus", SubagentModel: "opusplan",
+	})
+	if err != nil {
+		t.Fatalf("UpdateClaudePreferences() error = %v", err)
+	}
+	read, err := files.ReadClaudePreferences(updated)
+	if err != nil {
+		t.Fatalf("ReadClaudePreferences() error = %v", err)
+	}
+	if read.Model != "opus" || read.SubagentModel != "opusplan" {
+		t.Fatalf("read = %+v, want opus and the opusplan alias", read)
+	}
+	kept, err := files.ClearReloClaudePreferences(updated)
+	if err != nil {
+		t.Fatalf("ClearReloClaudePreferences() error = %v", err)
+	}
+	if !strings.Contains(kept, `"CLAUDE_CODE_SUBAGENT_MODEL": "opusplan"`) {
+		t.Fatalf("settings = %s, want the alias kept", kept)
 	}
 }
 

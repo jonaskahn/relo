@@ -15,6 +15,9 @@ const (
 	claudeCompactKey = "autoCompactWindow"
 	claudeModelKey   = "model"
 	claudeModelsKey  = "modelSettings"
+	// claudeSubagentModelEnv is the default model for subagents that do not
+	// name one. A definition or a per-spawn model still wins.
+	claudeSubagentModelEnv = "CLAUDE_CODE_SUBAGENT_MODEL"
 	// claudeAutoCompact is the documented value that returns a model to the
 	// window Claude Code tunes for it.
 	claudeAutoCompact = "auto"
@@ -26,10 +29,11 @@ const (
 // settings. An empty model or effort, or an auto compact window, means Claude
 // Code's own default.
 type ClaudePreferences struct {
-	Model       string
-	Effort      string
-	AutoCompact string
-	Entries     map[string]ClaudeModelPreference
+	Model         string
+	SubagentModel string
+	Effort        string
+	AutoCompact   string
+	Entries       map[string]ClaudeModelPreference
 }
 
 // ClaudeModelPreference is the effort and compact window saved for one model.
@@ -41,9 +45,10 @@ type ClaudeModelPreference struct {
 // ClaudePreferenceUpdate replaces the default model and that model's saved
 // effort and compact window.
 type ClaudePreferenceUpdate struct {
-	Model       string
-	Effort      string
-	AutoCompact string
+	Model         string
+	SubagentModel string
+	Effort        string
+	AutoCompact   string
 }
 
 // ReadClaudePreferences reads the default model and every per-model choice.
@@ -61,7 +66,11 @@ func ReadClaudePreferences(content string) (ClaudePreferences, error) {
 	if err != nil {
 		return ClaudePreferences{}, err
 	}
-	preferences := ClaudePreferences{Model: model, AutoCompact: claudeAutoCompact, Entries: entries}
+	subagent, err := readSubagentModel(document)
+	if err != nil {
+		return ClaudePreferences{}, err
+	}
+	preferences := ClaudePreferences{Model: model, SubagentModel: subagent, AutoCompact: claudeAutoCompact, Entries: entries}
 	if saved, found := entries[model]; found && model != "" {
 		preferences.Effort = saved.Effort
 		preferences.AutoCompact = saved.AutoCompact
@@ -84,9 +93,13 @@ func UpdateClaudePreferences(content string, update ClaudePreferenceUpdate) (str
 		compact = claudeAutoCompact
 	}
 	if model == "" {
-		return clearDefaultModel(document, effort, compact)
+		if err := clearDefaultModel(document, effort, compact); err != nil {
+			return "", err
+		}
+	} else if err := writeModelChoice(document, model, effort, compact); err != nil {
+		return "", err
 	}
-	if err := writeModelChoice(document, model, effort, compact); err != nil {
+	if err := writeSubagentModel(document, strings.TrimSpace(update.SubagentModel)); err != nil {
 		return "", err
 	}
 	return encodeSettings(document)
@@ -121,6 +134,9 @@ func ClearReloClaudePreferences(content string) (string, error) {
 	} else {
 		document[claudeModelsKey] = settings
 	}
+	if err := clearReloSubagentModel(document); err != nil {
+		return "", err
+	}
 	return encodeSettings(document)
 }
 
@@ -133,9 +149,6 @@ func ReloGatewayModel(id string) bool {
 func openClaudeSettings(content string) (map[string]any, error) {
 	document, err := decodeSettings(content)
 	if err != nil {
-		return nil, err
-	}
-	if _, err := settingsEnv(document); err != nil {
 		return nil, err
 	}
 	return document, nil
@@ -161,15 +174,59 @@ func readModelEntries(document map[string]any) (map[string]ClaudeModelPreference
 	return entries, nil
 }
 
-func clearDefaultModel(document map[string]any, effort, compact string) (string, error) {
+func clearDefaultModel(document map[string]any, effort, compact string) error {
 	if effort != "" || compact != claudeAutoCompact {
-		return "", fmt.Errorf("claude-code: %w (a model is required)", ErrUnrecognisedFile)
+		return fmt.Errorf("claude-code: %w (a model is required)", ErrUnrecognisedFile)
 	}
 	if _, err := settingsString(document, claudeModelKey); err != nil {
-		return "", err
+		return err
 	}
 	delete(document, claudeModelKey)
-	return encodeSettings(document)
+	return nil
+}
+
+func readSubagentModel(document map[string]any) (string, error) {
+	env, err := settingsEnv(document)
+	if err != nil {
+		return "", err
+	}
+	value, _ := env[claudeSubagentModelEnv].(string)
+	return value, nil
+}
+
+func writeSubagentModel(document map[string]any, model string) error {
+	env, err := settingsEnv(document)
+	if err != nil {
+		return err
+	}
+	if model == "" {
+		delete(env, claudeSubagentModelEnv)
+	} else {
+		env[claudeSubagentModelEnv] = model
+	}
+	return storeEnv(document, env)
+}
+
+func clearReloSubagentModel(document map[string]any) error {
+	env, err := settingsEnv(document)
+	if err != nil {
+		return err
+	}
+	value, ok := env[claudeSubagentModelEnv].(string)
+	if !ok || !ReloGatewayModel(value) {
+		return nil
+	}
+	delete(env, claudeSubagentModelEnv)
+	return storeEnv(document, env)
+}
+
+func storeEnv(document, env map[string]any) error {
+	if len(env) == 0 {
+		delete(document, "env")
+		return nil
+	}
+	document["env"] = env
+	return nil
 }
 
 func writeModelChoice(document map[string]any, model, effort, compact string) error {

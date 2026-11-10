@@ -269,10 +269,11 @@ type ClientFiles interface {
 // settings. An empty model, effort, or an auto compact window means Claude
 // Code's own default. Entries holds the saved choice for every model.
 type ClaudePreferences struct {
-	Model       string
-	Effort      string
-	AutoCompact string
-	Entries     map[string]ClaudeModelPreference
+	Model         string
+	SubagentModel string
+	Effort        string
+	AutoCompact   string
+	Entries       map[string]ClaudeModelPreference
 }
 
 // ClaudeModelPreference is the effort and compact window saved for one model.
@@ -281,13 +282,15 @@ type ClaudeModelPreference struct {
 	AutoCompact string
 }
 
-// ClaudePreferenceUpdate replaces the default model and that model's saved
-// effort and compact window. An empty model clears the default. Empty effort
-// and an auto compact window clear that model's overrides.
+// ClaudePreferenceUpdate replaces the default model, the subagent model, and
+// the default model's saved effort and compact window. An empty model or
+// subagent model clears that choice. Empty effort and an auto compact window
+// clear the default model's overrides.
 type ClaudePreferenceUpdate struct {
-	Model       string
-	Effort      string
-	AutoCompact string
+	Model         string
+	SubagentModel string
+	Effort        string
+	AutoCompact   string
 }
 
 // ModelDiff counts how the models one client file lists differ from the ones

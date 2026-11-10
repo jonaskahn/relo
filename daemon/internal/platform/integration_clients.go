@@ -300,7 +300,7 @@ func (ClientFiles) ReadClaudePreferences(content string) (appintegration.ClaudeP
 // UpdateClaudePreferences writes one personal model choice.
 func (ClientFiles) UpdateClaudePreferences(content string, update appintegration.ClaudePreferenceUpdate) (string, error) {
 	result, err := codingclients.UpdateClaudePreferences(content, codingclients.ClaudePreferenceUpdate{
-		Model: update.Model, Effort: update.Effort, AutoCompact: update.AutoCompact,
+		Model: update.Model, SubagentModel: update.SubagentModel, Effort: update.Effort, AutoCompact: update.AutoCompact,
 	})
 	return result, fileError(err)
 }
@@ -317,7 +317,8 @@ func claudePreferences(read codingclients.ClaudePreferences) appintegration.Clau
 		entries[id] = appintegration.ClaudeModelPreference{Effort: entry.Effort, AutoCompact: entry.AutoCompact}
 	}
 	return appintegration.ClaudePreferences{
-		Model: read.Model, Effort: read.Effort, AutoCompact: read.AutoCompact, Entries: entries,
+		Model: read.Model, SubagentModel: read.SubagentModel, Effort: read.Effort,
+		AutoCompact: read.AutoCompact, Entries: entries,
 	}
 }
 

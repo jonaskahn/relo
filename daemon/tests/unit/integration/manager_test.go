@@ -1012,12 +1012,12 @@ func TestClaudeCodePreferencesDoNotDriftAndLeaveNativeModels(t *testing.T) {
 		t.Fatalf("Enable() error = %v", err)
 	}
 	saved, err := h.manager.WriteClaudePreferences(context.Background(), integration.ClaudePreferenceUpdate{
-		Model: "claude-relo-openai--gpt-4o", Effort: "high", AutoCompact: "200000",
+		Model: "claude-relo-openai--gpt-4o", SubagentModel: "claude-relo-openai--gpt-4o", Effort: "high", AutoCompact: "200000",
 	})
 	if err != nil {
 		t.Fatalf("WriteClaudePreferences() error = %v", err)
 	}
-	if saved.Model != "claude-relo-openai--gpt-4o" || saved.Effort != "high" || saved.AutoCompact != "200000" {
+	if saved.Model != "claude-relo-openai--gpt-4o" || saved.SubagentModel != "claude-relo-openai--gpt-4o" || saved.Effort != "high" || saved.AutoCompact != "200000" {
 		t.Fatalf("saved = %+v, want the choice just written", saved)
 	}
 	if saved.Entries["opus"].Effort != "low" {

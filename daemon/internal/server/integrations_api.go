@@ -217,9 +217,10 @@ type codexContextRequest struct {
 }
 
 type claudeModelConfigRequest struct {
-	Model       string `json:"model"`
-	Effort      string `json:"effort"`
-	AutoCompact string `json:"auto_compact"`
+	Model         string `json:"model"`
+	SubagentModel string `json:"subagent_model"`
+	Effort        string `json:"effort"`
+	AutoCompact   string `json:"auto_compact"`
 }
 
 func (s *Server) handleGetClaudeModelConfig(w http.ResponseWriter, r *http.Request) {
@@ -245,7 +246,7 @@ func (s *Server) handleSetClaudeModelConfig(w http.ResponseWriter, r *http.Reque
 		return
 	}
 	config, err := manager.SetClaudeModelConfig(r.Context(), r.PathValue("id"), appintegration.ClaudePreferenceUpdate{
-		Model: request.Model, Effort: request.Effort, AutoCompact: request.AutoCompact,
+		Model: request.Model, SubagentModel: request.SubagentModel, Effort: request.Effort, AutoCompact: request.AutoCompact,
 	})
 	if err != nil {
 		s.writeIntegrationError(w, r, err)
