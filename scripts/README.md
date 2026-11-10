@@ -22,6 +22,23 @@ Requires `mitmproxy` (`brew install mitmproxy`). Captures land in
 `setup --trust` installs the CA into the System keychain; `teardown` removes
 it but never deletes `~/.mitmproxy` CA files.
 
+### compare-capture.mjs
+
+```console
+$ node scripts/compare-capture.mjs --reference debugger/captures/capture-*.jsonl --event 59995
+$ node scripts/compare-capture.mjs --reference <file> --event <id> --relo-sqlite ~/.relo/state.sqlite
+```
+
+Normalizes the genuine client's request from a capture against what Relo sent
+on one activity event: method, host and path, headers (transport and
+correlation headers left out, sensitive values masked), and the body's
+top-level scalar keys. Reads Relo's side from the management API with the
+admin token (`--admin-token`, `--admin-token-file`, or `~/.relo/admin-token`),
+falling back to a read-only `sqlite3` query with `--relo-sqlite`. Exits 1 when
+the two differ, 0 when they match. `--ignore-header` and `--ignore-key` (both
+repeatable) leave a deliberate divergence out; `--show-secrets` prints raw
+values.
+
 ## Build / sync
 
 ### build-console.sh (`make build-console`)
