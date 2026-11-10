@@ -572,14 +572,20 @@ func request(method, path, token string, body io.Reader) *http.Request {
 // upstreamServer is a mock provider endpoint whose response tests can
 // change between calls.
 type upstreamServer struct {
-	server   *httptest.Server
-	mu       sync.Mutex
-	fixture  string
+	server  *httptest.Server
+	mu      sync.Mutex
+	fixture string
+	// rawBody overrides the fixture, which is how a test stands in for one
+	// exact upstream body such as a lane's own quota refusal.
+	rawBody  string
 	sse      bool
 	status   int
 	delay    time.Duration
 	headers  map[string]string
 	requests []string
+	// seen keeps each request's headers, which is how a test reads what the
+	// relay actually sent upstream.
+	seen []http.Header
 	// bodies keeps each request's payload, which is what proves what the
 	// relay actually asked the upstream for.
 	bodies        []string
@@ -599,10 +605,11 @@ func newUpstreamServer(t *testing.T) *upstreamServer {
 func (u *upstreamServer) serve(w http.ResponseWriter, r *http.Request) {
 	payload, _ := io.ReadAll(io.LimitReader(r.Body, 1<<20))
 	u.mu.Lock()
-	fixture, sse, status, delay := u.fixture, u.sse, u.status, u.delay
+	fixture, rawBody, sse, status, delay := u.fixture, u.rawBody, u.sse, u.status, u.delay
 	headers := u.headers
 	waitForCancel, cancelled := u.waitForCancel, u.cancelled
 	u.requests = append(u.requests, r.URL.Path)
+	u.seen = append(u.seen, r.Header.Clone())
 	u.bodies = append(u.bodies, string(payload))
 	u.auths = append(u.auths, r.Header.Get("Authorization"))
 	u.mu.Unlock()
@@ -612,10 +619,16 @@ func (u *upstreamServer) serve(w http.ResponseWriter, r *http.Request) {
 		close(cancelled)
 		return
 	}
-	body, err := os.ReadFile(testkit.FixturePath(fixture))
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		return
+	var body []byte
+	if rawBody != "" {
+		body = []byte(rawBody)
+	} else {
+		read, err := os.ReadFile(testkit.FixturePath(fixture))
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+		body = read
 	}
 	if delay > 0 {
 		time.Sleep(delay)
@@ -650,6 +663,16 @@ func (u *upstreamServer) lastAuthorization() string {
 		return ""
 	}
 	return u.auths[len(u.auths)-1]
+}
+
+// headerAt returns the upstream headers of one recorded request.
+func (u *upstreamServer) headerAt(index int) http.Header {
+	u.mu.Lock()
+	defer u.mu.Unlock()
+	if index < 0 || index >= len(u.seen) {
+		return nil
+	}
+	return u.seen[index]
 }
 
 func (u *upstreamServer) URL() string {

@@ -169,8 +169,14 @@ func randInt63(max int64) int64 {
 // native session the caller keeps per lane, or "" to derive one from the
 // lane for callers without a conversation.
 type InboundIdentity struct {
-	Session         string
-	Affinity        string
+	// Session is the client's own conversation id (x-opencode-session-id),
+	// which differs from the root on a forked conversation.
+	Session string
+	// Affinity is the root session every alias header carries: a parent's id,
+	// a fork's source session, or the conversation's own id.
+	Affinity string
+	// Client is the agent name the client labels its turns with.
+	Client          string
 	UserAgent       string
 	Project         string
 	ParentSessionID string

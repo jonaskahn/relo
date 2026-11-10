@@ -131,6 +131,33 @@ func TestOpenCodeFreeHeadersRelayInboundIdentity(t *testing.T) {
 	}
 }
 
+// TestOpenCodeFreeHeadersCarryTheRootAndTheAgent covers the identity the
+// installed client writes: every affinity spelling carries the root session,
+// the session-id header keeps the client's own session, and the agent name
+// travels instead of the hardcoded CLI label.
+func TestOpenCodeFreeHeadersCarryTheRootAndTheAgent(t *testing.T) {
+	root := "ses_" + "abcdef123456" + "AbCdEfGhIjKlMn"
+	own := "ses_" + "123456abcdef" + "MnKlIjGhFeDcBa"
+	headers := wire.OpenCodeFreeHeaders("lane-free", wire.InboundIdentity{
+		Affinity: root, Session: own, Client: "build",
+	})
+	for _, alias := range []string{"x-opencode-session", "x-session-affinity", "x-session-id"} {
+		if headers[alias] != root {
+			t.Fatalf("%s = %q, want the root session %q", alias, headers[alias], root)
+		}
+	}
+	if headers["x-opencode-session-id"] != own {
+		t.Fatalf("session-id = %q, want the client's own %q", headers["x-opencode-session-id"], own)
+	}
+	if headers["x-opencode-client"] != "build" {
+		t.Fatalf("client = %q, want the agent name", headers["x-opencode-client"])
+	}
+	blank := wire.OpenCodeFreeHeaders("lane-free", wire.InboundIdentity{Client: "  "})
+	if blank["x-opencode-client"] != "cli" {
+		t.Fatalf("client = %q, want the CLI fallback", blank["x-opencode-client"])
+	}
+}
+
 // TestOpenCodeFreeSessionIsDerivedRatherThanRemembered covers a daemon that
 // outlives many conversations: a lane maps to its session without anything
 // keeping the mapping, so no conversation is retained once it ends.

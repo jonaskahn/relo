@@ -292,10 +292,15 @@ func (s *Server) attemptHeaders(spec attemptSpec, template catalog.Template, tem
 	}
 	lane := openCodeLane(outcome, r)
 	inbound := s.freeLaneIdentity(r, host)
-	// The genuine affinity travels as-is; only a conversation the client
-	// never named gets the forged session kept per lane.
+	// The genuine root session travels as-is; only a conversation the client
+	// never named gets the forged session kept per lane. A client that named
+	// only its own session keeps that as the root too.
 	if !wire.ValidSessionID(inbound.Affinity) {
-		inbound.Session = s.freeLaneSession(lane)
+		if wire.ValidSessionID(inbound.Session) {
+			inbound.Affinity = inbound.Session
+		} else {
+			inbound.Affinity = s.freeLaneSession(lane)
+		}
 	}
 	return wire.OpenCodeFreeHeaders(lane, inbound), nil
 }
@@ -311,8 +316,13 @@ func (s *Server) freeLaneIdentity(r *http.Request, host catalog.Provider) wire.I
 		return inbound
 	}
 	inbound.UserAgent = r.Header.Get("User-Agent")
+	inbound.Client = r.Header.Get("x-opencode-client")
+	// The affinity aliases carry the conversation's root session; the
+	// session-id header carries the client's own session, which differs on a
+	// forked conversation.
 	inbound.Affinity = firstHeader(r.Header,
 		"x-session-affinity", "X-Session-Id", "x-opencode-session", "x-opencode-session-id")
+	inbound.Session = firstHeader(r.Header, "x-opencode-session-id")
 	inbound.Project = r.Header.Get("x-opencode-project")
 	inbound.ParentSessionID = firstHeader(r.Header,
 		"x-opencode-parent-session-id", "x-parent-session-id")
