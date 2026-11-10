@@ -26,12 +26,15 @@ func TestOpenCodeFreeIsNotOpenCodeGo(t *testing.T) {
 		{baseURL: "https://opencode.ai/zen/go/v1", goPath: true},
 		// The gateway's current Go path is the same lane as the older one.
 		{baseURL: "https://opencode.ai/inference/go/v1", goPath: true},
-		// The paid Console path is neither the Go lane nor the signed-out one.
-		{baseURL: "https://opencode.ai/inference/v1"},
+		// The current signed-out path, which the installed client resolves.
+		{baseURL: "https://opencode.ai/inference/openai/v1", free: true},
+		{baseURL: "https://opencode.ai/inference/v1", free: true},
 		{baseURL: "https://opencode.ai/v1"},
 		{baseURL: "https://api.opencode.ai/zen/v1"},
+		{baseURL: "https://api.opencode.ai/inference/v1"},
 		{baseURL: "https://openrouter.ai/api/v1"},
 		{baseURL: "https://opencode.ai.evil.test/zen/v1"},
+		{baseURL: "https://opencode.ai.evil.test/inference/v1"},
 		{baseURL: ""},
 		{baseURL: "://nonsense"},
 	}

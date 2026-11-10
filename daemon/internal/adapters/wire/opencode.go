@@ -35,26 +35,26 @@ const freeClientUserAgent = "opencode/latest/2.0.27/cli"
 // per conversation lane and a fresh message identifier for each attempt. The
 // inbound identity is relayed, never invented: the client's own agent,
 // affinity, project, and parent travel when present, and only the gaps are
-// filled — the agent from the fallback above, the project omitted, the
-// session from the caller's forged value or derived from the lane.
+// filled — the agent name from the client or the fallback above, the project
+// omitted, the session from the caller's forged value or derived from the
+// lane. The affinity spellings carry the conversation's root session, while
+// x-opencode-session-id keeps the client's own session, the way the native
+// client writes a fork.
 func OpenCodeFreeHeaders(lane string, id InboundIdentity) map[string]string {
-	session := id.Session
-	if session == "" {
-		if ValidSessionID(id.Affinity) {
-			session = id.Affinity
-		} else {
-			session = freeSessionID(lane, "")
-		}
+	root := freeRootSession(lane, id)
+	own := id.Session
+	if !ValidSessionID(own) {
+		own = root
 	}
 	request := NativeRequestID()
 	headers := map[string]string{
 		"Authorization":         "Bearer public",
 		"User-Agent":            freeAgent(id.UserAgent),
-		"x-opencode-client":     "cli",
-		"x-opencode-session":    session,
-		"x-opencode-session-id": session,
-		"x-session-affinity":    session,
-		"x-session-id":          session,
+		"x-opencode-client":     freeClient(id.Client),
+		"x-opencode-session":    root,
+		"x-opencode-session-id": own,
+		"x-session-affinity":    root,
+		"x-session-id":          root,
 		"x-opencode-request":    request,
 		"Accept":                "*/*",
 	}
@@ -71,6 +71,28 @@ func OpenCodeFreeHeaders(lane string, id InboundIdentity) map[string]string {
 		headers["x-parent-session-id"] = parent
 	}
 	return headers
+}
+
+// freeRootSession is the conversation session every affinity spelling carries:
+// the client's root, its own session when it named no root, or the lane's
+// derived session for a caller that named nothing.
+func freeRootSession(lane string, id InboundIdentity) string {
+	if ValidSessionID(id.Affinity) {
+		return id.Affinity
+	}
+	if ValidSessionID(id.Session) {
+		return id.Session
+	}
+	return freeSessionID(lane, "")
+}
+
+// freeClient names the agent that sent the turn. A client that labels itself
+// keeps its name; anything else is the signed-out CLI's own name.
+func freeClient(inbound string) string {
+	if client := strings.TrimSpace(inbound); client != "" {
+		return client
+	}
+	return "cli"
 }
 
 // freeAgent prefers the inbound agent when it identifies as an opencode
@@ -515,15 +537,17 @@ func OpenCodeGo(baseURL string) bool {
 	return strings.Contains(path, "/zen/go") || strings.Contains(path, "/inference/go")
 }
 
-// OpenCodeFree reports whether baseURL is the signed-out OpenCode Zen
-// gateway, which keeps no account and prices nothing. The Go lane is
-// OpenCodeGo; a custom URL on the same gateway counts the same way.
+// OpenCodeFree reports whether baseURL is the signed-out OpenCode gateway,
+// which keeps no account and prices nothing. The older /zen path and the
+// current /inference one are the same lane, and the Go lane is OpenCodeGo; a
+// custom URL on the same gateway counts the same way.
 func OpenCodeFree(baseURL string) bool {
 	path, ok := gatewayPath(baseURL)
 	if !ok {
 		return false
 	}
-	return strings.Contains(path, "/zen") && !strings.Contains(path, "/zen/go")
+	return (strings.Contains(path, "/zen") && !strings.Contains(path, "/zen/go")) ||
+		(strings.Contains(path, "/inference") && !strings.Contains(path, "/inference/go"))
 }
 
 // gatewayPath returns the lowercased path of a URL on the OpenCode gateway,
