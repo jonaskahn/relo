@@ -351,7 +351,7 @@ func (d *sendDriver) blockedMember(candidate routing.Candidate, lastCandidate bo
 		// A connection that just failed every account is not asked again
 		// until its wait is over: the request goes to the next member.
 		cooling := &routing.CoolingError{
-			Name: candidate.ProviderID, Until: until,
+			Name: candidate.ProviderID, ProviderID: candidate.ProviderID, Until: until,
 			Reason: account.CoolingDown(candidate.ProviderID, until),
 		}
 		if d.cooldown == nil || until.Before(d.cooldown.Until) {
@@ -461,7 +461,7 @@ func (d *sendDriver) handleAttemptFailure(failed failedAttempt, err error) walkA
 // and a route still moves to another member. The last member answers in
 // Relo's own words.
 func (d *sendDriver) leaveSpentLane(failed failedAttempt, err error) walkAction {
-	d.s.markConnectionExhausted(failed.candidate.ProviderID, failed.result.RetryAfter)
+	d.s.markLaneSpent(failed.candidate.ProviderID, failed.result.RetryAfter)
 	d.s.markCandidateFailed(failed.candidate, failed.result)
 	if !failed.lastCandidate && memberSwitchAllowed(d.plan, failed.result) {
 		d.s.opts.Router.Unpin(d.s.conversationAnchor(d.outcome, d.r), routing.PinPrefix(d.plan))
@@ -650,6 +650,12 @@ func (s *Server) markConnectionExhausted(providerID string, retryAfter time.Dura
 	}
 }
 
+func (s *Server) markLaneSpent(providerID string, retryAfter time.Duration) {
+	if s.opts.Pools != nil {
+		s.opts.Pools.MarkLaneSpent(providerID, retryAfter)
+	}
+}
+
 func (s *Server) sendBudget(plan routing.Plan) int {
 	total := 0
 	for _, candidate := range plan.Candidates {
@@ -741,7 +747,7 @@ func (s *Server) writeUnwritten(d *sendDriver, upstreamStatus int, cause error) 
 	// Leaving the handler without a write is an empty HTTP 200, which a
 	// streaming client reads as a stream that ended before any event.
 	if errors.Is(cause, errFreeLaneExhausted) {
-		s.writeFreeLaneExhausted(d)
+		s.writeFreeLaneExhausted(d.w, d.r, d.anthropic, d.limitRetryAfter)
 		return
 	}
 	if d.groupLimited() {
@@ -771,16 +777,16 @@ func (s *Server) writeUnwritten(d *sendDriver, upstreamStatus int, cause error) 
 // writeFreeLaneExhausted answers a spent free lane with Relo's own refusal and
 // the wait the lane named. The vendor's message never travels: it advertises
 // a paid upgrade this connection does not have.
-func (s *Server) writeFreeLaneExhausted(d *sendDriver) {
-	if wait := d.limitRetryAfter; wait > 0 {
-		d.w.Header().Set("Retry-After", strconv.Itoa(max(1, int(wait.Seconds()+0.5))))
+func (s *Server) writeFreeLaneExhausted(w http.ResponseWriter, r *http.Request, anthropic bool, wait time.Duration) {
+	if wait > 0 {
+		w.Header().Set("Retry-After", strconv.Itoa(max(1, int(wait.Seconds()+0.5))))
 	}
-	if d.anthropic {
-		s.writeAnthropicDocument(d.w, http.StatusTooManyRequests, "rate_limit_error",
-			s.translator(d.r).Text("api.connections.free_lane_exhausted", nil))
+	if anthropic {
+		s.writeAnthropicDocument(w, http.StatusTooManyRequests, "rate_limit_error",
+			s.translator(r).Text("api.connections.free_lane_exhausted", nil))
 		return
 	}
-	s.fail(d.w, d.r, refusal{
+	s.fail(w, r, refusal{
 		Status: http.StatusTooManyRequests, Code: "free_lane_exhausted",
 		Message: "api.connections.free_lane_exhausted",
 	})
@@ -920,6 +926,11 @@ func (s *Server) failInference(w http.ResponseWriter, r *http.Request, cause err
 	status := failureStatus(cause)
 	var cooling *routing.CoolingError
 	if errors.As(cause, &cooling) {
+		if cooling.ProviderID != "" && s.opts.Pools != nil &&
+			!s.opts.Pools.LaneSpentUntil(cooling.ProviderID).IsZero() {
+			s.writeFreeLaneExhausted(w, r, anthropic, time.Until(cooling.Until))
+			return
+		}
 		w.Header().Set("Retry-After", strconv.Itoa(max(1, int(time.Until(cooling.Until).Seconds()+0.5))))
 	}
 	if anthropic {
