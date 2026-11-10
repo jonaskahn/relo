@@ -9,6 +9,7 @@ import {
 	emptyStepperState,
 	followFormatDefaults,
 	isDirty,
+	isFreeOnlySelection,
 	presetStepperState,
 	probeCredential,
 	probeTarget,
@@ -441,18 +442,47 @@ describe('the add stepper', () => {
 			commitBody(stateOf({ accountLabel: 'work' }), {
 				providerId: 'openai-2',
 				label: 'OpenAI 2',
-				disabled: ['gpt-4o']
+				disabled: ['gpt-4o'],
+				freeOnly: false
 			})
 		).toEqual({
 			provider_id: 'openai-2',
 			label: 'OpenAI 2',
 			account_label: 'work',
-			disabled_models: ['gpt-4o']
+			disabled_models: ['gpt-4o'],
+			free_only: false
 		});
 	});
 
+	test('a commit in free-only mode sends the flag', () => {
+		const body = commitBody(stateOf(), {
+			providerId: 'openai-free',
+			label: 'OpenAI',
+			disabled: ['gpt-4o'],
+			freeOnly: true
+		});
+		expect(body.free_only).toBe(true);
+	});
+
+	test('a free-only selection keeps every free model on and every paid model off', () => {
+		const models = [
+			{ id: 'free-a', is_free: true },
+			{ id: 'paid-b', is_free: false }
+		];
+		expect(isFreeOnlySelection(models, ['paid-b'])).toBe(true);
+		expect(isFreeOnlySelection(models, [])).toBe(false);
+		expect(isFreeOnlySelection(models, ['paid-b', 'free-a'])).toBe(false);
+		expect(isFreeOnlySelection([{ id: 'free-a', is_free: true }], [])).toBe(false);
+		expect(isFreeOnlySelection([{ id: 'paid-b', is_free: false }], ['paid-b'])).toBe(false);
+	});
+
 	test('a commit without an account label generates one', () => {
-		const body = commitBody(stateOf(), { providerId: 'openai', label: 'OpenAI', disabled: [] });
+		const body = commitBody(stateOf(), {
+			providerId: 'openai',
+			label: 'OpenAI',
+			disabled: [],
+			freeOnly: false
+		});
 		expect(String(body.account_label)).toMatch(/^[A-Z][a-z]+ [A-Z][a-z]+$/);
 	});
 

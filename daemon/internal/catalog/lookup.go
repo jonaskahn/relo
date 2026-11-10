@@ -165,6 +165,11 @@ func (s *Snapshot) Listed() []Model {
 		}
 		for _, model := range s.byProviderM[host.ID] {
 			name := ClientModelID(model.ProviderID, model.ID)
+			// A free-only connection never publishes a model that costs
+			// anything, whatever its switch says.
+			if host.FreeOnly && !model.IsFree {
+				continue
+			}
 			if !listable(model) || seen[name] {
 				continue
 			}

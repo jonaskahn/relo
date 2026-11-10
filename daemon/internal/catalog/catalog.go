@@ -95,6 +95,8 @@ type Provider struct {
 	UpdatedAtMs         int64
 	// UseProxy sends this connection through the proxy configured in Settings.
 	UseProxy bool
+	// FreeOnly marks a connection that serves only models costing nothing.
+	FreeOnly bool
 	// ToolCallDialect names a serving template that renders tool calls as
 	// text rather than structured deltas, which the chat decoder reads to
 	// recover the call. Empty for every provider that does not.
@@ -750,6 +752,7 @@ func providerIdentity(row ConnectionRecord) Provider {
 		LastRefreshError:    row.LastRefreshError,
 		Variables:           row.Variables,
 		AllowOverrides:      row.AllowOverrides,
+		FreeOnly:            row.FreeOnly,
 	}
 }
 

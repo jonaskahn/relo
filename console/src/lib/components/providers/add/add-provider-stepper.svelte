@@ -20,6 +20,7 @@
 		defaultVariables,
 		emptyStepperState,
 		isDirty,
+		isFreeOnlySelection,
 		presetStepperState,
 		stepAfter,
 		stepBefore,
@@ -336,7 +337,8 @@
 						commitBody(draft, {
 							providerId: draft.path === 'addKey' ? draft.targetProviderId : reviewId,
 							label: reviewLabel,
-							disabled
+							disabled,
+							freeOnly: isFreeOnlySelection(probe.models ?? [], disabled)
 						})
 					)
 				});
@@ -358,14 +360,7 @@
 	// Review's free-only mode owns two automatic markers while the operator has
 	// not typed over them: the -free id suffix and a native-language label mark.
 	$effect(() => {
-		const models = probe?.models ?? [];
-		const free = models.filter((model) => model.is_free);
-		const paid = models.filter((model) => !model.is_free);
-		const freeOnly =
-			free.length > 0 &&
-			paid.length > 0 &&
-			paid.every((model) => disabled.includes(model.id)) &&
-			free.every((model) => !disabled.includes(model.id));
+		const freeOnly = isFreeOnlySelection(probe?.models ?? [], disabled);
 		if (freeOnly) {
 			if (!idEdited && autoId === '' && !reviewId.endsWith('-free')) {
 				autoId = reviewId;

@@ -431,14 +431,31 @@ export function typedModels(state: StepperState): { model_id: string; priced_as:
 /** Renders the body that saves a probe. */
 export function commitBody(
 	state: StepperState,
-	options: { providerId: string; label: string; disabled: string[] }
+	options: { providerId: string; label: string; disabled: string[]; freeOnly: boolean }
 ): Record<string, unknown> {
 	return {
 		provider_id: options.providerId.trim(),
 		label: options.label.trim(),
 		account_label: state.accountLabel.trim() || defaultAccountName(),
-		disabled_models: options.disabled
+		disabled_models: options.disabled,
+		free_only: options.freeOnly
 	};
+}
+
+/** Reports whether a review selection keeps every free model on and every paid
+ *  model off, which is what marks the stored connection free-only. */
+export function isFreeOnlySelection(
+	models: readonly { readonly id: string; readonly is_free: boolean }[],
+	disabled: readonly string[]
+): boolean {
+	const free = models.filter((model) => model.is_free);
+	const paid = models.filter((model) => !model.is_free);
+	return (
+		free.length > 0 &&
+		paid.length > 0 &&
+		paid.every((model) => disabled.includes(model.id)) &&
+		free.every((model) => !disabled.includes(model.id))
+	);
 }
 
 /** Reports whether the operator typed anything that closing the flow would throw away, which is

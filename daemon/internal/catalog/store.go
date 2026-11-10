@@ -67,6 +67,9 @@ type ConnectionRecord struct {
 	CreatedAtMs         int64
 	UpdatedAtMs         int64
 	UseProxy            bool
+	// FreeOnly marks a connection that serves only models costing nothing.
+	// It is set at commit and enforced on every roster update and listing.
+	FreeOnly bool
 	// TimeoutSeconds is this connection's own call wait in seconds; nil
 	// inherits the global value.
 	TimeoutSeconds *int

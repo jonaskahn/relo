@@ -24,7 +24,7 @@ var (
 const providerColumns = "id, template_id, origin, label, auth, api_format, key_header, base_url, " +
 	"models_source, models_format, modelsdev_provider_id, headers, doc_url, key_env, login_flows, " +
 	"variables, enabled, rank, pool_strategy, last_refreshed_at, last_refresh_error, created_at, updated_at, use_proxy, " +
-	"timeout_seconds, retry_attempts, switch_on_4xx, switch_on_5xx, allow_overrides"
+	"timeout_seconds, retry_attempts, switch_on_4xx, switch_on_5xx, allow_overrides, free_only"
 
 const modelColumns = "provider_id, model_id, source, api_format, base_url, modelsdev_ref, " +
 	"match, enabled, available, listed_at, updated_at, upstream_model_id, cloned_from"
@@ -279,6 +279,7 @@ func scanProvider(row rowScanner) (ProviderRow, error) {
 		switchOn4xx     sql.NullInt64
 		switchOn5xx     sql.NullInt64
 		allowOverrides  int
+		freeOnly        int
 	)
 
 	err := row.Scan(&p.ID, &p.TemplateID, &p.Origin, &p.Label, &p.Auth,
@@ -286,16 +287,16 @@ func scanProvider(row rowScanner) (ProviderRow, error) {
 		&p.ModelsDevProviderID, &headersStr, &p.DocURL, &keyEnvStr, &loginFlowsStr,
 		&variablesStr, &p.Enabled, &p.Rank, &p.PoolStrategy, &lastRefreshedAt,
 		&p.LastRefreshError, &p.CreatedAtMs, &p.UpdatedAtMs, &useProxy,
-		&timeoutSeconds, &retryAttempts, &switchOn4xx, &switchOn5xx, &allowOverrides)
+		&timeoutSeconds, &retryAttempts, &switchOn4xx, &switchOn5xx, &allowOverrides, &freeOnly)
 	if err != nil {
 		return ProviderRow{}, err
 	}
 
 	return finishProviderRow(p, headersStr, keyEnvStr, loginFlowsStr, variablesStr,
-		lastRefreshedAt, useProxy, timeoutSeconds, retryAttempts, switchOn4xx, switchOn5xx, allowOverrides), nil
+		lastRefreshedAt, useProxy, timeoutSeconds, retryAttempts, switchOn4xx, switchOn5xx, allowOverrides, freeOnly), nil
 }
 
-func finishProviderRow(p ProviderRow, headersStr, keyEnvStr, loginFlowsStr, variablesStr string, lastRefreshedAt sql.NullInt64, useProxy int, timeoutSeconds, retryAttempts sql.NullInt64, switchOn4xx, switchOn5xx sql.NullInt64, allowOverrides int) ProviderRow {
+func finishProviderRow(p ProviderRow, headersStr, keyEnvStr, loginFlowsStr, variablesStr string, lastRefreshedAt sql.NullInt64, useProxy int, timeoutSeconds, retryAttempts sql.NullInt64, switchOn4xx, switchOn5xx sql.NullInt64, allowOverrides, freeOnly int) ProviderRow {
 	p.Headers = decodeStringMap(headersStr)
 	p.KeyEnv = decodeStrings(keyEnvStr)
 	p.LoginFlows = decodeStrings(loginFlowsStr)
@@ -306,6 +307,7 @@ func finishProviderRow(p ProviderRow, headersStr, keyEnvStr, loginFlowsStr, vari
 	}
 	p.UseProxy = useProxy != 0
 	p.AllowOverrides = allowOverrides != 0
+	p.FreeOnly = freeOnly != 0
 	if timeoutSeconds.Valid {
 		val := int(timeoutSeconds.Int64)
 		p.TimeoutSeconds = &val

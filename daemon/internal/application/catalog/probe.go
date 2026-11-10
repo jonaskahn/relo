@@ -93,6 +93,10 @@ type CommitProbeRequest struct {
 	// DisabledModels is the switch state Review collected. Absent means the
 	// probe's own decision stands; present means the list is the decision.
 	DisabledModels *[]string
+	// FreeOnly keeps only models that cost nothing on the new connection. The
+	// paid roster is still stored but disabled, so the flag is what survives
+	// a refresh that would otherwise re-enable new paid models.
+	FreeOnly bool
 }
 
 type probeSession struct {
@@ -759,6 +763,7 @@ func (s *Service) commitProbeLocked(ctx context.Context, probeID string, session
 		return s.commitCredentialProbe(ctx, probeID, session, req)
 	}
 	pID := s.assignCommitIDs(ctx, session, req)
+	session.Provider.FreeOnly = req.FreeOnly
 	applyCommitModels(session, req)
 
 	if err := s.persistCommitSession(ctx, session); err != nil {

@@ -159,7 +159,7 @@ func assembleRefreshRoster(t catalog.Template, host catalog.Provider, listed []c
 		modelsDevProviderID = host.ID
 	}
 	roster := buildRoster(t, rosterModeFor(t), listed, nil)
-	return assembleRefreshModels(roster, mdIdx, providerID, modelsDevProviderID, existingMap)
+	return assembleRefreshModels(roster, mdIdx, providerID, modelsDevProviderID, existingMap, host.FreeOnly)
 }
 
 func (s *Service) openRefreshHost(ctx context.Context, providerID string) (catalog.Provider, catalog.Template, *catalog.ModelsDevIndex, catalog.ModelsDevState, []catalog.Model, error) {
@@ -273,25 +273,32 @@ type refreshAssembly struct {
 	added   int
 }
 
-func assembleRefreshModels(roster []rosterEntry, mdIdx *catalog.ModelsDevIndex, providerID, modelsDevID string, existing map[string]catalog.Model) refreshAssembly {
+func assembleRefreshModels(roster []rosterEntry, mdIdx *catalog.ModelsDevIndex, providerID, modelsDevID string, existing map[string]catalog.Model, freeOnly bool) refreshAssembly {
 	out := refreshAssembly{
 		seen:    make(map[string]bool, len(roster)),
 		members: make(map[string]bool),
 	}
 	for _, entry := range roster {
-		out.add(entry, mdIdx, providerID, modelsDevID, existing)
+		out.add(entry, mdIdx, providerID, modelsDevID, existing, freeOnly)
 	}
 	return out
 }
 
-func (a *refreshAssembly) add(entry rosterEntry, mdIdx *catalog.ModelsDevIndex, providerID, modelsDevID string, existing map[string]catalog.Model) {
+func (a *refreshAssembly) add(entry rosterEntry, mdIdx *catalog.ModelsDevIndex, providerID, modelsDevID string, existing map[string]catalog.Model, freeOnly bool) {
+	pmMatch, pmRef, mdModel, foundMD := matchRefreshEntry(entry, mdIdx, modelsDevID)
+	effPrices := refreshEffectivePrices(entry, mdModel, foundMD)
+	// A free-only connection never stores a model that costs anything, so a
+	// paid entry is left out of the roster and out of seen: stored paid rows
+	// are then marked unavailable rather than kept.
+	if freeOnly && !refreshEntryFree(entry, mdModel, foundMD, effPrices) {
+		return
+	}
 	a.seen[entry.ID] = true
 	a.collectMembers(entry)
-	pmMatch, pmRef, mdModel, foundMD := matchRefreshEntry(entry, mdIdx, modelsDevID)
 	if foundMD {
 		a.matched++
 	}
-	if priceRefreshEntry(entry, mdModel, foundMD) {
+	if effPrices.Known() {
 		a.priced++
 	}
 	enabled, pmMatch, pmRef, added := refreshModelEnabled(entry, existing, pmMatch, pmRef)
@@ -342,7 +349,7 @@ func matchRefreshEntry(entry rosterEntry, mdIdx *catalog.ModelsDevIndex, modelsD
 	return pmMatch, mdModel.ID, mdModel, true
 }
 
-func priceRefreshEntry(entry rosterEntry, mdModel catalog.ModelsDevModel, foundMD bool) bool {
+func refreshEffectivePrices(entry rosterEntry, mdModel catalog.ModelsDevModel, foundMD bool) catalog.Prices {
 	var provPrices Prices
 	if entry.Prices != nil {
 		provPrices = toPrices(*entry.Prices)
@@ -352,7 +359,21 @@ func priceRefreshEntry(entry rosterEntry, mdModel catalog.ModelsDevModel, foundM
 		mdPrices = toPrices(mdModel.Prices)
 	}
 	effPrices, _ := resolvePrices(catalog.PriceRecord{}, provPrices.row(), mdPrices.row())
-	return effPrices.Known()
+	return effPrices
+}
+
+func refreshEntryFree(entry rosterEntry, mdModel catalog.ModelsDevModel, foundMD bool, effPrices catalog.Prices) bool {
+	category := catalog.CategoryChat
+	if foundMD && mdModel.Category != "" {
+		category = catalog.Category(mdModel.Category)
+	}
+	mark := entry.IsFree
+	if mark == nil && foundMD {
+		mark = mdModel.IsFree
+	}
+	return catalog.IsFreeModel(catalog.FreeModelFacts{
+		ListingMark: mark, ID: entry.ID, Prices: effPrices, Category: category,
+	})
 }
 
 func refreshModelEnabled(entry rosterEntry, existing map[string]catalog.Model, pmMatch, pmRef string) (bool, string, string, bool) {

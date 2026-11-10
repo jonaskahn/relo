@@ -163,12 +163,14 @@ type commitProbeRequest struct {
 	Label          string    `json:"label"`
 	AccountLabel   string    `json:"account_label"`
 	DisabledModels *[]string `json:"disabled_models"`
+	FreeOnly       bool      `json:"free_only"`
 }
 
 func toCommitProbeInput(request commitProbeRequest) appcatalog.CommitProbeRequest {
 	return appcatalog.CommitProbeRequest{
 		ProviderID: request.ProviderID, Label: request.Label,
 		AccountLabel: request.AccountLabel, DisabledModels: request.DisabledModels,
+		FreeOnly: request.FreeOnly,
 	}
 }
 

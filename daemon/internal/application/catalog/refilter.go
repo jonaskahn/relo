@@ -22,7 +22,7 @@ func (s *Service) RefilterProviderModels(ctx context.Context, providerID string)
 	}
 	listed := storedListing(existing)
 	roster := buildRoster(t, rosterModeFor(t), listed, nil)
-	assembly := assembleRefreshModels(roster, mdIdx, providerID, modelsDevIDOf(host), indexExistingModels(existing))
+	assembly := assembleRefreshModels(roster, mdIdx, providerID, modelsDevIDOf(host), indexExistingModels(existing), host.FreeOnly)
 	var atMs int64
 	if host.LastRefreshedAtMs != nil {
 		atMs = *host.LastRefreshedAtMs
