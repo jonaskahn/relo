@@ -85,9 +85,14 @@ Two panes side by side, stacking under the dock breakpoint with the wiring first
   client with no steps falls back to the two facts that matter — the base URL and the key hint.
 - **Write preview** (before a set-up, or while disabled): each planned file with its path and the fragment Relo would
   write, and a refused write with its reason inline in `--warn` with an icon.
-- **Model preferences** (Claude Code only, and only while it is set up): under the wiring, a default-model select, an
-  effort select, and an auto-compact control. Auto leaves that choice to Claude Code. Effort offers the levels that
-  model can store, plus a saved level that is no longer offered, and never the session-only max. A custom window accepts
+- **Model preferences** (Claude Code only, and only while it is set up): under the wiring, a default-model select, a
+  subagent-model select, an effort select, and an auto-compact control. Auto leaves that choice to Claude Code. The
+  subagent model is the default for subagents, teammates, and workflow agents that do not name their own; a definition
+  or a per-spawn model still wins. The subagent select offers Auto, then the documented aliases best, fable, sonnet,
+  opus, haiku, sonnet[1m], opus[1m], and opusplan, then the same models as the default select. A saved value outside
+  that list stays selected and is labelled unavailable. Effort and auto-compact stay on the default model. Effort
+  offers the levels that model can store, plus a saved level that is no longer offered, and never the session-only
+  max. A custom window accepts
   100,000–1,000,000 tokens and reports a bad value beside the control. Save writes inline and does not become the
   modal's primary action. The current model stays selected when it is missing from the list, labelled as unavailable,
   rather than being replaced. A line under the controls says an open Claude Code session keeps the previous choice

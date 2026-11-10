@@ -7,6 +7,7 @@
 		claudeEffortChoices,
 		claudePreferenceModels,
 		claudePreferencePayload,
+		claudeSubagentAliases,
 		type ClaudePreferenceDraft
 	} from '$lib/claude-preferences';
 	import Button from '$lib/components/ui/button.svelte';
@@ -30,6 +31,7 @@
 
 	let config = $state<ClaudeModelConfig | null>(null);
 	let model = $state('auto');
+	let subagentModel = $state('auto');
 	let effort = $state('auto');
 	let compact = $state<'auto' | 'custom'>('auto');
 	let tokens = $state('');
@@ -41,7 +43,12 @@
 	let fieldError = $state<'model' | 'compact' | ''>('');
 
 	const listed = $derived(
-		claudePreferenceModels(config?.model ?? '', models, modelsReady, config?.models ?? [])
+		claudePreferenceModels(
+			[config?.model ?? '', config?.subagent_model ?? ''],
+			models,
+			modelsReady,
+			config?.models ?? []
+		)
 	);
 	const selectedEfforts = $derived(listed.find((entry) => entry.id === model)?.efforts);
 	const effortLevels = $derived(
@@ -62,6 +69,26 @@
 					: entry.id
 		}))
 	]);
+	const subagentAliasIds = new Set<string>(claudeSubagentAliases.map((alias) => alias.value));
+	const subagentOptions = $derived([
+		{ value: 'auto', label: $t('ui.pages.integrationsPage.modelPreferencesModelAuto') },
+		...claudeSubagentAliases.map((alias) => ({
+			value: alias.value,
+			label: $t(alias.label)
+		})),
+		...listed
+			.filter((entry) => !subagentAliasIds.has(entry.id))
+			.map((entry) => ({
+				value: entry.id,
+				label: unavailable(entry.id)
+					? $t('ui.pages.integrationsPage.modelPreferencesUnavailable', {
+							values: { model: entry.id }
+						})
+					: entry.name && entry.name !== entry.id
+						? entry.name
+						: entry.id
+			}))
+	]);
 	const effortOptions = $derived([
 		{ value: 'auto', label: $t('ui.pages.integrationsPage.modelPreferencesEffortAuto') },
 		...effortLevels.map((level) => ({
@@ -79,7 +106,7 @@
 	});
 
 	function unavailable(id: string): boolean {
-		if (id !== config?.model) return false;
+		if (id !== config?.model && id !== config?.subagent_model) return false;
 		if (modelsReady && models.length > 0) return !models.some((item) => item.id === id);
 		return !(config?.models ?? []).some((item) => item.id === id);
 	}
@@ -106,6 +133,7 @@
 	function apply(next: ClaudeModelConfig) {
 		config = next;
 		model = next.model.trim() === '' ? 'auto' : next.model;
+		subagentModel = next.subagent_model.trim() === '' ? 'auto' : next.subagent_model;
 		const entry = next.entries.find((item) => item.model === next.model);
 		const savedEffort = (entry?.effort || next.effort).trim();
 		effort = savedEffort === '' ? 'auto' : savedEffort;
@@ -155,7 +183,7 @@
 	}
 
 	async function save() {
-		const draft: ClaudePreferenceDraft = { model, effort, compact, tokens };
+		const draft: ClaudePreferenceDraft = { model, subagentModel, effort, compact, tokens };
 		const payload = claudePreferencePayload(draft);
 		saved = false;
 		saveError = '';
@@ -209,6 +237,19 @@
 				options={modelOptions}
 				value={model}
 				onValueChange={chooseModel}
+				disabled={saving}
+			/>
+		</Field>
+		<Field id="claude-subagent" label={$t('ui.pages.integrationsPage.modelPreferencesSubagent')}>
+			<Select
+				id="claude-subagent"
+				options={subagentOptions}
+				value={subagentModel}
+				onValueChange={(value) => {
+					subagentModel = value;
+					saved = false;
+					saveError = '';
+				}}
 				disabled={saving}
 			/>
 		</Field>

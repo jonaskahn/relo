@@ -9,8 +9,22 @@ export const CLAUDE_COMPACT_MAX = 1_000_000;
 
 const contextSuffix = '[1m]';
 
+// Aliases Claude Code documents for CLAUDE_CODE_SUBAGENT_MODEL. default is not
+// an alias, and inherit belongs to an agent definition, which still wins.
+export const claudeSubagentAliases = [
+	{ value: 'best', label: 'ui.pages.integrationsPage.modelPreferencesSubagentBest' },
+	{ value: 'fable', label: 'ui.pages.integrationsPage.modelPreferencesSubagentFable' },
+	{ value: 'sonnet', label: 'ui.pages.integrationsPage.modelPreferencesSubagentSonnet' },
+	{ value: 'opus', label: 'ui.pages.integrationsPage.modelPreferencesSubagentOpus' },
+	{ value: 'haiku', label: 'ui.pages.integrationsPage.modelPreferencesSubagentHaiku' },
+	{ value: 'sonnet[1m]', label: 'ui.pages.integrationsPage.modelPreferencesSubagentSonnet1m' },
+	{ value: 'opus[1m]', label: 'ui.pages.integrationsPage.modelPreferencesSubagentOpus1m' },
+	{ value: 'opusplan', label: 'ui.pages.integrationsPage.modelPreferencesSubagentOpusplan' }
+] as const;
+
 export interface ClaudePreferenceDraft {
 	model: string;
+	subagentModel: string;
 	effort: string;
 	compact: 'auto' | 'custom';
 	tokens: string;
@@ -32,10 +46,10 @@ export function claudeEffortLevels(model: string): string[] {
 	return ['low', 'medium', 'high', 'xhigh'];
 }
 
-/** Models the select can offer. A ready test-pane listing wins; the saved model
+/** Models the select can offer. A ready test-pane listing wins; each saved model
  *  stays visible when that listing no longer contains it. */
 export function claudePreferenceModels(
-	savedModel: string,
+	savedModels: readonly string[],
 	pane: readonly { id: string; name?: string }[],
 	paneReady: boolean,
 	catalog: readonly ClaudeModelChoice[]
@@ -52,11 +66,19 @@ export function claudePreferenceModels(
 					name: model.name,
 					efforts: model.efforts
 				}));
-	const saved = savedModel.trim();
-	if (saved !== '' && !listed.some((model) => model.id === saved)) {
-		return [{ id: saved, efforts: claudeEffortLevels(saved) }, ...listed];
+	const missing: ClaudeListedModel[] = [];
+	for (const saved of savedModels) {
+		const id = saved.trim();
+		if (
+			id === '' ||
+			listed.some((model) => model.id === id) ||
+			missing.some((model) => model.id === id)
+		) {
+			continue;
+		}
+		missing.push({ id, efforts: claudeEffortLevels(id) });
 	}
-	return listed;
+	return missing.length === 0 ? listed : [...missing, ...listed];
 }
 
 /** Effort values for the selected model, keeping a saved value the ladder no
@@ -79,9 +101,13 @@ export function claudePreferencePayload(
 	draft: ClaudePreferenceDraft
 ): { ok: true; body: ClaudeModelConfigUpdate } | { ok: false; error: 'model' | 'compact' } {
 	const model = draft.model === 'auto' ? '' : draft.model.trim();
+	const subagentModel = draft.subagentModel === 'auto' ? '' : draft.subagentModel.trim();
 	const effort = model === '' || draft.effort === 'auto' ? '' : draft.effort.trim();
 	if (draft.compact !== 'custom') {
-		return { ok: true, body: { model, effort, auto_compact: 'auto' } };
+		return {
+			ok: true,
+			body: { model, subagent_model: subagentModel, effort, auto_compact: 'auto' }
+		};
 	}
 	if (model === '') return { ok: false, error: 'model' };
 	const tokens = draft.tokens.trim();
@@ -90,7 +116,10 @@ export function claudePreferencePayload(
 	if (!Number.isSafeInteger(window) || window < CLAUDE_COMPACT_MIN || window > CLAUDE_COMPACT_MAX) {
 		return { ok: false, error: 'compact' };
 	}
-	return { ok: true, body: { model, effort, auto_compact: String(window) } };
+	return {
+		ok: true,
+		body: { model, subagent_model: subagentModel, effort, auto_compact: String(window) }
+	};
 }
 
 function stripContext(model: string): string {

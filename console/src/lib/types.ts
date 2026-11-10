@@ -708,6 +708,7 @@ export interface IntegrationModels {
 /** The personal model choice stored in Claude Code's own settings. */
 export interface ClaudeModelConfig {
 	readonly model: string;
+	readonly subagent_model: string;
 	readonly effort: string;
 	readonly auto_compact: string;
 	readonly entries: readonly ClaudeModelPreferenceEntry[];
@@ -732,6 +733,7 @@ export interface ClaudeModelChoice {
 /** The body that stores one Claude Code model choice. */
 export interface ClaudeModelConfigUpdate {
 	readonly model: string;
+	readonly subagent_model: string;
 	readonly effort: string;
 	readonly auto_compact: string;
 }
