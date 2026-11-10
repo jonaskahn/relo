@@ -6,6 +6,7 @@ import (
 	"errors"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/jonaskahn/relo/internal/account"
 	"github.com/jonaskahn/relo/internal/activity"
@@ -1385,12 +1386,21 @@ func (s *Server) handleGetModelsDevState(w http.ResponseWriter, r *http.Request)
 	writeJSON(w, http.StatusOK, toModelsDevStateResponse(st))
 }
 
+// modelsDevTimeout bounds one operator-triggered download, which is a large
+// body a slow link may still finish.
+const modelsDevTimeout = 2 * time.Minute
+
 func (s *Server) handleRefreshModelsDev(w http.ResponseWriter, r *http.Request) {
 	manager, ok := s.catalogAPIOrUnavailable(w, r)
 	if !ok {
 		return
 	}
-	st, err := manager.RefreshModelsDev(r.Context())
+	// A tab that closes mid-download must not record the cancellation as the
+	// catalog's state, so the request's own cancellation is dropped and a
+	// bounded lifetime of our own is applied instead.
+	ctx, cancel := context.WithTimeout(context.WithoutCancel(r.Context()), modelsDevTimeout)
+	defer cancel()
+	st, err := manager.RefreshModelsDev(ctx)
 	if err != nil {
 		writeServiceError(w, err)
 		return

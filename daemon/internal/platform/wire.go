@@ -489,6 +489,7 @@ func startDiscovery(ctx context.Context, built deps) {
 		if !sleep(ctx, discoveryDelay) {
 			return
 		}
+		downloadModelsDev(ctx, built)
 		discoverEveryConfigured(ctx, built)
 		ticker := built.clock.NewTicker(discoveryInterval)
 		defer ticker.Stop()
@@ -497,10 +498,24 @@ func startDiscovery(ctx context.Context, built deps) {
 			case <-ctx.Done():
 				return
 			case <-ticker.C():
+				downloadModelsDev(ctx, built)
 				discoverEveryConfigured(ctx, built)
 			}
 		}
 	}()
+}
+
+// downloadModelsDev saves a fresh models.dev copy before the rosters are read,
+// so this pass prices against the newest catalog. Every read inside an add, a
+// probe, or a page load serves the copy this leaves behind; only the schedule
+// and the connections page's update button ever download.
+func downloadModelsDev(ctx context.Context, built deps) {
+	if built.catalogSvc == nil {
+		return
+	}
+	if err := built.catalogSvc.FetchModelsDev(ctx); err != nil {
+		built.logger.Warn("skip the models.dev download", "error", err)
+	}
 }
 
 func discoverEveryConfigured(ctx context.Context, built deps) {
