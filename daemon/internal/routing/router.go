@@ -233,7 +233,7 @@ func (r *Router) coolingPlan(plan Plan) *CoolingError {
 		}
 		if cooling == nil || until.Before(cooling.Until) {
 			cooling = &CoolingError{
-				Name: plan.Model, Until: until,
+				Name: plan.Model, ProviderID: skipped.ProviderID, Until: until,
 				Reason: account.CoolingDown(skipped.ProviderID, until),
 			}
 		}

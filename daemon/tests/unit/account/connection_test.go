@@ -100,6 +100,37 @@ func TestConnectionCooldownHonoursARetryAfter(t *testing.T) {
 	}
 }
 
+// TestLaneSpentIsItsOwnKindOfCooldown pins the marker a spent shared lane
+// leaves: the connection cools for the named wait, a different exhaustion
+// never sets the marker, a success clears it, and the wait expires on its own.
+func TestLaneSpentIsItsOwnKindOfCooldown(t *testing.T) {
+	clock := testkit.NewFakeClock(time.Now())
+	pool := newConnectionPool(t, clock)
+
+	pool.MarkExhausted(0)
+	if until := pool.LaneSpentUntil(); !until.IsZero() {
+		t.Fatalf("LaneSpentUntil() = %v, want a plain exhaustion not to mark the lane", until)
+	}
+	pool.MarkLaneSpent(10 * time.Minute)
+	until := pool.LaneSpentUntil()
+	if until.IsZero() {
+		t.Fatal("LaneSpentUntil() = zero, want the lane marked spent")
+	}
+	if got := pool.CooldownUntil(); !got.Equal(until) {
+		t.Fatalf("CooldownUntil() = %v, want the spent lane's own wait", got)
+	}
+	pool.MarkServed("one")
+	if until := pool.LaneSpentUntil(); !until.IsZero() {
+		t.Fatalf("LaneSpentUntil() = %v, want a success to clear the marker", until)
+	}
+
+	pool.MarkLaneSpent(time.Minute)
+	clock.Add(time.Minute)
+	if until := pool.LaneSpentUntil(); !until.IsZero() {
+		t.Fatalf("LaneSpentUntil() = %v, want an expired wait to read zero", until)
+	}
+}
+
 // TestConnectionCooldownReportsThePooledWait covers the resolution the catalog
 // and the router read: a connection on its cooldown names that moment, and a
 // success clears it.

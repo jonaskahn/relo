@@ -76,6 +76,9 @@ func TestConnectionCooldownReachesTheRefusal(t *testing.T) {
 	if !strings.Contains(cooling.Error(), "openai") {
 		t.Fatalf("cooling.Error() = %q, want the connection named", cooling.Error())
 	}
+	if cooling.ProviderID != "openai" {
+		t.Fatalf("cooling.ProviderID = %q, want the cooling connection named", cooling.ProviderID)
+	}
 }
 
 // TestRouteReasonNamesTheKindWithoutIdentifiers pins the stored value a usage

@@ -10,6 +10,10 @@ type connectionState struct {
 	sticky    string
 	failures  int
 	coolUntil time.Time
+	// spent marks a cooldown the connection earned by exhausting a shared
+	// lane, rather than by failing every account. It is what lets the answer
+	// name the lane instead of reporting a generic no-route.
+	spent bool
 }
 
 // MarkServed records the account that just answered a request: later requests
@@ -38,6 +42,33 @@ func (p *Pool) MarkExhausted(retryAfter time.Duration) {
 	if wait > 0 {
 		p.conn.coolUntil = p.clock.Now().Add(wait)
 	}
+}
+
+// MarkLaneSpent records a connection whose shared allowance is spent. No
+// account can help, so the connection sits out the wait the provider named.
+// MarkExhausted records a different cause and never sets this marker.
+func (p *Pool) MarkLaneSpent(retryAfter time.Duration) {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+	p.conn.sticky = ""
+	p.conn.spent = true
+	p.conn.coolUntil = p.clock.Now().Add(max(retryAfter, 0))
+}
+
+// LaneSpentUntil reports when a spent shared lane may be tried again. A
+// zero time means the lane is not spent, including once its wait expires.
+func (p *Pool) LaneSpentUntil() time.Time {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+	if !p.conn.spent {
+		return time.Time{}
+	}
+	if !p.clock.Now().Before(p.conn.coolUntil) {
+		p.conn.spent = false
+		p.conn.coolUntil = time.Time{}
+		return time.Time{}
+	}
+	return p.conn.coolUntil
 }
 
 // ConnectionCooldownUntil is when the connection may take a request again

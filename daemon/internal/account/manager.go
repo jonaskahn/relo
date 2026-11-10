@@ -239,6 +239,17 @@ func (m *Manager) MarkExhausted(providerID string, retryAfter time.Duration) {
 	m.GetPool(providerID).MarkExhausted(retryAfter)
 }
 
+// MarkLaneSpent records that a provider's shared free lane is spent.
+func (m *Manager) MarkLaneSpent(providerID string, retryAfter time.Duration) {
+	m.GetPool(providerID).MarkLaneSpent(retryAfter)
+}
+
+// LaneSpentUntil is when a provider's spent shared lane may be tried again.
+// A zero time means the lane is not spent.
+func (m *Manager) LaneSpentUntil(providerID string) time.Time {
+	return m.GetPool(providerID).LaneSpentUntil()
+}
+
 // SetFailoverBackoff changes the escalating waits a refused credential
 // walks through, for every pool this manager owns. No steps keeps no
 // denylist: open breakers close at once, so every credential is reusable

@@ -189,8 +189,11 @@ func groupKey(groupID string) string {
 // waiting out a failure. It is a no-route refusal that also says when to ask
 // again.
 type CoolingError struct {
-	Name  string
-	Until time.Time
+	Name string
+	// ProviderID names the connection that cooled, when the refusal is about a
+	// connection rather than a route. An empty value leaves the reason generic.
+	ProviderID string
+	Until      time.Time
 	// Reason is what the caller knows about the failure, when it knows more
 	// than this type does: a connection's own accounts cooling down, or a
 	// route whose every member failed.
