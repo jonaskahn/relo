@@ -101,6 +101,19 @@ snapshot so a configured free model reaches the consent refusal
 (`403 free_connections_disabled`) instead of `model_not_found`; a mixed route
 skips that member and may still serve from a paid one.
 
+**The OpenCode free lane authenticates the client's transport, not the request.**
+It accepts only OpenCode's own Bun `fetch` TLS/HTTP fingerprint and answers
+`FreeUsageLimitError` to every other client, including Relo's Go transport, even
+when the headers and body are byte-identical. The control experiment is the same
+capture replayed twice: Bun gets 200, Go and curl get 429. Relo therefore answers
+`429 free_lane_exhausted` and honors the vendor's wait as a cooldown instead of
+retrying or pretending the wire differs. Impersonating that fingerprint is out of
+scope: the gate is client authentication, and reproducing it would be fragile.
+An operator who wants free-model traffic behind Relo must author a route whose
+later member is `kilo-free` or `opencode-go`; both are verified working through
+Relo. The free lane is still attempted on a cold connection, so it starts again
+if the vendor ever changes the gate.
+
 **Free availability is derived, not configured.** A conversational model is
 free when the provider marks it free, the provider listing marks it free, both
 effective input and output rates are explicitly zero, or its identifier carries
