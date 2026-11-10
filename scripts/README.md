@@ -30,9 +30,12 @@ $ node scripts/compare-capture.mjs --reference <file> --event <id> --relo-sqlite
 ```
 
 Normalizes the genuine client's request from a capture against what Relo sent
-on one activity event: method, host and path, headers (transport and
-correlation headers left out, sensitive values masked), and the body's
-top-level scalar keys. Reads Relo's side from the management API with the
+on one activity event: method, host and path, headers (transport headers left
+out, sensitive values masked, per-conversation ids folded), and the body's
+top-level scalar keys. A header only one side sends is reported rather than
+ignored, including `x-opencode-request`; the output ceiling is reported by the
+spelling each side used, so `max_tokens` against `max_completion_tokens` is a
+difference. Reads Relo's side from the management API with the
 admin token (`--admin-token`, `--admin-token-file`, or `~/.relo/admin-token`),
 falling back to a read-only `sqlite3` query with `--relo-sqlite`. Exits 1 when
 the two differ, 0 when they match. `--ignore-header` and `--ignore-key` (both

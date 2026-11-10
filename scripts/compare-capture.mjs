@@ -26,9 +26,6 @@ const IGNORED_HEADERS = new Set([
     "connection", "content-length", "host", "accept-encoding", "b3",
     "traceparent", "tracestate", "date", "server", "cf-ray", "cf-placement",
     "x-opencode-log-id", "server-timing", "retry-after", "transfer-encoding",
-    // Per-attempt correlation ids: the value is minted for one send and says
-    // nothing about the shape Relo builds.
-    "x-opencode-request",
 ]);
 
 const SENSITIVE_HEADERS = new Set([
@@ -41,7 +38,7 @@ const SENSITIVE_HEADERS = new Set([
 const IDENTITY_HEADERS = new Set([
     "x-opencode-session", "x-opencode-session-id", "x-session-affinity",
     "x-session-id", "x-opencode-parent-session-id", "x-parent-session-id",
-    "x-opencode-project",
+    "x-opencode-project", "x-opencode-request",
 ]);
 
 const fail = (message) => {
@@ -138,14 +135,11 @@ function maskedHeader(name, value) {
     return space > 0 ? `${value.slice(0, space)} ****` : "****";
 }
 
-// normalizeHeader folds the values that legitimately vary between two runs:
-// conversation ids, forged project ids, and the client build version Relo
-// relays from whatever agent called it.
+// normalizeHeader folds the ids that legitimately vary between two runs. A
+// build version is not one: a client Relo relays differently is real drift.
 function normalizeHeader(name, value) {
-    if (IDENTITY_HEADERS.has(name)) return "<present>";
-    if (name === "user-agent") {
-        return value.replace(/(opencode\/latest\/)[^/]+(\/)/i, "$1<version>$2");
-    }
+    if (name === "x-opencode-project") return value.replace(/[0-9a-f]{16,}/gi, "<project>");
+    if (IDENTITY_HEADERS.has(name)) return value.replace(/(?:ses_|msg_)[A-Za-z0-9_-]+/g, "<id>");
     return value;
 }
 
@@ -271,17 +265,22 @@ for (const name of [...headerNames].sort()) {
 if (!referenceSide.body || !reloSide.body) {
     differences.push("body: one side did not carry a JSON object");
 } else {
-    // The output ceiling travels under one of two names on the Chat wire;
-    // compare the value once instead of the spelling.
-    const ceiling = (body) => body.max_completion_tokens ?? body.max_tokens;
+    // The output ceiling travels under one of two names on the Chat wire. The
+    // two spellings are not interchangeable: report what each side sent.
+    const ceiling = (body) => ["max_completion_tokens", "max_tokens"]
+        .filter((key) => body[key] !== undefined)
+        .map((key) => `${key}=${JSON.stringify(body[key])}`)
+        .join(", ") || "none";
+    if (ceiling(referenceSide.body) !== ceiling(reloSide.body)) {
+        differences.push(`body ceiling: reference=${ceiling(referenceSide.body)} relo=${ceiling(reloSide.body)}`);
+    }
     const keys = new Set([...Object.keys(referenceSide.body), ...Object.keys(reloSide.body)]);
     keys.delete("max_completion_tokens");
     keys.delete("max_tokens");
-    keys.add("max_tokens");
     for (const key of [...keys].sort()) {
         if (ignoredKeys.has(key)) continue;
-        const left = key === "max_tokens" ? ceiling(referenceSide.body) : referenceSide.body[key];
-        const right = key === "max_tokens" ? ceiling(reloSide.body) : reloSide.body[key];
+        const left = referenceSide.body[key];
+        const right = reloSide.body[key];
         if (left === undefined) {
             differences.push(`body +${key}`);
             continue;
