@@ -128,17 +128,22 @@ func (i *ModelIndex) learn(credentialID, modelID string, available bool) {
 
 // CanServe reports whether one credential may serve a model, named by any of
 // the identifiers a request may carry for it. An account whose roster is
-// unknown serves anything.
+// unknown serves anything it has not been observed to refuse: a learned
+// denial names one model, and is not a roster of every model the account holds.
 func (i *ModelIndex) CanServe(credentialID string, modelIDs []string) bool {
 	if i == nil {
 		return true
 	}
 	i.mu.RLock()
 	defer i.mu.RUnlock()
-	served, known := i.models[credentialID]
-	if !known {
-		return true
+	served := i.models[credentialID]
+	if _, rosterKnown := i.rosters[credentialID]; rosterKnown {
+		return servesListedModel(served, modelIDs)
 	}
+	return !refusesNamedModel(served, modelIDs)
+}
+
+func servesListedModel(served map[string]bool, modelIDs []string) bool {
 	for _, modelID := range modelIDs {
 		if modelID == "" {
 			continue
@@ -147,9 +152,25 @@ func (i *ModelIndex) CanServe(credentialID string, modelIDs []string) bool {
 			return true
 		}
 	}
-	// Either a known roster does not list the model, or the only rows are
-	// learned ones and none of them allows it.
 	return false
+}
+
+func refusesNamedModel(served map[string]bool, modelIDs []string) bool {
+	refused := false
+	for _, modelID := range modelIDs {
+		if modelID == "" {
+			continue
+		}
+		available, found := served[modelID]
+		if !found {
+			continue
+		}
+		if available {
+			return false
+		}
+		refused = true
+	}
+	return refused
 }
 
 // RosterKnown reports whether an account's own listing has been read.

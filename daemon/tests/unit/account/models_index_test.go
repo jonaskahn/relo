@@ -32,6 +32,50 @@ func TestModelIndexLoadsWhatTheStoreHolds(t *testing.T) {
 	}
 }
 
+// TestModelIndexKeepsALearnedDenialToTheModelItNames is the OpenCode Go failure:
+// one upstream refusal, remembered before any roster was read, must not close
+// the account to every other model.
+func TestModelIndexKeepsALearnedDenialToTheModelItNames(t *testing.T) {
+	index := account.NewModelIndex(nil)
+	for _, credentialID := range []string{"bison", "capybara", "energetic"} {
+		index.LearnUnavailable(credentialID, "gemini-4-argon")
+		if !index.CanServe(credentialID, []string{"deepseek-v4-pro"}) {
+			t.Fatalf("CanServe(%s, deepseek-v4-pro) = false, want true: a learned denial is not a roster", credentialID)
+		}
+		if index.CanServe(credentialID, []string{"gemini-4-argon"}) {
+			t.Fatalf("CanServe(%s, gemini-4-argon) = true, want the learned denial kept", credentialID)
+		}
+		if index.CanServe(credentialID, []string{"gemini-4-argon", "gemini-4-argon-upstream"}) {
+			t.Fatalf("CanServe(%s) = true, want a denial under any of the model's names kept", credentialID)
+		}
+	}
+}
+
+// TestModelIndexLoadsALearnedDenialWithoutClosingTheRoster is the same refusal
+// after a restart: the store holds the learned row and no roster marker.
+func TestModelIndexLoadsALearnedDenialWithoutClosingTheRoster(t *testing.T) {
+	index := account.NewModelIndex(nil)
+	index.Load(
+		[]account.ModelObservation{
+			{CredentialID: "bison", ModelID: "gemini-4-argon", Source: account.ModelSourceLearned, Available: false},
+			{CredentialID: "capybara", ModelID: "deepseek-v4-pro", Source: account.ModelSourceLearned, Available: true},
+		},
+		nil,
+	)
+	if !index.CanServe("bison", []string{"deepseek-v4.1-flash"}) {
+		t.Fatal("CanServe() = false for an unobserved model, want true")
+	}
+	if index.CanServe("bison", []string{"gemini-4-argon"}) {
+		t.Fatal("CanServe() = true for a stored learned denial, want false")
+	}
+	if !index.CanServe("capybara", []string{"deepseek-v4-pro"}) {
+		t.Fatal("CanServe() = false for a model the account was observed to serve, want true")
+	}
+	if !index.CanServe("capybara", []string{"glm-5.3-flash"}) {
+		t.Fatal("CanServe() = false for an unobserved model, want true while the roster is unknown")
+	}
+}
+
 // TestModelIndexLearnsWhatAnAccountServed covers the other half of learning: an
 // account that answered a model its listing did not carry stops being excluded.
 func TestModelIndexLearnsWhatAnAccountServed(t *testing.T) {
