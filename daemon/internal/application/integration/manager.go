@@ -1443,7 +1443,58 @@ func (m *Manager) removeClaudeContribution(agent Agent, file FileRecord) error {
 	if err != nil {
 		return err
 	}
+	stripped, err = m.files.ClearReloClaudePreferences(stripped)
+	if err != nil {
+		return err
+	}
 	return m.files.WriteFileAtomic(file.Path, []byte(stripped), 0o600)
+}
+
+// ReadClaudePreferences reads the personal model choice from Claude Code's
+// settings file.
+func (m *Manager) ReadClaudePreferences() (ClaudePreferences, error) {
+	content, err := m.files.ReadFileOrEmpty(m.paths.ClaudeSettings())
+	if err != nil {
+		return ClaudePreferences{}, err
+	}
+	return m.files.ReadClaudePreferences(content)
+}
+
+// WriteClaudePreferences stores one personal model choice and refreshes the
+// fingerprint of the settings file Relo already tracks.
+func (m *Manager) WriteClaudePreferences(ctx context.Context, update ClaudePreferenceUpdate) (ClaudePreferences, error) {
+	path := m.paths.ClaudeSettings()
+	content, err := m.files.ReadFileOrEmpty(path)
+	if err != nil {
+		return ClaudePreferences{}, err
+	}
+	updated, err := m.files.UpdateClaudePreferences(content, update)
+	if err != nil {
+		return ClaudePreferences{}, err
+	}
+	if err := m.files.WriteFileAtomic(path, []byte(updated), 0o600); err != nil {
+		return ClaudePreferences{}, err
+	}
+	if err := m.rememberClaudeDigest(ctx, updated); err != nil {
+		return ClaudePreferences{}, err
+	}
+	return m.files.ReadClaudePreferences(updated)
+}
+
+func (m *Manager) rememberClaudeDigest(ctx context.Context, content string) error {
+	files, err := m.store.Files(ctx, "claude-code")
+	if err != nil {
+		return err
+	}
+	for _, file := range files {
+		if file.Kind != KindClaudeSettings {
+			continue
+		}
+		file.Digest = m.files.Digest(content)
+		file.UpdatedAtMs = m.now().UnixMilli()
+		return m.store.SaveFile(ctx, file)
+	}
+	return nil
 }
 
 func (m *Manager) removeGenericContribution(agent Agent, file FileRecord) error {

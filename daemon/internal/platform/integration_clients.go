@@ -291,6 +291,36 @@ func (ClientFiles) ClaudeSettingsPointAt(content, baseURL, helperPath string, in
 	return codingclients.ClaudeSettingsPointAt(content, baseURL, helperPath, installHelper)
 }
 
+// ReadClaudePreferences reads the personal model choice from Claude settings.
+func (ClientFiles) ReadClaudePreferences(content string) (appintegration.ClaudePreferences, error) {
+	read, err := codingclients.ReadClaudePreferences(content)
+	return claudePreferences(read), fileError(err)
+}
+
+// UpdateClaudePreferences writes one personal model choice.
+func (ClientFiles) UpdateClaudePreferences(content string, update appintegration.ClaudePreferenceUpdate) (string, error) {
+	result, err := codingclients.UpdateClaudePreferences(content, codingclients.ClaudePreferenceUpdate{
+		Model: update.Model, Effort: update.Effort, AutoCompact: update.AutoCompact,
+	})
+	return result, fileError(err)
+}
+
+// ClearReloClaudePreferences removes a Relo gateway model and its settings.
+func (ClientFiles) ClearReloClaudePreferences(content string) (string, error) {
+	result, err := codingclients.ClearReloClaudePreferences(content)
+	return result, fileError(err)
+}
+
+func claudePreferences(read codingclients.ClaudePreferences) appintegration.ClaudePreferences {
+	entries := make(map[string]appintegration.ClaudeModelPreference, len(read.Entries))
+	for id, entry := range read.Entries {
+		entries[id] = appintegration.ClaudeModelPreference{Effort: entry.Effort, AutoCompact: entry.AutoCompact}
+	}
+	return appintegration.ClaudePreferences{
+		Model: read.Model, Effort: read.Effort, AutoCompact: read.AutoCompact, Entries: entries,
+	}
+}
+
 // Fragment renders one managed client's provider fragment.
 func (ClientFiles) Fragment(id, baseURL string, models []appintegration.ModelRef) (string, error) {
 	result, err := codingclients.Fragment(id, baseURL, clientModelRefs(models))

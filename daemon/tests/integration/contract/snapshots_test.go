@@ -212,6 +212,9 @@ func TestManagementContract(t *testing.T) {
 		{name: "integrations-get", method: http.MethodGet, path: "/api/v1/integrations/codex", wantStatus: http.StatusOK},
 		{name: "integrations-get-missing", method: http.MethodGet, path: "/api/v1/integrations/missing", wantStatus: http.StatusNotFound},
 		{name: "integrations-models", method: http.MethodGet, path: "/api/v1/integrations/codex/models", wantStatus: http.StatusNotFound},
+		{name: "integrations-claude-model-config", method: http.MethodGet, path: "/api/v1/integrations/claude-code/model-config", wantStatus: http.StatusBadRequest},
+		{name: "integrations-claude-model-config-other", method: http.MethodGet, path: "/api/v1/integrations/codex/model-config", wantStatus: http.StatusBadRequest},
+		{name: "integrations-claude-model-config-invalid", method: http.MethodPost, path: "/api/v1/integrations/claude-code/model-config", body: `{"model":"opus","effort":"max"}`, wantStatus: http.StatusBadRequest},
 
 		{name: "updates", method: http.MethodGet, path: "/api/v1/updates", wantStatus: http.StatusOK},
 

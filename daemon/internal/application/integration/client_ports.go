@@ -175,6 +175,14 @@ type ClientFiles interface {
 	StripClaudeSettings(existing, baseURL, helperPath string) (string, error)
 	// ClaudeSettingsPointAt reports whether the settings name Relo.
 	ClaudeSettingsPointAt(content, baseURL, helperPath string, installHelper bool) bool
+	// ReadClaudePreferences reads the personal model choice from Claude settings.
+	ReadClaudePreferences(content string) (ClaudePreferences, error)
+	// UpdateClaudePreferences writes one personal model choice and leaves every
+	// other settings key alone.
+	UpdateClaudePreferences(content string, update ClaudePreferenceUpdate) (string, error)
+	// ClearReloClaudePreferences removes a Relo gateway model and its per-model
+	// settings, leaving aliases and native models in place.
+	ClearReloClaudePreferences(content string) (string, error)
 	// Fragment renders one managed client's provider fragment.
 	Fragment(id, baseURL string, models []ModelRef) (string, error)
 	// MergeProvider merges Relo's provider into a managed client file.
@@ -255,6 +263,31 @@ type ClientFiles interface {
 	Digest(content string) string
 	// ModelsDigest fingerprints the model list a file was written with.
 	ModelsDigest(models []ModelRef) string
+}
+
+// ClaudePreferences is the personal model choice stored in Claude Code's user
+// settings. An empty model, effort, or an auto compact window means Claude
+// Code's own default. Entries holds the saved choice for every model.
+type ClaudePreferences struct {
+	Model       string
+	Effort      string
+	AutoCompact string
+	Entries     map[string]ClaudeModelPreference
+}
+
+// ClaudeModelPreference is the effort and compact window saved for one model.
+type ClaudeModelPreference struct {
+	Effort      string
+	AutoCompact string
+}
+
+// ClaudePreferenceUpdate replaces the default model and that model's saved
+// effort and compact window. An empty model clears the default. Empty effort
+// and an auto compact window clear that model's overrides.
+type ClaudePreferenceUpdate struct {
+	Model       string
+	Effort      string
+	AutoCompact string
 }
 
 // ModelDiff counts how the models one client file lists differ from the ones

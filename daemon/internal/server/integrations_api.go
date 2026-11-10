@@ -216,6 +216,44 @@ type codexContextRequest struct {
 	Enabled bool `json:"enabled"`
 }
 
+type claudeModelConfigRequest struct {
+	Model       string `json:"model"`
+	Effort      string `json:"effort"`
+	AutoCompact string `json:"auto_compact"`
+}
+
+func (s *Server) handleGetClaudeModelConfig(w http.ResponseWriter, r *http.Request) {
+	manager, ok := s.integrationsOrUnavailable(w, r)
+	if !ok {
+		return
+	}
+	config, err := manager.ClaudeModelConfig(r.Context(), r.PathValue("id"))
+	if err != nil {
+		s.writeIntegrationError(w, r, err)
+		return
+	}
+	writeJSON(w, http.StatusOK, toClaudeModelConfigResponse(config))
+}
+
+func (s *Server) handleSetClaudeModelConfig(w http.ResponseWriter, r *http.Request) {
+	manager, ok := s.integrationsOrUnavailable(w, r)
+	if !ok {
+		return
+	}
+	var request claudeModelConfigRequest
+	if !s.decodeJSON(w, r, &request) {
+		return
+	}
+	config, err := manager.SetClaudeModelConfig(r.Context(), r.PathValue("id"), appintegration.ClaudePreferenceUpdate{
+		Model: request.Model, Effort: request.Effort, AutoCompact: request.AutoCompact,
+	})
+	if err != nil {
+		s.writeIntegrationError(w, r, err)
+		return
+	}
+	writeJSON(w, http.StatusOK, toClaudeModelConfigResponse(config))
+}
+
 func (s *Server) handleCodexContext(w http.ResponseWriter, r *http.Request) {
 	manager, ok := s.integrationsOrUnavailable(w, r)
 	if !ok {

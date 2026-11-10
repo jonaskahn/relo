@@ -56,6 +56,33 @@ func stubOpenCodeLauncher(t *testing.T, script string) {
 	t.Setenv("PATH", binDir)
 }
 
+func TestClaudeModelConfigRoute(t *testing.T) {
+	t.Setenv("CLAUDE_CONFIG_DIR", t.TempDir())
+	h := newHarness(t)
+
+	for _, path := range []string{
+		"/api/v1/integrations/codex/model-config",
+		"/api/v1/integrations/claude-code/model-config",
+	} {
+		response := h.management(http.MethodGet, path, adminToken, nil)
+		if response.Code != http.StatusBadRequest {
+			t.Fatalf("GET %s = %d %s, want 400", path, response.Code, response.Body.String())
+		}
+	}
+	response := h.management(http.MethodPost, "/api/v1/integrations/claude-code/model-config", adminToken, strings.NewReader(`{"model":"opus","unknown":true}`))
+	if response.Code != http.StatusBadRequest || !strings.Contains(response.Body.String(), "unknown") {
+		t.Fatalf("unknown field = %d %s, want 400", response.Code, response.Body.String())
+	}
+	response = h.management(http.MethodPost, "/api/v1/integrations/claude-code/model-config", adminToken, strings.NewReader(`{"model":"opus","effort":"max","auto_compact":"auto"}`))
+	if response.Code != http.StatusBadRequest || !strings.Contains(response.Body.String(), "effort must be") {
+		t.Fatalf("effort = %d %s, want the effort refusal", response.Code, response.Body.String())
+	}
+	response = h.management(http.MethodPost, "/api/v1/integrations/claude-code/model-config", adminToken, strings.NewReader(`{"model":"opus","effort":"high","auto_compact":"auto"}`))
+	if response.Code != http.StatusBadRequest || !strings.Contains(response.Body.String(), "not set up") {
+		t.Fatalf("disabled = %d %s, want the setup refusal", response.Code, response.Body.String())
+	}
+}
+
 func TestReloadIntegrationRoute(t *testing.T) {
 	t.Run("reloads a running OpenCode service", func(t *testing.T) {
 		stubOpenCodeLauncher(t, "exit 0\n")

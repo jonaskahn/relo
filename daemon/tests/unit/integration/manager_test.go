@@ -997,3 +997,53 @@ func TestOpenCodeVersionsRoundTrip(t *testing.T) {
 		t.Fatalf("OpenCodeVersions(codex) = %q, want none", got)
 	}
 }
+
+func TestClaudeCodePreferencesDoNotDriftAndLeaveNativeModels(t *testing.T) {
+	h := newHarness(t, dataPlane)
+	settingsPath := h.paths.ClaudeSettings()
+	if err := os.MkdirAll(filepath.Dir(settingsPath), 0o755); err != nil {
+		t.Fatalf("create the claude directory: %v", err)
+	}
+	seed := `{"permissions":{"allow":["Bash(make ci)"]},"model":"opus","modelSettings":{"opus":{"effortLevel":"low"}}}` + "\n"
+	if err := os.WriteFile(settingsPath, []byte(seed), 0o600); err != nil {
+		t.Fatalf("seed the settings: %v", err)
+	}
+	if _, err := h.manager.Enable(context.Background(), "claude-code", "rlo_ak_test"); err != nil {
+		t.Fatalf("Enable() error = %v", err)
+	}
+	saved, err := h.manager.WriteClaudePreferences(context.Background(), integration.ClaudePreferenceUpdate{
+		Model: "claude-relo-openai--gpt-4o", Effort: "high", AutoCompact: "200000",
+	})
+	if err != nil {
+		t.Fatalf("WriteClaudePreferences() error = %v", err)
+	}
+	if saved.Model != "claude-relo-openai--gpt-4o" || saved.Effort != "high" || saved.AutoCompact != "200000" {
+		t.Fatalf("saved = %+v, want the choice just written", saved)
+	}
+	if saved.Entries["opus"].Effort != "low" {
+		t.Fatalf("entries = %+v, want the native model kept", saved.Entries)
+	}
+	edited := strings.Replace(readFile(t, settingsPath), `"model": "claude-relo-openai--gpt-4o"`, `"model": "sonnet"`, 1)
+	if err := os.WriteFile(settingsPath, []byte(edited), 0o600); err != nil {
+		t.Fatalf("edit the model: %v", err)
+	}
+	view, err := h.manager.Inspect(context.Background(), "claude-code")
+	if err != nil {
+		t.Fatalf("Inspect() error = %v", err)
+	}
+	if view.State != "on" || fileOf(view, integration.KindClaudeSettings).Drifted {
+		t.Fatalf("Inspect() state = %q drifted = %v, want an intact integration", view.State, fileOf(view, integration.KindClaudeSettings).Drifted)
+	}
+	if _, err := h.manager.Disable(context.Background(), "claude-code"); err != nil {
+		t.Fatalf("Disable() error = %v", err)
+	}
+	settings := readFile(t, settingsPath)
+	for _, want := range []string{`"permissions"`, `"model": "sonnet"`, `"opus"`} {
+		if !strings.Contains(settings, want) {
+			t.Fatalf("settings = %s, want %s kept", settings, want)
+		}
+	}
+	if strings.Contains(settings, "ANTHROPIC_BASE_URL") || strings.Contains(settings, "claude-relo-") {
+		t.Fatalf("settings = %s, want Relo's routing and gateway model gone", settings)
+	}
+}

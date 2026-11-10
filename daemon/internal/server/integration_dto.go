@@ -2,6 +2,8 @@
 package server
 
 import (
+	"sort"
+
 	appintegration "github.com/jonaskahn/relo/internal/application/integration"
 )
 
@@ -297,5 +299,47 @@ type integrationChatRequest struct {
 func toIntegrationChatQuery(request integrationChatRequest) appintegration.IntegrationChatRequest {
 	return appintegration.IntegrationChatRequest{
 		Model: request.Model, Prompt: request.Prompt,
+	}
+}
+
+type claudeModelEntryResponse struct {
+	Model       string `json:"model"`
+	Effort      string `json:"effort"`
+	AutoCompact string `json:"auto_compact"`
+}
+
+type claudeModelChoiceResponse struct {
+	ID            string   `json:"id"`
+	Name          string   `json:"name,omitempty"`
+	ContextWindow *int64   `json:"context_window,omitempty"`
+	Efforts       []string `json:"efforts"`
+}
+
+type claudeModelConfigResponse struct {
+	Model       string                      `json:"model"`
+	Effort      string                      `json:"effort"`
+	AutoCompact string                      `json:"auto_compact"`
+	Entries     []claudeModelEntryResponse  `json:"entries"`
+	Models      []claudeModelChoiceResponse `json:"models"`
+}
+
+func toClaudeModelConfigResponse(config appintegration.ClaudeModelConfig) claudeModelConfigResponse {
+	entries := make([]claudeModelEntryResponse, 0, len(config.Entries))
+	for model, entry := range config.Entries {
+		entries = append(entries, claudeModelEntryResponse{
+			Model: model, Effort: entry.Effort, AutoCompact: entry.AutoCompact,
+		})
+	}
+	sort.Slice(entries, func(i, j int) bool { return entries[i].Model < entries[j].Model })
+	models := make([]claudeModelChoiceResponse, 0, len(config.Models))
+	for _, model := range config.Models {
+		models = append(models, claudeModelChoiceResponse{
+			ID: model.ID, Name: model.Name, ContextWindow: model.ContextWindow,
+			Efforts: append([]string(nil), model.Efforts...),
+		})
+	}
+	return claudeModelConfigResponse{
+		Model: config.Model, Effort: config.Effort, AutoCompact: config.AutoCompact,
+		Entries: entries, Models: models,
 	}
 }
