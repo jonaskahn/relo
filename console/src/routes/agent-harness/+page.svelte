@@ -39,6 +39,7 @@
 	import AgentResultStep from '$lib/components/agents/agent-result-step.svelte';
 	import AgentTestPane from '$lib/components/agents/agent-test-pane.svelte';
 	import AgentWiringSection from '$lib/components/agents/agent-wiring-section.svelte';
+	import ClaudeModelPreferences from '$lib/components/agents/claude-model-preferences.svelte';
 	import CardLayoutToggle from '$lib/components/providers/card-layout-toggle.svelte';
 	import Button from '$lib/components/ui/button.svelte';
 	import IconAction from '$lib/components/ui/icon-action.svelte';
@@ -663,6 +664,13 @@
 							oncopy={() => void copyKey()}
 						/>
 						<AgentWiringSection agent={detail} />
+						{#if detail.enabled && detail.id === 'claude-code'}
+							<ClaudeModelPreferences
+								agent={detail}
+								{models}
+								modelsReady={modelsState === 'ready'}
+							/>
+						{/if}
 					</div>
 					<AgentTestPane
 						agent={detail}

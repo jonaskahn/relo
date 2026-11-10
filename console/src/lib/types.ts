@@ -705,6 +705,37 @@ export interface IntegrationModels {
 	readonly message: string;
 }
 
+/** The personal model choice stored in Claude Code's own settings. */
+export interface ClaudeModelConfig {
+	readonly model: string;
+	readonly effort: string;
+	readonly auto_compact: string;
+	readonly entries: readonly ClaudeModelPreferenceEntry[];
+	readonly models: readonly ClaudeModelChoice[];
+}
+
+/** Effort and auto-compact saved for one Claude Code model. */
+export interface ClaudeModelPreferenceEntry {
+	readonly model: string;
+	readonly effort: string;
+	readonly auto_compact: string;
+}
+
+/** One model Claude Code can save as its default, with the effort levels that model accepts. */
+export interface ClaudeModelChoice {
+	readonly id: string;
+	readonly name?: string;
+	readonly context_window?: number | null;
+	readonly efforts: readonly string[];
+}
+
+/** The body that stores one Claude Code model choice. */
+export interface ClaudeModelConfigUpdate {
+	readonly model: string;
+	readonly effort: string;
+	readonly auto_compact: string;
+}
+
 /** One test turn sent through an integration's own key. */
 export interface IntegrationChat {
 	readonly ok: boolean;

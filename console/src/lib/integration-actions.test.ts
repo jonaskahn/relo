@@ -59,6 +59,10 @@ describe('the integration actions', () => {
 	test('a path names one agent, encoded', () => {
 		expect(integrationPath('codex', 'remove')).toBe('/integrations/codex/disable');
 		expect(integrationPath('a/b', 'verify')).toBe('/integrations/a%2Fb/verify');
+		expect(integrationPath('claude-code', 'modelConfig')).toBe(
+			'/integrations/claude-code/model-config'
+		);
+		expect(integrationEndpoint('modelConfig')).toBe('model-config');
 	});
 
 	test('a missing install blocks set-up, and a foreign provider can be replaced', () => {
