@@ -32,10 +32,11 @@ The Make-backed build, test, vet, lint, packaging, and cross-build targets
 depend on `seed`. Beta and release workflows run `seed-latest` before
 compiling, so a download or validation failure stops them before artifacts are
 produced. A direct `go build ./...` or `go test ./...` without a generated seed
-remains supported: the runtime fetches models.dev and writes its normal cache.
-At runtime the network is tried first; a failed fetch falls back to the newest
-of a valid cache and the embedded seed, while search, pricing, and state reads
-never ask the network.
+remains supported: the runtime downloads models.dev and writes its normal cache.
+At runtime only three things download: daemon start, the 24-hour discovery pass,
+and the connections page's update button. They fall back to the newest of a
+valid cache and the embedded seed when the network fails. Search, pricing, adds,
+probes, sign-ins, roster refreshes, and state reads never ask the network.
 
 ## Windows contributors
 

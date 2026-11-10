@@ -24,11 +24,15 @@ the favicon is written both into the server package that embeds it and into
 Never edit a derived file by hand: `make icons-check` fails CI when the
 committed artwork and the sources disagree.
 
-**models.dev is network-first, with a build seed and a saved copy.** A model-facing read
-asks https://models.dev/api.json, saves a validated answer to `modelsdev.json` under the
-state directory, and falls back to the newest local copy when the network fails. Release
-artifacts embed a dataset downloaded at build time; the local order is a valid cache at
-least as new as the seed, then the seed, then an older cache. A custom `modelsdev_url`
+**models.dev is downloaded on a schedule, and every read serves a saved copy.** One
+download asks https://models.dev/api.json, validates the answer, and saves it to
+`modelsdev.json` under the state directory. Three things download: daemon start, the
+24-hour discovery pass, and the connections page's update button. Nothing else does —
+adding a connection, probing a key, signing in, refreshing a roster, and opening the
+add picker all read the copy Relo already holds, so a slow or unreachable models.dev
+can never refuse a connection or stall a page. Release artifacts embed a dataset
+downloaded at build time; the local order is a valid cache at least as new as the
+seed, then the seed, then an older cache. A custom `modelsdev_url`
 never uses the embedded seed. `make seed` downloads the seed only when it is missing or
 invalid and `make seed-latest` forces a fresh one; the generated
 `daemon/internal/adapters/modelsdev/seeddata/modelsdev.json.gz` is ignored by git, and a
