@@ -702,6 +702,10 @@ other = "Thoát — đang xử lý…"
 description = "Inference refusal when a configured free connection is reached with consent off"
 other = "Kết nối miễn phí cần sự đồng ý của bạn. Hãy bật kết nối miễn phí và chấp nhận thông báo trách nhiệm trước khi sử dụng."
 
+[api.connections.free_lane_exhausted]
+description = "Inference refusal when a free connection's shared allowance is spent"
+other = "Đã đạt giới hạn sử dụng miễn phí của kết nối này. Hãy thử lại sau thời gian hiển thị hoặc chuyển sang mô hình khác."
+
 [api.connections.free_connection_exists]
 description = "Management refusal when a second keyless free connection is requested"
 other = "Kết nối miễn phí này đã được thêm."

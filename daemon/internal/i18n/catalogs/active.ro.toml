@@ -702,6 +702,10 @@ other = "Închidere — în curs…"
 description = "Inference refusal when a configured free connection is reached with consent off"
 other = "Conexiunile gratuite necesită consimțământul tău. Activează conexiunile gratuite și acceptă notificarea de responsabilitate înainte de a le folosi."
 
+[api.connections.free_lane_exhausted]
+description = "Inference refusal when a free connection's shared allowance is spent"
+other = "Limita de utilizare gratuită a acestei conexiuni a fost atinsă. Încearcă din nou după timpul indicat sau schimbă modelul."
+
 [api.connections.free_connection_exists]
 description = "Management refusal when a second keyless free connection is requested"
 other = "Această conexiune gratuită este deja adăugată."

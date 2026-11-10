@@ -681,6 +681,10 @@ other = "Keluar — memproses…"
 description = "Inference refusal when a configured free connection is reached with consent off"
 other = "Koneksi gratis memerlukan persetujuan Anda. Aktifkan koneksi gratis dan setujui pemberitahuan tanggung jawab sebelum menggunakannya."
 
+[api.connections.free_lane_exhausted]
+description = "Inference refusal when a free connection's shared allowance is spent"
+other = "Batas penggunaan gratis untuk koneksi ini telah tercapai. Coba lagi setelah waktu yang ditunjukkan atau ganti model."
+
 [api.connections.free_connection_exists]
 description = "Management refusal when a second keyless free connection is requested"
 other = "Koneksi gratis ini sudah ditambahkan."

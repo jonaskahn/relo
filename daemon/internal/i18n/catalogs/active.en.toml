@@ -702,6 +702,10 @@ other = "Quit — processing…"
 description = "Inference refusal when a configured free connection is reached with consent off"
 other = "Free connections require consent. Enable Free connections and accept the responsibility notice before using them."
 
+[api.connections.free_lane_exhausted]
+description = "Inference refusal when a free connection's shared allowance is spent"
+other = "The free usage limit for this connection is reached. Try again after the time shown, or switch models."
+
 [api.connections.free_connection_exists]
 description = "Management refusal when a second keyless free connection is requested"
 other = "This free connection is already added."

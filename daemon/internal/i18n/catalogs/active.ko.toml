@@ -700,6 +700,10 @@ other = "종료 — 처리 중…"
 description = "Inference refusal when a configured free connection is reached with consent off"
 other = "무료 연결에는 동의가 필요합니다. 사용하기 전에 무료 연결을 켜고 책임 고지에 동의하세요."
 
+[api.connections.free_lane_exhausted]
+description = "Inference refusal when a free connection's shared allowance is spent"
+other = "이 연결의 무료 사용 한도에 도달했습니다. 표시된 시간 후에 다시 시도하거나 모델을 전환하세요."
+
 [api.connections.free_connection_exists]
 description = "Management refusal when a second keyless free connection is requested"
 other = "이 무료 연결은 이미 추가되었습니다."

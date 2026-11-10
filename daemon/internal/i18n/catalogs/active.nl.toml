@@ -702,6 +702,10 @@ other = "Afsluiten — bezig…"
 description = "Inference refusal when a configured free connection is reached with consent off"
 other = "Gratis verbindingen vereisen je toestemming. Schakel gratis verbindingen in en accepteer de verantwoordelijkheidsmelding voordat je ze gebruikt."
 
+[api.connections.free_lane_exhausted]
+description = "Inference refusal when a free connection's shared allowance is spent"
+other = "De gratis gebruikslimiet van deze verbinding is bereikt. Probeer het na de aangegeven tijd opnieuw of wissel van model."
+
 [api.connections.free_connection_exists]
 description = "Management refusal when a second keyless free connection is requested"
 other = "Deze gratis verbinding is al toegevoegd."

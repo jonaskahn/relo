@@ -700,6 +700,10 @@ other = "Beenden — wird verarbeitet…"
 description = "Inference refusal when a configured free connection is reached with consent off"
 other = "Kostenlose Verbindungen erfordern deine Zustimmung. Aktiviere kostenlose Verbindungen und akzeptiere den Verantwortungshinweis, bevor du sie verwendest."
 
+[api.connections.free_lane_exhausted]
+description = "Inference refusal when a free connection's shared allowance is spent"
+other = "Das kostenlose Nutzungslimit dieser Verbindung ist erreicht. Versuche es nach der angezeigten Zeit erneut oder wechsle das Modell."
+
 [api.connections.free_connection_exists]
 description = "Management refusal when a second keyless free connection is requested"
 other = "Diese kostenlose Verbindung ist bereits hinzugefügt."

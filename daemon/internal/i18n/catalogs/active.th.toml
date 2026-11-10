@@ -700,6 +700,10 @@ other = "ออก — กำลังดำเนินการ…"
 description = "Inference refusal when a configured free connection is reached with consent off"
 other = "การเชื่อมต่อฟรีต้องได้รับความยินยอมจากคุณ เปิดใช้การเชื่อมต่อฟรีและยอมรับประกาศความรับผิดชอบก่อนใช้งาน"
 
+[api.connections.free_lane_exhausted]
+description = "Inference refusal when a free connection's shared allowance is spent"
+other = "ถึงขีดจำกัดการใช้งานฟรีของ connection นี้แล้ว ลองอีกครั้งหลังจากเวลาที่แสดง หรือเปลี่ยนโมเดล"
+
 [api.connections.free_connection_exists]
 description = "Management refusal when a second keyless free connection is requested"
 other = "การเชื่อมต่อฟรีนี้ถูกเพิ่มแล้ว"

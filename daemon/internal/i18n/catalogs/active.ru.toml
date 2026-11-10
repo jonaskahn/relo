@@ -698,6 +698,10 @@ other = "Выход — обработка…"
 description = "Inference refusal when a configured free connection is reached with consent off"
 other = "Бесплатные подключения требуют вашего согласия. Включите бесплатные подключения и примите уведомление об ответственности, прежде чем использовать их."
 
+[api.connections.free_lane_exhausted]
+description = "Inference refusal when a free connection's shared allowance is spent"
+other = "Достигнут лимит бесплатного использования этого подключения. Повторите попытку после указанного времени или смените модель."
+
 [api.connections.free_connection_exists]
 description = "Management refusal when a second keyless free connection is requested"
 other = "Это бесплатное подключение уже добавлено."

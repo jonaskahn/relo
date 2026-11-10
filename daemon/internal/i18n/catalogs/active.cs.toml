@@ -702,6 +702,10 @@ other = "Ukončit — zpracování…"
 description = "Inference refusal when a configured free connection is reached with consent off"
 other = "Bezplatná připojení vyžadují tvůj souhlas. Zapni bezplatná připojení a přijmi upozornění na odpovědnost, než je použiješ."
 
+[api.connections.free_lane_exhausted]
+description = "Inference refusal when a free connection's shared allowance is spent"
+other = "Byl dosažen limit bezplatného využití tohoto připojení. Zkuste to znovu po uvedené době, nebo přepněte model."
+
 [api.connections.free_connection_exists]
 description = "Management refusal when a second keyless free connection is requested"
 other = "Toto bezplatné připojení je již přidáno."

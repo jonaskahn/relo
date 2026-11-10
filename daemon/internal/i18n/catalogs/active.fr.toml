@@ -700,6 +700,10 @@ other = "Quitter — traitement en cours…"
 description = "Inference refusal when a configured free connection is reached with consent off"
 other = "Les connexions gratuites nécessitent votre consentement. Activez les connexions gratuites et acceptez la notice de responsabilité avant de les utiliser."
 
+[api.connections.free_lane_exhausted]
+description = "Inference refusal when a free connection's shared allowance is spent"
+other = "La limite d'utilisation gratuite de cette connexion est atteinte. Réessayez après le délai indiqué ou changez de modèle."
+
 [api.connections.free_connection_exists]
 description = "Management refusal when a second keyless free connection is requested"
 other = "Cette connexion gratuite est déjà ajoutée."

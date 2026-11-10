@@ -16,6 +16,7 @@ import (
 	"github.com/jonaskahn/relo/internal/adapters/wire/anthropic"
 	"github.com/jonaskahn/relo/internal/adapters/wire/eventstream"
 	"github.com/jonaskahn/relo/internal/adapters/wire/sse"
+	"github.com/jonaskahn/relo/internal/catalog"
 )
 
 type attempt struct {
@@ -287,6 +288,13 @@ func (e *Executor) relayRejection(att attempt, response *http.Response) (Result,
 		RetryAfter:  preferredWait(retryAfter(response), info.RetryAfter),
 		ModelAccess: modelAccessRefusal(response.StatusCode, info, att.exchange.Request.Model),
 	}
+	if freeLaneExhausted(att.exchange, response.StatusCode, info) {
+		// The free lane's allowance is shared by every account, so no further
+		// send can serve this request, and the vendor's words never reach the
+		// client.
+		result.LaneExhausted = true
+		return result, fmt.Errorf("%w: %d %s", ErrUpstreamStatus, response.StatusCode, info.Message)
+	}
 	switchable := att.exchange.Policy.Switchable(response.StatusCode)
 	if retriedElsewhere(att.exchange, response.StatusCode, switchable) ||
 		(!att.exchange.Final && result.ModelAccess) {
@@ -297,6 +305,17 @@ func (e *Executor) relayRejection(att attempt, response *http.Response) (Result,
 	writeFailure(att.writer, att.exchange.Inbound, info, response.Header)
 	result.Wrote = true
 	return result, fmt.Errorf("%w: %d %s", ErrUpstreamStatus, response.StatusCode, info.Message)
+}
+
+// FreeUsageLimitCode is the error type the OpenCode free gateway reports when
+// the signed-out allowance is spent.
+const FreeUsageLimitCode = "FreeUsageLimitError"
+
+// freeLaneExhausted reports the free lane's own quota refusal, which says the
+// lane is spent rather than the request or the model being at fault.
+func freeLaneExhausted(ex Exchange, status int, info *inference.ErrorInfo) bool {
+	return status == http.StatusTooManyRequests && info != nil &&
+		ex.Options.TemplateID == catalog.OpenCodeFreeTemplate && info.Code == FreeUsageLimitCode
 }
 
 func modelAccessRefusal(status int, info *inference.ErrorInfo, model string) bool {

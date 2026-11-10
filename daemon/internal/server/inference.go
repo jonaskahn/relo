@@ -53,6 +53,11 @@ const (
 
 var errContextLimitExceeded = errors.New("context length exceeded")
 
+// errFreeLaneExhausted reports a free lane whose shared allowance is spent.
+// The refusal is Relo's own: the vendor's message names a paid upgrade, which
+// is not what this connection can offer.
+var errFreeLaneExhausted = errors.New("free lane exhausted")
+
 type inferenceSurface struct {
 	name string
 	path string
@@ -424,6 +429,9 @@ func (d *sendDriver) handleAttemptFailure(failed failedAttempt, err error) walkA
 	d.last = err
 	d.rememberLimitWait(failed.result)
 	d.rotateWire(failed)
+	if failed.result.LaneExhausted {
+		return d.leaveSpentLane(failed, err)
+	}
 	if retryAnotherCandidate(err) {
 		return d.tryAnotherCandidate(failed)
 	}
@@ -445,6 +453,23 @@ func (d *sendDriver) handleAttemptFailure(failed failedAttempt, err error) walkA
 		return walkContinue
 	}
 	return d.leaveAccount(failed)
+}
+
+// leaveSpentLane moves past a free lane whose shared allowance is spent. The
+// allowance belongs to the connection, not to one account, so neither another
+// account nor a retry can help: the lane cools for the wait the provider named
+// and a route still moves to another member. The last member answers in
+// Relo's own words.
+func (d *sendDriver) leaveSpentLane(failed failedAttempt, err error) walkAction {
+	d.s.markConnectionExhausted(failed.candidate.ProviderID, failed.result.RetryAfter)
+	d.s.markCandidateFailed(failed.candidate, failed.result)
+	if !failed.lastCandidate && memberSwitchAllowed(d.plan, failed.result) {
+		d.s.opts.Router.Unpin(d.s.conversationAnchor(d.outcome, d.r), routing.PinPrefix(d.plan))
+		failed.walk.marked = true
+		return walkNextMember
+	}
+	d.s.answerFailed(d, d.outcome, failed.result, fmt.Errorf("%w: %w", errFreeLaneExhausted, err))
+	return walkAnswered
 }
 
 // rememberLimitWait keeps the wait a rate-limited member named, so the
@@ -715,6 +740,10 @@ func (s *Server) waitBeforeRetry(ctx context.Context, retry int, retryAfter time
 func (s *Server) writeUnwritten(d *sendDriver, upstreamStatus int, cause error) {
 	// Leaving the handler without a write is an empty HTTP 200, which a
 	// streaming client reads as a stream that ended before any event.
+	if errors.Is(cause, errFreeLaneExhausted) {
+		s.writeFreeLaneExhausted(d)
+		return
+	}
 	if d.groupLimited() {
 		s.writeGroupExhausted(d, d.groupExhausted())
 		return
@@ -737,6 +766,24 @@ func (s *Server) writeUnwritten(d *sendDriver, upstreamStatus int, cause error) 
 		return
 	}
 	s.fail(d.w, d.r, refusal{Status: status, Code: unwrittenCode(cause, local), Detail: cause})
+}
+
+// writeFreeLaneExhausted answers a spent free lane with Relo's own refusal and
+// the wait the lane named. The vendor's message never travels: it advertises
+// a paid upgrade this connection does not have.
+func (s *Server) writeFreeLaneExhausted(d *sendDriver) {
+	if wait := d.limitRetryAfter; wait > 0 {
+		d.w.Header().Set("Retry-After", strconv.Itoa(max(1, int(wait.Seconds()+0.5))))
+	}
+	if d.anthropic {
+		s.writeAnthropicDocument(d.w, http.StatusTooManyRequests, "rate_limit_error",
+			s.translator(d.r).Text("api.connections.free_lane_exhausted", nil))
+		return
+	}
+	s.fail(d.w, d.r, refusal{
+		Status: http.StatusTooManyRequests, Code: "free_lane_exhausted",
+		Message: "api.connections.free_lane_exhausted",
+	})
 }
 
 // groupLimited reports a route whose every member answered with a rate

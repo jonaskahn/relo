@@ -161,6 +161,10 @@ type Result struct {
 	// relay turns into a retryable rate limit. The account's own health is
 	// not blamed for it.
 	ZeroTokens bool
+	// LaneExhausted reports a free lane whose shared allowance is spent, so
+	// no account of the connection can serve the request and the lane cools
+	// for the wait the provider named.
+	LaneExhausted bool
 	// RetryAfter is how long the upstream asked the caller to wait.
 	RetryAfter  time.Duration
 	RelayedBody bool

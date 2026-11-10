@@ -701,6 +701,10 @@ other = "Esci — elaborazione…"
 description = "Inference refusal when a configured free connection is reached with consent off"
 other = "Le connessioni gratuite richiedono il tuo consenso. Attiva le connessioni gratuite e accetta l’avviso di responsabilità prima di usarle."
 
+[api.connections.free_lane_exhausted]
+description = "Inference refusal when a free connection's shared allowance is spent"
+other = "Il limite di utilizzo gratuito di questa connessione è stato raggiunto. Riprova dopo il tempo indicato o cambia modello."
+
 [api.connections.free_connection_exists]
 description = "Management refusal when a second keyless free connection is requested"
 other = "Questa connessione gratuita è già aggiunta."

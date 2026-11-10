@@ -702,6 +702,10 @@ other = "Çıkış — işleniyor…"
 description = "Inference refusal when a configured free connection is reached with consent off"
 other = "Ücretsiz bağlantılar onayınızı gerektirir. Kullanmadan önce ücretsiz bağlantıları etkinleştirin ve sorumluluk bildirimini kabul edin."
 
+[api.connections.free_lane_exhausted]
+description = "Inference refusal when a free connection's shared allowance is spent"
+other = "Bu bağlantının ücretsiz kullanım sınırına ulaşıldı. Belirtilen süreden sonra tekrar deneyin veya modeli değiştirin."
+
 [api.connections.free_connection_exists]
 description = "Management refusal when a second keyless free connection is requested"
 other = "Bu ücretsiz bağlantı zaten eklenmiş."
