@@ -29,10 +29,24 @@ func TestOpenCodeFreePathUpgradeRenamesOnlyTheShippedDefault(t *testing.T) {
 		t.Fatalf("create the migration table: %v", err)
 	}
 	// Everything before the path rename, which is where this migration begins.
-	for _, migration := range migrations[:len(migrations)-1] {
-		if err := sqlite.ApplyMigration(db, migration); err != nil {
+	// Later migrations are unrelated and must not become the one under test.
+	const pathRename = 34
+	var rename *sqlite.Migration
+	for i := range migrations {
+		migration := &migrations[i]
+		if migration.Version > pathRename {
+			continue
+		}
+		if migration.Version == pathRename {
+			rename = migration
+			continue
+		}
+		if err := sqlite.ApplyMigration(db, *migration); err != nil {
 			t.Fatalf("ApplyMigration(%d) error = %v", migration.Version, err)
 		}
+	}
+	if rename == nil {
+		t.Fatal("the OpenCode path migration is missing")
 	}
 	ctx := context.Background()
 	rows := []struct{ id, templateID, baseURL string }{
@@ -49,9 +63,8 @@ func TestOpenCodeFreePathUpgradeRenamesOnlyTheShippedDefault(t *testing.T) {
 		}
 	}
 
-	last := migrations[len(migrations)-1]
-	if err := sqlite.ApplyMigration(db, last); err != nil {
-		t.Fatalf("ApplyMigration(%s) error = %v", last.Name, err)
+	if err := sqlite.ApplyMigration(db, *rename); err != nil {
+		t.Fatalf("ApplyMigration(%s) error = %v", rename.Name, err)
 	}
 
 	want := map[string]string{
