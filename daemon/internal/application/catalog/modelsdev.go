@@ -181,6 +181,15 @@ func mergeModelsDevRow(state catalog.ModelsDevState, row catalog.ModelsDevStateR
 	return state
 }
 
+// FetchModelsDev downloads the newest models.dev catalog and saves it, without
+// rewriting any model's priced layer. It is the scheduled download: readers
+// serve the copy it leaves behind until the connections page asks for a price
+// rewrite.
+func (s *Service) FetchModelsDev(ctx context.Context) error {
+	_, err := s.modelsDev.Get(ctx, catalog.FetchForce)
+	return err
+}
+
 // RefreshModelsDev downloads the newest models.dev catalog and rewrites every
 // model's models.dev layer from it. An override is never touched, a model an
 // operator priced by hand keeps the reference they chose, and a model the new

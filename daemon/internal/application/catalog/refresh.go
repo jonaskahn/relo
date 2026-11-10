@@ -23,7 +23,10 @@ func (s *Service) EnsureProvider(ctx context.Context, templateID string, signInO
 		return existing, nil
 	}
 
-	mdIdx, _ := s.modelsDev.Get(ctx, catalog.FetchOnlineFirst)
+	// The template is read from the copy Relo already holds: adding a
+	// connection never waits on a download, and an offline install still adds
+	// the templates this build ships.
+	mdIdx, _ := s.modelsDev.Cached()
 	t, found := s.templates.Get(templateID, mdIdx)
 	if !found || t.UnsupportedReason != "" {
 		return Provider{}, ErrProviderNotFound
@@ -169,7 +172,10 @@ func (s *Service) openRefreshHost(ctx context.Context, providerID string) (catal
 		return catalog.Provider{}, catalog.Template{}, nil, catalog.ModelsDevState{}, nil, ErrProviderNotFound
 	}
 
-	mdIdx, _ := s.modelsDev.Get(ctx, catalog.FetchOnlineFirst)
+	// A roster refresh reads the copy Relo already holds. A download is what
+	// startDiscovery and the connections page's update button do, so pricing
+	// never has to reach the network mid-add.
+	mdIdx, _ := s.modelsDev.Cached()
 	mdState := s.modelsDev.CurrentState()
 
 	// The stored row keeps connection details, not the catalog policy the

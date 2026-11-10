@@ -955,9 +955,11 @@ func describeAutoMember(snapshot *catalog.Snapshot, described *GroupMember) {
 	}
 }
 
-// Templates returns available provider templates and modelsdev status.
+// Templates returns available provider templates and modelsdev status. It
+// reads the copy Relo already holds, so opening the add picker never waits on
+// the network and a failed download cannot refuse a connection.
 func (s *Service) Templates(ctx context.Context) ([]catalog.Template, catalog.ModelsDevState, error) {
-	idx, err := s.modelsDev.Get(ctx, catalog.FetchOnlineFirst)
+	idx, err := s.modelsDev.Cached()
 	all := s.templates.All(idx)
 	st := s.modelsDev.CurrentState()
 	return all, st, err

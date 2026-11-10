@@ -418,7 +418,9 @@ func (s *Service) fetchProbeListing(ctx context.Context, req ProbeRequest, t cat
 }
 
 func (s *Service) openProbePlan(ctx context.Context, req ProbeRequest) (probePlan, *catalog.ModelsDevIndex, catalog.ModelsDevState, error) {
-	mdIdx, mdErr := s.modelsDev.Get(ctx, catalog.FetchOnlineFirst)
+	// The probe prices against the copy Relo already holds. Downloading is the
+	// scheduled job and the update button's work, never part of an add.
+	mdIdx, mdErr := s.modelsDev.Cached()
 	mdState := s.modelsDev.CurrentState()
 	t, origin, targetProviderID, targetVariables, templateFound := s.resolveProbeTemplate(ctx, req, mdIdx)
 	if !templateFound {
@@ -701,7 +703,8 @@ func (s *Service) storeProbe(plan probePlan, req ProbeRequest, listed []catalog.
 
 func modelsDevCheck(mdIdx *catalog.ModelsDevIndex, state catalog.ModelsDevState, mdErr error) ProbeCheck {
 	switch {
-	case mdErr != nil && (mdIdx == nil || len(mdIdx.Providers) == 0):
+	case mdIdx == nil || len(mdIdx.Providers) == 0:
+		// No saved copy and no seed: a probe still runs, it just prices nothing.
 		return ProbeCheck{Name: "modelsdev", Status: "warn", Detail: "models.dev data unavailable"}
 	case state.Stale:
 		return ProbeCheck{Name: "modelsdev", Status: "warn", Detail: "using the saved models.dev copy"}
