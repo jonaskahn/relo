@@ -521,7 +521,7 @@ func fixtureBytes(t *testing.T, name string) []byte {
 func newExecutor(t *testing.T) *upstream.Executor {
 	t.Helper()
 	logger, _ := testkit.TestLogger(t)
-	return upstream.NewExecutor(&http.Client{}, logger)
+	return upstream.NewExecutor(&http.Client{}, nil, logger)
 }
 
 func streamExchange(baseURL string) upstream.Exchange {

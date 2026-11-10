@@ -198,12 +198,26 @@ type Result struct {
 // Executor sends canonical requests upstream and relays their responses.
 type Executor struct {
 	client *http.Client
-	logger *slog.Logger
+	// zenClient reaches opencode.ai with the transport fingerprint its free
+	// gateway authenticates; every other destination uses client.
+	zenClient *http.Client
+	logger    *slog.Logger
 }
 
-// NewExecutor returns an executor that uses the given HTTP client.
-func NewExecutor(client *http.Client, logger *slog.Logger) *Executor {
-	return &Executor{client: client, logger: logger}
+// NewExecutor returns an executor that uses the given HTTP client. The zen
+// client adds the transport the OpenCode free lane's gateway demands, so only
+// requests bound for opencode.ai travel over it.
+func NewExecutor(client, zenClient *http.Client, logger *slog.Logger) *Executor {
+	return &Executor{client: client, zenClient: zenClient, logger: logger}
+}
+
+// clientFor picks the client an exchange travels over: the fingerprinting
+// transport for the free lane's own gateway, the plain client everywhere else.
+func (e *Executor) clientFor(ex *Exchange) *http.Client {
+	if ex.Options.TemplateID == catalog.OpenCodeFreeTemplate && e.zenClient != nil {
+		return e.zenClient
+	}
+	return e.client
 }
 
 // Execute sends one exchange upstream and writes the client response. An
@@ -317,7 +331,7 @@ func (e *Executor) dispatchOnce(ctx context.Context, pass dispatchPass, num int)
 func (e *Executor) sendDispatchRequest(ctx context.Context, pass dispatchPass, outbound *http.Request, num int) (bool, bool, Result, error) {
 	ex := pass.ex
 	clock, callCtx := startHeaderClock(ctx, ex.CallWait)
-	response, err := e.client.Do(outbound.WithContext(callCtx))
+	response, err := e.clientFor(ex).Do(outbound.WithContext(callCtx))
 	pass.state.latency = time.Since(pass.started)
 	if err != nil {
 		result, err := e.failDispatchSend(pass.attempt(pass.state.latency), clock, ctx, err)

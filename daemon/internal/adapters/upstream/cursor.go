@@ -86,7 +86,7 @@ func (r *bidirectionalRun) emit(events []inference.Event) {
 func (e *Executor) converse(ctx context.Context, att attempt, codec wire.BidirectionalCodec, emit func([]inference.Event)) ([]inference.Event, error) {
 	for attempt := 0; attempt < 2; attempt++ {
 		events, err := codec.RunBidirectional(ctx, wire.BidirectionalCall{
-			Client: e.client, Request: att.exchange.Request, Opts: att.exchange.Options, Emit: emit,
+			Client: e.clientFor(&att.exchange), Request: att.exchange.Request, Opts: att.exchange.Options, Emit: emit,
 			Record: recordCursorFrame(att), Handoff: att.exchange.OnHandoff,
 		})
 		if !errors.Is(err, cursor.ErrUnauthorized) || att.exchange.OnUnauthorized == nil || attempt == 1 {

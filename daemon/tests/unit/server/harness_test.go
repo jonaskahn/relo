@@ -227,7 +227,7 @@ func (h *harness) newServerWithOptions(cfg *config.Config, entries []account.Poo
 		AdminToken:      adminToken,
 		Catalog:         h.catalog,
 		Router:          routing.New(routing.Options{Catalog: h.catalog, Pools: pools, FailoverBackoff: account.DefaultFailoverBackoff()}),
-		Relay:           platform.NewRelay(h.newCredentials(pools), upstream.NewExecutor(&http.Client{}, h.logger)),
+		Relay:           platform.NewRelay(h.newCredentials(pools), upstream.NewExecutor(&http.Client{}, nil, h.logger)),
 		Templates:       platform.NewTemplateSource(),
 		CaptureRedactor: platform.NewCaptureRedactor(),
 		Pools:           pools,

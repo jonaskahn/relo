@@ -652,7 +652,7 @@ func coreServerOptions(built deps, captures *sqlite.CaptureStore) server.Options
 		AdminToken:      built.adminToken,
 		Catalog:         built.catalog,
 		Router:          built.router,
-		Relay:           NewRelay(built.credentials, upstream.NewExecutor(NewInferenceClient(), built.logger)),
+		Relay:           NewRelay(built.credentials, upstream.NewExecutor(NewInferenceClient(), NewZenClient(), built.logger)),
 		Templates:       NewTemplateSource(),
 		CaptureRedactor: NewCaptureRedactor(),
 		Traffic:         built.traffic,

@@ -96,21 +96,21 @@ func WithOutboundProxy(ctx context.Context, raw string) context.Context {
 	return context.WithValue(ctx, outboundProxyKey{}, raw)
 }
 
+// OutboundProxy returns the proxy URL a request opts into on its context, or
+// the process proxy when it opts into nothing.
+func OutboundProxy(request *http.Request) (*url.URL, error) {
+	raw, _ := request.Context().Value(outboundProxyKey{}).(string)
+	if raw != "" {
+		return url.Parse(raw)
+	}
+	return http.ProxyFromEnvironment(request)
+}
+
 // OutboundTransport is the HTTP transport that sends a request through the
 // proxy on its context, and otherwise uses the process proxy.
 func OutboundTransport() *http.Transport {
 	base := http.DefaultTransport.(*http.Transport).Clone()
-	fallback := base.Proxy
-	base.Proxy = func(request *http.Request) (*url.URL, error) {
-		raw, _ := request.Context().Value(outboundProxyKey{}).(string)
-		if raw != "" {
-			return url.Parse(raw)
-		}
-		if fallback != nil {
-			return fallback(request)
-		}
-		return nil, nil
-	}
+	base.Proxy = OutboundProxy
 	return base
 }
 

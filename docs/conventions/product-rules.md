@@ -107,16 +107,17 @@ skips that member and may still serve from a paid one.
 
 **The OpenCode free lane authenticates the client's transport, not the request.**
 It accepts only OpenCode's own Bun `fetch` TLS/HTTP fingerprint and answers
-`FreeUsageLimitError` to every other client, including Relo's Go transport, even
-when the headers and body are byte-identical. The control experiment is the same
-capture replayed twice: Bun gets 200, Go and curl get 429. Relo therefore answers
-`429 free_lane_exhausted` and honors the vendor's wait as a cooldown instead of
-retrying or pretending the wire differs. Impersonating that fingerprint is out of
-scope: the gate is client authentication, and reproducing it would be fragile.
-An operator who wants free-model traffic behind Relo must author a route whose
-later member is `kilo-free` or `opencode-go`; both are verified working through
-Relo. The free lane is still attempted on a cold connection, so it starts again
-if the vendor ever changes the gate.
+`FreeUsageLimitError` to every other client, even when the headers and body are
+byte-identical. The control experiment is the same capture replayed twice: Bun
+gets 200, Go and curl get 429. Relo therefore speaks the lane on a dedicated
+transport that reproduces Bun's client hello (uTLS), confined to opencode.ai;
+every other provider keeps the stock transport. The executor routes only the
+`opencode-free` template over it, the dialer refuses any other host, and a
+genuine quota refusal still answers `429 free_lane_exhausted` with the vendor's
+cooldown honored. The fingerprint is brittle and belongs to a deliberate access
+control, not a public contract: if the gateway changes it, the lane quietly
+answers 429 again until the fingerprint is relearned, and the honest long-term
+fix is a documented free-lane contract upstream rather than emulation.
 
 **Free availability is derived, not configured.** A conversational model is
 free when the provider marks it free, the provider listing marks it free, both

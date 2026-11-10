@@ -43,7 +43,9 @@ Contributors).
 | `github.com/inconshreveable/mousetrap` | v1.1.0                             | Apache-2.0   | indirect |
 | `github.com/mattn/go-isatty`           | v0.0.24                            | MIT          | indirect |
 | `github.com/ncruces/go-strftime`       | v1.1.0                             | MIT          | indirect |
+| `github.com/refraction-networking/utls`| v1.8.2                             | BSD-3-Clause | direct   |
 | `github.com/remyoudompheng/bigfft`     | v0.0.0-20230129092748-24d4a6f8daec | BSD-3-Clause | indirect |
+| `golang.org/x/crypto`                  | v0.57.0                            | BSD-3-Clause | indirect |
 | `golang.org/x/net`                     | v0.59.0                            | BSD-3-Clause | indirect |
 | `modernc.org/libc`                     | v1.77.1                            | BSD-3-Clause | indirect |
 | `modernc.org/mathutil`                 | v1.7.1                             | BSD-3-Clause | indirect |

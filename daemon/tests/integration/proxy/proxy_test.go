@@ -381,7 +381,7 @@ func startDaemonSeeded(t *testing.T, s seed) daemon {
 		Config: &cfg, SchemaVersion: db, Logger: logger, Clock: clk, Version: "integration",
 		AdminToken: adminToken,
 		Catalog:    models, Router: routing.New(routing.Options{Catalog: models, Pools: pools, FailoverBackoff: account.DefaultFailoverBackoff()}),
-		Relay:     platform.NewRelay(credentials, upstream.NewExecutor(&http.Client{}, logger)),
+		Relay:     platform.NewRelay(credentials, upstream.NewExecutor(&http.Client{}, nil, logger)),
 		Templates: platform.NewTemplateSource(), CaptureRedactor: platform.NewCaptureRedactor(),
 		Pools: pools, Secrets: platform.SecretView{SecretStore: secrets}, Usage: recorder,
 		Captures: sqlite.NewCaptureStore(db),

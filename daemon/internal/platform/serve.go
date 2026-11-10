@@ -21,6 +21,7 @@ import (
 
 	"github.com/jonaskahn/relo/internal/access"
 	"github.com/jonaskahn/relo/internal/adapters/sqlite"
+	"github.com/jonaskahn/relo/internal/adapters/upstream"
 	"github.com/jonaskahn/relo/internal/config"
 	"github.com/jonaskahn/relo/internal/inference"
 	// Login items are stored next to the tray code; the daemon uses them
@@ -339,6 +340,13 @@ func NewHTTPClient() *http.Client {
 // body and abort a live stream; the call wait bounds silence on each read.
 func NewInferenceClient() *http.Client {
 	return &http.Client{Transport: config.OutboundTransport()}
+}
+
+// NewZenClient returns the client the OpenCode free lane travels over: its
+// gateway authenticates the TLS fingerprint instead of the request, so only
+// opencode.ai rides this transport and the dialer refuses every other host.
+func NewZenClient() *http.Client {
+	return &http.Client{Transport: upstream.OpenCodeTransport(config.OutboundProxy)}
 }
 
 // EnsureAdminToken reads or creates the one management credential.

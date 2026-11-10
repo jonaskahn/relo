@@ -190,7 +190,7 @@ func (h *harness) newServer(port int) *server.Server {
 		Relay: platform.NewRelay(upstream.New(upstream.Options{
 			Pools: platform.NewCredentialPools(pools), Secrets: testkit.SecretStore(h.secrets),
 			Flows: platform.NewFlowRegistry(oauth.DefaultRegistry(), nil), Now: h.clock.Now,
-		}), upstream.NewExecutor(&http.Client{}, h.logger)),
+		}), upstream.NewExecutor(&http.Client{}, nil, h.logger)),
 		Templates:       platform.NewTemplateSource(),
 		CaptureRedactor: platform.NewCaptureRedactor(),
 		Pools:           pools,
