@@ -685,6 +685,10 @@ other = "मुफ़्त कनेक्शन के लिए आपकी 
 description = "Inference refusal when a free connection's shared allowance is spent"
 other = "इस कनेक्शन की मुफ़्त उपयोग सीमा पूरी हो गई है। दिखाए गए समय के बाद फिर कोशिश करें या मॉडल बदलें।"
 
+[api.connections.free_lane_refused]
+description = "Inference refusal when a free connection refused the request itself"
+other = "OpenCode के निःशुल्क मॉडल केवल OpenCode के अपने क्लाइंट को दिए जाते हैं, इसलिए यह अनुरोध अस्वीकार कर दिया गया। प्रदाता ने {{.Wait}} प्रतीक्षा का अनुरोध किया। OpenCode Go या कोई अन्य निःशुल्क प्रदाता उपयोग करें।"
+
 [api.connections.free_connection_exists]
 description = "Management refusal when a second keyless free connection is requested"
 other = "यह मुफ़्त कनेक्शन पहले से जोड़ा गया है।"

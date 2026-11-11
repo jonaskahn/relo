@@ -704,6 +704,10 @@ other = "Kostenlose Verbindungen erfordern deine Zustimmung. Aktiviere kostenlos
 description = "Inference refusal when a free connection's shared allowance is spent"
 other = "Das kostenlose Nutzungslimit dieser Verbindung ist erreicht. Versuche es nach der angezeigten Zeit erneut oder wechsle das Modell."
 
+[api.connections.free_lane_refused]
+description = "Inference refusal when a free connection refused the request itself"
+other = "Die kostenlosen Modelle von OpenCode werden nur dem eigenen OpenCode-Client angeboten, deshalb wurde diese Anfrage abgelehnt. Der Anbieter verlangt eine Wartezeit von {{.Wait}}. Nutze OpenCode Go oder einen anderen kostenlosen Anbieter."
+
 [api.connections.free_connection_exists]
 description = "Management refusal when a second keyless free connection is requested"
 other = "Diese kostenlose Verbindung ist bereits hinzugefügt."

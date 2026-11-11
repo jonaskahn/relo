@@ -706,6 +706,10 @@ other = "Bezplatná připojení vyžadují tvůj souhlas. Zapni bezplatná přip
 description = "Inference refusal when a free connection's shared allowance is spent"
 other = "Byl dosažen limit bezplatného využití tohoto připojení. Zkuste to znovu po uvedené době, nebo přepněte model."
 
+[api.connections.free_lane_refused]
+description = "Inference refusal when a free connection refused the request itself"
+other = "Bezplatné modely OpenCode jsou dostupné pouze vlastnímu klientovi OpenCode, proto byl tento požadavek odmítnut. Poskytovatel požádal o čekání {{.Wait}}. Použijte OpenCode Go nebo jinou bezplatnou službu."
+
 [api.connections.free_connection_exists]
 description = "Management refusal when a second keyless free connection is requested"
 other = "Toto bezplatné připojení je již přidáno."

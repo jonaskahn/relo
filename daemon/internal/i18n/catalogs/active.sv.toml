@@ -706,6 +706,10 @@ other = "Gratis anslutningar kräver ditt samtycke. Aktivera gratis anslutningar
 description = "Inference refusal when a free connection's shared allowance is spent"
 other = "Den kostnadsfria användningsgränsen för den här anslutningen är nådd. Försök igen efter den angivna tiden eller byt modell."
 
+[api.connections.free_lane_refused]
+description = "Inference refusal when a free connection refused the request itself"
+other = "OpenCodes gratis modeller serveras bara till OpenCodes egen klient, så begäran avvisades. Leverantören bad om att vänta {{.Wait}}. Använd OpenCode Go eller en annan gratis leverantör."
+
 [api.connections.free_connection_exists]
 description = "Management refusal when a second keyless free connection is requested"
 other = "Den här gratisanslutningen är redan tillagd."

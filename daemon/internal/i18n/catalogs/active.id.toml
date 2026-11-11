@@ -685,6 +685,10 @@ other = "Koneksi gratis memerlukan persetujuan Anda. Aktifkan koneksi gratis dan
 description = "Inference refusal when a free connection's shared allowance is spent"
 other = "Batas penggunaan gratis untuk koneksi ini telah tercapai. Coba lagi setelah waktu yang ditunjukkan atau ganti model."
 
+[api.connections.free_lane_refused]
+description = "Inference refusal when a free connection refused the request itself"
+other = "Model gratis OpenCode hanya dilayani oleh klien OpenCode itu sendiri, sehingga permintaan ini ditolak. Penyedia meminta menunggu {{.Wait}}. Gunakan OpenCode Go atau penyedia gratis lainnya."
+
 [api.connections.free_connection_exists]
 description = "Management refusal when a second keyless free connection is requested"
 other = "Koneksi gratis ini sudah ditambahkan."

@@ -704,6 +704,10 @@ other = "การเชื่อมต่อฟรีต้องได้ร�
 description = "Inference refusal when a free connection's shared allowance is spent"
 other = "ถึงขีดจำกัดการใช้งานฟรีของ connection นี้แล้ว ลองอีกครั้งหลังจากเวลาที่แสดง หรือเปลี่ยนโมเดล"
 
+[api.connections.free_lane_refused]
+description = "Inference refusal when a free connection refused the request itself"
+other = "โมเดลฟรีของ OpenCode ให้บริการเฉพาะไคลเอนต์ OpenCode เท่านั้น คำขอนี้จึงถูกปฏิเสธ โดยผู้ให้บริการขอให้รอ {{.Wait}} ใช้ OpenCode Go หรือผู้ให้บริการฟรีรายอื่น"
+
 [api.connections.free_connection_exists]
 description = "Management refusal when a second keyless free connection is requested"
 other = "การเชื่อมต่อฟรีนี้ถูกเพิ่มแล้ว"

@@ -706,6 +706,10 @@ other = "تتطلب الاتصالات المجانية موافقتك. فعّل
 description = "Inference refusal when a free connection's shared allowance is spent"
 other = "تم بلوغ حد الاستخدام المجاني لهذا الاتصال. أعد المحاولة بعد الوقت المحدد أو بدّل النموذج."
 
+[api.connections.free_lane_refused]
+description = "Inference refusal when a free connection refused the request itself"
+other = "تُقدَّم النماذج المجانية من OpenCode إلى عميل OpenCode الخاص فقط، لذلك رُفض هذا الطلب. طلب المزوّد انتظارًا قدره {{.Wait}}. استخدم OpenCode Go أو مزوّدًا مجانيًا آخر."
+
 [api.connections.free_connection_exists]
 description = "Management refusal when a second keyless free connection is requested"
 other = "تمت إضافة هذا الاتصال المجاني بالفعل."

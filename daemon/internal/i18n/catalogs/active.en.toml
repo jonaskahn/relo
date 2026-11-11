@@ -706,6 +706,10 @@ other = "Free connections require consent. Enable Free connections and accept th
 description = "Inference refusal when a free connection's shared allowance is spent"
 other = "The free usage limit for this connection is reached. Try again after the time shown, or switch models."
 
+[api.connections.free_lane_refused]
+description = "Inference refusal when a free connection refused the request itself"
+other = "The free models of OpenCode are served to OpenCode's own client only, so this request was refused. The provider asked for a wait of {{.Wait}}. Use OpenCode Go or another free provider."
+
 [api.connections.free_connection_exists]
 description = "Management refusal when a second keyless free connection is requested"
 other = "This free connection is already added."

@@ -706,6 +706,10 @@ other = "Gratis verbindingen vereisen je toestemming. Schakel gratis verbindinge
 description = "Inference refusal when a free connection's shared allowance is spent"
 other = "De gratis gebruikslimiet van deze verbinding is bereikt. Probeer het na de aangegeven tijd opnieuw of wissel van model."
 
+[api.connections.free_lane_refused]
+description = "Inference refusal when a free connection refused the request itself"
+other = "De gratis modellen van OpenCode worden alleen aan de eigen OpenCode-client geleverd, daarom is dit verzoek geweigerd. De provider vroeg om {{.Wait}} te wachten. Gebruik OpenCode Go of een andere gratis provider."
+
 [api.connections.free_connection_exists]
 description = "Management refusal when a second keyless free connection is requested"
 other = "Deze gratis verbinding is al toegevoegd."

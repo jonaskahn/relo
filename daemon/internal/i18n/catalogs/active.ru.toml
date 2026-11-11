@@ -702,6 +702,10 @@ other = "Бесплатные подключения требуют вашего
 description = "Inference refusal when a free connection's shared allowance is spent"
 other = "Достигнут лимит бесплатного использования этого подключения. Повторите попытку после указанного времени или смените модель."
 
+[api.connections.free_lane_refused]
+description = "Inference refusal when a free connection refused the request itself"
+other = "Бесплатные модели OpenCode доступны только собственному клиенту OpenCode, поэтому этот запрос отклонён. Провайдер запросил ожидание в {{.Wait}}. Используйте OpenCode Go или другого бесплатного провайдера."
+
 [api.connections.free_connection_exists]
 description = "Management refusal when a second keyless free connection is requested"
 other = "Это бесплатное подключение уже добавлено."

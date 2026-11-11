@@ -288,11 +288,14 @@ func (e *Executor) relayRejection(att attempt, response *http.Response) (Result,
 		RetryAfter:  preferredWait(retryAfter(response), info.RetryAfter),
 		ModelAccess: modelAccessRefusal(response.StatusCode, info, att.exchange.Request.Model),
 	}
-	if freeLaneExhausted(att.exchange, response.StatusCode, info) {
-		// The free lane's allowance is shared by every account, so no further
-		// send can serve this request, and the vendor's words never reach the
-		// client.
-		result.LaneExhausted = true
+	if freeLaneRefused(att.exchange, response.StatusCode, info) {
+		// The gateway serves its signed-out lane to OpenCode's own client
+		// only. Relo cannot tell a spent allowance from a refused request
+		// without a control, so it claims neither: the request fails over to
+		// another provider, the lane is not spent, and the vendor's words
+		// never reach the client.
+		result.LaneRefused = true
+		result.Retryable = true
 		return result, fmt.Errorf("%w: %d %s", ErrUpstreamStatus, response.StatusCode, info.Message)
 	}
 	switchable := att.exchange.Policy.Switchable(response.StatusCode)
@@ -307,13 +310,15 @@ func (e *Executor) relayRejection(att attempt, response *http.Response) (Result,
 	return result, fmt.Errorf("%w: %d %s", ErrUpstreamStatus, response.StatusCode, info.Message)
 }
 
-// FreeUsageLimitCode is the error type the OpenCode free gateway reports when
-// the signed-out allowance is spent.
+// FreeUsageLimitCode is the error type the OpenCode free gateway reports for
+// a request it refuses to serve, such as one that does not come from
+// OpenCode's own client.
 const FreeUsageLimitCode = "FreeUsageLimitError"
 
-// freeLaneExhausted reports the free lane's own quota refusal, which says the
-// lane is spent rather than the request or the model being at fault.
-func freeLaneExhausted(ex Exchange, status int, info *inference.ErrorInfo) bool {
+// freeLaneRefused reports the free lane's own refusal. The gateway answers a
+// request that does not come from OpenCode's client with this code, so the
+// refusal is about the request rather than about the shared allowance.
+func freeLaneRefused(ex Exchange, status int, info *inference.ErrorInfo) bool {
 	return status == http.StatusTooManyRequests && info != nil &&
 		ex.Options.TemplateID == catalog.OpenCodeFreeTemplate && info.Code == FreeUsageLimitCode
 }

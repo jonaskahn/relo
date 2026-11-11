@@ -706,6 +706,10 @@ other = "Ücretsiz bağlantılar onayınızı gerektirir. Kullanmadan önce ücr
 description = "Inference refusal when a free connection's shared allowance is spent"
 other = "Bu bağlantının ücretsiz kullanım sınırına ulaşıldı. Belirtilen süreden sonra tekrar deneyin veya modeli değiştirin."
 
+[api.connections.free_lane_refused]
+description = "Inference refusal when a free connection refused the request itself"
+other = "OpenCode'un ücretsiz modelleri yalnızca kendi istemcisine sunulur, bu nedenle bu istek reddedildi. Sağlayıcı {{.Wait}} beklenmesini istedi. OpenCode Go'yu veya başka bir ücretsiz sağlayıcıyı kullanın."
+
 [api.connections.free_connection_exists]
 description = "Management refusal when a second keyless free connection is requested"
 other = "Bu ücretsiz bağlantı zaten eklenmiş."

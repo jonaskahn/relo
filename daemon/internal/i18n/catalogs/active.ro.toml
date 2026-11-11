@@ -706,6 +706,10 @@ other = "Conexiunile gratuite necesită consimțământul tău. Activează conex
 description = "Inference refusal when a free connection's shared allowance is spent"
 other = "Limita de utilizare gratuită a acestei conexiuni a fost atinsă. Încearcă din nou după timpul indicat sau schimbă modelul."
 
+[api.connections.free_lane_refused]
+description = "Inference refusal when a free connection refused the request itself"
+other = "Modelele gratuite OpenCode sunt servite doar clientului OpenCode propriu, așa că această cerere a fost refuzată. Furnizorul a cerut o așteptare de {{.Wait}}. Folosește OpenCode Go sau alt furnizor gratuit."
+
 [api.connections.free_connection_exists]
 description = "Management refusal when a second keyless free connection is requested"
 other = "Această conexiune gratuită este deja adăugată."

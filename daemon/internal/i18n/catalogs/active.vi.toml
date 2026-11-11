@@ -706,6 +706,10 @@ other = "Kết nối miễn phí cần sự đồng ý của bạn. Hãy bật k
 description = "Inference refusal when a free connection's shared allowance is spent"
 other = "Đã đạt giới hạn sử dụng miễn phí của kết nối này. Hãy thử lại sau thời gian hiển thị hoặc chuyển sang mô hình khác."
 
+[api.connections.free_lane_refused]
+description = "Inference refusal when a free connection refused the request itself"
+other = "Các mô hình miễn phí của OpenCode chỉ được phục vụ cho chính ứng dụng OpenCode, nên yêu cầu này đã bị từ chối. Nhà cung cấp yêu cầu chờ {{.Wait}}. Hãy dùng OpenCode Go hoặc một nhà cung cấp miễn phí khác."
+
 [api.connections.free_connection_exists]
 description = "Management refusal when a second keyless free connection is requested"
 other = "Kết nối miễn phí này đã được thêm."

@@ -58,6 +58,11 @@ var errContextLimitExceeded = errors.New("context length exceeded")
 // is not what this connection can offer.
 var errFreeLaneExhausted = errors.New("free lane exhausted")
 
+// errFreeLaneRefused reports a free lane that refused the request itself.
+// The refusal is Relo's own: the vendor's message names a paid upgrade, which
+// is not what this connection can offer.
+var errFreeLaneRefused = errors.New("free lane refused")
+
 type inferenceSurface struct {
 	name string
 	path string
@@ -432,6 +437,9 @@ func (d *sendDriver) handleAttemptFailure(failed failedAttempt, err error) walkA
 	if failed.result.LaneExhausted {
 		return d.leaveSpentLane(failed, err)
 	}
+	if failed.result.LaneRefused {
+		return d.leaveRefusedLane(failed, err)
+	}
 	if retryAnotherCandidate(err) {
 		return d.tryAnotherCandidate(failed)
 	}
@@ -469,6 +477,20 @@ func (d *sendDriver) leaveSpentLane(failed failedAttempt, err error) walkAction 
 		return walkNextMember
 	}
 	d.s.answerFailed(d, d.outcome, failed.result, fmt.Errorf("%w: %w", errFreeLaneExhausted, err))
+	return walkAnswered
+}
+
+// leaveRefusedLane moves past a free lane that refused the request. The
+// refusal is about this request and not about the shared allowance, so the
+// lane is not spent, nothing cools, and another member of the route may
+// still serve. The last member answers in Relo's own words.
+func (d *sendDriver) leaveRefusedLane(failed failedAttempt, err error) walkAction {
+	if !failed.lastCandidate && memberSwitchAllowed(d.plan, failed.result) {
+		d.s.opts.Router.Unpin(d.s.conversationAnchor(d.outcome, d.r), routing.PinPrefix(d.plan))
+		failed.walk.marked = true
+		return walkNextMember
+	}
+	d.s.answerFailed(d, d.outcome, failed.result, fmt.Errorf("%w: %w", errFreeLaneRefused, err))
 	return walkAnswered
 }
 
@@ -750,6 +772,10 @@ func (s *Server) writeUnwritten(d *sendDriver, upstreamStatus int, cause error) 
 		s.writeFreeLaneExhausted(d.w, d.r, d.anthropic, d.limitRetryAfter)
 		return
 	}
+	if errors.Is(cause, errFreeLaneRefused) {
+		s.writeFreeLaneRefused(d.w, d.r, d.anthropic, d.limitRetryAfter)
+		return
+	}
 	if d.groupLimited() {
 		s.writeGroupExhausted(d, d.groupExhausted())
 		return
@@ -789,6 +815,23 @@ func (s *Server) writeFreeLaneExhausted(w http.ResponseWriter, r *http.Request, 
 	s.fail(w, r, refusal{
 		Status: http.StatusTooManyRequests, Code: "free_lane_exhausted",
 		Message: "api.connections.free_lane_exhausted",
+	})
+}
+
+// writeFreeLaneRefused answers a free lane that refused the request with
+// Relo's own words. The wait the vendor named travels as information, not as
+// a promise: the lane serves OpenCode's own client, so no wait brings this
+// request back.
+func (s *Server) writeFreeLaneRefused(w http.ResponseWriter, r *http.Request, anthropic bool, wait time.Duration) {
+	data := map[string]any{"Wait": wait.Round(time.Second).String()}
+	if anthropic {
+		s.writeAnthropicDocument(w, http.StatusTooManyRequests, "rate_limit_error",
+			s.translator(r).Text("api.connections.free_lane_refused", data))
+		return
+	}
+	s.fail(w, r, refusal{
+		Status: http.StatusTooManyRequests, Code: "free_lane_refused",
+		Message: "api.connections.free_lane_refused", Data: data,
 	})
 }
 

@@ -704,6 +704,10 @@ other = "무료 연결에는 동의가 필요합니다. 사용하기 전에 무�
 description = "Inference refusal when a free connection's shared allowance is spent"
 other = "이 연결의 무료 사용 한도에 도달했습니다. 표시된 시간 후에 다시 시도하거나 모델을 전환하세요."
 
+[api.connections.free_lane_refused]
+description = "Inference refusal when a free connection refused the request itself"
+other = "OpenCode의 무료 모델은 OpenCode 자체 클라이언트에만 제공되므로 이 요청은 거부되었습니다. 제공자가 {{.Wait}} 대기를 요청했습니다. OpenCode Go 또는 다른 무료 제공자를 사용하세요."
+
 [api.connections.free_connection_exists]
 description = "Management refusal when a second keyless free connection is requested"
 other = "이 무료 연결은 이미 추가되었습니다."

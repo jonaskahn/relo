@@ -82,6 +82,7 @@ func relayResult(result upstream.Result) server.Result {
 		Retryable: result.Retryable, ClassSwitch: result.ClassSwitch,
 		Wrote: result.Wrote, ModelAccess: result.ModelAccess,
 		ZeroTokens: result.ZeroTokens, LaneExhausted: result.LaneExhausted,
+		LaneRefused: result.LaneRefused,
 		RetryAfter:  result.RetryAfter,
 		RelayedBody: result.RelayedBody, RateLimits: result.RateLimits,
 		RefreshSettled: result.RefreshSettled, RotateWire: result.RotateWire,

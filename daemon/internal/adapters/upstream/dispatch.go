@@ -177,6 +177,11 @@ type Result struct {
 	// connection cannot help; the connection cools for the wait the provider
 	// named and the client reads Relo's own refusal.
 	LaneExhausted bool
+	// LaneRefused reports a free lane that refused the request itself. The
+	// refusal says nothing about the shared allowance, so the lane is not
+	// spent and nothing cools: the request fails over to another provider and
+	// the client reads Relo's own refusal.
+	LaneRefused bool
 	// RetryAfter is how long the upstream asked the caller to wait.
 	RetryAfter  time.Duration
 	RelayedBody bool

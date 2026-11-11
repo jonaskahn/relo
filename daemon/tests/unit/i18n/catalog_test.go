@@ -138,6 +138,7 @@ func TestTranslatorRendersEveryMessage(t *testing.T) {
 		"Languages": "en", "When": "now", "Name": "team", "Ordinal": 1,
 		"Seconds": 5,
 		"Value":   "1,234",
+		"Wait":    "1m0s",
 	}
 	for _, tag := range loaded.Supported() {
 		translator := loaded.Translate(tag)

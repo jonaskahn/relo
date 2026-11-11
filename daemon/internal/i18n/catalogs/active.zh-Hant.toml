@@ -704,6 +704,10 @@ other = "免費連線需要你的同意。使用前請啟用免費連線並接�
 description = "Inference refusal when a free connection's shared allowance is spent"
 other = "此連線已達到免費使用上限。請在顯示的時間後重試，或切換模型。"
 
+[api.connections.free_lane_refused]
+description = "Inference refusal when a free connection refused the request itself"
+other = "OpenCode 的免費模型僅提供給 OpenCode 自己的用戶端，因此該請求被拒絕。服務商要求等待 {{.Wait}}。請改用 OpenCode Go 或其他免費服務商。"
+
 [api.connections.free_connection_exists]
 description = "Management refusal when a second keyless free connection is requested"
 other = "此免費連線已新增。"
