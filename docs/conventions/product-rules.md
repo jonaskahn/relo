@@ -105,19 +105,25 @@ snapshot so a configured free model reaches the consent refusal
 (`403 free_connections_disabled`) instead of `model_not_found`; a mixed route
 skips that member and may still serve from a paid one.
 
-**The OpenCode free lane authenticates the client's transport, not the request.**
-It accepts only OpenCode's own Bun `fetch` TLS/HTTP fingerprint and answers
-`FreeUsageLimitError` to every other client, even when the headers and body are
-byte-identical. The control experiment is the same capture replayed twice: Bun
-gets 200, Go and curl get 429. Relo therefore speaks the lane on a dedicated
-transport that reproduces Bun's client hello (uTLS), confined to opencode.ai;
-every other provider keeps the stock transport. The executor routes only the
-`opencode-free` template over it, the dialer refuses any other host, and a
-genuine quota refusal still answers `429 free_lane_exhausted` with the vendor's
-cooldown honored. The fingerprint is brittle and belongs to a deliberate access
-control, not a public contract: if the gateway changes it, the lane quietly
-answers 429 again until the fingerprint is relearned, and the honest long-term
-fix is a documented free-lane contract upstream rather than emulation.
+**The OpenCode free lane authenticates the client's transport and the prompt it
+carries.** It accepts only OpenCode's own Bun `fetch` TLS/HTTP fingerprint and
+answers `FreeUsageLimitError` to every other client, even when the headers and
+body are byte-identical. The control experiment is the same capture replayed
+twice: Bun gets 200, Go and curl get 429. Relo therefore speaks the lane on a
+dedicated transport that reproduces Bun's client hello (uTLS), confined to
+opencode.ai; every other provider keeps the stock transport. The executor routes
+only the `opencode-free` template over it, the dialer refuses any other host.
+The lane reads the request as well: a request that does not carry OpenCode's own
+system prompt is refused with the same 429, whatever its headers and transport
+say. Relo does not reproduce that prompt. It forwards the inbound messages
+unchanged, so a genuine OpenCode client passes the gate with the prompt it
+brought, and a request without one — Relo's own integration test turn, for
+instance — does not. Such a refusal is answered `429 free_lane_refused`, which
+names the restriction instead of a quota the request cannot wait out. The
+fingerprint is brittle and belongs to a deliberate access control, not a public
+contract: if the gateway changes it, the lane quietly answers 429 again until
+the fingerprint is relearned, and the honest long-term fix is a documented
+free-lane contract upstream rather than emulation.
 
 **A connection's quota is read the way the connection serves.** A limit decides
 whether an account can serve only when it measures that account's own
@@ -131,17 +137,22 @@ on its own, never on the connection. The same reading decides routing: a full
 pool or an ended window constrains nothing, so an account that can still serve
 keeps being asked.
 
-**A spent lane's quota answer and a refused fingerprint look alike.** Both are a
+**A spent lane's quota answer and a refused request look alike.** Both are a
 429 carrying `FreeUsageLimitError`, so tell them apart before blaming the
 transport. A spent lane names a `Retry-After` measured in hours (a daily
-allowance shared by the whole connection). A refused fingerprint answers the
-same way, but the wait does not move while the allowance is spent: it stays
-near the same number across repeated requests, while a spent lane's wait
-counts down. The decisive test is a control: replay one captured native
-request over both transports at the same moment. A 200 over the fingerprint and
-a 429 over stock Go means the transport was the discriminator; the same 429
-from both means the allowance is spent. Relo keeps a spent lane's wait: once a
-lane is marked spent, an account refused afterwards may lengthen the
+allowance shared by the whole connection). A refused request answers the same
+way, and its wait counts down while a native request from the same machine
+keeps passing: in the capture of 2026-11-11 the wait fell from 26,486 s to
+24,373 s across calls while native opencode kept being answered 200. A moving
+wait therefore proves nothing. The decisive test is a control: replay one
+captured native request over both transports at the same moment. A 200 over the
+fingerprint and a 429 over stock Go means the transport was the discriminator;
+the same 429 from both means the allowance is spent or the request was refused
+for what it carried. Relo cannot tell a spent allowance from a refused request
+without such a control, so it claims neither: a refusal of the free lane fails
+the request over to another provider and answers `429 free_lane_refused`, and no
+lane is marked spent on a guess. A lane that is marked spent keeps its wait:
+once a lane is marked spent, an account refused afterwards may lengthen the
 connection's cooldown but never shorten it.
 
 **The free lane's fingerprint is the client hello, read byte for byte.** The
@@ -152,7 +163,8 @@ first and sent as a 1216-byte key share, with X25519 following as the
 fallback. A hello that offers only X25519 is a different fingerprint, and the
 gateway answers it exactly as it answers an exhausted allowance — the same
 `FreeUsageLimitError`, so the refusal is indistinguishable from a spent quota
-unless the two are compared side by side. The captured hello is the
+or from a request without OpenCode's prompt unless the three are compared side
+by side. The captured hello is the
 expectation: 17 cipher suites in Bun's order, 13 extensions in Bun's order,
 ALPN of http/1.1 alone, and the hybrid share first in both the offered groups
 and the key shares. `opencode_hello_test.go` reads the hello off the wire and
