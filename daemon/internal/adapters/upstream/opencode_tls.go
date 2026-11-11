@@ -68,8 +68,13 @@ var openCodeSignatureAlgorithms = []utls.SignatureScheme{
 	utls.PKCS1WithSHA1,
 }
 
-// openCodeSpec is the Bun-shaped client hello. ALPN offers http/1.1 only, and
-// the key share leaves the group alone so uTLS generates the X25519 key.
+// openCodeSpec is the Bun-shaped client hello. ALPN offers http/1.1 only.
+//
+// The hybrid post-quantum group comes first in both the offered groups and the
+// key shares, and the X25519 share follows it as the fallback. That pairing is
+// what the native client sends: a client hello without the hybrid share is a
+// different fingerprint, and the gateway refuses it with the same answer it
+// gives an exhausted allowance.
 func openCodeSpec(serverName string) *utls.ClientHelloSpec {
 	return &utls.ClientHelloSpec{
 		TLSVersMin:         utls.VersionTLS12,
@@ -80,14 +85,19 @@ func openCodeSpec(serverName string) *utls.ClientHelloSpec {
 			&utls.SNIExtension{ServerName: serverName},
 			&utls.ExtendedMasterSecretExtension{},
 			&utls.RenegotiationInfoExtension{Renegotiation: utls.RenegotiateNever},
-			&utls.SupportedCurvesExtension{Curves: []utls.CurveID{utls.X25519, utls.CurveP256, utls.CurveP384}},
+			&utls.SupportedCurvesExtension{Curves: []utls.CurveID{
+				utls.X25519MLKEM768, utls.X25519, utls.CurveP256, utls.CurveP384,
+			}},
 			&utls.SupportedPointsExtension{SupportedPoints: []byte{0}},
 			&utls.SessionTicketExtension{},
 			&utls.ALPNExtension{AlpnProtocols: []string{"http/1.1"}},
 			&utls.StatusRequestExtension{},
 			&utls.SignatureAlgorithmsExtension{SupportedSignatureAlgorithms: openCodeSignatureAlgorithms},
 			&utls.SCTExtension{},
-			&utls.KeyShareExtension{KeyShares: []utls.KeyShare{{Group: utls.X25519}}},
+			&utls.KeyShareExtension{KeyShares: []utls.KeyShare{
+				{Group: utls.X25519MLKEM768},
+				{Group: utls.X25519},
+			}},
 			&utls.PSKKeyExchangeModesExtension{Modes: []uint8{1}},
 			&utls.SupportedVersionsExtension{Versions: []uint16{utls.VersionTLS13, utls.VersionTLS12}},
 		},

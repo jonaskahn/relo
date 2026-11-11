@@ -90,9 +90,43 @@ func TestOpenCodeSpecPresentsTheBunFingerprint(t *testing.T) {
 	if len(alpn.AlpnProtocols) != 1 || alpn.AlpnProtocols[0] != "http/1.1" {
 		t.Fatalf("ALPN = %v, want exactly [http/1.1]", alpn.AlpnProtocols)
 	}
-	if keyShare == nil || len(keyShare.KeyShares) != 1 || keyShare.KeyShares[0].Group != utls.X25519 {
-		t.Fatalf("key share = %+v, want one X25519 group", keyShare)
+	// The key shares must be the hybrid post-quantum group first and X25519
+	// second. The captured native client hello offers exactly that pair, and a
+	// hello without the hybrid share is a different fingerprint that the
+	// gateway refuses with the same answer it gives an exhausted allowance.
+	if keyShare == nil || len(keyShare.KeyShares) != 2 {
+		t.Fatalf("key share = %+v, want the hybrid group and X25519", keyShare)
 	}
+	if keyShare.KeyShares[0].Group != utls.X25519MLKEM768 {
+		t.Fatalf("first key share = %v, want the hybrid group", keyShare.KeyShares[0].Group)
+	}
+	if keyShare.KeyShares[1].Group != utls.X25519 {
+		t.Fatalf("second key share = %v, want X25519 as the fallback", keyShare.KeyShares[1].Group)
+	}
+}
+
+// TestOpenCodeSpecOffersTheCapturedGroups pins the offered groups to the ones
+// the captured native client hello carried: the hybrid group first, then
+// X25519, P-256 and P-384.
+func TestOpenCodeSpecOffersTheCapturedGroups(t *testing.T) {
+	spec := openCodeSpec("opencode.ai")
+	want := []utls.CurveID{utls.X25519MLKEM768, utls.X25519, utls.CurveP256, utls.CurveP384}
+	for _, extension := range spec.Extensions {
+		curves, ok := extension.(*utls.SupportedCurvesExtension)
+		if !ok {
+			continue
+		}
+		if len(curves.Curves) != len(want) {
+			t.Fatalf("supported groups = %v, want %v", curves.Curves, want)
+		}
+		for i, group := range want {
+			if curves.Curves[i] != group {
+				t.Fatalf("supported group %d = %v, want %v", i, curves.Curves[i], group)
+			}
+		}
+		return
+	}
+	t.Fatal("client hello offers no supported groups")
 }
 
 // TestDialOpenCodeTLSHandshakesWithALoopbackServer drives the real fingerprint
