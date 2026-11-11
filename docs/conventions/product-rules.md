@@ -119,15 +119,49 @@ control, not a public contract: if the gateway changes it, the lane quietly
 answers 429 again until the fingerprint is relearned, and the honest long-term
 fix is a documented free-lane contract upstream rather than emulation.
 
+**A connection's quota is read the way the connection serves.** A limit decides
+whether an account can serve only when it measures that account's own
+allowance: a balance or a spend is a fact, a pool inside the allowance (the
+meters Cursor reports beside its monthly total, the model-scoped weekly limit
+Claude reports beside the weekly one) is one part spent, and a window whose
+period has ended describes a period that is over. A connection serves as long
+as one account can, so a connection reads Ready while any account is left, and
+Limit reached only when every account of it is spent; a spent account is marked
+on its own, never on the connection. The same reading decides routing: a full
+pool or an ended window constrains nothing, so an account that can still serve
+keeps being asked.
+
 **A spent lane's quota answer and a refused fingerprint look alike.** Both are a
 429 carrying `FreeUsageLimitError`, so tell them apart before blaming the
-transport: a spent lane names a `Retry-After` measured in hours (a daily
-allowance shared by the whole connection), while a fingerprint refusal is a
-plain 429. When Bun and Relo answer the same request with the same long
-`Retry-After`, the allowance is spent and no client hello change can return 200;
-the lane is simply exhausted until the named wait passes. Relo keeps that wait:
-once a lane is marked spent, an account refused afterwards may lengthen the
+transport. A spent lane names a `Retry-After` measured in hours (a daily
+allowance shared by the whole connection). A refused fingerprint answers the
+same way, but the wait does not move while the allowance is spent: it stays
+near the same number across repeated requests, while a spent lane's wait
+counts down. The decisive test is a control: replay one captured native
+request over both transports at the same moment. A 200 over the fingerprint and
+a 429 over stock Go means the transport was the discriminator; the same 429
+from both means the allowance is spent. Relo keeps a spent lane's wait: once a
+lane is marked spent, an account refused afterwards may lengthen the
 connection's cooldown but never shorten it.
+
+**The free lane's fingerprint is the client hello, read byte for byte.** The
+gateway matches the TLS client hello before any application bytes, so the
+hello has to be the native client's own, not merely a valid one. The native
+hello carries a post-quantum hybrid key share: `X25519MLKEM768` is offered
+first and sent as a 1216-byte key share, with X25519 following as the
+fallback. A hello that offers only X25519 is a different fingerprint, and the
+gateway answers it exactly as it answers an exhausted allowance — the same
+`FreeUsageLimitError`, so the refusal is indistinguishable from a spent quota
+unless the two are compared side by side. The captured hello is the
+expectation: 17 cipher suites in Bun's order, 13 extensions in Bun's order,
+ALPN of http/1.1 alone, and the hybrid share first in both the offered groups
+and the key shares. `opencode_hello_test.go` reads the hello off the wire and
+compares it with the capture, so a drift in the spec, in uTLS, or in the cipher
+list is caught locally rather than by the gateway refusing a request hours
+later. The fingerprint is brittle on purpose and belongs to a deliberate access
+control, not a public contract: if the gateway changes it, the lane quietly
+answers 429 again until the fingerprint is relearned, and the honest long-term
+fix is a documented free-lane contract upstream rather than emulation.
 
 
 **Free availability is derived, not configured.** A conversational model is
