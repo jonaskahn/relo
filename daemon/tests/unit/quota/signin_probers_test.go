@@ -102,6 +102,9 @@ func TestCursorProber(t *testing.T) {
 	if windows[0].Pool {
 		t.Fatalf("total window = %+v, want the monthly allowance unmarked", windows[0])
 	}
+	if windows[0].ResetAt == 0 {
+		t.Fatal("reset = 0, want the billing cycle end")
+	}
 	request := <-requests
 	if request.Method != http.MethodPost {
 		t.Fatalf("method = %q, want the Connect call's POST", request.Method)
@@ -143,6 +146,27 @@ func TestCopilotProber(t *testing.T) {
 	request := <-requests
 	if request.Header.Get("Authorization") != "token github-token" {
 		t.Fatalf("authorization = %q, want the GitHub token scheme", request.Header.Get("Authorization"))
+	}
+}
+
+// TestCopilotProberKeepsAnUnreadableResetOut covers a reset moment the
+// provider did not state: the reading is kept, and the window says it has no
+// reset rather than holding a moment from before the epoch.
+func TestCopilotProberKeepsAnUnreadableResetOut(t *testing.T) {
+	const body = `{"copilot_plan":"individual","quota_snapshots":{"premium_interactions":{"entitlement":1500,"remaining":300,"percent_remaining":80}}}`
+	server, _ := signInEndpoint(t, http.StatusOK, body)
+	prober := quota.NewCopilotProber(quota.SignInProberOptions{Endpoint: server.URL})
+	windows, err := prober.Probe(context.Background(), activity.Credential{
+		ID: "credential-1", AccessToken: "copilot-token", RefreshToken: "github-token",
+	})
+	if err != nil {
+		t.Fatalf("Probe() error = %v", err)
+	}
+	if len(windows) != 1 || windows[0].UsedPercent != 20 {
+		t.Fatalf("windows = %+v, want the credits at 20%% used", windows)
+	}
+	if windows[0].ResetAt != 0 {
+		t.Fatalf("reset = %d, want no reset moment", windows[0].ResetAt)
 	}
 }
 

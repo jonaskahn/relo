@@ -193,7 +193,7 @@ func cursorWindows(body []byte, credentialID string) ([]activity.WindowSample, e
 	}
 	windows := []activity.WindowSample{{
 		Window: "30d", UsedPercent: clampPercent(used),
-		ResetAt: parseProbeTime(payload.BillingCycleEnd).Unix(), Seconds: monthlySeconds,
+		ResetAt: probeReset(payload.BillingCycleEnd), Seconds: monthlySeconds,
 	}}
 	// The two pools Cursor reports beside the total are the meters a plan
 	// actually draws down, so they travel as extra windows when present. A
@@ -291,7 +291,7 @@ func copilotWindows(body []byte, credentialID string) ([]activity.WindowSample, 
 	}
 	return []activity.WindowSample{{
 		Window: "30d", UsedPercent: clampPercent(used),
-		ResetAt: parseProbeTime(payload.QuotaResetDate).Unix(), Seconds: monthlySeconds,
+		ResetAt: probeReset(payload.QuotaResetDate), Seconds: monthlySeconds,
 	}}, nil
 }
 
@@ -410,7 +410,7 @@ func (r *kimiRow) resetAt() int64 {
 	if r == nil {
 		return 0
 	}
-	return parseProbeTime(r.ResetTime).Unix()
+	return probeReset(r.ResetTime)
 }
 
 func readProbeBody(client *http.Client, request *http.Request, credentialID string) ([]byte, error) {
