@@ -637,7 +637,9 @@ func (s *Service) IntegrationToken(ctx context.Context, id string) (string, erro
 // IntegrationModels reads the model list one integration's key reaches. The
 // call travels the prefix the client itself is pointed at and speaks the
 // protocol that client speaks, so the identifiers an operator picks from are
-// the ones the agent would send.
+// the ones the agent would send. The signed-out OpenCode lane is left out: it
+// is served to OpenCode's own client, and a test turn carries a bare prompt
+// the gateway refuses.
 func (s *Service) IntegrationModels(ctx context.Context, id string) (IntegrationModels, error) {
 	agent, baseURL, token, err := s.integrationClient(id)
 	if err != nil {
@@ -656,7 +658,57 @@ func (s *Service) IntegrationModels(ctx context.Context, id string) (Integration
 	}
 	defer func() { _ = response.Body.Close() }()
 	body, _ := io.ReadAll(io.LimitReader(response.Body, integrationBodyLimit))
-	return describeModelsRead(url, response, body), nil
+	read := describeModelsRead(url, response, body)
+	read.Models = s.withoutFreeLaneModels(read.Models)
+	return read, nil
+}
+
+// withoutFreeLaneModels drops the models of the signed-out OpenCode lane from
+// a test turn's list. That lane is served to OpenCode's own client, and an
+// integration test turn carries a bare prompt of its own, so the gateway
+// refuses it.
+func (s *Service) withoutFreeLaneModels(models []IntegrationModel) []IntegrationModel {
+	kept := make([]IntegrationModel, 0, len(models))
+	for _, model := range models {
+		if s.freeLaneProvider(model.ProviderID) {
+			continue
+		}
+		kept = append(kept, model)
+	}
+	return kept
+}
+
+// freeLaneProvider reports whether a connection is the signed-out OpenCode
+// lane.
+func (s *Service) freeLaneProvider(providerID string) bool {
+	if s.catalog == nil || providerID == "" {
+		return false
+	}
+	snapshot, found := s.catalog.Snapshot()
+	if !found {
+		return false
+	}
+	provider, found := snapshot.Provider(providerID)
+	return found && provider.TemplateID == catalog.OpenCodeFreeTemplate
+}
+
+// freeLaneModel reports whether a model a client named belongs to the
+// signed-out OpenCode lane.
+func (s *Service) freeLaneModel(modelID string) bool {
+	if s.catalog == nil {
+		return false
+	}
+	snapshot, found := s.catalog.Snapshot()
+	if !found {
+		return false
+	}
+	for _, model := range snapshot.Listed() {
+		if catalog.ClientModelID(model.ProviderID, model.ID) != modelID {
+			continue
+		}
+		return s.freeLaneProvider(model.ProviderID)
+	}
+	return false
 }
 
 func describeModelsRead(url string, response *http.Response, body []byte) IntegrationModels {
@@ -679,6 +731,8 @@ func describeModelsRead(url string, response *http.Response, body []byte) Integr
 // IntegrationChat sends one prompt through the surface the client speaks, with
 // the key the client runs with. A listing proves the key is accepted; a turn
 // proves the whole path an agent uses, from its own prefix to a model's answer.
+// The signed-out OpenCode lane is refused: it is served to OpenCode's own
+// client, and a test turn carries a bare prompt the gateway refuses.
 func (s *Service) IntegrationChat(ctx context.Context, id string, request IntegrationChatRequest) (IntegrationChat, error) {
 	model := strings.TrimSpace(request.Model)
 	prompt := strings.TrimSpace(request.Prompt)
@@ -687,6 +741,10 @@ func (s *Service) IntegrationChat(ctx context.Context, id string, request Integr
 		return IntegrationChat{}, fmt.Errorf("a model: %w", ErrInvalidQuery)
 	case prompt == "":
 		return IntegrationChat{}, fmt.Errorf("a prompt: %w", ErrInvalidQuery)
+	case s.freeLaneModel(model):
+		return IntegrationChat{}, fmt.Errorf(
+			"the OpenCode free lane is served to OpenCode's own client, so a test turn cannot use it: %w",
+			ErrInvalidQuery)
 	}
 	agent, baseURL, token, err := s.integrationClient(id)
 	if err != nil {
