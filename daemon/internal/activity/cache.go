@@ -79,14 +79,16 @@ func (c *Cache) Headroom(ctx context.Context, credentialID, window string) (floa
 }
 
 // MostConstrained returns the smallest headroom across a credential's
-// windows, which is what a request actually has to fit in.
+// windows, which is what a request actually has to fit in. A pool is left
+// out: a pool that is full is one part of the allowance spent, not the
+// account.
 func (c *Cache) MostConstrained(ctx context.Context, credentialID string) (float64, bool) {
 	snapshots, err := c.Windows(ctx, credentialID)
 	if err != nil {
 		return 0, false
 	}
 	for _, snapshot := range snapshots {
-		if !monetary(snapshot) {
+		if !monetary(snapshot) && !snapshot.Pool {
 			return snapshot.Headroom(), true
 		}
 	}
@@ -114,6 +116,7 @@ func (c *Cache) snapshots(credentialID string, samples []WindowSample) []Snapsho
 			Currency:     sample.Currency,
 			ResetAt:      sample.ResetAt,
 			Seconds:      sample.Seconds,
+			Pool:         sample.Pool,
 			Source:       c.source,
 			UpdatedAt:    now,
 		})

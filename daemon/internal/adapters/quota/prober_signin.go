@@ -196,12 +196,19 @@ func cursorWindows(body []byte, credentialID string) ([]activity.WindowSample, e
 		ResetAt: parseProbeTime(payload.BillingCycleEnd).Unix(), Seconds: monthlySeconds,
 	}}
 	// The two pools Cursor reports beside the total are the meters a plan
-	// actually draws down, so they travel as extra windows when present.
+	// actually draws down, so they travel as extra windows when present. A
+	// full pool is one part of the allowance spent, not the account.
 	if payload.PlanUsage.AutoPercentUsed != nil {
-		windows = append(windows, activity.WindowSample{Window: "auto", UsedPercent: clampPercent(*payload.PlanUsage.AutoPercentUsed), Seconds: monthlySeconds})
+		windows = append(windows, activity.WindowSample{
+			Window: "auto", UsedPercent: clampPercent(*payload.PlanUsage.AutoPercentUsed),
+			Seconds: monthlySeconds, Pool: true,
+		})
 	}
 	if payload.PlanUsage.APIPercentUsed != nil {
-		windows = append(windows, activity.WindowSample{Window: "api", UsedPercent: clampPercent(*payload.PlanUsage.APIPercentUsed), Seconds: monthlySeconds})
+		windows = append(windows, activity.WindowSample{
+			Window: "api", UsedPercent: clampPercent(*payload.PlanUsage.APIPercentUsed),
+			Seconds: monthlySeconds, Pool: true,
+		})
 	}
 	return windows, nil
 }

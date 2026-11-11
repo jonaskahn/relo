@@ -104,7 +104,7 @@ func claudeWindows(body []byte) ([]activity.WindowSample, error) {
 		}
 		windows = append(windows, activity.WindowSample{
 			Window: limit.Scope.Model.DisplayName, UsedPercent: clampPercent(*limit.Percent),
-			ResetAt: probeReset(limit.ResetsAt), Seconds: weeklySeconds,
+			ResetAt: probeReset(limit.ResetsAt), Seconds: weeklySeconds, Pool: true,
 		})
 	}
 	return windows, nil

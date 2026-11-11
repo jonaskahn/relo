@@ -34,6 +34,11 @@ func TestClaudeProberReadsTheSessionAndWeeklyWindows(t *testing.T) {
 	if windows[1].Window != activity.WindowSevenDays || windows[2].Window != "Sonnet" || windows[3].Window != "Fable" {
 		t.Fatalf("windows = %+v, want weekly, Sonnet, then Fable", windows)
 	}
+	// A limit scoped to one model is a pool of the weekly allowance: a full
+	// one is that model spent, not the account.
+	if !windows[3].Pool {
+		t.Fatalf("scoped window = %+v, want the pool marked", windows[3])
+	}
 	reset := time.Unix(windows[0].ResetAt, 0).UTC()
 	if reset.Format(time.RFC3339) != "2026-09-30T06:00:00Z" {
 		t.Fatalf("session reset = %s", reset)

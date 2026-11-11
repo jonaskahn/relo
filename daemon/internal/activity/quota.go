@@ -19,6 +19,11 @@ type WindowSample struct {
 	// Seconds is how long the window lasts, and zero when the provider
 	// reports only a percentage.
 	Seconds int64
+	// Pool marks a window that measures one part of the account's allowance
+	// rather than the allowance itself: a provider that reports an overall
+	// limit beside the pools it draws from states the pools this way, so a
+	// full pool is not a spent account.
+	Pool bool
 }
 
 // Credential is what a probe needs to ask one account about its quota.
@@ -43,8 +48,14 @@ type Snapshot struct {
 	Currency     string
 	ResetAt      int64
 	Seconds      int64
-	Source       string
-	UpdatedAt    time.Time
+	// Pool marks a window that measures one part of the account's allowance
+	// rather than the allowance itself, the way a provider reports an overall
+	// limit beside the pools it draws from.
+	Pool bool
+	// Source names where the reading came from.
+	Source string
+	// UpdatedAt is when the reading was stored.
+	UpdatedAt time.Time
 }
 
 // The window names Relo shows for the limits the coding clients publish.

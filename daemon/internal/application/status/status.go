@@ -55,6 +55,9 @@ type QuotaWindow struct {
 	Currency     string
 	ResetAtMs    int64
 	Seconds      int64
+	// Sub marks a window that measures one part of an account's allowance
+	// rather than the allowance itself.
+	Sub          bool
 	Source       string
 	ObservedAtMs int64
 }
@@ -401,6 +404,7 @@ func toQuotaWindows(item appaccount.Account, rows []activity.Snapshot) []QuotaWi
 			CredentialID: item.ID, ProviderID: item.ProviderID, Label: item.Label,
 			Window: row.Window, UsedPercent: row.UsedPercent, ResetAtMs: row.ResetAt * 1000,
 			Amount: row.Amount, Currency: row.Currency, Seconds: row.Seconds,
+			Sub:    row.Pool,
 			Source: row.Source, ObservedAtMs: row.UpdatedAt.UnixMilli(),
 		})
 	}

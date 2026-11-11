@@ -65,7 +65,8 @@ func (s *QuotaStore) ListSnapshots(ctx context.Context, credentialID string) ([]
 		snapshots = append(snapshots, activity.Snapshot{
 			CredentialID: row.CredentialID, Window: row.Window, UsedPercent: row.UsedPercent,
 			Amount: row.Amount, Currency: row.Currency,
-			ResetAt: row.ResetAt, Seconds: row.Seconds, Source: row.Source, UpdatedAt: row.ObservedAt,
+			ResetAt: row.ResetAt, Seconds: row.Seconds, Pool: row.Pool,
+			Source: row.Source, UpdatedAt: row.ObservedAt,
 		})
 	}
 	return snapshots, nil
@@ -91,7 +92,8 @@ func toQuotaRows(snapshots []activity.Snapshot) []sqlite.QuotaRow {
 			CredentialID: snapshot.CredentialID, Window: snapshot.Window,
 			UsedPercent: snapshot.UsedPercent, ResetAt: snapshot.ResetAt,
 			Amount: snapshot.Amount, Currency: snapshot.Currency,
-			Seconds: snapshot.Seconds, Source: snapshot.Source, ObservedAt: snapshot.UpdatedAt,
+			Seconds: snapshot.Seconds, Pool: snapshot.Pool,
+			Source: snapshot.Source, ObservedAt: snapshot.UpdatedAt,
 		})
 	}
 	return rows

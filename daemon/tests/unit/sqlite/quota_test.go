@@ -82,6 +82,30 @@ func TestQuotaRepo(t *testing.T) {
 		}
 	})
 
+	t.Run("a pool of a larger allowance round-trips", func(t *testing.T) {
+		repo := sqlite.NewQuotaRepo(testkit.OpenTestDB(t))
+		ctx := context.Background()
+		if err := repo.UpsertSnapshots(ctx, []sqlite.QuotaRow{
+			{CredentialID: "credential-1", Window: "30d", UsedPercent: 46.7, Source: "probe", ObservedAt: time.Now()},
+			{CredentialID: "credential-1", Window: "api", UsedPercent: 100, Pool: true, Source: "probe", ObservedAt: time.Now()},
+		}); err != nil {
+			t.Fatalf("UpsertSnapshots() error = %v", err)
+		}
+		rows, err := repo.ListSnapshots(ctx, "credential-1")
+		if err != nil {
+			t.Fatalf("ListSnapshots() error = %v", err)
+		}
+		if len(rows) != 2 {
+			t.Fatalf("rows = %+v, want one row per window", rows)
+		}
+		if rows[0].Pool {
+			t.Fatalf("total row = %+v, want the account's own allowance", rows[0])
+		}
+		if !rows[1].Pool {
+			t.Fatalf("pool row = %+v, want the pool marked", rows[1])
+		}
+	})
+
 	t.Run("history replaces an observation in the same second", func(t *testing.T) {
 		db := testkit.OpenTestDB(t)
 		repo := sqlite.NewQuotaRepo(db)

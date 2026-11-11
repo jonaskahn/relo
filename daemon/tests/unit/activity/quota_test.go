@@ -98,6 +98,20 @@ func TestCache(t *testing.T) {
 		}
 	})
 
+	t.Run("a pool of a larger allowance constrains nothing", func(t *testing.T) {
+		repo := &fakeRepo{}
+		cache := activity.NewCache(repo, activity.CacheOptions{})
+		if err := cache.Record(context.Background(), "credential-1", []activity.WindowSample{
+			{Window: "30d", UsedPercent: 46.7},
+			{Window: "api", UsedPercent: 100, Pool: true},
+		}); err != nil {
+			t.Fatalf("Record() error = %v", err)
+		}
+		if headroom, ok := cache.MostConstrained(context.Background(), "credential-1"); !ok || headroom != 53.3 {
+			t.Fatalf("MostConstrained() = %v, %v, want only the account's own allowance", headroom, ok)
+		}
+	})
+
 	t.Run("repository failures are reported", func(t *testing.T) {
 		repo := &fakeRepo{upsertErr: errors.New("disk is full"), listErr: errors.New("disk is gone")}
 		cache := activity.NewCache(repo, activity.CacheOptions{})

@@ -705,6 +705,7 @@ func (s *Server) quotaWindows(windows []appstatus.QuotaWindow) []quotaWindowResp
 			Label: window.Label, Window: window.Window, Seconds: window.Seconds,
 			UsedPercent: window.UsedPercent, ResetAtMs: window.ResetAtMs,
 			Amount: window.Amount, Currency: window.Currency,
+			Sub:    window.Sub,
 			Source: window.Source, ObservedAtMs: window.ObservedAtMs,
 			Stale: s.quotaStale(window.CredentialID),
 		})
@@ -726,9 +727,12 @@ type quotaWindowResponse struct {
 	Amount       *float64 `json:"amount,omitempty"`
 	Currency     string   `json:"currency,omitempty"`
 	ResetAtMs    int64    `json:"reset_at_ms"`
-	Source       string   `json:"source"`
-	ObservedAtMs int64    `json:"observed_at_ms"`
-	Stale        bool     `json:"stale"`
+	// Sub marks a window that measures one part of an account's allowance
+	// rather than the allowance itself.
+	Sub          bool   `json:"sub"`
+	Source       string `json:"source"`
+	ObservedAtMs int64  `json:"observed_at_ms"`
+	Stale        bool   `json:"stale"`
 }
 
 func (s *Server) handleLogs(w http.ResponseWriter, r *http.Request) {

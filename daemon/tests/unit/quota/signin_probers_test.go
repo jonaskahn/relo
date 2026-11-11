@@ -94,6 +94,14 @@ func TestCursorProber(t *testing.T) {
 	if windows[1].UsedPercent != 40 || windows[2].UsedPercent != 90 {
 		t.Fatalf("pool windows = %+v, want the auto and api pools", windows[1:])
 	}
+	// The two pools are parts of the monthly allowance, so a full pool is one
+	// part spent and not the account.
+	if windows[1].Pool != true || windows[2].Pool != true {
+		t.Fatalf("pool windows = %+v, want both pools marked", windows[1:])
+	}
+	if windows[0].Pool {
+		t.Fatalf("total window = %+v, want the monthly allowance unmarked", windows[0])
+	}
 	request := <-requests
 	if request.Method != http.MethodPost {
 		t.Fatalf("method = %q, want the Connect call's POST", request.Method)

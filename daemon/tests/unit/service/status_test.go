@@ -54,6 +54,30 @@ func TestStatus(t *testing.T) {
 	}
 }
 
+// TestStatusQuotaWindowPool covers how the console reads a pool of a larger
+// allowance: the window says so, so a full one is not a spent account.
+func TestStatusQuotaWindowPool(t *testing.T) {
+	harness := newHarness(t)
+	ctx := context.Background()
+	account := harness.addAccount("openai", "work", "sk-quota")
+	store := platform.NewQuotaStore(harness.db)
+	now := harness.clock.Now()
+	if err := store.UpsertSnapshots(ctx, []activity.Snapshot{{
+		CredentialID: account.ID, Window: "api", UsedPercent: 100, Pool: true,
+		ResetAt: now.Add(time.Hour).Unix(), Source: "probe", UpdatedAt: now,
+	}}); err != nil {
+		t.Fatalf("UpsertSnapshots() error = %v", err)
+	}
+
+	windows, err := harness.status.Quotas(ctx)
+	if err != nil {
+		t.Fatalf("Quotas() error = %v", err)
+	}
+	if len(windows) != 1 || !windows[0].Sub {
+		t.Fatalf("windows = %+v, want the pool marked", windows)
+	}
+}
+
 func TestQuotaStoreAdapter(t *testing.T) {
 	harness := newHarness(t)
 	ctx := context.Background()
