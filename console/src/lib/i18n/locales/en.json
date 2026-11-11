@@ -989,6 +989,7 @@
           "keyAdded": "Key added to {label}.",
           "legend": "Price per 1M tokens, in / out",
           "retainsPrompts": "This free pool takes no account. Prompts you send to it may be logged by the provider.",
+          "opencodeClientOnly": "These free models are served to OpenCode's own client. A request Relo sends without OpenCode's own prompt is refused by the gateway.",
           "freeBadge": "Free",
           "turnOnFree": "Turn on all free",
           "turnOffFree": "Turn off all free",

@@ -989,6 +989,7 @@
           "keyAdded": "Nyckeln lades till i {label}.",
           "legend": "Pris per 1M token, in / ut",
           "retainsPrompts": "Den här fria poolen kräver inget konto. Promptar du skickar kan loggas av leverantören.",
+          "opencodeClientOnly": "Dessa gratis modeller serveras bara till OpenCodes egen klient. En begäran som Relo skickar utan OpenCodes prompt avvisas av gatewayen.",
           "freeBadge": "Gratis",
           "freeOnly": "Endast gratis",
           "noFreeModels": "Inga gratis modeller",

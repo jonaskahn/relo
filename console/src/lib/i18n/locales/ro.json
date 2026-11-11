@@ -989,6 +989,7 @@
           "keyAdded": "Cheie adăugată la {label}.",
           "legend": "Preț per 1M de tokenuri, intrare / ieșire",
           "retainsPrompts": "Acest pool gratuit nu necesită un cont. Solicitările trimise pot fi înregistrate de furnizor.",
+          "opencodeClientOnly": "Aceste modele gratuite sunt servite doar clientului OpenCode propriu. O cerere trimisă de Relo fără promptul OpenCode este refuzată de gateway.",
           "freeBadge": "Gratuit",
           "freeOnly": "Doar gratuit",
           "noFreeModels": "Niciun model gratuit",

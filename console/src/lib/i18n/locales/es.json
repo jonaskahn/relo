@@ -989,6 +989,7 @@
           "keyAdded": "Clave añadida a {label}.",
           "legend": "Precio por 1M de tokens, entrada / salida",
           "retainsPrompts": "Este conjunto gratuito no requiere cuenta. El proveedor puede registrar las consultas que le envíes.",
+          "opencodeClientOnly": "Estos modelos gratuitos se ofrecen solo al propio cliente de OpenCode. La pasarela rechaza una solicitud que Relo envíe sin el prompt de OpenCode.",
           "freeBadge": "Gratis",
           "freeOnly": "Solo gratis",
           "noFreeModels": "Sin modelos gratis",

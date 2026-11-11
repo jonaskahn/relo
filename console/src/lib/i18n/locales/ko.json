@@ -989,6 +989,7 @@
           "keyAdded": "키 추가 완료: {label}",
           "legend": "100만 토큰당 가격, 입력 / 출력",
           "retainsPrompts": "이 무료 풀에는 계정이 필요 없어요. 보낸 프롬프트는 제공업체가 기록할 수 있어요.",
+          "opencodeClientOnly": "이 무료 모델은 OpenCode 자체 클라이언트에만 제공됩니다. OpenCode의 프롬프트 없이 Relo가 보낸 요청은 게이트웨이가 거부합니다.",
           "freeBadge": "무료",
           "freeOnly": "무료만",
           "noFreeModels": "무료 모델 없음",

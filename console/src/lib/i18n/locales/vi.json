@@ -989,6 +989,7 @@
           "keyAdded": "Đã thêm khóa vào {label}.",
           "legend": "Giá mỗi 1 triệu token, vào / ra",
           "retainsPrompts": "Nhóm miễn phí này không cần tài khoản. Nhà cung cấp có thể ghi lại các lời nhắc bạn gửi đến.",
+          "opencodeClientOnly": "Các mô hình miễn phí này chỉ được phục vụ cho chính ứng dụng OpenCode. Yêu cầu mà Relo gửi mà không có prompt của OpenCode sẽ bị cổng từ chối.",
           "freeBadge": "Miễn phí",
           "freeOnly": "Chỉ miễn phí",
           "noFreeModels": "Không có mô hình miễn phí",

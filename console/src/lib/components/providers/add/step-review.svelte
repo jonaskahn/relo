@@ -7,6 +7,7 @@
 	import BillingChip from '$lib/components/providers/billing-chip.svelte';
 	import IconAction from '$lib/components/ui/icon-action.svelte';
 	import { formatUnitPrice } from '$lib/format';
+	import { isOpenCodeFreeConnection } from '$lib/provider-free';
 	import type { BillingInput } from '$lib/provider-billing';
 
 	// Review is the last look before the write: what will be stored on the
@@ -63,6 +64,9 @@
 	// The keyless pool takes no account and logs what it is sent, so the
 	// operator reads that beside the models they are about to route to it.
 	const retainsPrompts = $derived(templateId === 'kilo-free');
+	// The signed-out OpenCode lane is served to OpenCode's own client, so a
+	// request Relo sends without OpenCode's own prompt is refused.
+	const clientOnly = $derived(isOpenCodeFreeConnection({ template_id: templateId }));
 	const freeModels = $derived((probe?.models ?? []).filter((model) => model.is_free));
 	const freeIds = $derived(freeModels.map((model) => model.id));
 	const paidIds = $derived(
@@ -155,6 +159,12 @@
 			<p class="flex items-start gap-2 text-xs text-muted-foreground">
 				<Icon name="alert-triangle" size={14} class="mt-0.5 shrink-0 text-warn" />
 				<span>{$t('ui.pages.providersPage.review.retainsPrompts')}</span>
+			</p>
+		{/if}
+		{#if clientOnly}
+			<p class="flex items-start gap-2 text-xs text-muted-foreground">
+				<Icon name="alert-triangle" size={14} class="mt-0.5 shrink-0 text-warn" />
+				<span>{$t('ui.pages.providersPage.review.opencodeClientOnly')}</span>
 			</p>
 		{/if}
 		<div class="flex flex-col gap-2 sm:flex-row sm:items-center">

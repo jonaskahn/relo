@@ -989,6 +989,7 @@
           "keyAdded": "Anahtar {label} bağlantısına eklendi.",
           "legend": "1M token başına fiyat, giriş / çıkış",
           "retainsPrompts": "Bu ücretsiz havuz hesap gerektirmez. Gönderdiğin istemler sağlayıcı tarafından kaydedilebilir.",
+          "opencodeClientOnly": "Bu ücretsiz modeller yalnızca OpenCode'un kendi istemcisine sunulur. Relo'nun OpenCode'un promptu olmadan gönderdiği bir istek gateway tarafından reddedilir.",
           "freeBadge": "Ücretsiz",
           "freeOnly": "Yalnızca ücretsiz",
           "noFreeModels": "Ücretsiz model yok",

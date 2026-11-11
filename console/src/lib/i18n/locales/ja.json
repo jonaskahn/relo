@@ -989,6 +989,7 @@
           "keyAdded": "「{label}」にキーを追加しました。",
           "legend": "100万トークンあたりの料金（入力 / 出力）",
           "retainsPrompts": "この無料プールにアカウントは不要です。送信したプロンプトはプロバイダーが記録する場合があります。",
+          "opencodeClientOnly": "これらの無料モデルは OpenCode 自身のクライアントにのみ提供されます。OpenCode のプロンプトなしで Relo が送信したリクエストはゲートウェイに拒否されます。",
           "freeBadge": "無料",
           "freeOnly": "無料のみ",
           "noFreeModels": "無料モデルなし",

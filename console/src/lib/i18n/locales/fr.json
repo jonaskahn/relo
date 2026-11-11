@@ -989,6 +989,7 @@
           "keyAdded": "Clé ajoutée à {label}.",
           "legend": "Prix par million de tokens, entrée / sortie",
           "retainsPrompts": "Ce pool gratuit ne demande aucun compte. Le provider peut enregistrer les requêtes que tu lui envoies.",
+          "opencodeClientOnly": "Ces modèles gratuits ne sont servis qu'au client OpenCode lui-même. Une requête que Relo envoie sans le prompt d'OpenCode est refusée par la passerelle.",
           "freeBadge": "Gratuit",
           "freeOnly": "Gratuit uniquement",
           "noFreeModels": "Aucun modèle gratuit",

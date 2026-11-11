@@ -989,6 +989,7 @@
           "keyAdded": "Sleutel toegevoegd aan {label}.",
           "legend": "Prijs per 1M tokens, in / uit",
           "retainsPrompts": "Deze gratis pool heeft geen account nodig. Prompts die je erheen stuurt, kan de provider vastleggen.",
+          "opencodeClientOnly": "Deze gratis modellen worden alleen aan de eigen OpenCode-client geleverd. Een verzoek dat Relo zonder de prompt van OpenCode stuurt, wordt door de gateway geweigerd.",
           "freeBadge": "Gratis",
           "freeOnly": "Alleen gratis",
           "noFreeModels": "Geen gratis modellen",

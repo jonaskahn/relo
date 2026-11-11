@@ -989,6 +989,7 @@
           "keyAdded": "Klíč přidán k {label}.",
           "legend": "Cena za 1M tokenů, vstup / výstup",
           "retainsPrompts": "Tento bezplatný fond nevyžaduje účet. Prompty, které mu pošlete, může poskytovatel evidovat.",
+          "opencodeClientOnly": "Tyto bezplatné modely jsou dostupné pouze vlastnímu klientovi OpenCode. Gateway odmítne požadavek, který Relo pošle bez promptu OpenCode.",
           "freeBadge": "Zdarma",
           "freeOnly": "Pouze zdarma",
           "noFreeModels": "Žádné modely zdarma",

@@ -989,6 +989,7 @@
           "keyAdded": "Kunci ditambahkan ke {label}.",
           "legend": "Harga per 1 juta token, masuk / keluar",
           "retainsPrompts": "Pool gratis ini tidak perlu akun. Prompt yang kamu kirim bisa dicatat oleh penyedia.",
+          "opencodeClientOnly": "Model gratis ini hanya dilayani oleh klien OpenCode itu sendiri. Permintaan yang Relo kirim tanpa prompt OpenCode ditolak oleh gateway.",
           "freeBadge": "Gratis",
           "freeOnly": "Hanya gratis",
           "noFreeModels": "Tidak ada model gratis",

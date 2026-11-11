@@ -18,6 +18,13 @@ export function isFreeConnection(provider: Pick<Provider, 'template_id'>): boole
 	return FREE_TEMPLATES.has(provider.template_id);
 }
 
+/** Reports whether one connection is the signed-out OpenCode lane, whose
+ *  models are served to OpenCode's own client. A request that reaches it
+ *  without OpenCode's own prompt is refused by the gateway. */
+export function isOpenCodeFreeConnection(provider: Pick<Provider, 'template_id'>): boolean {
+	return provider.template_id === 'opencode-free';
+}
+
 /** A paid key or cloud connection that publishes at least one free model, which is
  *  what the Free available chip answers. Keyless free lanes, sign-in plans, local
  *  endpoints, and custom endpoints never wear it. */

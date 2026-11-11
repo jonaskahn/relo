@@ -989,6 +989,7 @@
           "keyAdded": "已为 {label} 添加密钥。",
           "legend": "每 100 万 Token 的价格（输入 / 输出）",
           "retainsPrompts": "这个免费池不需要账号。发给它的提示词可能会被提供商记录。",
+          "opencodeClientOnly": "这些免费模型仅提供给 OpenCode 自己的客户端。Relo 在不携带 OpenCode 提示词时发出的请求会被网关拒绝。",
           "freeBadge": "免费",
           "freeOnly": "仅免费",
           "noFreeModels": "没有免费模型",
