@@ -30,6 +30,10 @@ func (p *Pool) MarkServed(id string) {
 // retry-after longer than the step wins. No account is worth starting on once
 // they have all failed, so the connection forgets the one it remembered and
 // the next request picks again.
+//
+// A spent lane's wait is never shortened here. The lane named a wait the whole
+// connection shares, and one refused account afterwards says nothing about
+// that allowance, so its own longer cooldown stands.
 func (p *Pool) MarkExhausted(retryAfter time.Duration) {
 	p.mu.Lock()
 	defer p.mu.Unlock()
@@ -39,9 +43,14 @@ func (p *Pool) MarkExhausted(retryAfter time.Duration) {
 		return
 	}
 	wait := max(p.steps[min(p.conn.failures-1, len(p.steps)-1)], retryAfter)
-	if wait > 0 {
-		p.conn.coolUntil = p.clock.Now().Add(wait)
+	if wait <= 0 {
+		return
 	}
+	until := p.clock.Now().Add(wait)
+	if p.conn.spent && until.Before(p.conn.coolUntil) {
+		return
+	}
+	p.conn.coolUntil = until
 }
 
 // MarkLaneSpent records a connection whose shared allowance is spent. No

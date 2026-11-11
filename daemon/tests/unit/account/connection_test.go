@@ -131,6 +131,34 @@ func TestLaneSpentIsItsOwnKindOfCooldown(t *testing.T) {
 	}
 }
 
+// TestSpentLaneWaitOutlivesAShorterExhaustion pins the shared allowance's own
+// clock: the lane named a long wait, and one account refused afterwards must
+// not shorten it. The pool's failover step is 5 minutes at most, so a spent
+// lane that cooled 20 hours has to still read its own wait after a plain
+// exhaustion lands on the same connection.
+func TestSpentLaneWaitOutlivesAShorterExhaustion(t *testing.T) {
+	clock := testkit.NewFakeClock(time.Now())
+	pool := newConnectionPool(t, clock)
+
+	pool.MarkLaneSpent(20 * time.Hour)
+	spent := pool.LaneSpentUntil()
+	if spent.IsZero() {
+		t.Fatal("LaneSpentUntil() = zero, want the lane marked spent")
+	}
+
+	// A rate limit that named a one-minute wait, the kind a single account
+	// answers. It describes the account, not the shared allowance.
+	pool.MarkExhausted(time.Minute)
+	pool.MarkExhausted(0)
+
+	if got := pool.CooldownUntil(); got.Before(spent) {
+		t.Fatalf("CooldownUntil() = %v, want the spent lane's %v to stand", got, spent)
+	}
+	if until := pool.LaneSpentUntil(); until.IsZero() {
+		t.Fatal("LaneSpentUntil() = zero, want the lane still spent")
+	}
+}
+
 // TestConnectionCooldownReportsThePooledWait covers the resolution the catalog
 // and the router read: a connection on its cooldown names that moment, and a
 // success clears it.
