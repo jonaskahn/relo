@@ -59,15 +59,31 @@ controls inside it.
 - **Logo tile**: 46px, `--radius-lg`, full `--line` border, `--surface`. Only logos mirrored by
   `console/scripts/fetch-provider-logos.mjs` into `console/static/provider-logos/`. Placeholder: provider initial.
 - **Title**: name 15px 600, slug `.mono-data` 12px `--muted`. Truncate with ellipsis and `title`.
-- **Status pill** top-right: Ready, Near limit, Limit reached, Sign in again, Paused. Derived from the worst window
-  across all accounts. A card at its limit gets a `color-mix(in srgb,var(--danger) 30%,var(--line))` full border.
+- **Status pill** top-right: Ready, Near limit, Limit reached, Sign in again, Paused. The pill speaks for the
+  connection, not for its worst account: it reads **Limit reached** only when every account of the connection is spent,
+  and **Near limit** when the account with the most room left is close to its own limit. A connection with one account
+  left to serve is **Ready**. A card at its limit gets a
+  `color-mix(in srgb,var(--danger) 30%,var(--line))` full border.
 - **Accounts**: every card numbers its accounts, even a single one. The header line names the selected account. Numbers
   are 26px circles; selected is `--accent` filled. An account needing a new sign-in marks its number and replaces the
-  quota panel content with "Sign in again" (a button).
+  quota panel content with "Sign in again" (a button). An account that reached its own limit marks its number with the
+  ban icon in `--danger`, so one spent account beside a healthy one is told apart from a connection that is out.
 - **Quota panel**: `--sunken`, `--radius-lg`, padding 14. Reserves four rows whether windows exist or not, so cards
   align: `min-height: calc(4 * 2.5rem + 3 * 0.75rem)`.
 - **Footer**: models bar (56×5px, `--accent` on `--accent-100` track) plus "`x` of `y` models on" (`x` is 600 `--ink`);
   unpriced tag on the right when `n > 0`.
+
+## What a window decides
+
+A window is only a limit when it measures the account's own allowance. Three readings are not:
+
+- **A money reading** — a balance or a spend — is a fact, not a limit.
+- **A pool** — a part of a larger allowance, the way Cursor reports its `auto` and `api` meters beside the monthly
+  total, or Claude reports a model-scoped weekly limit beside the weekly one — is one part spent, not the account.
+- **A window whose period has ended** describes a period that is over. It reports nothing used until the provider
+  reads it again.
+
+Only the windows that remain decide whether an account is spent and whether a connection is at its limit.
 
 ## Quota row
 
@@ -81,6 +97,9 @@ Two lines, 2.5rem tall, 0.75rem between rows.
 | under 90% | `--accent` | `--ink`    | Ready         |
 | 90–99%    | `--warn`   | `--warn`   | Near limit    |
 | 100%      | `--danger` | `--danger` | Limit reached |
+
+The card status is the connection's own reading, so a row at 100% on one account beside a healthy sibling leaves the
+card **Ready** and marks that account instead.
 
 Bars with a value under 2% still render a 2% sliver; 0% renders none. Colour is never the only signal: the status pill
 says "Near limit" / "Limit reached" with an icon.

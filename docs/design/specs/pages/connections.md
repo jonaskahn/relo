@@ -20,7 +20,8 @@ tag and reload keep their own jobs; **Back** returns to the grid and restores fi
    items in one scrolling row — a 6px tone dot, the name and the reason, e.g. `Claude.ai · 5-hour limit reached,
    resets in 4h 9m` — not filled chips. An item is a button: the connection items open that pane, the unpriced item
    opens its Models tab filtered to Unpriced. It mounts with a horizontal slide that eases the search beside it (parked
-   under `prefers-reduced-motion`); hidden when nothing needs attention and below 640px.
+   under `prefers-reduced-motion`); hidden when nothing needs attention and below 640px. A connection raises attention
+   on the reading that still serves it, so one spent account beside a healthy sibling raises nothing.
 3. **Toolbar**: the filter select **All / Needs attention / Unpriced** with counts in its options, search (name, slug,
    account labels), then **All models**, a refresh-prices icon action, and the layout control. Filter and search share
    exactly one card column of the grid below and re-width with the layout control, the filter select taking the first
@@ -40,8 +41,8 @@ Top to bottom:
    Hover on the head: the head row scales to 1.02 from its left edge, 150ms, while the content below stays put; reduced
    motion keeps the head still.
 2. **Account row**: person icon and the selected account's label, then numbered 26px circles — one per account, selected
-   filled `--accent`. An account needing a new sign-in marks its number warn. A connection that never needs one shows a
-   single neutral number.
+   filled `--accent`. An account needing a new sign-in marks its number warn. An account that reached its own limit marks
+   its number with the ban icon in `--danger`. A connection that never needs one shows a single neutral number.
 3. **Quota panel** (`--sunken`, `--radius-panel`, padding 14) reserving four rows whether windows exist or not. Window
    rows: name 13px 500 and "4h 49m left" `.mono-data` 11.5px `--muted`; 7px bar on `--accent-100`; percentage
    `.mono-data` 12.5px 500, 38px, right-aligned. Under 90% `--accent`, 90–99% `--warn`, 100% `--danger` — with the
@@ -51,8 +52,11 @@ Top to bottom:
 4. **Footer**: models bar (56×5px, `--accent` on `--accent-100`) with "`x` of `y` models on" (`x` 600 `--ink`), and the
    unpriced tag on the right when `n > 0`.
 
-Status pill: Ready, Near limit, Limit reached, Sign in again, Paused, derived from the worst window across all accounts.
-A card at its limit wears a full `color-mix(in srgb,var(--danger) 30%,var(--line))` border. Status is never colour
+Status pill: Ready, Near limit, Limit reached, Sign in again, Paused, derived from the connection's own quota. A
+connection reads **Limit reached** only when every one of its accounts is spent, and **Near limit** when the account with
+the most room left is close to its own limit; a connection with one account left to serve is **Ready**, and the accounts
+that are spent are marked on their own numbers. A card at its limit wears a full
+`color-mix(in srgb,var(--danger) 30%,var(--line))` border. Status is never colour
 alone: every pill keeps its icon or word.
 
 A connection also wears one **billing chip** from a single classification: **Free** for the keyless lanes, **Paid plan**
