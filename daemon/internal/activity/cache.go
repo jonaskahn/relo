@@ -44,7 +44,9 @@ func (c *Cache) Record(ctx context.Context, credentialID string, samples []Windo
 }
 
 // Windows returns the stored windows of one credential, most constrained
-// first.
+// first. A window whose period has ended is still here: the operator sees
+// that it ran out, and it constrains nothing until the provider reports it
+// again.
 func (c *Cache) Windows(ctx context.Context, credentialID string) ([]Snapshot, error) {
 	snapshots, err := c.repo.ListSnapshots(ctx, credentialID)
 	if err != nil {
@@ -70,8 +72,9 @@ func (c *Cache) Headroom(ctx context.Context, credentialID, window string) (floa
 	if err != nil {
 		return 0, false
 	}
+	now := c.clock.Now()
 	for _, snapshot := range snapshots {
-		if snapshot.Window == window && !monetary(snapshot) {
+		if snapshot.Window == window && !monetary(snapshot) && !snapshot.Rolled(now) {
 			return snapshot.Headroom(), true
 		}
 	}
@@ -81,14 +84,16 @@ func (c *Cache) Headroom(ctx context.Context, credentialID, window string) (floa
 // MostConstrained returns the smallest headroom across a credential's
 // windows, which is what a request actually has to fit in. A pool is left
 // out: a pool that is full is one part of the allowance spent, not the
-// account.
+// account. A window whose period has ended is left out too: it describes a
+// period that is over.
 func (c *Cache) MostConstrained(ctx context.Context, credentialID string) (float64, bool) {
 	snapshots, err := c.Windows(ctx, credentialID)
 	if err != nil {
 		return 0, false
 	}
+	now := c.clock.Now()
 	for _, snapshot := range snapshots {
-		if !monetary(snapshot) && !snapshot.Pool {
+		if !monetary(snapshot) && !snapshot.Pool && !snapshot.Rolled(now) {
 			return snapshot.Headroom(), true
 		}
 	}

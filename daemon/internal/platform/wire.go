@@ -295,7 +295,7 @@ func (w *wiring) statusLayer() error {
 		DB: w.db, Retention: retention,
 		Secrets: NewSecretView(w.built.secrets), Entries: w.credRepo, Quotas: NewQuotaStore(w.db),
 		Keys: w.built.keys, Accounts: w.built.accounts, Catalog: w.models, Home: w.options.Home,
-		StartupLog: w.options.StartupLog, Traffic: traffic,
+		StartupLog: w.options.StartupLog, Traffic: traffic, Clock: w.clk,
 	})
 	w.built.traffic = traffic
 	settings := newSettings(w.db, w.options.Home, w.clk, w.logger, drain, traffic)

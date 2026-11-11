@@ -70,6 +70,13 @@ func (s Snapshot) Headroom() float64 {
 	return 100 - s.UsedPercent
 }
 
+// Rolled reports a window whose period has already ended: the provider will
+// replace it on its next observation, and until then the stored share
+// describes a period that is over.
+func (s Snapshot) Rolled(now time.Time) bool {
+	return s.ResetAt > 0 && s.ResetAt <= now.Unix()
+}
+
 // QuotaProber reads the quota windows a provider publishes for one
 // credential.
 type QuotaProber interface {

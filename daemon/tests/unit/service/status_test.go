@@ -54,18 +54,26 @@ func TestStatus(t *testing.T) {
 	}
 }
 
-// TestStatusQuotaWindowPool covers how the console reads a pool of a larger
-// allowance: the window says so, so a full one is not a spent account.
-func TestStatusQuotaWindowPool(t *testing.T) {
+// TestStatusQuotaWindows covers how the console reads a stored window: a
+// window whose period has ended reports nothing used, and a pool of a larger
+// allowance says so.
+func TestStatusQuotaWindows(t *testing.T) {
 	harness := newHarness(t)
 	ctx := context.Background()
 	account := harness.addAccount("openai", "work", "sk-quota")
 	store := platform.NewQuotaStore(harness.db)
 	now := harness.clock.Now()
-	if err := store.UpsertSnapshots(ctx, []activity.Snapshot{{
-		CredentialID: account.ID, Window: "api", UsedPercent: 100, Pool: true,
-		ResetAt: now.Add(time.Hour).Unix(), Source: "probe", UpdatedAt: now,
-	}}); err != nil {
+	snapshots := []activity.Snapshot{
+		{
+			CredentialID: account.ID, Window: "7d", UsedPercent: 100,
+			ResetAt: now.Add(-time.Hour).Unix(), Source: "probe", UpdatedAt: now,
+		},
+		{
+			CredentialID: account.ID, Window: "api", UsedPercent: 100, Pool: true,
+			ResetAt: now.Add(time.Hour).Unix(), Source: "probe", UpdatedAt: now,
+		},
+	}
+	if err := store.UpsertSnapshots(ctx, snapshots); err != nil {
 		t.Fatalf("UpsertSnapshots() error = %v", err)
 	}
 
@@ -73,8 +81,26 @@ func TestStatusQuotaWindowPool(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Quotas() error = %v", err)
 	}
-	if len(windows) != 1 || !windows[0].Sub {
-		t.Fatalf("windows = %+v, want the pool marked", windows)
+	if len(windows) != 2 {
+		t.Fatalf("windows = %+v, want both windows", windows)
+	}
+	byName := map[string]appstatus.QuotaWindow{}
+	for _, window := range windows {
+		byName[window.Window] = window
+	}
+	rolled, found := byName["7d"]
+	if !found {
+		t.Fatalf("windows = %+v, want the weekly window", windows)
+	}
+	if !rolled.Rolled || rolled.UsedPercent != 0 {
+		t.Fatalf("weekly window = %+v, want the ended period reported as nothing used", rolled)
+	}
+	pool, found := byName["api"]
+	if !found {
+		t.Fatalf("windows = %+v, want the pool window", windows)
+	}
+	if !pool.Sub || pool.Rolled {
+		t.Fatalf("pool window = %+v, want the pool marked and still running", pool)
 	}
 }
 

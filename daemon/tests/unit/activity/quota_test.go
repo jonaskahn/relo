@@ -98,6 +98,28 @@ func TestCache(t *testing.T) {
 		}
 	})
 
+	t.Run("a window whose period ended constrains nothing", func(t *testing.T) {
+		now := time.Now()
+		repo := &fakeRepo{}
+		cache := activity.NewCache(repo, activity.CacheOptions{Clock: testkit.NewFakeClock(now)})
+		if err := cache.Record(context.Background(), "credential-1", []activity.WindowSample{
+			{Window: "weekly", UsedPercent: 100, ResetAt: now.Add(-time.Hour).Unix()},
+			{Window: "5h", UsedPercent: 30, ResetAt: now.Add(time.Hour).Unix()},
+		}); err != nil {
+			t.Fatalf("Record() error = %v", err)
+		}
+		windows, err := cache.Windows(context.Background(), "credential-1")
+		if err != nil || len(windows) != 2 {
+			t.Fatalf("Windows() = %+v, %v, want both windows kept", windows, err)
+		}
+		if _, ok := cache.Headroom(context.Background(), "credential-1", "weekly"); ok {
+			t.Fatal("Headroom() reported a window whose period had ended")
+		}
+		if headroom, ok := cache.MostConstrained(context.Background(), "credential-1"); !ok || headroom != 70 {
+			t.Fatalf("MostConstrained() = %v, %v, want the window still running", headroom, ok)
+		}
+	})
+
 	t.Run("a pool of a larger allowance constrains nothing", func(t *testing.T) {
 		repo := &fakeRepo{}
 		cache := activity.NewCache(repo, activity.CacheOptions{})

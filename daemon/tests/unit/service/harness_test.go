@@ -227,6 +227,7 @@ func (h *harness) buildServiceWith(cat *catalog.Catalog, pools *account.Manager,
 		Secrets: platform.NewSecretView(store), Entries: sqlite.NewCredentialStore(h.db),
 		Quotas: platform.NewQuotaStore(h.db), Keys: h.keys,
 		Accounts: h.accounts, Catalog: cat, Home: h.home,
+		Clock: h.clock,
 	})
 	return h.session()
 }

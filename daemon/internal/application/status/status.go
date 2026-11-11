@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"time"
 
 	"github.com/jonaskahn/relo/internal/access"
 	pool "github.com/jonaskahn/relo/internal/account"
@@ -15,6 +16,7 @@ import (
 	appaccount "github.com/jonaskahn/relo/internal/application/account"
 	appsettings "github.com/jonaskahn/relo/internal/application/settings"
 	"github.com/jonaskahn/relo/internal/catalog"
+	"github.com/jonaskahn/relo/internal/clock"
 )
 
 const (
@@ -57,7 +59,10 @@ type QuotaWindow struct {
 	Seconds      int64
 	// Sub marks a window that measures one part of an account's allowance
 	// rather than the allowance itself.
-	Sub          bool
+	Sub bool
+	// Rolled marks a window whose period has already ended. Its share
+	// describes a period that is over, so it reports nothing used.
+	Rolled       bool
 	Source       string
 	ObservedAtMs int64
 }
@@ -120,6 +125,9 @@ type Options struct {
 	// StartupLog is the boot transcript this run writes, which marks the
 	// current start in the transcript list. Empty for a run with none.
 	StartupLog string
+	// Clock reads the current time, which tells a window whose period has
+	// already ended from one that still holds.
+	Clock clock.Clock
 }
 
 // Service is the status and doctor use cases.
@@ -135,15 +143,20 @@ type Service struct {
 	catalog    *catalog.Catalog
 	home       string
 	startupLog string
+	clock      clock.Clock
 }
 
 // New returns the status use cases.
 func New(options Options) *Service {
+	clk := options.Clock
+	if clk == nil {
+		clk = clock.New()
+	}
 	return &Service{
 		db: options.DB, retention: options.Retention, secrets: options.Secrets,
 		entries: options.Entries, quotas: options.Quotas, keys: options.Keys,
 		accounts: options.Accounts, catalog: options.Catalog, home: options.Home,
-		startupLog: options.StartupLog, traffic: options.Traffic,
+		startupLog: options.StartupLog, traffic: options.Traffic, clock: clk,
 	}
 }
 
@@ -206,7 +219,7 @@ func (s *Service) Quotas(ctx context.Context) ([]QuotaWindow, error) {
 		if err != nil {
 			return nil, err
 		}
-		windows = append(windows, toQuotaWindows(item, rows)...)
+		windows = append(windows, toQuotaWindows(item, rows, s.clock.Now())...)
 	}
 	return windows, nil
 }
@@ -397,14 +410,21 @@ func (s *Service) walBytes() int64 {
 	return info.Size()
 }
 
-func toQuotaWindows(item appaccount.Account, rows []activity.Snapshot) []QuotaWindow {
+func toQuotaWindows(item appaccount.Account, rows []activity.Snapshot, now time.Time) []QuotaWindow {
 	windows := make([]QuotaWindow, 0, len(rows))
 	for _, row := range rows {
+		// A window whose period has ended holds a share of a period that is
+		// over. It reports nothing used until the provider reads it again.
+		rolled := row.Rolled(now)
+		used := row.UsedPercent
+		if rolled {
+			used = 0
+		}
 		windows = append(windows, QuotaWindow{
 			CredentialID: item.ID, ProviderID: item.ProviderID, Label: item.Label,
-			Window: row.Window, UsedPercent: row.UsedPercent, ResetAtMs: row.ResetAt * 1000,
+			Window: row.Window, UsedPercent: used, ResetAtMs: row.ResetAt * 1000,
 			Amount: row.Amount, Currency: row.Currency, Seconds: row.Seconds,
-			Sub:    row.Pool,
+			Sub: row.Pool, Rolled: rolled,
 			Source: row.Source, ObservedAtMs: row.UpdatedAt.UnixMilli(),
 		})
 	}

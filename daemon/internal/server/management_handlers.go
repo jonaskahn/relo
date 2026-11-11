@@ -705,7 +705,7 @@ func (s *Server) quotaWindows(windows []appstatus.QuotaWindow) []quotaWindowResp
 			Label: window.Label, Window: window.Window, Seconds: window.Seconds,
 			UsedPercent: window.UsedPercent, ResetAtMs: window.ResetAtMs,
 			Amount: window.Amount, Currency: window.Currency,
-			Sub:    window.Sub,
+			Sub: window.Sub, Rolled: window.Rolled,
 			Source: window.Source, ObservedAtMs: window.ObservedAtMs,
 			Stale: s.quotaStale(window.CredentialID),
 		})
@@ -729,7 +729,9 @@ type quotaWindowResponse struct {
 	ResetAtMs    int64    `json:"reset_at_ms"`
 	// Sub marks a window that measures one part of an account's allowance
 	// rather than the allowance itself.
-	Sub          bool   `json:"sub"`
+	Sub bool `json:"sub"`
+	// Rolled marks a window whose period has already ended.
+	Rolled       bool   `json:"rolled"`
 	Source       string `json:"source"`
 	ObservedAtMs int64  `json:"observed_at_ms"`
 	Stale        bool   `json:"stale"`
