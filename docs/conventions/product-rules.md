@@ -119,6 +119,17 @@ control, not a public contract: if the gateway changes it, the lane quietly
 answers 429 again until the fingerprint is relearned, and the honest long-term
 fix is a documented free-lane contract upstream rather than emulation.
 
+**A spent lane's quota answer and a refused fingerprint look alike.** Both are a
+429 carrying `FreeUsageLimitError`, so tell them apart before blaming the
+transport: a spent lane names a `Retry-After` measured in hours (a daily
+allowance shared by the whole connection), while a fingerprint refusal is a
+plain 429. When Bun and Relo answer the same request with the same long
+`Retry-After`, the allowance is spent and no client hello change can return 200;
+the lane is simply exhausted until the named wait passes. Relo keeps that wait:
+once a lane is marked spent, an account refused afterwards may lengthen the
+connection's cooldown but never shorten it.
+
+
 **Free availability is derived, not configured.** A conversational model is
 free when the provider marks it free, the provider listing marks it free, both
 effective input and output rates are explicitly zero, or its identifier carries
