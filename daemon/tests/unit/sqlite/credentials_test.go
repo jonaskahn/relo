@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"testing"
+	"time"
 
 	"github.com/jonaskahn/relo/internal/adapters/sqlite"
 	"github.com/jonaskahn/relo/tests/testkit"
@@ -147,6 +148,32 @@ func TestCredentialRepo(t *testing.T) {
 		}
 		if err := repo.SoftDelete(ctx, "cred-1"); !errors.Is(err, sqlite.ErrCredentialNotFound) {
 			t.Fatalf("second SoftDelete() error = %v, want %v", err, sqlite.ErrCredentialNotFound)
+		}
+	})
+
+	t.Run("soft delete takes the quota of the account with it", func(t *testing.T) {
+		db := testkit.OpenTestDB(t)
+		seedProvider(t, db, "openai")
+		repo := sqlite.NewCredentialRepo(db)
+		ctx := context.Background()
+		if err := repo.Insert(ctx, sqlite.CredentialRow{ID: "cred-1", ProviderID: "openai", Kind: "api_key", Status: "active"}); err != nil {
+			t.Fatalf("Insert() error = %v", err)
+		}
+		quotas := sqlite.NewQuotaRepo(db)
+		if err := quotas.UpsertSnapshots(ctx, []sqlite.QuotaRow{
+			{CredentialID: "cred-1", Window: "5h", UsedPercent: 42, Source: "probe", ObservedAt: time.Now()},
+		}); err != nil {
+			t.Fatalf("UpsertSnapshots() error = %v", err)
+		}
+		if err := repo.SoftDelete(ctx, "cred-1"); err != nil {
+			t.Fatalf("SoftDelete() error = %v", err)
+		}
+		rows, err := quotas.ListSnapshots(ctx, "cred-1")
+		if err != nil {
+			t.Fatalf("ListSnapshots() error = %v", err)
+		}
+		if len(rows) != 0 {
+			t.Fatalf("rows = %+v, want the quota gone with the account", rows)
 		}
 	})
 

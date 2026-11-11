@@ -40,6 +40,16 @@ func TestQuotaUpgrade(t *testing.T) {
 	}
 	ctx := context.Background()
 	if _, err := db.SQL().ExecContext(ctx,
+		"INSERT INTO providers (id, template_id, origin, label, auth, api_format, models_format, created_at, updated_at)"+
+			" VALUES ('gemini','gemini','signin','Gemini','oauth','gemini','gemini',1,1)"); err != nil {
+		t.Fatalf("seed a provider in the old schema: %v", err)
+	}
+	if _, err := db.SQL().ExecContext(ctx,
+		"INSERT INTO credentials (id, provider_id, kind, label, created_at, updated_at)"+
+			" VALUES ('credential-1','gemini','oauth','default',1,1)"); err != nil {
+		t.Fatalf("seed a credential in the old schema: %v", err)
+	}
+	if _, err := db.SQL().ExecContext(ctx,
 		"INSERT INTO quota_snapshots (credential_id, window, used_percent, reset_at, source, updated_at) VALUES (?, ?, ?, ?, ?, ?)",
 		"credential-1", "Gem", 30.0, 100, "probe", 1); err != nil {
 		t.Fatalf("seed a window in the old schema: %v", err)
@@ -66,6 +76,70 @@ func TestQuotaUpgrade(t *testing.T) {
 	}
 	if len(after) != 2 {
 		t.Fatalf("rows = %+v, want the old window beside the new one", after)
+	}
+}
+
+// TestQuotaOrphanUpgrade covers a state database that kept quota rows for
+// accounts that are gone: the upgrade takes them with the accounts, and the
+// pool flag arrives with the column that carries it.
+func TestQuotaOrphanUpgrade(t *testing.T) {
+	logger, _ := testkit.TestLogger(t)
+	db, err := sqlite.OpenDB(config.DatabasePath(testkit.TempHome(t)), logger)
+	if err != nil {
+		t.Fatalf("OpenDB() error = %v", err)
+	}
+	defer func() { _ = db.Close() }()
+	migrations, err := sqlite.LoadMigrations()
+	if err != nil {
+		t.Fatalf("LoadMigrations() error = %v", err)
+	}
+	if _, err := db.SQL().Exec(`CREATE TABLE schema_migrations (
+		version    INTEGER NOT NULL PRIMARY KEY,
+		applied_at INTEGER NOT NULL,
+		checksum   TEXT    NOT NULL
+	) STRICT`); err != nil {
+		t.Fatalf("create the migration table: %v", err)
+	}
+	if err := sqlite.ApplyMigration(db, migrations[0]); err != nil {
+		t.Fatalf("ApplyMigration(baseline) error = %v", err)
+	}
+	ctx := context.Background()
+	if _, err := db.SQL().ExecContext(ctx,
+		"INSERT INTO providers (id, template_id, origin, label, auth, api_format, models_format, created_at, updated_at)"+
+			" VALUES ('gemini','gemini','signin','Gemini','oauth','gemini','gemini',1,1)"); err != nil {
+		t.Fatalf("seed a provider in the old schema: %v", err)
+	}
+	if _, err := db.SQL().ExecContext(ctx,
+		"INSERT INTO credentials (id, provider_id, kind, label, created_at, updated_at)"+
+			" VALUES ('live','gemini','oauth','default',1,1)"); err != nil {
+		t.Fatalf("seed a credential in the old schema: %v", err)
+	}
+	for _, id := range []string{"live", "gone"} {
+		if _, err := db.SQL().ExecContext(ctx,
+			"INSERT INTO quota_snapshots (credential_id, window, used_percent, reset_at, source, updated_at) VALUES (?, ?, ?, ?, ?, ?)",
+			id, "Gem", 30.0, 100, "probe", 1); err != nil {
+			t.Fatalf("seed a window in the old schema: %v", err)
+		}
+	}
+	if err := sqlite.Migrate(db); err != nil {
+		t.Fatalf("Migrate() error = %v", err)
+	}
+	rows, err := sqlite.NewQuotaRepo(db).ListSnapshots(ctx, "live")
+	if err != nil {
+		t.Fatalf("ListSnapshots() error = %v", err)
+	}
+	if len(rows) != 1 || rows[0].Window != "Gem" {
+		t.Fatalf("rows = %+v, want the live account's window kept", rows)
+	}
+	if rows[0].Pool {
+		t.Fatalf("row = %+v, want the pool flag off by default", rows[0])
+	}
+	orphans, err := sqlite.NewQuotaRepo(db).ListSnapshots(ctx, "gone")
+	if err != nil {
+		t.Fatalf("ListSnapshots() error = %v", err)
+	}
+	if len(orphans) != 0 {
+		t.Fatalf("rows = %+v, want the window of a gone account removed", orphans)
 	}
 }
 

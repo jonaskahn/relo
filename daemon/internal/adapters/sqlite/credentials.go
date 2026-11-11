@@ -105,6 +105,12 @@ func (r *CredentialRepo) SoftDelete(ctx context.Context, id string) error {
 	if err := models.forget(ctx, tx, id); err != nil {
 		return err
 	}
+	// The quota a removed account stored describes a live account, so it
+	// goes with it.
+	quotas := NewQuotaRepo(r.db)
+	if err := quotas.forget(ctx, tx, id); err != nil {
+		return err
+	}
 	if err := tx.Commit(); err != nil {
 		return fmt.Errorf("commit credential delete: %w", err)
 	}

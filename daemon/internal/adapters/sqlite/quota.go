@@ -39,6 +39,8 @@ ON CONFLICT (credential_id, window) DO UPDATE SET
 		FROM quota_history
 	) WHERE rank > ?
 )`
+	forgetQuotaSnapshotsSQL = `DELETE FROM quota_snapshots WHERE credential_id = ?`
+	forgetQuotaHistorySQL   = `DELETE FROM quota_history WHERE credential_id = ?`
 )
 
 // QuotaRow is one stored quota window.
@@ -104,6 +106,16 @@ func (r *QuotaRepo) AppendHistory(ctx context.Context, rows []QuotaRow) error {
 			row.CredentialID, row.Window, row.ObservedAt.Unix(), row.UsedPercent); err != nil {
 			return fmt.Errorf("store quota history for %s: %w", row.CredentialID, err)
 		}
+	}
+	return nil
+}
+
+func (r *QuotaRepo) forget(ctx context.Context, handle execer, credentialID string) error {
+	if _, err := handle.ExecContext(ctx, forgetQuotaSnapshotsSQL, credentialID); err != nil {
+		return fmt.Errorf("delete quota snapshots for %s: %w", credentialID, err)
+	}
+	if _, err := handle.ExecContext(ctx, forgetQuotaHistorySQL, credentialID); err != nil {
+		return fmt.Errorf("delete quota history for %s: %w", credentialID, err)
 	}
 	return nil
 }
