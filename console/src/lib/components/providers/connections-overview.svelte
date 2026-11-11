@@ -46,9 +46,7 @@
 	let filter = $state<'all' | 'attention' | 'unpriced' | 'free'>('all');
 
 	const providers = $derived(cards.map((card) => card.provider));
-	const attentionItems = $derived(
-		connectionAttention(providers, new Map(cards.map((card) => [card.provider.id, card.windows])))
-	);
+	const attentionItems = $derived(connectionAttention(cards));
 	const attentionIds = $derived(new Set(attentionItems.map((item) => item.providerId)));
 	const unpricedModels = $derived(unpricedTotal(providers));
 	const unpricedConnections = $derived(

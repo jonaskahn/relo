@@ -7,7 +7,7 @@
 	import Card from '$lib/components/ui/card.svelte';
 	import CardDescription from '$lib/components/ui/card-description.svelte';
 	import CardTitle from '$lib/components/ui/card-title.svelte';
-	import { selectedAccount } from '$lib/provider-quota';
+	import { connectionQuota, selectedAccount } from '$lib/provider-quota';
 	import { isExperimentalConnection } from '$lib/provider-experimental';
 	import { providerStatus, type ProviderStatusName } from '$lib/provider-status';
 	import { ATTENTION_PERCENT } from '$lib/provider-attention';
@@ -45,14 +45,14 @@
 	const current = $derived(selectedAccount(accounts, picked));
 	const status = $derived(providerStatus(provider));
 
-	// The quota the account reported is the card's own reading, so the pill
-	// overrides the connection state when a window is near or at its end.
-	const worst = $derived(
-		windows.reduce((max, window) => {
-			if (window.amount !== undefined) return max;
-			return Math.max(max, window.used_percent);
-		}, 0)
-	);
+	// The quota the accounts reported is the card's own reading. The pill
+	// speaks for the connection: a connection with one account left to serve
+	// is ready, and only a connection whose every account is spent says it
+	// reached its limit. A spent account is marked on its own dot.
+	const quota = $derived(connectionQuota(accounts, windows));
+	// serving is the share the account with the most room left has used, which
+	// is the reading that says how long the connection can keep serving.
+	const serving = $derived(quota.atLimit ? 100 : quota.servingPercent);
 
 	// Status is never carried by color alone: every state keeps its icon.
 	const icons: Record<ProviderStatusName, IconName> = {
@@ -67,14 +67,14 @@
 	};
 
 	const pill = $derived.by((): { tone: string; icon: IconName; label: string } => {
-		if (worst >= 100) {
+		if (quota.atLimit) {
 			return {
 				tone: 'bg-danger/10 text-danger',
 				icon: 'alert-triangle',
 				label: $t('ui.pages.providersPage.status.limitReached')
 			};
 		}
-		if (worst >= ATTENTION_PERCENT) {
+		if (serving >= ATTENTION_PERCENT) {
 			return {
 				tone: 'bg-warn/10 text-warn',
 				icon: 'alert-triangle',
@@ -103,9 +103,9 @@
 			? 0
 			: Math.round((provider.counts.enabled_models / provider.counts.models) * 100)
 	);
-	const atLimit = $derived(worst >= 100);
+	const atLimit = $derived(quota.atLimit);
 	const pillName = $derived(
-		worst >= 100 ? 'limitReached' : worst >= ATTENTION_PERCENT ? 'nearLimit' : status.name
+		quota.atLimit ? 'limitReached' : serving >= ATTENTION_PERCENT ? 'nearLimit' : status.name
 	);
 	// The lane logs what it is sent, so the card says so beside what it costs.
 	const experimental = $derived(isExperimentalConnection(provider.template_id || provider.id));

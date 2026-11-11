@@ -12,10 +12,14 @@
 		// warn marks an account that needs a new sign-in. The lock replaces the
 		// number, so the cue is not color alone and nothing hangs off the circle.
 		warn?: boolean;
+		// spent marks an account that reached its limit. The ban replaces the
+		// number, so one account at its end is told apart from the connection
+		// running out.
+		spent?: boolean;
 		onclick: () => void;
 	}
 
-	let { index, label, selected = false, warn = false, onclick }: Props = $props();
+	let { index, label, selected = false, warn = false, spent = false, onclick }: Props = $props();
 </script>
 
 <button
@@ -25,17 +29,23 @@
 	aria-label={label}
 	class={cn(
 		'inline-flex size-7 shrink-0 items-center justify-center rounded-round bg-sunken font-mono text-xs tabular-nums text-muted-foreground shadow-float-1 transition-[background-color,box-shadow,color] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring hover:bg-control-hover hover:text-foreground',
-		warn
+		spent
 			? selected
-				? 'bg-amber-500/15 font-semibold text-amber-800 dark:text-amber-300'
-				: 'text-amber-700 hover:text-amber-800 dark:text-amber-400'
-			: selected
-				? 'bg-accent-soft font-semibold text-accent-ink'
-				: ''
+				? 'bg-danger/15 font-semibold text-danger'
+				: 'text-danger hover:text-danger'
+			: warn
+				? selected
+					? 'bg-amber-500/15 font-semibold text-amber-800 dark:text-amber-300'
+					: 'text-amber-700 hover:text-amber-800 dark:text-amber-400'
+				: selected
+					? 'bg-accent-soft font-semibold text-accent-ink'
+					: ''
 	)}
 	{onclick}
 >
-	{#if warn}
+	{#if spent}
+		<Icon name="ban" size={14} />
+	{:else if warn}
 		<Icon name="lock" size={14} />
 	{:else}
 		{index}

@@ -1,7 +1,8 @@
-import type { Provider, QuotaWindow } from './types';
+import type { Provider } from './types';
+import { connectionQuota, type ConnectionCard } from './provider-quota';
 
 // What the connections overview needs to raise attention: a connection whose
-// worst window is near or at its limit, and models the catalog cannot price.
+// accounts are running out, and models the catalog cannot price.
 // A money reading (balance, spend) is a fact, not a limit, so it never raises
 // attention on its own.
 
@@ -21,26 +22,33 @@ export interface AttentionItem {
 	tone: 'danger' | 'warn';
 }
 
-/** Reads the connections that need attention from the quota they reported. */
-export function connectionAttention(
-	providers: readonly Provider[],
-	windowsByConnection: Map<string, QuotaWindow[]>
-): AttentionItem[] {
+/** Reads the connections that need attention from the quota they reported. A connection raises
+ *  attention when the account that still serves it is close to its limit, so one spent account
+ *  beside a healthy one does not raise a warning the connection does not deserve. */
+export function connectionAttention(cards: readonly ConnectionCard[]): AttentionItem[] {
 	const items: AttentionItem[] = [];
-	for (const provider of providers) {
-		let worst: QuotaWindow | null = null;
-		for (const window of windowsByConnection.get(provider.id) ?? []) {
-			if (window.amount !== undefined) continue;
-			if (worst === null || window.used_percent > worst.used_percent) worst = window;
+	for (const card of cards) {
+		const quota = connectionQuota(card.accounts, card.windows);
+		if (quota.atLimit) {
+			const worst = quota.spentWindows[0];
+			items.push({
+				providerId: card.provider.id,
+				label: card.provider.label || card.provider.id,
+				window: worst?.window ?? '',
+				percent: 100,
+				resetAtMs: worst?.reset_at_ms ?? 0,
+				tone: 'danger'
+			});
+			continue;
 		}
-		if (worst === null || worst.used_percent < ATTENTION_PERCENT) continue;
+		if (quota.servingWindow === null || quota.servingPercent < ATTENTION_PERCENT) continue;
 		items.push({
-			providerId: provider.id,
-			label: provider.label || provider.id,
-			window: worst.window,
-			percent: Math.round(worst.used_percent),
-			resetAtMs: worst.reset_at_ms,
-			tone: worst.used_percent >= 100 ? 'danger' : 'warn'
+			providerId: card.provider.id,
+			label: card.provider.label || card.provider.id,
+			window: quota.servingWindow.window,
+			percent: Math.round(quota.servingPercent),
+			resetAtMs: quota.servingWindow.reset_at_ms,
+			tone: 'warn'
 		});
 	}
 	return items.sort((a, b) => b.percent - a.percent || a.label.localeCompare(b.label));

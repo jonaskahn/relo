@@ -9,6 +9,7 @@ import type {
 	UsageAttemptRow,
 	UsageLogRow
 } from './types';
+import { accountSpent, governingWindow } from './provider-quota';
 
 export type MemberState =
 	'ready' | 'limited' | 'paused' | 'needsSignIn' | 'unavailable' | 'cooling';
@@ -284,7 +285,7 @@ function accountLimited(account: Account, nowMs: number, windows: readonly Quota
 	return (
 		account.limit_state === 'limited' ||
 		(account.limited_until_ms ?? 0) > nowMs ||
-		windows.some((window) => window.used_percent >= 100)
+		accountSpent(windows)
 	);
 }
 
@@ -329,8 +330,10 @@ export function pickQuotaAccount(
 		.map((account) => ({ account, own: windowsOf(account, windows) }))
 		.filter((candidate) => candidate.own.length > 0);
 	if (candidates.length === 0) return { label: '', windows };
-	const headroom = (own: readonly QuotaWindow[]) =>
-		100 - Math.max(...own.map((window) => window.used_percent));
+	const headroom = (own: readonly QuotaWindow[]) => {
+		const worst = governingWindow(own);
+		return worst === null ? 100 : 100 - worst.used_percent;
+	};
 	const resetAt = (own: readonly QuotaWindow[]) => {
 		const times = own.map((window) => window.reset_at_ms).filter((time) => time > 0);
 		return times.length > 0 ? Math.min(...times) : Number.MAX_SAFE_INTEGER;

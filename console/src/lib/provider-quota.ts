@@ -46,8 +46,8 @@ function groupBy<T>(items: T[], key: (item: T) => string): Map<string, T[]> {
 }
 
 /** Groups the stored quota by the account that reported it, which is what a card footer reads. */
-export function windowsByCredential(windows: QuotaWindow[]): Map<string, QuotaWindow[]> {
-	return groupBy(windows, (window) => window.credential_id);
+export function windowsByCredential(windows: readonly QuotaWindow[]): Map<string, QuotaWindow[]> {
+	return groupBy([...windows], (window) => window.credential_id);
 }
 
 /** Indexes accounts by their connection, and groupQuotaByConnection does the same for the
@@ -131,6 +131,78 @@ export function quotaWindowLabelKey(window: string): string {
  *  never treat money as an empty window. */
 export function isMoneyReading(window: QuotaWindow): boolean {
 	return window.amount !== undefined && window.currency !== undefined;
+}
+
+/** Reports whether a window decides whether an account can serve: a limit on the account's own
+ *  allowance. A pool inside that allowance does not, a reading of money does not, and a period
+ *  that has already ended does not. */
+export function windowGoverns(window: QuotaWindow): boolean {
+	if (window.sub) return false;
+	if (window.rolled) return false;
+	return !isMoneyReading(window);
+}
+
+/** The window that decides whether an account can serve: the fullest one that governs it. */
+export function governingWindow(windows: readonly QuotaWindow[]): QuotaWindow | null {
+	let worst: QuotaWindow | null = null;
+	for (const window of windows) {
+		if (!windowGoverns(window)) continue;
+		if (worst === null || window.used_percent > worst.used_percent) worst = window;
+	}
+	return worst;
+}
+
+/** Reports whether an account is spent: a window that governs it reached its end. */
+export function accountSpent(windows: readonly QuotaWindow[]): boolean {
+	const worst = governingWindow(windows);
+	return worst !== null && worst.used_percent >= 100;
+}
+
+/** What a connection's quota says about it: which accounts are spent, and how much room the
+ *  connection still has to serve with. */
+export interface ConnectionQuota {
+	/** The window that governs each spent account, so a caller can name the limit it reached. */
+	spentWindows: readonly QuotaWindow[];
+	/** The share used by the account with the most room left, which is the one that serves next.
+	 *  Zero when no account reports a limit. */
+	servingPercent: number;
+	/** The window that governs the account with the most room. */
+	servingWindow: QuotaWindow | null;
+	/** True when every account of the connection is spent, so the connection cannot serve. */
+	atLimit: boolean;
+}
+
+/** Reads the state of a connection's quota from the accounts it holds and the windows they
+ *  reported. A connection serves as long as one account can, so it is spent only when all of
+ *  them are, and an account that has not reported a limit still counts as able to serve. */
+export function connectionQuota(
+	accounts: readonly Account[],
+	windows: readonly QuotaWindow[]
+): ConnectionQuota {
+	const byCredential = windowsByCredential(windows);
+	const spentWindows: QuotaWindow[] = [];
+	let servingPercent = 0;
+	let servingWindow: QuotaWindow | null = null;
+	let servingFound = false;
+	for (const account of accounts) {
+		const own = byCredential.get(account.id) ?? [];
+		const worst = governingWindow(own);
+		if (worst !== null && worst.used_percent >= 100) {
+			spentWindows.push(worst);
+			continue;
+		}
+		const used = worst?.used_percent ?? 0;
+		if (servingFound && used >= servingPercent) continue;
+		servingFound = true;
+		servingPercent = used;
+		servingWindow = worst;
+	}
+	return {
+		spentWindows,
+		servingPercent,
+		servingWindow,
+		atLimit: accounts.length > 0 && spentWindows.length === accounts.length
+	};
 }
 
 /** Keeps the account a card shows valid when the list under it changes: an account that is gone

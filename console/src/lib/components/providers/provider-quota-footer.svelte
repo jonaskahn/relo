@@ -4,7 +4,7 @@
 	import Icon from '$lib/components/ui/icon.svelte';
 	import Button from '$lib/components/ui/button.svelte';
 	import AccountDot from '$lib/components/ui/account-dot.svelte';
-	import { selectedAccount, windowsByCredential } from '$lib/provider-quota';
+	import { accountSpent, selectedAccount, windowsByCredential } from '$lib/provider-quota';
 	import { accountNeedsSignIn } from '$lib/provider-status';
 	import type { CardLayout } from '$lib/theme.svelte';
 	import QuotaMeterRows from './quota-meter-rows.svelte';
@@ -64,9 +64,14 @@
 
 	function chipLabel(account: Account, index: number): string {
 		const values = { index: index + 1, label: account.label };
-		return accountNeedsSignIn(account)
-			? $t('ui.pages.providersPage.list.cardAccountChipReauth', { values })
-			: $t('ui.pages.providersPage.list.cardAccountChip', { values });
+		if (accountNeedsSignIn(account)) {
+			return $t('ui.pages.providersPage.list.cardAccountChipReauth', { values });
+		}
+		const chip = $t('ui.pages.providersPage.list.cardAccountChip', { values });
+		if (accountSpent(byCredential.get(account.id) ?? [])) {
+			return `${chip} — ${$t('ui.pages.providersPage.status.limitReached')}`;
+		}
+		return chip;
 	}
 
 	function pick(index: number) {
@@ -99,6 +104,7 @@
 						label={chipLabel(account, index)}
 						selected={current?.id === account.id}
 						warn={accountNeedsSignIn(account)}
+						spent={accountSpent(byCredential.get(account.id) ?? [])}
 						onclick={() => pick(index)}
 					/>
 				{/each}

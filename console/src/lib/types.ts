@@ -1133,6 +1133,11 @@ export interface QuotaWindow {
 	readonly source: string;
 	readonly observed_at_ms: number;
 	readonly stale: boolean;
+	/** sub marks a window that measures one part of an account's allowance rather than the
+	 *  allowance itself, so a full one is not a spent account. */
+	readonly sub?: boolean;
+	/** rolled marks a window whose period has already ended. */
+	readonly rolled?: boolean;
 }
 
 /** One part of a captured client turn. */

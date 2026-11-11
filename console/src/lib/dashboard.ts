@@ -2,7 +2,7 @@ import type { Account, Provider, QuotaWindow, UsageRollupRow } from './types';
 import { ATTENTION_PERCENT } from './provider-attention';
 import { isFreeConnection } from './provider-free';
 import { billingLane } from './provider-plan';
-import { isMoneyReading } from './provider-quota';
+import { governingWindow, windowGoverns } from './provider-quota';
 
 // The dashboard reads several daemon answers and combines them into the
 // health-first board. These helpers hold the pure decisions: how a
@@ -175,17 +175,6 @@ export function healthCards(
 		.sort((a, b) => HEALTH_SEVERITY[a.health.state] - HEALTH_SEVERITY[b.health.state]);
 }
 
-/** The window an account reports that fills the most of its limit. A money reading is a
- *  balance, not a limit, so it never fills one. */
-function worstWindow(windows: readonly QuotaWindow[]): QuotaWindow | null {
-	let worst: QuotaWindow | null = null;
-	for (const window of windows) {
-		if (isMoneyReading(window)) continue;
-		if (worst === null || window.used_percent > worst.used_percent) worst = window;
-	}
-	return worst;
-}
-
 /** Names the one state a dashboard card shows. A sign-in that expired or a paused account
  *  outranks a quota window, and the live rate-limit backoff outranks how full the windows are. */
 export function accountHealth(
@@ -200,9 +189,9 @@ export function accountHealth(
 		return { state: 'limited', nextResetMs: 0, limitedUntilMs: account.limited_until_ms ?? 0 };
 	}
 	const used = windows.filter(
-		(window) => window.credential_id === account.id && !isMoneyReading(window)
+		(window) => window.credential_id === account.id && windowGoverns(window)
 	);
-	const worst = worstWindow(used);
+	const worst = governingWindow(used);
 	let nextResetMs = 0;
 	for (const window of used) {
 		if (window.reset_at_ms > now && (nextResetMs === 0 || window.reset_at_ms < nextResetMs)) {
@@ -260,7 +249,7 @@ export function accountAttention(
 			});
 			continue;
 		}
-		const worst = worstWindow(windows.filter((window) => window.credential_id === account.id));
+		const worst = governingWindow(windows.filter((window) => window.credential_id === account.id));
 		if (!worst || worst.used_percent < ATTENTION_PERCENT) continue;
 		items.push({
 			account,
