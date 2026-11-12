@@ -687,7 +687,7 @@ other = "Batas penggunaan gratis untuk koneksi ini telah tercapai. Coba lagi set
 
 [api.connections.free_lane_refused]
 description = "Inference refusal when a free connection refused the request itself"
-other = "Model gratis OpenCode hanya dilayani oleh klien OpenCode itu sendiri, sehingga permintaan ini ditolak. Penyedia meminta menunggu {{.Wait}}. Gunakan OpenCode Go atau penyedia gratis lainnya."
+other = "Model gratis OpenCode hanya dilayani oleh klien OpenCode itu sendiri, sehingga permintaan ini ditolak. Gerbang melaporkan waktu tunggu {{.Wait}}, yang tidak dapat ditunggu oleh permintaan ini. Gunakan OpenCode Go atau penyedia gratis lainnya."
 
 [api.connections.free_connection_exists]
 description = "Management refusal when a second keyless free connection is requested"

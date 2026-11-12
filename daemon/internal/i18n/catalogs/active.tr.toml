@@ -708,7 +708,7 @@ other = "Bu bağlantının ücretsiz kullanım sınırına ulaşıldı. Belirtil
 
 [api.connections.free_lane_refused]
 description = "Inference refusal when a free connection refused the request itself"
-other = "OpenCode'un ücretsiz modelleri yalnızca kendi istemcisine sunulur, bu nedenle bu istek reddedildi. Sağlayıcı {{.Wait}} beklenmesini istedi. OpenCode Go'yu veya başka bir ücretsiz sağlayıcıyı kullanın."
+other = "OpenCode'un ücretsiz modelleri yalnızca kendi istemcisine sunulur, bu nedenle bu istek reddedildi. Ağ geçidi {{.Wait}} bekleme süresini bildirdi. Bu istek onu bekleyemiyor. OpenCode Go'yu veya başka bir ücretsiz sağlayıcıyı kullanın."
 
 [api.connections.free_connection_exists]
 description = "Management refusal when a second keyless free connection is requested"

@@ -706,7 +706,7 @@ other = "此连接已达到免费使用上限。请在显示的时间后重试�
 
 [api.connections.free_lane_refused]
 description = "Inference refusal when a free connection refused the request itself"
-other = "OpenCode 的免费模型仅提供给 OpenCode 自己的客户端，因此该请求被拒绝。服务商要求等待 {{.Wait}}。请使用 OpenCode Go 或其他免费服务商。"
+other = "OpenCode 的免费模型仅提供给 OpenCode 自己的客户端，因此该请求被拒绝。网关报告了 {{.Wait}} 的等待时间，此请求无法等待。请使用 OpenCode Go 或其他免费服务商。"
 
 [api.connections.free_connection_exists]
 description = "Management refusal when a second keyless free connection is requested"

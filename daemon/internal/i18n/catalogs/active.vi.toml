@@ -708,7 +708,7 @@ other = "Đã đạt giới hạn sử dụng miễn phí của kết nối này
 
 [api.connections.free_lane_refused]
 description = "Inference refusal when a free connection refused the request itself"
-other = "Các mô hình miễn phí của OpenCode chỉ được phục vụ cho chính ứng dụng OpenCode, nên yêu cầu này đã bị từ chối. Nhà cung cấp yêu cầu chờ {{.Wait}}. Hãy dùng OpenCode Go hoặc một nhà cung cấp miễn phí khác."
+other = "Các mô hình miễn phí của OpenCode chỉ được phục vụ cho chính ứng dụng OpenCode, nên yêu cầu này đã bị từ chối. Cổng đã báo thời gian chờ {{.Wait}}, mà yêu cầu này không thể chờ được. Hãy dùng OpenCode Go hoặc một nhà cung cấp miễn phí khác."
 
 [api.connections.free_connection_exists]
 description = "Management refusal when a second keyless free connection is requested"

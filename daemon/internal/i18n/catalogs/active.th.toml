@@ -706,7 +706,7 @@ other = "ถึงขีดจำกัดการใช้งานฟรี�
 
 [api.connections.free_lane_refused]
 description = "Inference refusal when a free connection refused the request itself"
-other = "โมเดลฟรีของ OpenCode ให้บริการเฉพาะไคลเอนต์ OpenCode เท่านั้น คำขอนี้จึงถูกปฏิเสธ โดยผู้ให้บริการขอให้รอ {{.Wait}} ใช้ OpenCode Go หรือผู้ให้บริการฟรีรายอื่น"
+other = "โมเดลฟรีของ OpenCode ให้บริการเฉพาะไคลเอนต์ OpenCode เท่านั้น คำขอนี้จึงถูกปฏิเสธ เกตเวย์รายงานเวลารอ {{.Wait}} ซึ่งคำขอนี้ไม่สามารถรอได้ ใช้ OpenCode Go หรือผู้ให้บริการฟรีรายอื่น"
 
 [api.connections.free_connection_exists]
 description = "Management refusal when a second keyless free connection is requested"

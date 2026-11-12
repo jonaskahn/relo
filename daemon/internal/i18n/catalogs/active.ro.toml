@@ -708,7 +708,7 @@ other = "Limita de utilizare gratuită a acestei conexiuni a fost atinsă. Înce
 
 [api.connections.free_lane_refused]
 description = "Inference refusal when a free connection refused the request itself"
-other = "Modelele gratuite OpenCode sunt servite doar clientului OpenCode propriu, așa că această cerere a fost refuzată. Furnizorul a cerut o așteptare de {{.Wait}}. Folosește OpenCode Go sau alt furnizor gratuit."
+other = "Modelele gratuite OpenCode sunt servite doar clientului OpenCode propriu, așa că această cerere a fost refuzată. Geanta a raportat o așteptare de {{.Wait}}, pe care această cerere nu o poate aștepta. Folosește OpenCode Go sau alt furnizor gratuit."
 
 [api.connections.free_connection_exists]
 description = "Management refusal when a second keyless free connection is requested"

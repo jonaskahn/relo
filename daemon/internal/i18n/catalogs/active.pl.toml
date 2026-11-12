@@ -708,7 +708,7 @@ other = "Osiągnięto limit darmowego użycia tego połączenia. Spróbuj ponown
 
 [api.connections.free_lane_refused]
 description = "Inference refusal when a free connection refused the request itself"
-other = "Bezpłatne modele OpenCode są udostępniane wyłącznie własnemu klientowi OpenCode, dlatego to żądanie zostało odrzucone. Dostawca poprosił o odczekanie {{.Wait}}. Użyj OpenCode Go lub innego bezpłatnego dostawcy."
+other = "Bezpłatne modele OpenCode są udostępniane wyłącznie własnemu klientowi OpenCode, dlatego to żądanie zostało odrzucone. Brama zgłosiła czas oczekiwania {{.Wait}}, na który to żądanie nie może czekać. Użyj OpenCode Go lub innego bezpłatnego dostawcy."
 
 [api.connections.free_connection_exists]
 description = "Management refusal when a second keyless free connection is requested"

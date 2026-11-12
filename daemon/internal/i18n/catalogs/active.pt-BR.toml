@@ -707,7 +707,7 @@ other = "O limite de uso gratuito desta conexão foi atingido. Tente novamente a
 
 [api.connections.free_lane_refused]
 description = "Inference refusal when a free connection refused the request itself"
-other = "Os modelos gratuitos do OpenCode são atendidos apenas pelo próprio cliente do OpenCode, então esta requisição foi recusada. O provedor pediu uma espera de {{.Wait}}. Use o OpenCode Go ou outro provedor gratuito."
+other = "Os modelos gratuitos do OpenCode são atendidos apenas pelo próprio cliente do OpenCode, então esta requisição foi recusada. O gateway relatou uma espera de {{.Wait}}, que esta requisição não pode aguardar. Use o OpenCode Go ou outro provedor gratuito."
 
 [api.connections.free_connection_exists]
 description = "Management refusal when a second keyless free connection is requested"
