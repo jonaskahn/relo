@@ -32,8 +32,9 @@ const (
 
 // zenGateway is a mock of the free lane that refuses what the gateway refuses.
 type zenGateway struct {
-	server   *httptest.Server
-	requests int
+	server            *httptest.Server
+	requests          int
+	enforcePromptGate bool
 	//
 	// last is everything one accepted request carried, so a test can assert on
 	// the identity the relay built rather than only on the reply it got.
@@ -89,7 +90,7 @@ func newZenGateway(t *testing.T, answer func(w http.ResponseWriter, attempt zenA
 				`Invalid value for 'tools': maximum number of items is 128."}}`)
 			return
 		}
-		if refuse := zenRefusal(r, body); refuse != "" {
+		if refuse := gateway.zenRefusal(r, body); refuse != "" {
 			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(http.StatusForbidden)
 			_, _ = io.WriteString(w, `{"type":"error","error":{"type":"FreeTierError","message":"`+refuse+`"}}`)
@@ -437,7 +438,7 @@ func assertZenFreeLaneDeclarations(t *testing.T, body map[string]any) {
 	}
 }
 
-func zenRefusal(r *http.Request, body map[string]any) string {
+func (g *zenGateway) zenRefusal(r *http.Request, body map[string]any) string {
 	// A turn that declares tools must name the lane's file tools beside them;
 	// a turn that declares none is left alone. That is the rule the capture
 	// and its control established.
@@ -463,6 +464,41 @@ func zenRefusal(r *http.Request, body map[string]any) string {
 	}
 	if streamed, _ := body["stream"].(bool); !streamed {
 		return "the free tier can only be used from within OpenCode"
+	}
+	// The gateway's request-side gate: the first system message must be
+	// OpenCode's own system prompt. Enforced only when a test opts in, so
+	// existing turns that predate the gate keep passing.
+	if g.enforcePromptGate {
+		if text := zenFirstSystemText(body); !strings.HasPrefix(text, "You are an AI agent running in OpenCode, a coding agent harness.") {
+			return "the request does not carry OpenCode's own system prompt"
+		}
+	}
+	return ""
+}
+
+// zenFirstSystemText returns the text of the first system message in the
+// request body, or "" when there is none. Content travels either as a string
+// or as a list of parts.
+func zenFirstSystemText(body map[string]any) string {
+	messages, _ := body["messages"].([]any)
+	for _, entry := range messages {
+		message, _ := entry.(map[string]any)
+		if message["role"] != "system" {
+			continue
+		}
+		switch content := message["content"].(type) {
+		case string:
+			return content
+		case []any:
+			var text strings.Builder
+			for _, part := range content {
+				if part, ok := part.(map[string]any); ok && part["type"] == "text" {
+					text.WriteString(zenField(part, "text").(string))
+				}
+			}
+			return text.String()
+		}
+		return ""
 	}
 	return ""
 }
@@ -854,17 +890,24 @@ func TestZenFreeReplaysCodexPatchHistory(t *testing.T) {
 				t.Fatalf("status = %d, body = %s", response.StatusCode, body)
 			}
 			messages := zenItems(gateway.last.body["messages"])
-			if len(messages) != 3 {
-				t.Fatalf("messages = %v, want call, result, and user turn", messages)
+			// OpenCode's prompt is forged onto messages[0]; the replayed call,
+			// its result, and the user turn follow at indices 1, 2, 3.
+			if len(messages) != 4 {
+				t.Fatalf("messages = %v, want the forged prompt plus call, result, and user turn", messages)
 			}
-			calls := zenItems(zenField(messages[0], "tool_calls"))
+			first, _ := messages[0].(map[string]any)
+			if first["role"] != "system" ||
+				!strings.HasPrefix(zenContentText(first["content"]), "You are an AI agent running in OpenCode, a coding agent harness.") {
+				t.Fatalf("messages[0] = %v, want OpenCode's forged prompt", messages[0])
+			}
+			calls := zenItems(zenField(messages[1], "tool_calls"))
 			if len(calls) != 1 {
 				t.Fatalf("tool calls = %v, want the replayed patch call", calls)
 			}
 			if got := zenField(zenField(calls[0], "function"), "arguments"); got != tc.want {
 				t.Fatalf("arguments = %v, want %s", got, tc.want)
 			}
-			if zenField(calls[0], "id") != "call_patch" || zenField(messages[1], "tool_call_id") != "call_patch" {
+			if zenField(calls[0], "id") != "call_patch" || zenField(messages[2], "tool_call_id") != "call_patch" {
 				t.Fatalf("history = %v, want the patch result bound to its call", messages)
 			}
 		})
@@ -1055,6 +1098,65 @@ func zenOfferedToolName(body map[string]any) string {
 type zenFreeModel struct {
 	ID     string
 	Format catalog.APIFormat
+}
+
+// TestZenFreeForgesOpenCodePromptForCodexClient proves the forge end to end:
+// a Codex-shaped turn reaches the mock with OpenCode's own system prompt
+// prepended ahead of Codex's own instructions, so the prompt gate accepts it.
+func TestZenFreeForgesOpenCodePromptForCodexClient(t *testing.T) {
+	gateway := newZenGateway(t, zenChatStream)
+	gateway.enforcePromptGate = true
+	daemon := startZenFreeDaemon(t, gateway.URL(), zenFreeModel{ID: "beam-free"})
+
+	// A Codex-shaped turn: its own system prompt, tools including read, streamed.
+	body := `{"model":"beam-free","stream":true,"messages":[` +
+		`{"role":"system","content":"You are a coding assistant."},` +
+		`{"role":"user","content":"hi"}],"tools":[` + zenToolDeclarations() + `]}`
+
+	response := send(t, daemon.dataPlane, "/v1/chat/completions", dataPlaneToken, body)
+	defer func() { _ = response.Body.Close() }()
+	if response.StatusCode != http.StatusOK {
+		respBody, _ := io.ReadAll(response.Body)
+		t.Fatalf("status = %d, body = %s, want the forged prompt to satisfy the gateway", response.StatusCode, respBody)
+	}
+
+	// The mock received the turn with OpenCode's prompt forged ahead of Codex's own.
+	messages, _ := gateway.last.body["messages"].([]any)
+	if len(messages) < 2 {
+		t.Fatalf("messages = %v, want the forged prompt plus Codex's own prompt", messages)
+	}
+	first, _ := messages[0].(map[string]any)
+	if first["role"] != "system" {
+		t.Fatalf("messages[0].role = %v, want system", first["role"])
+	}
+	if got := zenContentText(first["content"]); !strings.HasPrefix(got, "You are an AI agent running in OpenCode, a coding agent harness.") {
+		t.Fatalf("messages[0] content = %q, want OpenCode's forged prompt", got)
+	}
+	second, _ := messages[1].(map[string]any)
+	if second["role"] != "system" {
+		t.Fatalf("messages[1].role = %v, want system (Codex's own prompt)", second["role"])
+	}
+	if got := zenContentText(second["content"]); got != "You are a coding assistant." {
+		t.Fatalf("messages[1] content = %q, want Codex's own prompt", got)
+	}
+}
+
+// zenContentText returns the text carried by a content field, which travels
+// either as a string or as a list of parts.
+func zenContentText(content any) string {
+	switch value := content.(type) {
+	case string:
+		return value
+	case []any:
+		var text strings.Builder
+		for _, part := range value {
+			if part, ok := part.(map[string]any); ok && part["type"] == "text" {
+				text.WriteString(zenField(part, "text").(string))
+			}
+		}
+		return text.String()
+	}
+	return ""
 }
 
 // startZenFreeDaemon runs a daemon whose only connection is the keyless Zen

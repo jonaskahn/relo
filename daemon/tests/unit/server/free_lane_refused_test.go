@@ -124,9 +124,24 @@ func TestFreeLaneSendsAToolFreeTitleRequestWithoutTools(t *testing.T) {
 	if len(sent.ToolChoice) != 0 {
 		t.Fatalf("upstream tool choice = %s, want the field absent", sent.ToolChoice)
 	}
-	if len(sent.Messages) != 2 || sent.Messages[0].Role != "system" ||
-		sent.Messages[1].Content != "what is a monad" {
-		t.Fatalf("upstream messages = %+v, want the client's own two turns", sent.Messages)
+	// OpenCode's prompt is forged onto the non-native free turn: it leads, and
+	// the client's own two turns follow behind it. No tools are added because
+	// the turn brought none.
+	if len(sent.Messages) != 3 {
+		t.Fatalf("upstream messages = %d, want the forged prompt plus the client's two turns", len(sent.Messages))
+	}
+	first, _ := sent.Messages[0].Content.(string)
+	if sent.Messages[0].Role != "system" ||
+		!strings.HasPrefix(first, "You are an AI agent running in OpenCode, a coding agent harness.") {
+		t.Fatalf("upstream messages[0] = %+v, want OpenCode's forged prompt", sent.Messages[0])
+	}
+	second, _ := sent.Messages[1].Content.(string)
+	if sent.Messages[1].Role != "system" || second != "Generate a title for this conversation." {
+		t.Fatalf("upstream messages[1] = %+v, want the client's title prompt", sent.Messages[1])
+	}
+	third, _ := sent.Messages[2].Content.(string)
+	if sent.Messages[2].Role != "user" || third != "what is a monad" {
+		t.Fatalf("upstream messages[2] = %+v, want the client's user turn", sent.Messages[2])
 	}
 }
 

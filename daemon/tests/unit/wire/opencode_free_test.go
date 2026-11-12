@@ -113,8 +113,23 @@ func TestOpenCodeFreeRequestKeepsATitleGenerationTurnToolFree(t *testing.T) {
 		if got.ToolChoice != nil {
 			t.Fatalf("%s tool choice = %+v, want none", entry.name, got.ToolChoice)
 		}
-		if !reflect.DeepEqual(got.Messages, original.Messages) {
-			t.Fatalf("%s messages = %+v, want the client's own", entry.name, got.Messages)
+		// OpenCode's prompt is forged onto a non-native free turn: it leads,
+		// and the client's own messages follow unchanged. The caller's request
+		// itself is never mutated.
+		if !wire.HasOpenCodeSystemPrompt(got) {
+			t.Fatalf("%s = %+v, want OpenCode's prompt forged onto messages[0]", entry.name, got)
+		}
+		if len(got.Messages) != len(original.Messages)+1 {
+			t.Fatalf("%s messages = %d, want the forged prompt plus the client's own %d", entry.name, len(got.Messages), len(original.Messages)+1)
+		}
+		if !reflect.DeepEqual(got.Messages[1:], original.Messages) {
+			t.Fatalf("%s messages[1:] = %+v, want the client's own", entry.name, got.Messages[1:])
+		}
+		if !reflect.DeepEqual(original.Messages, []inference.Message{
+			{Role: "system", Content: []inference.ContentPart{{Type: "text", Text: "Generate a title."}}},
+			{Role: "user", Content: []inference.ContentPart{{Type: "text", Text: "what is a monad"}}},
+		}) {
+			t.Fatalf("original.Messages = %+v, want the caller's request untouched", original.Messages)
 		}
 		if got.MaxTokens != original.MaxTokens || got.Reasoning != original.Reasoning {
 			t.Fatalf("%s request = %+v, want every other field kept", entry.name, got)
@@ -464,9 +479,11 @@ func TestOpenCodeFreeRequestShortensToolNamesPastTheGatewayLimit(t *testing.T) {
 		got.ToolChoice.Name != alias {
 		t.Fatalf("tool choice = %+v, want the demand under the same alias", got.ToolChoice)
 	}
-	if got.Messages[0].ToolCalls[0].Name != alias {
+	// OpenCode's prompt is forged onto messages[0], so the assistant turn that
+	// carried the replayed call moved to index 1.
+	if got.Messages[1].ToolCalls[0].Name != alias {
 		t.Fatalf("replayed call = %q, want the alias its declaration went out under",
-			got.Messages[0].ToolCalls[0].Name)
+			got.Messages[1].ToolCalls[0].Name)
 	}
 	if got.Tools[1].Name != "read" {
 		t.Fatalf("short name = %q, want it left alone", got.Tools[1].Name)
@@ -601,5 +618,117 @@ func TestOpenCodeGatewayRecognizesOnlyTheGatewayLanes(t *testing.T) {
 		if wire.OpenCodeGateway(baseURL) {
 			t.Errorf("OpenCodeGateway(%q) = true, want another connection left alone", baseURL)
 		}
+	}
+}
+
+// opencodeSystemPromptMarkerTest is the opening line OpenCode's client writes
+// as its system prompt. It mirrors the unexported marker so the forge can be
+// exercised without reaching into package wire.
+const opencodeSystemPromptMarkerTest = "You are an AI agent running in OpenCode, a coding agent harness."
+
+func TestHasOpenCodeSystemPrompt(t *testing.T) {
+	native := &inference.Request{
+		Messages: []inference.Message{{Role: inference.RoleSystem, Content: []inference.ContentPart{{
+			Type: inference.ContentTypeText, Text: opencodeSystemPromptMarkerTest + " extra guidance",
+		}}}},
+	}
+	if !wire.HasOpenCodeSystemPrompt(native) {
+		t.Fatal("native request should be recognized as carrying OpenCode's prompt")
+	}
+	verbatim := &inference.Request{
+		Messages: []inference.Message{{Role: inference.RoleSystem, Content: []inference.ContentPart{{
+			Type: inference.ContentTypeText, Text: opencodeSystemPromptMarkerTest,
+		}}}},
+	}
+	if !wire.HasOpenCodeSystemPrompt(verbatim) {
+		t.Fatal("verbatim OpenCode prompt should be recognized as native")
+	}
+	codex := &inference.Request{
+		Messages: []inference.Message{{Role: inference.RoleSystem, Content: []inference.ContentPart{{
+			Type: inference.ContentTypeText, Text: "You are a coding assistant.",
+		}}}},
+	}
+	if wire.HasOpenCodeSystemPrompt(codex) {
+		t.Fatal("Codex prompt should not be mistaken for OpenCode's")
+	}
+	if wire.HasOpenCodeSystemPrompt(&inference.Request{}) {
+		t.Fatal("request with no system message should not be native")
+	}
+	systemAfterUser := &inference.Request{
+		Messages: []inference.Message{
+			{Role: inference.RoleUser, Content: []inference.ContentPart{{Type: inference.ContentTypeText, Text: "hi"}}},
+			{Role: inference.RoleSystem, Content: []inference.ContentPart{{Type: inference.ContentTypeText, Text: opencodeSystemPromptMarkerTest}}},
+		},
+	}
+	if !wire.HasOpenCodeSystemPrompt(systemAfterUser) {
+		t.Fatal("OpenCode's prompt should be found even when it is not messages[0]")
+	}
+}
+
+func TestOpenCodeFreeRequestForgesOpenCodePromptForNonNativeClient(t *testing.T) {
+	original := &inference.Request{
+		Model: "beam-free",
+		Messages: []inference.Message{
+			{Role: inference.RoleSystem, Content: []inference.ContentPart{{
+				Type: inference.ContentTypeText, Text: "You are a coding assistant.",
+			}}},
+			{Role: inference.RoleUser, Content: []inference.ContentPart{{
+				Type: inference.ContentTypeText, Text: "hi",
+			}}},
+		},
+		Tools: []inference.Tool{{Name: "read"}},
+	}
+	got, _ := wire.OpenCodeFreeRequest(original, catalog.FormatOpenAIChat)
+
+	// The caller's request is never mutated: it is shared between route candidates.
+	if wire.HasOpenCodeSystemPrompt(original) {
+		t.Fatalf("original = %+v, want the caller's request untouched", original)
+	}
+	if len(original.Messages) != 2 || original.Messages[0].Role != inference.RoleSystem {
+		t.Fatalf("original.Messages = %+v, want the caller's messages unchanged", original.Messages)
+	}
+
+	// OpenCode's prompt leads; the client's own messages follow behind it.
+	if !wire.HasOpenCodeSystemPrompt(got) {
+		t.Fatalf("got = %+v, want OpenCode's prompt forged onto messages[0]", got)
+	}
+	if len(got.Messages) != 3 {
+		t.Fatalf("got.Messages = %d, want the forged prompt plus the client's two messages", len(got.Messages))
+	}
+	if got.Messages[0].Role != inference.RoleSystem {
+		t.Fatalf("got.Messages[0].Role = %q, want system", got.Messages[0].Role)
+	}
+	if !reflect.DeepEqual(got.Messages[1:], original.Messages) {
+		t.Fatalf("got.Messages[1:] = %+v, want the client's own messages", got.Messages[1:])
+	}
+	names := map[string]bool{}
+	for _, tool := range got.Tools {
+		names[tool.Name] = true
+	}
+	if !names["read"] {
+		t.Fatalf("got.Tools = %v, want the read declaration kept", got.Tools)
+	}
+}
+
+func TestOpenCodeFreeRequestDoesNotReforgeANativePrompt(t *testing.T) {
+	original := &inference.Request{
+		Messages: []inference.Message{
+			{Role: inference.RoleSystem, Content: []inference.ContentPart{{
+				Type: inference.ContentTypeText, Text: opencodeSystemPromptMarkerTest,
+			}}},
+			{Role: inference.RoleUser, Content: []inference.ContentPart{{
+				Type: inference.ContentTypeText, Text: "hi",
+			}}},
+		},
+	}
+	got, _ := wire.OpenCodeFreeRequest(original, catalog.FormatOpenAIChat)
+	if len(got.Messages) != 2 {
+		t.Fatalf("got.Messages = %d, want the native request sent unchanged (no second prompt)", len(got.Messages))
+	}
+	if !reflect.DeepEqual(got.Messages, original.Messages) {
+		t.Fatalf("got.Messages = %+v, want the native request untouched", got.Messages)
+	}
+	if got.Model != "" {
+		t.Fatalf("got.Model = %q, want no change", got.Model)
 	}
 }
