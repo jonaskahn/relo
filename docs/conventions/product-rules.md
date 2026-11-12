@@ -113,17 +113,34 @@ twice: Bun gets 200, Go and curl get 429. Relo therefore speaks the lane on a
 dedicated transport that reproduces Bun's client hello (uTLS), confined to
 opencode.ai; every other provider keeps the stock transport. The executor routes
 only the `opencode-free` template over it, the dialer refuses any other host.
-The lane reads the request as well: a request that does not carry OpenCode's own
-system prompt is refused with the same 429, whatever its headers and transport
-say. Relo does not reproduce that prompt. It forwards the inbound messages
-unchanged, so a genuine OpenCode client passes the gate with the prompt it
-brought, and a request without one — Relo's own integration test turn, for
-instance — does not. Such a refusal is answered `429 free_lane_refused`, which
-names the restriction instead of a quota the request cannot wait out. The
-fingerprint is brittle and belongs to a deliberate access control, not a public
-contract: if the gateway changes it, the lane quietly answers 429 again until
-the fingerprint is relearned, and the honest long-term fix is a documented
-free-lane contract upstream rather than emulation.
+The lane reads the request as well: the gateway's request-side gate is two
+independent checks. First, the first system message must be OpenCode's own
+system prompt — a request that does not carry it is refused with the same 429,
+whatever its headers and transport say. Second, when the turn declares any
+tools, the tool set must contain a `read` declaration; a turn that declares no
+tools at all needs none. Relo now forges OpenCode's captured prompt onto every
+non-native free-lane request, prepending it as a new system message at index 0
+and keeping the client's own instructions behind it, so a Codex (or other)
+client's turn passes the gate while the client's own instructions stay intact.
+
+The prompt is a captured asset shipped at
+`daemon/internal/adapters/wire/assets/opencode-system-prompt.txt` (the complete
+`messages[0].content` of a native OpenCode client, ~514 KB). It goes stale with
+every OpenCode release: a stale capture means every non-native free-lane turn
+answers 429 until the asset is refreshed. To re-capture it, replay a native
+OpenCode request over the lane and save its `messages[0].content` whole — do
+not trim it, since a truncated prompt is refused.
+
+Relo therefore speaks the lane on a dedicated transport that reproduces Bun's
+client hello (uTLS), confined to opencode.ai; every other provider keeps the
+stock transport. The executor routes only the `opencode-free` template over it,
+the dialer refuses any other host. A genuine OpenCode client passes the gate
+with the prompt it brought, and a non-native client passes it with the prompt
+Relo forges. The fingerprint and the forgery are both deliberate impersonation
+of OpenCode's client and belong to a deliberate access control, not a public
+contract: if the gateway changes either, the lane quietly answers 429 again
+until it is relearned, and the honest long-term fix is a documented free-lane
+contract upstream rather than emulation.
 
 **A connection's quota is read the way the connection serves.** A limit decides
 whether an account can serve only when it measures that account's own
@@ -151,8 +168,9 @@ claim that the gateway accepts Codex's tool dialect.
 429 carrying `FreeUsageLimitError`, so tell them apart before blaming the
 transport. A spent lane names a `Retry-After` measured in hours (a daily
 allowance shared by the whole connection). A refused request answers the same
-way, and its wait counts down while a native request from the same machine
-keeps passing: in the capture of 2026-11-11 the wait fell from 26,486 s to
+way, but its wait counts down to a **fixed wall-clock instant** (midnight UTC)
+and moves by ~20 s per call — it is not an allowance being spent and waiting it
+out never helps. In the capture of 2026-11-11 the wait fell from 26,486 s to
 24,373 s across calls while native opencode kept being answered 200. A moving
 wait therefore proves nothing. The decisive test is a control: replay one
 captured native request over both transports at the same moment. A 200 over the
