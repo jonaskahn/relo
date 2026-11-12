@@ -1,5 +1,5 @@
 {
-  "generated": "2026-11-12T18:52:20Z",
+  "generated": "2026-11-12T18:52:31Z",
   "latest": "v0.2.10",
   "latest_beta": "v0.2.10-beta.122.cb689235",
   "install": {
@@ -20,7 +20,7 @@
     {
       "tag": "v0.2.10",
       "version": "0.2.10",
-      "name": "v0.2.10",
+      "name": "v0.2.10 - New land ❄️",
       "channel": "stable",
       "draft": false,
       "published_at": "2026-11-12T18:51:55Z",
