@@ -380,6 +380,15 @@ func openCodeFreeRequest(req *inference.Request, format catalog.APIFormat, cutTo
 		return nil, nil
 	}
 	copied := *req
+	// Forge OpenCode's system prompt onto a request that did not come from
+	// OpenCode's client. The free lane refuses any request whose first system
+	// message is not OpenCode's own prompt, so a non-native client's turn is
+	// prefixed with the captured prompt, keeping the client's own instructions
+	// behind it. The copy is made first so the caller's request is never
+	// mutated: it is shared between route candidates.
+	if !HasOpenCodeSystemPrompt(req) {
+		copied.Messages = withOpenCodeSystemPrompt(copied.Messages)
+	}
 	if len(req.Tools) > 0 {
 		copied.Tools = withFreeLaneTools(req.Tools)
 	}
