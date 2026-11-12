@@ -2,6 +2,7 @@ package server_test
 
 import (
 	"context"
+	"encoding/json"
 	"net/http"
 	"strings"
 	"testing"
@@ -68,10 +69,72 @@ func TestRefusedFreeLaneAnswersRelosOwnRefusal(t *testing.T) {
 	}
 }
 
+// TestFreeLaneSendsAToolFreeTitleRequestWithoutTools pins the serialized
+// upstream body of a native title turn: the client declared no tools, so the
+// attempt carries none. The placeholder declarations this lane used to append
+// turned an answer into a refusal (event 64041, 2026-11-10).
+func TestFreeLaneSendsAToolFreeTitleRequestWithoutTools(t *testing.T) {
+	h := newHarness(t)
+	if err := config.UpdateConnectionsConfig(h.settingsPath, true); err != nil {
+		t.Fatal(err)
+	}
+	repo := sqlite.NewCatalogRepo(h.db)
+	if err := repo.SaveProvider(context.Background(), sqlite.ProviderRow{
+		ID: catalog.OpenCodeFreeTemplate, TemplateID: catalog.OpenCodeFreeTemplate,
+		Origin: "template", Label: "OpenCode Zen Free", Auth: "none",
+		APIFormat: "openai-chat", BaseURL: h.upstream.URL(), ModelsFormat: "openai",
+		Enabled: true, Rank: 100,
+	}); err != nil {
+		t.Fatal(err)
+	}
+	if err := repo.SaveModel(context.Background(), sqlite.ModelRow{
+		ProviderID: catalog.OpenCodeFreeTemplate, ModelID: "free-model",
+		APIFormat: string(catalog.FormatOpenAIChat), Enabled: true,
+	}); err != nil {
+		t.Fatal(err)
+	}
+	if err := h.catalog.Reload(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+	h.server = h.newServerWithCredentials(h.cfg.Server.Port)
+
+	body := `{"model":"free-model","stream":true,"max_tokens":32000,"messages":[` +
+		`{"role":"system","content":"Generate a title for this conversation."},` +
+		`{"role":"user","content":"what is a monad"}]}`
+	response := h.dataPlane(http.MethodPost, "/v1/chat/completions", dataPlaneToken, strings.NewReader(body))
+	if response.Code != http.StatusOK {
+		t.Fatalf("status = %d, body = %s, want the lane to serve the request", response.Code, response.Body.String())
+	}
+
+	var sent struct {
+		Tools      json.RawMessage `json:"tools"`
+		ToolChoice json.RawMessage `json:"tool_choice"`
+		Messages   []struct {
+			Role    string `json:"role"`
+			Content any    `json:"content"`
+		} `json:"messages"`
+	}
+	raw := h.upstream.lastBody()
+	if err := json.Unmarshal([]byte(raw), &sent); err != nil {
+		t.Fatalf("decode upstream body = %s: %v", raw, err)
+	}
+	if len(sent.Tools) != 0 {
+		t.Fatalf("upstream tools = %s, want the field absent", sent.Tools)
+	}
+	if len(sent.ToolChoice) != 0 {
+		t.Fatalf("upstream tool choice = %s, want the field absent", sent.ToolChoice)
+	}
+	if len(sent.Messages) != 2 || sent.Messages[0].Role != "system" ||
+		sent.Messages[1].Content != "what is a monad" {
+		t.Fatalf("upstream messages = %+v, want the client's own two turns", sent.Messages)
+	}
+}
+
 // TestFreeLaneKeepsTheClientsOwnPrompt pins the middle ground the lane
 // leaves open: a request that brings a system message of its own is sent with
 // that message and with the client's own tools, so the gateway's prompt gate
-// is satisfied by the client rather than by Relo.
+// is satisfied by the client rather than by Relo. The mocked upstream proves
+// forwarding only, not that the gateway accepts the turn.
 func TestFreeLaneKeepsTheClientsOwnPrompt(t *testing.T) {
 	h := newHarness(t)
 	if err := config.UpdateConnectionsConfig(h.settingsPath, true); err != nil {

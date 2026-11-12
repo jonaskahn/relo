@@ -3,6 +3,7 @@ package codec
 import (
 	"encoding/json"
 	"fmt"
+	"reflect"
 	"slices"
 	"strings"
 	"testing"
@@ -48,16 +49,18 @@ func TestOpenCodeFreeIsNotOpenCodeGo(t *testing.T) {
 	}
 }
 
-// A tool-free turn gains the lane declarations: the gateway answers a bare
-// turn with 403 FreeTierError (observed live on title generation, 24 of 24
-// refused). The appended placeholders carry no tool choice of their own.
-func TestOpenCodeFreeRequestDeclaresToolsForAToolFreeChatTurn(t *testing.T) {
+// A turn that brought no tools keeps none. Inserting the lane declarations
+// into a captured native title request was the refusal it was meant to
+// prevent: the same body with only the insertions removed returned a title.
+func TestOpenCodeFreeRequestKeepsAToolFreeChatTurnToolFree(t *testing.T) {
 	original := &inference.Request{Model: "mimo-v2.6-flash-free"}
 	got, _ := wire.OpenCodeFreeRequest(original, catalog.FormatOpenAIChat)
 	if len(original.Tools) != 0 {
 		t.Fatalf("original tools = %v, want the caller's request untouched", original.Tools)
 	}
-	assertFreeLaneTools(t, got.Tools)
+	if len(got.Tools) != 0 {
+		t.Fatalf("tools = %v, want the tool-free turn to stay tool-free", got.Tools)
+	}
 	if got.ToolChoice != nil {
 		t.Fatalf("tool choice = %+v, want no choice added to a tool-free turn", got.ToolChoice)
 	}
@@ -66,26 +69,69 @@ func TestOpenCodeFreeRequestDeclaresToolsForAToolFreeChatTurn(t *testing.T) {
 	}
 }
 
-// The Responses wire answers a tool-free turn the same way: the lane
-// declarations travel, and no tool choice is invented for it.
-func TestOpenCodeFreeRequestDeclaresToolsWithoutChoiceOnResponses(t *testing.T) {
+// The Responses wire answers a tool-free turn the same way: nothing is added,
+// and no tool choice is invented for it.
+func TestOpenCodeFreeRequestKeepsAnEmptyResponsesTurnToolFree(t *testing.T) {
 	got, _ := wire.OpenCodeFreeRequest(&inference.Request{}, catalog.FormatOpenAIResp)
-	assertFreeLaneTools(t, got.Tools)
+	if len(got.Tools) != 0 {
+		t.Fatalf("tools = %v, want nothing added to a tool-free turn", got.Tools)
+	}
 	if got.ToolChoice != nil {
 		t.Fatalf("tool choice = %+v, want the Responses shape untouched", got.ToolChoice)
 	}
 }
 
-// The turn shape that produced every observed 403: a title generation, two
-// messages, no tools, a full output ceiling and a stated effort. It must
-// reach the gateway carrying the lane declarations.
-func TestOpenCodeFreeRequestDeclaresToolsForATitleGenerationTurn(t *testing.T) {
-	got, _ := wire.OpenCodeFreeRequest(&inference.Request{
-		Messages:  []inference.Message{{Role: "system"}, {Role: "user"}},
+// The turn shape a native client sends for a title: two messages, no tools, a
+// full output ceiling and a stated effort. Every field but the absent tools
+// travels, and the messages keep their text and order.
+func TestOpenCodeFreeRequestKeepsATitleGenerationTurnToolFree(t *testing.T) {
+	original := &inference.Request{
+		Messages: []inference.Message{
+			{Role: "system", Content: []inference.ContentPart{{Type: "text", Text: "Generate a title."}}},
+			{Role: "user", Content: []inference.ContentPart{{Type: "text", Text: "what is a monad"}}},
+		},
 		MaxTokens: 32000,
 		Reasoning: &inference.ReasoningConfig{Effort: "high"},
+	}
+	for _, entry := range []struct {
+		name string
+		got  func() *inference.Request
+	}{
+		{name: "free lane", got: func() *inference.Request {
+			request, _ := wire.OpenCodeFreeRequest(original, catalog.FormatOpenAIChat)
+			return request
+		}},
+		{name: "free lane with cutoff", got: func() *inference.Request {
+			request, _ := wire.OpenCodeFreeRequestWithToolCutoff(original, catalog.FormatOpenAIChat, "title")
+			return request
+		}},
+	} {
+		got := entry.got()
+		if len(got.Tools) != 0 {
+			t.Fatalf("%s tools = %v, want none", entry.name, got.Tools)
+		}
+		if got.ToolChoice != nil {
+			t.Fatalf("%s tool choice = %+v, want none", entry.name, got.ToolChoice)
+		}
+		if !reflect.DeepEqual(got.Messages, original.Messages) {
+			t.Fatalf("%s messages = %+v, want the client's own", entry.name, got.Messages)
+		}
+		if got.MaxTokens != original.MaxTokens || got.Reasoning != original.Reasoning {
+			t.Fatalf("%s request = %+v, want every other field kept", entry.name, got)
+		}
+	}
+}
+
+// A turn that already declares tools still gains the lane declarations it
+// misses: the refusal those were added for is a tool-bearing one.
+func TestOpenCodeFreeRequestAddsLaneToolsToAToolBearingTurn(t *testing.T) {
+	got, _ := wire.OpenCodeFreeRequest(&inference.Request{
+		Tools: []inference.Tool{{Name: "edit"}},
 	}, catalog.FormatOpenAIChat)
-	assertFreeLaneTools(t, got.Tools)
+	if len(got.Tools) != 5 || got.Tools[0].Name != "edit" {
+		t.Fatalf("tools = %v, want the client's tool kept and the lane's added", got.Tools)
+	}
+	assertFreeLaneTools(t, got.Tools[1:])
 }
 
 // assertFreeLaneTools checks the declarations the gateway inspects, in the

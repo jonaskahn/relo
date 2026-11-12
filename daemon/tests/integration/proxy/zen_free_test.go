@@ -50,11 +50,15 @@ type zenAttempt struct {
 var zenLaneTools = []string{"bash", "glob", "grep", "read"}
 
 // zenToolsSatisfyLane reports whether the request declares the tools the lane
-// expects. Every model it measured refused a request without them, an empty
-// array is not a waiver, and neither is declaring nothing at all, so the mock
-// holds that rule unconditionally.
+// expects. A turn that declares none needs none: a captured native title
+// request was answered as soon as the declarations Relo appended were removed.
+// A turn that declares any has to name all four, because that is the shape the
+// live gateway refused.
 func zenToolsSatisfyLane(body map[string]any) bool {
 	declared, _ := body["tools"].([]any)
+	if len(declared) == 0 {
+		return true
+	}
 	for _, want := range zenLaneTools {
 		if !zenDeclares(declared, want) {
 			return false
@@ -421,8 +425,8 @@ func zenDeclares(declared []any, name string) bool {
 	return false
 }
 
-// assertZenFreeLaneDeclarations checks that a turn reached the gateway with
-// the lane's file tools declared, which is what a tool-free turn needs most.
+// assertZenFreeLaneDeclarations checks that a tool-bearing turn reached the
+// gateway with the lane's file tools declared beside the client's own.
 func assertZenFreeLaneDeclarations(t *testing.T, body map[string]any) {
 	t.Helper()
 	declared, _ := body["tools"].([]any)
@@ -434,9 +438,9 @@ func assertZenFreeLaneDeclarations(t *testing.T, body map[string]any) {
 }
 
 func zenRefusal(r *http.Request, body map[string]any) string {
-	// Every turn must name the lane's file tools. A turn that declares none
-	// is refused as firmly as one that declares the wrong set, because that
-	// is what the live gateway answers 403 FreeTierError to.
+	// A turn that declares tools must name the lane's file tools beside them;
+	// a turn that declares none is left alone. That is the rule the capture
+	// and its control established.
 	if !zenToolsSatisfyLane(body) {
 		return "the free lane requires the client to declare its file tools"
 	}
@@ -732,11 +736,11 @@ func TestZenFreeTruncatesLegibly(t *testing.T) {
 	})
 }
 
-// TestZenFreeDeclaresToolsForAToolFreeTurn covers the plain-chat symptom: the
-// gateway answers a bare turn with 403 FreeTierError live, so a turn the
-// client sent without tools still has to reach it carrying the lane
-// declarations. No tool choice is invented for it.
-func TestZenFreeDeclaresToolsForAToolFreeTurn(t *testing.T) {
+// TestZenFreeKeepsAToolFreeTurnToolFree covers the title symptom: a native
+// client sends a tool-less turn, and Relo forwards it that way. The
+// declarations this lane used to append turned the captured body into a
+// refusal; the same body without them was answered with a real title.
+func TestZenFreeKeepsAToolFreeTurnToolFree(t *testing.T) {
 	t.Run("a chat model answers a tool-free turn", func(t *testing.T) {
 		gateway := newZenGateway(t, zenChatStream)
 		daemon := startZenFreeDaemon(t, gateway.URL(), zenFreeModel{ID: "mimo-v2.6-flash-free"})
@@ -747,7 +751,9 @@ func TestZenFreeDeclaresToolsForAToolFreeTurn(t *testing.T) {
 			body, _ := io.ReadAll(response.Body)
 			t.Fatalf("status = %d, body = %s", response.StatusCode, body)
 		}
-		assertZenFreeLaneDeclarations(t, gateway.last.body)
+		if tools, present := gateway.last.body["tools"]; present {
+			t.Fatalf("upstream tools = %v, want the tool-free turn forwarded without them", tools)
+		}
 		if choice, present := gateway.last.body["tool_choice"]; present {
 			t.Fatalf("tool_choice = %v, want no choice added to a tool-free turn", choice)
 		}
@@ -772,7 +778,9 @@ func TestZenFreeDeclaresToolsForAToolFreeTurn(t *testing.T) {
 		if gateway.last.path != responsesWire {
 			t.Fatalf("path = %q, want the responses wire this model serves", gateway.last.path)
 		}
-		assertZenFreeLaneDeclarations(t, gateway.last.body)
+		if tools, present := gateway.last.body["tools"]; present {
+			t.Fatalf("upstream tools = %v, want the tool-free turn forwarded without them", tools)
+		}
 	})
 
 	t.Run("capitalized client tools gain the lowercase declarations", func(t *testing.T) {
@@ -793,11 +801,12 @@ func TestZenFreeDeclaresToolsForAToolFreeTurn(t *testing.T) {
 			t.Fatalf("status = %d, body = %s", response.StatusCode, body)
 		}
 		declared, _ := gateway.last.body["tools"].([]any)
-		for _, want := range append([]string{"Bash", "Glob", "Grep", "Read"}, zenLaneTools...) {
+		for _, want := range []string{"Bash", "Glob", "Grep", "Read"} {
 			if !zenDeclares(declared, want) {
-				t.Fatalf("upstream tools = %v, want originals kept and lowercase appended", gateway.last.body["tools"])
+				t.Fatalf("upstream tools = %v, want the client's capitalized names kept", gateway.last.body["tools"])
 			}
 		}
+		assertZenFreeLaneDeclarations(t, gateway.last.body)
 	})
 }
 

@@ -134,7 +134,10 @@ func freeIdentifierTail(digest []byte) string {
 	return out.String()
 }
 
-// The free gateway rejects title-generation turns without these declarations.
+// The free gateway refused a tool-bearing turn that named none of these
+// declarations, so they are added beside a tool-bearing request. A tool-free
+// turn gains nothing: a captured native title request that carried them was
+// refused, and the same body without them was answered.
 var freeLaneTools = []string{"bash", "glob", "grep", "read"}
 
 // freeToolLimit is the most tool declarations the gateway accepts in one
@@ -350,16 +353,17 @@ func shortReplayedCalls(req *inference.Request, alias func(string) string) {
 }
 
 // OpenCodeFreeRequest returns the request the signed-out gateway accepts. A
-// turn that misses an inspected name gains it as an unavailable tool on a
-// copy; the caller's request is never mutated because it is shared between
-// route candidates. A turn that declares nothing gains the lane tools too: it
-// is the missing declarations the gateway answers 403 FreeTierError to. Only
-// the exact lowercase names satisfy the lane, so differently-cased client
-// tools stay and the missing lowercase declarations are still appended. Real
-// tools and an explicit tool choice are left alone. A schema the gateway
-// refuses, an output ceiling below its floor, and a tool name past its limit
-// are corrected on the same copy. The returned map names each shortened tool
-// again on the answer, and is empty when the gateway accepts every name.
+// turn that declares tools gains the lane declarations it misses as unavailable
+// tools on a copy; the caller's request is never mutated because it is shared
+// between route candidates. Only the exact lowercase names satisfy the lane, so
+// differently-cased client tools stay and the missing lowercase declarations are
+// still appended. Real tools and an explicit tool choice are left alone. A turn
+// that brought no tools keeps none: the gateway's demand for declarations is not
+// general, and appending placeholders to a tool-free turn is what turned a
+// native title request into a refusal. A schema the gateway refuses, an output
+// ceiling below its floor, and a tool name past its limit are corrected on the
+// same copy. The returned map names each shortened tool again on the answer, and
+// is empty when the gateway accepts every name.
 func OpenCodeFreeRequest(req *inference.Request, format catalog.APIFormat) (*inference.Request, map[string]string) {
 	return openCodeFreeRequest(req, format, false, "")
 }
@@ -376,12 +380,14 @@ func openCodeFreeRequest(req *inference.Request, format catalog.APIFormat, cutTo
 		return nil, nil
 	}
 	copied := *req
-	copied.Tools = withFreeLaneTools(req.Tools)
+	if len(req.Tools) > 0 {
+		copied.Tools = withFreeLaneTools(req.Tools)
+	}
 	if cutTools {
 		copied.Tools = cutFreeTools(copied.Tools, copied.ToolChoice, seed)
 	}
-	// The schemas are cleaned after the declarations are appended, so a lane tool
-	// added later is cleaned as well as one a client sent.
+	// The schemas are cleaned on the copy the attempt sends, so a lane tool
+	// added above is cleaned as well as one a client sent.
 	for index := range copied.Tools {
 		copied.Tools[index].Parameters = dropRejectedKeywords(copied.Tools[index].Parameters)
 	}
