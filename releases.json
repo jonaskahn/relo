@@ -1,6 +1,6 @@
 {
-  "generated": "2026-11-12T17:20:57Z",
-  "latest": "v0.2.9",
+  "generated": "2026-11-12T18:52:07Z",
+  "latest": "v0.2.10",
   "latest_beta": "v0.2.10-beta.122.cb689235",
   "install": {
     "stable": {
@@ -17,6 +17,158 @@
     }
   },
   "releases": [
+    {
+      "tag": "v0.2.10",
+      "version": "0.2.10",
+      "name": "v0.2.10",
+      "channel": "stable",
+      "draft": false,
+      "published_at": "2026-11-12T18:51:55Z",
+      "page": "https://github.com/jonaskahn/relo/releases/tag/v0.2.10",
+      "notes": "## 13-11-2026\r\n\r\n### 🧩 OpenCode free lane\r\n\r\n- 🎭 The lane now carries the OpenCode environment block (<env> + working directory) the gateway checks for, so clients other than OpenCode's own (Codex, Claude Code…) are served instead of refused. The block is rendered from the client's real workspace, never a captured prompt.\r\n- 🧰 A tool-free turn stays tool-free — the placeholder tool declarations are now added only beside a turn that already declares tools (adding them is what turned native title requests into refusals).\r\n- 🪪 The lane's TLS client hello now matches the captured native one byte for byte — post-quantum hybrid share (X25519MLKEM768 → X25519 fallback), Bun's cipher/extension order — and a test compares the hello on the wire with the capture.\r\n- 🆔 Free-lane session ids are minted fresh from the clock instead of derived from the lane.\r\n\r\n### 🚫 Refusal vs. exhaustion\r\n\r\n- 🚦 A refused free-lane request is no longer read as a spent quota: the lane is not marked spent, nothing cools, and the route fails over to another provider.\r\n- ⏳ A spent lane's cooldown is never shortened by a later refusal on the same connection.\r\n- 🧪 Integration test turns skip the OpenCode free lane — its models are dropped from the list and a turn naming one is refused up front.\r\n- 📝 The refusal copy no longer advertises the gateway's Retry-After as a wait that helps (all 22 languages).\r\n\r\n### 📊 Quota readings\r\n\r\n- 🪣 Windows that measure one pool of a larger allowance are flagged as such, so a full pool (e.g. Cursor's API meter at 100%) no longer reads as a spent account.\r\n- 🕰️ A window whose period has ended constrains nothing, and an unreadable reset moment reads as \"no reset\" instead of \"since the year one\".\r\n- 🧹 Removing an account now takes its quota rows and history with it (plus a migration for rows left by earlier builds).\r\n\r\n### 🖥️ Console\r\n\r\n- 📈 A connection reads Ready while any of its accounts can still serve; only a connection whose every account is spent shows \"limit reached\". A spent account is marked on its own dot.\r\n- 🛠️ The add-connection review step now names the signed-out OpenCode lane and the restriction it carries.\r\n\r\n### 🧪 Quality\r\n\r\n- 🧷 New coverage for the free-lane prompt gate, refusal wording, quota pools, rolled windows, and connection-level quota reading.\r\n- 📚 Documented the two-gate free-lane rule, the prompt forge, and what a connection's quota means.\r\n",
+      "install": {
+        "script": "curl -fsSL https://relo.ifelse.one/install.sh | sh -s -- --version 0.2.10",
+        "powershell": "& ([scriptblock]::Create((irm https://relo.ifelse.one/install.ps1))) -Version 0.2.10",
+        "npm": "npm i -g @jonaskahn/relo@0.2.10"
+      },
+      "files": [
+        {
+          "name": "checksums.txt",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.2.10/checksums.txt",
+          "size": 588,
+          "os": "any",
+          "arch": "any",
+          "kind": "checksums",
+          "format": "txt"
+        },
+        {
+          "name": "Relo-0.2.10-arm64.zip",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.2.10/Relo-0.2.10-arm64.zip",
+          "size": 16406032,
+          "os": "macos",
+          "arch": "arm64",
+          "kind": "app",
+          "format": "zip"
+        },
+        {
+          "name": "relo-0.2.10-darwin-amd64.tar.gz",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.2.10/relo-0.2.10-darwin-amd64.tar.gz",
+          "size": 15590347,
+          "os": "macos",
+          "arch": "amd64",
+          "kind": "archive",
+          "format": "tar.gz"
+        },
+        {
+          "name": "relo-0.2.10-darwin-arm64.tar.gz",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.2.10/relo-0.2.10-darwin-arm64.tar.gz",
+          "size": 15127661,
+          "os": "macos",
+          "arch": "arm64",
+          "kind": "archive",
+          "format": "tar.gz"
+        },
+        {
+          "name": "relo-0.2.10-linux-amd64.tar.gz",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.2.10/relo-0.2.10-linux-amd64.tar.gz",
+          "size": 15275754,
+          "os": "linux",
+          "arch": "amd64",
+          "kind": "archive",
+          "format": "tar.gz"
+        },
+        {
+          "name": "relo-0.2.10-linux-arm64.tar.gz",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.2.10/relo-0.2.10-linux-arm64.tar.gz",
+          "size": 14456704,
+          "os": "linux",
+          "arch": "arm64",
+          "kind": "archive",
+          "format": "tar.gz"
+        },
+        {
+          "name": "Relo-0.2.10-universal.zip",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.2.10/Relo-0.2.10-universal.zip",
+          "size": 32388347,
+          "os": "macos",
+          "arch": "universal",
+          "kind": "app",
+          "format": "zip"
+        },
+        {
+          "name": "relo-0.2.10-windows-amd64.tar.gz",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.2.10/relo-0.2.10-windows-amd64.tar.gz",
+          "size": 15232731,
+          "os": "windows",
+          "arch": "amd64",
+          "kind": "archive",
+          "format": "tar.gz"
+        },
+        {
+          "name": "relo-0.2.10-windows-arm64.tar.gz",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.2.10/relo-0.2.10-windows-arm64.tar.gz",
+          "size": 14304580,
+          "os": "windows",
+          "arch": "arm64",
+          "kind": "archive",
+          "format": "tar.gz"
+        },
+        {
+          "name": "Relo-Setup-0.2.10-amd64.deb",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.2.10/Relo-Setup-0.2.10-amd64.deb",
+          "size": 15544046,
+          "os": "linux",
+          "arch": "amd64",
+          "kind": "installer",
+          "format": "deb"
+        },
+        {
+          "name": "Relo-Setup-0.2.10-amd64.exe",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.2.10/Relo-Setup-0.2.10-amd64.exe",
+          "size": 11216725,
+          "os": "windows",
+          "arch": "amd64",
+          "kind": "installer",
+          "format": "exe"
+        },
+        {
+          "name": "Relo-Setup-0.2.10-amd64.rpm",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.2.10/Relo-Setup-0.2.10-amd64.rpm",
+          "size": 15512013,
+          "os": "linux",
+          "arch": "amd64",
+          "kind": "installer",
+          "format": "rpm"
+        },
+        {
+          "name": "Relo-Setup-0.2.10-arm64.deb",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.2.10/Relo-Setup-0.2.10-arm64.deb",
+          "size": 14793516,
+          "os": "linux",
+          "arch": "arm64",
+          "kind": "installer",
+          "format": "deb"
+        },
+        {
+          "name": "Relo-Setup-0.2.10-arm64.exe",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.2.10/Relo-Setup-0.2.10-arm64.exe",
+          "size": 10129243,
+          "os": "windows",
+          "arch": "arm64",
+          "kind": "installer",
+          "format": "exe"
+        },
+        {
+          "name": "Relo-Setup-0.2.10-arm64.rpm",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.2.10/Relo-Setup-0.2.10-arm64.rpm",
+          "size": 14719986,
+          "os": "linux",
+          "arch": "arm64",
+          "kind": "installer",
+          "format": "rpm"
+        }
+      ]
+    },
     {
       "tag": "v0.2.10-beta.122.cb689235",
       "version": "0.2.10-beta.122.cb689235",
