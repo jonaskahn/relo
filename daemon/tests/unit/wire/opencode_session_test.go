@@ -88,8 +88,8 @@ func TestOpenCodeFreeHeadersMatchTheSignedOutCLI(t *testing.T) {
 			t.Fatalf("%s = %q, want the session %q", alias, first[alias], first["x-opencode-session"])
 		}
 	}
-	if first["x-opencode-session"] != again["x-opencode-session"] {
-		t.Fatalf("session changed from %q to %q", first["x-opencode-session"], again["x-opencode-session"])
+	if first["x-opencode-session"] == again["x-opencode-session"] {
+		t.Fatalf("session reused: %q to %q", first["x-opencode-session"], again["x-opencode-session"])
 	}
 	if first["x-opencode-request"] == again["x-opencode-request"] {
 		t.Fatal("message id was reused")
@@ -158,46 +158,6 @@ func TestOpenCodeFreeHeadersCarryTheRootAndTheAgent(t *testing.T) {
 	}
 }
 
-// TestOpenCodeFreeSessionIsDerivedRatherThanRemembered covers a daemon that
-// outlives many conversations: a lane maps to its session without anything
-// keeping the mapping, so no conversation is retained once it ends.
-func TestOpenCodeFreeSessionIsDerivedRatherThanRemembered(t *testing.T) {
-	first := wire.OpenCodeFreeHeaders("lane-a", wire.InboundIdentity{})
-	other := wire.OpenCodeFreeHeaders("lane-a", wire.InboundIdentity{})
-	if first["x-opencode-session"] != other["x-opencode-session"] {
-		t.Fatalf("session = %q, again = %q, want the same lane on one session",
-			first["x-opencode-session"], other["x-opencode-session"])
-	}
-
-	distinct := map[string]bool{}
-	for _, lane := range []string{"lane-a", "lane-b", "lane-c", "codex-thread:t\x00u"} {
-		headers := wire.OpenCodeFreeHeaders(lane, wire.InboundIdentity{})
-		session := headers["x-opencode-session"]
-		if !openCodeSession.MatchString(session) {
-			t.Fatalf("session = %q, want the shape the gateway accepts", session)
-		}
-		distinct[session] = true
-	}
-	if len(distinct) != 4 {
-		t.Fatalf("sessions = %v, want one session per lane", distinct)
-	}
-}
-
-// TestOpenCodeFreeSessionPrefixCarriesTheGatewaysClock covers the rule the
-// gateway applies past the shape: the ninth and tenth digits of the hex prefix
-// both read "f", which a client's timestamp-derived id always carries. A
-// session that is only shaped right is answered 403, so the prefix the lane
-// derives has to carry those digits whichever conversation names it.
-func TestOpenCodeFreeSessionPrefixCarriesTheGatewaysClock(t *testing.T) {
-	clock := regexp.MustCompile(`^ses_[0-9a-f]{9}ff`)
-	for _, lane := range []string{"lane-a", "lane-b", "codex-thread:t\x00u", ""} {
-		headers := wire.OpenCodeFreeHeaders(lane, wire.InboundIdentity{})
-		if session := headers["x-opencode-session"]; !clock.MatchString(session) {
-			t.Fatalf("session = %q, want the clock digits the gateway accepts", session)
-		}
-	}
-}
-
 // TestOpenCodeFreeHeadersAreSafeUnderConcurrency covers the callers that read
 // these headers from every request at once: nothing they share is mutable.
 func TestOpenCodeFreeHeadersAreSafeUnderConcurrency(t *testing.T) {
@@ -212,17 +172,13 @@ func TestOpenCodeFreeHeadersAreSafeUnderConcurrency(t *testing.T) {
 		}()
 	}
 
-	// Concurrent callers on one lane share that lane's session, which is the
-	// point of deriving it, and each still gets its own request identifier.
-	var shared string
+	distinct := map[string]bool{}
 	for range callers {
 		session := <-sessions
-		if shared == "" {
-			shared = session
+		if distinct[session] {
+			t.Fatalf("reused session %q", session)
 		}
-		if session != shared {
-			t.Fatalf("session = %q, want the lane's own %q", session, shared)
-		}
+		distinct[session] = true
 	}
 	requestIDs := map[string]bool{}
 	for range callers {

@@ -1836,3 +1836,10 @@ func TestContinueTurn(t *testing.T) {
 		}
 	})
 }
+
+func TestInboundWorkingDirectory(t *testing.T) {
+	request := inboundRequest(t, []byte(`{"model":"claude-sonnet-4","max_tokens":8,"git_state":{"cwd":"/client/claude"},"messages":[{"role":"user","content":"hello"}]}`))
+	if request.WorkingDirectory != "/client/claude" {
+		t.Fatalf("directory = %q", request.WorkingDirectory)
+	}
+}

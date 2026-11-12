@@ -96,3 +96,18 @@ func ClientKind(header http.Header) string {
 	}
 	return ""
 }
+
+// WorkingDirectory reads the single workspace named by Codex turn metadata.
+// Ambiguous or malformed metadata leaves body context or the daemon fallback in charge.
+func WorkingDirectory(header http.Header) string {
+	var envelope struct {
+		Workspaces map[string]json.RawMessage `json:"workspaces"`
+	}
+	if err := json.Unmarshal([]byte(header.Get("x-codex-turn-metadata")), &envelope); err != nil || len(envelope.Workspaces) != 1 {
+		return ""
+	}
+	for directory := range envelope.Workspaces {
+		return strings.TrimSpace(directory)
+	}
+	return ""
+}

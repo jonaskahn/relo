@@ -166,8 +166,8 @@ func randInt63(max int64) int64 {
 // free lane relays the client's own identity instead of inventing one.
 // Session is the conversation session the caller resolved for the lane:
 // the inbound affinity when the client named its conversation, a forged
-// native session the caller keeps per lane, or "" to derive one from the
-// lane for callers without a conversation.
+// native session the caller keeps per lane, or "" to mint a fresh one for
+// callers without a conversation.
 type InboundIdentity struct {
 	// Session is the client's own conversation id (x-opencode-session-id),
 	// which differs from the root on a forked conversation.

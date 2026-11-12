@@ -706,7 +706,7 @@ other = "이 연결의 무료 사용 한도에 도달했습니다. 표시된 시
 
 [api.connections.free_lane_refused]
 description = "Inference refusal when a free connection refused the request itself"
-other = "OpenCode의 무료 모델은 OpenCode 자체 클라이언트에만 제공되므로 이 요청은 거부되었습니다. 게이트웨이가 {{.Wait}} 대기 시간을 보고했습니다. 이 요청은 기다릴 수 없습니다. OpenCode Go 또는 다른 무료 제공자를 사용하세요."
+other = "OpenCode의 무료 모델은 OpenCode 자체 클라이언트에만 제공되므로 이 요청은 거부되었습니다. 게이트웨이가 {{.Wait}} 한도를 보고했지만 기다려도 이 요청은 수락되지 않습니다. OpenCode Go 또는 다른 무료 제공자를 사용하세요."
 
 [api.connections.free_connection_exists]
 description = "Management refusal when a second keyless free connection is requested"

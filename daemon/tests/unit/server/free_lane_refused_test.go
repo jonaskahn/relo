@@ -55,6 +55,9 @@ func TestRefusedFreeLaneAnswersRelosOwnRefusal(t *testing.T) {
 	if strings.Contains(response.Body.String(), "Free usage limit reached") {
 		t.Fatalf("body = %s, want nothing of the vendor's message", response.Body.String())
 	}
+	if !strings.Contains(response.Body.String(), "gateway reported a limit") || !strings.Contains(response.Body.String(), "cannot wait out") {
+		t.Fatalf("body = %s, want no promise that waiting helps", response.Body.String())
+	}
 	if got := response.Header().Get("Retry-After"); got != "" {
 		t.Fatalf("Retry-After = %q, want no promise to come back", got)
 	}
@@ -124,25 +127,19 @@ func TestFreeLaneSendsAToolFreeTitleRequestWithoutTools(t *testing.T) {
 	if len(sent.ToolChoice) != 0 {
 		t.Fatalf("upstream tool choice = %s, want the field absent", sent.ToolChoice)
 	}
-	// OpenCode's prompt is forged onto the non-native free turn: it leads, and
-	// the client's own two turns follow behind it. No tools are added because
-	// the turn brought none.
-	if len(sent.Messages) != 3 {
-		t.Fatalf("upstream messages = %d, want the forged prompt plus the client's two turns", len(sent.Messages))
+
+	if len(sent.Messages) != 2 {
+		t.Fatalf("upstream messages = %d, want two client turns", len(sent.Messages))
 	}
 	first, _ := sent.Messages[0].Content.(string)
-	if sent.Messages[0].Role != "system" ||
-		!strings.HasPrefix(first, "You are an AI agent running in OpenCode, a coding agent harness.") {
-		t.Fatalf("upstream messages[0] = %+v, want OpenCode's forged prompt", sent.Messages[0])
+	if sent.Messages[0].Role != "system" || !strings.HasPrefix(first, "Generate a title for this conversation.") || !strings.Contains(first, "Working directory:") {
+		t.Fatalf("system prompt = %q", first)
 	}
 	second, _ := sent.Messages[1].Content.(string)
-	if sent.Messages[1].Role != "system" || second != "Generate a title for this conversation." {
-		t.Fatalf("upstream messages[1] = %+v, want the client's title prompt", sent.Messages[1])
+	if sent.Messages[1].Role != "user" || second != "what is a monad" {
+		t.Fatalf("user turn = %q", second)
 	}
-	third, _ := sent.Messages[2].Content.(string)
-	if sent.Messages[2].Role != "user" || third != "what is a monad" {
-		t.Fatalf("upstream messages[2] = %+v, want the client's user turn", sent.Messages[2])
-	}
+
 }
 
 // TestFreeLaneKeepsTheClientsOwnPrompt pins the middle ground the lane

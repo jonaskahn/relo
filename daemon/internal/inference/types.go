@@ -44,9 +44,11 @@ func SpokenText(parts []ContentPart) []ContentPart {
 
 // Request is the internal representation of any LLM request.
 type Request struct {
-	Model    string    `json:"model"`
-	Messages []Message `json:"messages"`
-	Tools    []Tool    `json:"tools,omitempty"`
+	// WorkingDirectory is client context, not an upstream wire field.
+	WorkingDirectory string    `json:"-"`
+	Model            string    `json:"model"`
+	Messages         []Message `json:"messages"`
+	Tools            []Tool    `json:"tools,omitempty"`
 	// ToolChoice carries the client's constraint on which tool the model calls.
 	// An empty value leaves the choice to the model, which is what a client
 	// that said nothing about it meant.

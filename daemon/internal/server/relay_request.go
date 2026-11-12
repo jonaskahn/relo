@@ -671,6 +671,7 @@ func (s *Server) modelRequest(spec attemptSpec, template catalog.Template, templ
 		copied.Reasoning = nil
 	}
 	if templated && template.ID == catalog.OpenCodeFreeTemplate {
+		copied.WorkingDirectory = freeWorkingDirectory(spec.request, copied.WorkingDirectory)
 		if s.openCodeFreeToolCutoff(spec) {
 			seed := conversationOf(spec.request)
 			if seed == "" && spec.outcome != nil {
@@ -833,4 +834,14 @@ func withCooldown(pools *account.Manager, providerID string, err error) error {
 		return err
 	}
 	return fmt.Errorf("%s: %w", account.CoolingDown(providerID, until), err)
+}
+
+func freeWorkingDirectory(request *http.Request, fallback string) string {
+	if request == nil {
+		return fallback
+	}
+	if directory := wire.WorkingDirectory(request.Header); directory != "" {
+		return directory
+	}
+	return fallback
 }

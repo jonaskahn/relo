@@ -1,74 +1,77 @@
-// Package wire embeds OpenCode's own system prompt, which the free lane
-// expects every request to carry. A non-OpenCode client (Codex, Claude Code,
-// anything else) brings its own prompt, which the gateway refuses, so Relo
-// prepends OpenCode's captured prompt before sending the turn upstream.
+// OpenCode environment instructions satisfy the free lane's system-message gate.
 package wire
 
 import (
-	_ "embed"
+	"os"
 	"strings"
 
 	"github.com/jonaskahn/relo/internal/inference"
 )
 
-// opencodeSystemPrompt is the complete system prompt captured from a native
-// OpenCode client. The free lane refuses any request whose first system
-// message is not OpenCode's own prompt, so Relo embeds it whole and prepends
-// it to turns that did not come from OpenCode. The asset is shipped untrimmed:
-// a truncated prompt is refused, so every byte matters.
-//
-//go:embed assets/opencode-system-prompt.txt
-var opencodeSystemPrompt string
-
-// openCodeSystemPromptMarker is the opening line OpenCode's client writes as
-// its system prompt. A request whose first system message starts with it is
-// native and is left untouched.
-const openCodeSystemPromptMarker = "You are an AI agent running in OpenCode, a coding agent harness."
-
-// HasOpenCodeSystemPrompt reports whether req already carries OpenCode's own
-// system prompt, so the forge does not add a second copy to a native request.
-// The gateway reads the body, not the User-Agent — a non-native client may send
-// OpenCode's User-Agent because Relo rewrites it — so the body is the only
-// signal that survives.
+// HasOpenCodeSystemPrompt reports whether a system message carries the environment
+// block the free gateway expects, regardless of message order.
 func HasOpenCodeSystemPrompt(req *inference.Request) bool {
-	return hasOpenCodeSystemPromptMessages(req.Messages)
-}
-
-func hasOpenCodeSystemPromptMessages(messages []inference.Message) bool {
-	for _, m := range messages {
-		if m.Role != inference.RoleSystem {
-			continue
+	if req == nil {
+		return false
+	}
+	for _, message := range req.Messages {
+		if message.Role == inference.RoleSystem && hasOpenCodeEnvironment(spokenText(message.Content)) {
+			return true
 		}
-		text := spokenText(m.Content)
-		return strings.HasPrefix(text, openCodeSystemPromptMarker) || text == opencodeSystemPrompt
 	}
 	return false
 }
 
-// spokenText returns the concatenated text parts of a message, so a prompt
-// carried as content parts is read the same way as one carried as a string.
-func spokenText(parts []inference.ContentPart) string {
-	var b strings.Builder
-	for _, p := range parts {
-		if p.Type == inference.ContentTypeText {
-			b.WriteString(p.Text)
+func hasOpenCodeEnvironment(text string) bool {
+	for {
+		_, rest, found := strings.Cut(text, "<env>")
+		if !found {
+			return false
 		}
+		body, tail, closed := strings.Cut(rest, "</env>")
+		if !closed {
+			return false
+		}
+		for line := range strings.SplitSeq(body, "\n") {
+			if value, ok := strings.CutPrefix(strings.TrimSpace(line), "Working directory:"); ok && strings.TrimSpace(value) != "" {
+				return true
+			}
+		}
+		text = tail
 	}
-	return b.String()
 }
 
-// withOpenCodeSystemPrompt returns messages with OpenCode's prompt prepended
-// as a new system message at index 0, keeping the caller's own messages behind
-// it. The input slice is not mutated: a fresh slice is returned.
-func withOpenCodeSystemPrompt(messages []inference.Message) []inference.Message {
-	copied := make([]inference.Message, 0, len(messages)+1)
-	copied = append(copied, inference.Message{
-		Role: inference.RoleSystem,
-		Content: []inference.ContentPart{{
-			Type: inference.ContentTypeText,
-			Text: opencodeSystemPrompt,
-		}},
-	})
-	copied = append(copied, messages...)
-	return copied
+func spokenText(parts []inference.ContentPart) string {
+	var text strings.Builder
+	for _, part := range parts {
+		if part.Type == inference.ContentTypeText {
+			text.WriteString(part.Text)
+		}
+	}
+	return text.String()
+}
+
+func openCodeEnvironmentInstruction(directory string) string {
+	if strings.TrimSpace(directory) == "" || strings.ContainsAny(directory, "\r\n<>") {
+		var err error
+		directory, err = os.Getwd()
+		if err != nil {
+			// A removed daemon cwd has no absolute name; use its relative spelling.
+			directory = "."
+		}
+	}
+	return "<env>\n  Working directory: " + directory + "\n</env>"
+}
+
+func withOpenCodeSystemPrompt(messages []inference.Message, directory string) []inference.Message {
+	instruction := inference.ContentPart{Type: inference.ContentTypeText, Text: "\n\n" + openCodeEnvironmentInstruction(directory)}
+	copied := append([]inference.Message(nil), messages...)
+	for index, message := range copied {
+		if message.Role != inference.RoleSystem {
+			continue
+		}
+		copied[index].Content = append(append([]inference.ContentPart(nil), message.Content...), instruction)
+		return copied
+	}
+	return append([]inference.Message{{Role: inference.RoleSystem, Content: []inference.ContentPart{instruction}}}, copied...)
 }

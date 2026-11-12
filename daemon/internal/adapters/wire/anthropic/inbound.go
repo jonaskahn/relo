@@ -399,6 +399,9 @@ func newMessageSuffix() string {
 }
 
 type inboundRequest struct {
+	GitState struct {
+		Cwd string `json:"cwd"`
+	} `json:"git_state"`
 	Model        string           `json:"model"`
 	MaxTokens    int              `json:"max_tokens"`
 	System       json.RawMessage  `json:"system"`
@@ -446,14 +449,15 @@ func (r inboundRequest) toCanonical() (*inference.Request, error) {
 		messages = append([]inference.Message{systemMessage(system)}, messages...)
 	}
 	return &inference.Request{
-		Model:       r.Model,
-		Messages:    inference.MergeToolResults(messages),
-		Tools:       decodeTools(r.Tools),
-		ToolChoice:  decodeToolChoice(r.ToolChoice),
-		Stream:      r.Stream,
-		MaxTokens:   tokenLimit(r.MaxTokens),
-		Temperature: r.Temperature,
-		Reasoning:   decodeThinking(r.Thinking, r.OutputConfig),
+		WorkingDirectory: r.GitState.Cwd,
+		Model:            r.Model,
+		Messages:         inference.MergeToolResults(messages),
+		Tools:            decodeTools(r.Tools),
+		ToolChoice:       decodeToolChoice(r.ToolChoice),
+		Stream:           r.Stream,
+		MaxTokens:        tokenLimit(r.MaxTokens),
+		Temperature:      r.Temperature,
+		Reasoning:        decodeThinking(r.Thinking, r.OutputConfig),
 	}, nil
 }
 

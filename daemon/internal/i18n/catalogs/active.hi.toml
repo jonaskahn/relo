@@ -687,7 +687,7 @@ other = "इस कनेक्शन की मुफ़्त उपयोग 
 
 [api.connections.free_lane_refused]
 description = "Inference refusal when a free connection refused the request itself"
-other = "OpenCode के निःशुल्क मॉडल केवल OpenCode के अपने क्लाइंट को दिए जाते हैं, इसलिए यह अनुरोध अस्वीकार कर दिया गया। गेटवे ने {{.Wait}} प्रतीक्षा की सूचना दी, जिसे यह अनुरोध प्रतीक्षा नहीं कर सकता। OpenCode Go या कोई अन्य निःशुल्क प्रदाता उपयोग करें।"
+other = "OpenCode के निःशुल्क मॉडल केवल OpenCode के अपने क्लाइंट को दिए जाते हैं, इसलिए यह अनुरोध अस्वीकार कर दिया गया। गेटवे ने {{.Wait}} की सीमा बताई; प्रतीक्षा करने से यह अनुरोध स्वीकार नहीं होगा। OpenCode Go या कोई अन्य निःशुल्क प्रदाता उपयोग करें।"
 
 [api.connections.free_connection_exists]
 description = "Management refusal when a second keyless free connection is requested"

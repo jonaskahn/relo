@@ -708,7 +708,7 @@ other = "Byl dosažen limit bezplatného využití tohoto připojení. Zkuste to
 
 [api.connections.free_lane_refused]
 description = "Inference refusal when a free connection refused the request itself"
-other = "Bezplatné modely OpenCode jsou dostupné pouze vlastnímu klientovi OpenCode, proto byl tento požadavek odmítnut. Brána nahlásila čekání {{.Wait}}, tento požadavek ale počkat nemůže. Použijte OpenCode Go nebo jinou bezplatnou službu."
+other = "Bezplatné modely OpenCode jsou dostupné pouze vlastnímu klientovi OpenCode, proto byl tento požadavek odmítnut. Brána nahlásila limit {{.Wait}}, čekání však tento požadavek nezpřístupní. Použijte OpenCode Go nebo jinou bezplatnou službu."
 
 [api.connections.free_connection_exists]
 description = "Management refusal when a second keyless free connection is requested"

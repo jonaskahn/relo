@@ -708,7 +708,7 @@ other = "تم بلوغ حد الاستخدام المجاني لهذا الات�
 
 [api.connections.free_lane_refused]
 description = "Inference refusal when a free connection refused the request itself"
-other = "تُقدَّم النماذج المجانية من OpenCode إلى عميل OpenCode الخاص فقط، لذلك رُفض هذا الطلب. أبلغت البوابة عن انتظار قدره {{.Wait}}، وهذا الطلب لا يمكنه الانتظار. استخدم OpenCode Go أو مزوّدًا مجانيًا آخر."
+other = "تُقدَّم النماذج المجانية من OpenCode إلى عميل OpenCode الخاص فقط، لذلك رُفض هذا الطلب. أبلغت البوابة عن حد قدره {{.Wait}}، ولن يؤدي الانتظار إلى قبول هذا الطلب. استخدم OpenCode Go أو مزوّدًا مجانيًا آخر."
 
 [api.connections.free_connection_exists]
 description = "Management refusal when a second keyless free connection is requested"

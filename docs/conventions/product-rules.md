@@ -113,34 +113,23 @@ twice: Bun gets 200, Go and curl get 429. Relo therefore speaks the lane on a
 dedicated transport that reproduces Bun's client hello (uTLS), confined to
 opencode.ai; every other provider keeps the stock transport. The executor routes
 only the `opencode-free` template over it, the dialer refuses any other host.
-The lane reads the request as well: the gateway's request-side gate is two
-independent checks. First, the first system message must be OpenCode's own
-system prompt — a request that does not carry it is refused with the same 429,
-whatever its headers and transport say. Second, when the turn declares any
-tools, the tool set must contain a `read` declaration; a turn that declares no
-tools at all needs none. Relo now forges OpenCode's captured prompt onto every
-non-native free-lane request, prepending it as a new system message at index 0
-and keeping the client's own instructions behind it, so a Codex (or other)
-client's turn passes the gate while the client's own instructions stay intact.
+The request-side gate accepts a system message containing an <env> block with a
+non-empty Working directory: line, together with a lowercase read declaration.
+The system message need not be first. A tool-free turn is accepted only as
+OpenCode's own complete title request; adding tools breaks that exception.
 
-The prompt is a captured asset shipped at
-`daemon/internal/adapters/wire/assets/opencode-system-prompt.txt` (the complete
-`messages[0].content` of a native OpenCode client, ~514 KB). It goes stale with
-every OpenCode release: a stale capture means every non-native free-lane turn
-answers 429 until the asset is refreshed. To re-capture it, replay a native
-OpenCode request over the lane and save its `messages[0].content` whole — do
-not trim it, since a truncated prompt is refused.
+Relo appends only the environment instruction to the first system message, or
+creates a system message when none exists. An existing valid environment block
+is preserved. No captured prompt or developer repository content is shipped.
+The model reads the path even though the gateway does not verify it, so Relo
+uses the client's single Codex workspace or Claude Code git_state.cwd, falling
+back to the daemon's working directory. Free-lane sessions are minted from the
+real clock; the server's bounded conversation cache keeps retries sticky.
 
-Relo therefore speaks the lane on a dedicated transport that reproduces Bun's
-client hello (uTLS), confined to opencode.ai; every other provider keeps the
-stock transport. The executor routes only the `opencode-free` template over it,
-the dialer refuses any other host. A genuine OpenCode client passes the gate
-with the prompt it brought, and a non-native client passes it with the prompt
-Relo forges. The fingerprint and the forgery are both deliberate impersonation
-of OpenCode's client and belong to a deliberate access control, not a public
-contract: if the gateway changes either, the lane quietly answers 429 again
-until it is relearned, and the honest long-term fix is a documented free-lane
-contract upstream rather than emulation.
+The fingerprint and request-shape emulation are deliberate impersonation of an
+access-controlled client, not a public contract. If the gate changes, update
+the environment renderer rather than shipping a captured system prompt. A
+documented upstream contract remains the long-term fix.
 
 **A connection's quota is read the way the connection serves.** A limit decides
 whether an account can serve only when it measures that account's own
@@ -161,8 +150,10 @@ captured native title request shows the opposite: the client sent no tools, the
 same body with the appended declarations was refused, and the same body with
 only those declarations removed was answered 200 with a real title. The lane
 therefore adds declarations only beside a turn that already declares tools, and
-a turn that brought none keeps none. This is a request-preservation fix, not a
-claim that the gateway accepts Codex's tool dialect.
+a turn that brought none keeps none. Tool-free non-native turns remain refused.
+Supporting them requires a separate
+policy change to add a read declaration; Relo does not replace their task with
+OpenCode's title prompt.
 
 **A spent lane's quota answer and a refused request look alike.** Both are a
 429 carrying `FreeUsageLimitError`, so tell them apart before blaming the
@@ -171,15 +162,12 @@ allowance shared by the whole connection). A refused request answers the same
 way, but its wait counts down to a **fixed wall-clock instant** (midnight UTC)
 and moves by ~20 s per call — it is not an allowance being spent and waiting it
 out never helps. In the capture of 2026-11-11 the wait fell from 26,486 s to
-24,373 s across calls while native opencode kept being answered 200. A moving
-wait therefore proves nothing. The decisive test is a control: replay one
-captured native request over both transports at the same moment. A 200 over the
-fingerprint and a 429 over stock Go means the transport was the discriminator;
-the same 429 from both means the allowance is spent or the request was refused
-for what it carried. Relo cannot tell a spent allowance from a refused request
-without such a control, so it claims neither: a refusal of the free lane fails
-the request over to another provider and answers `429 free_lane_refused`, and no
-lane is marked spent on a guess. A lane that is marked spent keeps its wait:
+24,373 s across calls while native opencode kept being answered 200. This
+fixed-instant countdown is a cheaper refusal discriminator than replaying a
+native capture; it is not evidence that an allowance was spent. Relo does not
+mark a lane spent on a guess: a refusal fails over to another provider and
+answers 429 free_lane_refused without a Retry-After promise. A lane that is
+marked spent keeps its wait:
 once a lane is marked spent, an account refused afterwards may lengthen the
 connection's cooldown but never shorten it.
 

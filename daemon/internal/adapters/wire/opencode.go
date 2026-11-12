@@ -17,14 +17,6 @@ import (
 
 var openCodeSession = regexp.MustCompile(`^ses_[0-9a-f]{12}[0-9A-Za-z]{14}$`)
 
-// freeIdentifierAlphabet is the character set the gateway accepts in the tail
-// of an identifier.
-const freeIdentifierAlphabet = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
-
-// freeSessionDomain separates Relo's session names from any other producer's,
-// so two clients that name the same conversation cannot land on one session.
-const freeSessionDomain = "relo/opencode-free/session/v1\x00"
-
 // freeClientUserAgent is the fallback identity for callers that are not an
 // opencode client. The gateway refuses a turn whose User-Agent carries no
 // "opencode/" marker, so a request that arrives without one cannot go out
@@ -36,8 +28,8 @@ const freeClientUserAgent = "opencode/latest/2.0.27/cli"
 // inbound identity is relayed, never invented: the client's own agent,
 // affinity, project, and parent travel when present, and only the gaps are
 // filled — the agent name from the client or the fallback above, the project
-// omitted, the session from the caller's forged value or derived from the
-// lane. The affinity spellings carry the conversation's root session, while
+// omitted, the session from the caller's forged value or a fresh clock-based
+// identifier. The affinity spellings carry the conversation's root session, while
 // x-opencode-session-id keeps the client's own session, the way the native
 // client writes a fork.
 func OpenCodeFreeHeaders(lane string, id InboundIdentity) map[string]string {
@@ -75,7 +67,7 @@ func OpenCodeFreeHeaders(lane string, id InboundIdentity) map[string]string {
 
 // freeRootSession is the conversation session every affinity spelling carries:
 // the client's root, its own session when it named no root, or the lane's
-// derived session for a caller that named nothing.
+// freshly minted session for a caller that named nothing.
 func freeRootSession(lane string, id InboundIdentity) string {
 	if ValidSessionID(id.Affinity) {
 		return id.Affinity
@@ -104,34 +96,11 @@ func freeAgent(inbound string) string {
 	return freeClientUserAgent
 }
 
-// freeSessionID is the session one conversation is sent on. It is derived from
-// the lane rather than remembered for it, because a daemon that outlives many
-// conversations would otherwise hold a session for every one it ever served.
-//
-// The gateway reads the client's clock out of the session's hex prefix: the
-// ninth and tenth digits must both read "f", which a timestamp-derived id
-// always carries because it inverts a number whose low twelve bits are set.
-// A prefix that has the shape but not those digits is answered 403
-// FreeTierError, so a hand-made id is told apart from a client's own. Every
-// other digit is free, which is what lets the prefix stay derived here.
-func freeSessionID(lane, inboundSession string) string {
+func freeSessionID(_ string, inboundSession string) string {
 	if openCodeSession.MatchString(inboundSession) {
 		return inboundSession
 	}
-	digest := sha256.Sum256([]byte(freeSessionDomain + lane))
-	prefix := digest
-	prefix[4] |= 0x0f
-	prefix[5] |= 0xf0
-	return "ses_" + hex.EncodeToString(prefix[:6]) + freeIdentifierTail(digest[6:20])
-}
-
-func freeIdentifierTail(digest []byte) string {
-	var out strings.Builder
-	out.Grow(len(digest))
-	for _, b := range digest {
-		out.WriteByte(freeIdentifierAlphabet[int(b)%len(freeIdentifierAlphabet)])
-	}
-	return out.String()
+	return NativeSessionID()
 }
 
 // The free gateway refused a tool-bearing turn that named none of these
@@ -380,14 +349,9 @@ func openCodeFreeRequest(req *inference.Request, format catalog.APIFormat, cutTo
 		return nil, nil
 	}
 	copied := *req
-	// Forge OpenCode's system prompt onto a request that did not come from
-	// OpenCode's client. The free lane refuses any request whose first system
-	// message is not OpenCode's own prompt, so a non-native client's turn is
-	// prefixed with the captured prompt, keeping the client's own instructions
-	// behind it. The copy is made first so the caller's request is never
-	// mutated: it is shared between route candidates.
+	// Only the environment instruction is required; preserve the client's task.
 	if !HasOpenCodeSystemPrompt(req) {
-		copied.Messages = withOpenCodeSystemPrompt(copied.Messages)
+		copied.Messages = withOpenCodeSystemPrompt(copied.Messages, copied.WorkingDirectory)
 	}
 	if len(req.Tools) > 0 {
 		copied.Tools = withFreeLaneTools(req.Tools)
