@@ -137,6 +137,16 @@ on its own, never on the connection. The same reading decides routing: a full
 pool or an ended window constrains nothing, so an account that can still serve
 keeps being asked.
 
+**A tool-free turn is forwarded without tools.** The lane used to append four
+unavailable placeholder tools (`bash`, `glob`, `grep`, `read`) to every request,
+on the theory that the gateway inspects declarations before answering. A
+captured native title request shows the opposite: the client sent no tools, the
+same body with the appended declarations was refused, and the same body with
+only those declarations removed was answered 200 with a real title. The lane
+therefore adds declarations only beside a turn that already declares tools, and
+a turn that brought none keeps none. This is a request-preservation fix, not a
+claim that the gateway accepts Codex's tool dialect.
+
 **A spent lane's quota answer and a refused request look alike.** Both are a
 429 carrying `FreeUsageLimitError`, so tell them apart before blaming the
 transport. A spent lane names a `Retry-After` measured in hours (a daily
