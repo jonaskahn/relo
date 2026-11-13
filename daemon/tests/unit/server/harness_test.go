@@ -577,12 +577,15 @@ type upstreamServer struct {
 	fixture string
 	// rawBody overrides the fixture, which is how a test stands in for one
 	// exact upstream body such as a lane's own quota refusal.
-	rawBody  string
-	sse      bool
-	status   int
-	delay    time.Duration
-	headers  map[string]string
-	requests []string
+	rawBody string
+	sse     bool
+	status  int
+	delay   time.Duration
+	headers map[string]string
+	// modelStatuses answers one model with its own status, so a test can rate
+	// limit one model and leave the others of the same connection alone.
+	modelStatuses map[string]int
+	requests      []string
 	// seen keeps each request's headers, which is how a test reads what the
 	// relay actually sent upstream.
 	seen []http.Header
@@ -607,12 +610,14 @@ func (u *upstreamServer) serve(w http.ResponseWriter, r *http.Request) {
 	u.mu.Lock()
 	fixture, rawBody, sse, status, delay := u.fixture, u.rawBody, u.sse, u.status, u.delay
 	headers := u.headers
+	modelStatuses := u.modelStatuses
 	waitForCancel, cancelled := u.waitForCancel, u.cancelled
 	u.requests = append(u.requests, r.URL.Path)
 	u.seen = append(u.seen, r.Header.Clone())
 	u.bodies = append(u.bodies, string(payload))
 	u.auths = append(u.auths, r.Header.Get("Authorization"))
 	u.mu.Unlock()
+	status = statusForModel(payload, modelStatuses, status)
 	if waitForCancel != nil {
 		close(waitForCancel)
 		<-r.Context().Done()
@@ -643,6 +648,25 @@ func (u *upstreamServer) serve(w http.ResponseWriter, r *http.Request) {
 	}
 	w.WriteHeader(status)
 	_, _ = w.Write(body)
+}
+
+// statusForModel reports the status the upstream answers one model with, so a
+// test can rate limit one model and leave the others of the same connection
+// alone. A model the map does not name is answered as the upstream is.
+func statusForModel(payload []byte, statuses map[string]int, fallback int) int {
+	if len(statuses) == 0 {
+		return fallback
+	}
+	var asked struct {
+		Model string `json:"model"`
+	}
+	if err := json.Unmarshal(payload, &asked); err != nil {
+		return fallback
+	}
+	if status, found := statuses[asked.Model]; found {
+		return status
+	}
+	return fallback
 }
 
 // lastBody returns the payload of the most recent request, which is what a
