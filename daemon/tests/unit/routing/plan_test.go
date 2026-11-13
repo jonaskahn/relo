@@ -3,6 +3,7 @@ package routing_test
 import (
 	"context"
 	"errors"
+	"net/http"
 	"strings"
 	"testing"
 	"time"
@@ -60,9 +61,11 @@ func TestConnectionCooldownReachesTheRefusal(t *testing.T) {
 	pools := account.NewManagerWithOptions(storedCredentials{}, noSecrets{}, account.ManagerOptions{
 		Clock: clock, FailoverBackoff: []time.Duration{15 * time.Minute},
 	})
-	// Every account of the connection failed one request, which is what puts
-	// the connection itself behind a wait.
-	pools.GetPool("openai").MarkExhausted(0)
+	// Every credential of the connection is waiting out a rate limit, which
+	// is what puts the connection itself behind a wait.
+	pool := pools.GetPool("openai")
+	pool.Add(account.PoolEntry{ID: "one", ProviderID: "openai", Status: account.StatusActive})
+	pool.RecordFailure("one", http.StatusTooManyRequests, 0)
 
 	router := routing.New(routing.Options{Catalog: catalogView, Pools: pools, Clock: clock})
 	_, err := router.Plan(ctx, routing.Request{Model: "alias"})

@@ -352,12 +352,13 @@ func (d *sendDriver) blockedMember(candidate routing.Candidate, lastCandidate bo
 		}
 		return walkNextMember
 	}
-	if until := d.s.connectionCooldown(candidate.ProviderID); !until.IsZero() {
-		// A connection that just failed every account is not asked again
-		// until its wait is over: the request goes to the next member.
+	if until := d.s.modelCooldown(candidate.ProviderID, candidate.ModelID); !until.IsZero() {
+		// A model that just failed every account of its connection is not
+		// asked again until its wait is over: the request goes to the next
+		// member. The other models of the connection keep being asked.
 		cooling := &routing.CoolingError{
 			Name: candidate.ProviderID, ProviderID: candidate.ProviderID, Until: until,
-			Reason: account.CoolingDown(candidate.ProviderID, until),
+			Reason: account.ModelCoolingDown(candidate.ProviderID, candidate.ModelID, until),
 		}
 		if d.cooldown == nil || until.Before(d.cooldown.Until) {
 			d.cooldown = cooling
@@ -400,6 +401,7 @@ func (d *sendDriver) stepAttempt(candidate routing.Candidate, lastCandidate bool
 		d.s.opts.Router.MarkSucceeded(candidate)
 		d.s.opts.Router.MarkGroupSucceeded(d.plan)
 		d.s.markConnectionServed(candidate.ProviderID, result.CredentialID)
+		d.s.markModelServed(candidate.ProviderID, candidate.ModelID)
 		d.s.record(context.WithoutCancel(d.r.Context()), d.outcome, result)
 		return walkAnswered
 	}
@@ -600,7 +602,7 @@ func (d *sendDriver) leaveAccount(failed failedAttempt) walkAction {
 		return walkContinue
 	}
 	if connectionSpent(result) {
-		d.s.markConnectionExhausted(candidate.ProviderID, result.RetryAfter)
+		d.s.markModelUnavailable(candidate.ProviderID, candidate.ModelID, result.RetryAfter)
 	}
 	d.s.markCandidateFailed(candidate, result)
 	if failed.lastCandidate || !memberSwitchAllowed(d.plan, result) {
@@ -615,7 +617,7 @@ func (d *sendDriver) leaveAccount(failed failedAttempt) walkAction {
 // recordSpentAccount records an account whose answer this request cannot
 // retry, which is the last attempt it may spend. Without it a request that
 // ends on the final attempt would never tell the connection that every
-// account of it failed, and the connection would keep being walked.
+// account of it failed for that model, and the model would keep being walked.
 func (d *sendDriver) recordSpentAccount(candidate routing.Candidate, allowance int, result Result) {
 	credential := credentialKeyOf(result)
 	if credential == "" || !connectionSpent(result) {
@@ -627,22 +629,23 @@ func (d *sendDriver) recordSpentAccount(candidate routing.Candidate, allowance i
 	if len(d.tried[candidate.ProviderID]) < allowance {
 		return
 	}
-	d.s.markConnectionExhausted(candidate.ProviderID, result.RetryAfter)
+	d.s.markModelUnavailable(candidate.ProviderID, candidate.ModelID, result.RetryAfter)
 	d.s.markCandidateFailed(candidate, result)
 }
 
 // connectionSpent reports a failure that means the connection cannot serve
-// right now: a rate limit or a server fault. A refusal about the request or
-// the model says nothing about the connection, so it never parks it.
+// this model right now: a rate limit or a server fault. A refusal about the
+// request or the model says nothing about the connection, so it never parks
+// it.
 func connectionSpent(result Result) bool {
 	return result.Status == 429 || result.Status >= 500
 }
 
-func (s *Server) connectionCooldown(providerID string) time.Time {
+func (s *Server) modelCooldown(providerID, modelID string) time.Time {
 	if s.opts.Pools == nil {
 		return time.Time{}
 	}
-	return s.opts.Pools.ConnectionCooldownUntil(providerID)
+	return s.opts.Pools.ModelCooldownUntil(providerID, modelID)
 }
 
 // freeConsentBlocked reports a keyless-free candidate the operator has not
@@ -666,9 +669,20 @@ func (s *Server) markConnectionServed(providerID, credentialID string) {
 	}
 }
 
-func (s *Server) markConnectionExhausted(providerID string, retryAfter time.Duration) {
+// markModelServed records that one model of a connection answered, so the
+// wait that model earned ends.
+func (s *Server) markModelServed(providerID, modelID string) {
+	if s.opts.Pools != nil && modelID != "" {
+		s.opts.Pools.MarkModelServed(providerID, modelID)
+	}
+}
+
+// markModelUnavailable parks one model of a connection after every account of
+// it failed a request for that model. The other models of the connection keep
+// being asked.
+func (s *Server) markModelUnavailable(providerID, modelID string, retryAfter time.Duration) {
 	if s.opts.Pools != nil {
-		s.opts.Pools.MarkExhausted(providerID, retryAfter)
+		s.opts.Pools.MarkModelUnavailable(providerID, modelID, retryAfter)
 	}
 }
 
