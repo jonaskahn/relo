@@ -244,64 +244,122 @@ const freeToolNameLimit = 64
 // name that shares a head with another still shortens to its own alias.
 const freeToolAliasDigest = 6
 
-// freeToolAlias returns the name the gateway accepts for one tool. A name
-// within the limit is returned unchanged; a longer one keeps a readable head
-// and gains a digest of the whole name, which the answer is read back through.
-func freeToolAlias(name string) string {
+// shortToolName returns the name the gateway accepts for one tool that carries
+// no fragment the gateway refuses. A name within the limit is returned
+// unchanged; a longer one keeps a readable head and gains a digest of the whole
+// name, which the answer is read back through.
+func shortToolName(name string) string {
 	if len(name) <= freeToolNameLimit {
 		return name
 	}
+	return digestToolAlias(name)
+}
+
+// digestToolAlias names one tool by a digest of its whole name, so two tools
+// whose names share a head, or that would otherwise claim one alias, still go
+// out apart.
+func digestToolAlias(name string) string {
 	digest := sha256.Sum256([]byte(name))
 	suffix := "_" + hex.EncodeToString(digest[:freeToolAliasDigest])
-	return name[:freeToolNameLimit-len(suffix)] + suffix
+	head := name
+	if len(head) > freeToolNameLimit-len(suffix) {
+		head = head[:freeToolNameLimit-len(suffix)]
+	}
+	return head + suffix
 }
 
-func carriesLongToolName(req *inference.Request) bool {
-	for _, tool := range req.Tools {
-		if len(tool.Name) > freeToolNameLimit {
-			return true
-		}
-	}
-	if req.ToolChoice != nil && len(req.ToolChoice.Name) > freeToolNameLimit {
-		return true
-	}
-	for _, message := range req.Messages {
-		for _, call := range message.ToolCalls {
-			if len(call.Name) > freeToolNameLimit {
-				return true
-			}
-		}
-	}
-	return false
-}
-
-// shortToolNames rewrites every name the gateway would refuse on the copy the
-// caller owns, and returns the map that names each alias again on the answer.
-// A request whose names all fit is left whole, so an ordinary turn pays
-// nothing. A name that appears only in a replayed call still gets the alias its
-// declaration got, because the same name always shortens the same way.
+// shortToolNames rewrites every name the paid lane's gateway would refuse on
+// the copy the caller owns, and returns the map that names each alias again on
+// the answer.
 func shortToolNames(req *inference.Request) map[string]string {
-	if !carriesLongToolName(req) {
+	return aliasToolNames(req, shortToolName)
+}
+
+// aliasToolNames rewrites every name the gateway would refuse on the copy the
+// caller owns, and returns the map that names each alias again on the answer.
+// A request whose names all pass is left whole, so an ordinary turn pays
+// nothing. A name that appears only in a replayed call still gets the alias its
+// declaration got, because the same name always aliases the same way.
+func aliasToolNames(req *inference.Request, alias func(string) string) map[string]string {
+	aliases := aliasToolNameMap(requestToolNames(req), alias)
+	if len(aliases) == 0 {
 		return nil
 	}
-	originals := map[string]string{}
-	alias := func(name string) string {
-		short := freeToolAlias(name)
-		if short != name {
-			originals[short] = name
+	rename := func(name string) string {
+		if aliased, found := aliases[name]; found {
+			return aliased
 		}
-		return short
+		return name
 	}
 	for index := range req.Tools {
-		req.Tools[index].Name = alias(req.Tools[index].Name)
+		req.Tools[index].Name = rename(req.Tools[index].Name)
 	}
 	if req.ToolChoice != nil {
 		req.ToolChoice = &inference.ToolChoice{
-			Mode: req.ToolChoice.Mode, Name: alias(req.ToolChoice.Name),
+			Mode: req.ToolChoice.Mode, Name: rename(req.ToolChoice.Name),
 		}
 	}
-	shortReplayedCalls(req, alias)
+	shortReplayedCalls(req, rename)
+	originals := make(map[string]string, len(aliases))
+	for name, aliased := range aliases {
+		originals[aliased] = name
+	}
 	return originals
+}
+
+// requestToolNames lists every tool name one request declares or replays, so
+// the alias map is built from the whole request before any name is rewritten.
+func requestToolNames(req *inference.Request) []string {
+	names := make([]string, 0, len(req.Tools)+1)
+	for _, tool := range req.Tools {
+		names = append(names, tool.Name)
+	}
+	if req.ToolChoice != nil {
+		names = append(names, req.ToolChoice.Name)
+	}
+	for _, message := range req.Messages {
+		for _, call := range message.ToolCalls {
+			names = append(names, call.Name)
+		}
+	}
+	return names
+}
+
+// aliasToolNameMap maps each name that has to change to the name it goes out
+// under. Two different originals that would claim one alias are kept apart by
+// a digest of the later name, which is hex and so cannot reintroduce a
+// fragment.
+func aliasToolNameMap(names []string, alias func(string) string) map[string]string {
+	aliases := make(map[string]string, len(names))
+	taken := make(map[string]string, len(names))
+	for _, name := range names {
+		if _, done := aliases[name]; done {
+			continue
+		}
+		aliased := alias(name)
+		if aliased == name {
+			continue
+		}
+		if other, claimed := taken[aliased]; claimed && other != name {
+			aliased = collisionToolAlias(name, aliased)
+		}
+		aliases[name] = aliased
+		taken[aliased] = name
+	}
+	return aliases
+}
+
+// collisionToolAlias keeps a name apart from another that claimed the same
+// alias, by naming it after a digest of itself. The alias it departs from has
+// already passed the gateway's checks, so the head keeps its spelling.
+func collisionToolAlias(name, aliased string) string {
+	digest := sha256.Sum256([]byte(name))
+	suffix := "_" + hex.EncodeToString(digest[:freeToolAliasDigest])
+	head := aliased
+	if len(head) > freeToolNameLimit-len(suffix) {
+		head = head[:freeToolNameLimit-len(suffix)]
+	}
+	return head + suffix
 }
 
 // shortReplayedCalls renames the tools a conversation already called, on fresh
@@ -367,7 +425,9 @@ func openCodeFreeRequest(req *inference.Request, format catalog.APIFormat, cutTo
 	if copied.MaxTokens > 0 && copied.MaxTokens < freeMinMaxTokens {
 		copied.MaxTokens = freeMinMaxTokens
 	}
-	return &copied, shortToolNames(&copied)
+	originals := aliasToolNames(&copied, freeToolAlias)
+	scrubToolSelfReferences(copied.Tools, originals)
+	return &copied, originals
 }
 
 type toolCandidate struct {
