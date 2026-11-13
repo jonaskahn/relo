@@ -612,3 +612,189 @@ func TestOpenCodeGatewayRecognizesOnlyTheGatewayLanes(t *testing.T) {
 		}
 	}
 }
+
+// claudeToolNames are the declarations Claude Code sends that the signed-out
+// gateway reads as another client's, plus two it tolerates.
+var claudeToolNames = []string{
+	"ReportFindings", "ScheduleWakeup", "DeferredToolPlaceholder",
+	"AskUserQuestion", "ListAgents", "ShareOnboardingGuide",
+}
+
+func claudeRequest(names ...string) *inference.Request {
+	tools := make([]inference.Tool, 0, len(names))
+	for _, name := range names {
+		tools = append(tools, inference.Tool{Name: name})
+	}
+	return &inference.Request{Tools: tools}
+}
+
+// zenSignatureFree reports whether a name carries no fragment the gateway reads
+// as another client's, matching the way the gateway matches.
+func zenSignatureFree(name string) bool {
+	lowered := strings.ToLower(name)
+	for _, fragment := range []string{"reportfindings", "schedulewakeup", "deferredtoolplaceholder"} {
+		if strings.Contains(lowered, fragment) {
+			return false
+		}
+	}
+	return true
+}
+
+// The gateway refuses a request whose declarations carry reportfindings together
+// with schedulewakeup or deferredtoolplaceholder. Each fragment goes out
+// underscored, which the gateway does not match, and the answer is read back
+// under the client's own name.
+func TestOpenCodeFreeRequestBreaksTheSignatureFragments(t *testing.T) {
+	got, originals := wire.OpenCodeFreeRequest(
+		claudeRequest("ReportFindings", "ScheduleWakeup", "DeferredToolPlaceholder"),
+		catalog.FormatOpenAIResp)
+
+	want := map[string]string{
+		"ReportFindings":          "report_findings",
+		"ScheduleWakeup":          "schedule_wakeup",
+		"DeferredToolPlaceholder": "deferred_tool_placeholder",
+	}
+	for _, tool := range got.Tools {
+		if !zenSignatureFree(tool.Name) {
+			t.Errorf("tool name = %q, want no fragment the gateway refuses", tool.Name)
+		}
+		if alias, found := want[tool.Name]; found {
+			t.Errorf("tool name = %q, want %q", tool.Name, alias)
+		}
+	}
+	for original, alias := range want {
+		if originals[alias] != original {
+			t.Errorf("originals[%q] = %q, want %q", alias, originals[alias], original)
+		}
+	}
+}
+
+// A declaration the gateway reads as another client's is renamed; a declaration
+// it tolerates keeps its spelling, and a turn that carries no fragment pays
+// nothing.
+func TestOpenCodeFreeRequestLeavesOtherToolNamesAlone(t *testing.T) {
+	names := append([]string{}, claudeToolNames[3:]...)
+	names = append(names, "read", "mcp__server__do_thing")
+	got, originals := wire.OpenCodeFreeRequest(claudeRequest(names...), catalog.FormatOpenAIChat)
+	if len(originals) != 0 {
+		t.Fatalf("originals = %v, want no map for a turn that renamed nothing", originals)
+	}
+	declared := make(map[string]bool, len(got.Tools))
+	for _, tool := range got.Tools {
+		declared[tool.Name] = true
+	}
+	for _, name := range names {
+		if !declared[name] {
+			t.Errorf("tools = %v, want %q left alone", got.Tools, name)
+		}
+	}
+}
+
+// A demand for one named tool and the calls a conversation already made go out
+// under the same alias as the declaration, and the caller's request keeps the
+// names it arrived with.
+func TestOpenCodeFreeRequestAliasesTheChoiceAndReplayedCalls(t *testing.T) {
+	original := &inference.Request{
+		Tools:      []inference.Tool{{Name: "ReportFindings"}, {Name: "ScheduleWakeup"}},
+		ToolChoice: &inference.ToolChoice{Mode: inference.ToolChoiceTool, Name: "ReportFindings"},
+		Messages: []inference.Message{{
+			Role:      inference.RoleAssistant,
+			ToolCalls: []inference.ToolCall{{ID: "call_1", Name: "ReportFindings"}},
+		}},
+	}
+	got, originals := wire.OpenCodeFreeRequest(original, catalog.FormatOpenAIResp)
+
+	alias := got.Tools[0].Name
+	if alias != "report_findings" {
+		t.Fatalf("tool name = %q, want report_findings", alias)
+	}
+	if got.ToolChoice == nil || got.ToolChoice.Name != alias {
+		t.Fatalf("tool choice = %+v, want the demand under the same alias", got.ToolChoice)
+	}
+	if got.Messages[1].ToolCalls[0].Name != alias {
+		t.Fatalf("replayed call = %q, want the alias its declaration went out under",
+			got.Messages[1].ToolCalls[0].Name)
+	}
+	if originals[alias] != "ReportFindings" {
+		t.Fatalf("originals = %v, want the alias read back as the client's name", originals)
+	}
+	if original.Tools[0].Name != "ReportFindings" ||
+		original.ToolChoice.Name != "ReportFindings" ||
+		original.Messages[0].ToolCalls[0].Name != "ReportFindings" {
+		t.Fatal("the caller's request was rewritten, want every name it arrived with")
+	}
+}
+
+// Two declarations that differ only by case would break to one alias, and the
+// answer map is keyed by alias, so one of them has to keep a name of its own.
+func TestOpenCodeFreeRequestKeepsFragmentAliasesApart(t *testing.T) {
+	got, originals := wire.OpenCodeFreeRequest(
+		claudeRequest("ReportFindings", "reportfindings"), catalog.FormatOpenAIResp)
+	if got.Tools[0].Name == got.Tools[1].Name {
+		t.Fatalf("aliases = %q, want each declaration under its own name", got.Tools[0].Name)
+	}
+	if originals[got.Tools[0].Name] != "ReportFindings" ||
+		originals[got.Tools[1].Name] != "reportfindings" {
+		t.Fatalf("originals = %v, want each alias read back as its own declaration", originals)
+	}
+	for _, tool := range got.Tools {
+		if !zenSignatureFree(tool.Name) {
+			t.Errorf("tool name = %q, want no fragment the gateway refuses", tool.Name)
+		}
+	}
+}
+
+// A session that loads an MCP server can name one tool both after a fragment and
+// past the limit; both corrections land in one pass.
+func TestOpenCodeFreeRequestComposesTheFragmentBreakWithTheLengthLimit(t *testing.T) {
+	name := "mcp__server__DeferredToolPlaceholder_" + strings.Repeat("x", 60)
+	got, originals := wire.OpenCodeFreeRequest(claudeRequest(name), catalog.FormatOpenAIResp)
+	alias := got.Tools[0].Name
+	if len(alias) > 64 {
+		t.Fatalf("tool name = %q (%d characters), want at most 64", alias, len(alias))
+	}
+	if !zenSignatureFree(alias) {
+		t.Fatalf("tool name = %q, want no fragment the gateway refuses", alias)
+	}
+	if originals[alias] != name {
+		t.Fatalf("originals = %v, want the alias read back as the client's name", originals)
+	}
+}
+
+// A declaration's own description names the declaration, so it has to name the
+// one the model actually reads.
+func TestOpenCodeFreeRequestScrubsTheSelfReferenceInTheDescription(t *testing.T) {
+	original := &inference.Request{Tools: []inference.Tool{{
+		Name:        "ScheduleWakeup",
+		Description: "Use ScheduleWakeup to wake this conversation later.",
+	}}}
+	got, _ := wire.OpenCodeFreeRequest(original, catalog.FormatOpenAIResp)
+	if got.Tools[0].Name != "schedule_wakeup" {
+		t.Fatalf("tool name = %q, want schedule_wakeup", got.Tools[0].Name)
+	}
+	if strings.Contains(got.Tools[0].Description, "ScheduleWakeup") {
+		t.Fatalf("description = %q, want the declaration's own name replaced", got.Tools[0].Description)
+	}
+	if !strings.Contains(got.Tools[0].Description, "schedule_wakeup") {
+		t.Fatalf("description = %q, want the alias named", got.Tools[0].Description)
+	}
+	if !strings.Contains(original.Tools[0].Description, "ScheduleWakeup") {
+		t.Fatal("the caller's description was rewritten, want it left whole")
+	}
+}
+
+// The fingerprint rule belongs to the signed-out lane. The paid lane keeps the
+// client's names apart from the length limit it has always applied.
+func TestOpenCodeGatewayRequestKeepsThePaidLaneWhole(t *testing.T) {
+	got, originals := wire.OpenCodeGatewayRequest(
+		claudeRequest("ReportFindings", "ScheduleWakeup", "DeferredToolPlaceholder"))
+	for _, tool := range got.Tools {
+		if tool.Name != "ReportFindings" && tool.Name != "ScheduleWakeup" &&
+			tool.Name != "DeferredToolPlaceholder" {
+			t.Fatalf("tool name = %q, want the paid lane to leave the name alone", tool.Name)
+		}
+	}
+	if len(originals) != 0 {
+		t.Fatalf("originals = %v, want no map for names the paid lane does not touch", originals)
+	}
+}

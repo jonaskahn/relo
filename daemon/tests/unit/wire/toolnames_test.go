@@ -128,3 +128,25 @@ func TestRestoreToolNamesBindsAnUnscopedCodecWithoutChangingUnknownNames(t *test
 		t.Fatalf("bound response = %+v, %v", events, err)
 	}
 }
+
+// The fragment break produces a map in the same direction as the length limit:
+// keyed by the name that went out, valued by the name the client knows.
+func TestRestoreToolNamesNamesBackAFragmentBrokenTool(t *testing.T) {
+	module := wire.RestoreToolNames(namedCodec{name: "schedule_wakeup"}, map[string]string{
+		"schedule_wakeup": "ScheduleWakeup",
+	})
+	for path, events := range map[string][]inference.Event{
+		"stream": func() []inference.Event {
+			events, _ := module.NewStreamDecoder().Push(wire.SSEEvent{})
+			return events
+		}(),
+		"response": func() []inference.Event {
+			events, _ := module.DecodeResponse(nil)
+			return events
+		}(),
+	} {
+		if len(events) != 1 || events[0].ToolCall == nil || events[0].ToolCall.Name != "ScheduleWakeup" {
+			t.Errorf("%s = %+v, want the client's own name", path, events)
+		}
+	}
+}
