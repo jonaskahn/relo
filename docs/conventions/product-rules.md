@@ -120,6 +120,14 @@ The request-side gate accepts a system message containing an <env> block with a
 non-empty Working directory: line, together with a lowercase read declaration.
 The system message need not be first. A tool-free turn is accepted only as
 OpenCode's own complete title request; adding tools breaks that exception.
+The gate also fingerprints the declared tool names: a request whose names carry
+`reportfindings` together with `schedulewakeup` or `deferredtoolplaceholder` —
+Claude Code's tool set — is refused, matched case-insensitively and by
+substring. Relo therefore names such a declaration with its fragments broken
+(`report_findings`, `schedule_wakeup`, `deferred_tool_placeholder`) on the
+signed-out lane only, never dropping the tool, and restores the client's own
+name on every answer path. The paid Go lane keeps the client's names whole
+apart from the 64-character limit it has always applied.
 
 Relo appends only the environment instruction to the first system message, or
 creates a system message when none exists. An existing valid environment block
