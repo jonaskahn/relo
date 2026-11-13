@@ -446,10 +446,39 @@ func (g *zenGateway) zenRefusal(r *http.Request, body map[string]any) string {
 	if streamed, _ := body["stream"].(bool); !streamed {
 		return "the free tier can only be used from within OpenCode"
 	}
+	if zenSignatureRefused(body) {
+		return "the request declares another client's tool set"
+	}
 	if g.enforcePromptGate && (!zenPromptSatisfiesGate(body) || !zenToolsSatisfyLane(body)) {
 		return "the request needs an environment block and a read declaration"
 	}
 	return ""
+}
+
+// zenToolSignatures are the tool-name fragments the gateway reads as another
+// client's, which it refuses in company: reportfindings together with
+// schedulewakeup or deferredtoolplaceholder is Claude Code's tool set. The
+// gateway matches case-insensitively and by substring.
+var zenToolSignatures = []string{"reportfindings", "schedulewakeup", "deferredtoolplaceholder"}
+
+// zenSignatureRefused reports the fingerprint rule the free lane enforces: a
+// lone fragment passes, and a pair that names Claude Code's tool set refuses.
+func zenSignatureRefused(body map[string]any) bool {
+	carried := map[string]bool{}
+	for name := range zenToolNames(body["tools"]) {
+		lowered := strings.ToLower(name)
+		for _, fragment := range zenToolSignatures {
+			if strings.Contains(lowered, fragment) {
+				carried[fragment] = true
+			}
+		}
+	}
+	for _, fragment := range zenToolSignatures[1:] {
+		if carried[zenToolSignatures[0]] && carried[fragment] {
+			return true
+		}
+	}
+	return false
 }
 
 func zenPromptSatisfiesGate(body map[string]any) bool {
@@ -969,6 +998,64 @@ func TestZenFreeShortensAndNamesBackALongToolName(t *testing.T) {
 	}
 }
 
+// claudeToolDeclarations is the declaration set Claude Code sends, which the
+// gateway reads as another client's tool set.
+var claudeToolDeclarations = []string{
+	"Bash", "Read", "Glob", "Grep", "Write", "Edit", "MultiEdit", "NotebookEdit",
+	"WebFetch", "WebSearch", "TodoWrite", "BashOutput", "KillBash", "ListAgents",
+	"AskUserQuestion", "ShareOnboardingGuide", "ReportFindings", "ScheduleWakeup",
+	"DeferredToolPlaceholder", "Workflow", "ToolSearch",
+}
+
+func zenClaudeTools() string {
+	tools := make([]string, 0, len(claudeToolDeclarations))
+	for _, name := range claudeToolDeclarations {
+		tools = append(tools, `{"type":"function","function":{"name":"`+name+`",`+
+			`"description":"`+name+` tool","parameters":{"type":"object","properties":{}}}}`)
+	}
+	return "[" + strings.Join(tools, ",") + "]"
+}
+
+// The gateway refuses a request whose declarations carry reportfindings together
+// with schedulewakeup or deferredtoolplaceholder, which is Claude Code's tool set.
+// Every declaration still reaches the model, under a name the gateway accepts,
+// and the answer names the tool the client declared.
+func TestZenFreeServesTheClaudeToolSet(t *testing.T) {
+	gateway := newZenGateway(t, zenResponsesCallsReportFindings)
+	daemon := startZenFreeDaemon(t, gateway.URL(),
+		zenFreeModel{ID: "muse-spark-1.3-contributor-free", Format: catalog.FormatOpenAIResp})
+	response := send(t, daemon.dataPlane, "/v1/chat/completions", dataPlaneToken,
+		`{"model":"muse-spark-1.3-contributor-free","stream":false,`+
+			`"messages":[{"role":"user","content":"review the change"}],`+
+			`"tools":`+zenClaudeTools()+`}`)
+	defer func() { _ = response.Body.Close() }()
+	if response.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(response.Body)
+		t.Fatalf("status = %d, body = %s", response.StatusCode, body)
+	}
+	if zenSignatureRefused(gateway.last.body) {
+		t.Fatalf("upstream tools = %v, want no declaration set the gateway refuses",
+			zenToolNames(gateway.last.body["tools"]))
+	}
+	sent := zenToolNames(gateway.last.body["tools"])
+	for _, want := range append([]string{"report_findings", "schedule_wakeup",
+		"deferred_tool_placeholder"}, zenLaneTools...) {
+		if !sent[want] {
+			t.Fatalf("tools = %v, want %q offered to the model", sent, want)
+		}
+	}
+	if len(gateway.last.body["tools"].([]any)) != len(claudeToolDeclarations)+len(zenLaneTools) {
+		t.Fatalf("tools = %d, want every declaration kept", len(gateway.last.body["tools"].([]any)))
+	}
+	body, err := io.ReadAll(response.Body)
+	if err != nil {
+		t.Fatalf("read body: %v", err)
+	}
+	if !strings.Contains(string(body), "ReportFindings") {
+		t.Fatalf("body = %s, want the call named as the client declared it", body)
+	}
+}
+
 // A coding session with many MCP servers sends more declarations than the
 // gateway accepts. Relo keeps the client's native tools and code tools, then
 // fills the remaining slots with a stable random choice.
@@ -1059,6 +1146,22 @@ func zenOfferedToolName(body map[string]any) string {
 		}
 	}
 	return ""
+}
+
+// zenResponsesCallsReportFindings answers with a call to the tool Claude Code
+// names through the refused fragment, which is the name the model was offered.
+func zenResponsesCallsReportFindings(w http.ResponseWriter, _ zenAttempt) {
+	w.Header().Set("Content-Type", "text/event-stream")
+	_, _ = io.WriteString(w, strings.Join([]string{
+		`data: {"type":"response.output_item.added","sequence_number":1,"output_index":0,` +
+			`"item":{"type":"function_call","id":"fc_1","call_id":"call_1",` +
+			`"name":"report_findings","arguments":"","status":"in_progress"}}`,
+		``,
+		`data: {"type":"response.completed","sequence_number":2,"response":{"id":"resp_1",` +
+			`"object":"response","status":"completed","output":[],` +
+			`"usage":{"input_tokens":12,"output_tokens":3,"total_tokens":15}}}`,
+		``,
+	}, "\n"))
 }
 
 // zenFreeModel is one model on the keyless lane, with the upstream wire it
