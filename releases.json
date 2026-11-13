@@ -1,6 +1,6 @@
 {
-  "generated": "2026-11-13T10:21:06Z",
-  "latest": "v0.2.10",
+  "generated": "2026-11-13T17:26:47Z",
+  "latest": "v0.2.11",
   "latest_beta": "v0.2.11-beta.125.3c13ce9e",
   "install": {
     "stable": {
@@ -17,6 +17,158 @@
     }
   },
   "releases": [
+    {
+      "tag": "v0.2.11",
+      "version": "0.2.11",
+      "name": "v0.2.11 - Old days 🍂",
+      "channel": "stable",
+      "draft": false,
+      "published_at": "2026-11-13T17:26:32Z",
+      "page": "https://github.com/jonaskahn/relo/releases/tag/v0.2.11",
+      "notes": "## What's Changed\r\n* chore: bump to 0.2.11 by @github-actions[bot] in https://github.com/jonaskahn/relo/pull/109\r\n\r\n\r\n**Full Changelog**: https://github.com/jonaskahn/relo/compare/v0.2.10...v0.2.11",
+      "install": {
+        "script": "curl -fsSL https://relo.ifelse.one/install.sh | sh -s -- --version 0.2.11",
+        "powershell": "& ([scriptblock]::Create((irm https://relo.ifelse.one/install.ps1))) -Version 0.2.11",
+        "npm": "npm i -g @jonaskahn/relo@0.2.11"
+      },
+      "files": [
+        {
+          "name": "checksums.txt",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.2.11/checksums.txt",
+          "size": 588,
+          "os": "any",
+          "arch": "any",
+          "kind": "checksums",
+          "format": "txt"
+        },
+        {
+          "name": "Relo-0.2.11-arm64.zip",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.2.11/Relo-0.2.11-arm64.zip",
+          "size": 16426098,
+          "os": "macos",
+          "arch": "arm64",
+          "kind": "app",
+          "format": "zip"
+        },
+        {
+          "name": "relo-0.2.11-darwin-amd64.tar.gz",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.2.11/relo-0.2.11-darwin-amd64.tar.gz",
+          "size": 15606350,
+          "os": "macos",
+          "arch": "amd64",
+          "kind": "archive",
+          "format": "tar.gz"
+        },
+        {
+          "name": "relo-0.2.11-darwin-arm64.tar.gz",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.2.11/relo-0.2.11-darwin-arm64.tar.gz",
+          "size": 15147901,
+          "os": "macos",
+          "arch": "arm64",
+          "kind": "archive",
+          "format": "tar.gz"
+        },
+        {
+          "name": "relo-0.2.11-linux-amd64.tar.gz",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.2.11/relo-0.2.11-linux-amd64.tar.gz",
+          "size": 15300639,
+          "os": "linux",
+          "arch": "amd64",
+          "kind": "archive",
+          "format": "tar.gz"
+        },
+        {
+          "name": "relo-0.2.11-linux-arm64.tar.gz",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.2.11/relo-0.2.11-linux-arm64.tar.gz",
+          "size": 14476490,
+          "os": "linux",
+          "arch": "arm64",
+          "kind": "archive",
+          "format": "tar.gz"
+        },
+        {
+          "name": "Relo-0.2.11-universal.zip",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.2.11/Relo-0.2.11-universal.zip",
+          "size": 32419085,
+          "os": "macos",
+          "arch": "universal",
+          "kind": "app",
+          "format": "zip"
+        },
+        {
+          "name": "relo-0.2.11-windows-amd64.tar.gz",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.2.11/relo-0.2.11-windows-amd64.tar.gz",
+          "size": 15252968,
+          "os": "windows",
+          "arch": "amd64",
+          "kind": "archive",
+          "format": "tar.gz"
+        },
+        {
+          "name": "relo-0.2.11-windows-arm64.tar.gz",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.2.11/relo-0.2.11-windows-arm64.tar.gz",
+          "size": 14324572,
+          "os": "windows",
+          "arch": "arm64",
+          "kind": "archive",
+          "format": "tar.gz"
+        },
+        {
+          "name": "Relo-Setup-0.2.11-amd64.deb",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.2.11/Relo-Setup-0.2.11-amd64.deb",
+          "size": 15566614,
+          "os": "linux",
+          "arch": "amd64",
+          "kind": "installer",
+          "format": "deb"
+        },
+        {
+          "name": "Relo-Setup-0.2.11-amd64.exe",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.2.11/Relo-Setup-0.2.11-amd64.exe",
+          "size": 11235558,
+          "os": "windows",
+          "arch": "amd64",
+          "kind": "installer",
+          "format": "exe"
+        },
+        {
+          "name": "Relo-Setup-0.2.11-amd64.rpm",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.2.11/Relo-Setup-0.2.11-amd64.rpm",
+          "size": 15529657,
+          "os": "linux",
+          "arch": "amd64",
+          "kind": "installer",
+          "format": "rpm"
+        },
+        {
+          "name": "Relo-Setup-0.2.11-arm64.deb",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.2.11/Relo-Setup-0.2.11-arm64.deb",
+          "size": 14817462,
+          "os": "linux",
+          "arch": "arm64",
+          "kind": "installer",
+          "format": "deb"
+        },
+        {
+          "name": "Relo-Setup-0.2.11-arm64.exe",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.2.11/Relo-Setup-0.2.11-arm64.exe",
+          "size": 10152524,
+          "os": "windows",
+          "arch": "arm64",
+          "kind": "installer",
+          "format": "exe"
+        },
+        {
+          "name": "Relo-Setup-0.2.11-arm64.rpm",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.2.11/Relo-Setup-0.2.11-arm64.rpm",
+          "size": 14747305,
+          "os": "linux",
+          "arch": "arm64",
+          "kind": "installer",
+          "format": "rpm"
+        }
+      ]
+    },
     {
       "tag": "v0.2.11-beta.125.3c13ce9e",
       "version": "0.2.11-beta.125.3c13ce9e",
