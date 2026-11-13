@@ -86,12 +86,15 @@ worked instead of rotating onto another. A conversation that named itself still 
 both, and a pool strategy the operator picked to spread load — round-robin, random — is
 left to spread it.
 
-**A connection that failed everywhere cools down.** When every account of a connection has
-failed one request, the connection waits out its next failover step before it is asked
-again; a route whose every member failed waits the same way. While it waits, the request
-is answered at once with 503 and a `Retry-After` naming when to come back, and a route
-skips the cooling connection for its next member. Both the pins and the cooldowns live in
-memory: a restart starts every connection available.
+**A model a connection failed everywhere for cools down alone.** When every account of a
+connection has failed one request for one model, that model waits out its next failover step
+before it is asked again; a route whose every member failed waits the same way. While it
+waits, the request is answered at once with 503 and a `Retry-After` naming when to come back,
+and a route skips the cooling member for its next member. The wait belongs to the model that
+earned it: the other models of the same connection keep being asked, because a limit a
+provider names for one model says nothing about the others it serves. One limit is shared by
+the whole connection — a spent free lane — and that one waits for the connection. Both the
+pins and the cooldowns live in memory: a restart starts every connection available.
 
 **Keyless free pools require an operator opt-in on fresh installs.**
 The connections.free setting in config.toml gates OpenCode Zen Free and Kilo Code Free.
