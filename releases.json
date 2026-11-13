@@ -1,7 +1,7 @@
 {
-  "generated": "2026-11-13T17:27:12Z",
+  "generated": "2026-11-13T17:53:38Z",
   "latest": "v0.2.11",
-  "latest_beta": "v0.2.11-beta.125.3c13ce9e",
+  "latest_beta": "v0.2.12-beta.126.67c3779e",
   "install": {
     "stable": {
       "script": "curl -fsSL https://relo.ifelse.one/install.sh | sh",
@@ -17,6 +17,86 @@
     }
   },
   "releases": [
+    {
+      "tag": "v0.2.12-beta.126.67c3779e",
+      "version": "0.2.12-beta.126.67c3779e",
+      "name": "v0.2.12-beta.126.67c3779e",
+      "channel": "beta",
+      "draft": false,
+      "published_at": "2026-11-13T17:53:28Z",
+      "page": "https://github.com/jonaskahn/relo/releases/tag/v0.2.12-beta.126.67c3779e",
+      "notes": "## What's Changed\n* chore: bump to 0.2.12 by @github-actions[bot] in https://github.com/jonaskahn/relo/pull/110\n\n\n**Full Changelog**: https://github.com/jonaskahn/relo/compare/v0.2.11...v0.2.12-beta.126.67c3779e",
+      "install": {
+        "script": "curl -fsSL https://relo.ifelse.one/install.sh | sh -s -- --version 0.2.12-beta.126.67c3779e",
+        "powershell": "& ([scriptblock]::Create((irm https://relo.ifelse.one/install.ps1))) -Version 0.2.12-beta.126.67c3779e",
+        "npm": "npm i -g @jonaskahn/relo@0.2.12-beta.126.67c3779e"
+      },
+      "files": [
+        {
+          "name": "checksums.txt",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.2.12-beta.126.67c3779e/checksums.txt",
+          "size": 696,
+          "os": "any",
+          "arch": "any",
+          "kind": "checksums",
+          "format": "txt"
+        },
+        {
+          "name": "relo-0.2.12-beta.126.67c3779e-darwin-amd64.tar.gz",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.2.12-beta.126.67c3779e/relo-0.2.12-beta.126.67c3779e-darwin-amd64.tar.gz",
+          "size": 15606407,
+          "os": "macos",
+          "arch": "amd64",
+          "kind": "archive",
+          "format": "tar.gz"
+        },
+        {
+          "name": "relo-0.2.12-beta.126.67c3779e-darwin-arm64.tar.gz",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.2.12-beta.126.67c3779e/relo-0.2.12-beta.126.67c3779e-darwin-arm64.tar.gz",
+          "size": 15147958,
+          "os": "macos",
+          "arch": "arm64",
+          "kind": "archive",
+          "format": "tar.gz"
+        },
+        {
+          "name": "relo-0.2.12-beta.126.67c3779e-linux-amd64.tar.gz",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.2.12-beta.126.67c3779e/relo-0.2.12-beta.126.67c3779e-linux-amd64.tar.gz",
+          "size": 15300668,
+          "os": "linux",
+          "arch": "amd64",
+          "kind": "archive",
+          "format": "tar.gz"
+        },
+        {
+          "name": "relo-0.2.12-beta.126.67c3779e-linux-arm64.tar.gz",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.2.12-beta.126.67c3779e/relo-0.2.12-beta.126.67c3779e-linux-arm64.tar.gz",
+          "size": 14476043,
+          "os": "linux",
+          "arch": "arm64",
+          "kind": "archive",
+          "format": "tar.gz"
+        },
+        {
+          "name": "relo-0.2.12-beta.126.67c3779e-windows-amd64.tar.gz",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.2.12-beta.126.67c3779e/relo-0.2.12-beta.126.67c3779e-windows-amd64.tar.gz",
+          "size": 15252986,
+          "os": "windows",
+          "arch": "amd64",
+          "kind": "archive",
+          "format": "tar.gz"
+        },
+        {
+          "name": "relo-0.2.12-beta.126.67c3779e-windows-arm64.tar.gz",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.2.12-beta.126.67c3779e/relo-0.2.12-beta.126.67c3779e-windows-arm64.tar.gz",
+          "size": 14324366,
+          "os": "windows",
+          "arch": "arm64",
+          "kind": "archive",
+          "format": "tar.gz"
+        }
+      ]
+    },
     {
       "tag": "v0.2.11",
       "version": "0.2.11",
