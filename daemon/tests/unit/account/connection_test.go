@@ -1,6 +1,7 @@
 package pool_test
 
 import (
+	"net/http"
 	"testing"
 	"time"
 
@@ -39,77 +40,120 @@ func TestConnectionStartsOnTheAccountThatServed(t *testing.T) {
 	}
 }
 
-// TestConnectionForgetsAServedAccountOnceEveryAccountFailed pins the release:
-// a connection whose every account failed no longer remembers one, and a
-// success starts remembering again.
-func TestConnectionForgetsAServedAccountOnceEveryAccountFailed(t *testing.T) {
+// TestModelCooldownParksOnlyThatModel pins the scope of the wait: a model that
+// failed every account of a connection sits out, while the other models of the
+// same connection keep being asked.
+func TestModelCooldownParksOnlyThatModel(t *testing.T) {
 	clock := testkit.NewFakeClock(time.Now())
 	pool := newConnectionPool(t, clock)
 
-	pool.MarkServed("two")
-	pool.MarkExhausted(0)
+	pool.MarkModelUnavailable("alpha", 0)
+	pool.MarkModelUnavailable("alpha", 0)
+	if until := pool.ModelCooldownUntil("alpha"); until.IsZero() {
+		t.Fatal("ModelCooldownUntil(alpha) = zero, want the model parked")
+	}
+	if until := pool.ModelCooldownUntil("beta"); !until.IsZero() {
+		t.Fatalf("ModelCooldownUntil(beta) = %v, want the other model usable", until)
+	}
 	if selected, err := pool.Select(account.Selection{}); err != nil || selected.ID == "" {
 		t.Fatalf("Select() = %v, %v, want an account to pick from", selected.ID, err)
 	}
-	pool.MarkServed("one")
-	selected, err := pool.Select(account.Selection{})
-	if err != nil || selected.ID != "one" {
-		t.Fatalf("Select() = %q, %v, want the account that served after the failure", selected.ID, err)
-	}
 }
 
-// TestConnectionCooldownEscalatesAndExpires pins the ladder a connection walks
-// once every account failed: the first step of zero keeps it usable, the
-// second parks it, and the wait expires on its own.
-func TestConnectionCooldownEscalatesAndExpires(t *testing.T) {
+// TestModelCooldownEscalatesAndExpires pins the ladder one model walks once
+// every account of the connection failed it: the first step of zero keeps it
+// usable, the second parks it, and the wait expires on its own.
+func TestModelCooldownEscalatesAndExpires(t *testing.T) {
 	clock := testkit.NewFakeClock(time.Now())
 	pool := newConnectionPool(t, clock)
 
-	if until := pool.ConnectionCooldownUntil(); !until.IsZero() {
-		t.Fatalf("ConnectionCooldownUntil() = %v, want no cooldown before a failure", until)
+	if until := pool.ModelCooldownUntil("alpha"); !until.IsZero() {
+		t.Fatalf("ModelCooldownUntil() = %v, want no cooldown before a failure", until)
 	}
-	pool.MarkExhausted(0)
-	if until := pool.ConnectionCooldownUntil(); !until.IsZero() {
-		t.Fatalf("ConnectionCooldownUntil() = %v, want the zero step to keep the connection usable", until)
+	pool.MarkModelUnavailable("alpha", 0)
+	if until := pool.ModelCooldownUntil("alpha"); !until.IsZero() {
+		t.Fatalf("ModelCooldownUntil() = %v, want the zero step to keep the model usable", until)
 	}
-	pool.MarkExhausted(0)
-	if until := pool.ConnectionCooldownUntil(); until.IsZero() {
-		t.Fatal("ConnectionCooldownUntil() = zero, want the second failure to park the connection")
+	pool.MarkModelUnavailable("alpha", 0)
+	if until := pool.ModelCooldownUntil("alpha"); until.IsZero() {
+		t.Fatal("ModelCooldownUntil() = zero, want the second failure to park the model")
 	}
 	clock.Add(2*time.Minute + 59*time.Second)
-	if until := pool.ConnectionCooldownUntil(); until.IsZero() {
-		t.Fatal("ConnectionCooldownUntil() = zero, want the three-minute step to still run")
+	if until := pool.ModelCooldownUntil("alpha"); until.IsZero() {
+		t.Fatal("ModelCooldownUntil() = zero, want the three-minute step to still run")
 	}
 	clock.Add(2 * time.Second)
-	if until := pool.ConnectionCooldownUntil(); !until.IsZero() {
-		t.Fatalf("ConnectionCooldownUntil() = %v, want the step to expire", until)
+	if until := pool.ModelCooldownUntil("alpha"); !until.IsZero() {
+		t.Fatalf("ModelCooldownUntil() = %v, want the step to expire", until)
 	}
 }
 
-// TestConnectionCooldownHonoursARetryAfter pins a provider that named a longer
-// wait than the ladder step the connection had reached.
-func TestConnectionCooldownHonoursARetryAfter(t *testing.T) {
+// TestModelCooldownWalksItsOwnLadder pins that the failures of one model say
+// nothing about another: a second model starts at the first step of its own.
+func TestModelCooldownWalksItsOwnLadder(t *testing.T) {
 	clock := testkit.NewFakeClock(time.Now())
 	pool := newConnectionPool(t, clock)
 
-	pool.MarkExhausted(0)
-	pool.MarkExhausted(10 * time.Minute)
+	pool.MarkModelUnavailable("alpha", 0)
+	pool.MarkModelUnavailable("alpha", 0)
+	pool.MarkModelUnavailable("beta", 0)
+	if until := pool.ModelCooldownUntil("beta"); !until.IsZero() {
+		t.Fatalf("ModelCooldownUntil(beta) = %v, want the first step to keep it usable", until)
+	}
+	pool.MarkModelUnavailable("beta", 0)
+	if until := pool.ModelCooldownUntil("beta"); until.IsZero() {
+		t.Fatal("ModelCooldownUntil(beta) = zero, want the second failure to park it")
+	}
+}
+
+// TestModelCooldownHonoursARetryAfter pins a provider that named a longer wait
+// than the ladder step the model had reached.
+func TestModelCooldownHonoursARetryAfter(t *testing.T) {
+	clock := testkit.NewFakeClock(time.Now())
+	pool := newConnectionPool(t, clock)
+
+	pool.MarkModelUnavailable("alpha", 0)
+	pool.MarkModelUnavailable("alpha", 10*time.Minute)
 	clock.Add(6 * time.Minute)
-	if until := pool.ConnectionCooldownUntil(); until.IsZero() {
-		t.Fatal("ConnectionCooldownUntil() = zero, want the provider's own wait to win")
+	if until := pool.ModelCooldownUntil("alpha"); until.IsZero() {
+		t.Fatal("ModelCooldownUntil() = zero, want the provider's own wait to win")
+	}
+}
+
+// TestModelServedClearsOnlyThatModel pins that a model which answered ends its
+// own wait and its own ladder, and leaves the other models alone.
+func TestModelServedClearsOnlyThatModel(t *testing.T) {
+	clock := testkit.NewFakeClock(time.Now())
+	pool := newConnectionPool(t, clock)
+
+	pool.MarkModelUnavailable("alpha", 0)
+	pool.MarkModelUnavailable("alpha", 0)
+	pool.MarkModelUnavailable("beta", 0)
+	pool.MarkModelUnavailable("beta", 0)
+
+	pool.MarkModelServed("alpha")
+	if until := pool.ModelCooldownUntil("alpha"); !until.IsZero() {
+		t.Fatalf("ModelCooldownUntil(alpha) = %v, want the served model usable", until)
+	}
+	if until := pool.ModelCooldownUntil("beta"); until.IsZero() {
+		t.Fatal("ModelCooldownUntil(beta) = zero, want the other model still parked")
+	}
+	pool.MarkModelServed("alpha")
+	if until := pool.ModelCooldownUntil("beta"); until.IsZero() {
+		t.Fatal("ModelCooldownUntil(beta) = zero, want a served model to clear only its own wait")
 	}
 }
 
 // TestLaneSpentIsItsOwnKindOfCooldown pins the marker a spent shared lane
-// leaves: the connection cools for the named wait, a different exhaustion
-// never sets the marker, a success clears it, and the wait expires on its own.
+// leaves: the connection cools for the named wait, a model that failed does
+// not mark the lane, a success clears it, and the wait expires on its own.
 func TestLaneSpentIsItsOwnKindOfCooldown(t *testing.T) {
 	clock := testkit.NewFakeClock(time.Now())
 	pool := newConnectionPool(t, clock)
 
-	pool.MarkExhausted(0)
+	pool.MarkModelUnavailable("alpha", 0)
 	if until := pool.LaneSpentUntil(); !until.IsZero() {
-		t.Fatalf("LaneSpentUntil() = %v, want a plain exhaustion not to mark the lane", until)
+		t.Fatalf("LaneSpentUntil() = %v, want a failed model not to mark the lane", until)
 	}
 	pool.MarkLaneSpent(10 * time.Minute)
 	until := pool.LaneSpentUntil()
@@ -131,12 +175,12 @@ func TestLaneSpentIsItsOwnKindOfCooldown(t *testing.T) {
 	}
 }
 
-// TestSpentLaneWaitOutlivesAShorterExhaustion pins the shared allowance's own
-// clock: the lane named a long wait, and one account refused afterwards must
+// TestSpentLaneWaitOutlivesAShorterModelPark pins the shared allowance's own
+// clock: the lane named a long wait, and one model that failed afterwards must
 // not shorten it. The pool's failover step is 5 minutes at most, so a spent
-// lane that cooled 20 hours has to still read its own wait after a plain
-// exhaustion lands on the same connection.
-func TestSpentLaneWaitOutlivesAShorterExhaustion(t *testing.T) {
+// lane that cooled 20 hours has to still read its own wait after a model park
+// lands on the same connection.
+func TestSpentLaneWaitOutlivesAShorterModelPark(t *testing.T) {
 	clock := testkit.NewFakeClock(time.Now())
 	pool := newConnectionPool(t, clock)
 
@@ -147,9 +191,9 @@ func TestSpentLaneWaitOutlivesAShorterExhaustion(t *testing.T) {
 	}
 
 	// A rate limit that named a one-minute wait, the kind a single account
-	// answers. It describes the account, not the shared allowance.
-	pool.MarkExhausted(time.Minute)
-	pool.MarkExhausted(0)
+	// answers. It describes the model, not the shared allowance.
+	pool.MarkModelUnavailable("alpha", time.Minute)
+	pool.MarkModelUnavailable("alpha", 0)
 
 	if got := pool.CooldownUntil(); got.Before(spent) {
 		t.Fatalf("CooldownUntil() = %v, want the spent lane's %v to stand", got, spent)
@@ -160,18 +204,21 @@ func TestSpentLaneWaitOutlivesAShorterExhaustion(t *testing.T) {
 }
 
 // TestConnectionCooldownReportsThePooledWait covers the resolution the catalog
-// and the router read: a connection on its cooldown names that moment, and a
-// success clears it.
+// and the router read: a connection whose credentials are all waiting names
+// that moment, and a success clears it.
 func TestConnectionCooldownReportsThePooledWait(t *testing.T) {
 	clock := testkit.NewFakeClock(time.Now())
 	pool := newConnectionPool(t, clock)
 
-	pool.MarkExhausted(0)
-	pool.MarkExhausted(0)
+	pool.RecordFailure("one", http.StatusTooManyRequests, 0)
+	pool.RecordFailure("one", http.StatusTooManyRequests, 0)
+	pool.RecordFailure("two", http.StatusTooManyRequests, 0)
+	pool.RecordFailure("two", http.StatusTooManyRequests, 0)
 	if until := pool.CooldownUntil(); until.IsZero() {
 		t.Fatal("CooldownUntil() = zero, want the connection's own cooldown")
 	}
-	pool.MarkServed("one")
+	pool.RecordSuccess("one")
+	pool.RecordSuccess("two")
 	if until := pool.CooldownUntil(); !until.IsZero() {
 		t.Fatalf("CooldownUntil() = %v, want a success to clear the connection cooldown", until)
 	}
