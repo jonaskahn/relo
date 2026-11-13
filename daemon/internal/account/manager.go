@@ -234,9 +234,22 @@ func (m *Manager) MarkServed(providerID, credentialID string) {
 	m.GetPool(providerID).MarkServed(credentialID)
 }
 
-// MarkExhausted records that every account of a provider failed one request.
-func (m *Manager) MarkExhausted(providerID string, retryAfter time.Duration) {
-	m.GetPool(providerID).MarkExhausted(retryAfter)
+// MarkModelServed records that one model of a provider answered a request.
+func (m *Manager) MarkModelServed(providerID, modelID string) {
+	m.GetPool(providerID).MarkModelServed(modelID)
+}
+
+// MarkModelUnavailable records that every account of a provider failed a
+// request for one of its models, which parks that model alone.
+func (m *Manager) MarkModelUnavailable(providerID, modelID string, retryAfter time.Duration) {
+	m.GetPool(providerID).MarkModelUnavailable(modelID, retryAfter)
+}
+
+// ModelCooldownUntil is when one model of a provider may be asked again after
+// every account of it failed a request for that model. A zero time means the
+// model is not cooling down.
+func (m *Manager) ModelCooldownUntil(providerID, modelID string) time.Time {
+	return m.GetPool(providerID).ModelCooldownUntil(modelID)
 }
 
 // MarkLaneSpent records that a provider's shared free lane is spent.
@@ -268,6 +281,14 @@ func (m *Manager) SetFailoverBackoff(steps []time.Duration) {
 func CoolingDown(providerID string, until time.Time) string {
 	return fmt.Sprintf("%s: every account is cooling down after upstream rate limiting until %s",
 		providerID, until.UTC().Format("15:04 MST"))
+}
+
+// ModelCoolingDown names the model of a provider that is waiting out an
+// upstream rate limit. The limit belongs to that model, so the other models
+// of the same connection are not named.
+func ModelCoolingDown(providerID, modelID string, until time.Time) string {
+	return fmt.Sprintf("%s/%s: cooling down after upstream rate limiting until %s",
+		providerID, modelID, until.UTC().Format("15:04 MST"))
 }
 
 // Health reports the breaker state of one credential inside one provider's

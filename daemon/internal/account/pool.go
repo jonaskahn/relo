@@ -36,6 +36,9 @@ type Pool struct {
 	clock      clock.Clock
 	steps      []time.Duration
 	conn       connectionState
+	// modelWaits holds the wait one model of this connection sits out, keyed
+	// by model identifier.
+	modelWaits map[string]modelState
 }
 
 // NewPool creates an empty pool that picks credentials by quota headroom,
@@ -74,6 +77,7 @@ func NewPoolWithOptions(providerID string, options Options) *Pool {
 		models:     settings.Models,
 		clock:      settings.Clock,
 		steps:      steps,
+		modelWaits: map[string]modelState{},
 	}
 }
 
@@ -343,10 +347,11 @@ func (p *Pool) activeWhere(allows func(*Breaker) bool) []PoolEntry {
 
 // CooldownUntil is when every active credential of this pool may take a
 // request again. A zero time means at least one account can take a request
-// now, or none is cooling down.
+// now, or none is cooling down. A shared lane that is spent holds the whole
+// pool, because no account of it can help.
 func (p *Pool) CooldownUntil() time.Time {
-	if connection := p.ConnectionCooldownUntil(); !connection.IsZero() {
-		return connection
+	if lane := p.LaneSpentUntil(); !lane.IsZero() {
+		return lane
 	}
 	if len(p.ready()) > 0 {
 		return time.Time{}
