@@ -1,5 +1,5 @@
 {
-  "generated": "2026-11-13T17:53:38Z",
+  "generated": "2026-11-14T09:48:57Z",
   "latest": "v0.2.11",
   "latest_beta": "v0.2.12-beta.126.67c3779e",
   "install": {
@@ -105,7 +105,7 @@
       "draft": false,
       "published_at": "2026-11-13T17:26:32Z",
       "page": "https://github.com/jonaskahn/relo/releases/tag/v0.2.11",
-      "notes": "## What's Changed\r\n* Fix opencode free not work with Claude code/Claude desktop",
+      "notes": "## What's Changed\r\n* Fix opencode free does not work with ClaudeCode/ClaudeDesktop 🎇",
       "install": {
         "script": "curl -fsSL https://relo.ifelse.one/install.sh | sh -s -- --version 0.2.11",
         "powershell": "& ([scriptblock]::Create((irm https://relo.ifelse.one/install.ps1))) -Version 0.2.11",
