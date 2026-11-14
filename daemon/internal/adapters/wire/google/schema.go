@@ -20,7 +20,8 @@ var allowedTypes = map[string]bool{
 // format, a string enum, properties, one items schema, and required names that
 // exist. A type union keeps its first allowed type, and anyOf becomes a
 // nullable schema, a merged enum, or nothing. A schema that is not a JSON
-// object is returned as it arrived.
+// object is returned as it arrived. An array left without a usable items
+// schema gets an empty one, since Google rejects an array that has none.
 func SanitizeSchema(schema json.RawMessage) json.RawMessage {
 	if len(schema) == 0 {
 		return nil
@@ -62,7 +63,19 @@ func sanitizeObject(node map[string]any, preserveNull bool) map[string]any {
 			cleaned[key] = value
 		}
 	}
+	ensureArrayItems(cleaned)
 	return cleaned
+}
+
+// ensureArrayItems adds an empty items schema to an array that lost or never
+// had one, such as a bare array or a tuple-style items list.
+func ensureArrayItems(cleaned map[string]any) {
+	if cleaned["type"] != "array" {
+		return
+	}
+	if _, found := cleaned["items"]; !found {
+		cleaned["items"] = map[string]any{}
+	}
 }
 
 func applyEnum(node, cleaned map[string]any) {
