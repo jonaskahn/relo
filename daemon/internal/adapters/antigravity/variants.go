@@ -45,6 +45,24 @@ var variants = map[string]map[string]Variant{
 		catalog.AntigravityBandMedium: {WireModel: "gemini-3.8-flash-medium", MaxOutput: maxOutputGemini},
 		catalog.AntigravityBandHigh:   {WireModel: "gemini-3.8-flash-high", MaxOutput: maxOutputGemini},
 	},
+	"gemini-4-argon": {
+		catalog.AntigravityBandLow:    {WireModel: "gemini-4-argon-low", MaxOutput: maxOutputGemini},
+		catalog.AntigravityBandMedium: {WireModel: "gemini-4-argon-medium", MaxOutput: maxOutputGemini},
+		catalog.AntigravityBandHigh:   {WireModel: "gemini-4-argon-high", MaxOutput: maxOutputGemini},
+		catalog.AntigravityBandXHigh:  {WireModel: "gemini-4-argon-xhigh", MaxOutput: maxOutputGemini},
+	},
+	"gemini-4-hydrogen": {
+		catalog.AntigravityBandLow:    {WireModel: "gemini-4-hydrogen-low", MaxOutput: maxOutputGemini},
+		catalog.AntigravityBandMedium: {WireModel: "gemini-4-hydrogen-medium", MaxOutput: maxOutputGemini},
+		catalog.AntigravityBandHigh:   {WireModel: "gemini-4-hydrogen-high", MaxOutput: maxOutputGemini},
+		catalog.AntigravityBandXHigh:  {WireModel: "gemini-4-hydrogen-xhigh", MaxOutput: maxOutputGemini},
+	},
+	"gemini-4-carbon": {
+		catalog.AntigravityBandLow:    {WireModel: "gemini-4-carbon-low", MaxOutput: maxOutputGemini},
+		catalog.AntigravityBandMedium: {WireModel: "gemini-4-carbon-medium", MaxOutput: maxOutputGemini},
+		catalog.AntigravityBandHigh:   {WireModel: "gemini-4-carbon-high", MaxOutput: maxOutputGemini},
+		catalog.AntigravityBandXHigh:  {WireModel: "gemini-4-carbon-xhigh", MaxOutput: maxOutputGemini},
+	},
 	"gemini-3.1-pro": {
 		catalog.AntigravityBandLow:  {WireModel: "gemini-3.1-pro-low", ModelEnum: "MODEL_PLACEHOLDER_M36", MaxOutput: maxOutputPro},
 		catalog.AntigravityBandHigh: {WireModel: "gemini-pro-agent", ModelEnum: "MODEL_PLACEHOLDER_M16", MaxOutput: maxOutputPro},

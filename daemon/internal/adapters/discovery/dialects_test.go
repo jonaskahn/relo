@@ -366,6 +366,39 @@ func TestListAntigravityOrdersThinkingBandsLowFirst(t *testing.T) {
 	}
 }
 
+// TestListAntigravityPublishesTheExtraHighBand pins the fourth band a
+// generation the vendor serves at four efforts publishes: one model, four
+// efforts ordered lowest first, under the clean family name.
+func TestListAntigravityPublishesTheExtraHighBand(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"models":{
+			"gemini-4-argon-xhigh":{"displayName":"Gemini 4 Argon (Extra High)"},
+			"gemini-4-argon-low":{"displayName":"Gemini 4 Argon (Low)"},
+			"gemini-4-argon-medium":{"displayName":"Gemini 4 Argon (Medium)"},
+			"gemini-4-argon-high":{"displayName":"Gemini 4 Argon (High)"}
+		}}`))
+	}))
+	t.Cleanup(server.Close)
+
+	listed, err := New(server.Client()).List(context.Background(), Target{
+		Format: catalog.ModelsAntigravity, BaseURL: server.URL,
+		Auth: upstream.Authorization{Token: "tok", KeyHeader: catalog.KeyHeaderBearer},
+	})
+	if err != nil {
+		t.Fatalf("List(antigravity) error = %v", err)
+	}
+	if len(listed) != 1 || listed[0].ID != "gemini-4-argon" {
+		t.Fatalf("listed = %+v, want the four bands collapsed onto one model", listed)
+	}
+	if got, want := listed[0].ReasoningEfforts, []string{"low", "medium", "high", "xhigh"}; !slices.Equal(got, want) {
+		t.Fatalf("ReasoningEfforts = %v, want %v", got, want)
+	}
+	if listed[0].Name != "Gemini 4 Argon" {
+		t.Fatalf("name = %q, want the effort dropped", listed[0].Name)
+	}
+}
+
 // TestListAntigravityDropsTheDisabledIDs pins the vendor's off switch: an
 // entry the vendor names "disabled", and any SKU whose id ends that way,
 // never reaches the roster, so no client is offered a name a request cannot

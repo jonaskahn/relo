@@ -28,6 +28,22 @@ func TestCollapse(t *testing.T) {
 		{"3.8 flash medium", "gemini-3.8-flash", "medium", "gemini-3.8-flash-medium", "", maxOutputGemini, true},
 		{"3.8 flash high", "gemini-3.8-flash", "high", "gemini-3.8-flash-high", "", maxOutputGemini, true},
 
+		{"argon low", "gemini-4-argon", "low", "gemini-4-argon-low", "", maxOutputGemini, true},
+		{"argon medium", "gemini-4-argon", "medium", "gemini-4-argon-medium", "", maxOutputGemini, true},
+		{"argon high", "gemini-4-argon", "high", "gemini-4-argon-high", "", maxOutputGemini, true},
+		{"argon xhigh", "gemini-4-argon", "xhigh", "gemini-4-argon-xhigh", "", maxOutputGemini, true},
+		{"argon max takes the top band", "gemini-4-argon", "max", "gemini-4-argon-xhigh", "", maxOutputGemini, true},
+
+		{"hydrogen low", "gemini-4-hydrogen", "low", "gemini-4-hydrogen-low", "", maxOutputGemini, true},
+		{"hydrogen medium", "gemini-4-hydrogen", "medium", "gemini-4-hydrogen-medium", "", maxOutputGemini, true},
+		{"hydrogen high", "gemini-4-hydrogen", "high", "gemini-4-hydrogen-high", "", maxOutputGemini, true},
+		{"hydrogen xhigh", "gemini-4-hydrogen", "xhigh", "gemini-4-hydrogen-xhigh", "", maxOutputGemini, true},
+
+		{"carbon low", "gemini-4-carbon", "low", "gemini-4-carbon-low", "", maxOutputGemini, true},
+		{"carbon medium", "gemini-4-carbon", "medium", "gemini-4-carbon-medium", "", maxOutputGemini, true},
+		{"carbon high", "gemini-4-carbon", "high", "gemini-4-carbon-high", "", maxOutputGemini, true},
+		{"carbon xhigh", "gemini-4-carbon", "xhigh", "gemini-4-carbon-xhigh", "", maxOutputGemini, true},
+
 		{"3.6 flash low", "gemini-3.6-flash", "low", "gemini-3.6-flash-low", "", maxOutputGemini, true},
 		{"3.6 flash medium", "gemini-3.6-flash", "medium", "gemini-3.6-flash-medium", "", maxOutputGemini, true},
 		{"3.6 flash high", "gemini-3.6-flash", "high", "gemini-3.6-flash-high", "", maxOutputGemini, true},

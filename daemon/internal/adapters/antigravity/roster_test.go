@@ -26,6 +26,9 @@ func TestServes(t *testing.T) {
 	if Serves(catalog.Listed{ID: "gemini-4-argon-disabled"}, prefixes) {
 		t.Fatal("Serves(disabled) = true, want the vendor's off switch dropped")
 	}
+	if !Serves(catalog.Listed{ID: "gemini-4-carbon-xhigh"}, prefixes) {
+		t.Fatal("Serves(gemini-4) = false, want the new family kept")
+	}
 }
 
 func TestLogical(t *testing.T) {
