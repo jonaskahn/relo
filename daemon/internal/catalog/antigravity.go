@@ -61,37 +61,43 @@ func DisabledAntigravity(id string) bool {
 
 // The thinking bands the vendor names. Every logical model collapses onto one
 // band per request, and a client chooses the band by asking for an effort.
+// The fourth band is per model: a generation the vendor serves at four
+// efforts publishes an xhigh SKU, and one it does not stops at high.
 const (
 	AntigravityBandLow    = "low"
 	AntigravityBandMedium = "medium"
 	AntigravityBandHigh   = "high"
+	AntigravityBandXHigh  = "xhigh"
 )
 
 // AntigravityBands are the bands in the order a picker offers them, lowest
 // first, so a model's thinking levels read in the order a client shows them.
 func AntigravityBands() []string {
-	return []string{AntigravityBandLow, AntigravityBandMedium, AntigravityBandHigh}
+	return []string{AntigravityBandLow, AntigravityBandMedium, AntigravityBandHigh, AntigravityBandXHigh}
 }
 
 // AntigravityBand maps one canonical thinking effort onto the vendor's band.
-// The canonical ladder is longer than the vendor's three tiers: the steps
-// below low share the low band and the steps above high share the high band.
-// An effort outside the ladder takes the middle band, which the vendor lists
-// for every model it collapses.
+// The canonical ladder is longer than the vendor's tiers: the steps below low
+// share the low band, and max shares the top band. An effort outside the
+// ladder takes the middle band, which the vendor lists for every model it
+// collapses.
 func AntigravityBand(effort string) string {
 	switch effort {
 	case "none", "minimal", "low":
 		return AntigravityBandLow
-	case "high", "xhigh", "max":
+	case "high":
 		return AntigravityBandHigh
+	case "xhigh", "max":
+		return AntigravityBandXHigh
 	default:
 		return AntigravityBandMedium
 	}
 }
 
 // antigravityEffortSuffixes are the thinking-effort labels the vendor appends
-// to a Gemini model's display name.
-var antigravityEffortSuffixes = []string{" (Low)", " (Medium)", " (High)", " (Extra Low)"}
+// to a Gemini model's display name. The longest of a band's spellings comes
+// first, so an xhigh name is not left carrying its own tail.
+var antigravityEffortSuffixes = []string{" (Extra High)", " (Extra Low)", " (Low)", " (Medium)", " (High)"}
 
 // CleanAntigravityGeminiName drops the thinking-effort suffix the vendor
 // appends to a display name. Relo publishes the model once, its effort chosen

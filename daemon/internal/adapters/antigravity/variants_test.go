@@ -82,6 +82,16 @@ func TestCollapseLeavesUnnamedBandsAlone(t *testing.T) {
 	}
 }
 
+// TestCollapseFallsBackToTheTopBand pins what a stronger request on a model
+// that stops at high sends: the high SKU, never the logical id, which the
+// endpoint refuses.
+func TestCollapseFallsBackToTheTopBand(t *testing.T) {
+	variant, collapsed := Collapse("gemini-3.8-flash", "xhigh")
+	if !collapsed || variant.WireModel != "gemini-3.8-flash-high" {
+		t.Fatalf("Collapse(gemini-3.8-flash, xhigh) = %+v, %v, want the high SKU", variant, collapsed)
+	}
+}
+
 // TestClaudeVariantKeepsItsOwnID pins that a Claude model reaches the wire
 // under its own id: no effort maps it onto another SKU.
 func TestClaudeVariantKeepsItsOwnID(t *testing.T) {

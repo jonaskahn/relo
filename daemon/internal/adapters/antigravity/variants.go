@@ -80,9 +80,16 @@ func ClaudeVariant(model string) Variant {
 }
 
 // Collapse reports the wire identity a logical model collapses onto at one
-// canonical effort, with false for a pair the table does not name.
+// canonical effort, with false for a pair the table does not name. The top
+// band is the exception: a model the vendor serves at three efforts answers an
+// xhigh request on its high SKU, because the logical id itself is not one the
+// endpoint serves.
 func Collapse(logical, effort string) (Variant, bool) {
-	variant, found := variants[logical][catalog.AntigravityBand(effort)]
+	band := catalog.AntigravityBand(effort)
+	variant, found := variants[logical][band]
+	if !found && band == catalog.AntigravityBandXHigh {
+		variant, found = variants[logical][catalog.AntigravityBandHigh]
+	}
 	return variant, found
 }
 

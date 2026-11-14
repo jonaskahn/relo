@@ -103,6 +103,7 @@ func TestCleanAntigravityGeminiName(t *testing.T) {
 		{"Gemini 3.8 Flash (High)", "gemini-3.8-flash", "Gemini 3.8 Flash"},
 		{"Gemini 3.8 Flash (Low)", "gemini-3.8-flash", "Gemini 3.8 Flash"},
 		{"Gemini 3.5 Flash (Extra Low)", "gemini-3.5-flash", "Gemini 3.5 Flash"},
+		{"Gemini 4 Argon (Extra High)", "gemini-4-argon", "Gemini 4 Argon"},
 		{"Gemini 3.8 Flash", "gemini-3.8-flash", "Gemini 3.8 Flash"},
 		{"GPT-OSS 120B (Medium)", "gpt-oss-120b-medium", "GPT-OSS 120B (Medium)"},
 		{"Claude Sonnet 5.5 (Medium)", "claude-sonnet-5-5", "Claude Sonnet 5.5"},
@@ -119,15 +120,15 @@ func TestCleanAntigravityGeminiName(t *testing.T) {
 	}
 }
 
-// TestAntigravityBandCollectsTheLadder pins that the vendor's three bands
-// answer for the whole canonical ladder: the steps below low share the low
-// band, the steps above high share the high one, and an effort the ladder does
-// not name takes the middle band every collapsed model publishes.
+// TestAntigravityBandCollectsTheLadder pins that the vendor's bands answer for
+// the whole canonical ladder: the steps below low share the low band, max
+// shares the top one, and an effort the ladder does not name takes the middle
+// band every collapsed model publishes.
 func TestAntigravityBandCollectsTheLadder(t *testing.T) {
 	cases := map[string]string{
 		"none": AntigravityBandLow, "minimal": AntigravityBandLow, "low": AntigravityBandLow,
 		"medium": AntigravityBandMedium, "": AntigravityBandMedium, "nonsense": AntigravityBandMedium,
-		"high": AntigravityBandHigh, "xhigh": AntigravityBandHigh, "max": AntigravityBandHigh,
+		"high": AntigravityBandHigh, "xhigh": AntigravityBandXHigh, "max": AntigravityBandXHigh,
 	}
 	for effort, want := range cases {
 		if got := AntigravityBand(effort); got != want {
@@ -169,7 +170,7 @@ func TestDisabledAntigravity(t *testing.T) {
 }
 
 func TestAntigravityBandsAreOfferedLowestFirst(t *testing.T) {
-	want := []string{AntigravityBandLow, AntigravityBandMedium, AntigravityBandHigh}
+	want := []string{AntigravityBandLow, AntigravityBandMedium, AntigravityBandHigh, AntigravityBandXHigh}
 	if got := AntigravityBands(); !slices.Equal(got, want) {
 		t.Fatalf("AntigravityBands() = %v, want %v", got, want)
 	}
