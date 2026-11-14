@@ -149,6 +149,25 @@ func TestSelectAntigravityVariantFallsBackToTheSelection(t *testing.T) {
 	}
 }
 
+// TestDisabledAntigravity pins the vendor's off switch: a bare "disabled"
+// entry and any SKU whose id ends that way stay off the roster.
+func TestDisabledAntigravity(t *testing.T) {
+	cases := map[string]bool{
+		"disabled":                  true,
+		"gemini-4-argon-disabled":   true,
+		"GEMINI-4-CARBON-DISABLED":  true,
+		" gemini-4-argon-disabled ": true,
+		"gemini-4-argon":            false,
+		"gemini-4-argon-low":        false,
+		"disabled-reasoning":        false,
+	}
+	for id, want := range cases {
+		if got := DisabledAntigravity(id); got != want {
+			t.Errorf("DisabledAntigravity(%q) = %v, want %v", id, got, want)
+		}
+	}
+}
+
 func TestAntigravityBandsAreOfferedLowestFirst(t *testing.T) {
 	want := []string{AntigravityBandLow, AntigravityBandMedium, AntigravityBandHigh}
 	if got := AntigravityBands(); !slices.Equal(got, want) {

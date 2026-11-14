@@ -7,6 +7,7 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"slices"
 	"sort"
 	"strings"
 	"testing"
@@ -362,6 +363,25 @@ func TestListAntigravityOrdersThinkingBandsLowFirst(t *testing.T) {
 		if got[i] != want[i] {
 			t.Fatalf("ReasoningEfforts = %v, want %v", got, want)
 		}
+	}
+}
+
+// TestListAntigravityDropsTheDisabledIDs pins the vendor's off switch: an
+// entry the vendor names "disabled", and any SKU whose id ends that way,
+// never reaches the roster, so no client is offered a name a request cannot
+// select.
+func TestListAntigravityDropsTheDisabledIDs(t *testing.T) {
+	got := antigravityListIDs(t, `{"models":{
+		"gemini-3.8-flash": {"displayName": "Gemini 3.8 Flash"},
+		"gemini-4-argon-disabled": {"displayName": "Gemini 4 Argon (Disabled)"},
+		"disabled": {"displayName": "Disabled"}
+	},
+	"agentModelSorts": [{"displayName": "Recommended", "groups": [{"modelIds": [
+		"gemini-3.8-flash", "gemini-4-argon-disabled", "disabled"
+	]}]}]}`)
+	want := []string{"gemini-3.8-flash"}
+	if !slices.Equal(got, want) {
+		t.Fatalf("listed = %v, want %v", got, want)
 	}
 }
 

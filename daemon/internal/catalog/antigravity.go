@@ -51,6 +51,14 @@ func RetiredAntigravity(id string) bool {
 	return RetiredAntigravityIDs[id]
 }
 
+// DisabledAntigravity reports whether one Antigravity id is the vendor's own
+// off switch: the bare "disabled" entry and any SKU whose id ends that way.
+// The vendor lists those beside the models it serves, so a roster drops them
+// rather than offering a name a request can never select.
+func DisabledAntigravity(id string) bool {
+	return strings.HasSuffix(strings.ToLower(strings.TrimSpace(id)), "disabled")
+}
+
 // The thinking bands the vendor names. Every logical model collapses onto one
 // band per request, and a client chooses the band by asking for an effort.
 const (

@@ -374,6 +374,8 @@ func antigravityServes(id string, agents, others map[string]bool, deprecated map
 	switch {
 	case catalog.RetiredAntigravity(id):
 		return false
+	case catalog.DisabledAntigravity(id):
+		return false
 	case deprecated != nil:
 		if _, found := deprecated[id]; found {
 			return false

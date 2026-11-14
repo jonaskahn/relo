@@ -23,6 +23,9 @@ func TestServes(t *testing.T) {
 	if Serves(catalog.Listed{ID: "gemini-3.5-flash-low"}, prefixes) {
 		t.Fatal("Serves(retired) = true, want the retired SKU dropped")
 	}
+	if Serves(catalog.Listed{ID: "gemini-4-argon-disabled"}, prefixes) {
+		t.Fatal("Serves(disabled) = true, want the vendor's off switch dropped")
+	}
 }
 
 func TestLogical(t *testing.T) {

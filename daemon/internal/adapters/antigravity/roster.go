@@ -18,5 +18,8 @@ func Serves(entry catalog.Listed, prefixes []string) bool {
 	if catalog.RetiredAntigravity(entry.ID) {
 		return false
 	}
+	if catalog.DisabledAntigravity(entry.ID) {
+		return false
+	}
 	return catalog.MatchesPrefix(entry.ID, prefixes)
 }
