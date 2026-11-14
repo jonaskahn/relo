@@ -1,5 +1,5 @@
 {
-  "generated": "2026-11-14T15:10:58Z",
+  "generated": "2026-11-14T15:19:15Z",
   "latest": "v0.2.12",
   "latest_beta": "v0.2.13-beta.129.f34ba6bf",
   "install": {
@@ -185,7 +185,7 @@
       "draft": false,
       "published_at": "2026-11-14T13:38:36Z",
       "page": "https://github.com/jonaskahn/relo/releases/tag/v0.2.12",
-      "notes": "## 14-11-2026\r\n- Support new Gemini Models's Google Antigravity",
+      "notes": "## 14-11-2026\r\n- Support new Google Antigravity's Gemini Models",
       "install": {
         "script": "curl -fsSL https://relo.ifelse.one/install.sh | sh -s -- --version 0.2.12",
         "powershell": "& ([scriptblock]::Create((irm https://relo.ifelse.one/install.ps1))) -Version 0.2.12",
