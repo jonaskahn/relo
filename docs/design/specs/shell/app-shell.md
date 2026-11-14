@@ -8,7 +8,7 @@ requires: [surfaces-borders, color]
 
 `100dvh`. Document scroll is off at `html/body`. Two independent scroll regions:
 
-1. **Sidebar nav.** Fixed header (logo and branding) and fixed footer (GitHub and Buy me a coffee on the left, Manage
+1. **Sidebar nav.** Fixed header (logo and branding) and fixed footer (GitHub and Support me on the left, Manage
    daemon on the right). Only the nav list scrolls.
 2. **Main content.** `flex-1 overflow-y-auto`.
 

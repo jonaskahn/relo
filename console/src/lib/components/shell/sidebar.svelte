@@ -268,7 +268,7 @@
 			label={$t('ui.sidebar.coffee')}
 			iconSize={compact ? compactIcon : 16}
 			onclick={() =>
-				window.open('https://buymeacoffee.com/jonaskahn', '_blank', 'noopener,noreferrer')}
+				window.open('https://ko-fi.com/jonaskahn/goal?g=5', '_blank', 'noopener,noreferrer')}
 		/>
 		{#if !compact}
 			<!-- Spacer keeps Manage daemon at the far end. -->
