@@ -294,21 +294,24 @@ func (s settings) body(req *inference.Request, mode Mode, opts wire.CodecOpts) (
 }
 
 // assistVariant reports the wire SKU one Cloud Code Assist attempt sends.
-// Claude already names its own SKU and thinks through nothing, so it skips
-// the collapse every Gemini effort resolves through.
+// The account's own configuration wins: it names the SKU the vendor serves
+// the requested effort on, and it covers the Claude generations the vendor
+// collapses per effort as well as the Gemini ones. A model no account
+// published a configuration for falls back to the shipped table, and a Claude
+// generation the vendor serves under its own id keeps that id.
 func assistVariant(req *inference.Request, opts wire.CodecOpts) (string, antigravity.Variant) {
-	if claudeOnAntigravity(req.Model) {
-		return req.Model, antigravity.ClaudeVariant(req.Model)
-	}
-	variant, _ := antigravity.Collapse(req.Model, effortOf(req))
 	if opts.Antigravity != nil && opts.Antigravity.WireModel != "" {
 		return opts.Antigravity.WireModel, antigravity.Variant{
 			WireModel: opts.Antigravity.WireModel, ModelEnum: opts.Antigravity.ModelEnum,
 			MaxOutput: opts.Antigravity.MaxOutput, ThinkingBudget: opts.Antigravity.ThinkingBudget,
 		}
 	}
+	variant, _ := antigravity.Collapse(req.Model, effortOf(req))
 	if variant.WireModel != "" {
 		return variant.WireModel, variant
+	}
+	if claudeOnAntigravity(req.Model) {
+		return req.Model, antigravity.ClaudeVariant(req.Model)
 	}
 	return req.Model, variant
 }
