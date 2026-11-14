@@ -2246,6 +2246,22 @@ func TestSanitizeSchemaDetails(t *testing.T) {
 			t.Fatalf("schema = %s, want the union dropped", cleaned)
 		}
 	})
+	t.Run("arrays without usable items get an empty items schema", func(t *testing.T) {
+		cases := map[string]string{
+			`{"type":"array"}`:                                      `{"type":"array","items":{}}`,
+			`{"type":"array","items":{"type":"array"}}`:             `{"type":"array","items":{"type":"array","items":{}}}`,
+			`{"type":"array","items":[{"type":"string"}]}`:          `{"type":"array","items":{}}`,
+			`{"type":"array","items":true}`:                         `{"type":"array","items":{}}`,
+			`{"type":["array","null"]}`:                             `{"type":"array","nullable":true,"items":{}}`,
+			`{"type":"array","items":{"type":"string"}}`:            `{"type":"array","items":{"type":"string"}}`,
+			`{"type":"object","properties":{"b":{"type":"array"}}}`: `{"type":"object","properties":{"b":{"type":"array","items":{}}}}`,
+		}
+		for schema, want := range cases {
+			if got := string(google.SanitizeSchema(json.RawMessage(schema))); !sameJSON(got, want) {
+				t.Fatalf("SanitizeSchema(%s) = %s, want %s", schema, got, want)
+			}
+		}
+	})
 	t.Run("tuple prefixes are dropped", func(t *testing.T) {
 		cleaned := string(google.SanitizeSchema(json.RawMessage(`{"type":"array","items":{"type":"string"},"prefixItems":[{"type":"number"}]}`)))
 		if !sameJSON(cleaned, `{"items":{"type":"string"},"type":"array"}`) {
