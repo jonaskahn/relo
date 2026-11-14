@@ -994,6 +994,37 @@ func TestCloudCodeAssistCarriesTheSelectedSkuBudget(t *testing.T) {
 	}
 }
 
+// TestCloudCodeAssistClaudeUsesTheAccountSKU covers the Claude generation the
+// vendor collapses onto thinking bands: the account published the SKU every
+// effort resolves to, and the envelope must name that SKU. Sending the logical
+// id instead names an entity the endpoint does not serve, which it refuses
+// with a 404.
+func TestCloudCodeAssistClaudeUsesTheAccountSKU(t *testing.T) {
+	request := canonicalRequest(false)
+	request.Model = "claude-sonnet-5-5"
+	request.MaxTokens = 128000
+	request.Reasoning = &inference.ReasoningConfig{Effort: "high"}
+	envelope := assistEnvelope(t, request, wire.CodecOpts{
+		CredentialRef: "token", AuthMethod: wire.AuthOAuth, Project: "aicode-consumers",
+		Antigravity: &wire.AntigravityRequest{
+			WireModel: "claude-sonnet-5-5-high", ModelEnum: "MODEL_PLACEHOLDER_M405",
+			MaxOutput: 64000, Context: 1000000,
+		},
+	})
+	if got, _ := envelope["model"].(string); got != "claude-sonnet-5-5-high" {
+		t.Fatalf("model = %q, want the SKU the account published", got)
+	}
+	inner := envelope["request"].(map[string]any)
+	labels := inner["labels"].(map[string]any)
+	if labels["model_enum"] != "MODEL_PLACEHOLDER_M405" {
+		t.Fatalf("model_enum = %v, want the enum the account published", labels["model_enum"])
+	}
+	config := inner["generationConfig"].(map[string]any)
+	if got, _ := config["maxOutputTokens"].(float64); got != 64000 {
+		t.Fatalf("maxOutputTokens = %v, want the ceiling that SKU accepts", config["maxOutputTokens"])
+	}
+}
+
 func encodeEnvelope(t *testing.T, module wire.Codec, request *inference.Request, opts wire.CodecOpts) map[string]any {
 	t.Helper()
 	body, err := io.ReadAll(encode(t, module, request, opts).Body)
@@ -1534,6 +1565,9 @@ func TestCloudCodeAssistVariantRouting(t *testing.T) {
 		{"gemini-3.1-pro", "high", "gemini-pro-agent", "MODEL_PLACEHOLDER_M16", 65535},
 		{"claude-sonnet-4-6", "high", "claude-sonnet-4-6", "", 64000},
 		{"claude-opus-4-6-thinking", "high", "claude-opus-4-6-thinking", "", 64000},
+		{"claude-sonnet-5-5", "low", "claude-sonnet-5-5-low", "", 64000},
+		{"claude-sonnet-5-5", "medium", "claude-sonnet-5-5-medium", "", 64000},
+		{"claude-sonnet-5-5", "high", "claude-sonnet-5-5-high", "", 64000},
 		{"gemini-2.0-flash", "high", "gemini-2.0-flash", "", 65536},
 	}
 	for _, test := range cases {

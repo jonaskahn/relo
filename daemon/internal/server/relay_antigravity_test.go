@@ -38,6 +38,16 @@ func antigravityVariant(selection, effort, wireModel string) catalog.ModelReques
 	})
 }
 
+// claudeAntigravityVariant is the same tuple for a Claude generation the
+// vendor collapses, whose logical id names the generation rather than the
+// SKU.
+func claudeAntigravityVariant(selection, effort, wireModel string) catalog.ModelRequestConfig {
+	return catalog.EncodeAntigravityConfig(catalog.AntigravityVariant{
+		LogicalID: "claude-sonnet-5-5", Selection: selection, Effort: effort,
+		WireModel: wireModel, ModelEnum: "MODEL_" + wireModel, MaxOutput: 64000,
+	})
+}
+
 func TestSelectAntigravityAttempt(t *testing.T) {
 	first := catalog.Authorization{CredentialID: "cred-a", Label: "a", Token: "a"}
 	second := catalog.Authorization{CredentialID: "cred-b", Label: "b", Token: "b"}
@@ -126,6 +136,26 @@ func TestSelectAntigravityAttempt(t *testing.T) {
 		}
 		if len(tried) != 0 {
 			t.Fatalf("tried = %v, want no account excluded", tried)
+		}
+	})
+
+	t.Run("a collapsed claude model resolves its effort SKU", func(t *testing.T) {
+		relay := &attemptStubRelay{accounts: []catalog.Authorization{first}}
+		server := attemptTestServer(relay, attemptStubConfigs{configs: map[string][]catalog.ModelRequestConfig{
+			"cred-a": {claudeAntigravityVariant("high", "high", "claude-sonnet-5-5-high")},
+		}})
+		spec := antigravityTestSpec(first, "high")
+		spec.candidate.ModelID = "claude-sonnet-5-5"
+		spec.candidate.Model = catalog.Model{ID: "claude-sonnet-5-5"}
+		selection, err := server.selectAntigravityAttempt(context.Background(), spec, map[string][]string{})
+		if err != nil {
+			t.Fatalf("selectAntigravityAttempt() error = %v", err)
+		}
+		if selection == nil || selection.WireModel != "claude-sonnet-5-5-high" {
+			t.Fatalf("selection = %+v, want the SKU the effort names", selection)
+		}
+		if selection.ModelEnum != "MODEL_claude-sonnet-5-5-high" {
+			t.Fatalf("selection = %+v, want the enum the vendor published", selection)
 		}
 	})
 }
