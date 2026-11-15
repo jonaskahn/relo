@@ -132,6 +132,11 @@ func (s *Server) dataPlaneRoutes(served dataPlaneProtocol) *http.ServeMux {
 	for _, surface := range served.surfaces {
 		mux.HandleFunc("POST "+surface.path, s.handleInference(surface))
 	}
+	if served.id == inference.ProtocolAnthropic {
+		// A Messages client asks what its prompt costs before sending it, and
+		// the count belongs to the protocol that reads the body.
+		mux.HandleFunc("POST "+countTokensPath, s.handleCountTokens)
+	}
 	mux.HandleFunc("GET "+modelsPath, s.handleListModels(served.id))
 	mux.HandleFunc("/", s.handleNotFound)
 	return mux
