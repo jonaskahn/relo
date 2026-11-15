@@ -156,6 +156,7 @@ func (s *Server) registerIntegrationRoutes(mux *http.ServeMux) {
 	mux.HandleFunc("POST "+apiPrefix+"integrations/{id}/enable", s.handleEnableIntegration)
 	mux.HandleFunc("POST "+apiPrefix+"integrations/{id}/disable", s.handleDisableIntegration)
 	mux.HandleFunc("POST "+apiPrefix+"integrations/{id}/rotate", s.handleRotateIntegration)
+	mux.HandleFunc("POST "+apiPrefix+"integrations/{id}/mode", s.handleIntegrationMode)
 	mux.HandleFunc("POST "+apiPrefix+"integrations/{id}/repair", s.handleRepairIntegration)
 	mux.HandleFunc("GET "+apiPrefix+"integrations/{id}/model-config", s.handleGetClaudeModelConfig)
 	mux.HandleFunc("POST "+apiPrefix+"integrations/{id}/model-config", s.handleSetClaudeModelConfig)

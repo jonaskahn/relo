@@ -49,6 +49,31 @@ const (
 	KindClaudeDesktop  = "claude-desktop"
 )
 
+// The ways one integration points its client at Relo. Env is the settings
+// mode every integration was wired in before proxy mode existed: the client's
+// own configuration names Relo's data plane. Proxy leaves the client talking
+// to the vendor and puts Relo's intercept in the path instead.
+const (
+	ModeEnv   = "env"
+	ModeProxy = "proxy"
+)
+
+// ErrUnknownMode reports a mode no integration understands.
+var ErrUnknownMode = errors.New("unknown integration mode")
+
+// NormalizeMode keeps the stored spelling one of the modes this build knows,
+// and treats an absent one as the mode every earlier row was written in.
+func NormalizeMode(mode string) (string, error) {
+	switch strings.TrimSpace(mode) {
+	case "", ModeEnv:
+		return ModeEnv, nil
+	case ModeProxy:
+		return ModeProxy, nil
+	default:
+		return "", fmt.Errorf("%q: %w", mode, ErrUnknownMode)
+	}
+}
+
 var (
 	// ErrUnknownAgent reports an identifier no integration matches.
 	ErrUnknownAgent = errors.New("unknown integration")
@@ -91,6 +116,10 @@ type Record struct {
 	ModelsDigest string
 	// Context1M is the Codex card's 1M button. A new row starts on.
 	Context1M bool
+	// Mode is how this integration points its client at Relo: ModeEnv or
+	// ModeProxy. An empty value is ModeEnv, which is how every row written
+	// before proxy mode existed reads.
+	Mode string
 }
 
 // FileRecord is one file Relo wrote for an integration: where it is, the
@@ -143,6 +172,9 @@ type Options struct {
 	ClaudeModels func() []ModelRef
 	// ClaudeAuth reports login or proxy. Nil detects it on this machine.
 	ClaudeAuth func() ClaudeAuth
+	// Proxy runs the intercept proxy mode points a client at. Nil means this
+	// build offers no proxy mode.
+	Proxy ProxyRuntime
 }
 
 // Manager owns every write an integration makes.
@@ -156,6 +188,7 @@ type Manager struct {
 	models       func() []ModelRef
 	claudeModels func() []ModelRef
 	claudeAuth   func() ClaudeAuth
+	proxy        ProxyRuntime
 }
 
 // New returns a manager over the given paths and store.
@@ -172,6 +205,7 @@ func New(options Options) *Manager {
 		paths: options.Paths, agents: options.Agents, files: options.Files,
 		store: options.Store, logger: logger, now: now,
 		models: options.Models, claudeModels: options.ClaudeModels, claudeAuth: options.ClaudeAuth,
+		proxy: options.Proxy,
 	}
 }
 
@@ -222,6 +256,11 @@ type View struct {
 	// Context1M is whether Codex setup writes the 1M window. It stays true
 	// until the operator turns that button off.
 	Context1M bool
+	// Mode is how this integration points its client at Relo.
+	Mode string
+	// ProxyState is how the client's settings stand against proxy mode. It is
+	// empty for an integration wired in settings mode.
+	ProxyState ProxyModeState
 }
 
 // Agents lists every integration this build knows.
@@ -475,6 +514,10 @@ func (m *Manager) Inspect(ctx context.Context, id string) (View, error) {
 		Files:       []FileView{},
 		Context1M:   agent.ID == "codex" && (!found || record.Context1M),
 	}
+	view.Mode, _ = NormalizeMode(record.Mode)
+	if view.Mode == ModeProxy && found {
+		view.ProxyState = m.proxyState(agent, files)
+	}
 	view = m.inspectFiles(agent, files, view)
 	if record.Enabled {
 		view.Reasons = m.attentionReasons(agent, record, files, view.Files)
@@ -669,6 +712,27 @@ func (m *Manager) contributionDrifted(agent Agent, file FileRecord, content stri
 type EnableOptions struct {
 	Overwrite        bool
 	OpenCodeVersions string
+	// Mode is how the client is pointed at Relo. An empty value keeps the
+	// mode the integration already carries, so callers that never mention a
+	// mode keep writing the settings file they always did.
+	Mode string
+}
+
+// Mode reports how one integration is wired, defaulting an absent value to
+// the settings mode every earlier row was written in.
+func (m *Manager) Mode(ctx context.Context, id string) (string, error) {
+	record, found, err := m.store.Integration(ctx, id)
+	if err != nil {
+		return "", err
+	}
+	if !found {
+		return ModeEnv, nil
+	}
+	mode, err := NormalizeMode(record.Mode)
+	if err != nil {
+		return ModeEnv, nil
+	}
+	return mode, nil
 }
 
 // EnableOverwriting writes everything one agent needs even when the client's
@@ -692,34 +756,101 @@ func (m *Manager) EnableWith(ctx context.Context, id, token string, opts EnableO
 }
 
 func (m *Manager) enable(ctx context.Context, id, token string, opts EnableOptions) (View, error) {
-	agent, found := m.agents.AgentFor(id)
-	if !found {
-		return View{}, fmt.Errorf("%s: %w", id, ErrUnknownAgent)
-	}
-	if err := m.requireSurface(agent); err != nil {
-		return View{}, err
-	}
-	record, err := m.ensureRecord(ctx, agent.ID)
+	agent, record, err := m.prepareEnable(ctx, id, &opts)
 	if err != nil {
 		return View{}, err
 	}
-	if err := m.writeKeyFile(ctx, agent, token); err != nil {
+	if err := m.writeEnableFiles(ctx, agent, token, opts); err != nil {
 		return View{}, err
 	}
-	if err := m.provisionAgentFiles(ctx, agent, token, opts); err != nil {
-		return View{}, err
-	}
-	if err := m.publishAgentEnv(ctx, agent); err != nil {
-		return View{}, err
-	}
-	record.ID, record.Enabled, record.State, record.LastError = id, true, StateOn, ""
-	record.ModelsDigest = m.files.ModelsDigest(m.modelsFor(agent))
-	record.UpdatedAtMs = m.now().UnixMilli()
-	if err := m.store.SaveIntegration(ctx, record); err != nil {
+	if err := m.recordEnable(ctx, agent, record, opts.Mode); err != nil {
 		return View{}, err
 	}
 	m.appendOp(ctx, id, "enable", "")
 	return m.Inspect(ctx, id)
+}
+
+// prepareEnable resolves the agent, the mode this setup runs in, and the
+// record it writes through, leaving the mode on opts for the writers.
+func (m *Manager) prepareEnable(ctx context.Context, id string, opts *EnableOptions) (Agent, Record, error) {
+	agent, found := m.agents.AgentFor(id)
+	if !found {
+		return Agent{}, Record{}, fmt.Errorf("%s: %w", id, ErrUnknownAgent)
+	}
+	if err := m.requireSurface(agent); err != nil {
+		return Agent{}, Record{}, err
+	}
+	mode, err := m.modeFor(ctx, agent, opts.Mode)
+	if err != nil {
+		return Agent{}, Record{}, err
+	}
+	opts.Mode = mode
+	record, err := m.ensureRecord(ctx, agent.ID)
+	if err != nil {
+		return Agent{}, Record{}, err
+	}
+	return agent, record, nil
+}
+
+// writeEnableFiles writes everything one setup owns, in the order a client
+// reads it: whatever the mode needs running, the key, the client's files, and
+// the environment a launcher reads.
+func (m *Manager) writeEnableFiles(ctx context.Context, agent Agent, token string, opts EnableOptions) error {
+	if err := m.ensureModeReady(agent, opts.Mode); err != nil {
+		return err
+	}
+	if err := m.writeKeyFile(ctx, agent, token); err != nil {
+		return err
+	}
+	if err := m.provisionAgentFiles(ctx, agent, token, opts); err != nil {
+		return err
+	}
+	return m.publishAgentEnv(ctx, agent)
+}
+
+// recordEnable stores what a successful setup achieved: the integration is
+// on, in the mode this setup wrote, with the model list it was written from.
+func (m *Manager) recordEnable(ctx context.Context, agent Agent, record Record, mode string) error {
+	record.ID, record.Enabled, record.State, record.LastError = agent.ID, true, StateOn, ""
+	record.Mode = mode
+	record.ModelsDigest = m.files.ModelsDigest(m.modelsFor(agent))
+	record.UpdatedAtMs = m.now().UnixMilli()
+	return m.store.SaveIntegration(ctx, record)
+}
+
+// ensureModeReady starts whatever a mode needs before any file names it. The
+// proxy's certificate and the address it binds must exist before the client is
+// told to trust either, so a refusal here leaves the machine as it was.
+func (m *Manager) ensureModeReady(agent Agent, mode string) error {
+	if mode != ModeProxy {
+		return nil
+	}
+	return m.ensureProxyMode(agent)
+}
+
+// modeFor resolves the mode an enable writes. An unstated mode keeps what the
+// integration already carries, so a Repair never silently moves an operator
+// off proxy mode and back onto the settings file.
+func (m *Manager) modeFor(ctx context.Context, agent Agent, requested string) (string, error) {
+	mode, err := NormalizeMode(requested)
+	if err != nil {
+		return "", err
+	}
+	if strings.TrimSpace(requested) != "" {
+		if mode == ModeProxy && agent.ID != "claude-code" {
+			return "", fmt.Errorf("%s: proxy mode wires Claude Code only", agent.ID)
+		}
+		return mode, nil
+	}
+	existing, found, err := m.store.Integration(ctx, agent.ID)
+	if err != nil || !found {
+		return ModeEnv, nil
+	}
+	current, err := NormalizeMode(existing.Mode)
+	if err != nil {
+		return ModeEnv, nil
+	}
+	return current, nil
 }
 
 func (m *Manager) provisionAgentFiles(ctx context.Context, agent Agent, token string, opts EnableOptions) error {
@@ -871,6 +1002,13 @@ func (m *Manager) Restore(ctx context.Context, id string, force bool) (View, err
 		m.recordFailure(ctx, agent, err)
 		return View{}, err
 	}
+	// Proxy mode's environment is Relo's own addition too, so it comes out
+	// before the snapshots do: a snapshot taken before Relo ever wrote holds
+	// no proxy keys, and restoring it would already leave the client clean.
+	if err := m.retireClaudeProxySettings(agent); err != nil {
+		m.recordFailure(ctx, agent, err)
+		return View{}, err
+	}
 	kept, doomed, err := m.stripCatalogFiles(ctx, agent, files, force)
 	if err != nil {
 		return View{}, err
@@ -969,6 +1107,13 @@ func (m *Manager) clearRestoredState(ctx context.Context, agent Agent, id string
 	if err := m.removeCodexCache(agent); err != nil {
 		return err
 	}
+	if mode, err := m.Mode(ctx, id); err == nil && mode == ModeProxy && m.proxy != nil {
+		// A removed integration must not leave a listener behind, nor the
+		// certificate file the client was told to trust.
+		if err := m.proxy.Retire(id); err != nil {
+			return err
+		}
+	}
 	return m.files.UnpublishEnv(agent)
 }
 
@@ -1040,7 +1185,7 @@ func (m *Manager) writeClientFiles(ctx context.Context, agent Agent, token strin
 		}
 		return m.writeCodexConfig(ctx, agent)
 	case "claude-code":
-		return m.writeClaudeSettings(ctx, agent)
+		return m.writeClaudeClient(ctx, agent, opts)
 	case "claude-desktop":
 		return m.writeClaudeDesktop(ctx, agent, token)
 	case ClientOpenCode, ClientHermes, ClientOpenClaw:
@@ -1266,6 +1411,32 @@ func (m *Manager) SetCodexContext(ctx context.Context, enabled bool) (View, erro
 	}
 	m.appendOp(ctx, agent.ID, "context", "")
 	return m.Inspect(ctx, agent.ID)
+}
+
+// writeClaudeClient writes the Claude Code wiring for the mode this setup
+// runs in: the settings that name Relo's surface, or the environment that
+// reaches the vendor through Relo's intercept.
+func (m *Manager) writeClaudeClient(ctx context.Context, agent Agent, opts EnableOptions) error {
+	if opts.Mode == ModeProxy {
+		if err := m.retireClaudeHelper(agent); err != nil {
+			return err
+		}
+		return m.writeClaudeProxySettings(ctx, agent)
+	}
+	return m.writeClaudeSettings(ctx, agent)
+}
+
+// retireClaudeHelper removes the key helper proxy mode does not use: a client
+// talking to the vendor authenticates with its own login.
+func (m *Manager) retireClaudeHelper(agent Agent) error {
+	path := m.paths.HelperFile(agent.ID)
+	if err := os.Remove(path); err != nil && !errors.Is(err, os.ErrNotExist) {
+		return fmt.Errorf("remove %s: %w", path, err)
+	}
+	if err := m.store.DeleteFile(context.Background(), agent.ID, KindClaudeHelper); err != nil {
+		return err
+	}
+	return nil
 }
 
 func (m *Manager) writeClaudeSettings(ctx context.Context, agent Agent) error {

@@ -28,7 +28,7 @@ func (s *IntegrationStore) Integration(ctx context.Context, id string) (integrat
 	return integration.Record{
 		ID: row.ID, Enabled: row.Enabled, KeyID: row.KeyID,
 		State: row.State, LastError: row.LastError, UpdatedAtMs: row.UpdatedAtMs,
-		ModelsDigest: row.ModelsDigest, Context1M: row.Context1M,
+		ModelsDigest: row.ModelsDigest, Context1M: row.Context1M, Mode: row.Mode,
 	}, true, nil
 }
 
@@ -37,7 +37,7 @@ func (s *IntegrationStore) SaveIntegration(ctx context.Context, record integrati
 	return s.repo.Save(ctx, sqlite.IntegrationRow{
 		ID: record.ID, Enabled: record.Enabled, KeyID: record.KeyID,
 		State: record.State, LastError: record.LastError, UpdatedAtMs: record.UpdatedAtMs,
-		ModelsDigest: record.ModelsDigest, Context1M: record.Context1M,
+		ModelsDigest: record.ModelsDigest, Context1M: record.Context1M, Mode: record.Mode,
 	})
 }
 

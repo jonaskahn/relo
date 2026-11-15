@@ -9,12 +9,12 @@ import (
 )
 
 const (
-	getIntegrationSQL  = "SELECT id, enabled, key_id, state, last_error, updated_at, models_digest, context_1m FROM integrations WHERE id = ?"
-	saveIntegrationSQL = "INSERT INTO integrations (id, enabled, key_id, state, last_error, updated_at, models_digest, context_1m)" +
-		" VALUES (?, ?, ?, ?, ?, ?, ?, ?)" +
+	getIntegrationSQL  = "SELECT id, enabled, key_id, state, last_error, updated_at, models_digest, context_1m, mode FROM integrations WHERE id = ?"
+	saveIntegrationSQL = "INSERT INTO integrations (id, enabled, key_id, state, last_error, updated_at, models_digest, context_1m, mode)" +
+		" VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)" +
 		" ON CONFLICT (id) DO UPDATE SET enabled = excluded.enabled, key_id = excluded.key_id," +
 		" state = excluded.state, last_error = excluded.last_error, updated_at = excluded.updated_at," +
-		" models_digest = excluded.models_digest, context_1m = excluded.context_1m"
+		" models_digest = excluded.models_digest, context_1m = excluded.context_1m, mode = excluded.mode"
 	listIntegrationFilesSQL = "SELECT integration_id, kind, path, digest, snapshot_path, updated_at" +
 		" FROM integration_files WHERE integration_id = ? ORDER BY kind"
 	saveIntegrationFileSQL = "INSERT INTO integration_files (integration_id, kind, path, digest, snapshot_path, updated_at)" +
@@ -39,6 +39,8 @@ type IntegrationRow struct {
 	UpdatedAtMs  int64
 	ModelsDigest string
 	Context1M    bool
+	// Mode is how this integration points its client at Relo: env or proxy.
+	Mode string
 }
 
 // IntegrationFileRow is one file Relo wrote for an integration.
@@ -74,7 +76,8 @@ func NewIntegrationRepo(db *DB) *IntegrationRepo {
 func (r *IntegrationRepo) Get(ctx context.Context, id string) (IntegrationRow, bool, error) {
 	var row IntegrationRow
 	err := r.db.sql.QueryRowContext(ctx, getIntegrationSQL, id).Scan(
-		&row.ID, &row.Enabled, &row.KeyID, &row.State, &row.LastError, &row.UpdatedAtMs, &row.ModelsDigest, &row.Context1M)
+		&row.ID, &row.Enabled, &row.KeyID, &row.State, &row.LastError, &row.UpdatedAtMs, &row.ModelsDigest, &row.Context1M,
+		&row.Mode)
 	if errors.Is(err, sql.ErrNoRows) {
 		return IntegrationRow{}, false, nil
 	}
@@ -87,7 +90,8 @@ func (r *IntegrationRepo) Get(ctx context.Context, id string) (IntegrationRow, b
 // Save stores one integration.
 func (r *IntegrationRepo) Save(ctx context.Context, row IntegrationRow) error {
 	if _, err := r.db.sql.ExecContext(ctx, saveIntegrationSQL,
-		row.ID, row.Enabled, row.KeyID, row.State, row.LastError, row.UpdatedAtMs, row.ModelsDigest, row.Context1M); err != nil {
+		row.ID, row.Enabled, row.KeyID, row.State, row.LastError, row.UpdatedAtMs, row.ModelsDigest, row.Context1M,
+		row.Mode); err != nil {
 		return fmt.Errorf("save integration %s: %w", row.ID, err)
 	}
 	return nil

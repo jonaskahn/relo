@@ -93,6 +93,11 @@ type IntegrationView struct {
 	// OpenCode file: v1, v2, or v1+v2. It is empty for every other agent and
 	// when the file holds none.
 	OpenCodeVersions string
+	// Mode is how this integration points its client at Relo: env or proxy.
+	Mode string
+	// ProxyState is how the client's settings stand against proxy mode. It is
+	// empty for an integration wired in settings mode.
+	ProxyState ProxyModeState
 }
 
 // IntegrationKey is the client key one integration owns, as a console reads
@@ -237,7 +242,13 @@ func (s *Service) Integration(ctx context.Context, id string) (IntegrationView, 
 // daemon when the agent asks for its key. Versions names which OpenCode
 // generations setup writes and is ignored for every other agent.
 func (s *Service) EnableIntegration(ctx context.Context, id, versions string) (IntegrationResult, error) {
-	return s.enableIntegration(ctx, id, false, versions)
+	return s.EnableIntegrationIn(ctx, id, versions, "")
+}
+
+// EnableIntegrationIn wires one agent in the mode the operator chose. An
+// empty mode keeps the mode the integration already carries.
+func (s *Service) EnableIntegrationIn(ctx context.Context, id, versions, mode string) (IntegrationResult, error) {
+	return s.enableIntegrationIn(ctx, id, enableRequest{versions: versions, mode: mode})
 }
 
 // EnableIntegrationOverwrite wires one agent the way EnableIntegration does,
@@ -246,7 +257,34 @@ func (s *Service) EnableIntegrationOverwrite(ctx context.Context, id, versions s
 	return s.enableIntegration(ctx, id, true, versions)
 }
 
+// EnableIntegrationOverwriteIn is the forced setup in the mode the operator
+// chose.
+func (s *Service) EnableIntegrationOverwriteIn(ctx context.Context, id, versions, mode string) (IntegrationResult, error) {
+	return s.enableIntegrationIn(ctx, id, enableRequest{overwrite: true, versions: versions, mode: mode})
+}
+
+// SetIntegrationMode switches one enabled integration between the settings
+// file Relo writes and the intercept it runs.
+func (s *Service) SetIntegrationMode(ctx context.Context, id, mode string) (IntegrationView, error) {
+	agent, found := s.agents.AgentFor(id)
+	if !found {
+		return IntegrationView{}, fmt.Errorf("%s: %w", id, ErrUnknownIntegration)
+	}
+	manager, err := s.manager()
+	if err != nil {
+		return IntegrationView{}, err
+	}
+	if _, err := manager.SetMode(ctx, agent.ID, mode); err != nil {
+		return IntegrationView{}, err
+	}
+	return s.describeIntegration(ctx, manager, agent)
+}
+
 func (s *Service) enableIntegration(ctx context.Context, id string, overwrite bool, versions string) (IntegrationResult, error) {
+	return s.enableIntegrationIn(ctx, id, enableRequest{overwrite: overwrite, versions: versions})
+}
+
+func (s *Service) enableIntegrationIn(ctx context.Context, id string, request enableRequest) (IntegrationResult, error) {
 	agent, found := s.agents.AgentFor(id)
 	if !found {
 		return IntegrationResult{}, fmt.Errorf("%s: %w", id, ErrUnknownIntegration)
@@ -259,7 +297,9 @@ func (s *Service) enableIntegration(ctx context.Context, id string, overwrite bo
 	if err != nil {
 		return IntegrationResult{}, err
 	}
-	if _, err := manager.EnableWith(ctx, agent.ID, token, EnableOptions{Overwrite: overwrite, OpenCodeVersions: versions}); err != nil {
+	if _, err := manager.EnableWith(ctx, agent.ID, token, EnableOptions{
+		Overwrite: request.overwrite, OpenCodeVersions: request.versions, Mode: request.mode,
+	}); err != nil {
 		return IntegrationResult{}, err
 	}
 	s.restartCodex(ctx, agent.ID)
@@ -979,6 +1019,7 @@ func (s *Service) describeIntegration(ctx context.Context, manager *Manager, age
 		return IntegrationView{}, err
 	}
 	described := baseIntegrationView(s, agent, view)
+	described.Mode, described.ProxyState = view.Mode, view.ProxyState
 	if agent.ID == "codex" {
 		on := view.Context1M
 		described.Context1M = &on
@@ -1148,6 +1189,19 @@ type ServiceOptions struct {
 	Now       func() time.Time
 	// ClaudeAuth reports login or proxy. Nil detects it on this machine.
 	ClaudeAuth func() ClaudeAuth
+	// Proxy runs the intercept proxy mode points a client at. Nil means this
+	// build offers no proxy mode.
+	Proxy ProxyRuntime
+	// ProxyShutdown ends every running intercept when the daemon stops.
+	ProxyShutdown func()
+}
+
+// enableRequest is one setup request: which client, which mode, and whether
+// the setup replaces a provider already in the client's file.
+type enableRequest struct {
+	versions  string
+	mode      string
+	overwrite bool
 }
 
 // Service is the integration setup use cases: what Relo knows about every
@@ -1164,6 +1218,9 @@ type Service struct {
 	logger     *slog.Logger
 	now        func() time.Time
 	claudeAuth func() ClaudeAuth
+	proxy      ProxyRuntime
+	// proxyShutdown ends the intercepts when the daemon stops.
+	proxyShutdown func()
 	// running holds the action each agent has in flight, so a second run of
 	// the same action waits rather than racing the first over the same files.
 	running sync.Map
@@ -1184,7 +1241,16 @@ func NewService(options ServiceOptions) *Service {
 		processes: options.Processes, wire: options.Wire,
 		store: options.Store, keys: options.Keys,
 		catalog: options.Catalog, logger: logger, now: now,
-		claudeAuth: options.ClaudeAuth,
+		claudeAuth: options.ClaudeAuth, proxy: options.Proxy,
+		proxyShutdown: options.ProxyShutdown,
+	}
+}
+
+// Shutdown stops every proxy-mode intercept this daemon started, so a stop
+// leaves no listener behind.
+func (s *Service) Shutdown() {
+	if s.proxyShutdown != nil {
+		s.proxyShutdown()
 	}
 }
 
@@ -1378,7 +1444,7 @@ func (s *Service) manager() (*Manager, error) {
 		Paths: s.paths, Agents: s.agents, Files: s.files,
 		Store: s.store, Logger: s.logger, Now: s.now,
 		Models: s.publishedModels, ClaudeModels: s.claudePickerModels,
-		ClaudeAuth: s.claudeAuth,
+		ClaudeAuth: s.claudeAuth, Proxy: s.proxy,
 	}), nil
 }
 

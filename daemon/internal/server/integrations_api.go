@@ -73,6 +73,10 @@ type enableIntegrationRequest struct {
 	Overwrite bool   `json:"overwrite"`
 	Force     bool   `json:"force"`
 	Versions  string `json:"versions,omitempty"`
+	// Mode points the client at Relo one way or the other: env writes the
+	// client's own settings, proxy leaves it talking to the vendor through
+	// Relo's intercept. Empty keeps the mode the integration already has.
+	Mode string `json:"mode,omitempty"`
 }
 
 func (s *Server) handleEnableIntegration(w http.ResponseWriter, r *http.Request) {
@@ -91,9 +95,9 @@ func (s *Server) handleEnableIntegration(w http.ResponseWriter, r *http.Request)
 	var result appintegration.IntegrationResult
 	var err error
 	if request.Overwrite {
-		result, err = manager.EnableIntegrationOverwrite(r.Context(), r.PathValue("id"), versions)
+		result, err = manager.EnableIntegrationOverwriteIn(r.Context(), r.PathValue("id"), versions, request.Mode)
 	} else {
-		result, err = manager.EnableIntegration(r.Context(), r.PathValue("id"), versions)
+		result, err = manager.EnableIntegrationIn(r.Context(), r.PathValue("id"), versions, request.Mode)
 	}
 	if err != nil {
 		s.writeIntegrationError(w, r, err)
@@ -214,6 +218,30 @@ func (s *Server) handleReloadIntegration(w http.ResponseWriter, r *http.Request)
 
 type codexContextRequest struct {
 	Enabled bool `json:"enabled"`
+}
+
+// integrationModeRequest names the mode an operator switches one integration
+// to: env writes the client's own settings, proxy leaves it talking to the
+// vendor through Relo's intercept.
+type integrationModeRequest struct {
+	Mode string `json:"mode"`
+}
+
+func (s *Server) handleIntegrationMode(w http.ResponseWriter, r *http.Request) {
+	manager, ok := s.integrationsOrUnavailable(w, r)
+	if !ok {
+		return
+	}
+	var request integrationModeRequest
+	if !s.decodeJSON(w, r, &request) {
+		return
+	}
+	view, err := manager.SetIntegrationMode(r.Context(), r.PathValue("id"), request.Mode)
+	if err != nil {
+		s.writeIntegrationError(w, r, err)
+		return
+	}
+	writeJSON(w, http.StatusOK, toIntegrationViewResponse(view))
 }
 
 type claudeModelConfigRequest struct {

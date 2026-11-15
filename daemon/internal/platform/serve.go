@@ -136,6 +136,13 @@ func executeServe(ctx context.Context, options Options, cfg *config.Config, logg
 		return err
 	}
 	defer func() { _ = wired.deps.usage.Close() }()
+	// Proxy mode's intercepts live as long as the daemon does, so they are
+	// closed with it rather than left holding a loopback port.
+	defer func() {
+		if wired.deps.integrations != nil {
+			wired.deps.integrations.Shutdown()
+		}
+	}()
 	return serveWired(ctx, wired, cfg, logger, cause)
 }
 

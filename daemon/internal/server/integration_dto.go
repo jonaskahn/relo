@@ -116,6 +116,11 @@ type integrationViewResponse struct {
 	// OpenCode file: v1, v2, or v1+v2. It is empty for every other agent and
 	// when the file holds none.
 	OpenCodeVersions string `json:"open_code_versions,omitempty"`
+	// Mode is how this integration points its client at Relo: env or proxy.
+	Mode string `json:"mode,omitempty"`
+	// ProxyState is how the client's settings stand against proxy mode. It is
+	// absent for an integration wired in settings mode.
+	ProxyState string `json:"proxy_state,omitempty"`
 }
 
 func toIntegrationViewResponse(view appintegration.IntegrationView) integrationViewResponse {
@@ -129,6 +134,7 @@ func toIntegrationViewResponse(view appintegration.IntegrationView) integrationV
 		UpdatedAtMs: view.UpdatedAtMs, ModelsStale: view.ModelsStale,
 		RestartNeeded: view.RestartNeeded, EnvKey: view.EnvKey,
 		Context1M: view.Context1M, OpenCodeVersions: view.OpenCodeVersions,
+		Mode: view.Mode, ProxyState: string(view.ProxyState),
 		Reasons: toIntegrationReasons(view.Reasons),
 	}
 }

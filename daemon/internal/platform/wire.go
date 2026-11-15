@@ -266,6 +266,9 @@ func (w *wiring) integrations() {
 		Relo:      reloPath(""),
 		DataPlane: func(protocol string) string { return dataPlaneBaseURL(w.cfg, protocol) },
 	}
+	proxyRuntime := NewProxyRuntime(ProxyRuntimeOptions{
+		Home: w.options.Home, Logger: w.logger, Routes: proxyRouteClaim(w.models),
+	})
 	integrationSvc := appintegration.NewService(appintegration.ServiceOptions{
 		Paths:     NewPathResolver(clientPaths),
 		Agents:    NewAgentRegistry(),
@@ -273,7 +276,8 @@ func (w *wiring) integrations() {
 		Processes: NewAgentProcesses(),
 		Wire:      NewWireCodec(),
 		Store:     NewIntegrationStore(w.db), Keys: w.built.keys, Catalog: w.models,
-		Logger: w.logger, Now: w.clk.Now,
+		Logger: w.logger, Now: w.clk.Now, Proxy: proxyRuntime,
+		ProxyShutdown: proxyRuntime.Stop,
 	})
 	w.refreshClaude = func(ctx context.Context) {
 		integrationSvc.RefreshClaudeGateway(ctx)
