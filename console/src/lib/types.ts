@@ -604,6 +604,13 @@ export interface IntegrationView {
 	// openCodeVersions names which generations hold Relo's provider in the
 	// OpenCode file: v1, v2, or v1+v2. Other agents omit it.
 	readonly openCodeVersions?: string;
+	// mode is how this integration points its client at Relo: env writes the
+	// client's own settings, proxy leaves it talking to the vendor through
+	// Relo's intercept. Only Claude Code offers proxy.
+	readonly mode?: 'env' | 'proxy' | string;
+	// proxy_state is how the client's settings stand against proxy mode. It is
+	// absent for an integration wired in settings mode.
+	readonly proxy_state?: 'absent' | 'applied' | 'stale' | 'foreign' | 'unreadable' | string;
 }
 
 /** One reason Relo reports for an agent needing the operator. The code names

@@ -39,6 +39,7 @@
 	import AgentResultStep from '$lib/components/agents/agent-result-step.svelte';
 	import AgentTestPane from '$lib/components/agents/agent-test-pane.svelte';
 	import AgentWiringSection from '$lib/components/agents/agent-wiring-section.svelte';
+	import ClaudeModeSection from '$lib/components/agents/claude-mode-section.svelte';
 	import ClaudeModelPreferences from '$lib/components/agents/claude-model-preferences.svelte';
 	import CardLayoutToggle from '$lib/components/providers/card-layout-toggle.svelte';
 	import Button from '$lib/components/ui/button.svelte';
@@ -665,11 +666,20 @@
 						/>
 						<AgentWiringSection agent={detail} />
 						{#if detail.enabled && detail.id === 'claude-code'}
-							<ClaudeModelPreferences
+							<ClaudeModeSection
 								agent={detail}
-								{models}
-								modelsReady={modelsState === 'ready'}
+								onchanged={(next) => {
+									agents = patchAgent(agents, next);
+									detail = next;
+								}}
 							/>
+							{#if (detail.mode ?? 'env') !== 'proxy'}
+								<ClaudeModelPreferences
+									agent={detail}
+									{models}
+									modelsReady={modelsState === 'ready'}
+								/>
+							{/if}
 						{/if}
 					</div>
 					<AgentTestPane
