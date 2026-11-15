@@ -291,6 +291,37 @@ func (ClientFiles) ClaudeSettingsPointAt(content, baseURL, helperPath string, in
 	return codingclients.ClaudeSettingsPointAt(content, baseURL, helperPath, installHelper)
 }
 
+// ProxyEnv is the environment proxy mode points a client with.
+func (ClientFiles) ProxyEnv() appintegration.ProxyEnv {
+	return appintegration.ProxyEnv{}
+}
+
+// MergeClaudeProxySettings points the Claude Code settings at the intercept.
+func (ClientFiles) MergeClaudeProxySettings(existing string, env appintegration.ProxyEnv) (string, error) {
+	result, err := codingclients.MergeClaudeProxySettings(existing, clientProxyEnv(env))
+	return result, fileError(err)
+}
+
+// StripClaudeProxySettings takes that environment back out.
+func (ClientFiles) StripClaudeProxySettings(existing string, env appintegration.ProxyEnv) (string, error) {
+	result, err := codingclients.StripClaudeProxySettings(existing, clientProxyEnv(env))
+	return result, fileError(err)
+}
+
+// ClaudeProxySettingsPointAt reports whether the settings carry the intercept.
+func (ClientFiles) ClaudeProxySettingsPointAt(content string, env appintegration.ProxyEnv) bool {
+	return codingclients.ClaudeProxySettingsPointAt(content, clientProxyEnv(env))
+}
+
+// InspectClaudeProxySettings classifies the settings against proxy mode.
+func (ClientFiles) InspectClaudeProxySettings(content string, env appintegration.ProxyEnv) appintegration.ProxyModeState {
+	return appintegration.ProxyModeState(codingclients.InspectClaudeProxySettings(content, clientProxyEnv(env)))
+}
+
+func clientProxyEnv(env appintegration.ProxyEnv) codingclients.ProxyEnv {
+	return codingclients.ProxyEnv{URL: env.URL, CAPath: env.CAPath}
+}
+
 // ReadClaudePreferences reads the personal model choice from Claude settings.
 func (ClientFiles) ReadClaudePreferences(content string) (appintegration.ClaudePreferences, error) {
 	read, err := codingclients.ReadClaudePreferences(content)

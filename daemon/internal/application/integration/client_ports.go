@@ -70,6 +70,27 @@ type ConfigTarget struct {
 	Dir  string
 }
 
+// ProxyEnv is the environment proxy mode points a client with: the
+// authenticated loopback address of Relo's intercept, and the certificate it
+// presents for the vendor's host.
+type ProxyEnv struct {
+	URL    string
+	CAPath string
+}
+
+// ProxyModeState is how a client's settings stand against proxy mode.
+type ProxyModeState string
+
+// The states proxy mode reports, so a console reads why its wiring is not in
+// place without decoding the file itself.
+const (
+	ProxyStateAbsent     ProxyModeState = "absent"
+	ProxyStateApplied    ProxyModeState = "applied"
+	ProxyStateStale      ProxyModeState = "stale"
+	ProxyStateForeign    ProxyModeState = "foreign"
+	ProxyStateUnreadable ProxyModeState = "unreadable"
+)
+
 // The client and file identifiers the workflows branch on. They repeat the
 // adapter's roster so this package never imports it; a test pins them equal.
 const (
@@ -175,6 +196,18 @@ type ClientFiles interface {
 	StripClaudeSettings(existing, baseURL, helperPath string) (string, error)
 	// ClaudeSettingsPointAt reports whether the settings name Relo.
 	ClaudeSettingsPointAt(content, baseURL, helperPath string, installHelper bool) bool
+	// ProxyEnv is the environment proxy mode points a client with.
+	ProxyEnv() ProxyEnv
+	// MergeClaudeProxySettings points the Claude Code settings at the
+	// intercept, refusing a proxy the operator already set.
+	MergeClaudeProxySettings(existing string, env ProxyEnv) (string, error)
+	// StripClaudeProxySettings takes that environment back out.
+	StripClaudeProxySettings(existing string, env ProxyEnv) (string, error)
+	// ClaudeProxySettingsPointAt reports whether the settings carry the
+	// environment proxy mode writes now.
+	ClaudeProxySettingsPointAt(content string, env ProxyEnv) bool
+	// InspectClaudeProxySettings classifies the settings against proxy mode.
+	InspectClaudeProxySettings(content string, env ProxyEnv) ProxyModeState
 	// ReadClaudePreferences reads the personal model choice from Claude settings.
 	ReadClaudePreferences(content string) (ClaudePreferences, error)
 	// UpdateClaudePreferences writes one personal model choice and leaves every
