@@ -185,9 +185,22 @@ Every action reports its result before the flow ends, and a failure stays next t
 | Restart    | the acting control spins, label reads "Restarting…" | toast                        | inline on the card              | patched in place   |
 | Reload     | the acting control spins, label reads "Reloading…"  | toast                        | inline on the card              | patched in place   |
 | 1M context | the acting toggle                                   | toast                        | inline on the card              | patched in place   |
+| Mode       | the chosen card                                     | the other card reads chosen  | inline in the section           | patched in place   |
 | Verify     | the acting control                                  | inline line in the test pane | inline in the pane with the fix | —                  |
 | Reveal key | the eye spins                                       | the field shows the secret   | inline beside the hint          | cached until close |
 | Send test  | **Send test** spins                                 | the answer in the pane       | inline in the pane              | —                  |
+
+## Connection mode (Claude Code only)
+
+Claude Code can reach Relo two ways. **Environment** writes Relo's address into the client's own settings;
+**Proxy** leaves the client talking to Anthropic and puts Relo's intercept in the path. The mode belongs to the
+integration, so one agent is in exactly one mode and switching writes the new mode before retiring the old one.
+
+The section sits above the model preferences in the manage modal, and only while the integration is on. Choosing
+Proxy asks once in place — not in an AlertDialog — because the warning is about the operator's own Anthropic account
+and the choice is reversible from the same control. The warning copy has one owner, the message the section renders,
+and the daemon never repeats it. Model preferences are hidden in proxy mode: they belong to the settings file it takes
+back out.
 
 Only one action is in flight per agent, and its own control carries the spinner while every other control stays live —
 one agent's set-up never freezes the page. An action patches its own agent into the list in place; the list keeps its
