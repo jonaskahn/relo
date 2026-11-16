@@ -28,6 +28,8 @@ type ProxyRuntime struct {
 	// routes reports whether a model is one Relo answers. A model it does not
 	// claim is relayed to the vendor with the caller's own credential.
 	routes func(model string) bool
+	// bind answers what a native model id is bound to for one integration.
+	bind func(integrationID, model string) (proxy.Binding, bool)
 
 	mu      sync.Mutex
 	running map[string]*runningProxy
@@ -47,6 +49,8 @@ type ProxyRuntimeOptions struct {
 	Home string
 	// Routes reports whether a model is one Relo serves.
 	Routes func(model string) bool
+	// Bind answers what a native model id is bound to for one integration.
+	Bind   func(integrationID, model string) (proxy.Binding, bool)
 	Logger *slog.Logger
 }
 
@@ -57,7 +61,7 @@ func NewProxyRuntime(options ProxyRuntimeOptions) *ProxyRuntime {
 		logger = slog.New(slog.DiscardHandler)
 	}
 	return &ProxyRuntime{
-		home: options.Home, logger: logger, routes: options.Routes,
+		home: options.Home, logger: logger, routes: options.Routes, bind: options.Bind,
 		running: map[string]*runningProxy{}, cancelled: context.Background(),
 	}
 }
@@ -76,7 +80,7 @@ func (r *ProxyRuntime) Ensure(ctx context.Context, id string, target appintegrat
 	if err != nil {
 		return appintegration.ProxyEnv{}, err
 	}
-	pair, err := r.pair(dir, target, authority)
+	pair, err := r.pair(id, dir, target, authority)
 	if err != nil {
 		return appintegration.ProxyEnv{}, err
 	}
@@ -94,14 +98,18 @@ func (r *ProxyRuntime) Ensure(ctx context.Context, id string, target appintegrat
 // pair builds one intercept over the certificate and the token in dir. The
 // token is read from disk rather than held, so the address a client carries
 // survives a restart.
-func (r *ProxyRuntime) pair(dir string, target appintegration.ProxyTarget, authority *proxy.Authority) (*proxy.Proxy, error) {
+func (r *ProxyRuntime) pair(id, dir string, target appintegration.ProxyTarget, authority *proxy.Authority) (*proxy.Proxy, error) {
 	token, err := proxyToken(dir)
 	if err != nil {
 		return nil, err
 	}
+	var bind func(model string) (proxy.Binding, bool)
+	if r.bind != nil {
+		bind = func(model string) (proxy.Binding, bool) { return r.bind(id, model) }
+	}
 	return proxy.New(proxy.Options{
 		Host: target.Host, Upstream: "https://" + target.Host, DataPlaneURL: target.DataPlaneURL,
-		Token: token, Authority: authority, Routes: r.routes, Logger: r.logger,
+		Token: token, Authority: authority, Routes: r.routes, Bind: bind, Logger: r.logger,
 		DataPlaneKey: target.Key,
 	})
 }

@@ -3,6 +3,8 @@
 package platform
 
 import (
+	"github.com/jonaskahn/relo/internal/adapters/proxy"
+	"github.com/jonaskahn/relo/internal/application/claudebindings"
 	"github.com/jonaskahn/relo/internal/catalog"
 )
 
@@ -26,5 +28,22 @@ func proxyRouteClaim(models *catalog.Catalog) func(model string) bool {
 			return true
 		}
 		return false
+	}
+}
+
+// proxyBinding hands the intercept what a native model id is bound to. A model
+// no binding applies to is left for the alias claim and then the vendor.
+func proxyBinding(bindings *claudebindings.Service) func(integrationID, model string) (proxy.Binding, bool) {
+	return func(integrationID, model string) (proxy.Binding, bool) {
+		resolution := bindings.Resolve(integrationID, model)
+		if !resolution.Matched {
+			return proxy.Binding{}, false
+		}
+		return proxy.Binding{
+			Rewrite:        resolution.Rewrite,
+			VendorFirst:    resolution.Direction == claudebindings.DirectionFallback,
+			VendorFallback: resolution.OnFailure == claudebindings.OnFailureNative,
+			Reason:         resolution.Reason,
+		}, true
 	}
 }

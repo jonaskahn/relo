@@ -27,6 +27,8 @@ import (
 	appaccount "github.com/jonaskahn/relo/internal/application/account"
 	appactivity "github.com/jonaskahn/relo/internal/application/activity"
 	appcatalog "github.com/jonaskahn/relo/internal/application/catalog"
+	"github.com/jonaskahn/relo/internal/application/claudebindings"
+	"github.com/jonaskahn/relo/internal/application/docstore"
 	appintegration "github.com/jonaskahn/relo/internal/application/integration"
 	approuting "github.com/jonaskahn/relo/internal/application/routing"
 	appsettings "github.com/jonaskahn/relo/internal/application/settings"
@@ -69,6 +71,7 @@ type deps struct {
 	credentials      *upstream.Source
 	catalogSvc       *appcatalog.Service
 	integrations     *appintegration.Service
+	bindings         *claudebindings.Service
 	accounts         *appaccount.Service
 	status           *appstatus.Service
 	keys             *appaccess.Keys
@@ -259,6 +262,21 @@ func (w *wiring) newCatalogService(edges *AccountEdges, accounts *appaccount.Ser
 	})
 }
 
+// claudeBindings builds the native-id bindings of proxy mode, loaded into
+// memory so a request is resolved without touching the database.
+func (w *wiring) claudeBindings() *claudebindings.Service {
+	service := claudebindings.New(claudebindings.Options{
+		Documents: docstore.NewCollection(newDocumentStore(w.db), claudebindings.Namespace,
+			docstore.Codec[claudebindings.Document]{Decode: claudebindings.Decode, Encode: claudebindings.Encode},
+			docstore.Options{Logger: w.logger, Now: w.clk.Now}),
+		Catalog: w.models,
+	})
+	if err := service.Load(w.ctx); err != nil {
+		w.logger.Warn("claude bindings are not loaded yet", "error", err)
+	}
+	return service
+}
+
 func (w *wiring) integrations() {
 	clientPaths := codingclients.Paths{
 		Home:      homeDirectory(""),
@@ -266,8 +284,11 @@ func (w *wiring) integrations() {
 		Relo:      reloPath(""),
 		DataPlane: func(protocol string) string { return dataPlaneBaseURL(w.cfg, protocol) },
 	}
+	bindings := w.claudeBindings()
+	w.built.bindings = bindings
 	proxyRuntime := NewProxyRuntime(ProxyRuntimeOptions{
 		Home: w.options.Home, Logger: w.logger, Routes: proxyRouteClaim(w.models),
+		Bind: proxyBinding(bindings),
 	})
 	integrationSvc := appintegration.NewService(appintegration.ServiceOptions{
 		Paths:     NewPathResolver(clientPaths),
@@ -683,6 +704,7 @@ func attachServerAPIs(options *server.Options, built deps) {
 	options.Routes = built.routes
 	options.CatalogAPI = built.catalogSvc
 	options.Integrations = built.integrations
+	options.ClaudeBindings = built.bindings
 	options.Quota = built.headerQuota
 	options.Keys = built.keys
 	options.Settings = built.settings
