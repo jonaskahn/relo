@@ -99,6 +99,7 @@ func (r *ProxyRuntime) Ensure(ctx context.Context, id string, target appintegrat
 		cancel()
 		return appintegration.ProxyEnv{}, err
 	}
+	rememberAddress(dir, pair.Addr(), r.logger)
 	env := appintegration.ProxyEnv{URL: pair.URL(), CAPath: authority.CAPathFile()}
 	r.running[id] = &runningProxy{proxy: pair, cancel: cancel, env: env}
 	r.dropCatalog()
@@ -117,7 +118,7 @@ func (r *ProxyRuntime) pair(dir string, target appintegration.ProxyTarget, autho
 	return proxy.New(proxy.Options{
 		Host: target.Host, Upstream: "https://" + target.Host, DataPlaneURL: target.DataPlaneURL,
 		Token: token, Authority: authority, Routes: r.routes, Bind: r.bind, Catalog: r.catalog, Logger: r.logger,
-		DataPlaneKey: target.Key, Admits: target.Admits,
+		DataPlaneKey: target.Key, Admits: target.Admits, PreferredAddr: lastAddress(dir),
 	})
 }
 
@@ -174,6 +175,32 @@ func (r *ProxyRuntime) Stop() {
 	r.mu.Unlock()
 	for _, id := range ids {
 		r.halt(id)
+	}
+}
+
+// lastAddress is the address the intercept listened on last time. A session a
+// client holds open names that port, so a restart tries it first and a client
+// only needs restarting when something else has taken it.
+func lastAddress(dir string) string {
+	content, err := os.ReadFile(filepath.Join(dir, "address"))
+	if err != nil {
+		return ""
+	}
+	return strings.TrimSpace(string(content))
+}
+
+// rememberAddress records where the intercept listens. A failed write costs
+// only the next restart its port, so it is logged and not raised.
+func rememberAddress(dir, address string, logger *slog.Logger) {
+	if lastAddress(dir) == address {
+		return
+	}
+	if err := os.MkdirAll(dir, 0o700); err != nil {
+		logger.Warn("remember the intercept's address", "error", err)
+		return
+	}
+	if err := os.WriteFile(filepath.Join(dir, "address"), []byte(address+"\n"), 0o600); err != nil {
+		logger.Warn("remember the intercept's address", "error", err)
 	}
 }
 

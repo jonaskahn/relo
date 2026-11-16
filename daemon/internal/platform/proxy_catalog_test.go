@@ -2,6 +2,7 @@ package platform
 
 import (
 	"context"
+	"net"
 	"os"
 	"path/filepath"
 	"strings"
@@ -69,5 +70,43 @@ func TestTheRuntimeDropsTheClientsCatalogWhenAnInterceptStartsAndStops(t *testin
 	}
 	if dropped != 2 {
 		t.Fatalf("dropped after Retire = %d, want 2", dropped)
+	}
+}
+
+// A restart keeps the port a client's open session names, and a taken port
+// falls back to a new one rather than refusing to start.
+func TestARestartKeepsTheInterceptsPortUnlessSomethingTookIt(t *testing.T) {
+	home := t.TempDir()
+	target := appintegration.ProxyTarget{Host: "api.anthropic.com", DataPlaneURL: "http://127.0.0.1:1"}
+	runtime := NewProxyRuntime(ProxyRuntimeOptions{Home: home})
+	first, err := runtime.Ensure(context.Background(), "claude-code", target)
+	if err != nil {
+		t.Fatalf("Ensure() error = %v", err)
+	}
+	runtime.Stop()
+
+	again := NewProxyRuntime(ProxyRuntimeOptions{Home: home})
+	second, err := again.Ensure(context.Background(), "claude-code", target)
+	if err != nil {
+		t.Fatalf("Ensure() after a restart error = %v", err)
+	}
+	if first.URL != second.URL {
+		t.Fatalf("restart gave %q, want the same address %q", second.URL, first.URL)
+	}
+	again.Stop()
+
+	held, err := net.Listen("tcp", strings.SplitN(first.URL, "@", 2)[1])
+	if err != nil {
+		t.Skipf("the port was taken before the test could hold it: %v", err)
+	}
+	defer func() { _ = held.Close() }()
+	crowded := NewProxyRuntime(ProxyRuntimeOptions{Home: home})
+	third, err := crowded.Ensure(context.Background(), "claude-code", target)
+	if err != nil {
+		t.Fatalf("Ensure() with the port taken error = %v", err)
+	}
+	defer crowded.Stop()
+	if third.URL == first.URL {
+		t.Fatalf("a taken port was reused: %q", third.URL)
 	}
 }

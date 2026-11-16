@@ -66,6 +66,10 @@ type Options struct {
 	// vendor sent it.
 	Catalog func() []CatalogRow
 	Logger  *slog.Logger
+	// PreferredAddr is a loopback address to bind first, which is how a restart
+	// keeps the port a client's settings already name. It is ignored when it is
+	// not loopback, and a taken port falls back to one the kernel picks.
+	PreferredAddr string
 	// Dial dials the vendor. Nil dials the network.
 	Dial func(ctx context.Context, network, address string) (net.Conn, error)
 }
@@ -112,7 +116,7 @@ func New(opts Options) (*Proxy, error) {
 // address is bound before anything else happens, so a caller rewrites a
 // client's settings only once the intercept is really listening.
 func (p *Proxy) Start(ctx context.Context) error {
-	listener, err := net.Listen("tcp", "127.0.0.1:0")
+	listener, err := listenLoopback(p.opts.PreferredAddr)
 	if err != nil {
 		return fmt.Errorf("bind the intercept: %w", err)
 	}
@@ -131,6 +135,18 @@ func (p *Proxy) Start(ctx context.Context) error {
 	}()
 	go p.accept()
 	return nil
+}
+
+// listenLoopback binds the preferred loopback address when it is free and a
+// port the kernel picks when it is not. The intercept never listens beyond
+// loopback, whatever address it is asked for.
+func listenLoopback(preferred string) (net.Listener, error) {
+	if host, _, err := net.SplitHostPort(preferred); err == nil && host == "127.0.0.1" {
+		if listener, err := net.Listen("tcp", preferred); err == nil {
+			return listener, nil
+		}
+	}
+	return net.Listen("tcp", "127.0.0.1:0")
 }
 
 // Addr is the loopback address clients point their proxy variable at.

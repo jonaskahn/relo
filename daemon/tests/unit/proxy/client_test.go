@@ -122,3 +122,27 @@ func TestEachClientPresentsItsOwnKeyToRelo(t *testing.T) {
 		t.Fatalf("desktop key = %q", got)
 	}
 }
+
+// TestThePreferredAddressNeverWidensTheListener keeps the intercept on
+// loopback: an address anywhere else is ignored rather than bound.
+func TestThePreferredAddressNeverWidensTheListener(t *testing.T) {
+	authority, err := proxy.LoadOrCreateAuthority(t.TempDir(), "api.anthropic.com")
+	if err != nil {
+		t.Fatalf("LoadOrCreateAuthority() error = %v", err)
+	}
+	pair, err := proxy.New(proxy.Options{
+		Host: "api.anthropic.com", Upstream: "https://api.anthropic.com",
+		Token: "token", Authority: authority, PreferredAddr: "0.0.0.0:0",
+	})
+	if err != nil {
+		t.Fatalf("New() error = %v", err)
+	}
+	ctx, cancel := context.WithCancel(context.Background())
+	if err := pair.Start(ctx); err != nil {
+		t.Fatalf("Start() error = %v", err)
+	}
+	t.Cleanup(func() { cancel(); pair.Wait() })
+	if !strings.HasPrefix(pair.Addr(), "127.0.0.1:") {
+		t.Fatalf("address = %q, want loopback", pair.Addr())
+	}
+}
