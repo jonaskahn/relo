@@ -119,6 +119,8 @@ func (c *Checker) manifestURL() string {
 	if c != nil && strings.TrimSpace(c.ManifestURL) != "" {
 		return c.ManifestURL
 	}
+	// A checker without a catalog of its own still reads the public one, so
+	// the current version's notes are available without a configured URL.
 	return DefaultManifestURL
 }
 

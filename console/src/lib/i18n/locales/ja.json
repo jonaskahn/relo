@@ -2170,6 +2170,9 @@
       "methodPowerShell": "PowerShell",
       "methodNpm": "npm",
       "methodBrew": "Homebrew"
+    },
+    "whatsNewDialog": {
+      "title": "Relo {version} の新機能"
     }
   }
 }

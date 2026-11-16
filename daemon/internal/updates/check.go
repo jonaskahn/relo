@@ -50,15 +50,18 @@ var (
 
 // Status is what the console and the tray show after a check.
 type Status struct {
-	Current   string     `json:"current"`
-	Latest    string     `json:"latest"`
-	Available bool       `json:"available"`
-	URL       string     `json:"url"`
-	Method    string     `json:"method"`
-	Installer string     `json:"installer"`
-	Notes     string     `json:"notes,omitempty"`
-	Page      string     `json:"page,omitempty"`
-	Downloads []Download `json:"downloads,omitempty"`
+	Current   string `json:"current"`
+	Latest    string `json:"latest"`
+	Available bool   `json:"available"`
+	URL       string `json:"url"`
+	Method    string `json:"method"`
+	Installer string `json:"installer"`
+	Notes     string `json:"notes,omitempty"`
+	// CurrentNotes is the running version's release notes, for the console's
+	// what's-new popup on the first open after an install or upgrade.
+	CurrentNotes string     `json:"current_notes,omitempty"`
+	Page         string     `json:"page,omitempty"`
+	Downloads    []Download `json:"downloads,omitempty"`
 }
 
 // Fetch reads one feed URL.
@@ -127,16 +130,20 @@ func (c *Checker) Status(ctx context.Context) Status {
 	// The feed is read without the lock, so one slow fetch never stacks
 	// every caller of the console behind it.
 	status := statusBase(c)
+	// The catalog carries the newest beta, the newer release's notes, and the
+	// running version's notes, so it is read once here and shared by all
+	// three. A missing catalog leaves the feed's answer to stand.
+	catalog, catalogErr := c.catalog(ctx)
 	// A beta follows the catalog's latest_beta: CI writes it on every beta
 	// publish, so it names the newest beta without waiting for the feed. The
 	// releases feed remains the fallback when the catalog cannot be read.
-	if !isPrerelease(c.Current) || !c.applyBetaCatalog(ctx, &status) {
+	if !isPrerelease(c.Current) || !applyBetaCatalog(catalog, catalogErr, c.Current, &status) {
 		body, err := c.fetch()(ctx, c.feedURL())
 		if err == nil {
 			c.applyFeed(&status, body)
 		}
-		c.attachManifest(ctx, &status)
 	}
+	attachCatalogNotes(catalog, catalogErr, &status)
 	c.storeStatus(status, now)
 	return status
 }
@@ -156,8 +163,7 @@ func (c *Checker) ttl() time.Duration {
 
 // applyBetaCatalog reports whether the catalog named a latest beta. The status
 // keeps the feed's current version and installer either way.
-func (c *Checker) applyBetaCatalog(ctx context.Context, status *Status) bool {
-	catalog, err := c.catalog(ctx)
+func applyBetaCatalog(catalog manifest, err error, current string, status *Status) bool {
 	if err != nil {
 		return false
 	}
@@ -166,7 +172,7 @@ func (c *Checker) applyBetaCatalog(ctx context.Context, status *Status) bool {
 		return false
 	}
 	status.Latest = latest
-	status.Available = Newer(latest, c.Current)
+	status.Available = Newer(latest, current)
 	if !status.Available {
 		return true
 	}
@@ -177,26 +183,30 @@ func (c *Checker) applyBetaCatalog(ctx context.Context, status *Status) bool {
 	if page := strings.TrimSpace(release.Page); page != "" {
 		status.URL = page
 	}
-	c.applyCatalogRelease(status, release)
+	applyCatalogRelease(status, release)
 	return true
 }
 
-func (c *Checker) attachManifest(ctx context.Context, status *Status) {
-	if !status.Available || status.Latest == "" {
-		return
-	}
-	catalog, err := c.catalog(ctx)
+// attachCatalogNotes fills both the running version's notes and, when an update
+// is available, its release details, from the catalog the status already read.
+func attachCatalogNotes(catalog manifest, err error, status *Status) {
 	if err != nil {
 		return
 	}
-	release, found := catalog.find(status.Latest)
-	if !found {
+	if status.Available && status.Latest != "" {
+		if release, found := catalog.find(status.Latest); found {
+			applyCatalogRelease(status, release)
+		}
+	}
+	if status.Current == "" {
 		return
 	}
-	c.applyCatalogRelease(status, release)
+	if release, found := catalog.find(status.Current); found {
+		status.CurrentNotes = release.Notes
+	}
 }
 
-func (c *Checker) applyCatalogRelease(status *Status, release manifestRelease) {
+func applyCatalogRelease(status *Status, release manifestRelease) {
 	status.Notes = release.Notes
 	status.Page = release.Page
 	status.Downloads = downloadsFor(release.Files, runtime.GOOS, runtime.GOARCH)

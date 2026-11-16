@@ -20,6 +20,7 @@ export type UpdateNotice = {
 	method?: 'sparkle' | 'download';
 	installer?: UpdateInstaller;
 	notes?: string;
+	current_notes?: string;
 	page?: string;
 	downloads?: readonly UpdateDownload[];
 };

@@ -24,6 +24,13 @@ const releaseCatalog = `{
         {"name": "Relo-Setup-0.2.0-arm64.deb", "url": "https://example.com/arm64.deb", "os": "linux", "arch": "arm64", "kind": "installer", "format": "deb"},
         {"name": "Relo-Setup-0.2.0-amd64.exe", "url": "https://example.com/amd64.exe", "os": "windows", "arch": "amd64", "kind": "installer", "format": "exe"}
       ]
+    },
+    {
+      "tag": "v0.2.13",
+      "version": "0.2.13",
+      "page": "https://github.com/jonaskahn/relo/releases/tag/v0.2.13",
+      "notes": "# v0.2.13\n* The running release.\n",
+      "files": []
     }
   ]
 }`
@@ -94,5 +101,13 @@ func TestStatusIgnoresACatalogWithoutTheRelease(t *testing.T) {
 	}
 	if status.Notes != "" || status.Page != "" || len(status.Downloads) != 0 {
 		t.Fatalf("status = %+v, want nothing from a release the catalog does not carry", status)
+	}
+}
+
+func TestStatusCarriesCurrentNotesWithoutAnUpdate(t *testing.T) {
+	checker := catalogChecker([]byte(releaseCatalog), nil)
+	checker.Current = "0.2.13"
+	if status := checker.Status(context.Background()); status.CurrentNotes == "" {
+		t.Fatalf("status = %+v, want the running version's notes", status)
 	}
 }

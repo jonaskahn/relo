@@ -2170,6 +2170,9 @@
       "methodPowerShell": "PowerShell",
       "methodNpm": "npm",
       "methodBrew": "Homebrew"
+    },
+    "whatsNewDialog": {
+      "title": "Yang baru di Relo {version}"
     }
   }
 }

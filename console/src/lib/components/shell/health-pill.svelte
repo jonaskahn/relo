@@ -8,6 +8,8 @@
 	import { updateAvailable, type UpdateNotice } from '$lib/updates';
 	import { cn } from '$lib/utils';
 	import UpdateDialog from '$lib/components/shell/update-dialog.svelte';
+	import WhatsNewDialog from '$lib/components/shell/whats-new-dialog.svelte';
+	import { browserStorage, shouldShowWhatsNew } from '$lib/whats-new';
 
 	interface Props {
 		class?: string;
@@ -19,6 +21,9 @@
 	let version = $state('');
 	let notice = $state<UpdateNotice | null>(null);
 	let updateOpen = $state(false);
+	let whatsNewOpen = $state(false);
+	// One popup per load: a failed write must not re-open it on every poll.
+	let whatsNewChecked = false;
 
 	// A poll still waiting for its answers is the same question the timer
 	// would ask again, so the tick that finds one running skips it. That also
@@ -40,6 +45,10 @@
 				notice = await api<UpdateNotice>('/updates');
 			} catch {
 				notice = null;
+			}
+			if (!whatsNewChecked && notice?.current) {
+				whatsNewChecked = true;
+				whatsNewOpen = shouldShowWhatsNew(browserStorage(), notice);
 			}
 		} finally {
 			polling = false;
@@ -108,6 +117,9 @@
 {/if}
 
 <UpdateDialog bind:open={updateOpen} {notice} />
+{#if whatsNewOpen && notice?.current}
+	<WhatsNewDialog open={whatsNewOpen} version={notice.current} notes={notice.current_notes ?? ''} />
+{/if}
 
 <style>
 	.daemon-dot {
