@@ -1911,7 +1911,7 @@
         "desktopPicker": {
           "title": "Desktop model picker",
           "hint": "Add Relo's models to the model picker of Claude Desktop's Code tab.",
-          "warning": "This adds a Relo certificate to your operating system's trust store, limited to claude.ai, and Relo terminates TLS for claude.ai on this machine. Anthropic's terms may treat that as a violation, and an account can be suspended. Claude Desktop must be quit completely and reopened, and it reaches the network only while Relo is running. Turn it on only if you accept that risk.",
+          "warning": "This adds a Relo certificate to your operating system's trust store, limited to claude.ai and api.anthropic.com, and Relo terminates TLS for claude.ai on this machine. Anthropic's terms may treat that as a violation, and an account can be suspended. Claude Desktop must be quit completely and reopened, and it reaches the network only while Relo is running. Turn it on only if you accept that risk.",
           "enable": "Turn on the picker",
           "confirm": "I accept the risk, turn it on",
           "disable": "Turn off",
@@ -1931,7 +1931,19 @@
           "reasonTrustDeclined": "The system did not trust the certificate, so nothing was changed.",
           "reasonTrustRemains": "The system still trusts Relo's certificate. Remove it with the button below.",
           "reasonCaUnverified": "Relo's certificate failed its safety check, so it was not used.",
-          "reasonFailed": "A step failed and was undone where it could be. Try again."
+          "reasonFailed": "A step failed and was undone where it could be. Try again.",
+          "cowork": {
+            "title": "Route Cowork",
+            "hint": "Send Claude Desktop's Cowork requests for models you bound to Relo. Cowork runs in its own virtual machine, so it is pointed at Relo through the picker's network proxy.",
+            "warning": "This makes Relo terminate TLS for api.anthropic.com for Cowork's traffic on this machine. The Relo certificate your system already trusts covers that host. Anthropic's terms may treat that as a violation, and an account can be suspended. Models you bind leave Anthropic entirely. Quit Claude Desktop completely and start a new Cowork session afterwards. If Cowork then fails with a certificate error, turn this off. Turn it on only if you accept that risk.",
+            "enable": "Turn on Cowork routing",
+            "seen": "Connections to api.anthropic.com through the picker: {count}",
+            "reasonOff": "Off. Cowork goes straight to Anthropic.",
+            "reasonActive": "On. Cowork's requests for bound models go to Relo.",
+            "reasonRestart": "On. Quit Claude Desktop completely, then start a new Cowork session.",
+            "reasonNeedsPicker": "Turn the Desktop picker on first.",
+            "reasonTrustMissing": "The system does not trust Relo's certificate for api.anthropic.com, so Cowork passes through untouched."
+          }
         },
         "claudeModeUnsaved": "Not saved yet. Press Save to apply this mode.",
         "claudeModeDesktopOwnerNote": "Claude Desktop shares Claude Code's proxy wiring, so saving also moves Claude Code to proxy mode.",

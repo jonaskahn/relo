@@ -1911,7 +1911,7 @@
         "desktopPicker": {
           "title": "Bộ chọn mô hình của Desktop",
           "hint": "Thêm các mô hình của Relo vào bộ chọn mô hình ở tab Code của Claude Desktop.",
-          "warning": "Thao tác này thêm một chứng chỉ Relo vào kho tin cậy của hệ điều hành, giới hạn cho claude.ai, và Relo kết thúc TLS cho claude.ai trên máy này. Điều khoản của Anthropic có thể coi đó là vi phạm, và tài khoản có thể bị đình chỉ. Claude Desktop phải được thoát hoàn toàn và mở lại, và chỉ ra mạng khi Relo đang chạy. Chỉ bật nếu bạn chấp nhận rủi ro đó.",
+          "warning": "Thao tác này thêm một chứng chỉ Relo vào kho tin cậy của hệ điều hành, giới hạn cho claude.ai và api.anthropic.com, và Relo kết thúc TLS cho claude.ai trên máy này. Điều khoản của Anthropic có thể coi đó là vi phạm, và tài khoản có thể bị đình chỉ. Claude Desktop phải được thoát hoàn toàn và mở lại, và chỉ ra mạng khi Relo đang chạy. Chỉ bật nếu bạn chấp nhận rủi ro đó.",
           "enable": "Bật bộ chọn",
           "confirm": "Tôi chấp nhận rủi ro, bật",
           "disable": "Tắt",
@@ -1931,7 +1931,19 @@
           "reasonTrustDeclined": "Hệ thống không tin cậy chứng chỉ, nên không có gì thay đổi.",
           "reasonTrustRemains": "Hệ thống vẫn tin cậy chứng chỉ của Relo. Gỡ bằng nút bên dưới.",
           "reasonCaUnverified": "Chứng chỉ của Relo không qua kiểm tra an toàn nên không được dùng.",
-          "reasonFailed": "Một bước thất bại và đã được hoàn tác khi có thể. Hãy thử lại."
+          "reasonFailed": "Một bước thất bại và đã được hoàn tác khi có thể. Hãy thử lại.",
+          "cowork": {
+            "title": "Định tuyến Cowork",
+            "hint": "Gửi các yêu cầu Cowork trong Claude Desktop cho những mô hình bạn đã gắn với Relo tới Relo. Cowork chạy trong máy ảo riêng, nên nó được hướng tới Relo qua proxy mạng của bộ chọn.",
+            "warning": "Việc này khiến Relo kết thúc TLS cho api.anthropic.com với lưu lượng của Cowork trên máy này. Chứng chỉ Relo mà hệ thống của bạn đã tin cậy bao gồm máy chủ đó. Điều khoản của Anthropic có thể coi đó là vi phạm, và tài khoản có thể bị đình chỉ. Các mô hình bạn gắn sẽ rời hoàn toàn khỏi Anthropic. Sau đó hãy thoát hoàn toàn Claude Desktop và bắt đầu một phiên Cowork mới. Nếu Cowork khi đó lỗi chứng chỉ, hãy tắt tính năng này. Chỉ bật nếu bạn chấp nhận rủi ro đó.",
+            "enable": "Bật định tuyến Cowork",
+            "seen": "Kết nối tới api.anthropic.com qua bộ chọn: {count}",
+            "reasonOff": "Đang tắt. Cowork đi thẳng tới Anthropic.",
+            "reasonActive": "Đang bật. Yêu cầu của Cowork cho mô hình đã gắn đi tới Relo.",
+            "reasonRestart": "Đang bật. Hãy thoát hoàn toàn Claude Desktop, rồi bắt đầu một phiên Cowork mới.",
+            "reasonNeedsPicker": "Hãy bật bộ chọn của Desktop trước.",
+            "reasonTrustMissing": "Hệ thống không tin cậy chứng chỉ của Relo cho api.anthropic.com, nên Cowork đi qua không đổi."
+          }
         },
         "claudeModeUnsaved": "Chưa lưu. Nhấn Lưu để áp dụng chế độ này.",
         "claudeModeDesktopOwnerNote": "Claude Desktop dùng chung kết nối proxy của Claude Code, nên khi lưu, Claude Code cũng được chuyển sang chế độ proxy.",

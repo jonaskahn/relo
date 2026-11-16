@@ -1911,7 +1911,7 @@
         "desktopPicker": {
           "title": "محدد النماذج في Desktop",
           "hint": "يضيف نماذج Relo إلى محدد النماذج في تبويب Code في Claude Desktop.",
-          "warning": "يضيف هذا شهادة من Relo إلى مخزن الثقة في نظام التشغيل، مقيّدة بـ claude.ai، ويُنهي Relo بروتوكول TLS لـ claude.ai على هذا الجهاز. قد تعدّ شروط Anthropic ذلك مخالفة، وقد يُعلَّق الحساب. يجب إغلاق Claude Desktop كليًا وإعادة فتحه، ولا يصل إلى الشبكة إلا أثناء تشغيل Relo. فعّله فقط إن كنت تقبل هذه المخاطرة.",
+          "warning": "يضيف هذا شهادة من Relo إلى مخزن الثقة في نظام التشغيل، مقيّدة بـ claude.ai و api.anthropic.com، ويُنهي Relo بروتوكول TLS لـ claude.ai على هذا الجهاز. قد تعدّ شروط Anthropic ذلك مخالفة، وقد يُعلَّق الحساب. يجب إغلاق Claude Desktop كليًا وإعادة فتحه، ولا يصل إلى الشبكة إلا أثناء تشغيل Relo. فعّله فقط إن كنت تقبل هذه المخاطرة.",
           "enable": "تشغيل المحدد",
           "confirm": "أقبل المخاطرة، شغّل",
           "disable": "إيقاف",
@@ -1931,7 +1931,19 @@
           "reasonTrustDeclined": "لم يثق النظام بالشهادة، لذا لم يتغير شيء.",
           "reasonTrustRemains": "ما زال النظام يثق بشهادة Relo. أزلها بالزر أدناه.",
           "reasonCaUnverified": "فشلت شهادة Relo في فحص الأمان، لذا لم تُستخدم.",
-          "reasonFailed": "فشلت خطوة وتم التراجع عنها قدر الإمكان. حاول مرة أخرى."
+          "reasonFailed": "فشلت خطوة وتم التراجع عنها قدر الإمكان. حاول مرة أخرى.",
+          "cowork": {
+            "title": "توجيه Cowork",
+            "hint": "يرسل طلبات Cowork في Claude Desktop الخاصة بالنماذج التي ربطتها بـ Relo إلى Relo. يعمل Cowork في جهاز افتراضي خاص به، لذا يُوجَّه إلى Relo عبر وكيل الشبكة الخاص بالمحدد.",
+            "warning": "يجعل هذا Relo يُنهي بروتوكول TLS لـ api.anthropic.com لحركة Cowork على هذا الجهاز. وشهادة Relo التي يثق بها نظامك بالفعل تشمل هذا المضيف. قد تعدّ شروط Anthropic ذلك مخالفة، وقد يُعلَّق الحساب. النماذج التي تربطها تغادر Anthropic بالكامل. بعد ذلك أغلق Claude Desktop كليًا وابدأ جلسة Cowork جديدة. إن فشل Cowork حينها بخطأ في الشهادة فأوقف هذا الخيار. فعّله فقط إن كنت تقبل هذه المخاطرة.",
+            "enable": "تشغيل توجيه Cowork",
+            "seen": "الاتصالات بـ api.anthropic.com عبر المحدد: {count}",
+            "reasonOff": "متوقف. يذهب Cowork مباشرة إلى Anthropic.",
+            "reasonActive": "قيد التشغيل. تذهب طلبات Cowork للنماذج المربوطة إلى Relo.",
+            "reasonRestart": "قيد التشغيل. أغلق Claude Desktop كليًا ثم ابدأ جلسة Cowork جديدة.",
+            "reasonNeedsPicker": "شغّل محدد Desktop أولًا.",
+            "reasonTrustMissing": "لا يثق النظام بشهادة Relo لـ api.anthropic.com، لذا يمرّ Cowork دون تغيير."
+          }
         },
         "claudeModeUnsaved": "لم يُحفظ بعد. اضغط حفظ لتطبيق هذا الوضع.",
         "claudeModeDesktopOwnerNote": "يشارك Claude Desktop توصيل الوكيل الخاص بـ Claude Code، لذا يؤدي الحفظ إلى نقل Claude Code أيضًا إلى وضع الوكيل.",

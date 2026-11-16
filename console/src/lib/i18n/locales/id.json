@@ -1911,7 +1911,7 @@
         "desktopPicker": {
           "title": "Pemilih model Desktop",
           "hint": "Menambahkan model Relo ke pemilih model di tab Code Claude Desktop.",
-          "warning": "Ini menambahkan sertifikat Relo ke penyimpanan kepercayaan sistem operasi Anda, dibatasi untuk claude.ai, dan Relo mengakhiri TLS untuk claude.ai di mesin ini. Ketentuan Anthropic dapat menganggapnya pelanggaran, dan akun dapat ditangguhkan. Claude Desktop harus ditutup sepenuhnya dan dibuka kembali, dan hanya menjangkau jaringan selama Relo berjalan. Aktifkan hanya jika Anda menerima risiko itu.",
+          "warning": "Ini menambahkan sertifikat Relo ke penyimpanan kepercayaan sistem operasi Anda, dibatasi untuk claude.ai dan api.anthropic.com, dan Relo mengakhiri TLS untuk claude.ai di mesin ini. Ketentuan Anthropic dapat menganggapnya pelanggaran, dan akun dapat ditangguhkan. Claude Desktop harus ditutup sepenuhnya dan dibuka kembali, dan hanya menjangkau jaringan selama Relo berjalan. Aktifkan hanya jika Anda menerima risiko itu.",
           "enable": "Aktifkan pemilih",
           "confirm": "Saya terima risikonya, aktifkan",
           "disable": "Matikan",
@@ -1931,7 +1931,19 @@
           "reasonTrustDeclined": "Sistem tidak memercayai sertifikat, jadi tidak ada yang diubah.",
           "reasonTrustRemains": "Sistem masih memercayai sertifikat Relo. Hapus dengan tombol di bawah.",
           "reasonCaUnverified": "Sertifikat Relo gagal pemeriksaan keamanan, jadi tidak digunakan.",
-          "reasonFailed": "Satu langkah gagal dan dibatalkan sejauh bisa. Coba lagi."
+          "reasonFailed": "Satu langkah gagal dan dibatalkan sejauh bisa. Coba lagi.",
+          "cowork": {
+            "title": "Arahkan Cowork",
+            "hint": "Mengirim permintaan Cowork di Claude Desktop untuk model yang Anda ikat ke Relo ke Relo. Cowork berjalan di mesin virtualnya sendiri, jadi diarahkan ke Relo lewat proxy jaringan pemilih.",
+            "warning": "Ini membuat Relo mengakhiri TLS untuk api.anthropic.com pada lalu lintas Cowork di mesin ini. Sertifikat Relo yang sudah dipercaya sistem Anda mencakup host itu. Ketentuan Anthropic dapat menganggapnya pelanggaran, dan akun dapat ditangguhkan. Model yang Anda ikat meninggalkan Anthropic sepenuhnya. Setelah itu, tutup Claude Desktop sepenuhnya dan mulai sesi Cowork baru. Jika Cowork lalu gagal dengan galat sertifikat, matikan ini. Aktifkan hanya jika Anda menerima risiko itu.",
+            "enable": "Aktifkan pengarahan Cowork",
+            "seen": "Koneksi ke api.anthropic.com lewat pemilih: {count}",
+            "reasonOff": "Mati. Cowork langsung ke Anthropic.",
+            "reasonActive": "Aktif. Permintaan Cowork untuk model terikat menuju Relo.",
+            "reasonRestart": "Aktif. Tutup Claude Desktop sepenuhnya, lalu mulai sesi Cowork baru.",
+            "reasonNeedsPicker": "Aktifkan pemilih Desktop terlebih dahulu.",
+            "reasonTrustMissing": "Sistem tidak mempercayai sertifikat Relo untuk api.anthropic.com, sehingga Cowork lewat tanpa diubah."
+          }
         },
         "claudeModeUnsaved": "Belum disimpan. Tekan Simpan untuk menerapkan mode ini.",
         "claudeModeDesktopOwnerNote": "Claude Desktop berbagi sambungan proxy Claude Code, jadi menyimpan juga memindahkan Claude Code ke mode proxy.",

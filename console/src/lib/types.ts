@@ -801,6 +801,12 @@ export interface DesktopPicker {
 		readonly hosts: readonly { host: string; count: number; last_seen_ms: number }[];
 		readonly refused_peers: number;
 	};
+	/** Whether Cowork's api.anthropic.com traffic is handed to Relo's intercept. */
+	readonly cowork: {
+		readonly enabled: boolean;
+		readonly armed: boolean;
+		readonly reason: string;
+	};
 }
 
 /** The body that sets or removes bindings. */

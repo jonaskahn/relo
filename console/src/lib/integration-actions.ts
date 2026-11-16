@@ -59,6 +59,9 @@ export function integrationPath(id: string, action: IntegrationAction): string {
  *  has its own constant, and the leading slash is what keeps it under `/api/v1/`. */
 export const DESKTOP_PICKER_PATH = '/integrations/claude-desktop/picker';
 
+/** The switch that routes Cowork, which rides the picker. */
+export const DESKTOP_COWORK_PATH = DESKTOP_PICKER_PATH + '/cowork';
+
 /** Why a set-up would not write yet. An empty code means the plan can be written. */
 export type SetupRefusal = '' | 'not_installed' | 'foreign_key' | 'relative_path' | 'unrecognised';
 

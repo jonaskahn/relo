@@ -1911,7 +1911,7 @@
         "desktopPicker": {
           "title": "Desktop 모델 선택기",
           "hint": "Relo의 모델을 Claude Desktop Code 탭의 모델 선택기에 추가합니다.",
-          "warning": "이 작업은 claude.ai로 제한된 Relo 인증서를 운영체제 신뢰 저장소에 추가하며, Relo가 이 컴퓨터에서 claude.ai의 TLS를 종료합니다. Anthropic의 약관은 이를 위반으로 볼 수 있고 계정이 정지될 수 있습니다. Claude Desktop은 완전히 종료한 뒤 다시 열어야 하며, Relo가 실행 중일 때만 네트워크에 접근합니다. 이 위험을 감수할 때만 켜세요.",
+          "warning": "이 작업은 claude.ai와 api.anthropic.com으로 제한된 Relo 인증서를 운영체제 신뢰 저장소에 추가하며, Relo가 이 컴퓨터에서 claude.ai의 TLS를 종료합니다. Anthropic의 약관은 이를 위반으로 볼 수 있고 계정이 정지될 수 있습니다. Claude Desktop은 완전히 종료한 뒤 다시 열어야 하며, Relo가 실행 중일 때만 네트워크에 접근합니다. 이 위험을 감수할 때만 켜세요.",
           "enable": "선택기 켜기",
           "confirm": "위험을 감수하고 켜기",
           "disable": "끄기",
@@ -1931,7 +1931,19 @@
           "reasonTrustDeclined": "시스템이 인증서를 신뢰하지 않아 아무것도 변경되지 않았습니다.",
           "reasonTrustRemains": "시스템이 아직 Relo의 인증서를 신뢰합니다. 아래 버튼으로 제거하세요.",
           "reasonCaUnverified": "Relo의 인증서가 안전 검사를 통과하지 못해 사용되지 않았습니다.",
-          "reasonFailed": "한 단계가 실패했고 가능한 만큼 되돌렸습니다. 다시 시도하세요."
+          "reasonFailed": "한 단계가 실패했고 가능한 만큼 되돌렸습니다. 다시 시도하세요.",
+          "cowork": {
+            "title": "Cowork 경유",
+            "hint": "Relo에 연결한 모델에 대한 Claude Desktop의 Cowork 요청을 Relo로 보냅니다. Cowork는 자체 가상 머신에서 실행되므로 선택기의 네트워크 프록시를 거쳐 Relo로 향하게 합니다.",
+            "warning": "이렇게 하면 Relo가 이 컴퓨터에서 Cowork의 트래픽에 대해 api.anthropic.com의 TLS를 종료합니다. 시스템이 이미 신뢰하는 Relo 인증서는 그 호스트도 포함합니다. Anthropic의 약관은 이를 위반으로 볼 수 있고 계정이 정지될 수 있습니다. 연결한 모델은 Anthropic을 완전히 벗어납니다. 이후 Claude Desktop을 완전히 종료하고 새 Cowork 세션을 시작하세요. 그때 Cowork가 인증서 오류로 실패하면 이 기능을 끄세요. 이 위험을 감수할 때만 켜세요.",
+            "enable": "Cowork 경유 켜기",
+            "seen": "선택기를 통한 api.anthropic.com 연결: {count}",
+            "reasonOff": "꺼짐. Cowork는 Anthropic으로 바로 갑니다.",
+            "reasonActive": "켜짐. 연결한 모델에 대한 Cowork 요청이 Relo로 갑니다.",
+            "reasonRestart": "켜짐. Claude Desktop을 완전히 종료한 뒤 새 Cowork 세션을 시작하세요.",
+            "reasonNeedsPicker": "먼저 Desktop 선택기를 켜세요.",
+            "reasonTrustMissing": "시스템이 api.anthropic.com에 대한 Relo 인증서를 신뢰하지 않아 Cowork는 변경 없이 통과합니다."
+          }
         },
         "claudeModeUnsaved": "아직 저장되지 않았습니다. 저장을 누르면 이 모드가 적용됩니다.",
         "claudeModeDesktopOwnerNote": "Claude Desktop은 Claude Code의 프록시 연결을 함께 사용하므로, 저장하면 Claude Code도 프록시 모드로 전환됩니다.",

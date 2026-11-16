@@ -1911,7 +1911,7 @@
         "desktopPicker": {
           "title": "Desktop model seçici",
           "hint": "Relo'nun modellerini Claude Desktop'ın Code sekmesindeki model seçiciye ekler.",
-          "warning": "Bu, işletim sisteminin güven deposuna claude.ai ile sınırlı bir Relo sertifikası ekler ve Relo bu makinede claude.ai için TLS'yi sonlandırır. Anthropic'in şartları bunu ihlal sayabilir ve bir hesap askıya alınabilir. Claude Desktop tamamen kapatılıp yeniden açılmalıdır ve yalnızca Relo çalışırken ağa erişir. Yalnızca bu riski kabul ediyorsanız açın.",
+          "warning": "Bu, işletim sisteminin güven deposuna claude.ai ve api.anthropic.com ile sınırlı bir Relo sertifikası ekler ve Relo bu makinede claude.ai için TLS'yi sonlandırır. Anthropic'in şartları bunu ihlal sayabilir ve bir hesap askıya alınabilir. Claude Desktop tamamen kapatılıp yeniden açılmalıdır ve yalnızca Relo çalışırken ağa erişir. Yalnızca bu riski kabul ediyorsanız açın.",
           "enable": "Seçiciyi aç",
           "confirm": "Riski kabul ediyorum, aç",
           "disable": "Kapat",
@@ -1931,7 +1931,19 @@
           "reasonTrustDeclined": "Sistem sertifikaya güvenmedi, bu yüzden hiçbir şey değişmedi.",
           "reasonTrustRemains": "Sistem hâlâ Relo'nun sertifikasına güveniyor. Aşağıdaki düğmeyle kaldırın.",
           "reasonCaUnverified": "Relo'nun sertifikası güvenlik denetimini geçemedi, bu yüzden kullanılmadı.",
-          "reasonFailed": "Bir adım başarısız oldu ve mümkün olduğunca geri alındı. Yeniden deneyin."
+          "reasonFailed": "Bir adım başarısız oldu ve mümkün olduğunca geri alındı. Yeniden deneyin.",
+          "cowork": {
+            "title": "Cowork yönlendirme",
+            "hint": "Claude Desktop'taki Cowork isteklerini, Relo'ya bağladığınız modeller için Relo'ya gönderir. Cowork kendi sanal makinesinde çalışır, bu yüzden seçicinin ağ proxy'si üzerinden Relo'ya yönlendirilir.",
+            "warning": "Bu, Relo'nun bu makinede Cowork trafiği için api.anthropic.com için TLS'yi sonlandırmasını sağlar. Sisteminizin zaten güvendiği Relo sertifikası bu ana makineyi de kapsar. Anthropic'in şartları bunu ihlal sayabilir ve bir hesap askıya alınabilir. Bağladığınız modeller Anthropic'ten tamamen çıkar. Sonra Claude Desktop'ı tamamen kapatın ve yeni bir Cowork oturumu başlatın. Cowork o zaman sertifika hatasıyla başarısız olursa bunu kapatın. Yalnızca bu riski kabul ediyorsanız açın.",
+            "enable": "Cowork yönlendirmeyi aç",
+            "seen": "Seçici üzerinden api.anthropic.com'a bağlantılar: {count}",
+            "reasonOff": "Kapalı. Cowork doğrudan Anthropic'e gider.",
+            "reasonActive": "Açık. Cowork'ün bağlı modeller için istekleri Relo'ya gider.",
+            "reasonRestart": "Açık. Claude Desktop’ı tamamen kapatın, sonra yeni bir Cowork oturumu başlatın.",
+            "reasonNeedsPicker": "Önce Desktop seçicisini açın.",
+            "reasonTrustMissing": "Sistem, api.anthropic.com için Relo sertifikasına güvenmiyor; bu yüzden Cowork değiştirilmeden geçer."
+          }
         },
         "claudeModeUnsaved": "Henüz kaydedilmedi. Bu modu uygulamak için Kaydet düğmesine basın.",
         "claudeModeDesktopOwnerNote": "Claude Desktop, Claude Code'un proxy bağlantısını paylaşır; bu yüzden kaydetmek Claude Code'u da proxy moduna alır.",

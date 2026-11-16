@@ -1911,7 +1911,7 @@
         "desktopPicker": {
           "title": "Modellväljare i Desktop",
           "hint": "Lägger till Relos modeller i modellväljaren på Code-fliken i Claude Desktop.",
-          "warning": "Detta lägger till ett Relo-certifikat i operativsystemets förtroendelager, begränsat till claude.ai, och Relo avslutar TLS för claude.ai på den här datorn. Anthropics villkor kan se det som ett brott och ett konto kan stängas av. Claude Desktop måste avslutas helt och öppnas igen, och når nätverket bara medan Relo körs. Slå på det bara om du accepterar den risken.",
+          "warning": "Detta lägger till ett Relo-certifikat i operativsystemets förtroendelager, begränsat till claude.ai och api.anthropic.com, och Relo avslutar TLS för claude.ai på den här datorn. Anthropics villkor kan se det som ett brott och ett konto kan stängas av. Claude Desktop måste avslutas helt och öppnas igen, och når nätverket bara medan Relo körs. Slå på det bara om du accepterar den risken.",
           "enable": "Slå på väljaren",
           "confirm": "Jag accepterar risken, slå på",
           "disable": "Slå av",
@@ -1931,7 +1931,19 @@
           "reasonTrustDeclined": "Systemet litade inte på certifikatet, så inget ändrades.",
           "reasonTrustRemains": "Systemet litar fortfarande på Relos certifikat. Ta bort det med knappen nedan.",
           "reasonCaUnverified": "Relos certifikat klarade inte säkerhetskontrollen och användes därför inte.",
-          "reasonFailed": "Ett steg misslyckades och ångrades så långt det gick. Försök igen."
+          "reasonFailed": "Ett steg misslyckades och ångrades så långt det gick. Försök igen.",
+          "cowork": {
+            "title": "Dirigera Cowork",
+            "hint": "Skickar Claude Desktops Cowork-förfrågningar för modeller du har bundit till Relo till Relo. Cowork körs i en egen virtuell maskin och leds därför till Relo via väljarens nätverksproxy.",
+            "warning": "Detta gör att Relo avslutar TLS för api.anthropic.com för Coworks trafik på den här datorn. Det Relo-certifikat som ditt system redan litar på täcker den värden. Anthropics villkor kan se det som ett brott och ett konto kan stängas av. Modeller du binder lämnar Anthropic helt. Avsluta Claude Desktop helt efteråt och starta en ny Cowork-session. Om Cowork då misslyckas med ett certifikatfel, slå av detta. Slå på det bara om du accepterar den risken.",
+            "enable": "Slå på Cowork-dirigering",
+            "seen": "Anslutningar till api.anthropic.com via väljaren: {count}",
+            "reasonOff": "Av. Cowork går direkt till Anthropic.",
+            "reasonActive": "På. Coworks förfrågningar för bundna modeller går till Relo.",
+            "reasonRestart": "På. Avsluta Claude Desktop helt och starta sedan en ny Cowork-session.",
+            "reasonNeedsPicker": "Slå först på Desktops väljare.",
+            "reasonTrustMissing": "Systemet litar inte på Relos certifikat för api.anthropic.com, så Cowork går igenom oförändrat."
+          }
         },
         "claudeModeUnsaved": "Inte sparat än. Tryck på Spara för att tillämpa läget.",
         "claudeModeDesktopOwnerNote": "Claude Desktop delar Claude Codes proxykoppling, så att spara flyttar också Claude Code till proxyläge.",

@@ -1911,7 +1911,7 @@
         "desktopPicker": {
           "title": "Desktop 模型选择器",
           "hint": "把 Relo 的模型添加到 Claude Desktop 的 Code 标签页的模型选择器中。",
-          "warning": "这会把一个仅限 claude.ai 的 Relo 证书添加到操作系统的信任存储，并由 Relo 在这台机器上终止 claude.ai 的 TLS。Anthropic 的条款可能将此视为违规，账号可能被暂停。必须彻底退出并重新打开 Claude Desktop，且只有在 Relo 运行时它才能访问网络。只有在你接受这一风险时才开启。",
+          "warning": "这会把一个仅限 claude.ai 和 api.anthropic.com 的 Relo 证书添加到操作系统的信任存储，并由 Relo 在这台机器上终止 claude.ai 的 TLS。Anthropic 的条款可能将此视为违规，账号可能被暂停。必须彻底退出并重新打开 Claude Desktop，且只有在 Relo 运行时它才能访问网络。只有在你接受这一风险时才开启。",
           "enable": "开启选择器",
           "confirm": "我接受风险，开启",
           "disable": "关闭",
@@ -1931,7 +1931,19 @@
           "reasonTrustDeclined": "系统没有信任该证书，所以没有任何更改。",
           "reasonTrustRemains": "系统仍然信任 Relo 的证书。请用下面的按钮移除。",
           "reasonCaUnverified": "Relo 的证书未通过安全检查，因此没有使用。",
-          "reasonFailed": "某一步失败了，并已尽可能撤销。请重试。"
+          "reasonFailed": "某一步失败了，并已尽可能撤销。请重试。",
+          "cowork": {
+            "title": "路由 Cowork",
+            "hint": "把 Claude Desktop 中 Cowork 针对已绑定到 Relo 的模型发出的请求发给 Relo。Cowork 运行在自己的虚拟机里，所以要通过选择器的网络代理指向 Relo。",
+            "warning": "这会让 Relo 在这台机器上对 Cowork 的流量终止 api.anthropic.com 的 TLS。系统已经信任的那份 Relo 证书同样覆盖该主机。Anthropic 的条款可能将此视为违规，账号可能被暂停。你绑定的模型会完全离开 Anthropic。之后请彻底退出 Claude Desktop，并开启新的 Cowork 会话。如果 Cowork 随后因证书错误失败，请关闭此项。只有在你接受这一风险时才开启。",
+            "enable": "开启 Cowork 路由",
+            "seen": "通过选择器连接 api.anthropic.com 的次数：{count}",
+            "reasonOff": "已关闭。Cowork 直接连到 Anthropic。",
+            "reasonActive": "已开启。Cowork 针对已绑定模型的请求会发往 Relo。",
+            "reasonRestart": "已开启。请彻底退出 Claude Desktop，然后开启新的 Cowork 会话。",
+            "reasonNeedsPicker": "请先开启 Desktop 选择器。",
+            "reasonTrustMissing": "系统不信任 Relo 针对 api.anthropic.com 的证书，因此 Cowork 会原样通过。"
+          }
         },
         "claudeModeUnsaved": "尚未保存。点击“保存”以应用此模式。",
         "claudeModeDesktopOwnerNote": "Claude Desktop 与 Claude Code 共用代理接线，因此保存时也会把 Claude Code 切换到代理模式。",

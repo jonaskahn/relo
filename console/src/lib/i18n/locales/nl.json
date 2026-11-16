@@ -1911,7 +1911,7 @@
         "desktopPicker": {
           "title": "Modelkiezer van Desktop",
           "hint": "Voegt de modellen van Relo toe aan de modelkiezer van het Code-tabblad van Claude Desktop.",
-          "warning": "Dit voegt een Relo-certificaat toe aan het vertrouwensarchief van je besturingssysteem, beperkt tot claude.ai, en Relo beëindigt TLS voor claude.ai op deze computer. De voorwaarden van Anthropic kunnen dat als overtreding zien en een account kan worden geschorst. Claude Desktop moet helemaal worden afgesloten en opnieuw geopend en bereikt het netwerk alleen zolang Relo draait. Zet het alleen aan als je dat risico accepteert.",
+          "warning": "Dit voegt een Relo-certificaat toe aan het vertrouwensarchief van je besturingssysteem, beperkt tot claude.ai en api.anthropic.com, en Relo beëindigt TLS voor claude.ai op deze computer. De voorwaarden van Anthropic kunnen dat als overtreding zien en een account kan worden geschorst. Claude Desktop moet helemaal worden afgesloten en opnieuw geopend en bereikt het netwerk alleen zolang Relo draait. Zet het alleen aan als je dat risico accepteert.",
           "enable": "Kiezer aanzetten",
           "confirm": "Ik accepteer het risico, aanzetten",
           "disable": "Uitzetten",
@@ -1931,7 +1931,19 @@
           "reasonTrustDeclined": "Het systeem vertrouwde het certificaat niet, dus er is niets gewijzigd.",
           "reasonTrustRemains": "Het systeem vertrouwt het certificaat van Relo nog. Verwijder het met de knop hieronder.",
           "reasonCaUnverified": "Het certificaat van Relo kwam niet door de veiligheidscontrole en is niet gebruikt.",
-          "reasonFailed": "Een stap is mislukt en is waar mogelijk teruggedraaid. Probeer het opnieuw."
+          "reasonFailed": "Een stap is mislukt en is waar mogelijk teruggedraaid. Probeer het opnieuw.",
+          "cowork": {
+            "title": "Cowork omleiden",
+            "hint": "Stuurt de Cowork-verzoeken van Claude Desktop voor modellen die je aan Relo hebt gebonden naar Relo. Cowork draait in een eigen virtuele machine en wordt daarom via de netwerkproxy van de kiezer naar Relo geleid.",
+            "warning": "Hierdoor beëindigt Relo op deze computer TLS voor api.anthropic.com voor het verkeer van Cowork. Het Relo-certificaat dat je systeem al vertrouwt, dekt die host. De voorwaarden van Anthropic kunnen dat als overtreding zien en een account kan worden geschorst. Modellen die je bindt, verlaten Anthropic helemaal. Sluit Claude Desktop daarna helemaal af en start een nieuwe Cowork-sessie. Faalt Cowork dan met een certificaatfout, zet dit dan uit. Zet het alleen aan als je dat risico accepteert.",
+            "enable": "Cowork-omleiding aanzetten",
+            "seen": "Verbindingen met api.anthropic.com via de kiezer: {count}",
+            "reasonOff": "Uit. Cowork gaat rechtstreeks naar Anthropic.",
+            "reasonActive": "Aan. De verzoeken van Cowork voor gebonden modellen gaan naar Relo.",
+            "reasonRestart": "Aan. Sluit Claude Desktop helemaal af en start dan een nieuwe Cowork-sessie.",
+            "reasonNeedsPicker": "Zet eerst de kiezer van Desktop aan.",
+            "reasonTrustMissing": "Het systeem vertrouwt het certificaat van Relo voor api.anthropic.com niet, dus Cowork loopt ongewijzigd door."
+          }
         },
         "claudeModeUnsaved": "Nog niet opgeslagen. Druk op Opslaan om deze modus toe te passen.",
         "claudeModeDesktopOwnerNote": "Claude Desktop deelt de proxybedrading van Claude Code, dus opslaan zet ook Claude Code in proxymodus.",

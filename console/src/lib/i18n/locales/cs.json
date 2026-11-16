@@ -1911,7 +1911,7 @@
         "desktopPicker": {
           "title": "Výběr modelu v Desktopu",
           "hint": "Přidá modely Relo do výběru modelu na kartě Code v Claude Desktop.",
-          "warning": "Tím se do úložiště důvěryhodných certifikátů operačního systému přidá certifikát Relo, omezený na claude.ai, a Relo na tomto počítači ukončuje TLS pro claude.ai. Podmínky Anthropic to mohou považovat za porušení a účet může být pozastaven. Claude Desktop je nutné úplně ukončit a znovu otevřít a k síti se dostane jen tehdy, když Relo běží. Zapněte to jen tehdy, pokud toto riziko přijímáte.",
+          "warning": "Tím se do úložiště důvěryhodných certifikátů operačního systému přidá certifikát Relo, omezený na claude.ai a api.anthropic.com, a Relo na tomto počítači ukončuje TLS pro claude.ai. Podmínky Anthropic to mohou považovat za porušení a účet může být pozastaven. Claude Desktop je nutné úplně ukončit a znovu otevřít a k síti se dostane jen tehdy, když Relo běží. Zapněte to jen tehdy, pokud toto riziko přijímáte.",
           "enable": "Zapnout výběr",
           "confirm": "Přijímám riziko, zapnout",
           "disable": "Vypnout",
@@ -1931,7 +1931,19 @@
           "reasonTrustDeclined": "Systém certifikátu nedůvěřoval, takže se nic nezměnilo.",
           "reasonTrustRemains": "Systém stále důvěřuje certifikátu Relo. Odeberte ho tlačítkem níže.",
           "reasonCaUnverified": "Certifikát Relo neprošel bezpečnostní kontrolou, a proto nebyl použit.",
-          "reasonFailed": "Krok selhal a byl vrácen, kde to šlo. Zkuste to znovu."
+          "reasonFailed": "Krok selhal a byl vrácen, kde to šlo. Zkuste to znovu.",
+          "cowork": {
+            "title": "Směrovat Cowork",
+            "hint": "Posílá požadavky Cowork z Claude Desktop pro modely, které jste svázali s Relo, do Relo. Cowork běží ve vlastním virtuálním stroji, proto je na Relo nasměrován přes síťový proxy výběru modelu.",
+            "warning": "Relo tím na tomto počítači ukončuje TLS pro api.anthropic.com u provozu Cowork. Certifikát Relo, kterému systém už důvěřuje, tento hostitel pokrývá. Podmínky Anthropic to mohou považovat za porušení a účet může být pozastaven. Modely, které svážete, opouštějí Anthropic úplně. Poté úplně ukončete Claude Desktop a spusťte novou relaci Cowork. Pokud Cowork pak selže s chybou certifikátu, vypněte to. Zapněte to jen tehdy, pokud toto riziko přijímáte.",
+            "enable": "Zapnout směrování Cowork",
+            "seen": "Připojení k api.anthropic.com přes výběr: {count}",
+            "reasonOff": "Vypnuto. Cowork jde přímo k Anthropic.",
+            "reasonActive": "Zapnuto. Požadavky Cowork pro svázané modely jdou do Relo.",
+            "reasonRestart": "Zapnuto. Úplně ukončete Claude Desktop a pak spusťte novou relaci Cowork.",
+            "reasonNeedsPicker": "Nejprve zapněte výběr modelu v Desktopu.",
+            "reasonTrustMissing": "Systém nedůvěřuje certifikátu Relo pro api.anthropic.com, proto Cowork prochází beze změny."
+          }
         },
         "claudeModeUnsaved": "Zatím neuloženo. Stisknutím Uložit tento režim použijete.",
         "claudeModeDesktopOwnerNote": "Claude Desktop sdílí proxy zapojení Claude Code, takže uložení přepne do režimu proxy i Claude Code.",

@@ -1911,7 +1911,7 @@
         "desktopPicker": {
           "title": "Selector de modelos de Desktop",
           "hint": "Añade los modelos de Relo al selector de modelos de la pestaña Code de Claude Desktop.",
-          "warning": "Esto añade un certificado de Relo al almacén de confianza de tu sistema operativo, limitado a claude.ai, y Relo termina TLS para claude.ai en este equipo. Los términos de Anthropic pueden considerarlo una infracción y una cuenta puede ser suspendida. Claude Desktop debe cerrarse por completo y volver a abrirse, y solo llega a la red mientras Relo está en marcha. Actívalo solo si aceptas ese riesgo.",
+          "warning": "Esto añade un certificado de Relo al almacén de confianza de tu sistema operativo, limitado a claude.ai y api.anthropic.com, y Relo termina TLS para claude.ai en este equipo. Los términos de Anthropic pueden considerarlo una infracción y una cuenta puede ser suspendida. Claude Desktop debe cerrarse por completo y volver a abrirse, y solo llega a la red mientras Relo está en marcha. Actívalo solo si aceptas ese riesgo.",
           "enable": "Activar el selector",
           "confirm": "Acepto el riesgo, activar",
           "disable": "Desactivar",
@@ -1931,7 +1931,19 @@
           "reasonTrustDeclined": "El sistema no confió en el certificado, así que no se cambió nada.",
           "reasonTrustRemains": "El sistema aún confía en el certificado de Relo. Quítalo con el botón de abajo.",
           "reasonCaUnverified": "El certificado de Relo no superó su comprobación de seguridad, así que no se usó.",
-          "reasonFailed": "Un paso falló y se deshizo en lo posible. Inténtalo de nuevo."
+          "reasonFailed": "Un paso falló y se deshizo en lo posible. Inténtalo de nuevo.",
+          "cowork": {
+            "title": "Dirigir Cowork",
+            "hint": "Envía a Relo las solicitudes de Cowork en Claude Desktop para los modelos que vinculaste. Cowork se ejecuta en su propia máquina virtual, así que se dirige a Relo mediante el proxy de red del selector.",
+            "warning": "Con esto Relo termina TLS para api.anthropic.com en el tráfico de Cowork de este equipo. El certificado de Relo en el que tu sistema ya confía cubre ese host. Los términos de Anthropic pueden considerarlo una infracción y una cuenta puede ser suspendida. Los modelos que vinculas salen por completo de Anthropic. Después, cierra Claude Desktop por completo e inicia una sesión nueva de Cowork. Si Cowork falla entonces con un error de certificado, desactiva esto. Actívalo solo si aceptas ese riesgo.",
+            "enable": "Activar la ruta de Cowork",
+            "seen": "Conexiones a api.anthropic.com por el selector: {count}",
+            "reasonOff": "Desactivado. Cowork va directo a Anthropic.",
+            "reasonActive": "Activado. Las solicitudes de Cowork para modelos vinculados van a Relo.",
+            "reasonRestart": "Activado. Cierra Claude Desktop por completo e inicia una sesión nueva de Cowork.",
+            "reasonNeedsPicker": "Activa primero el selector de Desktop.",
+            "reasonTrustMissing": "El sistema no confía en el certificado de Relo para api.anthropic.com, así que Cowork pasa sin cambios."
+          }
         },
         "claudeModeUnsaved": "Aún sin guardar. Pulsa Guardar para aplicar este modo.",
         "claudeModeDesktopOwnerNote": "Claude Desktop comparte el cableado proxy de Claude Code, así que al guardar también se pasa Claude Code al modo proxy.",

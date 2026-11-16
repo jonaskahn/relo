@@ -250,8 +250,8 @@ not routed.
 Under Desktop's bindings, one section adds Relo's models to the model picker of Desktop's own Code tab. It is off by
 default and is the only control that asks the operating system to trust a certificate, so **Turn on the picker** opens
 the risk warning in place and writes nothing until the operator confirms with "I accept the risk, turn it on". The
-warning has one owner, the message the section renders: Relo adds a certificate limited to claude.ai to the system trust
-store and terminates TLS for claude.ai on this machine; Anthropic's terms may treat that as a violation and an account
+warning has one owner, the message the section renders: Relo adds a certificate limited to claude.ai and api.anthropic.com
+to the system trust store and terminates TLS for claude.ai on this machine; Anthropic's terms may treat that as a violation and an account
 can be suspended; Desktop must be quit and reopened and reaches the network only while Relo runs.
 
 The section reads the daemon's reason code as one sentence (off, on, restart needed, trust pending, trust declined, trust
@@ -259,6 +259,20 @@ remains, and the refusals), shows the system's trust of the certificate and the 
 off** while it is on. **Remove trust** appears only while the picker is off and the certificate is still trusted, which
 is what is left when turning it off could not remove it. On a system Relo cannot trust a certificate on, the section
 says so and offers nothing. The one certificate is the one every client shares; there is no per-client certificate.
+
+##### Route Cowork
+
+While the picker is on and armed, a nested **Route Cowork** control hands the connections Cowork's virtual machine makes
+to `api.anthropic.com` to Relo's intercept, so a model bound for Desktop applies there too. Cowork does not read the
+settings file the Code tab does; Desktop points the VM's network at the picker's proxy, and the proxy chains that one
+host to the intercept. It is off by default, asks the operating system for nothing, and has its own warning and confirm:
+Relo terminates TLS for api.anthropic.com for Cowork's traffic, the certificate the system already trusts covers that
+host, Anthropic's terms may treat it as a violation, bound models leave Anthropic, Desktop must be quit and a new Cowork
+session started, and a certificate error in Cowork means the switch should be turned off. The control shows its reason
+as one sentence (off, on, restart needed, needs the picker, trust missing) and how many connections to the vendor API the
+picker's proxy has been asked for, which is what tells the operator whether Cowork's traffic reaches Relo. Turning the
+picker off turns Cowork routing off first. Desktop copies only administrator-trusted roots into the Cowork VM, so this
+route is verified on a machine by sending one Cowork message, not assumed.
 
 ### Model bindings (proxy mode)
 

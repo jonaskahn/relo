@@ -1911,7 +1911,7 @@
         "desktopPicker": {
           "title": "Desktop のモデルピッカー",
           "hint": "Relo のモデルを Claude Desktop の Code タブのモデルピッカーに追加します。",
-          "warning": "これは claude.ai に限定した Relo の証明書をオペレーティングシステムの信頼ストアに追加し、Relo がこのマシンで claude.ai の TLS を終端します。Anthropic の規約はこれを違反とみなす可能性があり、アカウントが停止されることがあります。Claude Desktop は完全に終了して開き直す必要があり、Relo が動いている間だけネットワークに到達します。このリスクを受け入れる場合にのみ有効にしてください。",
+          "warning": "これは claude.ai と api.anthropic.com に限定した Relo の証明書をオペレーティングシステムの信頼ストアに追加し、Relo がこのマシンで claude.ai の TLS を終端します。Anthropic の規約はこれを違反とみなす可能性があり、アカウントが停止されることがあります。Claude Desktop は完全に終了して開き直す必要があり、Relo が動いている間だけネットワークに到達します。このリスクを受け入れる場合にのみ有効にしてください。",
           "enable": "ピッカーをオンにする",
           "confirm": "リスクを受け入れてオンにする",
           "disable": "オフにする",
@@ -1931,7 +1931,19 @@
           "reasonTrustDeclined": "システムが証明書を信頼しなかったため、何も変更されていません。",
           "reasonTrustRemains": "システムはまだ Relo の証明書を信頼しています。下のボタンで削除してください。",
           "reasonCaUnverified": "Relo の証明書が安全性の確認に失敗したため、使用されませんでした。",
-          "reasonFailed": "ある手順が失敗し、可能な範囲で元に戻しました。もう一度お試しください。"
+          "reasonFailed": "ある手順が失敗し、可能な範囲で元に戻しました。もう一度お試しください。",
+          "cowork": {
+            "title": "Cowork を経由させる",
+            "hint": "Claude Desktop の Cowork が出すリクエストのうち、Relo に紐付けたモデルのものを Relo に送ります。Cowork は専用の仮想マシンで動くため、ピッカーのネットワークプロキシ経由で Relo に向けます。",
+            "warning": "これにより、Relo はこのマシンで Cowork の通信に限って api.anthropic.com の TLS を終端します。システムがすでに信頼している Relo の証明書は、そのホストも対象にしています。Anthropic の規約はこれを違反とみなす可能性があり、アカウントが停止されることがあります。紐付けたモデルは Anthropic から完全に離れます。その後、Claude Desktop を完全に終了し、新しい Cowork セッションを始めてください。Cowork が証明書エラーで失敗する場合は、これをオフにしてください。このリスクを受け入れる場合にのみオンにしてください。",
+            "enable": "Cowork の経由をオンにする",
+            "seen": "ピッカー経由の api.anthropic.com への接続: {count}",
+            "reasonOff": "オフ。Cowork は Anthropic に直接つながります。",
+            "reasonActive": "オン。紐付けたモデルの Cowork リクエストは Relo に届きます。",
+            "reasonRestart": "オン。Claude Desktop を完全に終了し、新しい Cowork セッションを始めてください。",
+            "reasonNeedsPicker": "先に Desktop のピッカーをオンにしてください。",
+            "reasonTrustMissing": "システムが api.anthropic.com に対する Relo の証明書を信頼していないため、Cowork はそのまま通過します。"
+          }
         },
         "claudeModeUnsaved": "まだ保存されていません。保存を押すとこのモードが適用されます。",
         "claudeModeDesktopOwnerNote": "Claude Desktop は Claude Code のプロキシ配線を共有するため、保存すると Claude Code もプロキシモードに移ります。",
