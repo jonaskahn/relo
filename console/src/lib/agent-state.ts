@@ -270,3 +270,8 @@ export function patchAgent(agents: IntegrationView[], agent: IntegrationView): I
 /** Re-exported so a card reads the repair check beside the readings it is judged on, rather than
  *  reaching into the actions module for one predicate. */
 export { needsRepair };
+
+/** The two clients that have a proxy mode, and so choose a mode when they are set up. */
+export function choosesMode(agent: IntegrationView): boolean {
+	return agent.id === 'claude-code' || agent.id === 'claude-desktop';
+}

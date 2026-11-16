@@ -19,6 +19,7 @@
 	import {
 		contextOn,
 		isTested,
+		choosesMode,
 		labelOf,
 		patchAgent,
 		refusalOf,
@@ -178,11 +179,6 @@
 			(diagramMode === 'env' || detail.proxy_state === 'applied')
 	);
 
-	// The two clients with a proxy mode, which therefore choose one at set-up.
-	function choosesMode(agent: IntegrationView): boolean {
-		return agent.id === 'claude-code' || agent.id === 'claude-desktop';
-	}
-
 	function message(error: unknown): string {
 		return error instanceof Error ? error.message : String(error);
 	}
@@ -239,7 +235,9 @@
 	function reportResult(answer: IntegrationResult, action: AgentAction) {
 		result = {
 			state: 'success',
-			copy: $t('ui.pages.integrationsPage.' + resultCodeFor(action, answer.integration)),
+			copy: $t('ui.pages.integrationsPage.' + resultCodeFor(action, answer.integration), {
+				values: { label: labelOf(answer.integration) }
+			}),
 			token: answer.token ?? '',
 			warnings: answer.warnings ?? []
 		};
@@ -262,7 +260,11 @@
 				openDetail(answer.integration);
 				reportResult(answer, action);
 			} else {
-				toast.success($t('ui.pages.integrationsPage.' + resultCodeFor(action, answer.integration)));
+				toast.success(
+					$t('ui.pages.integrationsPage.' + resultCodeFor(action, answer.integration), {
+						values: { label: labelOf(answer.integration) }
+					})
+				);
 			}
 		} catch (error) {
 			// A failure stays next to the control that failed, with the reason and

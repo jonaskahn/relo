@@ -2,7 +2,16 @@
 	import { t } from 'svelte-i18n';
 
 	import { ADD_STEPS, addStepBack, resultCodeFor, type AddStep } from '$lib/agent-flow';
-	import { labelOf, logoIdOf, refusalDetailKey, refusalOf } from '$lib/agent-state';
+	import {
+		choosesMode,
+		isTested,
+		labelOf,
+		logoIdOf,
+		refusalDetailKey,
+		refusalOf,
+		stateKey,
+		stateTone
+	} from '$lib/agent-state';
 	import { api } from '$lib/api';
 	import type { DataPlaneURLs } from '$lib/client-setup';
 	import { integrationPath, openCodeSetupVersions, setupBlocked } from '$lib/integration-actions';
@@ -10,9 +19,12 @@
 	import FieldSwitch from '$lib/components/ui/field-switch.svelte';
 	import Icon from '$lib/components/ui/icon.svelte';
 	import ProviderLogo from '$lib/components/ui/provider-logo.svelte';
+	import StatusBadge from '$lib/components/ui/status-badge.svelte';
 	import WizardStepper from '$lib/components/ui/wizard-stepper.svelte';
 	import AgentResultStep from '$lib/components/agents/agent-result-step.svelte';
 	import AgentVerifyChecks from '$lib/components/agents/agent-verify-checks.svelte';
+	import ClaudeModeSection from '$lib/components/agents/claude-mode-section.svelte';
+	import ModeDiagram from '$lib/components/agents/mode-diagram.svelte';
 	import AgentWiringSection from '$lib/components/agents/agent-wiring-section.svelte';
 	import Button from '$lib/components/ui/button.svelte';
 	import type {
@@ -48,6 +60,9 @@
 	// V1 stays visible as the legacy generation Relo no longer writes, and V2 is
 	// the one new setup selects.
 	let openCodeV2 = $state(true);
+	// Claude Code and Claude Desktop choose how they reach Relo before anything is
+	// written; the set-up writes the mode chosen here.
+	let setupMode = $state<'env' | 'proxy'>('env');
 
 	const stepLabels: Record<AddStep, string> = {
 		choose: 'ui.pages.integrationsPage.addStepChoose',
@@ -67,8 +82,9 @@
 	// The set-up body: overwrite when replacing, plus the generations for
 	// OpenCode. Anything else sends what it always sent.
 	function setupBody(agent: IntegrationView, overwrite: boolean): string | undefined {
-		const payload: { overwrite?: boolean; versions?: string } = {};
+		const payload: { overwrite?: boolean; versions?: string; mode?: 'env' | 'proxy' } = {};
 		if (overwrite) payload.overwrite = true;
+		if (choosesMode(agent)) payload.mode = setupMode;
 		if (agent.id === 'opencode') payload.versions = openCodeSetupVersions(false, openCodeV2);
 		return Object.keys(payload).length > 0 ? JSON.stringify(payload) : undefined;
 	}
@@ -85,6 +101,7 @@
 		revealCopied = false;
 		didWork = false;
 		openCodeV2 = true;
+		setupMode = 'env';
 	}
 
 	// Opening the flow starts it from the choice, so a second visit never
@@ -119,6 +136,7 @@
 		selected = agent;
 		failure = '';
 		openCodeV2 = true;
+		setupMode = 'env';
 	}
 
 	function forward() {
@@ -167,7 +185,9 @@
 			didWork = true;
 			result = {
 				state: 'success',
-				copy: $t('ui.pages.integrationsPage.' + resultCodeFor('setup', answer.integration)),
+				copy: $t('ui.pages.integrationsPage.' + resultCodeFor('setup', answer.integration), {
+					values: { label: labelOf(answer.integration) }
+				}),
 				token: answer.token ?? ''
 			};
 			revealCopied = false;
@@ -325,7 +345,26 @@
 			{:else}
 				<!-- The preview is the whole step: what Relo would write, with
 				     the fragment and any refusal reason, before anything changes. -->
-				<AgentWiringSection agent={selected} />
+				{#if choosesMode(selected)}
+					<ClaudeModeSection
+						agent={selected}
+						setup
+						selected={setupMode}
+						onselect={(value) => (setupMode = value)}
+						onchanged={() => {}}
+					/>
+					<ModeDiagram
+						mode={setupMode}
+						client={selected.id === 'claude-desktop' ? 'claude-desktop' : 'claude-code'}
+						live={false}
+						preview
+					/>
+				{/if}
+				<!-- The preview describes the files environment mode writes, so it is
+				     not shown while proxy mode, which writes none of them, is chosen. -->
+				{#if !(choosesMode(selected) && setupMode === 'proxy')}
+					<AgentWiringSection agent={selected} />
+				{/if}
 				{#if selected.id === 'opencode'}
 					<!-- The generations this client understands. V2 is the one Relo
 				     writes; V1 stays visible so an older setup is still named. -->
@@ -394,12 +433,25 @@
 		{/if}
 	</div>
 
+	{#snippet titleAside()}
+		{#if selected}
+			<span class="min-w-0 truncate text-sm font-semibold">{labelOf(selected)}</span>
+			<StatusBadge kind={stateTone(selected)} label={$t(stateKey(selected))} />
+			<StatusBadge
+				kind="muted"
+				label={$t(
+					isTested(selected)
+						? 'ui.pages.integrationsPage.tested'
+						: 'ui.pages.integrationsPage.notTestedYet'
+				)}
+			/>
+		{/if}
+	{/snippet}
+
 	{#snippet footer()}
 		<div class="flex flex-wrap items-center justify-between gap-3">
 			<div class="flex min-w-0 items-center gap-2" role="status">
-				{#if selected}
-					<span class="min-w-0 truncate text-sm font-semibold">{labelOf(selected)}</span>
-				{:else}
+				{#if !selected}
 					<span class="truncate text-sm text-muted-foreground">
 						{$t('ui.pages.integrationsPage.addChooseHint')}
 					</span>

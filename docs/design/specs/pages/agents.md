@@ -67,6 +67,14 @@ never reorders a card an operator is looking at.
 **One modal for one agent.** Header carries the agent name and its summary line; the body and footer swap per step
 (`view`, `result`, `reveal`) and never stack a second modal.
 
+### Add agent (the four-step flow)
+
+Choose, Set up, Verify, Result. The chosen agent's name, status pill and coverage tag sit beside the title once an agent is
+picked, and the footer carries the actions alone. Claude Code and Claude Desktop show the mode choice and its diagram
+preview on the Set up step, and the set-up writes the mode picked there; while Proxy is picked the preview of the files
+environment mode writes is hidden, because proxy mode writes none of them. A result that names the agent ("The Claude Code
+integration is wired…") is given the agent's label.
+
 ### Step: view
 
 One column, row by row, never split into side-by-side panes. A verification result, when there is one, sits above

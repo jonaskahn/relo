@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+	choosesMode,
 	byLabel,
 	contextOn,
 	isTested,
@@ -259,5 +260,15 @@ describe('the OpenCode generations chip', () => {
 		expect(openCodeVersionChip(agentOf({ id: 'opencode', openCodeVersions: 'v1+v2' }))).toBe(
 			'V1+V2'
 		);
+	});
+});
+
+describe('the clients that choose a mode at set-up', () => {
+	it('names Claude Code and Claude Desktop, the two with a proxy mode, and no other', () => {
+		expect(choosesMode(agentOf({ id: 'claude-code' }))).toBe(true);
+		expect(choosesMode(agentOf({ id: 'claude-desktop' }))).toBe(true);
+		for (const id of ['codex', 'opencode', 'dsh']) {
+			expect(choosesMode(agentOf({ id }))).toBe(false);
+		}
 	});
 });
