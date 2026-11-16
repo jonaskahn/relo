@@ -28,6 +28,7 @@ func desktopProxyHarnessWith(t *testing.T, picker integration.DesktopPicker) (*h
 	runtimeProxy := &fakeProxy{env: proxyEnvFixture()}
 	h := proxyHarnessFull(t, runtimeProxy, nil, picker)
 	t.Setenv("CLAUDE_USER_DATA_DIR", "")
+	t.Setenv("XDG_CONFIG_HOME", "")
 	support := filepath.Join(h.paths.Home, ".config")
 	if runtime.GOOS == "darwin" {
 		support = filepath.Join(h.paths.Home, "Library", "Application Support")

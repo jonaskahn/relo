@@ -56,6 +56,7 @@ func proxyDesktopService(t *testing.T, refuse func(id string) bool) (*appintegra
 	home := t.TempDir()
 	t.Setenv("CLAUDE_CONFIG_DIR", filepath.Join(home, ".claude"))
 	t.Setenv("CLAUDE_USER_DATA_DIR", "")
+	t.Setenv("XDG_CONFIG_HOME", "")
 	support := filepath.Join(home, ".config")
 	if runtime.GOOS == "darwin" {
 		support = filepath.Join(home, "Library", "Application Support")

@@ -24,6 +24,7 @@ func desktopHarness(t *testing.T, models *[]integration.ModelRef) (*harness, str
 	h := newHarness(t, dataPlane)
 	withModels(h, models)
 	t.Setenv("CLAUDE_USER_DATA_DIR", "")
+	t.Setenv("XDG_CONFIG_HOME", "")
 	support := filepath.Join(h.paths.Home, ".config")
 	if runtime.GOOS == "darwin" {
 		support = filepath.Join(h.paths.Home, "Library", "Application Support")
