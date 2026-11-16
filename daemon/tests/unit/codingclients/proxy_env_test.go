@@ -69,7 +69,12 @@ func TestAnAddressFromBeforeARestartIsStaleNotForeign(t *testing.T) {
 	if err != nil || strings.Contains(stripped, "HTTPS_PROXY") {
 		t.Fatalf("stripped = %s (%v), want the earlier address removed too", stripped, err)
 	}
-	for _, other := range []string{"http://relo:other@127.0.0.1:49000", "http://elsewhere:secret@127.0.0.1:49000"} {
+	// A run before the token was kept signed its address with another one.
+	other := `{"env":{"HTTPS_PROXY":"http://relo:older@127.0.0.1:49000"}}`
+	if merged, err := codingclients.MergeClaudeProxySettings(other, env); err != nil || strings.Contains(merged, "older") {
+		t.Fatalf("merged = %s (%v), want an earlier credential replaced", merged, err)
+	}
+	for _, other := range []string{"http://elsewhere:secret@127.0.0.1:49000", "http://relo:secret@corp-proxy:3128"} {
 		content := `{"env":{"HTTPS_PROXY":"` + other + `"}}`
 		if _, err := codingclients.MergeClaudeProxySettings(content, env); err == nil {
 			t.Fatalf("MergeClaudeProxySettings(%s) error = nil, want another proxy refused", other)

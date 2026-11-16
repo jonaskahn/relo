@@ -102,17 +102,14 @@ func ClaudeProxySettingsPointAt(content string, env ProxyEnv) bool {
 	return proxy == env.URL && ca == env.CAPath
 }
 
-var trailingPort = regexp.MustCompile(`:\d+$`)
+var reloIntercept = regexp.MustCompile(`^http://relo:[^@/\s]*@127\.0\.0\.1:\d+$`)
 
 // sameIntercept reports whether a proxy address is one Relo's own intercept
-// carried before a restart: the same credential on the same loopback host, on
-// the port the kernel picked then. The port changes on every start, so such an
-// address is stale, not another proxy the operator set.
+// wrote in an earlier run: its `relo` user on the loopback host. The port is
+// picked on every start, and a run that predates a kept token carries another
+// credential, so either way the address is stale, not a proxy the operator set.
 func sameIntercept(current, url string) bool {
-	if !strings.HasPrefix(current, "http://relo:") || !strings.HasPrefix(url, "http://relo:") {
-		return false
-	}
-	return trailingPort.ReplaceAllString(current, "") == trailingPort.ReplaceAllString(url, "")
+	return reloIntercept.MatchString(current) && reloIntercept.MatchString(url)
 }
 
 // proxyNoProxy joins Relo's loopback bypass onto whatever the operator
