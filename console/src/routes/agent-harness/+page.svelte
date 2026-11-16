@@ -743,6 +743,20 @@
 		{/key}
 	{/if}
 
+	{#snippet titleAside()}
+		{#if detail}
+			<StatusBadge kind={stateTone(detail)} label={$t(stateKey(detail))} />
+			<StatusBadge
+				kind="muted"
+				label={$t(
+					isTested(detail)
+						? 'ui.pages.integrationsPage.tested'
+						: 'ui.pages.integrationsPage.notTestedYet'
+				)}
+			/>
+		{/if}
+	{/snippet}
+
 	{#snippet footer()}
 		{#if step !== 'view'}
 			<!-- A result step keeps one way out, and Done returns to the wiring
@@ -757,23 +771,9 @@
 				</Button>
 			</div>
 		{:else if detail && primary}
-			<!-- Footer summary and actions share one row: what this modal is
-			     about and how it stands on the left, the action group on the
-			     right. The row wraps on narrow sheets while the action group
-			     keeps its own stacking. -->
-			<div class="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
-				<div class="flex min-w-0 flex-wrap items-center gap-2">
-					<span class="min-w-0 truncate text-sm font-semibold">{labelOf(detail)}</span>
-					<StatusBadge kind={stateTone(detail)} label={$t(stateKey(detail))} />
-					<StatusBadge
-						kind="muted"
-						label={$t(
-							isTested(detail)
-								? 'ui.pages.integrationsPage.tested'
-								: 'ui.pages.integrationsPage.notTestedYet'
-						)}
-					/>
-				</div>
+			<!-- The footer carries the actions alone; the agent's name and how it
+			     stands sit beside the title at the top. -->
+			<div class="flex flex-wrap items-center justify-end gap-x-4 gap-y-2">
 				<div class="modal-footer max-sm:w-full flex-wrap">
 					<!-- The destructive action leads the footer group: named, not a bare
 					     icon, and apart from the primary rather than beside it. -->

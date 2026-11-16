@@ -113,8 +113,11 @@ mode section: a title, the drawing stretched across the row, and one caption sen
   rather than being replaced. A line under the controls says an open Claude Code session keeps the previous choice
   until it is started again. Claude Desktop and every other agent omit this section.
 
-**Footer** — summary above (name, status pill, coverage tag) and the shared `.modal-footer` below, so the actions
-stack full-width with the safe-area inset on a sheet:
+**Title row** — the status pill and the coverage tag ("Tested" or "Not tested yet") sit beside the title, at the top of
+the modal, as the modal's `titleAside`. The footer repeats neither them nor the name.
+
+**Footer** — the shared `.modal-footer` alone, right-aligned, so the actions stack full-width with the safe-area inset
+on a sheet:
 
 | Agent state                 | Primary    | Also                                                    |
 |-----------------------------|------------|---------------------------------------------------------|
