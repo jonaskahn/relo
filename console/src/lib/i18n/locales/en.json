@@ -1900,8 +1900,14 @@
           "captionEnv": "Claude Code sends every request to Relo's address, which ANTHROPIC_BASE_URL sets in its settings. Anthropic is not in the path, so a claude.ai login is not used.",
           "captionProxy": "Claude Code keeps talking to api.anthropic.com through HTTPS_PROXY. Relo's intercept sends the models you bound to Relo under Relo's own key and relays everything else to Anthropic with your own login, untouched.",
           "idle": "The wiring is not applied, so nothing is moving.",
-          "preview": "Preview. Nothing is written until you confirm."
-        }
+          "preview": "Preview. Nothing is written until you confirm.",
+          "subDesktop": "Code tab",
+          "captionDesktopEnv": "Claude Desktop runs as a Relo client: its gateway profile points every tab at Relo's address. Anthropic is not in the path, so the claude.ai login is not used.",
+          "captionDesktopProxy": "Claude Desktop keeps its login. Only its Code tab runs through Relo's intercept, which sends bound models to Relo under Relo's own key and relays the rest to Anthropic untouched. Chat and the model picker stay Anthropic's."
+        },
+        "claudeModeDesktopHint": "Choose how Claude Desktop reaches Relo. The mode applies to the app and to the Code tab it starts.",
+        "claudeModeDesktopEnvHint": "Claude Desktop runs as a Relo client through a gateway profile. The claude.ai login is not used.",
+        "claudeModeDesktopProxyHint": "Claude Desktop keeps its login. Its Code tab goes through Relo's intercept; Chat and the model picker stay Anthropic's. Needs Claude Code in proxy mode."
       },
       "chatPage": {
         "title": "Chat",

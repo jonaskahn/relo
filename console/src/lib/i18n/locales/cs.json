@@ -1900,8 +1900,14 @@
           "captionEnv": "Claude Code posílá každý požadavek na adresu Relo, kterou v nastavení určuje ANTHROPIC_BASE_URL. Anthropic na cestě není, takže se přihlášení ke claude.ai nepoužívá.",
           "captionProxy": "Claude Code dál komunikuje s api.anthropic.com přes HTTPS_PROXY. Zachycení Relo posílá svázané modely do Relo s vlastním klíčem Relo a vše ostatní předává Anthropic s vaším přihlášením beze změny.",
           "idle": "Zapojení není použito, takže se nic nehýbe.",
-          "preview": "Náhled. Nic se nezapíše, dokud nepotvrdíte."
-        }
+          "preview": "Náhled. Nic se nezapíše, dokud nepotvrdíte.",
+          "subDesktop": "karta Code",
+          "captionDesktopEnv": "Claude Desktop běží jako klient Relo: profil brány míří každou kartou na adresu Relo. Anthropic není na cestě, takže se přihlášení ke claude.ai nepoužívá.",
+          "captionDesktopProxy": "Claude Desktop si ponechává své přihlášení. Jen karta Code jde přes zachycení Relo, které posílá svázané modely do Relo vlastním klíčem Relo a vše ostatní předává Anthropic beze změny. Chat a výběr modelu zůstávají u Anthropic."
+        },
+        "claudeModeDesktopHint": "Vyberte, jak se Claude Desktop připojuje k Relo. Režim platí pro aplikaci i pro kartu Code, kterou spouští.",
+        "claudeModeDesktopEnvHint": "Claude Desktop běží jako klient Relo přes profil brány. Přihlášení ke claude.ai se nepoužívá.",
+        "claudeModeDesktopProxyHint": "Claude Desktop si ponechává své přihlášení. Karta Code jde přes zachycení Relo; Chat a výběr modelu zůstávají u Anthropic. Vyžaduje Claude Code v režimu proxy."
       },
       "chatPage": {
         "title": "Chat",

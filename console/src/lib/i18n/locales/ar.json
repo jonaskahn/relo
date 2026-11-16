@@ -1900,8 +1900,14 @@
           "captionEnv": "يرسل Claude Code كل طلب إلى عنوان Relo الذي يحدده ANTHROPIC_BASE_URL في إعداداته. لا تقع Anthropic في المسار، لذا لا يُستخدم تسجيل الدخول إلى claude.ai.",
           "captionProxy": "يواصل Claude Code الحديث مع api.anthropic.com عبر HTTPS_PROXY. يرسل اعتراض Relo النماذج التي ربطتها إلى Relo بمفتاح Relo الخاص، ويمرر كل ما عداها إلى Anthropic بتسجيل دخولك دون تعديل.",
           "idle": "لم يُطبَّق التوصيل، لذا لا شيء يتحرك.",
-          "preview": "معاينة. لا يُكتب شيء حتى تؤكد."
-        }
+          "preview": "معاينة. لا يُكتب شيء حتى تؤكد.",
+          "subDesktop": "تبويب Code",
+          "captionDesktopEnv": "يعمل Claude Desktop كعميل لـ Relo: يوجّه ملف تعريف البوابة كل تبويب إلى عنوان Relo. لا تقع Anthropic في المسار، لذا لا يُستخدم تسجيل الدخول إلى claude.ai.",
+          "captionDesktopProxy": "يحتفظ Claude Desktop بتسجيل دخوله. يمر تبويب Code وحده عبر اعتراض Relo، الذي يرسل النماذج المرتبطة إلى Relo بمفتاح Relo الخاص ويمرر كل ما عداها إلى Anthropic دون تغيير. تبقى المحادثة ومحدد النماذج لدى Anthropic."
+        },
+        "claudeModeDesktopHint": "اختر كيف يصل Claude Desktop إلى Relo. ينطبق الوضع على التطبيق وعلى تبويب Code الذي يشغّله.",
+        "claudeModeDesktopEnvHint": "يعمل Claude Desktop كعميل لـ Relo عبر ملف تعريف بوابة. لا يُستخدم تسجيل الدخول إلى claude.ai.",
+        "claudeModeDesktopProxyHint": "يحتفظ Claude Desktop بتسجيل دخوله. يمر تبويب Code عبر اعتراض Relo؛ أما المحادثة ومحدد النماذج فيبقيان لدى Anthropic. يتطلب أن يكون Claude Code في وضع الوكيل."
       },
       "chatPage": {
         "title": "الدردشة",

@@ -1900,8 +1900,14 @@
           "captionEnv": "Claude Code her isteği, ayarlarında ANTHROPIC_BASE_URL ile belirlenen Relo adresine gönderir. Anthropic yolda değildir, bu yüzden claude.ai girişi kullanılmaz.",
           "captionProxy": "Claude Code, HTTPS_PROXY üzerinden api.anthropic.com ile konuşmaya devam eder. Relo'nun yakalayıcısı, bağladığınız modelleri Relo'nun kendi anahtarıyla Relo'ya gönderir; geri kalan her şeyi kendi girişinizle, değiştirmeden Anthropic'e aktarır.",
           "idle": "Bağlantı uygulanmadı, bu yüzden hiçbir şey hareket etmiyor.",
-          "preview": "Önizleme. Onaylayana kadar hiçbir şey yazılmaz."
-        }
+          "preview": "Önizleme. Onaylayana kadar hiçbir şey yazılmaz.",
+          "subDesktop": "Code sekmesi",
+          "captionDesktopEnv": "Claude Desktop bir Relo istemcisi olarak çalışır: ağ geçidi profili her sekmeyi Relo'nun adresine yönlendirir. Anthropic yolda değildir, bu yüzden claude.ai girişi kullanılmaz.",
+          "captionDesktopProxy": "Claude Desktop kendi girişini korur. Yalnızca Code sekmesi Relo'nun araya girme katmanından geçer; bu katman bağlanan modelleri Relo'nun kendi anahtarıyla Relo'ya gönderir, geri kalan her şeyi değiştirmeden Anthropic'e iletir. Sohbet ve model seçici Anthropic'te kalır."
+        },
+        "claudeModeDesktopHint": "Claude Desktop'ın Relo'ya nasıl ulaşacağını seçin. Mod, uygulamaya ve başlattığı Code sekmesine uygulanır.",
+        "claudeModeDesktopEnvHint": "Claude Desktop, bir ağ geçidi profiliyle Relo istemcisi olarak çalışır. claude.ai girişi kullanılmaz.",
+        "claudeModeDesktopProxyHint": "Claude Desktop kendi girişini korur. Code sekmesi Relo'nun araya girme katmanından geçer; Sohbet ve model seçici Anthropic'te kalır. Claude Code'un proxy modunda olması gerekir."
       },
       "chatPage": {
         "title": "Sohbet",

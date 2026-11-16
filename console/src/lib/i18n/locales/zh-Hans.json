@@ -1900,8 +1900,14 @@
           "captionEnv": "Claude Code 把每个请求发往 Relo 的地址，该地址由设置中的 ANTHROPIC_BASE_URL 指定。Anthropic 不在路径上，因此不会使用 claude.ai 登录。",
           "captionProxy": "Claude Code 仍通过 HTTPS_PROXY 与 api.anthropic.com 通信。Relo 的拦截会把你绑定的模型用 Relo 自己的密钥发给 Relo，其余一切用你自己的登录原样转发给 Anthropic。",
           "idle": "接线尚未应用，所以没有任何流动。",
-          "preview": "预览。确认之前不会写入任何内容。"
-        }
+          "preview": "预览。确认之前不会写入任何内容。",
+          "subDesktop": "Code 标签页",
+          "captionDesktopEnv": "Claude Desktop 作为 Relo 客户端运行：网关配置文件让每个标签页都指向 Relo 的地址。Anthropic 不在路径上，因此不会使用 claude.ai 登录。",
+          "captionDesktopProxy": "Claude Desktop 保留自己的登录。只有其 Code 标签页经过 Relo 的拦截，拦截会把你绑定的模型用 Relo 自己的密钥发给 Relo，其余一切原样转发给 Anthropic。聊天和模型选择器仍归 Anthropic。"
+        },
+        "claudeModeDesktopHint": "选择 Claude Desktop 如何访问 Relo。该方式适用于应用本身及其启动的 Code 标签页。",
+        "claudeModeDesktopEnvHint": "Claude Desktop 通过网关配置文件作为 Relo 客户端运行，不使用 claude.ai 登录。",
+        "claudeModeDesktopProxyHint": "Claude Desktop 保留自己的登录。其 Code 标签页经过 Relo 的拦截；聊天和模型选择器仍归 Anthropic。需要 Claude Code 处于代理模式。"
       },
       "chatPage": {
         "title": "聊天",

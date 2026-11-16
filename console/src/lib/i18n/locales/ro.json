@@ -1900,8 +1900,14 @@
           "captionEnv": "Claude Code trimite fiecare cerere la adresa Relo, setată de ANTHROPIC_BASE_URL în setări. Anthropic nu este pe traseu, deci o autentificare claude.ai nu este folosită.",
           "captionProxy": "Claude Code continuă să vorbească cu api.anthropic.com prin HTTPS_PROXY. Interceptorul Relo trimite către Relo modelele asociate, cu cheia proprie a Relo, și retransmite tot restul către Anthropic cu autentificarea ta, nemodificat.",
           "idle": "Conexiunea nu este aplicată, deci nimic nu se mișcă.",
-          "preview": "Previzualizare. Nu se scrie nimic până nu confirmi."
-        }
+          "preview": "Previzualizare. Nu se scrie nimic până nu confirmi.",
+          "subDesktop": "fila Code",
+          "captionDesktopEnv": "Claude Desktop rulează ca client Relo: profilul de gateway îndreaptă fiecare filă spre adresa Relo. Anthropic nu este pe traseu, deci autentificarea claude.ai nu este folosită.",
+          "captionDesktopProxy": "Claude Desktop își păstrează autentificarea. Doar fila Code trece prin interceptorul Relo, care trimite către Relo modelele asociate cu cheia proprie a Relo și retransmite tot restul către Anthropic nemodificat. Chat și selectorul de modele rămân ale Anthropic."
+        },
+        "claudeModeDesktopHint": "Alege cum ajunge Claude Desktop la Relo. Modul se aplică aplicației și filei Code pe care o pornește.",
+        "claudeModeDesktopEnvHint": "Claude Desktop rulează ca client Relo printr-un profil de gateway. Autentificarea claude.ai nu este folosită.",
+        "claudeModeDesktopProxyHint": "Claude Desktop își păstrează autentificarea. Fila Code trece prin interceptorul Relo; Chat și selectorul de modele rămân ale Anthropic. Necesită Claude Code în modul proxy."
       },
       "chatPage": {
         "title": "Chat",

@@ -1900,8 +1900,14 @@
           "captionEnv": "Claude Code はすべてのリクエストを、設定内の ANTHROPIC_BASE_URL が指す Relo のアドレスへ送ります。Anthropic は経路に入らないため、claude.ai のログインは使われません。",
           "captionProxy": "Claude Code は HTTPS_PROXY を通じて引き続き api.anthropic.com と通信します。Relo のインターセプトは、紐付けたモデルを Relo 自身のキーで Relo に送り、それ以外はあなた自身のログインのまま変更せずに Anthropic へ中継します。",
           "idle": "配線が適用されていないため、何も動いていません。",
-          "preview": "プレビュー。確認するまで何も書き込まれません。"
-        }
+          "preview": "プレビュー。確認するまで何も書き込まれません。",
+          "subDesktop": "Code タブ",
+          "captionDesktopEnv": "Claude Desktop は Relo のクライアントとして動作します。ゲートウェイプロファイルがすべてのタブを Relo のアドレスへ向けます。Anthropic は経路に入らないため、claude.ai のログインは使われません。",
+          "captionDesktopProxy": "Claude Desktop は自分のログインを保ちます。Code タブだけが Relo のインターセプトを通り、紐付けたモデルは Relo 自身のキーで Relo に送られ、それ以外は変更せずに Anthropic へ中継されます。チャットとモデルピッカーは Anthropic のままです。"
+        },
+        "claudeModeDesktopHint": "Claude Desktop が Relo に到達する方法を選びます。このモードはアプリと、アプリが起動する Code タブに適用されます。",
+        "claudeModeDesktopEnvHint": "Claude Desktop はゲートウェイプロファイルを通じて Relo のクライアントとして動作します。claude.ai のログインは使われません。",
+        "claudeModeDesktopProxyHint": "Claude Desktop は自分のログインを保ちます。Code タブは Relo のインターセプトを通り、チャットとモデルピッカーは Anthropic のままです。Claude Code がプロキシモードである必要があります。"
       },
       "chatPage": {
         "title": "チャット",

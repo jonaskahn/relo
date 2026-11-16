@@ -657,7 +657,7 @@
 						oncopy={() => void copyKey()}
 					/>
 					<AgentWiringSection agent={detail} />
-					{#if detail.enabled && detail.id === 'claude-code'}
+					{#if detail.enabled && (detail.id === 'claude-code' || detail.id === 'claude-desktop')}
 						<ClaudeModeSection
 							agent={detail}
 							onpreview={(value) => (previewingProxy = value)}
@@ -666,10 +666,15 @@
 								detail = next;
 							}}
 						/>
-						<ModeDiagram mode={diagramMode} live={diagramLive} preview={previewingProxy} />
+						<ModeDiagram
+							mode={diagramMode}
+							client={detail.id === 'claude-desktop' ? 'claude-desktop' : 'claude-code'}
+							live={diagramLive}
+							preview={previewingProxy}
+						/>
 						{#if (detail.mode ?? 'env') === 'proxy'}
 							<ClaudeBindingsSection agent={detail} />
-						{:else}
+						{:else if detail.id === 'claude-code'}
 							<ClaudeModelPreferences
 								agent={detail}
 								{models}

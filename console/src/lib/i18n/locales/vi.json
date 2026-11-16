@@ -1900,8 +1900,14 @@
           "captionEnv": "Claude Code gửi mọi yêu cầu tới địa chỉ của Relo, do ANTHROPIC_BASE_URL đặt trong cài đặt. Anthropic không nằm trên đường đi, nên đăng nhập claude.ai không được dùng.",
           "captionProxy": "Claude Code vẫn nói chuyện với api.anthropic.com qua HTTPS_PROXY. Bộ chặn của Relo gửi các mô hình bạn đã gắn tới Relo bằng khóa riêng của Relo, và chuyển tiếp mọi thứ còn lại tới Anthropic bằng đăng nhập của bạn, không đổi.",
           "idle": "Việc nối chưa được áp dụng, nên không có gì chuyển động.",
-          "preview": "Xem trước. Không có gì được ghi cho tới khi bạn xác nhận."
-        }
+          "preview": "Xem trước. Không có gì được ghi cho tới khi bạn xác nhận.",
+          "subDesktop": "tab Code",
+          "captionDesktopEnv": "Claude Desktop chạy như một máy khách của Relo: hồ sơ cổng trỏ mọi tab tới địa chỉ của Relo. Anthropic không nằm trên đường đi, nên đăng nhập claude.ai không được dùng.",
+          "captionDesktopProxy": "Claude Desktop giữ đăng nhập của nó. Chỉ tab Code đi qua bộ chặn của Relo, bộ này gửi các mô hình đã gắn tới Relo bằng khóa riêng của Relo và chuyển tiếp mọi thứ còn lại tới Anthropic, không đổi. Chat và bộ chọn mô hình vẫn thuộc Anthropic."
+        },
+        "claudeModeDesktopHint": "Chọn cách Claude Desktop tới Relo. Chế độ áp dụng cho ứng dụng và tab Code mà nó khởi chạy.",
+        "claudeModeDesktopEnvHint": "Claude Desktop chạy như một máy khách của Relo qua hồ sơ cổng. Đăng nhập claude.ai không được dùng.",
+        "claudeModeDesktopProxyHint": "Claude Desktop giữ đăng nhập của nó. Tab Code đi qua bộ chặn của Relo; Chat và bộ chọn mô hình vẫn thuộc Anthropic. Cần Claude Code ở chế độ proxy."
       },
       "chatPage": {
         "title": "Trò chuyện",

@@ -1900,8 +1900,14 @@
           "captionEnv": "Claude Code envía cada solicitud a la dirección de Relo, que ANTHROPIC_BASE_URL fija en sus ajustes. Anthropic no está en el camino, así que no se usa una sesión de claude.ai.",
           "captionProxy": "Claude Code sigue hablando con api.anthropic.com mediante HTTPS_PROXY. El interceptor de Relo envía a Relo los modelos que vinculaste, con la clave propia de Relo, y reenvía todo lo demás a Anthropic con tu propia sesión, sin tocarlo.",
           "idle": "El cableado no está aplicado, así que nada se mueve.",
-          "preview": "Vista previa. No se escribe nada hasta que confirmes."
-        }
+          "preview": "Vista previa. No se escribe nada hasta que confirmes.",
+          "subDesktop": "pestaña Code",
+          "captionDesktopEnv": "Claude Desktop funciona como cliente de Relo: su perfil de pasarela apunta todas las pestañas a la dirección de Relo. Anthropic no está en el camino, así que no se usa la sesión de claude.ai.",
+          "captionDesktopProxy": "Claude Desktop conserva su sesión. Solo su pestaña Code pasa por el interceptor de Relo, que envía a Relo los modelos vinculados con la clave propia de Relo y reenvía todo lo demás a Anthropic sin tocarlo. El Chat y el selector de modelos siguen siendo de Anthropic."
+        },
+        "claudeModeDesktopHint": "Elige cómo llega Claude Desktop a Relo. El modo se aplica a la aplicación y a la pestaña Code que inicia.",
+        "claudeModeDesktopEnvHint": "Claude Desktop funciona como cliente de Relo mediante un perfil de pasarela. No se usa la sesión de claude.ai.",
+        "claudeModeDesktopProxyHint": "Claude Desktop conserva su sesión. Su pestaña Code pasa por el interceptor de Relo; el Chat y el selector de modelos siguen siendo de Anthropic. Requiere Claude Code en modo proxy."
       },
       "chatPage": {
         "title": "Chat",

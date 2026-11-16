@@ -1900,8 +1900,14 @@
           "captionEnv": "Claude Code mengirim setiap permintaan ke alamat Relo, yang ditetapkan ANTHROPIC_BASE_URL di pengaturannya. Anthropic tidak ada di jalur, sehingga login claude.ai tidak dipakai.",
           "captionProxy": "Claude Code tetap berbicara dengan api.anthropic.com lewat HTTPS_PROXY. Pencegat Relo mengirim model yang Anda ikat ke Relo dengan kunci milik Relo sendiri, dan meneruskan semua yang lain ke Anthropic dengan login Anda sendiri, tanpa diubah.",
           "idle": "Pengaturan belum diterapkan, jadi tidak ada yang bergerak.",
-          "preview": "Pratinjau. Tidak ada yang ditulis sampai Anda mengonfirmasi."
-        }
+          "preview": "Pratinjau. Tidak ada yang ditulis sampai Anda mengonfirmasi.",
+          "subDesktop": "tab Code",
+          "captionDesktopEnv": "Claude Desktop berjalan sebagai klien Relo: profil gateway-nya mengarahkan setiap tab ke alamat Relo. Anthropic tidak ada di jalur, sehingga login claude.ai tidak dipakai.",
+          "captionDesktopProxy": "Claude Desktop mempertahankan loginnya. Hanya tab Code yang melewati intersep Relo, yang mengirim model terikat ke Relo dengan kunci milik Relo sendiri dan meneruskan sisanya ke Anthropic tanpa diubah. Chat dan pemilih model tetap milik Anthropic."
+        },
+        "claudeModeDesktopHint": "Pilih cara Claude Desktop menjangkau Relo. Mode ini berlaku untuk aplikasi dan tab Code yang dijalankannya.",
+        "claudeModeDesktopEnvHint": "Claude Desktop berjalan sebagai klien Relo melalui profil gateway. Login claude.ai tidak dipakai.",
+        "claudeModeDesktopProxyHint": "Claude Desktop mempertahankan loginnya. Tab Code melewati intersep Relo; Chat dan pemilih model tetap milik Anthropic. Memerlukan Claude Code dalam mode proxy."
       },
       "chatPage": {
         "title": "Obrolan",

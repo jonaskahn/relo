@@ -11,19 +11,28 @@
 	// only while it is, so the picture never claims traffic that is not flowing.
 	interface Props {
 		mode: DiagramMode;
+		/** The client the picture is of. Desktop's proxy path is its Code tab alone. */
+		client?: 'claude-code' | 'claude-desktop';
 		/** Whether the wiring is applied, which is what lets the dots run. */
 		live: boolean;
 		/** A mode the operator is looking at before it is written. */
 		preview?: boolean;
 	}
 
-	let { mode, live, preview = false }: Props = $props();
+	let { mode, client = 'claude-code', live, preview = false }: Props = $props();
+
+	const desktop = $derived(client === 'claude-desktop');
 
 	let width = $state(0);
 
 	// A product name is not translated; the words around it are.
 	const labels = $derived<DiagramLabels>({
-		client: { name: 'Claude Code', sub: $t('ui.pages.integrationsPage.modeDiagram.subClient') },
+		client: desktop
+			? {
+					name: 'Claude Desktop',
+					sub: $t('ui.pages.integrationsPage.modeDiagram.subDesktop')
+				}
+			: { name: 'Claude Code', sub: $t('ui.pages.integrationsPage.modeDiagram.subClient') },
 		intercept: {
 			name: $t('ui.pages.integrationsPage.modeDiagram.intercept'),
 			sub: '127.0.0.1'
@@ -44,18 +53,23 @@
 	});
 
 	const diagram = $derived(modeDiagram({ mode, width, labels }));
-	const caption = $derived(
-		$t(
-			mode === 'env'
-				? 'ui.pages.integrationsPage.modeDiagram.captionEnv'
-				: 'ui.pages.integrationsPage.modeDiagram.captionProxy'
-		)
-	);
+	const caption = $derived($t(captionKey(desktop, mode)));
 
 	// A line that joins fades in and one that leaves fades out, the way the dashboard's map
 	// takes new traffic; the lines two modes share morph in place.
 	const JOIN_MS = 240;
 	const LEAVE_MS = 160;
+
+	function captionKey(forDesktop: boolean, shown: DiagramMode): string {
+		if (forDesktop) {
+			return shown === 'env'
+				? 'ui.pages.integrationsPage.modeDiagram.captionDesktopEnv'
+				: 'ui.pages.integrationsPage.modeDiagram.captionDesktopProxy';
+		}
+		return shown === 'env'
+			? 'ui.pages.integrationsPage.modeDiagram.captionEnv'
+			: 'ui.pages.integrationsPage.modeDiagram.captionProxy';
+	}
 
 	function chipText(kind: string): string {
 		return $t(

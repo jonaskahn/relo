@@ -1900,8 +1900,14 @@
           "captionEnv": "Claude Code skickar varje förfrågan till Relos adress, som ANTHROPIC_BASE_URL anger i inställningarna. Anthropic ligger inte i vägen, så en claude.ai-inloggning används inte.",
           "captionProxy": "Claude Code fortsätter prata med api.anthropic.com via HTTPS_PROXY. Relos interceptor skickar de modeller du bundit till Relo med Relos egen nyckel och vidarebefordrar allt annat orört till Anthropic med din egen inloggning.",
           "idle": "Kopplingen är inte tillämpad, så inget rör sig.",
-          "preview": "Förhandsvisning. Inget skrivs förrän du bekräftar."
-        }
+          "preview": "Förhandsvisning. Inget skrivs förrän du bekräftar.",
+          "subDesktop": "Code-flik",
+          "captionDesktopEnv": "Claude Desktop körs som Relo-klient: gatewayprofilen pekar varje flik mot Relos adress. Anthropic ligger inte i vägen, så claude.ai-inloggningen används inte.",
+          "captionDesktopProxy": "Claude Desktop behåller sin inloggning. Bara Code-fliken går via Relos interceptor, som skickar bundna modeller till Relo med Relos egen nyckel och vidarebefordrar allt annat orört till Anthropic. Chat och modellväljaren förblir Anthropics."
+        },
+        "claudeModeDesktopHint": "Välj hur Claude Desktop når Relo. Läget gäller appen och den Code-flik den startar.",
+        "claudeModeDesktopEnvHint": "Claude Desktop körs som Relo-klient via en gatewayprofil. Inloggningen på claude.ai används inte.",
+        "claudeModeDesktopProxyHint": "Claude Desktop behåller sin inloggning. Code-fliken går via Relos interceptor; Chat och modellväljaren förblir Anthropics. Kräver Claude Code i proxyläge."
       },
       "chatPage": {
         "title": "Chatt",

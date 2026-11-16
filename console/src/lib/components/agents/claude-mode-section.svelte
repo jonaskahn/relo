@@ -7,9 +7,10 @@
 	import { integrationPath } from '$lib/integration-actions';
 	import type { IntegrationView } from '$lib/types';
 
-	// How Claude Code is pointed at Relo. Environment writes the client's own
-	// settings; proxy leaves the client talking to Anthropic and puts Relo's
-	// intercept in the path instead, which keeps a claude.ai login working.
+	// How Claude Code, or Claude Desktop, is pointed at Relo. Environment writes the
+	// client's own settings, or Desktop's gateway profile; proxy leaves the client
+	// talking to Anthropic and puts Relo's intercept in the path instead, which
+	// keeps a claude.ai login working.
 	interface Props {
 		agent: IntegrationView;
 		onchanged: (agent: IntegrationView) => void;
@@ -30,6 +31,7 @@
 	}
 
 	const mode = $derived(agent.mode === 'proxy' ? 'proxy' : 'env');
+	const desktop = $derived(agent.id === 'claude-desktop');
 	const proxyState = $derived(agent.proxy_state ?? '');
 
 	async function choose(next: 'env' | 'proxy') {
@@ -75,7 +77,13 @@
 <section class="space-y-3 border-t border-border pt-4">
 	<div class="min-w-0">
 		<h3 class="text-sm font-semibold">{$t('ui.pages.integrationsPage.claudeModeTitle')}</h3>
-		<p class="text-xs text-muted-foreground">{$t('ui.pages.integrationsPage.claudeModeHint')}</p>
+		<p class="text-xs text-muted-foreground">
+			{$t(
+				desktop
+					? 'ui.pages.integrationsPage.claudeModeDesktopHint'
+					: 'ui.pages.integrationsPage.claudeModeHint'
+			)}
+		</p>
 	</div>
 
 	<div class="grid gap-3 sm:grid-cols-2">
@@ -93,7 +101,11 @@
 				{$t('ui.pages.integrationsPage.claudeModeEnv')}
 			</span>
 			<span class="mt-1 block text-xs text-muted-foreground">
-				{$t('ui.pages.integrationsPage.claudeModeEnvHint')}
+				{$t(
+					desktop
+						? 'ui.pages.integrationsPage.claudeModeDesktopEnvHint'
+						: 'ui.pages.integrationsPage.claudeModeEnvHint'
+				)}
 			</span>
 		</button>
 		<button
@@ -110,7 +122,11 @@
 				{$t('ui.pages.integrationsPage.claudeModeProxy')}
 			</span>
 			<span class="mt-1 block text-xs text-muted-foreground">
-				{$t('ui.pages.integrationsPage.claudeModeProxyHint')}
+				{$t(
+					desktop
+						? 'ui.pages.integrationsPage.claudeModeDesktopProxyHint'
+						: 'ui.pages.integrationsPage.claudeModeProxyHint'
+				)}
 			</span>
 		</button>
 	</div>

@@ -1900,8 +1900,14 @@
           "captionEnv": "Claude Code надсилає кожен запит на адресу Relo, яку задає ANTHROPIC_BASE_URL у налаштуваннях. Anthropic не на шляху, тож вхід claude.ai не використовується.",
           "captionProxy": "Claude Code, як і раніше, звертається до api.anthropic.com через HTTPS_PROXY. Перехоплення Relo надсилає прив’язані моделі до Relo з власним ключем Relo, а все інше передає до Anthropic з вашим входом без змін.",
           "idle": "Підключення не застосовано, тож нічого не рухається.",
-          "preview": "Попередній перегляд. Нічого не записується, доки ви не підтвердите."
-        }
+          "preview": "Попередній перегляд. Нічого не записується, доки ви не підтвердите.",
+          "subDesktop": "вкладка Code",
+          "captionDesktopEnv": "Claude Desktop працює як клієнт Relo: профіль шлюзу спрямовує кожну вкладку на адресу Relo. Anthropic не на шляху, тому вхід у claude.ai не використовується.",
+          "captionDesktopProxy": "Claude Desktop зберігає свій вхід. Лише вкладка Code йде через перехоплення Relo, яке надсилає прив'язані моделі до Relo з власним ключем Relo, а все решту пересилає Anthropic без змін. Чат і вибір моделі залишаються за Anthropic."
+        },
+        "claudeModeDesktopHint": "Виберіть, як Claude Desktop звертається до Relo. Режим стосується застосунку та вкладки Code, яку він запускає.",
+        "claudeModeDesktopEnvHint": "Claude Desktop працює як клієнт Relo через профіль шлюзу. Вхід у claude.ai не використовується.",
+        "claudeModeDesktopProxyHint": "Claude Desktop зберігає свій вхід. Вкладка Code йде через перехоплення Relo; чат і вибір моделі залишаються за Anthropic. Потрібен Claude Code в режимі проксі."
       },
       "chatPage": {
         "title": "Чат",

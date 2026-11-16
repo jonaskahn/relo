@@ -1900,8 +1900,14 @@
           "captionEnv": "Claude Code envoie chaque requête à l'adresse de Relo, que ANTHROPIC_BASE_URL définit dans ses réglages. Anthropic n'est pas sur le trajet, donc une connexion claude.ai n'est pas utilisée.",
           "captionProxy": "Claude Code continue de parler à api.anthropic.com via HTTPS_PROXY. L'interception de Relo envoie à Relo les modèles que vous lui avez liés, avec la clé propre à Relo, et relaie tout le reste à Anthropic avec votre propre connexion, sans le modifier.",
           "idle": "Le câblage n'est pas appliqué, donc rien ne bouge.",
-          "preview": "Aperçu. Rien n'est écrit tant que vous ne confirmez pas."
-        }
+          "preview": "Aperçu. Rien n'est écrit tant que vous ne confirmez pas.",
+          "subDesktop": "onglet Code",
+          "captionDesktopEnv": "Claude Desktop fonctionne comme client de Relo : son profil de passerelle envoie chaque onglet vers l'adresse de Relo. Anthropic n'est pas sur le trajet, donc la connexion claude.ai n'est pas utilisée.",
+          "captionDesktopProxy": "Claude Desktop garde sa connexion. Seul son onglet Code passe par l'interception de Relo, qui envoie les modèles liés à Relo avec la clé propre à Relo et relaie tout le reste à Anthropic sans le modifier. Le Chat et le sélecteur de modèle restent ceux d'Anthropic."
+        },
+        "claudeModeDesktopHint": "Choisissez comment Claude Desktop atteint Relo. Le mode s'applique à l'application et à l'onglet Code qu'elle lance.",
+        "claudeModeDesktopEnvHint": "Claude Desktop fonctionne comme client de Relo via un profil de passerelle. La connexion claude.ai n'est pas utilisée.",
+        "claudeModeDesktopProxyHint": "Claude Desktop garde sa connexion. Son onglet Code passe par l'interception de Relo ; le Chat et le sélecteur de modèle restent ceux d'Anthropic. Nécessite Claude Code en mode proxy."
       },
       "chatPage": {
         "title": "Chat",

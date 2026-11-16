@@ -1900,8 +1900,14 @@
           "captionEnv": "Claude Code stuurt elk verzoek naar het adres van Relo, dat ANTHROPIC_BASE_URL in de instellingen vastlegt. Anthropic ligt niet op de route, dus een claude.ai-login wordt niet gebruikt.",
           "captionProxy": "Claude Code blijft met api.anthropic.com praten via HTTPS_PROXY. De interceptor van Relo stuurt de aan Relo gebonden modellen met de eigen sleutel van Relo naar Relo en geeft al het andere ongewijzigd door aan Anthropic met jouw eigen login.",
           "idle": "De bedrading is niet toegepast, dus er beweegt niets.",
-          "preview": "Voorbeeld. Er wordt niets geschreven tot je bevestigt."
-        }
+          "preview": "Voorbeeld. Er wordt niets geschreven tot je bevestigt.",
+          "subDesktop": "Code-tabblad",
+          "captionDesktopEnv": "Claude Desktop draait als Relo-client: het gatewayprofiel wijst elk tabblad naar het adres van Relo. Anthropic ligt niet op de route, dus de claude.ai-login wordt niet gebruikt.",
+          "captionDesktopProxy": "Claude Desktop behoudt zijn login. Alleen het Code-tabblad loopt via de interceptor van Relo, die gebonden modellen met de eigen sleutel van Relo naar Relo stuurt en al het andere ongewijzigd doorgeeft aan Anthropic. Chat en de modelkiezer blijven van Anthropic."
+        },
+        "claudeModeDesktopHint": "Kies hoe Claude Desktop Relo bereikt. De modus geldt voor de app en voor het Code-tabblad dat ze start.",
+        "claudeModeDesktopEnvHint": "Claude Desktop draait als Relo-client via een gatewayprofiel. De claude.ai-login wordt niet gebruikt.",
+        "claudeModeDesktopProxyHint": "Claude Desktop behoudt zijn login. Het Code-tabblad loopt via de interceptor van Relo; Chat en de modelkiezer blijven van Anthropic. Vereist Claude Code in proxymodus."
       },
       "chatPage": {
         "title": "Chat",

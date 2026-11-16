@@ -72,12 +72,15 @@ never reorders a card an operator is looking at.
 One column, row by row, never split into side-by-side panes. A verification result, when there is one, sits above
 the rows as a single status line.
 
-**The mode diagram** (Claude Code, while it is set up) is one full-width `--sunken` row directly under the Connection
+**The mode diagram** (Claude Code and Claude Desktop, while they are set up) is one full-width `--sunken` row directly under the Connection
 mode section: a title, the drawing stretched across the row, and one caption sentence that says the same path in words:
 
 - Environment: `Claude Code` → `Relo` → connections. `Anthropic` stands dashed and dim, "not used".
 - Proxy: `Claude Code` → `Intercept` → forks. The branch for models bound to Relo goes to `Relo` (chip "to Relo"), the
   rest goes to `Anthropic` (chip "to Anthropic") with the caller's own login, untouched.
+- Claude Desktop draws the same two pictures with `Claude Desktop` / "Code tab" as the first node. Environment is its
+  gateway profile, which points every tab at Relo. Proxy is its Code tab alone; the caption says Chat and the model
+  picker stay Anthropic's.
 - Dots travel the lines only while that mode's wiring is applied (proxy: `proxy_state` is `applied`); otherwise the
   lines stand still and the panel says the wiring is not applied. Reduced motion draws the lines alone. While the proxy
   warning is open the panel previews proxy mode, static, and says nothing is written until the operator confirms.
@@ -191,7 +194,7 @@ Every action reports its result before the flow ends, and a failure stays next t
 | Verify     | the acting control                                  | status line above the wiring | inline, with the fix            | —                  |
 | Reveal key | the eye spins                                       | the field shows the secret   | inline beside the hint          | cached until close |
 
-## Connection mode (Claude Code only)
+## Connection mode (Claude Code and Claude Desktop)
 
 Claude Code can reach Relo two ways. **Environment** writes Relo's address into the client's own settings;
 **Proxy** leaves the client talking to Anthropic and puts Relo's intercept in the path. The mode belongs to the
@@ -202,6 +205,19 @@ Proxy asks once in place — not in an AlertDialog — because the warning is ab
 and the choice is reversible from the same control. The warning copy has one owner, the message the section renders,
 and the daemon never repeats it. Model preferences are hidden in proxy mode: they belong to the settings file it takes
 back out.
+
+### Claude Desktop
+
+Desktop has the same two modes with its own copy. **Environment** is the gateway profile that makes the whole app a Relo
+client. **Proxy** keeps Desktop's own login and routes its Code tab: the processes Desktop starts read Claude Code's
+settings file, so Desktop rides Claude Code's intercept and writes no file of its own. Entering proxy mode takes the
+gateway profile out and puts the previous selection back; leaving it writes the profile again with Desktop's own key.
+
+Two refusals are named rather than worked around, and the daemon's message is shown where the choice was made. Desktop
+cannot enter proxy mode while Claude Code is not in it, and Claude Code cannot leave proxy mode, be disabled or be
+restored while Desktop uses it. Each client has its own bindings list and presents its own Relo key, and a client that
+is not in proxy mode has every request relayed to Anthropic untouched. Desktop's own model picker and the Chat tab are
+not routed.
 
 ### Model bindings (proxy mode)
 
