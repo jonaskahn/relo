@@ -1,5 +1,5 @@
 {
-  "generated": "2026-11-16T07:37:24Z",
+  "generated": "2026-11-16T16:32:54Z",
   "latest": "v0.2.13",
   "latest_beta": "v0.2.13-beta.141.ea9afaf8",
   "install": {
@@ -4436,12 +4436,12 @@
     {
       "tag": "v0.2.5",
       "version": "0.2.5",
-      "name": "v0.2.5 - Brand New Day 🕸️",
+      "name": "🚀 v0.2.5 — 2026-11-02",
       "channel": "stable",
       "draft": false,
       "published_at": "2026-11-03T03:06:14Z",
       "page": "https://github.com/jonaskahn/relo/releases/tag/v0.2.5",
-      "notes": "## What's Changed\r\n* Fix Codex, ClaudeCode dashboard request open many times",
+      "notes": "# 🚀 v0.2.5 — 2026-11-02\n\n### ✨ Improvements\n\n- 🌍 Translated READMEs: Japanese, Korean, Hindi, German, Simplified Chinese, Vietnamese.\n\n### 🐛 Fixes\n\n- 🤫 Key helpers start the daemon silently.\n- 🔁 Codex takes over an unmarked relo provider.\n",
       "install": {
         "script": "curl -fsSL https://relo.ifelse.one/install.sh | sh -s -- --version 0.2.5",
         "powershell": "& ([scriptblock]::Create((irm https://relo.ifelse.one/install.ps1))) -Version 0.2.5",
@@ -4748,12 +4748,12 @@
     {
       "tag": "v0.2.4",
       "version": "0.2.4",
-      "name": "v0.2.4 - New Noodles 🍜",
+      "name": "🚀 v0.2.4 — 2026-11-02",
       "channel": "stable",
       "draft": false,
       "published_at": "2026-11-02T13:41:45Z",
       "page": "https://github.com/jonaskahn/relo/releases/tag/v0.2.4",
-      "notes": "## What's Changed\r\n* Support workbuddy",
+      "notes": "# 🚀 v0.2.4 — 2026-11-02\n\n### ✨ Improvements\n\n- 🤝 New WorkBuddy and CodeBuddy integrations.\n- 📌 Each conversation keeps its own session, pinned to the account serving it.\n- 🔍 Inspector: a member is limited only when every account is, and coverage counts serving accounts.\n\n### 🐛 Fixes\n\n- 🧭 A served member no longer leads new sessions of a priority group.\n- 🔁 A conversation's account pin is renewed each time it is used.\n- 📊 Antigravity: name Claude and Gemini quota pools; show the connection title first.\n",
       "install": {
         "script": "curl -fsSL https://relo.ifelse.one/install.sh | sh -s -- --version 0.2.4",
         "powershell": "& ([scriptblock]::Create((irm https://relo.ifelse.one/install.ps1))) -Version 0.2.4",
@@ -5380,12 +5380,12 @@
     {
       "tag": "v0.2.3",
       "version": "0.2.3",
-      "name": "v0.2.3 - Strongbow 🍻",
+      "name": "🚀 v0.2.3 — 2026-11-02",
       "channel": "stable",
       "draft": false,
       "published_at": "2026-11-01T18:35:56Z",
       "page": "https://github.com/jonaskahn/relo/releases/tag/v0.2.3",
-      "notes": "# 🚀 2026-11-02\r\n\r\n### ✨ Highlights\r\n\r\n- 🧭 Redesigned routing inspector — routing history, quota limits, responsive layouts, and clearer route visualization.\r\n- 📊 Activity insights — busiest day plus longest and current streaks in one card; request filtering by routing group.\r\n- 🩺 Console reporting — report failures directly from request details and the top bar.\r\n- 🗂️ Log export — download the daemon log as a zip.\r\n- 🔗 Curated dashboard links for connections.\r\n- 🌍 New UI strings localized across all 23 languages.\r\n\r\n### 🐛 Fixes\r\n\r\n- 🔑 Corrected Pi API key reference handling.\r\n- 🕒 Activity day labels now consistently use UTC.\r\n- 👁️ Route previews are read-only.\r\n- 🔍 Deep-linked requests now open correctly in the drawer.\r\n- 🎨 Improved routing inspector contrast and arrow rendering.\r\n\r\n### 🧰 Under the hood\r\n\r\n- 🎨 Shared themed provider marks.\r\n- 🛡️ Preserved invariant product terminology across locales.\r\n- ✅ Added tests for routing, reports, activity runs, and log export.",
+      "notes": "# 🚀 v0.2.3 — 2026-11-02\n\n### ✨ Improvements\n\n- 🧭 Redesigned the routing inspector: responsive canvas, routing history, and quota limits.\n- 📊 Dashboard reports and the inspector are localized.\n- 🔗 Curated dashboard links on connections.\n- 📥 Export the daemon log as a zip.\n- 🗂️ Filter requests by routing group.\n- 🔥 Activity streaks: current and longest runs, named in UTC.\n- 🔎 Deep-linked requests open in the log drawer.\n\n### 🐛 Fixes\n\n- ⏱️ Read quota windows in hours and days; route dots start at Agent Harness.\n- 🧱 Keep Agent Harness and technical terms out of translation.\n- 👁️ Restore routing inspector contrast; the preview is read-only.\n",
       "install": {
         "script": "curl -fsSL https://relo.ifelse.one/install.sh | sh -s -- --version 0.2.3",
         "powershell": "& ([scriptblock]::Create((irm https://relo.ifelse.one/install.ps1))) -Version 0.2.3",
@@ -6172,12 +6172,12 @@
     {
       "tag": "v0.2.2",
       "version": "0.2.2",
-      "name": "v0.2.2 - Almonds 🌰",
+      "name": "🚀 v0.2.2 — 2026-11-01",
       "channel": "stable",
       "draft": false,
       "published_at": "2026-11-01T05:16:05Z",
       "page": "https://github.com/jonaskahn/relo/releases/tag/v0.2.2",
-      "notes": "# 2026-11-01\r\n\r\n> Changes from `v0.2.1`.\r\n\r\n## ✨ Highlights\r\n\r\n- **Automatic dashboard opening:** `daemon run`, `daemon start`, and `daemon restart` now open the dashboard after a successful start or when attaching to an already-running instance.\r\n- **Quiet startup:** Added `--silent` to `daemon run`, `daemon start`, and `daemon restart` to prevent the browser from opening.\r\n- **Silent autostart:** Login items and installer startup entries now launch Relo silently. Existing autostart registrations are upgraded to include `--silent`.\r\n\r\n## 🐛 Fixes\r\n\r\n- **MiMo thinking on every provider:** MiMo chat models now resolve as an on/off thinking toggle across all providers, not only Xiaomi-hosted connections. Provider-declared effort ladders and reasoning opt-outs remain respected, while speech and image variants are excluded.\r\n- **MiMo tool calls on every provider:** The correct tool-call dialect now follows the resolved MiMo model when a gateway has no connection-level dialect, fixing tool calls being treated as prose on non-Xiaomi providers. Connection-level settings still take precedence.\r\n\r\n## 🧪 Quality\r\n\r\n- Added regression coverage for dashboard lifecycle behavior, silent autostart, MiMo catalog and relay handling, wire credentials/tool names, and stored roster refiltering.\r\n- Documented and localized the new `--silent` flag.\r\n- Extracted the tray dashboard opener to keep CLI lint checks within complexity limits.\r\n\r\n**Full Changelog:** https://github.com/jonaskahn/relo/compare/v0.2.1...v0.2.2",
+      "notes": "# 🚀 v0.2.2 — 2026-11-01\n\n### ✨ Improvements\n\n- 🤫 `--silent` on `daemon run`, `start`, and `restart`, and login items start without a window.\n- 🏠 Lifecycle actions open the dashboard when it makes sense.\n- 🩹 MiMo: recover tool calls on every provider; the MiMo family is toggle-only in the catalog.\n\n### 🧹 Under the hood\n\n- ♻️ Extracted the tray dashboard opener.\n",
       "install": {
         "script": "curl -fsSL https://relo.ifelse.one/install.sh | sh -s -- --version 0.2.2",
         "powershell": "& ([scriptblock]::Create((irm https://relo.ifelse.one/install.ps1))) -Version 0.2.2",
@@ -6564,12 +6564,12 @@
     {
       "tag": "v0.2.1",
       "version": "0.2.1",
-      "name": "v0.2.1 - Rocky 🍪",
+      "name": "🚀 v0.2.1 — 2026-10-31",
       "channel": "stable",
       "draft": false,
       "published_at": "2026-10-31T04:45:55Z",
       "page": "https://github.com/jonaskahn/relo/releases/tag/v0.2.1",
-      "notes": "## What's Changed\r\n* Fix windows installer issue",
+      "notes": "# 🚀 v0.2.1 — 2026-10-31\n\n### ✨ Improvements\n\n- 🪟 Windows: the setup installer and the npm install add a Desktop shortcut.\n- 🖥️ The spawned daemon no longer keeps the launching terminal open.\n- 📝 Release notes are kept per version in the repository.\n\n### 🐛 Fixes\n\n- 📱 Keep \"add connection\" narrow on mobile.\n- 🎛️ Stretch the review toolbar controls to fill the row.\n",
       "install": {
         "script": "curl -fsSL https://relo.ifelse.one/install.sh | sh -s -- --version 0.2.1",
         "powershell": "& ([scriptblock]::Create((irm https://relo.ifelse.one/install.ps1))) -Version 0.2.1",
