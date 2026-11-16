@@ -153,7 +153,9 @@
 				<Button size="sm" variant="outline" disabled={busy} onclick={() => turn(false)}>
 					{$t('ui.pages.integrationsPage.desktopPicker.disable')}
 				</Button>
-			{:else if canRoute}
+			{/if}
+			<!-- Turned on but not armed means the system trust is missing, so asking again is how it is retried. -->
+			{#if canRoute && !cowork.armed}
 				<Button size="sm" disabled={busy} onclick={() => (confirming = true)}>
 					{$t('ui.pages.integrationsPage.desktopPicker.cowork.enable')}
 				</Button>
