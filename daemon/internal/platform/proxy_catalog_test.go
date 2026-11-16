@@ -26,8 +26,8 @@ func TestProxyCatalogRowsCarryThePickerIDNameAndWindow(t *testing.T) {
 }
 
 // A daemon shutdown must keep the token and certificate the client's settings
-// carry; only turning the integration off removes them.
-func TestAShutdownKeepsTheTokenAndCertificateButRetireRemovesThem(t *testing.T) {
+// carry; turning the integration off removes the token, and the shared root stays.
+func TestAShutdownKeepsTheTokenAndCertificateButRetireRemovesTheToken(t *testing.T) {
 	home := t.TempDir()
 	runtime := NewProxyRuntime(ProxyRuntimeOptions{Home: home})
 	target := appintegration.ProxyTarget{Host: "api.anthropic.com", DataPlaneURL: "http://127.0.0.1:1"}
@@ -52,6 +52,12 @@ func TestAShutdownKeepsTheTokenAndCertificateButRetireRemovesThem(t *testing.T) 
 	}
 	if _, err := os.Stat(filepath.Join(home, "proxy-mode", "claude-code")); !os.IsNotExist(err) {
 		t.Fatalf("Retire() left the intercept's directory behind: %v", err)
+	}
+	if first.CAPath != filepath.Join(AuthorityDir(home), "ca.pem") {
+		t.Fatalf("certificate path = %q, want the one shared root", first.CAPath)
+	}
+	if _, err := os.Stat(first.CAPath); err != nil {
+		t.Fatalf("Retire() removed the shared root: %v", err)
 	}
 }
 

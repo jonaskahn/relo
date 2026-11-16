@@ -268,9 +268,9 @@ func (p *Proxy) terminate(conn net.Conn) {
 		return
 	}
 	tlsConn := tls.Server(conn, &tls.Config{
-		Certificates: []tls.Certificate{p.opts.Authority.Leaf()},
-		MinVersion:   tls.VersionTLS12,
-		NextProtos:   []string{"http/1.1"},
+		GetCertificate: p.opts.Authority.GetCertificate,
+		MinVersion:     tls.VersionTLS12,
+		NextProtos:     []string{"http/1.1"},
 	})
 	if err := tlsConn.Handshake(); err != nil {
 		return

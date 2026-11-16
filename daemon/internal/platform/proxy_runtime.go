@@ -86,7 +86,7 @@ func (r *ProxyRuntime) Ensure(ctx context.Context, id string, target appintegrat
 		return running.env, nil
 	}
 	dir := filepath.Join(r.home, "proxy-mode", id)
-	authority, err := proxy.LoadOrCreateAuthority(dir, target.Host)
+	authority, err := r.authority()
 	if err != nil {
 		return appintegration.ProxyEnv{}, err
 	}
@@ -105,6 +105,29 @@ func (r *ProxyRuntime) Ensure(ctx context.Context, id string, target appintegrat
 	r.dropCatalog()
 	r.logger.Info("proxy mode intercept listening", "integration", id, "address", pair.Addr())
 	return env, nil
+}
+
+// AuthorityDir is where Relo's one certificate authority lives. Every client
+// shares it, so there is a single root to trust and a single one to remove.
+func AuthorityDir(home string) string {
+	return filepath.Join(home, "ca")
+}
+
+// authority loads Relo's root, creating it on first use. A root left in an
+// intercept's own directory by an earlier build is removed: it was constrained
+// to one host and is not the root any client is told to trust now.
+func (r *ProxyRuntime) authority() (*proxy.Authority, error) {
+	authority, err := proxy.LoadOrCreateAuthority(AuthorityDir(r.home), proxy.InterceptHosts...)
+	if err != nil {
+		return nil, err
+	}
+	legacy := filepath.Join(r.home, "proxy-mode", appintegration.ProxyOwner)
+	for _, name := range []string{"ca.pem", "ca.key"} {
+		if err := os.Remove(filepath.Join(legacy, name)); err != nil && !errors.Is(err, os.ErrNotExist) {
+			r.logger.Warn("remove the earlier intercept certificate", "error", err)
+		}
+	}
+	return authority, nil
 }
 
 // pair builds one intercept over the certificate and the token in dir. The
@@ -139,8 +162,8 @@ func (r *ProxyRuntime) Status(id string) (string, bool) {
 	return running.proxy.Addr(), true
 }
 
-// Retire stops one integration's intercept and removes the certificate a
-// client was told to trust, so a removed integration leaves nothing behind.
+// Retire stops the intercept and removes its token and address. The root is
+// shared with every other client and outlives it.
 func (r *ProxyRuntime) Retire(id string) error {
 	r.halt(id)
 	r.dropCatalog()

@@ -5,6 +5,7 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"encoding/base64"
+	"errors"
 	"io"
 	"net"
 	"net/http"
@@ -72,7 +73,11 @@ func TestLeafVerifiesOnlyForItsHost(t *testing.T) {
 	}
 	roots := x509.NewCertPool()
 	roots.AddCert(authority.Certificate())
-	leaf := authority.Leaf().Leaf
+	leafCert, err := authority.LeafFor("api.anthropic.com")
+	if err != nil {
+		t.Fatalf("LeafFor() error = %v", err)
+	}
+	leaf := leafCert.Leaf
 	if _, err := leaf.Verify(x509.VerifyOptions{Roots: roots, DNSName: "api.anthropic.com"}); err != nil {
 		t.Fatalf("the leaf does not verify for its host: %v", err)
 	}
@@ -254,4 +259,48 @@ func proxyTokenFor(*testing.T) string { return "token" }
 
 func basicAuth(credentials string) string {
 	return base64.StdEncoding.EncodeToString([]byte(credentials))
+}
+
+// TestOneRootServesEveryInterceptedHostAndNothingElse pins the single-root
+// design: Claude Code's host and Claude Desktop's host share one constrained
+// root, a leaf verifies for each, and none can be issued for a third.
+func TestOneRootServesEveryInterceptedHostAndNothingElse(t *testing.T) {
+	authority, err := proxy.LoadOrCreateAuthority(t.TempDir(), proxy.InterceptHosts...)
+	if err != nil {
+		t.Fatalf("LoadOrCreateAuthority() error = %v", err)
+	}
+	if !authority.HostsListed(proxy.InterceptHosts...) || !authority.Constrained() {
+		t.Fatalf("permitted domains = %v, want exactly the intercepted hosts, critical, with every IP excluded",
+			authority.Certificate().PermittedDNSDomains)
+	}
+	roots := x509.NewCertPool()
+	roots.AddCert(authority.Certificate())
+	for _, host := range proxy.InterceptHosts {
+		leaf, err := authority.LeafFor(host)
+		if err != nil {
+			t.Fatalf("LeafFor(%s) error = %v", host, err)
+		}
+		if _, err := leaf.Leaf.Verify(x509.VerifyOptions{Roots: roots, DNSName: host}); err != nil {
+			t.Fatalf("the leaf does not verify for %s: %v", host, err)
+		}
+	}
+	if _, err := authority.LeafFor("example.com"); err == nil {
+		t.Fatal("a leaf was issued for a host the root does not cover")
+	}
+	if len(authority.SHA1()) != 40 || len(authority.SHA256()) != 64 {
+		t.Fatalf("fingerprints = %q / %q", authority.SHA1(), authority.SHA256())
+	}
+}
+
+// TestARootThatLostItsConstraintIsRefused keeps a tampered or older root from
+// being loaded and handed to an OS: it must name exactly the hosts this build
+// intercepts.
+func TestARootThatLostItsConstraintIsRefused(t *testing.T) {
+	dir := t.TempDir()
+	if _, err := proxy.LoadOrCreateAuthority(dir, "api.anthropic.com"); err != nil {
+		t.Fatalf("LoadOrCreateAuthority() error = %v", err)
+	}
+	if _, err := proxy.LoadOrCreateAuthority(dir, proxy.InterceptHosts...); !errors.Is(err, proxy.ErrAuthorityUnconstrained) {
+		t.Fatalf("loading a one-host root as the two-host root error = %v, want %v", err, proxy.ErrAuthorityUnconstrained)
+	}
 }
