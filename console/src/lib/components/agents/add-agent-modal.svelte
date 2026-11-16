@@ -4,6 +4,7 @@
 	import { ADD_STEPS, addStepBack, resultCodeFor, type AddStep } from '$lib/agent-flow';
 	import {
 		choosesMode,
+		claudeCodeFollows,
 		isTested,
 		labelOf,
 		logoIdOf,
@@ -82,9 +83,15 @@
 	// The set-up body: overwrite when replacing, plus the generations for
 	// OpenCode. Anything else sends what it always sent.
 	function setupBody(agent: IntegrationView, overwrite: boolean): string | undefined {
-		const payload: { overwrite?: boolean; versions?: string; mode?: 'env' | 'proxy' } = {};
+		const payload: {
+			overwrite?: boolean;
+			versions?: string;
+			mode?: 'env' | 'proxy';
+			with_claude_code?: true;
+		} = {};
 		if (overwrite) payload.overwrite = true;
 		if (choosesMode(agent)) payload.mode = setupMode;
+		if (claudeCodeFollows(agents, agent, setupMode)) payload.with_claude_code = true;
 		if (agent.id === 'opencode') payload.versions = openCodeSetupVersions(false, openCodeV2);
 		return Object.keys(payload).length > 0 ? JSON.stringify(payload) : undefined;
 	}
@@ -350,6 +357,9 @@
 						agent={selected}
 						selected={setupMode}
 						onselect={(value) => (setupMode = value)}
+						note={claudeCodeFollows(agents, selected, setupMode)
+							? $t('ui.pages.integrationsPage.claudeModeDesktopOwnerNote')
+							: ''}
 					/>
 					<ModeDiagram
 						mode={setupMode}

@@ -1907,7 +1907,7 @@
         },
         "claudeModeDesktopHint": "Wybierz, jak Claude Desktop łączy się z Relo. Tryb dotyczy aplikacji i uruchamianej przez nią karty Code.",
         "claudeModeDesktopEnvHint": "Claude Desktop działa jako klient Relo przez profil bramy. Logowanie do claude.ai nie jest używane.",
-        "claudeModeDesktopProxyHint": "Claude Desktop zachowuje swoje logowanie. Karta Code przechodzi przez przechwytywanie Relo; Czat i wybór modelu pozostają po stronie Anthropic. Wymaga Claude Code w trybie proxy.",
+        "claudeModeDesktopProxyHint": "Claude Desktop zachowuje swoje logowanie. Karta Code przechodzi przez przechwytywanie Relo; Czat i wybór modelu pozostają po stronie Anthropic.",
         "desktopPicker": {
           "title": "Wybór modelu w Desktop",
           "hint": "Dodaje modele Relo do wyboru modelu na karcie Code w Claude Desktop.",
@@ -1933,7 +1933,9 @@
           "reasonCaUnverified": "Certyfikat Relo nie przeszedł kontroli bezpieczeństwa, więc nie został użyty.",
           "reasonFailed": "Krok się nie powiódł i został cofnięty, o ile się dało. Spróbuj ponownie."
         },
-        "claudeModeUnsaved": "Jeszcze nie zapisano. Naciśnij Zapisz, aby zastosować ten tryb."
+        "claudeModeUnsaved": "Jeszcze nie zapisano. Naciśnij Zapisz, aby zastosować ten tryb.",
+        "claudeModeDesktopOwnerNote": "Claude Desktop korzysta z tego samego połączenia proxy co Claude Code, więc zapis przełącza też Claude Code w tryb proxy.",
+        "claudeModeProxyInUse": "Claude Desktop nadal używa tego proxy. Najpierw przywróć poprzedni tryb Claude Desktop."
       },
       "chatPage": {
         "title": "Czat",

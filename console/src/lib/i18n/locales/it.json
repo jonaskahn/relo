@@ -1907,7 +1907,7 @@
         },
         "claudeModeDesktopHint": "Scegli come Claude Desktop raggiunge Relo. La modalità vale per l'app e per la scheda Code che avvia.",
         "claudeModeDesktopEnvHint": "Claude Desktop funziona come client di Relo tramite un profilo gateway. L'accesso a claude.ai non viene usato.",
-        "claudeModeDesktopProxyHint": "Claude Desktop mantiene il suo accesso. La scheda Code passa dall'intercettore di Relo; Chat e selettore dei modelli restano di Anthropic. Richiede Claude Code in modalità proxy.",
+        "claudeModeDesktopProxyHint": "Claude Desktop mantiene il suo accesso. La scheda Code passa dall'intercettore di Relo; Chat e selettore dei modelli restano di Anthropic.",
         "desktopPicker": {
           "title": "Selettore modelli di Desktop",
           "hint": "Aggiunge i modelli di Relo al selettore modelli della scheda Code di Claude Desktop.",
@@ -1933,7 +1933,9 @@
           "reasonCaUnverified": "Il certificato di Relo non ha superato il controllo di sicurezza, quindi non è stato usato.",
           "reasonFailed": "Un passaggio non è riuscito ed è stato annullato dove possibile. Riprova."
         },
-        "claudeModeUnsaved": "Non ancora salvato. Premi Salva per applicare questa modalità."
+        "claudeModeUnsaved": "Non ancora salvato. Premi Salva per applicare questa modalità.",
+        "claudeModeDesktopOwnerNote": "Claude Desktop condivide il collegamento proxy di Claude Code, quindi salvando anche Claude Code passa alla modalità proxy.",
+        "claudeModeProxyInUse": "Claude Desktop usa ancora questo proxy. Riporta prima Claude Desktop alla modalità precedente."
       },
       "chatPage": {
         "title": "Chat",

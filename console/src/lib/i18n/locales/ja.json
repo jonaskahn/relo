@@ -1907,7 +1907,7 @@
         },
         "claudeModeDesktopHint": "Claude Desktop が Relo に到達する方法を選びます。このモードはアプリと、アプリが起動する Code タブに適用されます。",
         "claudeModeDesktopEnvHint": "Claude Desktop はゲートウェイプロファイルを通じて Relo のクライアントとして動作します。claude.ai のログインは使われません。",
-        "claudeModeDesktopProxyHint": "Claude Desktop は自分のログインを保ちます。Code タブは Relo のインターセプトを通り、チャットとモデルピッカーは Anthropic のままです。Claude Code がプロキシモードである必要があります。",
+        "claudeModeDesktopProxyHint": "Claude Desktop は自分のログインを保ちます。Code タブは Relo のインターセプトを通り、チャットとモデルピッカーは Anthropic のままです。",
         "desktopPicker": {
           "title": "Desktop のモデルピッカー",
           "hint": "Relo のモデルを Claude Desktop の Code タブのモデルピッカーに追加します。",
@@ -1933,7 +1933,9 @@
           "reasonCaUnverified": "Relo の証明書が安全性の確認に失敗したため、使用されませんでした。",
           "reasonFailed": "ある手順が失敗し、可能な範囲で元に戻しました。もう一度お試しください。"
         },
-        "claudeModeUnsaved": "まだ保存されていません。保存を押すとこのモードが適用されます。"
+        "claudeModeUnsaved": "まだ保存されていません。保存を押すとこのモードが適用されます。",
+        "claudeModeDesktopOwnerNote": "Claude Desktop は Claude Code のプロキシ配線を共有するため、保存すると Claude Code もプロキシモードに移ります。",
+        "claudeModeProxyInUse": "Claude Desktop がまだこのプロキシを使っています。先に Claude Desktop を元に戻してください。"
       },
       "chatPage": {
         "title": "チャット",

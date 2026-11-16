@@ -219,8 +219,9 @@ change is pending. The proxy warning reads while Proxy is picked and is not yet 
 Before set-up, the modal of Claude Code and of Claude Desktop shows the same two choices above the diagram, so the mode
 is picked first and the set-up writes it. Choosing writes nothing: the diagram previews the chosen mode, the proxy
 warning stays in view while Proxy is picked, and **Set up** is the confirmation. Every other agent has one way to be wired
-and shows no choice. Desktop in proxy mode needs Claude Code in it, and a set-up that cannot have that is refused with
-the reason in the result step.
+and shows no choice. Desktop in proxy mode needs Claude Code in it, so while Claude Code is not set up or is in
+Environment mode, picking Proxy for Desktop shows one line under the warning saying that Set up also moves Claude Code
+to proxy mode.
 
 The section sits above the model preferences in the manage modal, and only while the integration is on. Choosing
 Proxy asks once in place — not in an AlertDialog — because the warning is about the operator's own Anthropic account
@@ -235,9 +236,12 @@ client. **Proxy** keeps Desktop's own login and routes its Code tab: the process
 settings file, so Desktop rides Claude Code's intercept and writes no file of its own. Entering proxy mode takes the
 gateway profile out and puts the previous selection back; leaving it writes the profile again with Desktop's own key.
 
-Two refusals are named rather than worked around, and the daemon's message is shown where the choice was made. Desktop
-cannot enter proxy mode while Claude Code is not in it, and Claude Code cannot leave proxy mode, be disabled or be
-restored while Desktop uses it. Each client has its own bindings list and presents its own Relo key, and a client that
+Desktop and Claude Code share the one wiring, so choosing Proxy for Desktop while Claude Code is not in it says so
+under the warning, and Save (or Set up) brings Claude Code to proxy mode in the same step. The console sends
+`with_claude_code`; the daemon refuses the request without it, and puts Claude Code back as it was when the Desktop step
+fails. Leaving proxy mode later leaves Claude Code in it. The one refusal that stays is the other direction: Claude Code
+cannot leave proxy mode, be disabled or be restored while Desktop uses it, and the console words that in its own
+language. Each client has its own bindings list and presents its own Relo key, and a client that
 is not in proxy mode has every request relayed to Anthropic untouched. Desktop's own model picker and the Chat tab are
 not routed.
 

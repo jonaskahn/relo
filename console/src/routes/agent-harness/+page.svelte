@@ -17,6 +17,7 @@
 		type Work
 	} from '$lib/agent-flow';
 	import {
+		claudeCodeFollows,
 		contextOn,
 		isTested,
 		choosesMode,
@@ -28,7 +29,7 @@
 		stateKey,
 		stateTone
 	} from '$lib/agent-state';
-	import { api } from '$lib/api';
+	import { api, ApiError } from '$lib/api';
 	import { cn } from '$lib/utils';
 	import CenteredModal from '$lib/components/ui/centered-modal.svelte';
 	import Icon, { type IconName } from '$lib/components/ui/icon.svelte';
@@ -180,16 +181,19 @@
 	async function saveMode(agent: IntegrationView) {
 		running = { id: agent.id, action: 'save' };
 		modeFailure = '';
+		const follows = claudeCodeFollows(agents, agent, chosenMode);
 		try {
 			const next = await api<IntegrationView>(integrationPath(agent.id, 'mode'), {
 				method: 'POST',
-				body: JSON.stringify({ mode: chosenMode })
+				body: JSON.stringify({ mode: chosenMode, ...(follows ? { with_claude_code: true } : {}) })
 			});
 			agents = patchAgent(agents, next);
 			detail = next;
 			chosenMode = next.mode === 'proxy' ? 'proxy' : 'env';
+			// Claude Code moved with Desktop, so its card is read again rather than patched.
+			if (follows) void load(true);
 		} catch (error) {
-			modeFailure = message(error);
+			modeFailure = modeMessage(error);
 		} finally {
 			running = null;
 		}
@@ -197,6 +201,15 @@
 
 	function message(error: unknown): string {
 		return error instanceof Error ? error.message : String(error);
+	}
+
+	// A mode refusal the daemon names by code is worded here, so it reads in the
+	// console's language rather than the daemon's.
+	function modeMessage(error: unknown): string {
+		if (error instanceof ApiError && error.code === 'proxy_in_use') {
+			return $t('ui.pages.integrationsPage.claudeModeProxyInUse');
+		}
+		return message(error);
 	}
 
 	function openDetail(agent: IntegrationView) {
@@ -562,8 +575,11 @@
 
 	// Claude Code and Claude Desktop are set up in the mode the operator chose in the
 	// modal; every other agent has one way to be wired and sends nothing.
-	function modeFor(agent: IntegrationView): { mode?: 'env' | 'proxy' } {
-		return choosesMode(agent) && detail?.id === agent.id ? { mode: chosenMode } : {};
+	function modeFor(agent: IntegrationView): { mode?: 'env' | 'proxy'; with_claude_code?: true } {
+		if (!choosesMode(agent) || detail?.id !== agent.id) return {};
+		return claudeCodeFollows(agents, agent, chosenMode)
+			? { mode: chosenMode, with_claude_code: true }
+			: { mode: chosenMode };
 	}
 
 	function setupRequest(agent: IntegrationView): { body?: string } {
@@ -715,6 +731,9 @@
 							}}
 							busy={blocked(running, detail)}
 							failure={modeFailure}
+							note={claudeCodeFollows(agents, detail, chosenMode)
+								? $t('ui.pages.integrationsPage.claudeModeDesktopOwnerNote')
+								: ''}
 						/>
 						<ModeDiagram
 							mode={diagramMode}

@@ -1907,7 +1907,7 @@
         },
         "claudeModeDesktopHint": "चुनें कि Claude Desktop, Relo तक कैसे पहुँचे। यह मोड ऐप और उसके खोले Code टैब पर लागू होता है।",
         "claudeModeDesktopEnvHint": "Claude Desktop, गेटवे प्रोफ़ाइल के ज़रिए Relo के क्लाइंट की तरह चलता है। claude.ai लॉगिन इस्तेमाल नहीं होता।",
-        "claudeModeDesktopProxyHint": "Claude Desktop अपना लॉगिन बनाए रखता है। उसका Code टैब Relo के इंटरसेप्ट से गुज़रता है; चैट और मॉडल चयनकर्ता Anthropic के ही रहते हैं। इसके लिए Claude Code का प्रॉक्सी मोड में होना ज़रूरी है।",
+        "claudeModeDesktopProxyHint": "Claude Desktop अपना लॉगिन बनाए रखता है। उसका Code टैब Relo के इंटरसेप्ट से गुज़रता है; चैट और मॉडल चयनकर्ता Anthropic के ही रहते हैं।",
         "desktopPicker": {
           "title": "Desktop मॉडल चयनकर्ता",
           "hint": "Relo के मॉडल को Claude Desktop के Code टैब के मॉडल चयनकर्ता में जोड़ता है।",
@@ -1933,7 +1933,9 @@
           "reasonCaUnverified": "Relo का प्रमाणपत्र सुरक्षा जाँच में विफल रहा, इसलिए उपयोग नहीं हुआ।",
           "reasonFailed": "एक चरण विफल हुआ और जहाँ संभव था वापस कर दिया गया। फिर कोशिश करें।"
         },
-        "claudeModeUnsaved": "अभी सहेजा नहीं गया। इस मोड को लागू करने के लिए सहेजें दबाएँ।"
+        "claudeModeUnsaved": "अभी सहेजा नहीं गया। इस मोड को लागू करने के लिए सहेजें दबाएँ।",
+        "claudeModeDesktopOwnerNote": "Claude Desktop, Claude Code की प्रॉक्सी वायरिंग साझा करता है, इसलिए सहेजने पर Claude Code भी प्रॉक्सी मोड में चला जाता है।",
+        "claudeModeProxyInUse": "Claude Desktop अब भी इस प्रॉक्सी का उपयोग कर रहा है। पहले Claude Desktop को पिछले मोड में लौटाएँ।"
       },
       "chatPage": {
         "title": "चैट",

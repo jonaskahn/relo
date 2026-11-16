@@ -1907,7 +1907,7 @@
         },
         "claudeModeDesktopHint": "Choose how Claude Desktop reaches Relo. The mode applies to the app and to the Code tab it starts.",
         "claudeModeDesktopEnvHint": "Claude Desktop runs as a Relo client through a gateway profile. The claude.ai login is not used.",
-        "claudeModeDesktopProxyHint": "Claude Desktop keeps its login. Its Code tab goes through Relo's intercept; Chat and the model picker stay Anthropic's. Needs Claude Code in proxy mode.",
+        "claudeModeDesktopProxyHint": "Claude Desktop keeps its login. Its Code tab goes through Relo's intercept; Chat and the model picker stay Anthropic's.",
         "desktopPicker": {
           "title": "Desktop model picker",
           "hint": "Add Relo's models to the model picker of Claude Desktop's Code tab.",
@@ -1933,7 +1933,9 @@
           "reasonCaUnverified": "Relo's certificate failed its safety check, so it was not used.",
           "reasonFailed": "A step failed and was undone where it could be. Try again."
         },
-        "claudeModeUnsaved": "Not saved yet. Press Save to apply this mode."
+        "claudeModeUnsaved": "Not saved yet. Press Save to apply this mode.",
+        "claudeModeDesktopOwnerNote": "Claude Desktop shares Claude Code's proxy wiring, so saving also moves Claude Code to proxy mode.",
+        "claudeModeProxyInUse": "Claude Desktop still uses this proxy. Switch Claude Desktop back first."
       },
       "chatPage": {
         "title": "Chat",

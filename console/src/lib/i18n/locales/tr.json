@@ -1907,7 +1907,7 @@
         },
         "claudeModeDesktopHint": "Claude Desktop'ın Relo'ya nasıl ulaşacağını seçin. Mod, uygulamaya ve başlattığı Code sekmesine uygulanır.",
         "claudeModeDesktopEnvHint": "Claude Desktop, bir ağ geçidi profiliyle Relo istemcisi olarak çalışır. claude.ai girişi kullanılmaz.",
-        "claudeModeDesktopProxyHint": "Claude Desktop kendi girişini korur. Code sekmesi Relo'nun araya girme katmanından geçer; Sohbet ve model seçici Anthropic'te kalır. Claude Code'un proxy modunda olması gerekir.",
+        "claudeModeDesktopProxyHint": "Claude Desktop kendi girişini korur. Code sekmesi Relo'nun araya girme katmanından geçer; Sohbet ve model seçici Anthropic'te kalır.",
         "desktopPicker": {
           "title": "Desktop model seçici",
           "hint": "Relo'nun modellerini Claude Desktop'ın Code sekmesindeki model seçiciye ekler.",
@@ -1933,7 +1933,9 @@
           "reasonCaUnverified": "Relo'nun sertifikası güvenlik denetimini geçemedi, bu yüzden kullanılmadı.",
           "reasonFailed": "Bir adım başarısız oldu ve mümkün olduğunca geri alındı. Yeniden deneyin."
         },
-        "claudeModeUnsaved": "Henüz kaydedilmedi. Bu modu uygulamak için Kaydet düğmesine basın."
+        "claudeModeUnsaved": "Henüz kaydedilmedi. Bu modu uygulamak için Kaydet düğmesine basın.",
+        "claudeModeDesktopOwnerNote": "Claude Desktop, Claude Code'un proxy bağlantısını paylaşır; bu yüzden kaydetmek Claude Code'u da proxy moduna alır.",
+        "claudeModeProxyInUse": "Claude Desktop bu proxy'yi hâlâ kullanıyor. Önce Claude Desktop'ı geri alın."
       },
       "chatPage": {
         "title": "Sohbet",

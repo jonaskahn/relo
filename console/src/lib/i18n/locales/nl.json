@@ -1907,7 +1907,7 @@
         },
         "claudeModeDesktopHint": "Kies hoe Claude Desktop Relo bereikt. De modus geldt voor de app en voor het Code-tabblad dat ze start.",
         "claudeModeDesktopEnvHint": "Claude Desktop draait als Relo-client via een gatewayprofiel. De claude.ai-login wordt niet gebruikt.",
-        "claudeModeDesktopProxyHint": "Claude Desktop behoudt zijn login. Het Code-tabblad loopt via de interceptor van Relo; Chat en de modelkiezer blijven van Anthropic. Vereist Claude Code in proxymodus.",
+        "claudeModeDesktopProxyHint": "Claude Desktop behoudt zijn login. Het Code-tabblad loopt via de interceptor van Relo; Chat en de modelkiezer blijven van Anthropic.",
         "desktopPicker": {
           "title": "Modelkiezer van Desktop",
           "hint": "Voegt de modellen van Relo toe aan de modelkiezer van het Code-tabblad van Claude Desktop.",
@@ -1933,7 +1933,9 @@
           "reasonCaUnverified": "Het certificaat van Relo kwam niet door de veiligheidscontrole en is niet gebruikt.",
           "reasonFailed": "Een stap is mislukt en is waar mogelijk teruggedraaid. Probeer het opnieuw."
         },
-        "claudeModeUnsaved": "Nog niet opgeslagen. Druk op Opslaan om deze modus toe te passen."
+        "claudeModeUnsaved": "Nog niet opgeslagen. Druk op Opslaan om deze modus toe te passen.",
+        "claudeModeDesktopOwnerNote": "Claude Desktop deelt de proxybedrading van Claude Code, dus opslaan zet ook Claude Code in proxymodus.",
+        "claudeModeProxyInUse": "Claude Desktop gebruikt deze proxy nog. Zet Claude Desktop eerst terug."
       },
       "chatPage": {
         "title": "Chat",

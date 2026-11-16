@@ -1907,7 +1907,7 @@
         },
         "claudeModeDesktopHint": "Vyberte, jak se Claude Desktop připojuje k Relo. Režim platí pro aplikaci i pro kartu Code, kterou spouští.",
         "claudeModeDesktopEnvHint": "Claude Desktop běží jako klient Relo přes profil brány. Přihlášení ke claude.ai se nepoužívá.",
-        "claudeModeDesktopProxyHint": "Claude Desktop si ponechává své přihlášení. Karta Code jde přes zachycení Relo; Chat a výběr modelu zůstávají u Anthropic. Vyžaduje Claude Code v režimu proxy.",
+        "claudeModeDesktopProxyHint": "Claude Desktop si ponechává své přihlášení. Karta Code jde přes zachycení Relo; Chat a výběr modelu zůstávají u Anthropic.",
         "desktopPicker": {
           "title": "Výběr modelu v Desktopu",
           "hint": "Přidá modely Relo do výběru modelu na kartě Code v Claude Desktop.",
@@ -1933,7 +1933,9 @@
           "reasonCaUnverified": "Certifikát Relo neprošel bezpečnostní kontrolou, a proto nebyl použit.",
           "reasonFailed": "Krok selhal a byl vrácen, kde to šlo. Zkuste to znovu."
         },
-        "claudeModeUnsaved": "Zatím neuloženo. Stisknutím Uložit tento režim použijete."
+        "claudeModeUnsaved": "Zatím neuloženo. Stisknutím Uložit tento režim použijete.",
+        "claudeModeDesktopOwnerNote": "Claude Desktop sdílí proxy zapojení Claude Code, takže uložení přepne do režimu proxy i Claude Code.",
+        "claudeModeProxyInUse": "Claude Desktop tento proxy stále používá. Nejprve vraťte Claude Desktop zpět."
       },
       "chatPage": {
         "title": "Chat",

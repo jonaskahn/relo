@@ -271,6 +271,19 @@ export function patchAgent(agents: IntegrationView[], agent: IntegrationView): I
  *  reaching into the actions module for one predicate. */
 export { needsRepair };
 
+/** True when saving Proxy for Claude Desktop also has to bring Claude Code's proxy wiring up,
+ *  because Desktop's processes read the settings file that wiring lives in. It holds while
+ *  Claude Code is not set up or is still in environment mode. */
+export function claudeCodeFollows(
+	agents: IntegrationView[],
+	agent: IntegrationView,
+	chosen: 'env' | 'proxy'
+): boolean {
+	if (agent.id !== 'claude-desktop' || chosen !== 'proxy') return false;
+	const code = agents.find((candidate) => candidate.id === 'claude-code');
+	return !(code?.enabled && code.mode === 'proxy');
+}
+
 /** The two clients that have a proxy mode, and so choose a mode when they are set up. */
 export function choosesMode(agent: IntegrationView): boolean {
 	return agent.id === 'claude-code' || agent.id === 'claude-desktop';

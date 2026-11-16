@@ -1907,7 +1907,7 @@
         },
         "claudeModeDesktopHint": "Alege cum ajunge Claude Desktop la Relo. Modul se aplică aplicației și filei Code pe care o pornește.",
         "claudeModeDesktopEnvHint": "Claude Desktop rulează ca client Relo printr-un profil de gateway. Autentificarea claude.ai nu este folosită.",
-        "claudeModeDesktopProxyHint": "Claude Desktop își păstrează autentificarea. Fila Code trece prin interceptorul Relo; Chat și selectorul de modele rămân ale Anthropic. Necesită Claude Code în modul proxy.",
+        "claudeModeDesktopProxyHint": "Claude Desktop își păstrează autentificarea. Fila Code trece prin interceptorul Relo; Chat și selectorul de modele rămân ale Anthropic.",
         "desktopPicker": {
           "title": "Selector de modele din Desktop",
           "hint": "Adaugă modelele Relo în selectorul de modele din fila Code a Claude Desktop.",
@@ -1933,7 +1933,9 @@
           "reasonCaUnverified": "Certificatul Relo a picat verificarea de siguranță și nu a fost folosit.",
           "reasonFailed": "Un pas a eșuat și a fost anulat unde s-a putut. Încearcă din nou."
         },
-        "claudeModeUnsaved": "Nesalvat încă. Apasă Salvează pentru a aplica acest mod."
+        "claudeModeUnsaved": "Nesalvat încă. Apasă Salvează pentru a aplica acest mod.",
+        "claudeModeDesktopOwnerNote": "Claude Desktop folosește aceeași conexiune proxy ca Claude Code, deci salvarea mută și Claude Code în modul proxy.",
+        "claudeModeProxyInUse": "Claude Desktop folosește încă acest proxy. Mai întâi readu Claude Desktop la modul anterior."
       },
       "chatPage": {
         "title": "Chat",

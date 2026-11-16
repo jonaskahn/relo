@@ -1907,7 +1907,7 @@
         },
         "claudeModeDesktopHint": "Chọn cách Claude Desktop tới Relo. Chế độ áp dụng cho ứng dụng và tab Code mà nó khởi chạy.",
         "claudeModeDesktopEnvHint": "Claude Desktop chạy như một máy khách của Relo qua hồ sơ cổng. Đăng nhập claude.ai không được dùng.",
-        "claudeModeDesktopProxyHint": "Claude Desktop giữ đăng nhập của nó. Tab Code đi qua bộ chặn của Relo; Chat và bộ chọn mô hình vẫn thuộc Anthropic. Cần Claude Code ở chế độ proxy.",
+        "claudeModeDesktopProxyHint": "Claude Desktop giữ đăng nhập của nó. Tab Code đi qua bộ chặn của Relo; Chat và bộ chọn mô hình vẫn thuộc Anthropic.",
         "desktopPicker": {
           "title": "Bộ chọn mô hình của Desktop",
           "hint": "Thêm các mô hình của Relo vào bộ chọn mô hình ở tab Code của Claude Desktop.",
@@ -1933,7 +1933,9 @@
           "reasonCaUnverified": "Chứng chỉ của Relo không qua kiểm tra an toàn nên không được dùng.",
           "reasonFailed": "Một bước thất bại và đã được hoàn tác khi có thể. Hãy thử lại."
         },
-        "claudeModeUnsaved": "Chưa lưu. Nhấn Lưu để áp dụng chế độ này."
+        "claudeModeUnsaved": "Chưa lưu. Nhấn Lưu để áp dụng chế độ này.",
+        "claudeModeDesktopOwnerNote": "Claude Desktop dùng chung kết nối proxy của Claude Code, nên khi lưu, Claude Code cũng được chuyển sang chế độ proxy.",
+        "claudeModeProxyInUse": "Claude Desktop vẫn đang dùng proxy này. Hãy chuyển Claude Desktop về trước."
       },
       "chatPage": {
         "title": "Trò chuyện",

@@ -1907,7 +1907,7 @@
         },
         "claudeModeDesktopHint": "Wähle, wie Claude Desktop Relo erreicht. Der Modus gilt für die App und für den Code-Tab, den sie startet.",
         "claudeModeDesktopEnvHint": "Claude Desktop läuft über ein Gateway-Profil als Relo-Client. Das claude.ai-Login wird nicht verwendet.",
-        "claudeModeDesktopProxyHint": "Claude Desktop behält sein Login. Der Code-Tab läuft über den Intercept von Relo; Chat und Modellauswahl bleiben bei Anthropic. Erfordert Claude Code im Proxy-Modus.",
+        "claudeModeDesktopProxyHint": "Claude Desktop behält sein Login. Der Code-Tab läuft über den Intercept von Relo; Chat und Modellauswahl bleiben bei Anthropic.",
         "desktopPicker": {
           "title": "Modellauswahl in Desktop",
           "hint": "Fügt die Modelle von Relo der Modellauswahl im Code-Tab von Claude Desktop hinzu.",
@@ -1933,7 +1933,9 @@
           "reasonCaUnverified": "Das Zertifikat von Relo hat seine Sicherheitsprüfung nicht bestanden und wurde nicht verwendet.",
           "reasonFailed": "Ein Schritt ist fehlgeschlagen und wurde, soweit möglich, rückgängig gemacht. Versuche es erneut."
         },
-        "claudeModeUnsaved": "Noch nicht gespeichert. Mit Speichern wird dieser Modus angewendet."
+        "claudeModeUnsaved": "Noch nicht gespeichert. Mit Speichern wird dieser Modus angewendet.",
+        "claudeModeDesktopOwnerNote": "Claude Desktop teilt die Proxy-Verdrahtung von Claude Code, daher stellt Speichern auch Claude Code auf den Proxy-Modus um.",
+        "claudeModeProxyInUse": "Claude Desktop nutzt diesen Proxy noch. Stelle zuerst Claude Desktop zurück."
       },
       "chatPage": {
         "title": "Chat",

@@ -1907,7 +1907,7 @@
         },
         "claudeModeDesktopHint": "Pilih cara Claude Desktop menjangkau Relo. Mode ini berlaku untuk aplikasi dan tab Code yang dijalankannya.",
         "claudeModeDesktopEnvHint": "Claude Desktop berjalan sebagai klien Relo melalui profil gateway. Login claude.ai tidak dipakai.",
-        "claudeModeDesktopProxyHint": "Claude Desktop mempertahankan loginnya. Tab Code melewati intersep Relo; Chat dan pemilih model tetap milik Anthropic. Memerlukan Claude Code dalam mode proxy.",
+        "claudeModeDesktopProxyHint": "Claude Desktop mempertahankan loginnya. Tab Code melewati intersep Relo; Chat dan pemilih model tetap milik Anthropic.",
         "desktopPicker": {
           "title": "Pemilih model Desktop",
           "hint": "Menambahkan model Relo ke pemilih model di tab Code Claude Desktop.",
@@ -1933,7 +1933,9 @@
           "reasonCaUnverified": "Sertifikat Relo gagal pemeriksaan keamanan, jadi tidak digunakan.",
           "reasonFailed": "Satu langkah gagal dan dibatalkan sejauh bisa. Coba lagi."
         },
-        "claudeModeUnsaved": "Belum disimpan. Tekan Simpan untuk menerapkan mode ini."
+        "claudeModeUnsaved": "Belum disimpan. Tekan Simpan untuk menerapkan mode ini.",
+        "claudeModeDesktopOwnerNote": "Claude Desktop berbagi sambungan proxy Claude Code, jadi menyimpan juga memindahkan Claude Code ke mode proxy.",
+        "claudeModeProxyInUse": "Claude Desktop masih memakai proxy ini. Kembalikan Claude Desktop terlebih dahulu."
       },
       "chatPage": {
         "title": "Obrolan",

@@ -1907,7 +1907,7 @@
         },
         "claudeModeDesktopHint": "اختر كيف يصل Claude Desktop إلى Relo. ينطبق الوضع على التطبيق وعلى تبويب Code الذي يشغّله.",
         "claudeModeDesktopEnvHint": "يعمل Claude Desktop كعميل لـ Relo عبر ملف تعريف بوابة. لا يُستخدم تسجيل الدخول إلى claude.ai.",
-        "claudeModeDesktopProxyHint": "يحتفظ Claude Desktop بتسجيل دخوله. يمر تبويب Code عبر اعتراض Relo؛ أما المحادثة ومحدد النماذج فيبقيان لدى Anthropic. يتطلب أن يكون Claude Code في وضع الوكيل.",
+        "claudeModeDesktopProxyHint": "يحتفظ Claude Desktop بتسجيل دخوله. يمر تبويب Code عبر اعتراض Relo؛ أما المحادثة ومحدد النماذج فيبقيان لدى Anthropic.",
         "desktopPicker": {
           "title": "محدد النماذج في Desktop",
           "hint": "يضيف نماذج Relo إلى محدد النماذج في تبويب Code في Claude Desktop.",
@@ -1933,7 +1933,9 @@
           "reasonCaUnverified": "فشلت شهادة Relo في فحص الأمان، لذا لم تُستخدم.",
           "reasonFailed": "فشلت خطوة وتم التراجع عنها قدر الإمكان. حاول مرة أخرى."
         },
-        "claudeModeUnsaved": "لم يُحفظ بعد. اضغط حفظ لتطبيق هذا الوضع."
+        "claudeModeUnsaved": "لم يُحفظ بعد. اضغط حفظ لتطبيق هذا الوضع.",
+        "claudeModeDesktopOwnerNote": "يشارك Claude Desktop توصيل الوكيل الخاص بـ Claude Code، لذا يؤدي الحفظ إلى نقل Claude Code أيضًا إلى وضع الوكيل.",
+        "claudeModeProxyInUse": "لا يزال Claude Desktop يستخدم هذا الوكيل. أعد Claude Desktop إلى وضعه السابق أولًا."
       },
       "chatPage": {
         "title": "الدردشة",

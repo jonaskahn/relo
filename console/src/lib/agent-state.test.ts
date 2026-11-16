@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+	claudeCodeFollows,
 	choosesMode,
 	byLabel,
 	contextOn,
@@ -270,5 +271,30 @@ describe('the clients that choose a mode at set-up', () => {
 		for (const id of ['codex', 'opencode', 'dsh']) {
 			expect(choosesMode(agentOf({ id }))).toBe(false);
 		}
+	});
+});
+
+describe('Claude Code following Claude Desktop into proxy mode', () => {
+	const desktop = agentOf({ id: 'claude-desktop' });
+	const codeIn = (patch: Partial<IntegrationView>) => agentOf({ id: 'claude-code', ...patch });
+
+	it('follows when Claude Code is not set up or is in environment mode', () => {
+		expect(claudeCodeFollows([codeIn({ enabled: false })], desktop, 'proxy')).toBe(true);
+		expect(claudeCodeFollows([codeIn({ enabled: true, mode: 'env' })], desktop, 'proxy')).toBe(
+			true
+		);
+		expect(claudeCodeFollows([], desktop, 'proxy')).toBe(true);
+	});
+
+	it('does not follow when Claude Code is already in proxy mode', () => {
+		expect(claudeCodeFollows([codeIn({ enabled: true, mode: 'proxy' })], desktop, 'proxy')).toBe(
+			false
+		);
+	});
+
+	it('does not follow for environment mode or for any other agent', () => {
+		expect(claudeCodeFollows([codeIn({ enabled: false })], desktop, 'env')).toBe(false);
+		expect(claudeCodeFollows([], agentOf({ id: 'claude-code' }), 'proxy')).toBe(false);
+		expect(claudeCodeFollows([], agentOf({ id: 'codex' }), 'proxy')).toBe(false);
 	});
 });

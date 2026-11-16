@@ -1907,7 +1907,7 @@
         },
         "claudeModeDesktopHint": "选择 Claude Desktop 如何访问 Relo。该方式适用于应用本身及其启动的 Code 标签页。",
         "claudeModeDesktopEnvHint": "Claude Desktop 通过网关配置文件作为 Relo 客户端运行，不使用 claude.ai 登录。",
-        "claudeModeDesktopProxyHint": "Claude Desktop 保留自己的登录。其 Code 标签页经过 Relo 的拦截；聊天和模型选择器仍归 Anthropic。需要 Claude Code 处于代理模式。",
+        "claudeModeDesktopProxyHint": "Claude Desktop 保留自己的登录。其 Code 标签页经过 Relo 的拦截；聊天和模型选择器仍归 Anthropic。",
         "desktopPicker": {
           "title": "Desktop 模型选择器",
           "hint": "把 Relo 的模型添加到 Claude Desktop 的 Code 标签页的模型选择器中。",
@@ -1933,7 +1933,9 @@
           "reasonCaUnverified": "Relo 的证书未通过安全检查，因此没有使用。",
           "reasonFailed": "某一步失败了，并已尽可能撤销。请重试。"
         },
-        "claudeModeUnsaved": "尚未保存。点击“保存”以应用此模式。"
+        "claudeModeUnsaved": "尚未保存。点击“保存”以应用此模式。",
+        "claudeModeDesktopOwnerNote": "Claude Desktop 与 Claude Code 共用代理接线，因此保存时也会把 Claude Code 切换到代理模式。",
+        "claudeModeProxyInUse": "Claude Desktop 仍在使用此代理。请先把 Claude Desktop 切换回去。"
       },
       "chatPage": {
         "title": "聊天",

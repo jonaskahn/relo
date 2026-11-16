@@ -18,9 +18,11 @@
 		onselect: (mode: 'env' | 'proxy') => void;
 		busy?: boolean;
 		failure?: string;
+		/** A line the page adds under the proxy warning, such as what else the save moves. */
+		note?: string;
 	}
 
-	let { agent, selected, onselect, busy = false, failure = '' }: Props = $props();
+	let { agent, selected, onselect, busy = false, failure = '', note = '' }: Props = $props();
 
 	const mode = $derived(selected);
 	const desktop = $derived(agent.id === 'claude-desktop');
@@ -111,6 +113,13 @@
 		<p class="flex items-start gap-2 text-xs text-muted-foreground">
 			<Icon name="info-circle" size={14} />
 			<span>{$t(proxyStateKey(proxyState))}</span>
+		</p>
+	{/if}
+
+	{#if note}
+		<p class="flex items-start gap-2 text-xs text-muted-foreground">
+			<Icon name="info-circle" size={14} />
+			<span>{note}</span>
 		</p>
 	{/if}
 

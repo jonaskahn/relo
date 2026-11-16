@@ -1907,7 +1907,7 @@
         },
         "claudeModeDesktopHint": "เลือกวิธีที่ Claude Desktop เข้าถึง Relo โหมดนี้ใช้กับแอปและแท็บ Code ที่แอปเปิดขึ้น",
         "claudeModeDesktopEnvHint": "Claude Desktop ทำงานเป็นไคลเอนต์ของ Relo ผ่านโปรไฟล์เกตเวย์ ไม่ใช้การเข้าสู่ระบบ claude.ai",
-        "claudeModeDesktopProxyHint": "Claude Desktop ยังใช้การเข้าสู่ระบบของตัวเอง แท็บ Code ผ่านตัวดักจับของ Relo ส่วนแชตและตัวเลือกโมเดลยังเป็นของ Anthropic ต้องให้ Claude Code อยู่ในโหมดพร็อกซี",
+        "claudeModeDesktopProxyHint": "Claude Desktop ยังใช้การเข้าสู่ระบบของตัวเอง แท็บ Code ผ่านตัวดักจับของ Relo ส่วนแชตและตัวเลือกโมเดลยังเป็นของ Anthropic",
         "desktopPicker": {
           "title": "ตัวเลือกโมเดลของ Desktop",
           "hint": "เพิ่มโมเดลของ Relo ลงในตัวเลือกโมเดลของแท็บ Code ใน Claude Desktop",
@@ -1933,7 +1933,9 @@
           "reasonCaUnverified": "ใบรับรองของ Relo ไม่ผ่านการตรวจความปลอดภัย จึงไม่ได้ใช้",
           "reasonFailed": "ขั้นตอนหนึ่งล้มเหลวและถูกย้อนกลับเท่าที่ทำได้ ลองอีกครั้ง"
         },
-        "claudeModeUnsaved": "ยังไม่ได้บันทึก กดบันทึกเพื่อใช้โหมดนี้"
+        "claudeModeUnsaved": "ยังไม่ได้บันทึก กดบันทึกเพื่อใช้โหมดนี้",
+        "claudeModeDesktopOwnerNote": "Claude Desktop ใช้การเชื่อมต่อพร็อกซีร่วมกับ Claude Code ดังนั้นการบันทึกจะย้าย Claude Code ไปโหมดพร็อกซีด้วย",
+        "claudeModeProxyInUse": "Claude Desktop ยังใช้พร็อกซีนี้อยู่ โปรดสลับ Claude Desktop กลับก่อน"
       },
       "chatPage": {
         "title": "แชต",

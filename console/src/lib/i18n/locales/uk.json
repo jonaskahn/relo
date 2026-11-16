@@ -1907,7 +1907,7 @@
         },
         "claudeModeDesktopHint": "Виберіть, як Claude Desktop звертається до Relo. Режим стосується застосунку та вкладки Code, яку він запускає.",
         "claudeModeDesktopEnvHint": "Claude Desktop працює як клієнт Relo через профіль шлюзу. Вхід у claude.ai не використовується.",
-        "claudeModeDesktopProxyHint": "Claude Desktop зберігає свій вхід. Вкладка Code йде через перехоплення Relo; чат і вибір моделі залишаються за Anthropic. Потрібен Claude Code в режимі проксі.",
+        "claudeModeDesktopProxyHint": "Claude Desktop зберігає свій вхід. Вкладка Code йде через перехоплення Relo; чат і вибір моделі залишаються за Anthropic.",
         "desktopPicker": {
           "title": "Вибір моделі в Desktop",
           "hint": "Додає моделі Relo до вибору моделі на вкладці Code у Claude Desktop.",
@@ -1933,7 +1933,9 @@
           "reasonCaUnverified": "Сертифікат Relo не пройшов перевірку безпеки, тому не використовувався.",
           "reasonFailed": "Крок не вдався й був скасований, де це можливо. Спробуйте ще раз."
         },
-        "claudeModeUnsaved": "Ще не збережено. Натисніть «Зберегти», щоб застосувати цей режим."
+        "claudeModeUnsaved": "Ще не збережено. Натисніть «Зберегти», щоб застосувати цей режим.",
+        "claudeModeDesktopOwnerNote": "Claude Desktop використовує те саме проксі-підключення, що й Claude Code, тому збереження переводить у режим проксі і Claude Code.",
+        "claudeModeProxyInUse": "Claude Desktop досі використовує це проксі. Спершу поверніть Claude Desktop до попереднього режиму."
       },
       "chatPage": {
         "title": "Чат",

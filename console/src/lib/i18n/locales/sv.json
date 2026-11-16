@@ -1907,7 +1907,7 @@
         },
         "claudeModeDesktopHint": "Välj hur Claude Desktop når Relo. Läget gäller appen och den Code-flik den startar.",
         "claudeModeDesktopEnvHint": "Claude Desktop körs som Relo-klient via en gatewayprofil. Inloggningen på claude.ai används inte.",
-        "claudeModeDesktopProxyHint": "Claude Desktop behåller sin inloggning. Code-fliken går via Relos interceptor; Chat och modellväljaren förblir Anthropics. Kräver Claude Code i proxyläge.",
+        "claudeModeDesktopProxyHint": "Claude Desktop behåller sin inloggning. Code-fliken går via Relos interceptor; Chat och modellväljaren förblir Anthropics.",
         "desktopPicker": {
           "title": "Modellväljare i Desktop",
           "hint": "Lägger till Relos modeller i modellväljaren på Code-fliken i Claude Desktop.",
@@ -1933,7 +1933,9 @@
           "reasonCaUnverified": "Relos certifikat klarade inte säkerhetskontrollen och användes därför inte.",
           "reasonFailed": "Ett steg misslyckades och ångrades så långt det gick. Försök igen."
         },
-        "claudeModeUnsaved": "Inte sparat än. Tryck på Spara för att tillämpa läget."
+        "claudeModeUnsaved": "Inte sparat än. Tryck på Spara för att tillämpa läget.",
+        "claudeModeDesktopOwnerNote": "Claude Desktop delar Claude Codes proxykoppling, så att spara flyttar också Claude Code till proxyläge.",
+        "claudeModeProxyInUse": "Claude Desktop använder fortfarande den här proxyn. Växla tillbaka Claude Desktop först."
       },
       "chatPage": {
         "title": "Chatt",
