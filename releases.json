@@ -1,5 +1,5 @@
 {
-  "generated": "2026-11-16T16:32:54Z",
+  "generated": "2026-11-16T16:33:09Z",
   "latest": "v0.2.13",
   "latest_beta": "v0.2.13-beta.141.ea9afaf8",
   "install": {
@@ -3340,12 +3340,12 @@
     {
       "tag": "v0.2.8",
       "version": "0.2.8",
-      "name": "v0.2.8 - New Films 🎥",
+      "name": "🚀 v0.2.8 — 2026-11-05",
       "channel": "stable",
       "draft": false,
       "published_at": "2026-11-06T04:30:15Z",
       "page": "https://github.com/jonaskahn/relo/releases/tag/v0.2.8",
-      "notes": "## What's Changed\r\n- Enhance UI/Layout",
+      "notes": "# 🚀 v0.2.8 — 2026-11-05\n\n### ✨ Improvements\n\n- 🆘 New support menu; report a masked provider exchange from the activity view.\n- 🤖 One robot mark for every harness.\n- 🏷️ Version-free Claude Desktop alias in the catalog.\n\n### 🐛 Fixes\n\n- 🎯 Desktop keeps the exact picker ids it accepts.\n",
       "install": {
         "script": "curl -fsSL https://relo.ifelse.one/install.sh | sh -s -- --version 0.2.8",
         "powershell": "& ([scriptblock]::Create((irm https://relo.ifelse.one/install.ps1))) -Version 0.2.8",
@@ -3652,12 +3652,12 @@
     {
       "tag": "v0.2.7",
       "version": "0.2.7",
-      "name": "v0.2.7 - An Empty 🫙",
+      "name": "🚀 v0.2.7 — 2026-11-03",
       "channel": "stable",
       "draft": false,
       "published_at": "2026-11-04T04:48:57Z",
       "page": "https://github.com/jonaskahn/relo/releases/tag/v0.2.7",
-      "notes": "## What's Changed\r\n* chore: bump to 0.2.7 by @github-actions[bot] in https://github.com/jonaskahn/relo/pull/105\r\n\r\n\r\n**Full Changelog**: https://github.com/jonaskahn/relo/compare/v0.2.6...v0.2.7",
+      "notes": "# 🚀 v0.2.7 — 2026-11-03\n\n### ✨ Improvements\n\n- 🖥️ Desktop profiles carry behavior metadata and the upstream model identity.\n- 🧠 Reasoning effort is parsed and coerced to what a model accepts instead of rejected.\n- 🚦 Traffic log: retention applied, head and tail of captured bodies kept, reported in the doctor.\n\n### 🐛 Fixes\n\n- 🎚️ Cursor and Antigravity variants are selected by effort.\n",
       "install": {
         "script": "curl -fsSL https://relo.ifelse.one/install.sh | sh -s -- --version 0.2.7",
         "powershell": "& ([scriptblock]::Create((irm https://relo.ifelse.one/install.ps1))) -Version 0.2.7",
@@ -4044,12 +4044,12 @@
     {
       "tag": "v0.2.6",
       "version": "0.2.6",
-      "name": "v0.2.6 -  No way home 🕷️",
+      "name": "🚀 v0.2.6 — 2026-11-03",
       "channel": "stable",
       "draft": false,
       "published_at": "2026-11-03T07:04:11Z",
       "page": "https://github.com/jonaskahn/relo/releases/tag/v0.2.6",
-      "notes": "## 2026-11-03\r\n\r\n### Features\r\n\r\n- console: Reads the outdated file flag, so the console can show when a file is out of date.\r\n\r\n### Fixes\r\n\r\n- agents: Outdated files are now refreshed at startup and on reload.\r\n- agents: Outdated files are now told apart from files you edited.\r\n- console: One event stream is now shared across tabs, instead of one per tab.\r\n\r\n### Tests and docs\r\n\r\n- agents: Added tests for the silent refresh of outdated files.\r\n- api: Documented the connection cost of the event stream.",
+      "notes": "# 🚀 v0.2.6 — 2026-11-03\n\n### ✨ Improvements\n\n- 🚦 Console reads whether agent files are outdated.\n\n### 🐛 Fixes\n\n- 📡 One event stream is shared across tabs instead of one per tab.\n- 🔄 Outdated agent files are told apart from edited ones and refreshed at startup and reload.\n",
       "install": {
         "script": "curl -fsSL https://relo.ifelse.one/install.sh | sh -s -- --version 0.2.6",
         "powershell": "& ([scriptblock]::Create((irm https://relo.ifelse.one/install.ps1))) -Version 0.2.6",
