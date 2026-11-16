@@ -242,12 +242,12 @@ func (s *Service) Integration(ctx context.Context, id string) (IntegrationView, 
 // daemon when the agent asks for its key. Versions names which OpenCode
 // generations setup writes and is ignored for every other agent.
 func (s *Service) EnableIntegration(ctx context.Context, id, versions string) (IntegrationResult, error) {
-	return s.EnableIntegrationIn(ctx, id, versions, "")
+	return s.EnableIntegrationIn(ctx, id, versions, ModeRequest{})
 }
 
 // EnableIntegrationIn wires one agent in the mode the operator chose. An
 // empty mode keeps the mode the integration already carries.
-func (s *Service) EnableIntegrationIn(ctx context.Context, id, versions, mode string) (IntegrationResult, error) {
+func (s *Service) EnableIntegrationIn(ctx context.Context, id, versions string, mode ModeRequest) (IntegrationResult, error) {
 	return s.enableIntegrationIn(ctx, id, enableRequest{versions: versions, mode: mode})
 }
 
@@ -259,13 +259,13 @@ func (s *Service) EnableIntegrationOverwrite(ctx context.Context, id, versions s
 
 // EnableIntegrationOverwriteIn is the forced setup in the mode the operator
 // chose.
-func (s *Service) EnableIntegrationOverwriteIn(ctx context.Context, id, versions, mode string) (IntegrationResult, error) {
+func (s *Service) EnableIntegrationOverwriteIn(ctx context.Context, id, versions string, mode ModeRequest) (IntegrationResult, error) {
 	return s.enableIntegrationIn(ctx, id, enableRequest{overwrite: true, versions: versions, mode: mode})
 }
 
 // SetIntegrationMode switches one enabled integration between the settings
 // file Relo writes and the intercept it runs.
-func (s *Service) SetIntegrationMode(ctx context.Context, id, mode string) (IntegrationView, error) {
+func (s *Service) SetIntegrationMode(ctx context.Context, id string, mode ModeRequest) (IntegrationView, error) {
 	agent, found := s.agents.AgentFor(id)
 	if !found {
 		return IntegrationView{}, fmt.Errorf("%s: %w", id, ErrUnknownIntegration)
@@ -274,7 +274,11 @@ func (s *Service) SetIntegrationMode(ctx context.Context, id, mode string) (Inte
 	if err != nil {
 		return IntegrationView{}, err
 	}
-	if _, err := manager.SetMode(ctx, agent.ID, mode); err != nil {
+	err = s.withProxyOwner(ctx, agent.ID, mode, func() error {
+		_, err := manager.SetMode(ctx, agent.ID, mode.Mode)
+		return err
+	})
+	if err != nil {
 		return IntegrationView{}, err
 	}
 	return s.describeIntegration(ctx, manager, agent)
@@ -285,6 +289,16 @@ func (s *Service) enableIntegration(ctx context.Context, id string, overwrite bo
 }
 
 func (s *Service) enableIntegrationIn(ctx context.Context, id string, request enableRequest) (IntegrationResult, error) {
+	var result IntegrationResult
+	err := s.withProxyOwner(ctx, id, request.mode, func() error {
+		var err error
+		result, err = s.enableAgent(ctx, id, request)
+		return err
+	})
+	return result, err
+}
+
+func (s *Service) enableAgent(ctx context.Context, id string, request enableRequest) (IntegrationResult, error) {
 	agent, found := s.agents.AgentFor(id)
 	if !found {
 		return IntegrationResult{}, fmt.Errorf("%s: %w", id, ErrUnknownIntegration)
@@ -298,7 +312,7 @@ func (s *Service) enableIntegrationIn(ctx context.Context, id string, request en
 		return IntegrationResult{}, err
 	}
 	if _, err := manager.EnableWith(ctx, agent.ID, token, EnableOptions{
-		Overwrite: request.overwrite, OpenCodeVersions: request.versions, Mode: request.mode,
+		Overwrite: request.overwrite, OpenCodeVersions: request.versions, Mode: request.mode.Mode,
 	}); err != nil {
 		return IntegrationResult{}, err
 	}
@@ -1203,7 +1217,7 @@ type ServiceOptions struct {
 // the setup replaces a provider already in the client's file.
 type enableRequest struct {
 	versions  string
-	mode      string
+	mode      ModeRequest
 	overwrite bool
 }
 

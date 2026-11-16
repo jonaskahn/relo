@@ -27,6 +27,8 @@ func TestServiceStatusMapsRecoverableFailures(t *testing.T) {
 		{name: "catalog", err: catalog.ErrNoCatalog, status: http.StatusServiceUnavailable, code: "service_unavailable"},
 		{name: "rejected list", err: catalog.ErrListRejected, status: http.StatusBadGateway, code: "upstream_unavailable"},
 		{name: "unsupported list", err: catalog.ErrListUnsupported, status: http.StatusBadGateway, code: "upstream_unavailable"},
+		{name: "desktop needs claude code", err: appintegration.ErrProxyOwnerNeeded, status: http.StatusConflict, code: "proxy_owner_needed"},
+		{name: "proxy still serves desktop", err: appintegration.ErrProxyInUse, status: http.StatusConflict, code: "proxy_in_use"},
 		{name: "free consent", err: appcatalog.ErrFreeConnectionsDisabled, status: http.StatusForbidden, code: "free_connections_disabled"},
 		{name: "duplicate free connection", err: appcatalog.ErrFreeConnectionExists, status: http.StatusConflict, code: "free_connection_exists"},
 	}

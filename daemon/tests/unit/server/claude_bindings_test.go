@@ -169,3 +169,23 @@ func TestBindingsAreWrittenReadBackAndRefusedWhenInvalid(t *testing.T) {
 		t.Fatalf("remove = %d %s, want the binding gone", status, body)
 	}
 }
+
+// TestDesktopProxyRequestCarriesTheClaudeCodeFlag pins the HTTP side of the
+// one-step switch: refused with a code the console names when the flag is
+// absent, and Claude Code brought along when it is sent.
+func TestDesktopProxyRequestCarriesTheClaudeCodeFlag(t *testing.T) {
+	h, served := bindingsServer(t)
+	status, body := call(t, h, served, http.MethodPost, "/api/v1/integrations/claude-desktop/enable", `{"mode":"proxy"}`)
+	if status != http.StatusConflict || !strings.Contains(body, "proxy_owner_needed") {
+		t.Fatalf("setup without the flag = %d %s, want a proxy_owner_needed conflict", status, body)
+	}
+	status, body = call(t, h, served, http.MethodPost, "/api/v1/integrations/claude-desktop/enable",
+		`{"mode":"proxy","with_claude_code":true}`)
+	if status != http.StatusOK {
+		t.Fatalf("setup with the flag = %d %s", status, body)
+	}
+	status, body = call(t, h, served, http.MethodGet, "/api/v1/integrations/claude-code", "")
+	if status != http.StatusOK || !strings.Contains(body, `"mode":"proxy"`) {
+		t.Fatalf("Claude Code after Desktop's setup = %d %s, want it on in proxy mode", status, body)
+	}
+}

@@ -367,6 +367,14 @@ func serviceStatus(err error) (int, string) {
 	if errors.Is(err, appcatalog.ErrFreeConnectionExists) {
 		return http.StatusConflict, "free_connection_exists"
 	}
+	// Claude Desktop and Claude Code share one proxy wiring, and the console
+	// words each refusal about it by its code.
+	if errors.Is(err, appintegration.ErrProxyOwnerNeeded) {
+		return http.StatusConflict, "proxy_owner_needed"
+	}
+	if errors.Is(err, appintegration.ErrProxyInUse) {
+		return http.StatusConflict, "proxy_in_use"
+	}
 	return generalServiceStatus(err)
 }
 
@@ -386,7 +394,6 @@ func generalServiceStatus(err error) (int, string) {
 		return http.StatusServiceUnavailable, "service_unavailable"
 	case errors.Is(err, appcatalog.ErrCatalogConflict), errors.Is(err, appaccount.ErrDuplicateAccount),
 		errors.Is(err, appcatalog.ErrListAuthoritative),
-		errors.Is(err, appintegration.ErrProxyOwnerNeeded), errors.Is(err, appintegration.ErrProxyInUse),
 		errors.Is(err, appintegration.ErrPickerInUse),
 		appintegration.RefusalCode(err) == appintegration.CodeForeignKey:
 		return http.StatusConflict, "conflict"

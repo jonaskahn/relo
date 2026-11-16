@@ -77,6 +77,13 @@ type enableIntegrationRequest struct {
 	// client's own settings, proxy leaves it talking to the vendor through
 	// Relo's intercept. Empty keeps the mode the integration already has.
 	Mode string `json:"mode,omitempty"`
+	// WithClaudeCode lets a Claude Desktop proxy setup bring Claude Code's proxy
+	// wiring up too, instead of being refused for the want of it.
+	WithClaudeCode bool `json:"with_claude_code,omitempty"`
+}
+
+func (r enableIntegrationRequest) modeRequest() appintegration.ModeRequest {
+	return appintegration.ModeRequest{Mode: r.Mode, WithClaudeCode: r.WithClaudeCode}
 }
 
 func (s *Server) handleEnableIntegration(w http.ResponseWriter, r *http.Request) {
@@ -95,9 +102,9 @@ func (s *Server) handleEnableIntegration(w http.ResponseWriter, r *http.Request)
 	var result appintegration.IntegrationResult
 	var err error
 	if request.Overwrite {
-		result, err = manager.EnableIntegrationOverwriteIn(r.Context(), r.PathValue("id"), versions, request.Mode)
+		result, err = manager.EnableIntegrationOverwriteIn(r.Context(), r.PathValue("id"), versions, request.modeRequest())
 	} else {
-		result, err = manager.EnableIntegrationIn(r.Context(), r.PathValue("id"), versions, request.Mode)
+		result, err = manager.EnableIntegrationIn(r.Context(), r.PathValue("id"), versions, request.modeRequest())
 	}
 	if err != nil {
 		s.writeIntegrationError(w, r, err)
@@ -225,6 +232,9 @@ type codexContextRequest struct {
 // vendor through Relo's intercept.
 type integrationModeRequest struct {
 	Mode string `json:"mode"`
+	// WithClaudeCode lets a Claude Desktop switch to proxy mode move Claude Code
+	// there too, instead of being refused for the want of its wiring.
+	WithClaudeCode bool `json:"with_claude_code,omitempty"`
 }
 
 func (s *Server) handleIntegrationMode(w http.ResponseWriter, r *http.Request) {
@@ -236,7 +246,8 @@ func (s *Server) handleIntegrationMode(w http.ResponseWriter, r *http.Request) {
 	if !s.decodeJSON(w, r, &request) {
 		return
 	}
-	view, err := manager.SetIntegrationMode(r.Context(), r.PathValue("id"), request.Mode)
+	view, err := manager.SetIntegrationMode(r.Context(), r.PathValue("id"),
+		appintegration.ModeRequest{Mode: request.Mode, WithClaudeCode: request.WithClaudeCode})
 	if err != nil {
 		s.writeIntegrationError(w, r, err)
 		return
