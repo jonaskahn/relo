@@ -1,12 +1,16 @@
 package server_test
 
 import (
+	"context"
 	"net/http"
+	"net/http/httptest"
 	"strings"
 	"testing"
 	"time"
 
+	"github.com/jonaskahn/relo/internal/account"
 	"github.com/jonaskahn/relo/internal/inference"
+	"github.com/jonaskahn/relo/internal/server"
 )
 
 // setRetryAttempts patches a connection's own retry count, which is what each
@@ -107,6 +111,40 @@ func TestAProviderWaitLongerThanARetryMovesOn(t *testing.T) {
 	}
 	if elapsed := time.Since(started); elapsed > 5*time.Second {
 		t.Fatalf("elapsed = %v, want the answer without the provider's wait", elapsed)
+	}
+}
+
+// TestCancelledRetryStillReportsTheRefusal pins what a client disconnect
+// leaves behind: a rate limit is held back from its account while a retry is
+// expected, so a wait the client cancels still reports it rather than leaving
+// the account healthy on a failure nobody ever recorded.
+func TestCancelledRetryStillReportsTheRefusal(t *testing.T) {
+	h := newHarness(t)
+	h.upstream.status = http.StatusTooManyRequests
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	h.server = h.newServerWithOptions(h.cfg, []account.PoolEntry{defaultEntry()},
+		func(options *server.Options) {
+			// The client goes away exactly where the retry wait would begin.
+			options.RetryDelay = func(int) time.Duration {
+				cancel()
+				return time.Minute
+			}
+		})
+
+	body := `{"model":"claude-relo-openai--gpt-4o","max_tokens":16,"messages":[{"role":"user","content":"hi"}]}`
+	handler, found := h.server.DataPlaneHandler(inference.ProtocolAnthropic)
+	if !found {
+		t.Fatal("the server serves no anthropic port")
+	}
+	recorder := httptest.NewRecorder()
+	handler.ServeHTTP(recorder, request(http.MethodPost, "/v1/messages", dataPlaneToken, strings.NewReader(body)).WithContext(ctx))
+
+	if recorder.Code != http.StatusTooManyRequests {
+		t.Fatalf("status = %d, body = %s, want the upstream rate limit", recorder.Code, recorder.Body.String())
+	}
+	if failures := h.pools.Health("openai", "one").Failures; failures != 1 {
+		t.Fatalf("failures = %d, want the cancelled retry to have reported its rate limit", failures)
 	}
 }
 

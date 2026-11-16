@@ -139,7 +139,7 @@ func (s *Server) reportAttemptAsync(spec attemptSpec, result Result) {
 	held := spec.hold != nil && spec.hold(result)
 	s.bookkeeping.enqueue(func() {
 		if !held {
-			s.reportCredential(ctx, candidate, authorized, result)
+			s.reportCredential(ctx, candidate, authorized.CredentialID, result)
 		}
 		s.learnModelAccess(ctx, candidate, authorized, result)
 		s.recordQuota(ctx, authorized.CredentialID, result.RateLimits)
@@ -615,7 +615,7 @@ func retryCurable(status int) bool {
 	return status == 0 || status == http.StatusTooManyRequests || status >= 500
 }
 
-func (s *Server) reportCredential(ctx context.Context, candidate routing.Candidate, authorized catalog.Authorization, result Result) {
+func (s *Server) reportCredential(ctx context.Context, candidate routing.Candidate, credentialID string, result Result) {
 	// A completion that counted no tokens is the relay's own synthetic rate
 	// limit: it says nothing about the account, and counting it would open
 	// the breaker in the middle of the short retries.
@@ -623,7 +623,7 @@ func (s *Server) reportCredential(ctx context.Context, candidate routing.Candida
 		return
 	}
 	err := s.opts.Relay.Report(ctx, Outcome{
-		ProviderID: candidate.ProviderID, CredentialID: authorized.CredentialID,
+		ProviderID: candidate.ProviderID, CredentialID: credentialID,
 		Status: result.Status, RetryAfter: result.RetryAfter, RefreshSettled: result.RefreshSettled,
 	})
 	if err != nil && s.opts.Logger != nil {

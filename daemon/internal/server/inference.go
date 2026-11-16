@@ -453,9 +453,13 @@ func (d *sendDriver) handleAttemptFailure(failed failedAttempt, err error) walkA
 	walk.pending, walk.pendingErr, walk.attempted = result, err, true
 	if d.retriesAccount(walk, result) {
 		if !d.s.waitBeforeRetry(d.r.Context(), walk.retries, result.RetryAfter) {
-			// The wait was cut short, so no attempt follows. Answer the
-			// refusal the request already earned rather than leaving the
-			// handler with an empty success when the caller is gone.
+			// The wait was cut short, so no attempt follows. The failure was
+			// held back from its account while a retry was expected, so it is
+			// reported here rather than lost with the retry that never came.
+			d.s.reportCredential(d.s.recordContext(d.r.Context()), failed.candidate, result.CredentialID, result)
+			// Answer the refusal the request already earned rather than
+			// leaving the handler with an empty success when the caller is
+			// gone.
 			d.s.answerFailed(d, d.outcome, result, err)
 			return walkAnswered
 		}
