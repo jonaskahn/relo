@@ -17,9 +17,15 @@
 		// Tells the mode diagram the operator is reading the proxy warning, so it draws
 		// the mode before it is written.
 		onpreview?: (previewing: boolean) => void;
+		// Before set-up there is nothing to switch, so choosing only picks the mode
+		// the set-up will write. The warning stays in view while proxy is picked, and
+		// the set-up button is the confirmation.
+		setup?: boolean;
+		selected?: 'env' | 'proxy';
+		onselect?: (mode: 'env' | 'proxy') => void;
 	}
 
-	let { agent, onchanged, onpreview }: Props = $props();
+	let { agent, onchanged, onpreview, setup = false, selected = 'env', onselect }: Props = $props();
 
 	let busy = $state(false);
 	let failure = $state('');
@@ -30,11 +36,15 @@
 		onpreview?.(value);
 	}
 
-	const mode = $derived(agent.mode === 'proxy' ? 'proxy' : 'env');
+	const mode = $derived(setup ? selected : agent.mode === 'proxy' ? 'proxy' : 'env');
 	const desktop = $derived(agent.id === 'claude-desktop');
 	const proxyState = $derived(agent.proxy_state ?? '');
 
 	async function choose(next: 'env' | 'proxy') {
+		if (setup) {
+			onselect?.(next);
+			return;
+		}
 		if (next === mode) return;
 		if (next === 'proxy' && !confirmProxy) {
 			// The warning is the point of this step: an operator turning proxy
@@ -131,7 +141,11 @@
 		</button>
 	</div>
 
-	{#if mode === 'proxy'}
+	{#if setup && mode === 'proxy'}
+		<p class="rounded-lg border border-warning/40 bg-warning/5 p-3 text-xs text-warning">
+			{$t('ui.pages.integrationsPage.claudeModeProxyWarning')}
+		</p>
+	{:else if mode === 'proxy'}
 		<p class="flex items-start gap-2 text-xs text-muted-foreground">
 			<Icon name="info-circle" size={14} />
 			<span>{$t(proxyStateKey(proxyState))}</span>

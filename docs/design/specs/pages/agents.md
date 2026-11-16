@@ -200,6 +200,12 @@ Claude Code can reach Relo two ways. **Environment** writes Relo's address into 
 **Proxy** leaves the client talking to Anthropic and puts Relo's intercept in the path. The mode belongs to the
 integration, so one agent is in exactly one mode and switching writes the new mode before retiring the old one.
 
+Before set-up, the modal of Claude Code and of Claude Desktop shows the same two choices above the diagram, so the mode
+is picked first and the set-up writes it. Choosing writes nothing: the diagram previews the chosen mode, the proxy
+warning stays in view while Proxy is picked, and **Set up** is the confirmation. Every other agent has one way to be wired
+and shows no choice. Desktop in proxy mode needs Claude Code in it, and a set-up that cannot have that is refused with
+the reason in the result step.
+
 The section sits above the model preferences in the manage modal, and only while the integration is on. Choosing
 Proxy asks once in place — not in an AlertDialog — because the warning is about the operator's own Anthropic account
 and the choice is reversible from the same control. The warning copy has one owner, the message the section renders,

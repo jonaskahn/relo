@@ -114,6 +114,8 @@
 	let modelsState = $state<'idle' | 'loading' | 'ready' | 'failed'>('idle');
 	// The proxy warning is being read, so the diagram draws proxy before it is written.
 	let previewingProxy = $state(false);
+	// The mode a set-up will write, chosen in the modal before anything is written.
+	let setupMode = $state<'env' | 'proxy'>('env');
 	let verifying = $state(false);
 	let verifyRead = $state<{ ok: boolean; copy: string } | null>(null);
 
@@ -161,7 +163,13 @@
 	// The diagram follows the mode the client is wired for, or proxy while its warning is
 	// open. Its dots run only while that wiring is applied.
 	const diagramMode = $derived(
-		previewingProxy || (detail?.mode ?? 'env') === 'proxy' ? 'proxy' : 'env'
+		(
+			detail?.enabled
+				? previewingProxy || (detail?.mode ?? 'env') === 'proxy'
+				: setupMode === 'proxy'
+		)
+			? 'proxy'
+			: 'env'
 	);
 	const diagramLive = $derived(
 		!previewingProxy &&
@@ -169,6 +177,11 @@
 			stateTone(detail) === 'pass' &&
 			(diagramMode === 'env' || detail.proxy_state === 'applied')
 	);
+
+	// The two clients with a proxy mode, which therefore choose one at set-up.
+	function choosesMode(agent: IntegrationView): boolean {
+		return agent.id === 'claude-code' || agent.id === 'claude-desktop';
+	}
 
 	function message(error: unknown): string {
 		return error instanceof Error ? error.message : String(error);
@@ -182,6 +195,7 @@
 		revealCopied = false;
 		verifyRead = null;
 		previewingProxy = false;
+		setupMode = 'env';
 		resetKey();
 		resetModels();
 		detailOpen = true;
@@ -238,7 +252,8 @@
 		cardFailure = null;
 		try {
 			const answer = await api<IntegrationResult>(integrationPath(agent.id, action), {
-				method: 'POST'
+				method: 'POST',
+				...(action === 'setup' ? setupRequest(agent) : {})
 			});
 			await patch(answer);
 			// Set up, repair and rotation report their result in the modal before the
@@ -426,7 +441,7 @@
 			if (action === 'overwrite') {
 				const answer = await api<IntegrationResult>(integrationPath(agent.id, 'setup'), {
 					method: 'POST',
-					body: JSON.stringify({ overwrite: true })
+					body: JSON.stringify({ overwrite: true, ...modeFor(agent) })
 				});
 				await patch(answer);
 				openDetail(answer.integration);
@@ -523,6 +538,17 @@
 		}
 		return { key: 'verify', icon: 'circle-check', act: () => void verifyNow() };
 	});
+
+	// Claude Code and Claude Desktop are set up in the mode the operator chose in the
+	// modal; every other agent has one way to be wired and sends nothing.
+	function modeFor(agent: IntegrationView): { mode?: 'env' | 'proxy' } {
+		return choosesMode(agent) && detail?.id === agent.id ? { mode: setupMode } : {};
+	}
+
+	function setupRequest(agent: IntegrationView): { body?: string } {
+		const chosen = modeFor(agent);
+		return chosen.mode ? { body: JSON.stringify(chosen) } : {};
+	}
 
 	function startSetup(agent: IntegrationView) {
 		if (refusalOf(agent) === 'foreign_key') {
@@ -658,7 +684,22 @@
 						oncopy={() => void copyKey()}
 					/>
 					<AgentWiringSection agent={detail} />
-					{#if detail.enabled && (detail.id === 'claude-code' || detail.id === 'claude-desktop')}
+					{#if !detail.enabled && choosesMode(detail)}
+						<ClaudeModeSection
+							agent={detail}
+							setup
+							selected={setupMode}
+							onselect={(value) => (setupMode = value)}
+							onchanged={() => {}}
+						/>
+						<ModeDiagram
+							mode={diagramMode}
+							client={detail.id === 'claude-desktop' ? 'claude-desktop' : 'claude-code'}
+							live={false}
+							preview
+						/>
+					{/if}
+					{#if detail.enabled && choosesMode(detail)}
 						<ClaudeModeSection
 							agent={detail}
 							onpreview={(value) => (previewingProxy = value)}

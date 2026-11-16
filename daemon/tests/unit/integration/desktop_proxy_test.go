@@ -215,3 +215,39 @@ func TestDesktopStaysInProxyModeWhileItsPickerIsOn(t *testing.T) {
 		t.Fatalf("SetMode(desktop, env) with the picker off error = %v", err)
 	}
 }
+
+// TestSetUpInProxyModeWritesTheModeTheOperatorChose pins the set-up path the
+// modal now offers: the mode chosen before anything is written is the mode the
+// first set-up writes, for both clients, without a switch afterwards.
+func TestSetUpInProxyModeWritesTheModeTheOperatorChose(t *testing.T) {
+	h, runtimeProxy, profile := desktopProxyHarness(t)
+	ctx := context.Background()
+	code, err := h.manager.EnableWith(ctx, "claude-code", "rlo_ak_code", integration.EnableOptions{Mode: integration.ModeProxy})
+	if err != nil || code.Mode != integration.ModeProxy || code.ProxyState != integration.ProxyStateApplied {
+		t.Fatalf("set up claude-code in proxy mode = %+v %v, want proxy applied", code, err)
+	}
+	if settings := readSettings(t, h); strings.Contains(settings, "ANTHROPIC_BASE_URL") || !strings.Contains(settings, runtimeProxy.env.URL) {
+		t.Fatalf("settings = %s, want the intercept and no settings-mode keys", settings)
+	}
+	desktop, err := h.manager.EnableWith(ctx, "claude-desktop", "rlo_ak_desktop", integration.EnableOptions{Mode: integration.ModeProxy})
+	if err != nil || desktop.Mode != integration.ModeProxy {
+		t.Fatalf("set up claude-desktop in proxy mode = %+v %v", desktop, err)
+	}
+	if _, err := os.Stat(profile); !os.IsNotExist(err) {
+		t.Fatalf("stat the gateway profile error = %v, want none written in proxy mode", err)
+	}
+}
+
+// TestSetUpDesktopInProxyModeNeedsClaudeCodeThere keeps the first set-up honest:
+// choosing proxy for Desktop while Claude Code is not in it is refused and
+// writes nothing.
+func TestSetUpDesktopInProxyModeNeedsClaudeCodeThere(t *testing.T) {
+	h, _, profile := desktopProxyHarness(t)
+	_, err := h.manager.EnableWith(context.Background(), "claude-desktop", "rlo_ak_desktop", integration.EnableOptions{Mode: integration.ModeProxy})
+	if !errors.Is(err, integration.ErrProxyOwnerNeeded) {
+		t.Fatalf("error = %v, want %v", err, integration.ErrProxyOwnerNeeded)
+	}
+	if _, statErr := os.Stat(profile); !os.IsNotExist(statErr) {
+		t.Fatalf("stat the gateway profile error = %v, want nothing written", statErr)
+	}
+}
