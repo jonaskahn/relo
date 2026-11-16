@@ -75,3 +75,4 @@ internal/inference	internal/inference/...	68
 exempt	internal/adapters/discovery	covered by tests/integration/management
 exempt	internal/adapters/codex	client identity constants only
 internal/contentencoding	internal/contentencoding/...	90
+internal/application/docstore	tests/unit/docstore/...
