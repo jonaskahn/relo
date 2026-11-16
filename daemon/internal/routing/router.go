@@ -217,7 +217,9 @@ func (r *Router) resolve(ctx context.Context, request Request, preview bool) (Pl
 }
 
 // coolingPlan names a connection every account of which is waiting out a
-// failure, so the answer can say when the request may come back.
+// failure, so the answer can say when the request may come back. A wait one
+// model earned is named as that model's, because the other models of the same
+// connection are still being served.
 func (r *Router) coolingPlan(plan Plan) *CoolingError {
 	if r.pools == nil {
 		return nil
@@ -227,18 +229,38 @@ func (r *Router) coolingPlan(plan Plan) *CoolingError {
 		if skipped.ProviderID == "" {
 			continue
 		}
-		until := r.pools.CooldownUntil(skipped.ProviderID)
-		if until.IsZero() {
+		candidate := r.cooledCandidate(plan.Model, skipped)
+		if candidate == nil {
 			continue
 		}
-		if cooling == nil || until.Before(cooling.Until) {
-			cooling = &CoolingError{
-				Name: plan.Model, ProviderID: skipped.ProviderID, Until: until,
-				Reason: account.CoolingDown(skipped.ProviderID, until),
-			}
+		if cooling == nil || candidate.Until.Before(cooling.Until) {
+			cooling = candidate
 		}
 	}
 	return cooling
+}
+
+// cooledCandidate names one skipped candidate's wait and its own wording: a
+// model's wait when the connection parked that whole model, otherwise the
+// connection's. A request waits both out, so the later of the two is the wait
+// it is told about, and the wording names whichever one is binding.
+func (r *Router) cooledCandidate(name string, skipped Skipped) *CoolingError {
+	providerUntil := r.pools.CooldownUntil(skipped.ProviderID)
+	modelUntil := r.pools.ModelCooldownUntil(skipped.ProviderID, skipped.ModelID)
+	switch {
+	case modelUntil.IsZero() && providerUntil.IsZero():
+		return nil
+	case !modelUntil.IsZero() && modelUntil.After(providerUntil):
+		return &CoolingError{
+			Name: name, ProviderID: skipped.ProviderID, Until: modelUntil,
+			Reason: account.ModelCoolingDown(skipped.ProviderID, skipped.ModelID, modelUntil),
+		}
+	default:
+		return &CoolingError{
+			Name: name, ProviderID: skipped.ProviderID, Until: providerUntil,
+			Reason: account.CoolingDown(skipped.ProviderID, providerUntil),
+		}
+	}
 }
 
 func (r *Router) current() (*catalog.Snapshot, bool) {

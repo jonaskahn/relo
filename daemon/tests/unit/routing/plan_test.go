@@ -84,6 +84,69 @@ func TestConnectionCooldownReachesTheRefusal(t *testing.T) {
 	}
 }
 
+// TestModelCooldownIsNamedAsThatModel pins what a caller learns when the
+// connection parked one model rather than every account: the wait belongs to
+// that model, so the refusal names the model instead of the whole connection.
+func TestModelCooldownIsNamedAsThatModel(t *testing.T) {
+	clock := testkit.NewFakeClock(time.Now())
+	db := testkit.OpenTestDB(t)
+	upstream := testkit.MockUpstream(t, map[string]string{})
+	testkit.CustomProvider(t, db, testkit.Upstream{
+		ID: "openai", Label: "OpenAI", APIFormat: catalog.FormatOpenAIChat,
+		BaseURL: upstream.URL, Auth: catalog.AuthAPIKey,
+		Models: []string{"alpha"}, ModelsFormat: catalog.ModelsNone,
+	})
+	catalogView := testkit.ReloadCatalog(t, db, unavailable{})
+	pools := account.NewManagerWithOptions(storedCredentials{}, noSecrets{}, account.ManagerOptions{
+		Clock: clock, FailoverBackoff: []time.Duration{15 * time.Minute},
+	})
+	pool := pools.GetPool("openai")
+	pool.Add(account.PoolEntry{ID: "one", ProviderID: "openai", Status: account.StatusActive})
+	pool.MarkModelUnavailable("alpha", 10*time.Minute)
+
+	router := routing.New(routing.Options{Catalog: catalogView, Pools: pools, Clock: clock})
+	_, err := router.Plan(context.Background(), routing.Request{Model: "openai/alpha"})
+	var cooling *routing.CoolingError
+	if !errors.As(err, &cooling) {
+		t.Fatalf("Plan() error = %v, want the parked model's cooldown named", err)
+	}
+	if !strings.Contains(cooling.Error(), "openai/alpha") {
+		t.Fatalf("cooling.Error() = %q, want the parked model named", cooling.Error())
+	}
+}
+
+// TestSkipWithoutACooldownStaysAPlainRefusal pins the skip that is not a
+// wait: a model no account of the connection can serve is refused as a
+// no-route, and nothing is parked into a cooldown that never happened.
+func TestSkipWithoutACooldownStaysAPlainRefusal(t *testing.T) {
+	clock := testkit.NewFakeClock(time.Now())
+	ctx := context.Background()
+	db := testkit.OpenTestDB(t)
+	upstream := testkit.MockUpstream(t, map[string]string{})
+	testkit.CustomProvider(t, db, testkit.Upstream{
+		ID: "openai", Label: "OpenAI", APIFormat: catalog.FormatOpenAIChat,
+		BaseURL: upstream.URL, Auth: catalog.AuthAPIKey,
+		Models: []string{"alpha"}, ModelsFormat: catalog.ModelsNone,
+	})
+	catalogView := testkit.ReloadCatalog(t, db, unavailable{})
+	pools := account.NewManagerWithOptions(storedCredentials{}, noSecrets{}, account.ManagerOptions{
+		Clock: clock, FailoverBackoff: []time.Duration{15 * time.Minute},
+	})
+	pools.GetPool("openai").Add(account.PoolEntry{
+		ID: "one", ProviderID: "openai", Status: account.StatusActive,
+	})
+
+	router := routing.New(routing.Options{Catalog: catalogView, Pools: pools, Clock: clock})
+	_, err := router.Plan(ctx, routing.Request{Model: "openai/alpha"})
+	if !errors.Is(err, routing.ErrNoRoute) {
+		t.Fatalf("Plan() error = %v, want a no-route refusal", err)
+	}
+	var cooling *routing.CoolingError
+	if errors.As(err, &cooling) {
+		t.Fatalf("Plan() error = %v, want a plain refusal and no cooldown named", err)
+	}
+}
+
 // TestRouteReasonNamesTheKindWithoutIdentifiers pins the stored value a usage
 // row carries for how a request resolved: the kind's own name, so the stored
 // row stays free of any identifier.
