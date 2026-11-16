@@ -70,6 +70,7 @@
       "health": "Daemon",
       "healthRunning": "läuft",
       "healthDown": "nicht erreichbar",
+      "starOnGithub": "Auf GitHub mit Stern markieren",
       "updateAvailable": "Update verfügbar",
       "quickAdd": "Hinzufügen",
       "quickAddAccount": "Anbieter-Konto",

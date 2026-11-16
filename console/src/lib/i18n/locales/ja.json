@@ -70,6 +70,7 @@
       "health": "デーモン",
       "healthRunning": "実行中",
       "healthDown": "到達不可",
+      "starOnGithub": "GitHubでスターを付ける",
       "updateAvailable": "アップデートがあります",
       "quickAdd": "追加",
       "quickAddAccount": "プロバイダーアカウント",

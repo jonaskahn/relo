@@ -70,6 +70,7 @@
       "health": "daemon",
       "healthRunning": "běží",
       "healthDown": "nedostupný",
+      "starOnGithub": "Dát hvězdu na GitHubu",
       "updateAvailable": "Je k dispozici aktualizace",
       "quickAdd": "Přidat",
       "quickAddAccount": "Účet poskytovatele",

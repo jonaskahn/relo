@@ -70,6 +70,7 @@
       "health": "الخادم",
       "healthRunning": "قيد التشغيل",
       "healthDown": "غير متاح",
+      "starOnGithub": "ضع نجمة على GitHub",
       "updateAvailable": "يتوفر تحديث",
       "quickAdd": "إضافة",
       "quickAddAccount": "حساب مزوّد",

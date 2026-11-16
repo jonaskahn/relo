@@ -70,6 +70,7 @@
       "health": "Daemon",
       "healthRunning": "rulează",
       "healthDown": "inaccesibil",
+      "starOnGithub": "Dă o stea pe GitHub",
       "updateAvailable": "Actualizare disponibilă",
       "quickAdd": "Adaugă",
       "quickAddAccount": "Cont de furnizor",

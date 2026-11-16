@@ -70,6 +70,7 @@
       "health": "Daemon",
       "healthRunning": "em execução",
       "healthDown": "inacessível",
+      "starOnGithub": "Dar uma estrela no GitHub",
       "updateAvailable": "Atualização disponível",
       "quickAdd": "Adicionar",
       "quickAddAccount": "Conta de provedor",

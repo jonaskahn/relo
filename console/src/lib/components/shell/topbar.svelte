@@ -40,6 +40,8 @@
 				: $t('ui.topbar.collapseMenu')
 	);
 	const menuExpanded = $derived((navDrawer.pinned && !navDrawer.compact) || navDrawer.overlay);
+
+	const REPO_URL = 'https://github.com/jonaskahn/relo';
 </script>
 
 <header
@@ -68,6 +70,16 @@
 	<div class="flex-1"></div>
 
 	<HealthPill class="hidden sm:inline-flex" />
+	<!-- Hidden on a phone, where the topbar has no room for a label. -->
+	<Button
+		variant="outline"
+		size="sm"
+		class="hidden sm:inline-flex"
+		onclick={() => window.open(REPO_URL, '_blank', 'noopener,noreferrer')}
+	>
+		<Icon name="brand-github" size={16} />
+		{$t('ui.topbar.starOnGithub')}
+	</Button>
 	<SupportMenu />
 
 	<DropdownMenu.Root>

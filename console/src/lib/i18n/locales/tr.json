@@ -70,6 +70,7 @@
       "health": "Daemon",
       "healthRunning": "çalışıyor",
       "healthDown": "erişilemiyor",
+      "starOnGithub": "GitHub'da yıldızla",
       "updateAvailable": "Güncelleme var",
       "quickAdd": "Hızlı ekleme",
       "quickAddAccount": "Sağlayıcı hesabı",

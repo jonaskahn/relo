@@ -70,6 +70,7 @@
       "health": "Daemon",
       "healthRunning": "running",
       "healthDown": "unreachable",
+      "starOnGithub": "Star on GitHub",
       "updateAvailable": "Update available",
       "quickAdd": "Add",
       "quickAddAccount": "Provider account",

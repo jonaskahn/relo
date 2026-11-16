@@ -70,6 +70,7 @@
       "health": "常駐程式",
       "healthRunning": "執行中",
       "healthDown": "無法連線",
+      "starOnGithub": "在 GitHub 上加星號",
       "updateAvailable": "有可用更新",
       "quickAdd": "新增",
       "quickAddAccount": "供應商賬號",

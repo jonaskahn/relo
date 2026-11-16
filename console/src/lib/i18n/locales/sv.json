@@ -70,6 +70,7 @@
       "health": "Daemon",
       "healthRunning": "körs",
       "healthDown": "oåtkomlig",
+      "starOnGithub": "Stjärnmärk på GitHub",
       "updateAvailable": "Uppdatering tillgänglig",
       "quickAdd": "Lägg till",
       "quickAddAccount": "Leverantörskonto",

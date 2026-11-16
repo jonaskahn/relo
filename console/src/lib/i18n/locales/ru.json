@@ -70,6 +70,7 @@
       "health": "Служба",
       "healthRunning": "работает",
       "healthDown": "недоступен",
+      "starOnGithub": "Поставить звезду на GitHub",
       "updateAvailable": "Доступно обновление",
       "quickAdd": "Добавить",
       "quickAddAccount": "Аккаунт провайдера",
