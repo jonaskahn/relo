@@ -1935,19 +1935,34 @@
           "cowork": {
             "title": "Kieruj Cowork",
             "hint": "Wysyła do Relo żądania Cowork z Claude Desktop dla modeli powiązanych z Relo. Cowork działa we własnej maszynie wirtualnej, więc jest kierowany do Relo przez sieciowe proxy wyboru modelu.",
-            "warning": "Dzięki temu Relo kończy TLS dla api.anthropic.com w ruchu Cowork na tym komputerze. Certyfikat Relo, któremu system już ufa, obejmuje ten host. Warunki Anthropic mogą uznać to za naruszenie, a konto może zostać zawieszone. Powiązane modele całkowicie opuszczają Anthropic. Potem zamknij Claude Desktop całkowicie i uruchom nową sesję Cowork. Jeśli Cowork zakończy się wtedy błędem certyfikatu, wyłącz tę opcję. Włącz ją tylko, jeśli akceptujesz to ryzyko.",
+            "warning": "Dzięki temu Relo kończy TLS dla api.anthropic.com w ruchu Cowork na tym komputerze i prosi system o zaufanie do certyfikatu Relo dla wszystkich aplikacji i wszystkich użytkowników, co wymaga zgody administratora. Certyfikat jest ograniczony do claude.ai i api.anthropic.com, ale wszystko, co działa jako ty, może odczytać plik jego klucza prywatnego (ca.key, obok certyfikatu). Zaufanie trwa, dopóki go nie usuniesz; Relo usuwa je także, gdy Claude Desktop opuszcza tryb proxy, zostaje usunięty albo Relo zostaje odinstalowane. Warunki Anthropic mogą uznać to za naruszenie, a konto może zostać zawieszone. Powiązane modele całkowicie opuszczają Anthropic. Potem zamknij Claude Desktop całkowicie i uruchom nową sesję Cowork. Jeśli Cowork zakończy się błędem certyfikatu, wyłącz tę opcję. Włącz ją tylko, jeśli akceptujesz to ryzyko.",
             "enable": "Włącz kierowanie Cowork",
             "seen": "Połączenia z api.anthropic.com przez wybór modelu: {count}",
             "reasonOff": "Wyłączone. Cowork idzie prosto do Anthropic.",
             "reasonActive": "Włączone. Żądania Cowork dla powiązanych modeli trafiają do Relo.",
             "reasonRestart": "Włączone. Zamknij Claude Desktop całkowicie, a potem uruchom nową sesję Cowork.",
             "reasonNeedsPicker": "Najpierw włącz wybór modelu w Desktop.",
-            "reasonTrustMissing": "System nie ufa certyfikatowi Relo dla api.anthropic.com, więc Cowork przechodzi bez zmian."
+            "reasonTrustMissing": "System nie ufa certyfikatowi Relo dla api.anthropic.com, więc Cowork przechodzi bez zmian.",
+            "reasonTrustDeclined": "Zgoda systemu została odrzucona, więc nic się nie zmieniło. Spróbuj ponownie albo zainstaluj certyfikat samodzielnie według kroków poniżej.",
+            "reasonTrustUnavailable": "Ten komputer nie może sam poprosić o zgodę. Zainstaluj certyfikat samodzielnie według kroków poniżej.",
+            "reasonTrustRemains": "Certyfikat Relo nadal jest zaufany w całym systemie. Usuń go, gdy przestanie być potrzebny.",
+            "removeTrust": "Usuń zaufanie systemowe",
+            "systemTrust": "Zaufanie systemowe",
+            "manualTitle": "Zrób to sam",
+            "manualInstallIntro": "Zainstaluj certyfikat tymi poleceniami (proszą o zgodę administratora) albo skorzystaj ze strony z instrukcjami. Potem naciśnij Sprawdź ponownie.",
+            "manualRemoveIntro": "Relo nie zdołał usunąć certyfikatu. Usuń go tymi poleceniami albo skorzystaj ze strony z instrukcjami. Potem naciśnij Sprawdź ponownie.",
+            "manualPath": "Plik certyfikatu",
+            "manualGuide": "Otwórz instrukcje",
+            "manualCheckAgain": "Sprawdź ponownie",
+            "manualCopyPrompt": "Skopiuj prompt dla swojego agenta kodu",
+            "agentPromptInstall": "Zainstaluj dla mnie jeden certyfikat w całym systemie i nic więcej.\n1. Plik to {path}. Najpierw oblicz jego odcisk SHA-256 i sprawdź, czy wynosi {sha256}. Jeśli się różni, zatrzymaj się i powiedz mi.\n2. Zaufaj tylko temu plikowi jako certyfikatowi głównemu w systemie {os}. Zapytaj mnie przed każdym poleceniem wymagającym uprawnień administratora. Polecenia:\n{commands}\n3. Nie ufaj żadnemu innemu certyfikatowi i nie zmieniaj żadnego innego ustawienia.\n4. Sprawdź poleceniem:\n{check}\nPotem powiedz mi, co zobaczyłeś.",
+            "agentPromptRemove": "Usuń dla mnie jeden certyfikat z zaufania systemowego i nic więcej.\n1. To certyfikat o odcisku SHA-256 {sha256} (plik {path}). Sprawdź, czy plik się zgadza, zanim cokolwiek usuniesz.\n2. Usuń tylko ten certyfikat w systemie {os}. Zapytaj mnie przed każdym poleceniem wymagającym uprawnień administratora. Polecenia:\n{commands}\n3. Nie usuwaj żadnego innego certyfikatu.\n4. Sprawdź poleceniem:\n{check}\nPotem powiedz mi, co zobaczyłeś."
           }
         },
         "claudeModeUnsaved": "Jeszcze nie zapisano. Naciśnij Zapisz, aby zastosować ten tryb.",
         "claudeModeDesktopOwnerNote": "Claude Desktop korzysta z tego samego połączenia proxy co Claude Code, więc zapis przełącza też Claude Code w tryb proxy.",
-        "claudeModeProxyInUse": "Claude Desktop nadal używa tego proxy. Najpierw przywróć poprzedni tryb Claude Desktop."
+        "claudeModeProxyInUse": "Claude Desktop nadal używa tego proxy. Najpierw przywróć poprzedni tryb Claude Desktop.",
+        "claudeModeTrustRemains": "Relo nie zdołał usunąć zainstalowanego certyfikatu, więc nic się nie zmieniło. Otwórz sekcję wyboru modelu w Desktop, usuń go według pokazanych kroków i spróbuj ponownie."
       },
       "chatPage": {
         "title": "Czat",

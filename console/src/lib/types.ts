@@ -806,7 +806,23 @@ export interface DesktopPicker {
 		readonly enabled: boolean;
 		readonly armed: boolean;
 		readonly reason: string;
+		/** The OS's system-wide trust of Relo's certificate. */
+		readonly trust: 'trusted' | 'untrusted' | 'unknown' | 'unsupported' | '';
+		/** How to install or remove the certificate by hand. Null where nothing is supported. */
+		readonly manual: DesktopPickerManual | null;
 	};
+}
+
+/** What an operator needs to install or remove Relo's certificate without Relo's help. */
+export interface DesktopPickerManual {
+	readonly os: string;
+	readonly cert_path: string;
+	readonly sha1: string;
+	readonly sha256: string;
+	readonly docs_url: string;
+	readonly install: string;
+	readonly remove: string;
+	readonly check: string;
 }
 
 /** The body that sets or removes bindings. */

@@ -1935,19 +1935,34 @@
           "cowork": {
             "title": "Định tuyến Cowork",
             "hint": "Gửi các yêu cầu Cowork trong Claude Desktop cho những mô hình bạn đã gắn với Relo tới Relo. Cowork chạy trong máy ảo riêng, nên nó được hướng tới Relo qua proxy mạng của bộ chọn.",
-            "warning": "Việc này khiến Relo kết thúc TLS cho api.anthropic.com với lưu lượng của Cowork trên máy này. Chứng chỉ Relo mà hệ thống của bạn đã tin cậy bao gồm máy chủ đó. Điều khoản của Anthropic có thể coi đó là vi phạm, và tài khoản có thể bị đình chỉ. Các mô hình bạn gắn sẽ rời hoàn toàn khỏi Anthropic. Sau đó hãy thoát hoàn toàn Claude Desktop và bắt đầu một phiên Cowork mới. Nếu Cowork khi đó lỗi chứng chỉ, hãy tắt tính năng này. Chỉ bật nếu bạn chấp nhận rủi ro đó.",
+            "warning": "Việc này khiến Relo kết thúc TLS cho api.anthropic.com với lưu lượng của Cowork trên máy này và yêu cầu hệ thống của bạn tin cậy chứng chỉ Relo cho mọi ứng dụng và mọi người dùng, điều này cần quản trị viên chấp thuận. Chứng chỉ chỉ giới hạn cho claude.ai và api.anthropic.com, nhưng bất cứ thứ gì chạy dưới tên bạn đều đọc được tệp khóa riêng của nó (ca.key, cạnh chứng chỉ). Sự tin cậy giữ nguyên cho đến khi bạn gỡ; Relo cũng gỡ nó khi Claude Desktop rời chế độ proxy, bị gỡ hoặc Relo bị gỡ cài đặt. Điều khoản của Anthropic có thể coi đó là vi phạm, và tài khoản có thể bị đình chỉ. Các mô hình bạn gắn sẽ rời hoàn toàn khỏi Anthropic. Sau đó hãy thoát hoàn toàn Claude Desktop và bắt đầu phiên Cowork mới. Nếu Cowork lỗi chứng chỉ, hãy tắt tính năng này. Chỉ bật nếu bạn chấp nhận rủi ro đó.",
             "enable": "Bật định tuyến Cowork",
             "seen": "Kết nối tới api.anthropic.com qua bộ chọn: {count}",
             "reasonOff": "Đang tắt. Cowork đi thẳng tới Anthropic.",
             "reasonActive": "Đang bật. Yêu cầu của Cowork cho mô hình đã gắn đi tới Relo.",
             "reasonRestart": "Đang bật. Hãy thoát hoàn toàn Claude Desktop, rồi bắt đầu một phiên Cowork mới.",
             "reasonNeedsPicker": "Hãy bật bộ chọn của Desktop trước.",
-            "reasonTrustMissing": "Hệ thống không tin cậy chứng chỉ của Relo cho api.anthropic.com, nên Cowork đi qua không đổi."
+            "reasonTrustMissing": "Hệ thống không tin cậy chứng chỉ của Relo cho api.anthropic.com, nên Cowork đi qua không đổi.",
+            "reasonTrustDeclined": "Quản trị viên hệ thống đã từ chối chấp thuận, nên chưa có gì thay đổi. Hãy thử lại hoặc tự cài chứng chỉ theo các bước bên dưới.",
+            "reasonTrustUnavailable": "Máy này không tự yêu cầu được sự chấp thuận. Hãy tự cài chứng chỉ theo các bước bên dưới.",
+            "reasonTrustRemains": "Chứng chỉ Relo vẫn được tin cậy trên toàn hệ thống. Hãy gỡ khi bạn không cần nữa.",
+            "removeTrust": "Gỡ tin cậy hệ thống",
+            "systemTrust": "Tin cậy toàn hệ thống",
+            "manualTitle": "Tự làm",
+            "manualInstallIntro": "Cài chứng chỉ bằng các lệnh này (chúng yêu cầu quản trị viên chấp thuận) hoặc làm theo trang hướng dẫn. Sau đó bấm Kiểm tra lại.",
+            "manualRemoveIntro": "Relo không gỡ được chứng chỉ. Hãy gỡ bằng các lệnh này hoặc làm theo trang hướng dẫn. Sau đó bấm Kiểm tra lại.",
+            "manualPath": "Tệp chứng chỉ",
+            "manualGuide": "Mở hướng dẫn",
+            "manualCheckAgain": "Kiểm tra lại",
+            "manualCopyPrompt": "Sao chép lời nhắc cho tác tử mã của bạn",
+            "agentPromptInstall": "Hãy cài cho tôi đúng một chứng chỉ, trên toàn hệ thống, và không làm gì khác.\n1. Tệp là {path}. Trước tiên hãy tính dấu vân tay SHA-256 của nó và kiểm tra xem có phải {sha256} không. Nếu khác, hãy dừng lại và báo tôi.\n2. Chỉ tin cậy tệp đó làm chứng chỉ gốc trên {os}. Hỏi tôi trước mọi lệnh cần quyền quản trị. Các lệnh:\n{commands}\n3. Không tin cậy chứng chỉ nào khác và không đổi cài đặt nào khác.\n4. Kiểm tra bằng:\n{check}\nSau đó cho tôi biết bạn đã thấy gì.",
+            "agentPromptRemove": "Hãy gỡ cho tôi đúng một chứng chỉ khỏi sự tin cậy của hệ thống, và không làm gì khác.\n1. Đó là chứng chỉ có dấu vân tay SHA-256 {sha256} (tệp {path}). Kiểm tra tệp khớp trước khi gỡ bất cứ thứ gì.\n2. Chỉ gỡ chứng chỉ đó trên {os}. Hỏi tôi trước mọi lệnh cần quyền quản trị. Các lệnh:\n{commands}\n3. Không gỡ chứng chỉ nào khác.\n4. Kiểm tra bằng:\n{check}\nSau đó cho tôi biết bạn đã thấy gì."
           }
         },
         "claudeModeUnsaved": "Chưa lưu. Nhấn Lưu để áp dụng chế độ này.",
         "claudeModeDesktopOwnerNote": "Claude Desktop dùng chung kết nối proxy của Claude Code, nên khi lưu, Claude Code cũng được chuyển sang chế độ proxy.",
-        "claudeModeProxyInUse": "Claude Desktop vẫn đang dùng proxy này. Hãy chuyển Claude Desktop về trước."
+        "claudeModeProxyInUse": "Claude Desktop vẫn đang dùng proxy này. Hãy chuyển Claude Desktop về trước.",
+        "claudeModeTrustRemains": "Relo không gỡ được chứng chỉ mà nó đã cài, nên chưa có gì thay đổi. Hãy mở phần bộ chọn của Desktop, gỡ bằng các bước được hiển thị rồi thử lại."
       },
       "chatPage": {
         "title": "Trò chuyện",

@@ -1935,19 +1935,34 @@
           "cowork": {
             "title": "Cowork を経由させる",
             "hint": "Claude Desktop の Cowork が出すリクエストのうち、Relo に紐付けたモデルのものを Relo に送ります。Cowork は専用の仮想マシンで動くため、ピッカーのネットワークプロキシ経由で Relo に向けます。",
-            "warning": "これにより、Relo はこのマシンで Cowork の通信に限って api.anthropic.com の TLS を終端します。システムがすでに信頼している Relo の証明書は、そのホストも対象にしています。Anthropic の規約はこれを違反とみなす可能性があり、アカウントが停止されることがあります。紐付けたモデルは Anthropic から完全に離れます。その後、Claude Desktop を完全に終了し、新しい Cowork セッションを始めてください。Cowork が証明書エラーで失敗する場合は、これをオフにしてください。このリスクを受け入れる場合にのみオンにしてください。",
+            "warning": "これにより、Relo はこのマシンで Cowork の通信に限って api.anthropic.com の TLS を終端し、すべてのアプリとすべてのユーザーについて Relo の証明書を信頼するようシステムに求めます。この操作には管理者の承認が必要です。証明書は claude.ai と api.anthropic.com に限定されていますが、あなたとして動くものは何でも、その秘密鍵ファイル（証明書の隣の ca.key）を読み取れます。信頼は削除するまで残り、Claude Desktop がプロキシモードを抜けたとき、削除されたとき、または Relo をアンインストールしたときにも Relo が削除します。Anthropic の規約はこれを違反とみなす可能性があり、アカウントが停止されることがあります。紐付けたモデルは Anthropic から完全に離れます。その後、Claude Desktop を完全に終了し、新しい Cowork セッションを始めてください。Cowork が証明書エラーで失敗する場合は、これをオフにしてください。このリスクを受け入れる場合にのみオンにしてください。",
             "enable": "Cowork の経由をオンにする",
             "seen": "ピッカー経由の api.anthropic.com への接続: {count}",
             "reasonOff": "オフ。Cowork は Anthropic に直接つながります。",
             "reasonActive": "オン。紐付けたモデルの Cowork リクエストは Relo に届きます。",
             "reasonRestart": "オン。Claude Desktop を完全に終了し、新しい Cowork セッションを始めてください。",
             "reasonNeedsPicker": "先に Desktop のピッカーをオンにしてください。",
-            "reasonTrustMissing": "システムが api.anthropic.com に対する Relo の証明書を信頼していないため、Cowork はそのまま通過します。"
+            "reasonTrustMissing": "システムが api.anthropic.com に対する Relo の証明書を信頼していないため、Cowork はそのまま通過します。",
+            "reasonTrustDeclined": "システムの承認が拒否されたため、何も変更されていません。もう一度試すか、下の手順で証明書を自分でインストールしてください。",
+            "reasonTrustUnavailable": "このマシンは自分では承認を求められません。下の手順で証明書を自分でインストールしてください。",
+            "reasonTrustRemains": "Relo の証明書は今もシステム全体で信頼されています。不要になったら削除してください。",
+            "removeTrust": "システム全体の信頼を削除",
+            "systemTrust": "システム全体の信頼",
+            "manualTitle": "自分で行う",
+            "manualInstallIntro": "これらのコマンドで証明書をインストールするか（管理者の承認を求められます）、手順のページに従ってください。その後、もう一度確認を押してください。",
+            "manualRemoveIntro": "Relo は証明書を削除できませんでした。これらのコマンドで削除するか、手順のページに従ってください。その後、もう一度確認を押してください。",
+            "manualPath": "証明書ファイル",
+            "manualGuide": "手順を開く",
+            "manualCheckAgain": "もう一度確認",
+            "manualCopyPrompt": "コーディングエージェント用のプロンプトをコピー",
+            "agentPromptInstall": "証明書を1つだけ、システム全体にインストールしてください。それ以外は何もしないでください。\n1. ファイルは {path} です。まずその SHA-256 フィンガープリントを計算し、{sha256} と一致するか確認してください。違う場合は止めて私に知らせてください。\n2. {os} で、そのファイルだけをルート証明書として信頼してください。管理者権限が必要なコマンドの前には必ず私に尋ねてください。コマンド:\n{commands}\n3. ほかの証明書を信頼したり、ほかの設定を変えたりしないでください。\n4. 次で確認してください:\n{check}\nその後、確認した内容を教えてください。",
+            "agentPromptRemove": "証明書を1つだけ、システムの信頼から削除してください。それ以外は何もしないでください。\n1. SHA-256 フィンガープリントが {sha256} の証明書です（ファイル {path}）。何かを削除する前に、ファイルが一致することを確認してください。\n2. {os} で、その証明書だけを削除してください。管理者権限が必要なコマンドの前には必ず私に尋ねてください。コマンド:\n{commands}\n3. ほかの証明書は削除しないでください。\n4. 次で確認してください:\n{check}\nその後、確認した内容を教えてください。"
           }
         },
         "claudeModeUnsaved": "まだ保存されていません。保存を押すとこのモードが適用されます。",
         "claudeModeDesktopOwnerNote": "Claude Desktop は Claude Code のプロキシ配線を共有するため、保存すると Claude Code もプロキシモードに移ります。",
-        "claudeModeProxyInUse": "Claude Desktop がまだこのプロキシを使っています。先に Claude Desktop を元に戻してください。"
+        "claudeModeProxyInUse": "Claude Desktop がまだこのプロキシを使っています。先に Claude Desktop を元に戻してください。",
+        "claudeModeTrustRemains": "Relo は自分でインストールした証明書を削除できなかったため、何も変更されていません。Desktop のピッカーの項目を開き、表示された手順で削除してから、もう一度お試しください。"
       },
       "chatPage": {
         "title": "チャット",

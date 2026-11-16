@@ -1935,19 +1935,34 @@
           "cowork": {
             "title": "Dirigera Cowork",
             "hint": "Skickar Claude Desktops Cowork-förfrågningar för modeller du har bundit till Relo till Relo. Cowork körs i en egen virtuell maskin och leds därför till Relo via väljarens nätverksproxy.",
-            "warning": "Detta gör att Relo avslutar TLS för api.anthropic.com för Coworks trafik på den här datorn. Det Relo-certifikat som ditt system redan litar på täcker den värden. Anthropics villkor kan se det som ett brott och ett konto kan stängas av. Modeller du binder lämnar Anthropic helt. Avsluta Claude Desktop helt efteråt och starta en ny Cowork-session. Om Cowork då misslyckas med ett certifikatfel, slå av detta. Slå på det bara om du accepterar den risken.",
+            "warning": "Detta gör att Relo avslutar TLS för api.anthropic.com för Coworks trafik på den här datorn och ber ditt system lita på Relos certifikat för alla appar och alla användare, vilket kräver en administratörs godkännande. Certifikatet är begränsat till claude.ai och api.anthropic.com, men allt som körs som du kan läsa dess privata nyckelfil (ca.key, bredvid certifikatet). Förtroendet finns kvar tills du tar bort det; Relo tar också bort det när Claude Desktop lämnar proxyläget, tas bort eller Relo avinstalleras. Anthropics villkor kan se det som ett brott och ett konto kan stängas av. Modeller du binder lämnar Anthropic helt. Avsluta Claude Desktop helt efteråt och starta en ny Cowork-session. Om Cowork misslyckas med ett certifikatfel, slå av detta. Slå på det bara om du accepterar den risken.",
             "enable": "Slå på Cowork-dirigering",
             "seen": "Anslutningar till api.anthropic.com via väljaren: {count}",
             "reasonOff": "Av. Cowork går direkt till Anthropic.",
             "reasonActive": "På. Coworks förfrågningar för bundna modeller går till Relo.",
             "reasonRestart": "På. Avsluta Claude Desktop helt och starta sedan en ny Cowork-session.",
             "reasonNeedsPicker": "Slå först på Desktops väljare.",
-            "reasonTrustMissing": "Systemet litar inte på Relos certifikat för api.anthropic.com, så Cowork går igenom oförändrat."
+            "reasonTrustMissing": "Systemet litar inte på Relos certifikat för api.anthropic.com, så Cowork går igenom oförändrat.",
+            "reasonTrustDeclined": "Systemets godkännande avvisades, så ingenting ändrades. Försök igen eller installera certifikatet själv med stegen nedan.",
+            "reasonTrustUnavailable": "Den här datorn kan inte be om godkännandet själv. Installera certifikatet själv med stegen nedan.",
+            "reasonTrustRemains": "Relos certifikat är fortfarande betrott i hela systemet. Ta bort det när du inte längre behöver det.",
+            "removeTrust": "Ta bort systemförtroendet",
+            "systemTrust": "Systemomfattande förtroende",
+            "manualTitle": "Gör det själv",
+            "manualInstallIntro": "Installera certifikatet med de här kommandona (de ber om en administratörs godkännande) eller följ instruktionssidan. Tryck sedan på Kontrollera igen.",
+            "manualRemoveIntro": "Relo kunde inte ta bort certifikatet. Ta bort det med de här kommandona eller följ instruktionssidan. Tryck sedan på Kontrollera igen.",
+            "manualPath": "Certifikatfil",
+            "manualGuide": "Öppna instruktionerna",
+            "manualCheckAgain": "Kontrollera igen",
+            "manualCopyPrompt": "Kopiera en prompt till din kodagent",
+            "agentPromptInstall": "Installera ett enda certifikat åt mig, i hela systemet, och inget annat.\n1. Filen är {path}. Beräkna först dess SHA-256-fingeravtryck och kontrollera att det är {sha256}. Om det avviker, stanna och säg till mig.\n2. Lita bara på den filen som rotcertifikat på {os}. Fråga mig före varje kommando som kräver administratörsrättigheter. Kommandon:\n{commands}\n3. Lita inte på något annat certifikat och ändra ingen annan inställning.\n4. Kontrollera med:\n{check}\nBerätta sedan vad du såg.",
+            "agentPromptRemove": "Ta bort ett enda certifikat ur systemförtroendet åt mig, och inget annat.\n1. Det är certifikatet med SHA-256-fingeravtrycket {sha256} (filen {path}). Kontrollera att filen stämmer innan du tar bort något.\n2. Ta bara bort det certifikatet på {os}. Fråga mig före varje kommando som kräver administratörsrättigheter. Kommandon:\n{commands}\n3. Ta inte bort något annat certifikat.\n4. Kontrollera med:\n{check}\nBerätta sedan vad du såg."
           }
         },
         "claudeModeUnsaved": "Inte sparat än. Tryck på Spara för att tillämpa läget.",
         "claudeModeDesktopOwnerNote": "Claude Desktop delar Claude Codes proxykoppling, så att spara flyttar också Claude Code till proxyläge.",
-        "claudeModeProxyInUse": "Claude Desktop använder fortfarande den här proxyn. Växla tillbaka Claude Desktop först."
+        "claudeModeProxyInUse": "Claude Desktop använder fortfarande den här proxyn. Växla tillbaka Claude Desktop först.",
+        "claudeModeTrustRemains": "Relo kunde inte ta bort certifikatet som det installerade, så ingenting ändrades. Öppna avsnittet för Desktops modellväljare, ta bort det med stegen som visas och försök igen."
       },
       "chatPage": {
         "title": "Chatt",

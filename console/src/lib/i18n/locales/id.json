@@ -1935,19 +1935,34 @@
           "cowork": {
             "title": "Arahkan Cowork",
             "hint": "Mengirim permintaan Cowork di Claude Desktop untuk model yang Anda ikat ke Relo ke Relo. Cowork berjalan di mesin virtualnya sendiri, jadi diarahkan ke Relo lewat proxy jaringan pemilih.",
-            "warning": "Ini membuat Relo mengakhiri TLS untuk api.anthropic.com pada lalu lintas Cowork di mesin ini. Sertifikat Relo yang sudah dipercaya sistem Anda mencakup host itu. Ketentuan Anthropic dapat menganggapnya pelanggaran, dan akun dapat ditangguhkan. Model yang Anda ikat meninggalkan Anthropic sepenuhnya. Setelah itu, tutup Claude Desktop sepenuhnya dan mulai sesi Cowork baru. Jika Cowork lalu gagal dengan galat sertifikat, matikan ini. Aktifkan hanya jika Anda menerima risiko itu.",
+            "warning": "Ini membuat Relo mengakhiri TLS untuk api.anthropic.com pada lalu lintas Cowork di mesin ini dan meminta sistem Anda memercayai sertifikat Relo untuk semua aplikasi dan semua pengguna, yang memerlukan persetujuan administrator. Sertifikat dibatasi untuk claude.ai dan api.anthropic.com, tetapi apa pun yang berjalan sebagai Anda dapat membaca berkas kunci privatnya (ca.key, di samping sertifikat). Kepercayaan tetap ada sampai Anda menghapusnya; Relo juga menghapusnya saat Claude Desktop keluar dari mode proxy, dihapus, atau Relo dicopot. Ketentuan Anthropic dapat menganggapnya pelanggaran, dan akun dapat ditangguhkan. Model yang Anda ikat meninggalkan Anthropic sepenuhnya. Setelah itu, tutup Claude Desktop sepenuhnya dan mulai sesi Cowork baru. Jika Cowork gagal dengan galat sertifikat, matikan ini. Aktifkan hanya jika Anda menerima risiko itu.",
             "enable": "Aktifkan pengarahan Cowork",
             "seen": "Koneksi ke api.anthropic.com lewat pemilih: {count}",
             "reasonOff": "Mati. Cowork langsung ke Anthropic.",
             "reasonActive": "Aktif. Permintaan Cowork untuk model terikat menuju Relo.",
             "reasonRestart": "Aktif. Tutup Claude Desktop sepenuhnya, lalu mulai sesi Cowork baru.",
             "reasonNeedsPicker": "Aktifkan pemilih Desktop terlebih dahulu.",
-            "reasonTrustMissing": "Sistem tidak mempercayai sertifikat Relo untuk api.anthropic.com, sehingga Cowork lewat tanpa diubah."
+            "reasonTrustMissing": "Sistem tidak mempercayai sertifikat Relo untuk api.anthropic.com, sehingga Cowork lewat tanpa diubah.",
+            "reasonTrustDeclined": "Persetujuan sistem ditolak, jadi tidak ada yang diubah. Coba lagi atau pasang sertifikat sendiri dengan langkah di bawah.",
+            "reasonTrustUnavailable": "Mesin ini tidak dapat meminta persetujuan sendiri. Pasang sertifikat sendiri dengan langkah di bawah.",
+            "reasonTrustRemains": "Sertifikat Relo masih dipercaya di seluruh sistem. Hapus saat tidak lagi diperlukan.",
+            "removeTrust": "Hapus kepercayaan sistem",
+            "systemTrust": "Kepercayaan seluruh sistem",
+            "manualTitle": "Lakukan sendiri",
+            "manualInstallIntro": "Pasang sertifikat dengan perintah ini (perintah ini meminta persetujuan administrator) atau ikuti halaman petunjuk. Lalu tekan Periksa lagi.",
+            "manualRemoveIntro": "Relo tidak dapat menghapus sertifikat. Hapus dengan perintah ini atau ikuti halaman petunjuk. Lalu tekan Periksa lagi.",
+            "manualPath": "Berkas sertifikat",
+            "manualGuide": "Buka petunjuk",
+            "manualCheckAgain": "Periksa lagi",
+            "manualCopyPrompt": "Salin prompt untuk agen kode Anda",
+            "agentPromptInstall": "Pasangkan satu sertifikat untuk saya, di seluruh sistem, dan tidak ada yang lain.\n1. Berkasnya {path}. Pertama hitung sidik jari SHA-256-nya dan pastikan nilainya {sha256}. Jika berbeda, berhenti dan beri tahu saya.\n2. Percayai hanya berkas itu sebagai sertifikat akar di {os}. Tanyakan kepada saya sebelum perintah apa pun yang membutuhkan hak administrator. Perintah:\n{commands}\n3. Jangan percayai sertifikat lain dan jangan ubah pengaturan lain.\n4. Periksa dengan:\n{check}\nLalu beri tahu saya apa yang Anda lihat.",
+            "agentPromptRemove": "Hapuskan satu sertifikat dari kepercayaan sistem untuk saya, dan tidak ada yang lain.\n1. Itu adalah sertifikat dengan sidik jari SHA-256 {sha256} (berkas {path}). Pastikan berkasnya cocok sebelum menghapus apa pun.\n2. Hapus hanya sertifikat itu di {os}. Tanyakan kepada saya sebelum perintah apa pun yang membutuhkan hak administrator. Perintah:\n{commands}\n3. Jangan hapus sertifikat lain.\n4. Periksa dengan:\n{check}\nLalu beri tahu saya apa yang Anda lihat."
           }
         },
         "claudeModeUnsaved": "Belum disimpan. Tekan Simpan untuk menerapkan mode ini.",
         "claudeModeDesktopOwnerNote": "Claude Desktop berbagi sambungan proxy Claude Code, jadi menyimpan juga memindahkan Claude Code ke mode proxy.",
-        "claudeModeProxyInUse": "Claude Desktop masih memakai proxy ini. Kembalikan Claude Desktop terlebih dahulu."
+        "claudeModeProxyInUse": "Claude Desktop masih memakai proxy ini. Kembalikan Claude Desktop terlebih dahulu.",
+        "claudeModeTrustRemains": "Relo tidak dapat menghapus sertifikat yang dipasangnya, jadi tidak ada yang diubah. Buka bagian pemilih Desktop, hapus dengan langkah yang ditampilkan, lalu coba lagi."
       },
       "chatPage": {
         "title": "Obrolan",

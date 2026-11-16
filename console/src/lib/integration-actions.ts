@@ -62,6 +62,9 @@ export const DESKTOP_PICKER_PATH = '/integrations/claude-desktop/picker';
 /** The switch that routes Cowork, which rides the picker. */
 export const DESKTOP_COWORK_PATH = DESKTOP_PICKER_PATH + '/cowork';
 
+/** Removes the system-wide trust Route Cowork asked for. */
+export const DESKTOP_COWORK_TRUST_PATH = DESKTOP_COWORK_PATH + '/trust';
+
 /** Why a set-up would not write yet. An empty code means the plan can be written. */
 export type SetupRefusal = '' | 'not_installed' | 'foreign_key' | 'relative_path' | 'unrecognised';
 

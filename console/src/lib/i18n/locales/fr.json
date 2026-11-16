@@ -1935,19 +1935,34 @@
           "cowork": {
             "title": "Acheminer Cowork",
             "hint": "Envoie à Relo les requêtes de Cowork dans Claude Desktop pour les modèles que vous avez liés. Cowork s'exécute dans sa propre machine virtuelle ; il est donc dirigé vers Relo par le proxy réseau du sélecteur.",
-            "warning": "Relo termine alors TLS pour api.anthropic.com pour le trafic de Cowork sur cette machine. Le certificat Relo que votre système approuve déjà couvre cet hôte. Les conditions d'Anthropic peuvent y voir une violation, et un compte peut être suspendu. Les modèles que vous liez quittent entièrement Anthropic. Quittez ensuite complètement Claude Desktop et démarrez une nouvelle session Cowork. Si Cowork échoue alors avec une erreur de certificat, désactivez cette option. N'activez-la que si vous acceptez ce risque.",
+            "warning": "Relo termine alors TLS pour api.anthropic.com pour le trafic de Cowork sur cette machine, et demande à votre système d'approuver le certificat de Relo pour toutes les applications et tous les utilisateurs, ce qui exige l'accord d'un administrateur. Le certificat est limité à claude.ai et api.anthropic.com, mais tout ce qui s'exécute sous votre compte peut lire sa clé privée (ca.key, à côté du certificat). La confiance reste jusqu'à ce que vous la retiriez ; Relo la retire aussi quand Claude Desktop quitte le mode proxy, est supprimé, ou que Relo est désinstallé. Les conditions d'Anthropic peuvent y voir une violation, et un compte peut être suspendu. Les modèles que vous liez quittent entièrement Anthropic. Quittez ensuite complètement Claude Desktop et démarrez une nouvelle session Cowork. Si Cowork échoue avec une erreur de certificat, désactivez cette option. N'activez-la que si vous acceptez ce risque.",
             "enable": "Activer l'acheminement de Cowork",
             "seen": "Connexions à api.anthropic.com via le sélecteur : {count}",
             "reasonOff": "Désactivé. Cowork va directement chez Anthropic.",
             "reasonActive": "Activé. Les requêtes de Cowork pour les modèles liés vont à Relo.",
             "reasonRestart": "Activé. Quittez complètement Claude Desktop, puis démarrez une nouvelle session Cowork.",
             "reasonNeedsPicker": "Activez d'abord le sélecteur de Desktop.",
-            "reasonTrustMissing": "Le système n'approuve pas le certificat de Relo pour api.anthropic.com ; Cowork passe donc sans modification."
+            "reasonTrustMissing": "Le système n'approuve pas le certificat de Relo pour api.anthropic.com ; Cowork passe donc sans modification.",
+            "reasonTrustDeclined": "L'approbation du système a été refusée, donc rien n'a changé. Réessayez, ou installez le certificat vous-même avec les étapes ci-dessous.",
+            "reasonTrustUnavailable": "Cette machine ne peut pas demander l'approbation elle-même. Installez le certificat vous-même avec les étapes ci-dessous.",
+            "reasonTrustRemains": "Le certificat de Relo est toujours approuvé pour tout le système. Retirez-le quand vous n'en avez plus besoin.",
+            "removeTrust": "Retirer la confiance du système",
+            "systemTrust": "Confiance du système",
+            "manualTitle": "À faire vous-même",
+            "manualInstallIntro": "Installez le certificat avec ces commandes (elles demandent l'accord d'un administrateur) ou suivez la page d'instructions. Appuyez ensuite sur Vérifier à nouveau.",
+            "manualRemoveIntro": "Relo n'a pas pu retirer le certificat. Retirez-le avec ces commandes ou suivez la page d'instructions. Appuyez ensuite sur Vérifier à nouveau.",
+            "manualPath": "Fichier du certificat",
+            "manualGuide": "Ouvrir les instructions",
+            "manualCheckAgain": "Vérifier à nouveau",
+            "manualCopyPrompt": "Copier une consigne pour votre agent de code",
+            "agentPromptInstall": "Installe pour moi un seul certificat, pour tout le système, et rien d'autre.\n1. Le fichier est {path}. Calcule d'abord son empreinte SHA-256 et vérifie qu'elle vaut {sha256}. Si elle diffère, arrête-toi et dis-le-moi.\n2. Approuve uniquement ce fichier comme certificat racine sous {os}. Demande-moi avant toute commande qui exige des droits d'administrateur. Commandes :\n{commands}\n3. N'approuve aucun autre certificat et ne modifie aucun autre réglage.\n4. Vérifie avec :\n{check}\nDis-moi ensuite ce que tu as constaté.",
+            "agentPromptRemove": "Retire pour moi un seul certificat de la confiance du système, et rien d'autre.\n1. C'est le certificat dont l'empreinte SHA-256 est {sha256} (fichier {path}). Vérifie que le fichier correspond avant de retirer quoi que ce soit.\n2. Retire uniquement ce certificat sous {os}. Demande-moi avant toute commande qui exige des droits d'administrateur. Commandes :\n{commands}\n3. Ne retire aucun autre certificat.\n4. Vérifie avec :\n{check}\nDis-moi ensuite ce que tu as constaté."
           }
         },
         "claudeModeUnsaved": "Pas encore enregistré. Appuyez sur Enregistrer pour appliquer ce mode.",
         "claudeModeDesktopOwnerNote": "Claude Desktop partage le câblage proxy de Claude Code : enregistrer fait donc aussi passer Claude Code en mode proxy.",
-        "claudeModeProxyInUse": "Claude Desktop utilise encore ce proxy. Remettez d'abord Claude Desktop dans son mode précédent."
+        "claudeModeProxyInUse": "Claude Desktop utilise encore ce proxy. Remettez d'abord Claude Desktop dans son mode précédent.",
+        "claudeModeTrustRemains": "Relo n'a pas pu retirer le certificat qu'il a installé, donc rien n'a changé. Ouvrez la section du sélecteur de Desktop, retirez-le avec les étapes affichées, puis réessayez."
       },
       "chatPage": {
         "title": "Chat",

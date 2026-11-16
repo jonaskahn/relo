@@ -1935,19 +1935,34 @@
           "cowork": {
             "title": "Cowork omleiden",
             "hint": "Stuurt de Cowork-verzoeken van Claude Desktop voor modellen die je aan Relo hebt gebonden naar Relo. Cowork draait in een eigen virtuele machine en wordt daarom via de netwerkproxy van de kiezer naar Relo geleid.",
-            "warning": "Hierdoor beëindigt Relo op deze computer TLS voor api.anthropic.com voor het verkeer van Cowork. Het Relo-certificaat dat je systeem al vertrouwt, dekt die host. De voorwaarden van Anthropic kunnen dat als overtreding zien en een account kan worden geschorst. Modellen die je bindt, verlaten Anthropic helemaal. Sluit Claude Desktop daarna helemaal af en start een nieuwe Cowork-sessie. Faalt Cowork dan met een certificaatfout, zet dit dan uit. Zet het alleen aan als je dat risico accepteert.",
+            "warning": "Hierdoor beëindigt Relo op deze computer TLS voor api.anthropic.com voor het verkeer van Cowork en vraagt het je systeem het Relo-certificaat te vertrouwen voor alle apps en alle gebruikers, wat goedkeuring van een beheerder vraagt. Het certificaat is beperkt tot claude.ai en api.anthropic.com, maar alles wat als jij draait kan het bestand met de privésleutel lezen (ca.key, naast het certificaat). Het vertrouwen blijft tot je het verwijdert; Relo verwijdert het ook wanneer Claude Desktop de proxymodus verlaat, wordt verwijderd of Relo wordt gedeïnstalleerd. De voorwaarden van Anthropic kunnen dat als overtreding zien en een account kan worden geschorst. Modellen die je bindt, verlaten Anthropic helemaal. Sluit Claude Desktop daarna helemaal af en start een nieuwe Cowork-sessie. Faalt Cowork met een certificaatfout, zet dit dan uit. Zet het alleen aan als je dat risico accepteert.",
             "enable": "Cowork-omleiding aanzetten",
             "seen": "Verbindingen met api.anthropic.com via de kiezer: {count}",
             "reasonOff": "Uit. Cowork gaat rechtstreeks naar Anthropic.",
             "reasonActive": "Aan. De verzoeken van Cowork voor gebonden modellen gaan naar Relo.",
             "reasonRestart": "Aan. Sluit Claude Desktop helemaal af en start dan een nieuwe Cowork-sessie.",
             "reasonNeedsPicker": "Zet eerst de kiezer van Desktop aan.",
-            "reasonTrustMissing": "Het systeem vertrouwt het certificaat van Relo voor api.anthropic.com niet, dus Cowork loopt ongewijzigd door."
+            "reasonTrustMissing": "Het systeem vertrouwt het certificaat van Relo voor api.anthropic.com niet, dus Cowork loopt ongewijzigd door.",
+            "reasonTrustDeclined": "De systeemgoedkeuring is geweigerd, dus er is niets gewijzigd. Probeer het opnieuw of installeer het certificaat zelf met de stappen hieronder.",
+            "reasonTrustUnavailable": "Deze computer kan de goedkeuring niet zelf vragen. Installeer het certificaat zelf met de stappen hieronder.",
+            "reasonTrustRemains": "Het Relo-certificaat wordt nog steeds systeembreed vertrouwd. Verwijder het zodra je het niet meer nodig hebt.",
+            "removeTrust": "Systeemvertrouwen verwijderen",
+            "systemTrust": "Systeembreed vertrouwen",
+            "manualTitle": "Doe het zelf",
+            "manualInstallIntro": "Installeer het certificaat met deze opdrachten (ze vragen om goedkeuring van een beheerder) of volg de instructiepagina. Druk daarna op Opnieuw controleren.",
+            "manualRemoveIntro": "Relo kon het certificaat niet verwijderen. Verwijder het met deze opdrachten of volg de instructiepagina. Druk daarna op Opnieuw controleren.",
+            "manualPath": "Certificaatbestand",
+            "manualGuide": "Instructies openen",
+            "manualCheckAgain": "Opnieuw controleren",
+            "manualCopyPrompt": "Prompt voor je codeeragent kopiëren",
+            "agentPromptInstall": "Installeer voor mij één certificaat, systeembreed, en niets anders.\n1. Het bestand is {path}. Bereken eerst de SHA-256-vingerafdruk en controleer of die {sha256} is. Wijkt die af, stop dan en meld het mij.\n2. Vertrouw alleen dat bestand als basiscertificaat op {os}. Vraag mij vóór elke opdracht die beheerdersrechten nodig heeft. Opdrachten:\n{commands}\n3. Vertrouw geen ander certificaat en wijzig geen andere instelling.\n4. Controleer met:\n{check}\nVertel me daarna wat je zag.",
+            "agentPromptRemove": "Verwijder voor mij één certificaat uit het systeembrede vertrouwen, en niets anders.\n1. Het is het certificaat met SHA-256-vingerafdruk {sha256} (bestand {path}). Controleer of het bestand overeenkomt voordat je iets verwijdert.\n2. Verwijder alleen dat certificaat op {os}. Vraag mij vóór elke opdracht die beheerdersrechten nodig heeft. Opdrachten:\n{commands}\n3. Verwijder geen ander certificaat.\n4. Controleer met:\n{check}\nVertel me daarna wat je zag."
           }
         },
         "claudeModeUnsaved": "Nog niet opgeslagen. Druk op Opslaan om deze modus toe te passen.",
         "claudeModeDesktopOwnerNote": "Claude Desktop deelt de proxybedrading van Claude Code, dus opslaan zet ook Claude Code in proxymodus.",
-        "claudeModeProxyInUse": "Claude Desktop gebruikt deze proxy nog. Zet Claude Desktop eerst terug."
+        "claudeModeProxyInUse": "Claude Desktop gebruikt deze proxy nog. Zet Claude Desktop eerst terug.",
+        "claudeModeTrustRemains": "Relo kon het certificaat dat het had geïnstalleerd niet verwijderen, dus er is niets gewijzigd. Open het gedeelte van de modelkiezer van Desktop, verwijder het met de getoonde stappen en probeer het opnieuw."
       },
       "chatPage": {
         "title": "Chat",

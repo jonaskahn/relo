@@ -2,8 +2,9 @@
 	import { onMount } from 'svelte';
 	import { t } from 'svelte-i18n';
 
-	import { api, ApiError } from '$lib/api';
-	import { DESKTOP_COWORK_PATH, DESKTOP_PICKER_PATH } from '$lib/integration-actions';
+	import { api } from '$lib/api';
+	import { DESKTOP_PICKER_PATH } from '$lib/integration-actions';
+	import DesktopCoworkSection from '$lib/components/agents/desktop-cowork-section.svelte';
 	import Button from '$lib/components/ui/button.svelte';
 	import Icon from '$lib/components/ui/icon.svelte';
 	import type { DesktopPicker } from '$lib/types';
@@ -15,7 +16,6 @@
 	let busy = $state(false);
 	let failure = $state('');
 	let confirming = $state(false);
-	let coworkConfirming = $state(false);
 
 	const path = DESKTOP_PICKER_PATH;
 
@@ -49,50 +49,6 @@
 	function turn(enabled: boolean) {
 		void run(() => api(path, { method: 'PUT', body: JSON.stringify({ enabled }) }));
 	}
-
-	function turnCowork(enabled: boolean) {
-		void run(async () => {
-			try {
-				return await api(DESKTOP_COWORK_PATH, { method: 'PUT', body: JSON.stringify({ enabled }) });
-			} catch (error) {
-				// A refusal the daemon names by reason reads in the console's language.
-				if (error instanceof ApiError && coworkReasons.has(error.code)) {
-					throw new Error($t(coworkReasonKey(error.code)), { cause: error });
-				}
-				throw error;
-			} finally {
-				coworkConfirming = false;
-			}
-		});
-	}
-
-	const coworkReasons = new Set([
-		'cowork_needs_picker',
-		'cowork_trust_missing',
-		'cowork_restart_required',
-		'cowork_active'
-	]);
-
-	function coworkReasonKey(reason: string): string {
-		switch (reason) {
-			case 'cowork_active':
-				return 'ui.pages.integrationsPage.desktopPicker.cowork.reasonActive';
-			case 'cowork_restart_required':
-				return 'ui.pages.integrationsPage.desktopPicker.cowork.reasonRestart';
-			case 'cowork_needs_picker':
-				return 'ui.pages.integrationsPage.desktopPicker.cowork.reasonNeedsPicker';
-			case 'cowork_trust_missing':
-				return 'ui.pages.integrationsPage.desktopPicker.cowork.reasonTrustMissing';
-			default:
-				return 'ui.pages.integrationsPage.desktopPicker.cowork.reasonOff';
-		}
-	}
-
-	// How many connections to the vendor API the picker's proxy has been asked for, which is
-	// what tells an operator whether Cowork's traffic reaches Relo at all.
-	const vendorConnections = $derived(
-		picker?.connections.hosts.find((entry) => entry.host === 'api.anthropic.com')?.count ?? 0
-	);
 
 	function removeTrust() {
 		void run(() => api(`${path}/trust`, { method: 'DELETE' }));
@@ -201,52 +157,8 @@
 		{/if}
 	{/if}
 
-	{#if picker?.supported && picker.enabled && picker.armed}
-		<div class="space-y-2 border-t border-border pt-3">
-			<h4 class="text-sm font-semibold">
-				{$t('ui.pages.integrationsPage.desktopPicker.cowork.title')}
-			</h4>
-			<p class="text-xs text-muted-foreground">
-				{$t('ui.pages.integrationsPage.desktopPicker.cowork.hint')}
-			</p>
-			<p class="flex items-start gap-2 text-xs text-muted-foreground" role="status">
-				<Icon name={picker.cowork.enabled ? 'circle-check' : 'circle-off'} size={14} />
-				<span>{$t(coworkReasonKey(picker.cowork.reason))}</span>
-			</p>
-			<p class="text-xs text-muted-foreground">
-				{$t('ui.pages.integrationsPage.desktopPicker.cowork.seen', {
-					values: { count: vendorConnections }
-				})}
-			</p>
-			{#if coworkConfirming}
-				<div class="rounded-lg border border-warning/40 bg-warning/5 p-3">
-					<p class="text-xs text-warning">
-						{$t('ui.pages.integrationsPage.desktopPicker.cowork.warning')}
-					</p>
-					<div class="mt-2 flex flex-wrap items-center gap-2">
-						<Button size="sm" disabled={busy} onclick={() => turnCowork(true)}>
-							{$t('ui.pages.integrationsPage.desktopPicker.confirm')}
-						</Button>
-						<Button
-							size="sm"
-							variant="ghost"
-							disabled={busy}
-							onclick={() => (coworkConfirming = false)}
-						>
-							{$t('ui.common.cancel')}
-						</Button>
-					</div>
-				</div>
-			{:else if picker.cowork.enabled}
-				<Button size="sm" variant="outline" disabled={busy} onclick={() => turnCowork(false)}>
-					{$t('ui.pages.integrationsPage.desktopPicker.disable')}
-				</Button>
-			{:else}
-				<Button size="sm" disabled={busy} onclick={() => (coworkConfirming = true)}>
-					{$t('ui.pages.integrationsPage.desktopPicker.cowork.enable')}
-				</Button>
-			{/if}
-		</div>
+	{#if picker?.supported && ((picker.enabled && picker.armed) || picker.cowork.trust === 'trusted')}
+		<DesktopCoworkSection {picker} onupdate={(next) => (picker = next)} onreload={load} />
 	{/if}
 
 	{#if busy}

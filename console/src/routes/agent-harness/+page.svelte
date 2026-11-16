@@ -203,11 +203,17 @@
 		return error instanceof Error ? error.message : String(error);
 	}
 
+	// The codes that mean Relo could not take its certificate out of the system.
+	const TRUST_REMAINS = new Set(['trust_remains', 'cowork_trust_remains']);
+
 	// A mode refusal the daemon names by code is worded here, so it reads in the
 	// console's language rather than the daemon's.
 	function modeMessage(error: unknown): string {
 		if (error instanceof ApiError && error.code === 'proxy_in_use') {
 			return $t('ui.pages.integrationsPage.claudeModeProxyInUse');
+		}
+		if (error instanceof ApiError && TRUST_REMAINS.has(error.code)) {
+			return $t('ui.pages.integrationsPage.claudeModeTrustRemains');
 		}
 		return message(error);
 	}

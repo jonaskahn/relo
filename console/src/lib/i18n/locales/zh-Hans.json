@@ -1935,19 +1935,34 @@
           "cowork": {
             "title": "路由 Cowork",
             "hint": "把 Claude Desktop 中 Cowork 针对已绑定到 Relo 的模型发出的请求发给 Relo。Cowork 运行在自己的虚拟机里，所以要通过选择器的网络代理指向 Relo。",
-            "warning": "这会让 Relo 在这台机器上对 Cowork 的流量终止 api.anthropic.com 的 TLS。系统已经信任的那份 Relo 证书同样覆盖该主机。Anthropic 的条款可能将此视为违规，账号可能被暂停。你绑定的模型会完全离开 Anthropic。之后请彻底退出 Claude Desktop，并开启新的 Cowork 会话。如果 Cowork 随后因证书错误失败，请关闭此项。只有在你接受这一风险时才开启。",
+            "warning": "这会让 Relo 在这台机器上对 Cowork 的流量终止 api.anthropic.com 的 TLS，并请求系统对所有应用和所有用户信任 Relo 的证书，这需要管理员批准。该证书仅限 claude.ai 和 api.anthropic.com，但任何以你身份运行的程序都能读取它的私钥文件（证书旁边的 ca.key）。这项信任会一直保留到你移除它；当 Claude Desktop 离开代理模式、被移除或 Relo 被卸载时，Relo 也会移除它。Anthropic 的条款可能将此视为违规，账号可能被暂停。你绑定的模型会完全离开 Anthropic。之后请彻底退出 Claude Desktop，并开启新的 Cowork 会话。如果 Cowork 因证书错误失败，请关闭此项。只有在你接受这一风险时才开启。",
             "enable": "开启 Cowork 路由",
             "seen": "通过选择器连接 api.anthropic.com 的次数：{count}",
             "reasonOff": "已关闭。Cowork 直接连到 Anthropic。",
             "reasonActive": "已开启。Cowork 针对已绑定模型的请求会发往 Relo。",
             "reasonRestart": "已开启。请彻底退出 Claude Desktop，然后开启新的 Cowork 会话。",
             "reasonNeedsPicker": "请先开启 Desktop 选择器。",
-            "reasonTrustMissing": "系统不信任 Relo 针对 api.anthropic.com 的证书，因此 Cowork 会原样通过。"
+            "reasonTrustMissing": "系统不信任 Relo 针对 api.anthropic.com 的证书，因此 Cowork 会原样通过。",
+            "reasonTrustDeclined": "系统批准被拒绝，所以没有任何改动。请重试，或按下面的步骤自行安装证书。",
+            "reasonTrustUnavailable": "这台机器无法自行请求批准。请按下面的步骤自行安装证书。",
+            "reasonTrustRemains": "Relo 的证书仍在整个系统中受信任。不再需要时请移除它。",
+            "removeTrust": "移除系统级信任",
+            "systemTrust": "系统级信任",
+            "manualTitle": "自己动手",
+            "manualInstallIntro": "用这些命令安装证书（它们会请求管理员批准），或按说明页操作。然后点按再次检查。",
+            "manualRemoveIntro": "Relo 无法移除证书。用这些命令移除它，或按说明页操作。然后点按再次检查。",
+            "manualPath": "证书文件",
+            "manualGuide": "打开说明",
+            "manualCheckAgain": "再次检查",
+            "manualCopyPrompt": "复制给你的编程智能体的提示词",
+            "agentPromptInstall": "请为我在整个系统中只安装一个证书，不要做别的事。\n1. 文件是 {path}。先计算它的 SHA-256 指纹，并确认是 {sha256}。如果不同，请停下并告诉我。\n2. 在 {os} 上只信任该文件作为根证书。任何需要管理员权限的命令执行前都要先问我。命令：\n{commands}\n3. 不要信任其他证书，也不要更改其他设置。\n4. 用下面的命令检查：\n{check}\n然后告诉我你看到了什么。",
+            "agentPromptRemove": "请为我只从系统信任中移除一个证书，不要做别的事。\n1. 它是 SHA-256 指纹为 {sha256} 的证书（文件 {path}）。移除任何东西之前，先确认文件一致。\n2. 在 {os} 上只移除该证书。任何需要管理员权限的命令执行前都要先问我。命令：\n{commands}\n3. 不要移除其他证书。\n4. 用下面的命令检查：\n{check}\n然后告诉我你看到了什么。"
           }
         },
         "claudeModeUnsaved": "尚未保存。点击“保存”以应用此模式。",
         "claudeModeDesktopOwnerNote": "Claude Desktop 与 Claude Code 共用代理接线，因此保存时也会把 Claude Code 切换到代理模式。",
-        "claudeModeProxyInUse": "Claude Desktop 仍在使用此代理。请先把 Claude Desktop 切换回去。"
+        "claudeModeProxyInUse": "Claude Desktop 仍在使用此代理。请先把 Claude Desktop 切换回去。",
+        "claudeModeTrustRemains": "Relo 无法移除它安装的证书，所以没有任何改动。请打开 Desktop 选择器部分，按显示的步骤移除后再试。"
       },
       "chatPage": {
         "title": "聊天",

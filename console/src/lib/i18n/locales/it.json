@@ -1935,19 +1935,34 @@
           "cowork": {
             "title": "Instrada Cowork",
             "hint": "Invia a Relo le richieste di Cowork in Claude Desktop per i modelli che hai associato. Cowork gira in una macchina virtuale propria, quindi viene indirizzato a Relo tramite il proxy di rete del selettore.",
-            "warning": "Così Relo termina TLS per api.anthropic.com per il traffico di Cowork su questo computer. Il certificato Relo di cui il sistema si fida già copre quell'host. I termini di Anthropic possono considerarlo una violazione e un account può essere sospeso. I modelli che associ lasciano del tutto Anthropic. Poi chiudi Claude Desktop del tutto e avvia una nuova sessione Cowork. Se Cowork fallisce con un errore di certificato, disattiva questa opzione. Attivala solo se accetti questo rischio.",
+            "warning": "Così Relo termina TLS per api.anthropic.com per il traffico di Cowork su questo computer e chiede al sistema di considerare attendibile il certificato di Relo per tutte le app e tutti gli utenti, il che richiede l'approvazione di un amministratore. Il certificato è limitato a claude.ai e api.anthropic.com, ma qualsiasi processo eseguito come te può leggere il suo file di chiave privata (ca.key, accanto al certificato). L'attendibilità resta finché non la rimuovi; Relo la rimuove anche quando Claude Desktop esce dalla modalità proxy, viene rimosso o Relo viene disinstallato. I termini di Anthropic possono considerarlo una violazione e un account può essere sospeso. I modelli che associ lasciano del tutto Anthropic. Poi chiudi Claude Desktop del tutto e avvia una nuova sessione Cowork. Se Cowork fallisce con un errore di certificato, disattiva questa opzione. Attivala solo se accetti questo rischio.",
             "enable": "Attiva l'instradamento di Cowork",
             "seen": "Connessioni a api.anthropic.com tramite il selettore: {count}",
             "reasonOff": "Disattivato. Cowork va direttamente da Anthropic.",
             "reasonActive": "Attivo. Le richieste di Cowork per i modelli associati vanno a Relo.",
             "reasonRestart": "Attivo. Chiudi Claude Desktop del tutto, poi avvia una nuova sessione Cowork.",
             "reasonNeedsPicker": "Attiva prima il selettore di Desktop.",
-            "reasonTrustMissing": "Il sistema non si fida del certificato di Relo per api.anthropic.com, quindi Cowork passa senza modifiche."
+            "reasonTrustMissing": "Il sistema non si fida del certificato di Relo per api.anthropic.com, quindi Cowork passa senza modifiche.",
+            "reasonTrustDeclined": "L'approvazione del sistema è stata rifiutata, quindi non è cambiato nulla. Riprova oppure installa il certificato tu stesso con i passaggi qui sotto.",
+            "reasonTrustUnavailable": "Questo computer non può chiedere da solo l'approvazione. Installa il certificato tu stesso con i passaggi qui sotto.",
+            "reasonTrustRemains": "Il certificato di Relo è ancora attendibile in tutto il sistema. Rimuovilo quando non ti serve più.",
+            "removeTrust": "Rimuovi l'attendibilità di sistema",
+            "systemTrust": "Attendibilità di sistema",
+            "manualTitle": "Fallo tu",
+            "manualInstallIntro": "Installa il certificato con questi comandi (chiedono l'approvazione di un amministratore) oppure segui la pagina di istruzioni. Poi premi Controlla di nuovo.",
+            "manualRemoveIntro": "Relo non è riuscito a rimuovere il certificato. Rimuovilo con questi comandi oppure segui la pagina di istruzioni. Poi premi Controlla di nuovo.",
+            "manualPath": "File del certificato",
+            "manualGuide": "Apri le istruzioni",
+            "manualCheckAgain": "Controlla di nuovo",
+            "manualCopyPrompt": "Copia un prompt per il tuo agente di codice",
+            "agentPromptInstall": "Installa per me un solo certificato, in tutto il sistema, e nient'altro.\n1. Il file è {path}. Calcola prima la sua impronta SHA-256 e verifica che sia {sha256}. Se differisce, fermati e dimmelo.\n2. Considera attendibile solo quel file come certificato radice su {os}. Chiedimi prima di ogni comando che richiede diritti di amministratore. Comandi:\n{commands}\n3. Non considerare attendibile nessun altro certificato e non cambiare nessun'altra impostazione.\n4. Verifica con:\n{check}\nPoi dimmi cosa hai visto.",
+            "agentPromptRemove": "Rimuovi per me un solo certificato dall'attendibilità di sistema, e nient'altro.\n1. È il certificato con impronta SHA-256 {sha256} (file {path}). Verifica che il file corrisponda prima di rimuovere qualsiasi cosa.\n2. Rimuovi solo quel certificato su {os}. Chiedimi prima di ogni comando che richiede diritti di amministratore. Comandi:\n{commands}\n3. Non rimuovere nessun altro certificato.\n4. Verifica con:\n{check}\nPoi dimmi cosa hai visto."
           }
         },
         "claudeModeUnsaved": "Non ancora salvato. Premi Salva per applicare questa modalità.",
         "claudeModeDesktopOwnerNote": "Claude Desktop condivide il collegamento proxy di Claude Code, quindi salvando anche Claude Code passa alla modalità proxy.",
-        "claudeModeProxyInUse": "Claude Desktop usa ancora questo proxy. Riporta prima Claude Desktop alla modalità precedente."
+        "claudeModeProxyInUse": "Claude Desktop usa ancora questo proxy. Riporta prima Claude Desktop alla modalità precedente.",
+        "claudeModeTrustRemains": "Relo non è riuscito a rimuovere il certificato che aveva installato, quindi non è cambiato nulla. Apri la sezione del selettore di Desktop, rimuovilo con i passaggi mostrati e riprova."
       },
       "chatPage": {
         "title": "Chat",

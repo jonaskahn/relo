@@ -1935,19 +1935,34 @@
           "cowork": {
             "title": "Směrovat Cowork",
             "hint": "Posílá požadavky Cowork z Claude Desktop pro modely, které jste svázali s Relo, do Relo. Cowork běží ve vlastním virtuálním stroji, proto je na Relo nasměrován přes síťový proxy výběru modelu.",
-            "warning": "Relo tím na tomto počítači ukončuje TLS pro api.anthropic.com u provozu Cowork. Certifikát Relo, kterému systém už důvěřuje, tento hostitel pokrývá. Podmínky Anthropic to mohou považovat za porušení a účet může být pozastaven. Modely, které svážete, opouštějí Anthropic úplně. Poté úplně ukončete Claude Desktop a spusťte novou relaci Cowork. Pokud Cowork pak selže s chybou certifikátu, vypněte to. Zapněte to jen tehdy, pokud toto riziko přijímáte.",
+            "warning": "Relo tím na tomto počítači ukončuje TLS pro api.anthropic.com u provozu Cowork a žádá systém, aby důvěřoval certifikátu Relo pro všechny aplikace a všechny uživatele, což vyžaduje souhlas správce. Certifikát je omezen na claude.ai a api.anthropic.com, ale cokoli, co běží pod vaším účtem, může číst soubor jeho soukromého klíče (ca.key, vedle certifikátu). Důvěra zůstane, dokud ji neodeberete; Relo ji odebere také tehdy, když Claude Desktop opustí režim proxy, je odstraněn nebo je Relo odinstalováno. Podmínky Anthropic to mohou považovat za porušení a účet může být pozastaven. Modely, které svážete, opouštějí Anthropic úplně. Poté úplně ukončete Claude Desktop a spusťte novou relaci Cowork. Pokud Cowork selže s chybou certifikátu, vypněte to. Zapněte to jen tehdy, pokud toto riziko přijímáte.",
             "enable": "Zapnout směrování Cowork",
             "seen": "Připojení k api.anthropic.com přes výběr: {count}",
             "reasonOff": "Vypnuto. Cowork jde přímo k Anthropic.",
             "reasonActive": "Zapnuto. Požadavky Cowork pro svázané modely jdou do Relo.",
             "reasonRestart": "Zapnuto. Úplně ukončete Claude Desktop a pak spusťte novou relaci Cowork.",
             "reasonNeedsPicker": "Nejprve zapněte výběr modelu v Desktopu.",
-            "reasonTrustMissing": "Systém nedůvěřuje certifikátu Relo pro api.anthropic.com, proto Cowork prochází beze změny."
+            "reasonTrustMissing": "Systém nedůvěřuje certifikátu Relo pro api.anthropic.com, proto Cowork prochází beze změny.",
+            "reasonTrustDeclined": "Souhlas systému byl odmítnut, takže se nic nezměnilo. Zkuste to znovu nebo certifikát nainstalujte sami podle kroků níže.",
+            "reasonTrustUnavailable": "Tento počítač si souhlas nemůže vyžádat sám. Certifikát nainstalujte sami podle kroků níže.",
+            "reasonTrustRemains": "Certifikát Relo je stále důvěryhodný v celém systému. Odeberte ho, až ho nebudete potřebovat.",
+            "removeTrust": "Odebrat systémovou důvěru",
+            "systemTrust": "Systémová důvěra",
+            "manualTitle": "Udělejte to sami",
+            "manualInstallIntro": "Nainstalujte certifikát těmito příkazy (žádají o souhlas správce) nebo se řiďte stránkou s pokyny. Poté stiskněte Zkontrolovat znovu.",
+            "manualRemoveIntro": "Relo certifikát nedokázal odebrat. Odeberte ho těmito příkazy nebo se řiďte stránkou s pokyny. Poté stiskněte Zkontrolovat znovu.",
+            "manualPath": "Soubor certifikátu",
+            "manualGuide": "Otevřít pokyny",
+            "manualCheckAgain": "Zkontrolovat znovu",
+            "manualCopyPrompt": "Zkopírovat prompt pro vašeho agenta pro kód",
+            "agentPromptInstall": "Nainstaluj za mě jediný certifikát pro celý systém a nic víc.\n1. Soubor je {path}. Nejprve spočítej jeho otisk SHA-256 a ověř, že je {sha256}. Pokud se liší, zastav se a řekni mi to.\n2. Důvěřuj pouze tomuto souboru jako kořenovému certifikátu v systému {os}. Před každým příkazem, který vyžaduje práva správce, se mě zeptej. Příkazy:\n{commands}\n3. Nedůvěřuj žádnému jinému certifikátu a neměň žádné jiné nastavení.\n4. Ověř příkazem:\n{check}\nPak mi řekni, co jsi viděl.",
+            "agentPromptRemove": "Odeber za mě jediný certifikát ze systémové důvěry a nic víc.\n1. Je to certifikát s otiskem SHA-256 {sha256} (soubor {path}). Než cokoli odebereš, ověř, že soubor odpovídá.\n2. Odeber pouze tento certifikát v systému {os}. Před každým příkazem, který vyžaduje práva správce, se mě zeptej. Příkazy:\n{commands}\n3. Neodebírej žádný jiný certifikát.\n4. Ověř příkazem:\n{check}\nPak mi řekni, co jsi viděl."
           }
         },
         "claudeModeUnsaved": "Zatím neuloženo. Stisknutím Uložit tento režim použijete.",
         "claudeModeDesktopOwnerNote": "Claude Desktop sdílí proxy zapojení Claude Code, takže uložení přepne do režimu proxy i Claude Code.",
-        "claudeModeProxyInUse": "Claude Desktop tento proxy stále používá. Nejprve vraťte Claude Desktop zpět."
+        "claudeModeProxyInUse": "Claude Desktop tento proxy stále používá. Nejprve vraťte Claude Desktop zpět.",
+        "claudeModeTrustRemains": "Relo nedokázal odebrat certifikát, který nainstaloval, takže se nic nezměnilo. Otevřete sekci výběru modelu v Desktopu, odeberte ho podle zobrazených kroků a zkuste to znovu."
       },
       "chatPage": {
         "title": "Chat",

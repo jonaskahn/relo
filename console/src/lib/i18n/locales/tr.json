@@ -1935,19 +1935,34 @@
           "cowork": {
             "title": "Cowork yönlendirme",
             "hint": "Claude Desktop'taki Cowork isteklerini, Relo'ya bağladığınız modeller için Relo'ya gönderir. Cowork kendi sanal makinesinde çalışır, bu yüzden seçicinin ağ proxy'si üzerinden Relo'ya yönlendirilir.",
-            "warning": "Bu, Relo'nun bu makinede Cowork trafiği için api.anthropic.com için TLS'yi sonlandırmasını sağlar. Sisteminizin zaten güvendiği Relo sertifikası bu ana makineyi de kapsar. Anthropic'in şartları bunu ihlal sayabilir ve bir hesap askıya alınabilir. Bağladığınız modeller Anthropic'ten tamamen çıkar. Sonra Claude Desktop'ı tamamen kapatın ve yeni bir Cowork oturumu başlatın. Cowork o zaman sertifika hatasıyla başarısız olursa bunu kapatın. Yalnızca bu riski kabul ediyorsanız açın.",
+            "warning": "Bu, Relo'nun bu makinede Cowork trafiği için api.anthropic.com TLS'sini sonlandırmasını ve sisteminizden Relo sertifikasına tüm uygulamalar ve tüm kullanıcılar için güvenmesini istemesini sağlar; bunun için yönetici onayı gerekir. Sertifika claude.ai ve api.anthropic.com ile sınırlıdır, ancak sizin adınıza çalışan her şey özel anahtar dosyasını (ca.key, sertifikanın yanında) okuyabilir. Güven, siz kaldırana kadar durur; Relo da Claude Desktop proxy modundan çıktığında, kaldırıldığında veya Relo kaldırıldığında bunu kaldırır. Anthropic'in şartları bunu ihlal sayabilir ve bir hesap askıya alınabilir. Bağladığınız modeller Anthropic'ten tamamen çıkar. Sonra Claude Desktop'ı tamamen kapatın ve yeni bir Cowork oturumu başlatın. Cowork sertifika hatasıyla başarısız olursa bunu kapatın. Yalnızca bu riski kabul ediyorsanız açın.",
             "enable": "Cowork yönlendirmeyi aç",
             "seen": "Seçici üzerinden api.anthropic.com'a bağlantılar: {count}",
             "reasonOff": "Kapalı. Cowork doğrudan Anthropic'e gider.",
             "reasonActive": "Açık. Cowork'ün bağlı modeller için istekleri Relo'ya gider.",
             "reasonRestart": "Açık. Claude Desktop’ı tamamen kapatın, sonra yeni bir Cowork oturumu başlatın.",
             "reasonNeedsPicker": "Önce Desktop seçicisini açın.",
-            "reasonTrustMissing": "Sistem, api.anthropic.com için Relo sertifikasına güvenmiyor; bu yüzden Cowork değiştirilmeden geçer."
+            "reasonTrustMissing": "Sistem, api.anthropic.com için Relo sertifikasına güvenmiyor; bu yüzden Cowork değiştirilmeden geçer.",
+            "reasonTrustDeclined": "Sistem onayı reddedildi, bu yüzden hiçbir şey değişmedi. Yeniden deneyin ya da sertifikayı aşağıdaki adımlarla kendiniz kurun.",
+            "reasonTrustUnavailable": "Bu makine onayı kendisi isteyemiyor. Sertifikayı aşağıdaki adımlarla kendiniz kurun.",
+            "reasonTrustRemains": "Relo sertifikası hâlâ tüm sistemde güvenilir. Artık gerek kalmayınca kaldırın.",
+            "removeTrust": "Sistem güvenini kaldır",
+            "systemTrust": "Sistem genelinde güven",
+            "manualTitle": "Kendiniz yapın",
+            "manualInstallIntro": "Sertifikayı bu komutlarla kurun (yönetici onayı isterler) ya da yönergeler sayfasını izleyin. Sonra Yeniden denetle'ye basın.",
+            "manualRemoveIntro": "Relo sertifikayı kaldıramadı. Bu komutlarla kaldırın ya da yönergeler sayfasını izleyin. Sonra Yeniden denetle'ye basın.",
+            "manualPath": "Sertifika dosyası",
+            "manualGuide": "Yönergeleri aç",
+            "manualCheckAgain": "Yeniden denetle",
+            "manualCopyPrompt": "Kod ajanınız için bir istem kopyala",
+            "agentPromptInstall": "Benim için tek bir sertifikayı sistem genelinde kur ve başka hiçbir şey yapma.\n1. Dosya {path}. Önce SHA-256 parmak izini hesapla ve {sha256} olduğunu doğrula. Farklıysa dur ve bana söyle.\n2. Yalnızca bu dosyaya {os} üzerinde kök sertifika olarak güven. Yönetici hakkı gerektiren her komuttan önce bana sor. Komutlar:\n{commands}\n3. Başka hiçbir sertifikaya güvenme ve başka hiçbir ayarı değiştirme.\n4. Şununla doğrula:\n{check}\nSonra ne gördüğünü söyle.",
+            "agentPromptRemove": "Benim için tek bir sertifikayı sistem güveninden kaldır ve başka hiçbir şey yapma.\n1. Bu, SHA-256 parmak izi {sha256} olan sertifika (dosya {path}). Bir şey kaldırmadan önce dosyanın eşleştiğini doğrula.\n2. Yalnızca bu sertifikayı {os} üzerinde kaldır. Yönetici hakkı gerektiren her komuttan önce bana sor. Komutlar:\n{commands}\n3. Başka hiçbir sertifikayı kaldırma.\n4. Şununla doğrula:\n{check}\nSonra ne gördüğünü söyle."
           }
         },
         "claudeModeUnsaved": "Henüz kaydedilmedi. Bu modu uygulamak için Kaydet düğmesine basın.",
         "claudeModeDesktopOwnerNote": "Claude Desktop, Claude Code'un proxy bağlantısını paylaşır; bu yüzden kaydetmek Claude Code'u da proxy moduna alır.",
-        "claudeModeProxyInUse": "Claude Desktop bu proxy'yi hâlâ kullanıyor. Önce Claude Desktop'ı geri alın."
+        "claudeModeProxyInUse": "Claude Desktop bu proxy'yi hâlâ kullanıyor. Önce Claude Desktop'ı geri alın.",
+        "claudeModeTrustRemains": "Relo kurduğu sertifikayı kaldıramadı, bu yüzden hiçbir şey değişmedi. Desktop seçici bölümünü açın, gösterilen adımlarla kaldırın ve yeniden deneyin."
       },
       "chatPage": {
         "title": "Sohbet",

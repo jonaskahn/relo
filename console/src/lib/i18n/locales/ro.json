@@ -1935,19 +1935,34 @@
           "cowork": {
             "title": "Direcționează Cowork",
             "hint": "Trimite la Relo cererile Cowork din Claude Desktop pentru modelele pe care le-ai asociat. Cowork rulează într-o mașină virtuală proprie, deci este îndreptat spre Relo prin proxy-ul de rețea al selectorului.",
-            "warning": "Astfel, Relo încheie TLS pentru api.anthropic.com pentru traficul Cowork pe acest computer. Certificatul Relo pe care sistemul tău îl consideră deja de încredere acoperă acea gazdă. Termenii Anthropic pot considera asta o încălcare și un cont poate fi suspendat. Modelele pe care le asociezi părăsesc complet Anthropic. După aceea, închide complet Claude Desktop și pornește o sesiune Cowork nouă. Dacă Cowork eșuează apoi cu o eroare de certificat, dezactivează opțiunea. Activeaz-o doar dacă accepți acest risc.",
+            "warning": "Astfel, Relo încheie TLS pentru api.anthropic.com pentru traficul Cowork pe acest computer și cere sistemului tău să considere de încredere certificatul Relo pentru toate aplicațiile și toți utilizatorii, ceea ce necesită aprobarea unui administrator. Certificatul este limitat la claude.ai și api.anthropic.com, dar orice rulează ca tine poate citi fișierul cheii sale private (ca.key, lângă certificat). Încrederea rămâne până o elimini; Relo o elimină și când Claude Desktop iese din modul proxy, este eliminat sau Relo este dezinstalat. Termenii Anthropic pot considera asta o încălcare și un cont poate fi suspendat. Modelele pe care le asociezi părăsesc complet Anthropic. După aceea, închide complet Claude Desktop și pornește o sesiune Cowork nouă. Dacă Cowork eșuează cu o eroare de certificat, dezactivează opțiunea. Activeaz-o doar dacă accepți acest risc.",
             "enable": "Activează direcționarea Cowork",
             "seen": "Conexiuni la api.anthropic.com prin selector: {count}",
             "reasonOff": "Dezactivat. Cowork merge direct la Anthropic.",
             "reasonActive": "Activat. Cererile Cowork pentru modelele asociate merg la Relo.",
             "reasonRestart": "Activat. Închide complet Claude Desktop, apoi pornește o sesiune Cowork nouă.",
             "reasonNeedsPicker": "Activează mai întâi selectorul din Desktop.",
-            "reasonTrustMissing": "Sistemul nu se încrede în certificatul Relo pentru api.anthropic.com, deci Cowork trece neschimbat."
+            "reasonTrustMissing": "Sistemul nu se încrede în certificatul Relo pentru api.anthropic.com, deci Cowork trece neschimbat.",
+            "reasonTrustDeclined": "Aprobarea sistemului a fost refuzată, deci nu s-a schimbat nimic. Încearcă din nou sau instalează tu certificatul cu pașii de mai jos.",
+            "reasonTrustUnavailable": "Acest computer nu poate cere singur aprobarea. Instalează tu certificatul cu pașii de mai jos.",
+            "reasonTrustRemains": "Certificatul Relo este în continuare de încredere în tot sistemul. Elimină-l când nu mai ai nevoie de el.",
+            "removeTrust": "Elimină încrederea sistemului",
+            "systemTrust": "Încredere la nivel de sistem",
+            "manualTitle": "Fă-o tu",
+            "manualInstallIntro": "Instalează certificatul cu aceste comenzi (ele cer aprobarea unui administrator) sau urmează pagina de instrucțiuni. Apoi apasă Verifică din nou.",
+            "manualRemoveIntro": "Relo nu a putut elimina certificatul. Elimină-l cu aceste comenzi sau urmează pagina de instrucțiuni. Apoi apasă Verifică din nou.",
+            "manualPath": "Fișierul certificatului",
+            "manualGuide": "Deschide instrucțiunile",
+            "manualCheckAgain": "Verifică din nou",
+            "manualCopyPrompt": "Copiază un prompt pentru agentul tău de cod",
+            "agentPromptInstall": "Instalează pentru mine un singur certificat, în tot sistemul, și nimic altceva.\n1. Fișierul este {path}. Calculează mai întâi amprenta lui SHA-256 și verifică dacă este {sha256}. Dacă diferă, oprește-te și spune-mi.\n2. Acordă încredere doar acelui fișier ca certificat rădăcină pe {os}. Întreabă-mă înainte de orice comandă care cere drepturi de administrator. Comenzi:\n{commands}\n3. Nu acorda încredere niciunui alt certificat și nu schimba nicio altă setare.\n4. Verifică cu:\n{check}\nApoi spune-mi ce ai văzut.",
+            "agentPromptRemove": "Elimină pentru mine un singur certificat din încrederea sistemului, și nimic altceva.\n1. Este certificatul cu amprenta SHA-256 {sha256} (fișierul {path}). Verifică dacă fișierul se potrivește înainte de a elimina ceva.\n2. Elimină doar acel certificat pe {os}. Întreabă-mă înainte de orice comandă care cere drepturi de administrator. Comenzi:\n{commands}\n3. Nu elimina niciun alt certificat.\n4. Verifică cu:\n{check}\nApoi spune-mi ce ai văzut."
           }
         },
         "claudeModeUnsaved": "Nesalvat încă. Apasă Salvează pentru a aplica acest mod.",
         "claudeModeDesktopOwnerNote": "Claude Desktop folosește aceeași conexiune proxy ca Claude Code, deci salvarea mută și Claude Code în modul proxy.",
-        "claudeModeProxyInUse": "Claude Desktop folosește încă acest proxy. Mai întâi readu Claude Desktop la modul anterior."
+        "claudeModeProxyInUse": "Claude Desktop folosește încă acest proxy. Mai întâi readu Claude Desktop la modul anterior.",
+        "claudeModeTrustRemains": "Relo nu a putut elimina certificatul pe care l-a instalat, deci nu s-a schimbat nimic. Deschide secțiunea selectorului din Desktop, elimină-l cu pașii afișați și încearcă din nou."
       },
       "chatPage": {
         "title": "Chat",

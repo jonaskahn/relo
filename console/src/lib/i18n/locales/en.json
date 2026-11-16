@@ -1935,19 +1935,34 @@
           "cowork": {
             "title": "Route Cowork",
             "hint": "Send Claude Desktop's Cowork requests for models you bound to Relo. Cowork runs in its own virtual machine, so it is pointed at Relo through the picker's network proxy.",
-            "warning": "This makes Relo terminate TLS for api.anthropic.com for Cowork's traffic on this machine. The Relo certificate your system already trusts covers that host. Anthropic's terms may treat that as a violation, and an account can be suspended. Models you bind leave Anthropic entirely. Quit Claude Desktop completely and start a new Cowork session afterwards. If Cowork then fails with a certificate error, turn this off. Turn it on only if you accept that risk.",
+            "warning": "This makes Relo terminate TLS for api.anthropic.com for Cowork's traffic on this machine, and it asks your system to trust Relo's certificate for every app and every user, which needs an administrator approval. The certificate is limited to claude.ai and api.anthropic.com, but anything running as you can read its private key file (ca.key, beside the certificate). The trust stays until you remove it, and Relo also removes it when Claude Desktop leaves proxy mode, is removed, or Relo is uninstalled. Anthropic's terms may treat this as a violation, and an account can be suspended. Models you bind leave Anthropic entirely. Afterwards quit Claude Desktop completely and start a new Cowork session. If Cowork fails with a certificate error, turn this off. Turn it on only if you accept that risk.",
             "enable": "Turn on Cowork routing",
             "seen": "Connections to api.anthropic.com through the picker: {count}",
             "reasonOff": "Off. Cowork goes straight to Anthropic.",
             "reasonActive": "On. Cowork's requests for bound models go to Relo.",
             "reasonRestart": "On. Quit Claude Desktop completely, then start a new Cowork session.",
             "reasonNeedsPicker": "Turn the Desktop picker on first.",
-            "reasonTrustMissing": "The system does not trust Relo's certificate for api.anthropic.com, so Cowork passes through untouched."
+            "reasonTrustMissing": "The system does not trust Relo's certificate for api.anthropic.com, so Cowork passes through untouched.",
+            "reasonTrustDeclined": "The system approval was declined, so nothing was changed. Try again, or install the certificate yourself with the steps below.",
+            "reasonTrustUnavailable": "This machine cannot ask for the approval itself. Install the certificate yourself with the steps below.",
+            "reasonTrustRemains": "Relo's certificate is still trusted system-wide. Remove it when you no longer need it.",
+            "removeTrust": "Remove system-wide trust",
+            "systemTrust": "System-wide trust",
+            "manualTitle": "Do it yourself",
+            "manualInstallIntro": "Install the certificate with these commands (they ask for your administrator approval), or follow the instructions page. Then press Check again.",
+            "manualRemoveIntro": "Relo could not remove the certificate. Remove it with these commands, or follow the instructions page. Then press Check again.",
+            "manualPath": "Certificate file",
+            "manualGuide": "Open the instructions",
+            "manualCheckAgain": "Check again",
+            "manualCopyPrompt": "Copy a prompt for your coding agent",
+            "agentPromptInstall": "Install one certificate for me, system-wide, and nothing else.\n1. The file is {path}. First compute its SHA-256 fingerprint and check that it is {sha256}. If it differs, stop and tell me.\n2. Trust only that file as a root certificate on {os}. Ask me before any command that needs administrator rights. Commands:\n{commands}\n3. Do not trust any other certificate or change any other setting.\n4. Check with:\n{check}\nThen tell me what you saw.",
+            "agentPromptRemove": "Remove one certificate from the system-wide trust for me, and nothing else.\n1. It is the certificate with SHA-256 fingerprint {sha256} (file {path}). Check that the file matches before you remove anything.\n2. Remove only that certificate on {os}. Ask me before any command that needs administrator rights. Commands:\n{commands}\n3. Do not remove any other certificate.\n4. Check with:\n{check}\nThen tell me what you saw."
           }
         },
         "claudeModeUnsaved": "Not saved yet. Press Save to apply this mode.",
         "claudeModeDesktopOwnerNote": "Claude Desktop shares Claude Code's proxy wiring, so saving also moves Claude Code to proxy mode.",
-        "claudeModeProxyInUse": "Claude Desktop still uses this proxy. Switch Claude Desktop back first."
+        "claudeModeProxyInUse": "Claude Desktop still uses this proxy. Switch Claude Desktop back first.",
+        "claudeModeTrustRemains": "Relo could not remove the certificate it installed, so nothing was changed. Open the Desktop picker section, remove it with the steps shown, then try again."
       },
       "chatPage": {
         "title": "Chat",

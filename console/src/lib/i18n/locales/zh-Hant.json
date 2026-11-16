@@ -1935,19 +1935,34 @@
           "cowork": {
             "title": "路由 Cowork",
             "hint": "把 Claude Desktop 中 Cowork 針對已綁定到 Relo 的模型所發出的請求送給 Relo。Cowork 執行在自己的虛擬機器裡，所以要透過選擇器的網路代理指向 Relo。",
-            "warning": "這會讓 Relo 在這台機器上對 Cowork 的流量終止 api.anthropic.com 的 TLS。系統已經信任的那份 Relo 憑證同樣涵蓋該主機。Anthropic 的條款可能視此為違規，帳號可能被停用。你綁定的模型會完全離開 Anthropic。之後請徹底結束 Claude Desktop，並開啟新的 Cowork 工作階段。如果 Cowork 隨後因憑證錯誤失敗，請關閉此項。只有在你接受這項風險時才開啟。",
+            "warning": "這會讓 Relo 在這台機器上對 Cowork 的流量終止 api.anthropic.com 的 TLS，並要求系統對所有應用程式和所有使用者信任 Relo 的憑證，這需要管理員核准。該憑證僅限 claude.ai 和 api.anthropic.com，但任何以你身分執行的程式都能讀取它的私密金鑰檔（憑證旁邊的 ca.key）。這項信任會一直保留到你移除它；當 Claude Desktop 離開代理模式、被移除或 Relo 被解除安裝時，Relo 也會移除它。Anthropic 的條款可能視此為違規，帳號可能被停用。你綁定的模型會完全離開 Anthropic。之後請徹底結束 Claude Desktop，並開啟新的 Cowork 工作階段。如果 Cowork 因憑證錯誤失敗，請關閉此項。只有在你接受這項風險時才開啟。",
             "enable": "開啟 Cowork 路由",
             "seen": "透過選擇器連線 api.anthropic.com 的次數：{count}",
             "reasonOff": "已關閉。Cowork 直接連到 Anthropic。",
             "reasonActive": "已開啟。Cowork 針對已綁定模型的請求會送往 Relo。",
             "reasonRestart": "已開啟。請徹底結束 Claude Desktop，然後開啟新的 Cowork 工作階段。",
             "reasonNeedsPicker": "請先開啟 Desktop 選擇器。",
-            "reasonTrustMissing": "系統不信任 Relo 針對 api.anthropic.com 的憑證，因此 Cowork 會原樣通過。"
+            "reasonTrustMissing": "系統不信任 Relo 針對 api.anthropic.com 的憑證，因此 Cowork 會原樣通過。",
+            "reasonTrustDeclined": "系統核准被拒絕，所以沒有任何變更。請重試，或依下方步驟自行安裝憑證。",
+            "reasonTrustUnavailable": "這台機器無法自行要求核准。請依下方步驟自行安裝憑證。",
+            "reasonTrustRemains": "Relo 的憑證仍在整個系統中受信任。不再需要時請移除它。",
+            "removeTrust": "移除系統層級信任",
+            "systemTrust": "系統層級信任",
+            "manualTitle": "自己動手",
+            "manualInstallIntro": "用這些指令安裝憑證（它們會要求管理員核准），或依說明頁操作。然後按再次檢查。",
+            "manualRemoveIntro": "Relo 無法移除憑證。用這些指令移除它，或依說明頁操作。然後按再次檢查。",
+            "manualPath": "憑證檔案",
+            "manualGuide": "開啟說明",
+            "manualCheckAgain": "再次檢查",
+            "manualCopyPrompt": "複製給你的程式設計代理的提示詞",
+            "agentPromptInstall": "請為我在整個系統中只安裝一份憑證，不要做別的事。\n1. 檔案是 {path}。先計算它的 SHA-256 指紋，並確認是 {sha256}。如果不同，請停下並告訴我。\n2. 在 {os} 上只信任該檔案作為根憑證。任何需要管理員權限的指令執行前都要先問我。指令：\n{commands}\n3. 不要信任其他憑證，也不要變更其他設定。\n4. 用下面的指令檢查：\n{check}\n然後告訴我你看到了什麼。",
+            "agentPromptRemove": "請為我只從系統信任中移除一份憑證，不要做別的事。\n1. 它是 SHA-256 指紋為 {sha256} 的憑證（檔案 {path}）。移除任何東西之前，先確認檔案一致。\n2. 在 {os} 上只移除該憑證。任何需要管理員權限的指令執行前都要先問我。指令：\n{commands}\n3. 不要移除其他憑證。\n4. 用下面的指令檢查：\n{check}\n然後告訴我你看到了什麼。"
           }
         },
         "claudeModeUnsaved": "尚未儲存。按下「儲存」即可套用此模式。",
         "claudeModeDesktopOwnerNote": "Claude Desktop 與 Claude Code 共用代理接線，因此儲存時也會把 Claude Code 切換到代理模式。",
-        "claudeModeProxyInUse": "Claude Desktop 仍在使用此代理。請先把 Claude Desktop 切換回去。"
+        "claudeModeProxyInUse": "Claude Desktop 仍在使用此代理。請先把 Claude Desktop 切換回去。",
+        "claudeModeTrustRemains": "Relo 無法移除它安裝的憑證，所以沒有任何變更。請開啟 Desktop 選擇器區塊，依顯示的步驟移除後再試。"
       },
       "chatPage": {
         "title": "聊天",
