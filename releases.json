@@ -1,5 +1,5 @@
 {
-  "generated": "2026-11-16T16:33:38Z",
+  "generated": "2026-11-16T16:35:46Z",
   "latest": "v0.2.13",
   "latest_beta": "v0.2.13-beta.141.ea9afaf8",
   "install": {
@@ -3340,7 +3340,7 @@
     {
       "tag": "v0.2.8",
       "version": "0.2.8",
-      "name": "🚀 v0.2.8 — 2026-11-05",
+      "name": "v0.2.8 - New Films 🎥",
       "channel": "stable",
       "draft": false,
       "published_at": "2026-11-06T04:30:15Z",
@@ -3652,7 +3652,7 @@
     {
       "tag": "v0.2.7",
       "version": "0.2.7",
-      "name": "🚀 v0.2.7 — 2026-11-03",
+      "name": "v0.2.7 - An Empty 🫙",
       "channel": "stable",
       "draft": false,
       "published_at": "2026-11-04T04:48:57Z",
@@ -4044,7 +4044,7 @@
     {
       "tag": "v0.2.6",
       "version": "0.2.6",
-      "name": "🚀 v0.2.6 — 2026-11-03",
+      "name": "v0.2.6 - No way home 🕷️",
       "channel": "stable",
       "draft": false,
       "published_at": "2026-11-03T07:04:11Z",
@@ -4436,7 +4436,7 @@
     {
       "tag": "v0.2.5",
       "version": "0.2.5",
-      "name": "🚀 v0.2.5 — 2026-11-02",
+      "name": "v0.2.5 - Brand New Day 🕸️",
       "channel": "stable",
       "draft": false,
       "published_at": "2026-11-03T03:06:14Z",
@@ -4748,7 +4748,7 @@
     {
       "tag": "v0.2.4",
       "version": "0.2.4",
-      "name": "🚀 v0.2.4 — 2026-11-02",
+      "name": "v0.2.4 - New Noodles 🍜",
       "channel": "stable",
       "draft": false,
       "published_at": "2026-11-02T13:41:45Z",
@@ -5380,7 +5380,7 @@
     {
       "tag": "v0.2.3",
       "version": "0.2.3",
-      "name": "🚀 v0.2.3 — 2026-11-02",
+      "name": "v0.2.3 - Strongbow 🍻",
       "channel": "stable",
       "draft": false,
       "published_at": "2026-11-01T18:35:56Z",
@@ -6172,7 +6172,7 @@
     {
       "tag": "v0.2.2",
       "version": "0.2.2",
-      "name": "🚀 v0.2.2 — 2026-11-01",
+      "name": "v0.2.2 - Almonds 🌰",
       "channel": "stable",
       "draft": false,
       "published_at": "2026-11-01T05:16:05Z",
@@ -6564,7 +6564,7 @@
     {
       "tag": "v0.2.1",
       "version": "0.2.1",
-      "name": "🚀 v0.2.1 — 2026-10-31",
+      "name": "v0.2.1 - Rocky 🍪",
       "channel": "stable",
       "draft": false,
       "published_at": "2026-10-31T04:45:55Z",
