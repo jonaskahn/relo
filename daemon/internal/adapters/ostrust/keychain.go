@@ -46,7 +46,11 @@ func domainFlags(scope Scope) []string {
 // operator is told to run is what Relo runs.
 func addTrustedCertArgs(scope Scope, keychainPath, file string) []string {
 	args := append([]string{"add-trusted-cert"}, domainFlags(scope)...)
-	args = append(args, "-r", "trustRoot", "-p", "ssl")
+	// The root is trusted for basicX509 as well as for SSL: a collector of
+	// trusted roots evaluates each certificate under a basicX509 policy, and a
+	// root that only carries the SSL policy is "not trusted" under it, which
+	// leaves the root out of what such a collector gathers.
+	args = append(args, "-r", "trustRoot", "-p", "ssl", "-p", "basic")
 	if keychainPath != "" {
 		args = append(args, "-k", keychainPath)
 	}

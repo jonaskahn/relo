@@ -283,7 +283,7 @@ func TestALinuxUserRootNeedsTheNSSTool(t *testing.T) {
 func TestTheManualStepsAreTheCommandsTheAutomaticPathRuns(t *testing.T) {
 	steps := ostrust.Manual("darwin", systemRoot(), "/Users/x/.relo/ca/ca.pem")
 	for _, want := range []string{
-		"'add-trusted-cert' '-d' '-r' 'trustRoot' '-p' 'ssl' '/Users/x/.relo/ca/ca.pem'",
+		"'add-trusted-cert' '-d' '-r' 'trustRoot' '-p' 'ssl' '-p' 'basic' '/Users/x/.relo/ca/ca.pem'",
 	} {
 		if !strings.Contains(steps.Install, want) {
 			t.Errorf("install = %s, want %q", steps.Install, want)

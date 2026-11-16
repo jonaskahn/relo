@@ -43,7 +43,7 @@ Install. Run it as yourself, not under `sudo`: macOS asks you for your administr
 dialog, and a command run as root has no screen to ask on and is refused.
 
 ```sh
-security add-trusted-cert -d -r trustRoot -p ssl ~/.relo/ca/ca.pem
+security add-trusted-cert -d -r trustRoot -p ssl -p basic ~/.relo/ca/ca.pem
 ```
 
 Remove (the second line only matters if the certificate was also copied into the System keychain):
