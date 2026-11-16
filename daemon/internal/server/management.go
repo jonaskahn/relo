@@ -15,6 +15,7 @@ import (
 	appaccount "github.com/jonaskahn/relo/internal/application/account"
 	appactivity "github.com/jonaskahn/relo/internal/application/activity"
 	appcatalog "github.com/jonaskahn/relo/internal/application/catalog"
+	"github.com/jonaskahn/relo/internal/application/claudebindings"
 	appintegration "github.com/jonaskahn/relo/internal/application/integration"
 	approuting "github.com/jonaskahn/relo/internal/application/routing"
 	appsettings "github.com/jonaskahn/relo/internal/application/settings"
@@ -157,6 +158,8 @@ func (s *Server) registerIntegrationRoutes(mux *http.ServeMux) {
 	mux.HandleFunc("POST "+apiPrefix+"integrations/{id}/disable", s.handleDisableIntegration)
 	mux.HandleFunc("POST "+apiPrefix+"integrations/{id}/rotate", s.handleRotateIntegration)
 	mux.HandleFunc("POST "+apiPrefix+"integrations/{id}/mode", s.handleIntegrationMode)
+	mux.HandleFunc("GET "+apiPrefix+"integrations/{id}/bindings", s.handleGetBindings)
+	mux.HandleFunc("POST "+apiPrefix+"integrations/{id}/bindings", s.handleSetBindings)
 	mux.HandleFunc("POST "+apiPrefix+"integrations/{id}/repair", s.handleRepairIntegration)
 	mux.HandleFunc("GET "+apiPrefix+"integrations/{id}/model-config", s.handleGetClaudeModelConfig)
 	mux.HandleFunc("POST "+apiPrefix+"integrations/{id}/model-config", s.handleSetClaudeModelConfig)
@@ -429,6 +432,7 @@ func isClientError(err error) bool {
 		apptemplates.ErrUnsupported, apptemplates.ErrInvalidPrefixes,
 		appcatalog.ErrUnknownModelsDevRef, ErrUnknownStatus,
 		appintegration.ErrRestartUnsupported,
+		claudebindings.ErrInvalidBinding, claudebindings.ErrInvalidTarget, claudebindings.ErrTooMany,
 		appintegration.ErrReloadUnsupported,
 	}
 	for _, sentinel := range sentinels {

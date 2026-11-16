@@ -22,6 +22,7 @@ import (
 	appaccount "github.com/jonaskahn/relo/internal/application/account"
 	appactivity "github.com/jonaskahn/relo/internal/application/activity"
 	appcatalog "github.com/jonaskahn/relo/internal/application/catalog"
+	"github.com/jonaskahn/relo/internal/application/claudebindings"
 	appintegration "github.com/jonaskahn/relo/internal/application/integration"
 	approuting "github.com/jonaskahn/relo/internal/application/routing"
 	appsettings "github.com/jonaskahn/relo/internal/application/settings"
@@ -83,6 +84,9 @@ type Options struct {
 	CatalogAPI *appcatalog.Service
 	// Integrations is the coding-client setup use cases.
 	Integrations *appintegration.Service
+	// ClaudeBindings maps native Claude ids to Relo models for the integration
+	// proxy mode wires.
+	ClaudeBindings *claudebindings.Service
 	// NativeAnthropicURL is where a claude.ai model id is forwarded. Empty
 	// means https://api.anthropic.com.
 	NativeAnthropicURL string
