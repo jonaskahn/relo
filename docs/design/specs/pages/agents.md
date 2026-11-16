@@ -202,6 +202,27 @@ and the choice is reversible from the same control. The warning copy has one own
 and the daemon never repeats it. Model preferences are hidden in proxy mode: they belong to the settings file it takes
 back out.
 
+### Model bindings (proxy mode)
+
+In proxy mode Claude Code keeps its own model names, so the section that replaces the model preferences binds a
+native Claude id to the Relo route or model that answers it. A model with no binding still reaches Anthropic with the
+caller's own login.
+
+Each binding is a row: the Claude id, the target (a route, or one connection's model), who answers first, and — only
+while Relo answers first — what a refusal does. **Relo answers** sends the request to the target in the id's place.
+**Anthropic first** asks the vendor and replays the request to the target when the vendor says wait or fails before
+answering. A replaced request that Relo cannot answer shows the error unless the binding asks to go back to Anthropic,
+so a bound request never spends the operator's vendor quota unasked. A caller's own 4xx is never replayed, and a
+request is passed to the other side once.
+
+Ids are matched without the release date, the `[1m]` marker or case, so one binding covers every spelling. The
+official ids offered are a seed list, the native ids a Claude connection lists, and the ids already bound; any Claude
+id can be bound. A binding whose target was deleted reads **Target is gone** and is left to Anthropic rather than
+failing the request. The row states and the caveat line (the picker keeps the Claude name, and the model is told it is
+that Claude model) are the only copy the section adds. Bindings are one JSON document per integration in
+`app_documents`, loaded into memory at startup and replaced whole on every save, so a request never waits on the
+database.
+
 Only one action is in flight per agent, and its own control carries the spinner while every other control stays live —
 one agent's set-up never freezes the page. An action patches its own agent into the list in place; the list keeps its
 order, the open step and the modal's scroll, and a silent background re-sync reconciles the daemon's answer without a
