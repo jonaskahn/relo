@@ -2,6 +2,7 @@ package ostrust
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -45,7 +46,11 @@ func domainFlags(scope Scope) []string {
 // operator is told to run is what Relo runs.
 func addTrustedCertArgs(scope Scope, keychainPath, file string) []string {
 	args := append([]string{"add-trusted-cert"}, domainFlags(scope)...)
-	return append(args, "-r", "trustRoot", "-p", "ssl", "-k", keychainPath, file)
+	args = append(args, "-r", "trustRoot", "-p", "ssl")
+	if keychainPath != "" {
+		args = append(args, "-k", keychainPath)
+	}
+	return append(args, file)
 }
 
 func removeTrustedCertArgs(scope Scope, file string) []string {
@@ -58,7 +63,9 @@ func deleteCertificateArgs(sha1, keychainPath string) []string {
 
 // elevated runs security commands as the administrator, through the OS's own
 // approval dialog, in one request so the operator is asked once. It never sees
-// a password. A request the operator turns down is ErrDeclined.
+// a password. A request the operator turns down is ErrDeclined. It is for the
+// keychain file only: changing trust settings needs a user in front of the
+// screen, which a command run this way does not have.
 func (k *keychain) elevated(ctx context.Context, commands ...[]string) error {
 	lines := make([]string, len(commands))
 	for index, args := range commands {
@@ -70,9 +77,17 @@ func (k *keychain) elevated(ctx context.Context, commands ...[]string) error {
 	case err != nil:
 		return ErrUnavailable
 	case result.Code != 0:
-		return ErrDeclined
+		return refused(result)
 	}
 	return nil
+}
+
+// refused is ErrDeclined with what the tool said, so a failure is not a mystery.
+func refused(result Result) error {
+	if said := strings.TrimSpace(result.Stderr + result.Stdout); said != "" {
+		return fmt.Errorf("%w: %s", ErrDeclined, said)
+	}
+	return ErrDeclined
 }
 
 var sha1Line = regexp.MustCompile(`(?m)^SHA-1 hash:\s*([0-9A-Fa-f:]{40,59})\s*$`)
@@ -90,17 +105,34 @@ func listsFingerprint(output, sha1 string) bool {
 // it issued verifies for the host, and the trust setting is not host-scoped.
 // Anything the OS will not say is Unknown.
 func (k *keychain) Inspect(ctx context.Context, root Root) State {
+	if root.Scope == ScopeSystem {
+		return k.inspectSystem(ctx, root)
+	}
 	if state := k.listedState(ctx, root); state != Trusted {
 		return state
 	}
 	if state := k.verifiedState(ctx, root); state != Trusted {
 		return state
 	}
-	scoped, readable := k.hostScoped(ctx, root.SHA1, root.Scope)
+	_, scoped, readable := k.trustEntry(ctx, root.SHA1, root.Scope)
 	switch {
 	case !readable:
 		return Unknown
 	case scoped:
+		return Untrusted
+	}
+	return Trusted
+}
+
+// inspectSystem reads the administrator trust domain alone. The keychain
+// lookups and a verified leaf answer for the user's own trust as well, which is
+// not what a virtual machine copies, so only an entry in that domain counts.
+func (k *keychain) inspectSystem(ctx context.Context, root Root) State {
+	present, scoped, readable := k.trustEntry(ctx, root.SHA1, ScopeSystem)
+	switch {
+	case !readable:
+		return Unknown
+	case !present, scoped:
 		return Untrusted
 	}
 	return Trusted
@@ -140,50 +172,56 @@ func (k *keychain) verifiedState(ctx context.Context, root Root) State {
 	return Trusted
 }
 
-// hostScoped reports whether the root's trust settings carry a policy string,
-// and false in the second result when they cannot be read.
-func (k *keychain) hostScoped(ctx context.Context, sha1 string, scope Scope) (scoped, readable bool) {
+// trustEntry reads a trust domain's settings for one root: whether it has an
+// entry, whether that entry carries a policy string, and false in the last
+// result when the settings cannot be read.
+func (k *keychain) trustEntry(ctx context.Context, sha1 string, scope Scope) (present, scoped, readable bool) {
 	dir, err := os.MkdirTemp("", "relo-trust-")
 	if err != nil {
-		return false, false
+		return false, false, false
 	}
 	defer func() { _ = os.RemoveAll(dir) }()
 	file := filepath.Join(dir, "trust-settings.plist")
 	exported, err := k.run(ctx, securityTool, append(append([]string{"trust-settings-export"}, domainFlags(scope)...), file)...)
 	if err != nil || exported.Code != 0 {
-		return false, false
+		return false, false, false
 	}
 	content, err := os.ReadFile(file)
 	if err != nil {
-		return false, false
+		return false, false, false
 	}
 	xml := string(content)
 	at := strings.Index(xml, "<key>"+sha1+"</key>")
 	if at < 0 {
-		return false, true
+		return false, false, true
 	}
 	entry := xml[at:]
 	if end := strings.Index(entry, "</array>"); end >= 0 {
 		entry = entry[:end]
 	}
-	return strings.Contains(entry, "<key>kSecTrustSettingsPolicyString</key>"), true
+	return true, strings.Contains(entry, "<key>kSecTrustSettingsPolicyString</key>"), true
 }
 
-// Trust adds the root to the login keychain as an SSL trust root, which is the
-// step macOS answers with its own authorization prompt.
+// Trust adds the root as an SSL trust root, which is the step macOS answers with
+// its own authorization prompt. The system scope writes the administrator
+// domain as the user, with no keychain named: run as root without a screen the
+// same command is refused, because it cannot ask.
 func (k *keychain) Trust(ctx context.Context, root Root) error {
 	file, cleanup, err := privateCopy("ca.pem", root.PEM)
 	if err != nil {
 		return err
 	}
 	defer cleanup()
-	args := addTrustedCertArgs(root.Scope, k.path(root.Scope), file)
+	keychainPath := k.path(root.Scope)
 	if root.Scope == ScopeSystem {
-		return k.elevated(ctx, args)
+		keychainPath = ""
 	}
-	result, err := k.run(ctx, securityTool, args...)
-	if err != nil || result.Code != 0 {
+	result, err := k.run(ctx, securityTool, addTrustedCertArgs(root.Scope, keychainPath, file)...)
+	switch {
+	case err != nil:
 		return ErrDeclined
+	case result.Code != 0:
+		return refused(result)
 	}
 	return nil
 }
@@ -191,6 +229,9 @@ func (k *keychain) Trust(ctx context.Context, root Root) error {
 // Untrust takes the trust setting and the certificate out. A root that is not
 // there is already gone, and asking the keychain about it would only prompt.
 func (k *keychain) Untrust(ctx context.Context, root Root) error {
+	if root.Scope == ScopeSystem {
+		return k.untrustSystem(ctx, root)
+	}
 	listed, err := k.listed(ctx, root)
 	if err != nil {
 		return err
@@ -203,16 +244,57 @@ func (k *keychain) Untrust(ctx context.Context, root Root) error {
 		return err
 	}
 	defer cleanup()
-	if root.Scope == ScopeSystem {
-		if err := k.elevated(ctx, removeTrustedCertArgs(root.Scope, file),
-			deleteCertificateArgs(root.SHA1, k.path(root.Scope))); err != nil {
-			return err
-		}
-	} else if err := k.removeOwn(ctx, root, file); err != nil {
+	if err := k.removeOwn(ctx, root, file); err != nil {
 		return err
 	}
 	if still, err := k.listed(ctx, root); err != nil || still {
 		return ErrDeclined
+	}
+	return nil
+}
+
+// untrustSystem takes Relo's entry out of the administrator trust domain, which
+// the OS asks the operator about, and any copy of the root out of the System
+// keychain, which one administrator request covers. The root stays in the
+// operator's own keychain, where the picker's trust lives.
+func (k *keychain) untrustSystem(ctx context.Context, root Root) error {
+	present, _, readable := k.trustEntry(ctx, root.SHA1, ScopeSystem)
+	listed, err := k.listed(ctx, root)
+	switch {
+	case !readable:
+		return ErrDeclined
+	case err != nil:
+		return err
+	}
+	if present {
+		if err := k.removeSystemSetting(ctx, root); err != nil {
+			return err
+		}
+	}
+	if listed {
+		if err := k.elevated(ctx, deleteCertificateArgs(root.SHA1, k.path(ScopeSystem))); err != nil {
+			return err
+		}
+	}
+	still, _, readable := k.trustEntry(ctx, root.SHA1, ScopeSystem)
+	if again, err := k.listed(ctx, root); err != nil || again || still || !readable {
+		return ErrDeclined
+	}
+	return nil
+}
+
+func (k *keychain) removeSystemSetting(ctx context.Context, root Root) error {
+	file, cleanup, err := privateCopy("ca.pem", root.PEM)
+	if err != nil {
+		return err
+	}
+	defer cleanup()
+	result, err := k.run(ctx, securityTool, removeTrustedCertArgs(root.Scope, file)...)
+	switch {
+	case err != nil:
+		return err
+	case result.Code != 0:
+		return refused(result)
 	}
 	return nil
 }

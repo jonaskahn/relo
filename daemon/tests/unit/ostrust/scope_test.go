@@ -63,65 +63,63 @@ func (t *table) line(fragment string) string {
 	return ""
 }
 
-// TestTrustingSystemWideOnMacAsksOnceThroughTheOSApprovalDialog pins the system
-// scope on macOS: one elevated request, in the administrator trust domain and
-// the System keychain, and never a direct write.
-func TestTrustingSystemWideOnMacAsksOnceThroughTheOSApprovalDialog(t *testing.T) {
-	s := &script{answers: map[string][]ostrust.Result{"/usr/bin/osascript": {{}}}}
+// TestTrustingSystemWideOnMacWritesTheAdministratorDomainAsTheUser pins the
+// system scope on macOS: the trust setting is written by the user, whom macOS
+// asks itself, and never through a root shell, which cannot be asked and is
+// refused ("no user interaction was possible").
+func TestTrustingSystemWideOnMacWritesTheAdministratorDomainAsTheUser(t *testing.T) {
+	s := &script{answers: map[string][]ostrust.Result{"add-trusted-cert": {{}}}}
 	if err := mac(s).Trust(context.Background(), systemRoot()); err != nil {
 		t.Fatalf("Trust() error = %v", err)
 	}
-	if s.ran("add-trusted-cert") {
-		t.Fatal("the system trust was written without the approval dialog")
+	if s.ran("/usr/bin/osascript") {
+		t.Fatal("the trust setting was written through a root shell")
 	}
-	var request string
-	for _, seen := range s.seen {
-		if strings.HasPrefix(seen, "/usr/bin/osascript") {
-			request = seen
-		}
-	}
-	for _, want := range []string{
-		"with administrator privileges", "'add-trusted-cert' '-d' '-r' 'trustRoot' '-p' 'ssl' '-k' '/Library/Keychains/System.keychain'",
-	} {
-		if !strings.Contains(request, want) {
-			t.Fatalf("request = %s, want %q", request, want)
-		}
+	command := s.seen[0]
+	if !strings.Contains(command, "add-trusted-cert -d -r trustRoot -p ssl") || strings.Contains(command, " -k ") {
+		t.Fatalf("command = %q, want the administrator domain and no keychain", command)
 	}
 }
 
-func TestADeclinedApprovalDialogLeavesTheSystemUntouched(t *testing.T) {
-	s := &script{answers: map[string][]ostrust.Result{"/usr/bin/osascript": {{Code: 1, Stderr: "User canceled. (-128)"}}}}
-	if err := mac(s).Trust(context.Background(), systemRoot()); !errors.Is(err, ostrust.ErrDeclined) {
-		t.Fatalf("Trust() error = %v, want %v", err, ostrust.ErrDeclined)
+func TestADeclinedSystemTrustSaysWhatTheOSSaid(t *testing.T) {
+	s := &script{answers: map[string][]ostrust.Result{"add-trusted-cert": {{Code: 1, Stderr: "User canceled. (-128)"}}}}
+	err := mac(s).Trust(context.Background(), systemRoot())
+	if !errors.Is(err, ostrust.ErrDeclined) || !strings.Contains(err.Error(), "User canceled") {
+		t.Fatalf("Trust() error = %v, want a decline carrying the OS's words", err)
 	}
 }
 
-func TestAMacWithoutTheApprovalToolCannotInstallAutomatically(t *testing.T) {
-	failing := func(context.Context, string, ...string) (ostrust.Result, error) {
-		return ostrust.Result{}, errors.New("not found")
-	}
-	if err := ostrust.New("darwin", "/Users/x", failing).Trust(context.Background(), systemRoot()); !errors.Is(err, ostrust.ErrUnavailable) {
-		t.Fatalf("Trust() error = %v, want %v", err, ostrust.ErrUnavailable)
-	}
-}
-
-// TestRemovingTheSystemTrustIsOneRequestAndIsReadBack keeps the dialog to a
-// single ask and confirms the root is gone before reporting success.
-func TestRemovingTheSystemTrustIsOneRequestAndIsReadBack(t *testing.T) {
+// TestRemovingTheSystemTrustTakesTheSettingAndTheKeychainCopyAndReadsBack keeps
+// the administrator request to the one step that needs it, the keychain file.
+func TestRemovingTheSystemTrustTakesTheSettingAndTheKeychainCopyAndReadsBack(t *testing.T) {
+	entry := "<key>" + fingerprint + "</key><array></array>"
 	s := &script{answers: map[string][]ostrust.Result{
-		"find-certificate": {listing(0), listing(1)}, "/usr/bin/osascript": {{}},
+		"find-certificate": {listing(0), listing(1)}, "remove-trusted-cert": {{}},
+		"trust-settings-export": {{}}, "/usr/bin/osascript": {{}},
 	}}
+	exports := 0
+	s.hook = func(args []string) {
+		if args[0] == "trust-settings-export" {
+			exports++
+			content := entry
+			if exports > 1 {
+				content = ""
+			}
+			_ = os.WriteFile(args[len(args)-1], []byte(content), 0o600)
+		}
+	}
 	if err := mac(s).Untrust(context.Background(), systemRoot()); err != nil {
 		t.Fatalf("Untrust() error = %v", err)
+	}
+	if !s.ran("remove-trusted-cert remove-trusted-cert -d") {
+		t.Fatalf("commands = %v, want the setting removed from the administrator domain", s.seen)
 	}
 	asked := 0
 	for _, seen := range s.seen {
 		if strings.HasPrefix(seen, "/usr/bin/osascript") {
 			asked++
-			for _, want := range []string{"remove-trusted-cert' '-d'", "delete-certificate' '-Z' '" + fingerprint + "' '/Library/Keychains/System.keychain'"} {
-				if !strings.Contains(seen, want) {
-					t.Fatalf("request = %s, want %q", seen, want)
-				}
+			if want := "delete-certificate' '-Z' '" + fingerprint + "' '/Library/Keychains/System.keychain'"; !strings.Contains(seen, want) || strings.Contains(seen, "remove-trusted-cert") {
+				t.Fatalf("request = %s, want only the keychain delete", seen)
 			}
 		}
 	}
@@ -130,23 +128,41 @@ func TestRemovingTheSystemTrustIsOneRequestAndIsReadBack(t *testing.T) {
 	}
 }
 
-func TestTheSystemScopeIsReadFromTheSystemKeychainAndTheAdministratorDomain(t *testing.T) {
-	s := trustedScript("<key>" + fingerprint + "</key><array></array>")
-	s.hook = func(args []string) {
-		if args[0] == "trust-settings-export" {
-			_ = os.WriteFile(args[len(args)-1], []byte("<key>"+fingerprint+"</key><array></array>"), 0o600)
+// TestTheSystemScopeNeedsAnEntryInTheAdministratorDomain pins the fix for a
+// root that is in the System keychain and trusted by the user alone: a verified
+// leaf says nothing about the domain a virtual machine copies from.
+func TestTheSystemScopeNeedsAnEntryInTheAdministratorDomain(t *testing.T) {
+	read := func(plist string) ostrust.State {
+		s := trustedScript(plist)
+		s.hook = func(args []string) {
+			if args[0] == "trust-settings-export" {
+				_ = os.WriteFile(args[len(args)-1], []byte(plist), 0o600)
+			}
 		}
+		return mac(s).Inspect(context.Background(), systemRoot())
+	}
+	if got := read("<key>mitmproxy</key><array></array>"); got != ostrust.Untrusted {
+		t.Fatalf("no entry: state = %q, want untrusted", got)
+	}
+	if got := read("<key>" + fingerprint + "</key><array></array>"); got != ostrust.Trusted {
+		t.Fatalf("entry: state = %q, want trusted", got)
+	}
+	scoped := "<key>" + fingerprint + "</key><array><dict><key>kSecTrustSettingsPolicyString</key><string>claude.ai</string></dict></array>"
+	if got := read(scoped); got != ostrust.Untrusted {
+		t.Fatalf("host-scoped: state = %q, want untrusted", got)
+	}
+}
+
+func TestTheSystemScopeIsReadFromTheAdministratorDomain(t *testing.T) {
+	s := &script{answers: map[string][]ostrust.Result{"trust-settings-export": {{}}}}
+	s.hook = func(args []string) {
+		_ = os.WriteFile(args[len(args)-1], []byte("<key>"+fingerprint+"</key><array></array>"), 0o600)
 	}
 	if got := mac(s).Inspect(context.Background(), systemRoot()); got != ostrust.Trusted {
 		t.Fatalf("state = %q, want trusted", got)
 	}
-	var sawKeychain, sawDomain bool
-	for _, seen := range s.seen {
-		sawKeychain = sawKeychain || strings.Contains(seen, "/Library/Keychains/System.keychain")
-		sawDomain = sawDomain || strings.Contains(seen, "trust-settings-export -d ")
-	}
-	if !sawKeychain || !sawDomain {
-		t.Fatalf("commands = %v, want the System keychain and the -d domain", s.seen)
+	if !strings.Contains(strings.Join(s.seen, "\n"), "trust-settings-export -d ") {
+		t.Fatalf("commands = %v, want the -d domain", s.seen)
 	}
 }
 
@@ -267,13 +283,13 @@ func TestALinuxUserRootNeedsTheNSSTool(t *testing.T) {
 func TestTheManualStepsAreTheCommandsTheAutomaticPathRuns(t *testing.T) {
 	steps := ostrust.Manual("darwin", systemRoot(), "/Users/x/.relo/ca/ca.pem")
 	for _, want := range []string{
-		"sudo ", "'add-trusted-cert' '-d' '-r' 'trustRoot' '-p' 'ssl' '-k' '/Library/Keychains/System.keychain' '/Users/x/.relo/ca/ca.pem'",
+		"'add-trusted-cert' '-d' '-r' 'trustRoot' '-p' 'ssl' '/Users/x/.relo/ca/ca.pem'",
 	} {
 		if !strings.Contains(steps.Install, want) {
 			t.Errorf("install = %s, want %q", steps.Install, want)
 		}
 	}
-	if !strings.Contains(steps.Remove, "'delete-certificate' '-Z' '"+fingerprint+"' '/Library/Keychains/System.keychain'") {
+	if strings.Contains(steps.Install, "sudo") || !strings.Contains(steps.Remove, "sudo '/usr/bin/security' 'delete-certificate' '-Z' '"+fingerprint+"' '/Library/Keychains/System.keychain'") {
 		t.Errorf("remove = %s, want the System keychain delete", steps.Remove)
 	}
 	if steps.DocsURL != ostrust.DocsURL || steps.SHA256 != sha256Fingerprint || steps.CertPath == "" {
@@ -298,7 +314,8 @@ func TestTheManualStepsAreTheCommandsTheAutomaticPathRuns(t *testing.T) {
 // nothing to do silent, on each OS: it is what lets Desktop leave proxy mode
 // without a dialog when no certificate was ever installed.
 func TestRemovingWhatIsNotThereNeverAsksForAnApproval(t *testing.T) {
-	mac := &script{answers: map[string][]ostrust.Result{"find-certificate": {listing(1)}}}
+	mac := &script{answers: map[string][]ostrust.Result{"find-certificate": {listing(1)}, "trust-settings-export": {{}}}}
+	mac.hook = func(args []string) { _ = os.WriteFile(args[len(args)-1], []byte(""), 0o600) }
 	if err := ostrust.New("darwin", "/Users/x", mac.run).Untrust(context.Background(), systemRoot()); err != nil {
 		t.Fatalf("macOS Untrust() error = %v", err)
 	}

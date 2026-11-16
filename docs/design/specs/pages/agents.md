@@ -269,7 +269,7 @@ host to the intercept. The VM also copies the system's trust when it starts, and
 not the user's own, so the control needs Relo's certificate trusted system-wide.
 
 It is off by default and has its own warning and confirm. Turning it on asks the operating system for that trust, once,
-through the system's own approval dialog (an administrator dialog on macOS, UAC on Windows, polkit or a sudo that needs
+through the system's own approval dialog (macOS asks for your administrator password in its own dialog, UAC on Windows, polkit or a sudo that needs
 no password on Linux); Relo never sees a password. The warning says: Relo terminates TLS for api.anthropic.com for
 Cowork's traffic; the certificate is trusted for every app and every user, limited to claude.ai and api.anthropic.com;
 anything running as the user can read its private key file; the trust stays until removed and is removed automatically

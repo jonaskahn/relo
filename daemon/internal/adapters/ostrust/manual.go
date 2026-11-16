@@ -42,17 +42,19 @@ func Manual(goos string, root Root, certPath string) ManualSteps {
 }
 
 func darwinManual(root Root, certPath string) (install, remove, check string) {
-	keychainPath, sudo := "~/Library/Keychains/login.keychain-db", ""
-	if root.Scope == ScopeSystem {
-		keychainPath, sudo = systemKeychain, "sudo "
+	if root.Scope != ScopeSystem {
+		keychainPath := "~/Library/Keychains/login.keychain-db"
+		install = shellLine(append([]string{securityTool}, addTrustedCertArgs(root.Scope, keychainPath, certPath)...)...)
+		remove = shellLine(append([]string{securityTool}, removeTrustedCertArgs(root.Scope, certPath)...)...) +
+			"; " + shellLine(append([]string{securityTool}, deleteCertificateArgs(root.SHA1, keychainPath)...)...)
+		return install, remove, shellLine(securityTool, "dump-trust-settings") + " | grep " + shellQuote(root.CommonName)
 	}
-	install = sudo + shellLine(append([]string{securityTool}, addTrustedCertArgs(root.Scope, keychainPath, certPath)...)...)
-	remove = sudo + shellLine(append([]string{securityTool}, removeTrustedCertArgs(root.Scope, certPath)...)...) +
-		"; " + sudo + shellLine(append([]string{securityTool}, deleteCertificateArgs(root.SHA1, keychainPath)...)...)
-	check = shellLine(securityTool, "dump-trust-settings") + " | grep " + shellQuote(root.CommonName)
-	if root.Scope == ScopeSystem {
-		check = shellLine(securityTool, "dump-trust-settings", "-d") + " | grep " + shellQuote(root.CommonName)
-	}
+	// The administrator domain is written as yourself: macOS asks you, and a
+	// command run under sudo has no screen to ask on and is refused.
+	install = shellLine(append([]string{securityTool}, addTrustedCertArgs(root.Scope, "", certPath)...)...)
+	remove = shellLine(append([]string{securityTool}, removeTrustedCertArgs(root.Scope, certPath)...)...) +
+		"; sudo " + shellLine(append([]string{securityTool}, deleteCertificateArgs(root.SHA1, systemKeychain)...)...)
+	check = shellLine(securityTool, "dump-trust-settings", "-d") + " | grep " + shellQuote(root.CommonName)
 	return install, remove, check
 }
 

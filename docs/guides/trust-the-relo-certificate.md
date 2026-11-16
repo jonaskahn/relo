@@ -39,16 +39,17 @@ stop and do not trust the file.
 
 ## macOS
 
-Install (asks for your administrator password):
+Install. Run it as yourself, not under `sudo`: macOS asks you for your administrator password in its own
+dialog, and a command run as root has no screen to ask on and is refused.
 
 ```sh
-sudo security add-trusted-cert -d -r trustRoot -p ssl -k /Library/Keychains/System.keychain ~/.relo/ca/ca.pem
+security add-trusted-cert -d -r trustRoot -p ssl ~/.relo/ca/ca.pem
 ```
 
-Remove:
+Remove (the second line only matters if the certificate was also copied into the System keychain):
 
 ```sh
-sudo security remove-trusted-cert -d ~/.relo/ca/ca.pem
+security remove-trusted-cert -d ~/.relo/ca/ca.pem
 sudo security delete-certificate -Z <SHA-1 fingerprint> /Library/Keychains/System.keychain
 ```
 
