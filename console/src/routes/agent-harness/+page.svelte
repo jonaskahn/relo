@@ -114,9 +114,9 @@
 	let models = $state<IntegrationModel[]>([]);
 	let modelsState = $state<'idle' | 'loading' | 'ready' | 'failed'>('idle');
 	// The proxy warning is being read, so the diagram draws proxy before it is written.
-	let previewingProxy = $state(false);
+	let modeFailure = $state('');
 	// The mode a set-up will write, chosen in the modal before anything is written.
-	let setupMode = $state<'env' | 'proxy'>('env');
+	let chosenMode = $state<'env' | 'proxy'>('env');
 	let verifying = $state(false);
 	let verifyRead = $state<{ ok: boolean; copy: string } | null>(null);
 
@@ -161,23 +161,39 @@
 		dataPlane = status.status === 'fulfilled' ? (status.value.data_plane ?? []) : [];
 	}
 
-	// The diagram follows the mode the client is wired for, or proxy while its warning is
-	// open. Its dots run only while that wiring is applied.
-	const diagramMode = $derived(
-		(
-			detail?.enabled
-				? previewingProxy || (detail?.mode ?? 'env') === 'proxy'
-				: setupMode === 'proxy'
-		)
-			? 'proxy'
-			: 'env'
+	// The mode the operator has picked but not yet saved, for an agent that is already set up.
+	const modeDirty = $derived(
+		!!detail?.enabled &&
+			choosesMode(detail) &&
+			chosenMode !== (detail.mode === 'proxy' ? 'proxy' : 'env')
 	);
+	// The diagram follows the pick. Its dots run only for the stored wiring, once it is applied.
+	const diagramMode = $derived(chosenMode);
 	const diagramLive = $derived(
-		!previewingProxy &&
+		!modeDirty &&
 			!!detail?.enabled &&
 			stateTone(detail) === 'pass' &&
 			(diagramMode === 'env' || detail.proxy_state === 'applied')
 	);
+
+	// Writes the picked mode. Nothing moves until the operator presses Save.
+	async function saveMode(agent: IntegrationView) {
+		running = { id: agent.id, action: 'save' };
+		modeFailure = '';
+		try {
+			const next = await api<IntegrationView>(integrationPath(agent.id, 'mode'), {
+				method: 'POST',
+				body: JSON.stringify({ mode: chosenMode })
+			});
+			agents = patchAgent(agents, next);
+			detail = next;
+			chosenMode = next.mode === 'proxy' ? 'proxy' : 'env';
+		} catch (error) {
+			modeFailure = message(error);
+		} finally {
+			running = null;
+		}
+	}
 
 	function message(error: unknown): string {
 		return error instanceof Error ? error.message : String(error);
@@ -190,8 +206,8 @@
 		confirmFailure = '';
 		revealCopied = false;
 		verifyRead = null;
-		previewingProxy = false;
-		setupMode = 'env';
+		modeFailure = '';
+		chosenMode = agent.enabled && agent.mode === 'proxy' ? 'proxy' : 'env';
 		resetKey();
 		resetModels();
 		detailOpen = true;
@@ -535,6 +551,9 @@
 		if (!agent.enabled) {
 			return { key: 'setup', icon: 'plus', act: () => startSetup(agent) };
 		}
+		if (modeDirty) {
+			return { key: 'save', icon: 'check', act: () => void saveMode(agent) };
+		}
 		if (needsRepair(agent)) {
 			return { key: 'repair', icon: 'wrench', act: () => void run('repair', agent) };
 		}
@@ -544,7 +563,7 @@
 	// Claude Code and Claude Desktop are set up in the mode the operator chose in the
 	// modal; every other agent has one way to be wired and sends nothing.
 	function modeFor(agent: IntegrationView): { mode?: 'env' | 'proxy' } {
-		return choosesMode(agent) && detail?.id === agent.id ? { mode: setupMode } : {};
+		return choosesMode(agent) && detail?.id === agent.id ? { mode: chosenMode } : {};
 	}
 
 	function setupRequest(agent: IntegrationView): { body?: string } {
@@ -686,36 +705,25 @@
 						oncopy={() => void copyKey()}
 					/>
 					<AgentWiringSection agent={detail} />
-					{#if !detail.enabled && choosesMode(detail)}
+					{#if choosesMode(detail)}
 						<ClaudeModeSection
 							agent={detail}
-							setup
-							selected={setupMode}
-							onselect={(value) => (setupMode = value)}
-							onchanged={() => {}}
-						/>
-						<ModeDiagram
-							mode={diagramMode}
-							client={detail.id === 'claude-desktop' ? 'claude-desktop' : 'claude-code'}
-							live={false}
-							preview
-						/>
-					{/if}
-					{#if detail.enabled && choosesMode(detail)}
-						<ClaudeModeSection
-							agent={detail}
-							onpreview={(value) => (previewingProxy = value)}
-							onchanged={(next) => {
-								agents = patchAgent(agents, next);
-								detail = next;
+							selected={chosenMode}
+							onselect={(value) => {
+								chosenMode = value;
+								modeFailure = '';
 							}}
+							busy={blocked(running, detail)}
+							failure={modeFailure}
 						/>
 						<ModeDiagram
 							mode={diagramMode}
 							client={detail.id === 'claude-desktop' ? 'claude-desktop' : 'claude-code'}
 							live={diagramLive}
-							preview={previewingProxy}
+							preview={!detail.enabled || modeDirty}
 						/>
+					{/if}
+					{#if detail.enabled && choosesMode(detail) && !modeDirty}
 						{#if (detail.mode ?? 'env') === 'proxy'}
 							<ClaudeBindingsSection agent={detail} />
 							{#if detail.id === 'claude-desktop'}
@@ -869,7 +877,9 @@
 						{:else}
 							<Icon name={primary.icon} size={14} />
 						{/if}
-						{$t('ui.pages.integrationsPage.' + primary.key)}
+						{primary.key === 'save'
+							? $t('ui.common.save')
+							: $t('ui.pages.integrationsPage.' + primary.key)}
 					</Button>
 				</div>
 			</div>

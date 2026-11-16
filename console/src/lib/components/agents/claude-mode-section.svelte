@@ -1,72 +1,34 @@
 <script lang="ts">
 	import { t } from 'svelte-i18n';
 
-	import { api } from '$lib/api';
-	import Button from '$lib/components/ui/button.svelte';
 	import Icon from '$lib/components/ui/icon.svelte';
-	import { integrationPath } from '$lib/integration-actions';
 	import type { IntegrationView } from '$lib/types';
 
 	// How Claude Code, or Claude Desktop, is pointed at Relo. Environment writes the
 	// client's own settings, or Desktop's gateway profile; proxy leaves the client
 	// talking to Anthropic and puts Relo's intercept in the path instead, which
 	// keeps a claude.ai login working.
+	//
+	// Choosing writes nothing. The pick is held by the page, whose primary button
+	// becomes Save while it differs from what is stored, so the operator confirms
+	// the change before the wiring moves.
 	interface Props {
 		agent: IntegrationView;
-		onchanged: (agent: IntegrationView) => void;
-		// Tells the mode diagram the operator is reading the proxy warning, so it draws
-		// the mode before it is written.
-		onpreview?: (previewing: boolean) => void;
-		// Before set-up there is nothing to switch, so choosing only picks the mode
-		// the set-up will write. The warning stays in view while proxy is picked, and
-		// the set-up button is the confirmation.
-		setup?: boolean;
-		selected?: 'env' | 'proxy';
-		onselect?: (mode: 'env' | 'proxy') => void;
+		selected: 'env' | 'proxy';
+		onselect: (mode: 'env' | 'proxy') => void;
+		busy?: boolean;
+		failure?: string;
 	}
 
-	let { agent, onchanged, onpreview, setup = false, selected = 'env', onselect }: Props = $props();
+	let { agent, selected, onselect, busy = false, failure = '' }: Props = $props();
 
-	let busy = $state(false);
-	let failure = $state('');
-	let confirmProxy = $state(false);
-
-	function confirming(value: boolean) {
-		confirmProxy = value;
-		onpreview?.(value);
-	}
-
-	const mode = $derived(setup ? selected : agent.mode === 'proxy' ? 'proxy' : 'env');
+	const mode = $derived(selected);
 	const desktop = $derived(agent.id === 'claude-desktop');
+	const stored = $derived(agent.enabled && agent.mode === 'proxy' ? 'proxy' : 'env');
 	const proxyState = $derived(agent.proxy_state ?? '');
-
-	async function choose(next: 'env' | 'proxy') {
-		if (setup) {
-			onselect?.(next);
-			return;
-		}
-		if (next === mode) return;
-		if (next === 'proxy' && !confirmProxy) {
-			// The warning is the point of this step: an operator turning proxy
-			// mode on reads what it does to their account before it is written.
-			confirming(true);
-			return;
-		}
-		busy = true;
-		failure = '';
-		try {
-			const answer = await api<IntegrationView>(integrationPath(agent.id, 'mode'), {
-				method: 'POST',
-				body: JSON.stringify({ mode: next })
-			});
-			confirming(false);
-			onchanged(answer);
-		} catch (error) {
-			failure = error instanceof Error ? error.message : String(error);
-		} finally {
-			busy = false;
-		}
-	}
+	// The warning reads while proxy is chosen but not yet the stored mode.
+	const warn = $derived(mode === 'proxy' && stored !== 'proxy');
+	const dirty = $derived(agent.enabled && mode !== stored);
 
 	function proxyStateKey(state: string): string {
 		switch (state) {
@@ -104,7 +66,7 @@
 				: 'border-border hover:border-muted-foreground/40'}"
 			disabled={busy}
 			aria-pressed={mode === 'env'}
-			onclick={() => void choose('env')}
+			onclick={() => onselect('env')}
 		>
 			<span class="flex items-center gap-2 text-sm font-medium">
 				<Icon name={mode === 'env' ? 'circle-check' : 'circle-off'} size={14} />
@@ -125,7 +87,7 @@
 				: 'border-border hover:border-muted-foreground/40'}"
 			disabled={busy}
 			aria-pressed={mode === 'proxy'}
-			onclick={() => void choose('proxy')}
+			onclick={() => onselect('proxy')}
 		>
 			<span class="flex items-center gap-2 text-sm font-medium">
 				<Icon name={mode === 'proxy' ? 'circle-check' : 'circle-off'} size={14} />
@@ -141,37 +103,24 @@
 		</button>
 	</div>
 
-	{#if setup && mode === 'proxy'}
+	{#if warn}
 		<p class="rounded-lg border border-warning/40 bg-warning/5 p-3 text-xs text-warning">
 			{$t('ui.pages.integrationsPage.claudeModeProxyWarning')}
 		</p>
-	{:else if mode === 'proxy'}
+	{:else if mode === 'proxy' && agent.enabled}
 		<p class="flex items-start gap-2 text-xs text-muted-foreground">
 			<Icon name="info-circle" size={14} />
 			<span>{$t(proxyStateKey(proxyState))}</span>
 		</p>
 	{/if}
 
-	{#if confirmProxy}
-		<div class="rounded-lg border border-warning/40 bg-warning/5 p-3">
-			<p class="text-xs text-warning">{$t('ui.pages.integrationsPage.claudeModeProxyWarning')}</p>
-			<div class="mt-2 flex flex-wrap items-center gap-2">
-				<Button size="sm" disabled={busy} onclick={() => void choose('proxy')}>
-					{$t('ui.pages.integrationsPage.claudeModeProxyConfirm')}
-				</Button>
-				<Button size="sm" variant="ghost" disabled={busy} onclick={() => confirming(false)}>
-					{$t('ui.common.cancel')}
-				</Button>
-			</div>
-		</div>
+	{#if dirty}
+		<p class="text-xs text-muted-foreground" role="status">
+			{$t('ui.pages.integrationsPage.claudeModeUnsaved')}
+		</p>
 	{/if}
 
-	{#if busy}
-		<p class="flex items-center gap-2 text-xs text-muted-foreground">
-			<Icon name="loader" size={14} spin />
-			{$t('ui.common.saving')}
-		</p>
-	{:else if failure}
+	{#if failure}
 		<p class="text-sm text-danger" role="alert">{failure}</p>
 	{/if}
 </section>

@@ -1932,7 +1932,8 @@
           "reasonTrustRemains": "Das System vertraut dem Zertifikat von Relo noch. Entferne es mit der Schaltfläche unten.",
           "reasonCaUnverified": "Das Zertifikat von Relo hat seine Sicherheitsprüfung nicht bestanden und wurde nicht verwendet.",
           "reasonFailed": "Ein Schritt ist fehlgeschlagen und wurde, soweit möglich, rückgängig gemacht. Versuche es erneut."
-        }
+        },
+        "claudeModeUnsaved": "Noch nicht gespeichert. Mit Speichern wird dieser Modus angewendet."
       },
       "chatPage": {
         "title": "Chat",

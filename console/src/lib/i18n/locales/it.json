@@ -1932,7 +1932,8 @@
           "reasonTrustRemains": "Il sistema considera ancora attendibile il certificato di Relo. Rimuovilo con il pulsante qui sotto.",
           "reasonCaUnverified": "Il certificato di Relo non ha superato il controllo di sicurezza, quindi non è stato usato.",
           "reasonFailed": "Un passaggio non è riuscito ed è stato annullato dove possibile. Riprova."
-        }
+        },
+        "claudeModeUnsaved": "Non ancora salvato. Premi Salva per applicare questa modalità."
       },
       "chatPage": {
         "title": "Chat",

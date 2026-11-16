@@ -1932,7 +1932,8 @@
           "reasonTrustRemains": "The system still trusts Relo's certificate. Remove it with the button below.",
           "reasonCaUnverified": "Relo's certificate failed its safety check, so it was not used.",
           "reasonFailed": "A step failed and was undone where it could be. Try again."
-        }
+        },
+        "claudeModeUnsaved": "Not saved yet. Press Save to apply this mode."
       },
       "chatPage": {
         "title": "Chat",

@@ -62,7 +62,7 @@ export function resultCodeFor(action: AgentAction, agent: IntegrationView): Resu
 
 /** What a control bar reports a spinner for: the actions that change an agent's wiring, its
  *  context window, and the verification the test pane runs. */
-export type Work = AgentAction | 'verify' | 'context';
+export type Work = AgentAction | 'verify' | 'context' | 'save';
 
 /** The one piece of work in flight, named by the agent it belongs to. */
 export type Running = { id: string; action: Work } | null;

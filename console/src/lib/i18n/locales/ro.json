@@ -1932,7 +1932,8 @@
           "reasonTrustRemains": "Sistemul încă se încrede în certificatul Relo. Elimină-l cu butonul de mai jos.",
           "reasonCaUnverified": "Certificatul Relo a picat verificarea de siguranță și nu a fost folosit.",
           "reasonFailed": "Un pas a eșuat și a fost anulat unde s-a putut. Încearcă din nou."
-        }
+        },
+        "claudeModeUnsaved": "Nesalvat încă. Apasă Salvează pentru a aplica acest mod."
       },
       "chatPage": {
         "title": "Chat",

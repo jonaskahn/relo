@@ -1932,7 +1932,8 @@
           "reasonTrustRemains": "Systém stále důvěřuje certifikátu Relo. Odeberte ho tlačítkem níže.",
           "reasonCaUnverified": "Certifikát Relo neprošel bezpečnostní kontrolou, a proto nebyl použit.",
           "reasonFailed": "Krok selhal a byl vrácen, kde to šlo. Zkuste to znovu."
-        }
+        },
+        "claudeModeUnsaved": "Zatím neuloženo. Stisknutím Uložit tento režim použijete."
       },
       "chatPage": {
         "title": "Chat",

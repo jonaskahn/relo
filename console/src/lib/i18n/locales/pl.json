@@ -1932,7 +1932,8 @@
           "reasonTrustRemains": "System nadal ufa certyfikatowi Relo. Usuń go przyciskiem poniżej.",
           "reasonCaUnverified": "Certyfikat Relo nie przeszedł kontroli bezpieczeństwa, więc nie został użyty.",
           "reasonFailed": "Krok się nie powiódł i został cofnięty, o ile się dało. Spróbuj ponownie."
-        }
+        },
+        "claudeModeUnsaved": "Jeszcze nie zapisano. Naciśnij Zapisz, aby zastosować ten tryb."
       },
       "chatPage": {
         "title": "Czat",

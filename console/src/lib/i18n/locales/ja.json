@@ -1932,7 +1932,8 @@
           "reasonTrustRemains": "システムはまだ Relo の証明書を信頼しています。下のボタンで削除してください。",
           "reasonCaUnverified": "Relo の証明書が安全性の確認に失敗したため、使用されませんでした。",
           "reasonFailed": "ある手順が失敗し、可能な範囲で元に戻しました。もう一度お試しください。"
-        }
+        },
+        "claudeModeUnsaved": "まだ保存されていません。保存を押すとこのモードが適用されます。"
       },
       "chatPage": {
         "title": "チャット",

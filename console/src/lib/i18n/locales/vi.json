@@ -1932,7 +1932,8 @@
           "reasonTrustRemains": "Hệ thống vẫn tin cậy chứng chỉ của Relo. Gỡ bằng nút bên dưới.",
           "reasonCaUnverified": "Chứng chỉ của Relo không qua kiểm tra an toàn nên không được dùng.",
           "reasonFailed": "Một bước thất bại và đã được hoàn tác khi có thể. Hãy thử lại."
-        }
+        },
+        "claudeModeUnsaved": "Chưa lưu. Nhấn Lưu để áp dụng chế độ này."
       },
       "chatPage": {
         "title": "Trò chuyện",

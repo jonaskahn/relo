@@ -348,10 +348,8 @@
 				{#if choosesMode(selected)}
 					<ClaudeModeSection
 						agent={selected}
-						setup
 						selected={setupMode}
 						onselect={(value) => (setupMode = value)}
-						onchanged={() => {}}
 					/>
 					<ModeDiagram
 						mode={setupMode}

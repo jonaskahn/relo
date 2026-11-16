@@ -1932,7 +1932,8 @@
           "reasonTrustRemains": "O sistema ainda confia no certificado do Relo. Remova-o com o botão abaixo.",
           "reasonCaUnverified": "O certificado do Relo falhou na verificação de segurança e não foi usado.",
           "reasonFailed": "Uma etapa falhou e foi desfeita quando possível. Tente novamente."
-        }
+        },
+        "claudeModeUnsaved": "Ainda não salvo. Pressione Salvar para aplicar este modo."
       },
       "chatPage": {
         "title": "Chat",

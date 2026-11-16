@@ -1932,7 +1932,8 @@
           "reasonTrustRemains": "Sistem hâlâ Relo'nun sertifikasına güveniyor. Aşağıdaki düğmeyle kaldırın.",
           "reasonCaUnverified": "Relo'nun sertifikası güvenlik denetimini geçemedi, bu yüzden kullanılmadı.",
           "reasonFailed": "Bir adım başarısız oldu ve mümkün olduğunca geri alındı. Yeniden deneyin."
-        }
+        },
+        "claudeModeUnsaved": "Henüz kaydedilmedi. Bu modu uygulamak için Kaydet düğmesine basın."
       },
       "chatPage": {
         "title": "Sohbet",

@@ -1932,7 +1932,8 @@
           "reasonTrustRemains": "Sistem masih memercayai sertifikat Relo. Hapus dengan tombol di bawah.",
           "reasonCaUnverified": "Sertifikat Relo gagal pemeriksaan keamanan, jadi tidak digunakan.",
           "reasonFailed": "Satu langkah gagal dan dibatalkan sejauh bisa. Coba lagi."
-        }
+        },
+        "claudeModeUnsaved": "Belum disimpan. Tekan Simpan untuk menerapkan mode ini."
       },
       "chatPage": {
         "title": "Obrolan",

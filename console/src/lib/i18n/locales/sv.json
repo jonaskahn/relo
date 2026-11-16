@@ -1932,7 +1932,8 @@
           "reasonTrustRemains": "Systemet litar fortfarande på Relos certifikat. Ta bort det med knappen nedan.",
           "reasonCaUnverified": "Relos certifikat klarade inte säkerhetskontrollen och användes därför inte.",
           "reasonFailed": "Ett steg misslyckades och ångrades så långt det gick. Försök igen."
-        }
+        },
+        "claudeModeUnsaved": "Inte sparat än. Tryck på Spara för att tillämpa läget."
       },
       "chatPage": {
         "title": "Chatt",

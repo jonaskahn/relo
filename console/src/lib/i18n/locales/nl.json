@@ -1932,7 +1932,8 @@
           "reasonTrustRemains": "Het systeem vertrouwt het certificaat van Relo nog. Verwijder het met de knop hieronder.",
           "reasonCaUnverified": "Het certificaat van Relo kwam niet door de veiligheidscontrole en is niet gebruikt.",
           "reasonFailed": "Een stap is mislukt en is waar mogelijk teruggedraaid. Probeer het opnieuw."
-        }
+        },
+        "claudeModeUnsaved": "Nog niet opgeslagen. Druk op Opslaan om deze modus toe te passen."
       },
       "chatPage": {
         "title": "Chat",

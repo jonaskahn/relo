@@ -1932,7 +1932,8 @@
           "reasonTrustRemains": "El sistema aún confía en el certificado de Relo. Quítalo con el botón de abajo.",
           "reasonCaUnverified": "El certificado de Relo no superó su comprobación de seguridad, así que no se usó.",
           "reasonFailed": "Un paso falló y se deshizo en lo posible. Inténtalo de nuevo."
-        }
+        },
+        "claudeModeUnsaved": "Aún sin guardar. Pulsa Guardar para aplicar este modo."
       },
       "chatPage": {
         "title": "Chat",

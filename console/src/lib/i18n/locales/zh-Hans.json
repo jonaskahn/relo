@@ -1932,7 +1932,8 @@
           "reasonTrustRemains": "系统仍然信任 Relo 的证书。请用下面的按钮移除。",
           "reasonCaUnverified": "Relo 的证书未通过安全检查，因此没有使用。",
           "reasonFailed": "某一步失败了，并已尽可能撤销。请重试。"
-        }
+        },
+        "claudeModeUnsaved": "尚未保存。点击“保存”以应用此模式。"
       },
       "chatPage": {
         "title": "聊天",
