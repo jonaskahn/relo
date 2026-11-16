@@ -293,3 +293,30 @@ func TestTheManualStepsAreTheCommandsTheAutomaticPathRuns(t *testing.T) {
 		t.Errorf("unsupported OS = %+v, want the path and no commands", other)
 	}
 }
+
+// TestRemovingWhatIsNotThereNeverAsksForAnApproval keeps a removal that has
+// nothing to do silent, on each OS: it is what lets Desktop leave proxy mode
+// without a dialog when no certificate was ever installed.
+func TestRemovingWhatIsNotThereNeverAsksForAnApproval(t *testing.T) {
+	mac := &script{answers: map[string][]ostrust.Result{"find-certificate": {listing(1)}}}
+	if err := ostrust.New("darwin", "/Users/x", mac.run).Untrust(context.Background(), systemRoot()); err != nil {
+		t.Fatalf("macOS Untrust() error = %v", err)
+	}
+	if mac.ran("/usr/bin/osascript") {
+		t.Fatal("macOS asked for an approval to remove nothing")
+	}
+	windows := &script{answers: map[string][]ostrust.Result{"powershell.exe": {{}}}}
+	if err := ostrust.New("windows", "", windows.run).Untrust(context.Background(), systemRoot()); err != nil {
+		t.Fatalf("Windows Untrust() error = %v", err)
+	}
+	if len(windows.seen) != 1 || strings.Contains(windows.seen[0], "RunAs") {
+		t.Fatalf("Windows commands = %v, want one read and no elevation", windows.seen)
+	}
+	bare := &table{}
+	if err := ostrust.New("linux", "/home/x", bare.run).Untrust(context.Background(), systemRoot()); err != nil {
+		t.Fatalf("Linux Untrust() error = %v", err)
+	}
+	if err := ostrust.New("linux", "/home/x", bare.run).Untrust(context.Background(), root); err != nil {
+		t.Fatalf("Linux user Untrust() error = %v", err)
+	}
+}

@@ -90,6 +90,14 @@ func (w *windowsStore) Trust(ctx context.Context, root Root) error {
 	return nil
 }
 
+// absent reports whether the root is certainly not in its store, which needs no
+// approval to read, so removing something that is not there never asks for one.
+func (w *windowsStore) absent(ctx context.Context, root Root) bool {
+	script := fmt.Sprintf(`if (Test-Path '%s\%s') { exit 10 } else { exit 0 }`, store(root.Scope), root.SHA1)
+	result, err := w.powershell(ctx, script)
+	return err == nil && result.Code == 0
+}
+
 // Untrust removes the root from the current user's Root store, by thumbprint.
 func (w *windowsStore) Untrust(ctx context.Context, root Root) error {
 	script := fmt.Sprintf(`$ErrorActionPreference='Stop'
@@ -97,6 +105,9 @@ $path = '%s\%s'
 if (Test-Path $path) { Remove-Item -LiteralPath $path -Force }
 if (Test-Path $path) { exit 3 }`, store(root.Scope), root.SHA1)
 	if root.Scope == ScopeSystem {
+		if w.absent(ctx, root) {
+			return nil
+		}
 		return w.elevated(ctx, script)
 	}
 	result, err := w.powershell(ctx, script)

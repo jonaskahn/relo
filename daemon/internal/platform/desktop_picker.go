@@ -94,26 +94,19 @@ func (p *DesktopPicker) enabled() bool {
 }
 
 func (p *DesktopPicker) supported() bool {
-	return p.opts.Platform == "darwin" || p.opts.Platform == "windows"
+	return p.opts.Platform == "darwin" || p.opts.Platform == "windows" || p.opts.Platform == "linux"
 }
 
 // root describes Relo's root to the OS, with a leaf that proves the trust for
 // claude.ai, which is what arms the picker.
 func (p *DesktopPicker) root(authority *proxy.Authority) (ostrust.Root, error) {
-	return p.rootFor(authority, proxy.HostClaudeAI)
+	return p.rootFor(authority, proxy.HostClaudeAI, ostrust.ScopeUser)
 }
 
 // rootFor describes the same root with a leaf for one host, so the OS is asked
-// whether it trusts the root for that host.
-func (p *DesktopPicker) rootFor(authority *proxy.Authority, host string) (ostrust.Root, error) {
-	leaf, err := authority.LeafPEM(host)
-	if err != nil {
-		return ostrust.Root{}, err
-	}
-	return ostrust.Root{
-		PEM: authority.PEM(), SHA1: authority.SHA1(), CommonName: proxy.CommonName,
-		Host: host, LeafPEM: leaf,
-	}, nil
+// whether it trusts the root for that host, in the user's own store or system-wide.
+func (p *DesktopPicker) rootFor(authority *proxy.Authority, host string, scope ostrust.Scope) (ostrust.Root, error) {
+	return trustRoot(authority, host, scope)
 }
 
 // View reports where the picker stands. It reads the OS and the library and
@@ -146,6 +139,7 @@ func (p *DesktopPicker) view(ctx context.Context, reason appintegration.PickerRe
 		if root, err := p.root(authority); err == nil {
 			view.Trust = string(p.opts.Trust.Inspect(ctx, root))
 		}
+		p.describeCowork(ctx, &view, authority)
 	}
 	view.Reason = p.reasonFor(view, reason)
 	return view
@@ -372,26 +366,36 @@ func (p *DesktopPicker) stop() {
 
 // Disable turns the picker off and takes back what it added, in the order that
 // keeps Desktop's network: stop terminating, point Desktop back, stop the proxy,
-// then take the trust out. A step that fails stops there and says which, with
-// the proxy left running while Desktop still names it.
+// then take the user's trust out. A step that fails stops there and says which,
+// with the proxy left running while Desktop still names it. System-wide trust,
+// which only Cowork routing asks for, stays until it is removed on purpose.
 func (p *DesktopPicker) Disable(ctx context.Context) (appintegration.PickerView, error) {
 	p.mu.Lock()
 	defer p.mu.Unlock()
-	p.armed.Store(false)
-	if err := p.dropCowork(); err != nil {
-		return p.view(ctx, appintegration.PickerCleanupIncomplete), fail(appintegration.PickerCleanupIncomplete, err)
-	}
-	if err := codingclients.RemoveDesktopPickerProfile(p.opts.Library(), p.stateDir()); err != nil {
-		return p.view(ctx, appintegration.PickerCleanupIncomplete), fail(appintegration.PickerCleanupIncomplete, err)
-	}
-	p.stop()
-	if err := os.Remove(p.markerPath()); err != nil && !os.IsNotExist(err) {
+	if err := p.turnOff(); err != nil {
 		return p.view(ctx, appintegration.PickerCleanupIncomplete), fail(appintegration.PickerCleanupIncomplete, err)
 	}
 	if err := p.untrust(ctx); err != nil {
 		return p.view(ctx, appintegration.PickerTrustRemains), fail(appintegration.PickerTrustRemains, err)
 	}
 	return p.view(ctx, ""), nil
+}
+
+// turnOff stops everything the picker runs: Cowork routing, the profile Desktop
+// reads, the proxy and the marker a restart restores from. It touches no trust.
+func (p *DesktopPicker) turnOff() error {
+	p.armed.Store(false)
+	if err := p.dropCowork(); err != nil {
+		return err
+	}
+	if err := codingclients.RemoveDesktopPickerProfile(p.opts.Library(), p.stateDir()); err != nil {
+		return err
+	}
+	p.stop()
+	if err := os.Remove(p.markerPath()); err != nil && !os.IsNotExist(err) {
+		return err
+	}
+	return nil
 }
 
 // RemoveTrust takes Relo's root out of the OS trust store. It refuses while the

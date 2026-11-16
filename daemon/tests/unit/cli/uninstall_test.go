@@ -1,6 +1,7 @@
 package cli_test
 
 import (
+	"context"
 	"errors"
 	"io"
 	"os"
@@ -10,6 +11,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/jonaskahn/relo/internal/adapters/ostrust"
 	"github.com/jonaskahn/relo/internal/cli"
 	"github.com/jonaskahn/relo/internal/config"
 	"github.com/jonaskahn/relo/internal/platform"
@@ -324,4 +326,50 @@ func TestUninstallHelp(t *testing.T) {
 			t.Fatalf("help = %q, want the prepare flag hidden", stdout)
 		}
 	})
+}
+
+// TestUninstallTakesTheTrustOutBeforeTheDataGoesAndReportsWhatIsLeft pins the
+// order and the report: the certificate trust is retracted while the state that
+// holds the root still exists, a trust that could not be removed is named with
+// the commands that remove it, and the uninstall still completes.
+func TestUninstallTakesTheTrustOutBeforeTheDataGoesAndReportsWhatIsLeft(t *testing.T) {
+	notAnswering(t)
+	keepingTheProgram(t)
+	home := installedHome(t)
+	original := cli.RetractTrust
+	t.Cleanup(func() { cli.RetractTrust = original })
+	var dataPresent bool
+	cli.RetractTrust = func(_ context.Context, got string) []ostrust.ManualSteps {
+		dataPresent = stateExists(t, got, "state.sqlite")
+		return []ostrust.ManualSteps{{OS: "darwin", Remove: "sudo security remove-trusted-cert -d ca.pem"}}
+	}
+	stdout, _, err := run(t, nil, "--home", home, "uninstall", "--wipe")
+	if err != nil {
+		t.Fatalf("uninstall error = %v", err)
+	}
+	if !dataPresent {
+		t.Fatal("the trust was retracted after the state directory was wiped")
+	}
+	if !strings.Contains(stdout, "sudo security remove-trusted-cert -d ca.pem") {
+		t.Fatalf("stdout = %q, want the commands that remove what is left", stdout)
+	}
+	if stateExists(t, home, "state.sqlite") {
+		t.Fatal("a trust that could not be removed stopped the wipe")
+	}
+}
+
+func TestUninstallSaysNothingAboutTrustWhenNothingIsLeft(t *testing.T) {
+	notAnswering(t)
+	keepingTheProgram(t)
+	home := installedHome(t)
+	original := cli.RetractTrust
+	t.Cleanup(func() { cli.RetractTrust = original })
+	cli.RetractTrust = func(context.Context, string) []ostrust.ManualSteps { return nil }
+	stdout, _, err := run(t, nil, "--home", home, "uninstall", "--wipe")
+	if err != nil {
+		t.Fatalf("uninstall error = %v", err)
+	}
+	if strings.Contains(stdout, "certificate") {
+		t.Fatalf("stdout = %q, want no mention of a certificate", stdout)
+	}
 }

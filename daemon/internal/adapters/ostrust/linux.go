@@ -158,7 +158,9 @@ func (l *linuxStore) trustUser(ctx context.Context, root Root, file string) erro
 	return nil
 }
 
-// Untrust takes the root out of the scope's store and reads it back.
+// Untrust takes the root out of the scope's store and reads it back. A store
+// with no tool on this machine holds nothing Relo put there, so there is nothing
+// to take out.
 func (l *linuxStore) Untrust(ctx context.Context, root Root) error {
 	if l.Inspect(ctx, root) == Untrusted {
 		return nil
@@ -168,18 +170,28 @@ func (l *linuxStore) Untrust(ctx context.Context, root Root) error {
 		return err
 	}
 	defer cleanup()
+	if err := l.remove(ctx, root, file); err != nil {
+		return err
+	}
+	if l.Inspect(ctx, root) == Trusted {
+		return ErrDeclined
+	}
+	return nil
+}
+
+// remove runs the removal for the root's scope.
+func (l *linuxStore) remove(ctx context.Context, root Root, file string) error {
 	if root.Scope == ScopeSystem {
 		family, found := l.family(ctx)
 		if !found {
-			return ErrUnavailable
+			return nil
 		}
-		if err := l.elevate(ctx, removeScript(family, file)); err != nil {
-			return err
-		}
-	} else if removed, err := l.run(ctx, "certutil", "-d", l.nssDB(), "-D", "-n", root.CommonName); err != nil || removed.Code != 0 {
-		return ErrDeclined
+		return l.elevate(ctx, removeScript(family, file))
 	}
-	if l.Inspect(ctx, root) == Trusted {
+	if !l.has(ctx, "certutil") {
+		return nil
+	}
+	if removed, err := l.run(ctx, "certutil", "-d", l.nssDB(), "-D", "-n", root.CommonName); err != nil || removed.Code != 0 {
 		return ErrDeclined
 	}
 	return nil

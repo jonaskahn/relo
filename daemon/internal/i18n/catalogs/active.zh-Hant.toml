@@ -664,6 +664,10 @@ other = "正在移除 Relo…"
 description = "What an uninstall says when nothing on the machine removes Relo"
 other = "請手動移除 Relo 程式"
 
+[cli.uninstall.trust_failed]
+description = "What an uninstall says when it could not remove Relo's certificate from the system trust store"
+other = "Relo 無法從此系統的信任存放區移除自己的憑證。請用以下指令自行移除："
+
 [cli.uninstall.trash]
 description = "What an uninstall says when the macOS app bundle could not be deleted"
 other = "請將 {{.Bundle}} 移到垃圾桶"

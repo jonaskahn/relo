@@ -5,7 +5,6 @@ package integration
 
 import (
 	"context"
-	"errors"
 	"fmt"
 )
 
@@ -34,6 +33,14 @@ const (
 	PickerCoworkTrustMissing PickerReason = "cowork_trust_missing"
 	PickerCoworkRestart      PickerReason = "cowork_restart_required"
 	PickerCoworkActive       PickerReason = "cowork_active"
+	// PickerCoworkTrustDeclined is the operator turning down the system approval
+	// dialog. PickerCoworkTrustUnavailable is a machine with no way to ask for one.
+	// Both leave the certificate to be installed by hand.
+	PickerCoworkTrustDeclined    PickerReason = "cowork_trust_declined"
+	PickerCoworkTrustUnavailable PickerReason = "cowork_trust_unavailable"
+	// PickerCoworkTrustRemains is system-wide trust that could not be removed, or
+	// that is still installed after Cowork routing was turned off.
+	PickerCoworkTrustRemains PickerReason = "cowork_trust_remains"
 )
 
 // PickerHost is how many connections one host has asked the picker's egress
@@ -58,9 +65,28 @@ type PickerCowork struct {
 	// Enabled is whether the operator turned it on.
 	Enabled bool
 	// Armed is whether traffic is being handed on right now, which needs the
-	// picker armed and the OS to trust Relo's root for the vendor API host too.
-	Armed  bool
+	// picker armed and the OS to trust Relo's root system-wide.
+	Armed bool
+	// Trust is the OS's system-wide trust of Relo's root: trusted, untrusted,
+	// unknown or unsupported.
+	Trust  string
 	Reason PickerReason
+	// Manual is how to install or remove the certificate by hand. It is set only
+	// while that is what is left to do.
+	Manual *PickerManual
+}
+
+// PickerManual is what an operator needs to install or remove Relo's
+// certificate without Relo's help.
+type PickerManual struct {
+	OS       string
+	CertPath string
+	SHA1     string
+	SHA256   string
+	DocsURL  string
+	Install  string
+	Remove   string
+	Check    string
 }
 
 // PickerView is where the picker stands.
@@ -105,10 +131,6 @@ func (e *PickerError) Error() string {
 
 func (e *PickerError) Unwrap() error { return e.Cause }
 
-// ErrPickerInUse reports Desktop asked to leave proxy mode, or to be removed,
-// while its picker still depends on it.
-var ErrPickerInUse = errors.New("the Desktop picker is on: turn it off first")
-
 // DesktopPicker runs Desktop's picker. The composition root backs it with the
 // egress proxy, the OS trust store and Desktop's config library, so the
 // workflows never reach any of them.
@@ -123,24 +145,29 @@ type DesktopPicker interface {
 	// left to do when Disable could not.
 	RemoveTrust(ctx context.Context) (PickerView, error)
 	// EnableCowork hands Cowork's vendor API traffic to the intercept. It needs the
-	// picker on and armed and asks the OS for nothing.
+	// picker on and armed, and asks the OS to trust Relo's root system-wide when it
+	// does not already.
 	EnableCowork(ctx context.Context) (PickerView, error)
-	// DisableCowork stops handing it on, at once.
+	// DisableCowork stops handing it on, at once. The system-wide trust stays
+	// until RemoveSystemTrust or Retire takes it out.
 	DisableCowork(ctx context.Context) (PickerView, error)
+	// RemoveSystemTrust takes Relo's root out of the system-wide trust. It
+	// refuses while Cowork routing is on.
+	RemoveSystemTrust(ctx context.Context) (PickerView, error)
+	// Retire takes back everything the picker and Cowork routing added, and every
+	// certificate Relo asked the OS to trust, because Desktop is leaving proxy mode
+	// or being removed. It does nothing when there is nothing to take back.
+	Retire(ctx context.Context) (PickerView, error)
 }
 
-// pickerEnabled reports whether Desktop's picker is on. A build with no picker
-// has none to keep.
-func (m *Manager) pickerEnabled(ctx context.Context) bool {
-	return m.picker != nil && m.picker.View(ctx).Enabled
-}
-
-// requirePickerOff refuses taking Desktop out of proxy mode, or removing it,
-// while the picker is on: the picker rides the Code tab's wiring and Desktop's
-// network, which Relo must not pull out from under an open app.
-func (m *Manager) requirePickerOff(ctx context.Context, agent Agent) error {
-	if agent.ID == ProxyDesktop && m.pickerEnabled(ctx) {
-		return fmt.Errorf("%s: %w", agent.ID, ErrPickerInUse)
+// retirePicker takes Desktop's picker and the trust Relo added out of the way
+// before Desktop leaves proxy mode or goes away. When it cannot, the change is
+// refused with the picker's own reason, so Relo never leaves a certificate
+// trusted on a machine it no longer serves.
+func (m *Manager) retirePicker(ctx context.Context, agent Agent) error {
+	if agent.ID != ProxyDesktop || m.picker == nil {
+		return nil
 	}
-	return nil
+	_, err := m.picker.Retire(ctx)
+	return err
 }

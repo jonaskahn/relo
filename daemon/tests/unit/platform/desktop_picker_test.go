@@ -19,6 +19,11 @@ import (
 // left in, changes it only when asked, and records every call.
 type fakeTrust struct {
 	state ostrust.State
+	// system is the state of the system-wide trust. Empty follows state until it is
+	// asked to change, so a test that never mentions it gets one trust for both.
+	system ostrust.State
+	// trustErr and systemUntrustErr make the OS refuse the system-wide steps.
+	trustErr, systemUntrustErr error
 	// byHost overrides the state for a root read through one host's leaf.
 	byHost    map[string]ostrust.State
 	declines  bool
@@ -30,10 +35,21 @@ func (f *fakeTrust) Inspect(_ context.Context, root ostrust.Root) ostrust.State 
 	if state, ok := f.byHost[root.Host]; ok {
 		return state
 	}
+	if root.Scope == ostrust.ScopeSystem && f.system != "" {
+		return f.system
+	}
 	return f.state
 }
 
-func (f *fakeTrust) Trust(context.Context, ostrust.Root) error {
+func (f *fakeTrust) Trust(_ context.Context, root ostrust.Root) error {
+	if root.Scope == ostrust.ScopeSystem {
+		f.calls = append(f.calls, "trust-system")
+		if f.trustErr != nil {
+			return f.trustErr
+		}
+		f.system = ostrust.Trusted
+		return nil
+	}
 	f.calls = append(f.calls, "trust")
 	if f.declines {
 		return ostrust.ErrDeclined
@@ -42,7 +58,15 @@ func (f *fakeTrust) Trust(context.Context, ostrust.Root) error {
 	return nil
 }
 
-func (f *fakeTrust) Untrust(context.Context, ostrust.Root) error {
+func (f *fakeTrust) Untrust(_ context.Context, root ostrust.Root) error {
+	if root.Scope == ostrust.ScopeSystem {
+		f.calls = append(f.calls, "untrust-system")
+		if f.systemUntrustErr != nil {
+			return f.systemUntrustErr
+		}
+		f.system = ostrust.Untrusted
+		return nil
+	}
 	f.calls = append(f.calls, "untrust")
 	if !f.untrustOK {
 		return ostrust.ErrDeclined
@@ -154,7 +178,7 @@ func TestThePickerRefusesWhatItCannotRideBeforeTouchingAnything(t *testing.T) {
 	if _, err := rig.picker.Enable(context.Background()); reasonOfError(t, err) != appintegration.PickerNeedsDesktopProxy {
 		t.Fatalf("error = %v, want %s", err, appintegration.PickerNeedsDesktopProxy)
 	}
-	linux := rig.build(t, "linux")
+	linux := rig.build(t, "plan9")
 	rig.wired = true
 	if _, err := linux.Enable(context.Background()); reasonOfError(t, err) != appintegration.PickerUnsupportedOS {
 		t.Fatalf("error = %v, want %s", err, appintegration.PickerUnsupportedOS)

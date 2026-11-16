@@ -2,6 +2,7 @@ package platform
 
 import (
 	"context"
+	"errors"
 	"os"
 	"path/filepath"
 
@@ -38,10 +39,61 @@ func (p *DesktopPicker) coworkView() appintegration.PickerCowork {
 	return view
 }
 
-// coworkTrusted is whether the OS trusts Relo's root for the vendor API host.
+// systemRoot is Relo's root as the system-wide store sees it, which is where a
+// virtual machine's copy of the host's trust is read from.
+func (p *DesktopPicker) systemRoot(authority *proxy.Authority) (ostrust.Root, error) {
+	return p.rootFor(authority, proxy.HostAnthropicAPI, ostrust.ScopeSystem)
+}
+
+// coworkTrusted is whether the OS trusts Relo's root system-wide for the vendor
+// API host.
 func (p *DesktopPicker) coworkTrusted(ctx context.Context, authority *proxy.Authority) bool {
-	root, err := p.rootFor(authority, proxy.HostAnthropicAPI)
+	root, err := p.systemRoot(authority)
 	return err == nil && p.opts.Trust.Inspect(ctx, root) == ostrust.Trusted
+}
+
+// describeCowork adds what the OS says about the system-wide trust, and how to
+// install or remove it by hand, to the view.
+func (p *DesktopPicker) describeCowork(ctx context.Context, view *appintegration.PickerView, authority *proxy.Authority) {
+	root, err := p.systemRoot(authority)
+	if err != nil {
+		return
+	}
+	state := p.opts.Trust.Inspect(ctx, root)
+	view.Cowork.Trust = string(state)
+	if !view.Cowork.Enabled && state == ostrust.Trusted {
+		view.Cowork.Reason = appintegration.PickerCoworkTrustRemains
+	}
+	steps := ostrust.Manual(p.opts.Platform, root, authority.CAPathFile())
+	view.Cowork.Manual = &appintegration.PickerManual{
+		OS: steps.OS, CertPath: steps.CertPath, SHA1: steps.SHA1, SHA256: steps.SHA256,
+		DocsURL: steps.DocsURL, Install: steps.Install, Remove: steps.Remove, Check: steps.Check,
+	}
+}
+
+// ensureSystemTrust leaves Relo's root trusted system-wide, asking the OS only
+// when it is not. The ask is the OS's own approval dialog, so a decline leaves
+// nothing changed; a machine with no way to ask leaves the install to the
+// operator.
+func (p *DesktopPicker) ensureSystemTrust(ctx context.Context, authority *proxy.Authority) error {
+	root, err := p.systemRoot(authority)
+	if err != nil {
+		return fail(appintegration.PickerCAUnverified, err)
+	}
+	if p.opts.Trust.Inspect(ctx, root) == ostrust.Trusted {
+		return nil
+	}
+	if err := p.opts.Trust.Trust(ctx, root); err != nil {
+		if errors.Is(err, ostrust.ErrUnavailable) || errors.Is(err, ostrust.ErrUnsupported) {
+			return fail(appintegration.PickerCoworkTrustUnavailable, err)
+		}
+		return fail(appintegration.PickerCoworkTrustDeclined, err)
+	}
+	if p.opts.Trust.Inspect(ctx, root) != ostrust.Trusted {
+		_ = p.opts.Trust.Untrust(ctx, root)
+		return fail(appintegration.PickerCoworkTrustMissing, nil)
+	}
+	return nil
 }
 
 // armCowork recomputes whether the vendor API is handed on: only while the
@@ -51,14 +103,19 @@ func (p *DesktopPicker) armCowork(ctx context.Context, authority *proxy.Authorit
 	p.cowork.Store(p.coworkEnabled() && p.armed.Load() && p.coworkTrusted(ctx, authority))
 }
 
-// EnableCowork turns Cowork routing on. It asks the OS for nothing: it refuses
-// unless the picker is already armed and the root is already trusted for the
-// vendor API host.
+// EnableCowork turns Cowork routing on. It refuses unless the picker is already
+// armed; it then asks the OS to trust Relo's root system-wide if it does not
+// already, which is the one place that is asked, and only on this explicit
+// request. A failed ask leaves nothing changed.
 func (p *DesktopPicker) EnableCowork(ctx context.Context) (appintegration.PickerView, error) {
 	p.mu.Lock()
 	defer p.mu.Unlock()
-	if err := p.coworkPreconditions(ctx); err != nil {
-		return p.view(ctx, ""), err
+	authority, err := p.coworkPreconditions(ctx)
+	if err != nil {
+		return p.coworkResult(ctx, reasonOf(err)), err
+	}
+	if err := p.ensureSystemTrust(ctx, authority); err != nil {
+		return p.coworkResult(ctx, reasonOf(err)), err
 	}
 	if err := os.MkdirAll(p.stateDir(), 0o700); err != nil {
 		return p.view(ctx, ""), fail(appintegration.PickerProfileFailed, err)
@@ -70,23 +127,21 @@ func (p *DesktopPicker) EnableCowork(ctx context.Context) (appintegration.Picker
 	return p.coworkResult(ctx, appintegration.PickerCoworkRestart), nil
 }
 
-func (p *DesktopPicker) coworkPreconditions(ctx context.Context) error {
+// coworkPreconditions answers the authority when Cowork routing may be turned on.
+func (p *DesktopPicker) coworkPreconditions(ctx context.Context) (*proxy.Authority, error) {
 	switch {
 	case !p.enabled() || p.pair == nil || !p.armed.Load():
-		return fail(appintegration.PickerCoworkNeedsPicker, nil)
+		return nil, fail(appintegration.PickerCoworkNeedsPicker, nil)
 	case !p.opts.DesktopWired(ctx):
-		return fail(appintegration.PickerNeedsDesktopProxy, nil)
+		return nil, fail(appintegration.PickerNeedsDesktopProxy, nil)
 	case p.opts.Intercept == nil || !p.interceptUp():
-		return fail(appintegration.PickerProxyUnavailable, nil)
+		return nil, fail(appintegration.PickerProxyUnavailable, nil)
 	}
 	authority, err := p.opts.Authority()
 	if err != nil || !authority.Constrained() {
-		return fail(appintegration.PickerCAUnverified, err)
+		return nil, fail(appintegration.PickerCAUnverified, err)
 	}
-	if !p.coworkTrusted(ctx, authority) {
-		return fail(appintegration.PickerCoworkTrustMissing, nil)
-	}
-	return nil
+	return authority, nil
 }
 
 func (p *DesktopPicker) interceptUp() bool {
@@ -95,7 +150,8 @@ func (p *DesktopPicker) interceptUp() bool {
 }
 
 // DisableCowork stops handing the vendor API on, before anything else, so the
-// next connection is spliced through.
+// next connection is spliced through. The system-wide trust stays until the
+// operator removes it, or Desktop leaves proxy mode or is removed.
 func (p *DesktopPicker) DisableCowork(ctx context.Context) (appintegration.PickerView, error) {
 	p.mu.Lock()
 	defer p.mu.Unlock()
@@ -120,4 +176,55 @@ func (p *DesktopPicker) coworkResult(ctx context.Context, reason appintegration.
 	view := p.view(ctx, "")
 	view.Cowork.Reason = reason
 	return view
+}
+
+// RemoveSystemTrust takes Relo's root out of the system-wide trust. It refuses
+// while Cowork routing is on, because that cannot run without it.
+func (p *DesktopPicker) RemoveSystemTrust(ctx context.Context) (appintegration.PickerView, error) {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+	if p.coworkEnabled() {
+		return p.coworkResult(ctx, appintegration.PickerCoworkActive), fail(appintegration.PickerCoworkActive, nil)
+	}
+	if err := p.untrustSystem(ctx); err != nil {
+		return p.coworkResult(ctx, appintegration.PickerCoworkTrustRemains), fail(appintegration.PickerCoworkTrustRemains, err)
+	}
+	return p.view(ctx, ""), nil
+}
+
+func (p *DesktopPicker) untrustSystem(ctx context.Context) error {
+	if !p.supported() {
+		return nil
+	}
+	authority, err := p.opts.Authority()
+	if err != nil {
+		return err
+	}
+	root, err := p.systemRoot(authority)
+	if err != nil {
+		return err
+	}
+	return p.opts.Trust.Untrust(ctx, root)
+}
+
+// Retire takes back everything the picker and Cowork routing added and every
+// certificate Relo asked the OS to trust, in the order that keeps Desktop's
+// network: routing, then the profile and proxy, then the user's trust, then the
+// system-wide trust. It stops at the first step that fails and says which, and
+// does nothing for a step with nothing to take back.
+func (p *DesktopPicker) Retire(ctx context.Context) (appintegration.PickerView, error) {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+	if p.enabled() || p.coworkEnabled() {
+		if err := p.turnOff(); err != nil {
+			return p.view(ctx, appintegration.PickerCleanupIncomplete), fail(appintegration.PickerCleanupIncomplete, err)
+		}
+	}
+	if err := p.untrust(ctx); err != nil {
+		return p.view(ctx, appintegration.PickerTrustRemains), fail(appintegration.PickerTrustRemains, err)
+	}
+	if err := p.untrustSystem(ctx); err != nil {
+		return p.coworkResult(ctx, appintegration.PickerCoworkTrustRemains), fail(appintegration.PickerCoworkTrustRemains, err)
+	}
+	return p.view(ctx, ""), nil
 }

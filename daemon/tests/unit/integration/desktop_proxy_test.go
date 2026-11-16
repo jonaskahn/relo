@@ -178,47 +178,93 @@ func TestRestoringDesktopLeavesClaudeCodesProxyWiringInPlace(t *testing.T) {
 	}
 }
 
-// onPicker is a Desktop picker that is on, which is all the manager asks.
-type onPicker struct{ enabled bool }
-
-func (p *onPicker) View(context.Context) integration.PickerView {
-	return integration.PickerView{Enabled: p.enabled}
-}
-func (p *onPicker) Enable(context.Context) (integration.PickerView, error) {
-	return integration.PickerView{}, nil
-}
-func (p *onPicker) Disable(context.Context) (integration.PickerView, error) {
-	return integration.PickerView{}, nil
-}
-func (p *onPicker) RemoveTrust(context.Context) (integration.PickerView, error) {
-	return integration.PickerView{}, nil
-}
-func (p *onPicker) EnableCowork(context.Context) (integration.PickerView, error) {
-	return integration.PickerView{}, nil
-}
-func (p *onPicker) DisableCowork(context.Context) (integration.PickerView, error) {
-	return integration.PickerView{}, nil
+// recordingPicker is a Desktop picker that records being retired, and can refuse.
+type recordingPicker struct {
+	retired int
+	err     error
 }
 
-// TestDesktopStaysInProxyModeWhileItsPickerIsOn keeps the picker from being
-// stranded: it rides Desktop's wiring, so every way out is refused until it is off.
-func TestDesktopStaysInProxyModeWhileItsPickerIsOn(t *testing.T) {
-	picker := &onPicker{enabled: true}
+func (p *recordingPicker) View(context.Context) integration.PickerView {
+	return integration.PickerView{}
+}
+func (p *recordingPicker) Enable(context.Context) (integration.PickerView, error) {
+	return integration.PickerView{}, nil
+}
+func (p *recordingPicker) Disable(context.Context) (integration.PickerView, error) {
+	return integration.PickerView{}, nil
+}
+func (p *recordingPicker) RemoveTrust(context.Context) (integration.PickerView, error) {
+	return integration.PickerView{}, nil
+}
+func (p *recordingPicker) EnableCowork(context.Context) (integration.PickerView, error) {
+	return integration.PickerView{}, nil
+}
+func (p *recordingPicker) DisableCowork(context.Context) (integration.PickerView, error) {
+	return integration.PickerView{}, nil
+}
+func (p *recordingPicker) RemoveSystemTrust(context.Context) (integration.PickerView, error) {
+	return integration.PickerView{}, nil
+}
+func (p *recordingPicker) Retire(context.Context) (integration.PickerView, error) {
+	p.retired++
+	return integration.PickerView{}, p.err
+}
+
+// TestLeavingProxyModeOrRemovingDesktopRetiresThePickerAndItsTrust is the
+// automatic removal: the picker and every certificate Relo asked the OS to trust
+// go before Desktop leaves proxy mode, is disabled, or is restored.
+func TestLeavingProxyModeOrRemovingDesktopRetiresThePickerAndItsTrust(t *testing.T) {
+	picker := &recordingPicker{}
 	h, _, _ := desktopProxyHarnessWith(t, picker)
 	enableBoth(t, h, integration.ModeProxy)
 	ctx := context.Background()
-	if _, err := h.manager.SetMode(ctx, "claude-desktop", integration.ModeEnv); !errors.Is(err, integration.ErrPickerInUse) {
-		t.Fatalf("SetMode(desktop, env) error = %v, want %v", err, integration.ErrPickerInUse)
-	}
-	if _, err := h.manager.Restore(ctx, "claude-desktop", false); !errors.Is(err, integration.ErrPickerInUse) {
-		t.Fatalf("Restore(desktop) error = %v, want %v", err, integration.ErrPickerInUse)
-	}
-	if _, err := h.manager.Disable(ctx, "claude-desktop"); !errors.Is(err, integration.ErrPickerInUse) {
-		t.Fatalf("Disable(desktop) error = %v, want %v", err, integration.ErrPickerInUse)
-	}
-	picker.enabled = false
 	if _, err := h.manager.SetMode(ctx, "claude-desktop", integration.ModeEnv); err != nil {
-		t.Fatalf("SetMode(desktop, env) with the picker off error = %v", err)
+		t.Fatalf("SetMode(desktop, env) error = %v", err)
+	}
+	if picker.retired != 1 {
+		t.Fatalf("retired = %d after leaving proxy mode, want 1", picker.retired)
+	}
+	if _, err := h.manager.SetMode(ctx, "claude-desktop", integration.ModeProxy); err != nil {
+		t.Fatalf("SetMode(desktop, proxy) error = %v", err)
+	}
+	if _, err := h.manager.Disable(ctx, "claude-desktop"); err != nil {
+		t.Fatalf("Disable(desktop) error = %v", err)
+	}
+	if picker.retired != 2 {
+		t.Fatalf("retired = %d after disabling Desktop, want 2", picker.retired)
+	}
+	if _, err := h.manager.Enable(ctx, "claude-desktop", "rlo_ak_desktop"); err != nil {
+		t.Fatalf("Enable(desktop) error = %v", err)
+	}
+	if _, err := h.manager.Restore(ctx, "claude-desktop", false); err != nil {
+		t.Fatalf("Restore(desktop) error = %v", err)
+	}
+	if picker.retired != 3 {
+		t.Fatalf("retired = %d after restoring Desktop, want 3", picker.retired)
+	}
+}
+
+// TestAChangeIsRefusedWhenTheTrustCannotBeRemoved keeps Relo from leaving a
+// certificate trusted on a machine it no longer serves: the reason comes back and
+// Desktop stays as it was.
+func TestAChangeIsRefusedWhenTheTrustCannotBeRemoved(t *testing.T) {
+	refusal := &integration.PickerError{Reason: integration.PickerCoworkTrustRemains}
+	picker := &recordingPicker{err: refusal}
+	h, _, _ := desktopProxyHarnessWith(t, picker)
+	enableBoth(t, h, integration.ModeProxy)
+	ctx := context.Background()
+	var picked *integration.PickerError
+	if _, err := h.manager.SetMode(ctx, "claude-desktop", integration.ModeEnv); !errors.As(err, &picked) || picked.Reason != integration.PickerCoworkTrustRemains {
+		t.Fatalf("SetMode(desktop, env) error = %v, want the picker's reason", err)
+	}
+	if mode, _ := h.manager.Mode(ctx, "claude-desktop"); mode != integration.ModeProxy {
+		t.Fatalf("mode = %q, want Desktop left in proxy mode", mode)
+	}
+	if _, err := h.manager.Disable(ctx, "claude-desktop"); !errors.As(err, &picked) {
+		t.Fatalf("Disable(desktop) error = %v, want the picker's reason", err)
+	}
+	if view, err := h.manager.Inspect(ctx, "claude-desktop"); err != nil || !view.Enabled {
+		t.Fatalf("Inspect() = %+v %v, want Desktop still on", view, err)
 	}
 }
 

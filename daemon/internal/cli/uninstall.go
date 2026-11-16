@@ -13,6 +13,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/jonaskahn/relo/internal/adapters/ostrust"
 	"github.com/jonaskahn/relo/internal/platform"
 	"github.com/jonaskahn/relo/internal/platform/autostart"
 )
@@ -24,6 +25,10 @@ var (
 	// WipeState removes a state directory and the credentials the operating
 	// system keychain holds for it.
 	WipeState = platform.WipeState
+	// RetractTrust takes Relo's certificate out of the OS's trust before the data
+	// that holds it is touched, and answers the steps to take it out by hand for
+	// any scope it could not clear.
+	RetractTrust = platform.RetractTrust
 	// AskWipeData reads the answer to the data question.
 	AskWipeData = PromptWipeData
 	// AskOnTerminal reports where to ask that question, and whether anyone is
@@ -80,6 +85,7 @@ func runUninstall(cmd *cobra.Command, _ []string, localized ui) error {
 	if err := stopUninstallServices(cmd, home); err != nil {
 		return err
 	}
+	reportTrustLeft(out, localized, RetractTrust(cmd.Context(), home))
 	data, err := decideData(cmd, localized, keep, wipe, prepare)
 	if err != nil {
 		return err
@@ -92,6 +98,23 @@ func runUninstall(cmd *cobra.Command, _ []string, localized ui) error {
 	}
 	_, _ = fmt.Fprintln(out, localized.text("cli.uninstall.removing", nil))
 	return RemoveProgram(out, localized.text)
+}
+
+// reportTrustLeft names the certificate trust an uninstall could not remove and
+// prints the commands that remove it. It is never an error: the uninstall goes on,
+// and the operator is told what is left.
+func reportTrustLeft(out io.Writer, localized ui, left []ostrust.ManualSteps) {
+	printed := false
+	for _, steps := range left {
+		if steps.Remove == "" {
+			continue
+		}
+		if !printed {
+			_, _ = fmt.Fprintln(out, localized.text("cli.uninstall.trust_failed", nil))
+			printed = true
+		}
+		_, _ = fmt.Fprintln(out, "  "+strings.ReplaceAll(steps.Remove, "\n", "\n  "))
+	}
 }
 
 func removeService(ctx context.Context, home string) error {

@@ -932,7 +932,7 @@ func (m *Manager) agentToRetire(ctx context.Context, id string) (Agent, error) {
 	if !found {
 		return Agent{}, fmt.Errorf("%s: %w", id, ErrUnknownAgent)
 	}
-	if err := m.requirePickerOff(ctx, agent); err != nil {
+	if err := m.retirePicker(ctx, agent); err != nil {
 		return Agent{}, err
 	}
 	return agent, m.requireNoProxyDependents(ctx, agent)
