@@ -55,6 +55,10 @@ export function integrationPath(id: string, action: IntegrationAction): string {
 	return '/integrations/' + encodeURIComponent(id) + '/' + integrationEndpoint(action);
 }
 
+/** Claude Desktop's picker endpoint. It is the one integration path with no action word, so it
+ *  has its own constant, and the leading slash is what keeps it under `/api/v1/`. */
+export const DESKTOP_PICKER_PATH = '/integrations/claude-desktop/picker';
+
 /** Why a set-up would not write yet. An empty code means the plan can be written. */
 export type SetupRefusal = '' | 'not_installed' | 'foreign_key' | 'relative_path' | 'unrecognised';
 

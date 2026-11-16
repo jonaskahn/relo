@@ -3,6 +3,7 @@
 	import { t } from 'svelte-i18n';
 
 	import { api } from '$lib/api';
+	import { DESKTOP_PICKER_PATH } from '$lib/integration-actions';
 	import Button from '$lib/components/ui/button.svelte';
 	import Icon from '$lib/components/ui/icon.svelte';
 	import type { DesktopPicker } from '$lib/types';
@@ -15,7 +16,7 @@
 	let failure = $state('');
 	let confirming = $state(false);
 
-	const path = 'integrations/claude-desktop/picker';
+	const path = DESKTOP_PICKER_PATH;
 
 	onMount(() => {
 		void load();

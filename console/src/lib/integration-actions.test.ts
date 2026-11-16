@@ -1,6 +1,7 @@
 import { describe, expect, test } from 'vitest';
 
 import {
+	DESKTOP_PICKER_PATH,
 	integrationEndpoint,
 	integrationPath,
 	isSetupRefusal,
@@ -135,5 +136,14 @@ describe('the OpenCode set-up generations', () => {
 		expect(openCodeSetupVersions(true, false)).toBe('v1');
 		expect(openCodeSetupVersions(false, true)).toBe('v2');
 		expect(openCodeSetupVersions(false, false)).toBe('');
+	});
+});
+
+describe('the Desktop picker path', () => {
+	test('starts with a slash, so the request lands under the API prefix', () => {
+		// A path without it was sent as `/api/v1integrations/...` and answered by the
+		// console's page fallback, so the picker never loaded.
+		expect(DESKTOP_PICKER_PATH.startsWith('/')).toBe(true);
+		expect(DESKTOP_PICKER_PATH).toBe('/integrations/claude-desktop/picker');
 	});
 });
