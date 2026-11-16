@@ -168,7 +168,6 @@
 			stateTone(detail) === 'pass' &&
 			(diagramMode === 'env' || detail.proxy_state === 'applied')
 	);
-	const showDiagram = $derived(!!detail?.enabled && detail.id === 'claude-code');
 
 	function message(error: unknown): string {
 		return error instanceof Error ? error.message : String(error);
@@ -643,46 +642,40 @@
 						{verifyRead.copy}
 					</p>
 				{/if}
-				<!-- The wiring on the left. Where the client has a mode, the diagram of how
-				     its requests travel sits beside it and stacks below on a narrow sheet. -->
-				<div class={cn('grid gap-6', showDiagram && 'lg:grid-cols-2')}>
-					<div class="flex min-w-0 flex-col gap-6">
-						<AgentKeySection
+				<!-- One column, row by row. The diagram of how requests travel follows the mode
+				     choice at the full width of the modal. -->
+				<div class="flex min-w-0 flex-col gap-6">
+					<AgentKeySection
+						agent={detail}
+						visible={keyVisible}
+						token={keyToken}
+						loading={keyLoading}
+						copied={keyCopied}
+						failure={keyFailure}
+						busy={blocked(running, detail)}
+						ontoggle={() => void toggleKey()}
+						oncopy={() => void copyKey()}
+					/>
+					<AgentWiringSection agent={detail} />
+					{#if detail.enabled && detail.id === 'claude-code'}
+						<ClaudeModeSection
 							agent={detail}
-							visible={keyVisible}
-							token={keyToken}
-							loading={keyLoading}
-							copied={keyCopied}
-							failure={keyFailure}
-							busy={blocked(running, detail)}
-							ontoggle={() => void toggleKey()}
-							oncopy={() => void copyKey()}
+							onpreview={(value) => (previewingProxy = value)}
+							onchanged={(next) => {
+								agents = patchAgent(agents, next);
+								detail = next;
+							}}
 						/>
-						<AgentWiringSection agent={detail} />
-						{#if detail.enabled && detail.id === 'claude-code'}
-							<ClaudeModeSection
+						<ModeDiagram mode={diagramMode} live={diagramLive} preview={previewingProxy} />
+						{#if (detail.mode ?? 'env') === 'proxy'}
+							<ClaudeBindingsSection agent={detail} />
+						{:else}
+							<ClaudeModelPreferences
 								agent={detail}
-								onpreview={(value) => (previewingProxy = value)}
-								onchanged={(next) => {
-									agents = patchAgent(agents, next);
-									detail = next;
-								}}
+								{models}
+								modelsReady={modelsState === 'ready'}
 							/>
-							{#if (detail.mode ?? 'env') === 'proxy'}
-								<ClaudeBindingsSection agent={detail} />
-							{:else}
-								<ClaudeModelPreferences
-									agent={detail}
-									{models}
-									modelsReady={modelsState === 'ready'}
-								/>
-							{/if}
 						{/if}
-					</div>
-					{#if showDiagram}
-						<div class="min-w-0 self-start lg:sticky lg:top-0">
-							<ModeDiagram mode={diagramMode} live={diagramLive} preview={previewingProxy} />
-						</div>
 					{/if}
 				</div>
 			{:else if result}
