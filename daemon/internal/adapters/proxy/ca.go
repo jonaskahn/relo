@@ -31,7 +31,8 @@ import (
 const (
 	caValidity   = 10 * 365 * 24 * time.Hour
 	leafValidity = 365 * 24 * time.Hour
-	caCommonName = "Relo Local CA"
+	// CommonName names Relo's root wherever an OS lists it.
+	CommonName = "Relo Local CA"
 	// serialBits bounds the random serial number every certificate carries.
 	serialBits = 128
 )
@@ -118,7 +119,7 @@ func authorityTemplate(hosts []string) (*x509.Certificate, error) {
 	now := time.Now()
 	template := &x509.Certificate{
 		SerialNumber:                serial,
-		Subject:                     pkix.Name{CommonName: caCommonName, Organization: []string{"Relo"}},
+		Subject:                     pkix.Name{CommonName: CommonName, Organization: []string{"Relo"}},
 		NotBefore:                   now.Add(-time.Hour),
 		NotAfter:                    now.Add(caValidity),
 		KeyUsage:                    x509.KeyUsageCertSign | x509.KeyUsageCRLSign | x509.KeyUsageDigitalSignature,
@@ -346,4 +347,14 @@ func (a *Authority) SHA256() string {
 // than from the file, which another process of the same user could swap.
 func (a *Authority) PEM() []byte {
 	return pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: a.certificate.Raw})
+}
+
+// LeafPEM is the leaf the root issues for host, as the bytes an OS verifies the
+// root's trust against.
+func (a *Authority) LeafPEM(host string) ([]byte, error) {
+	leaf, err := a.LeafFor(host)
+	if err != nil {
+		return nil, err
+	}
+	return pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: leaf.Certificate[0]}), nil
 }

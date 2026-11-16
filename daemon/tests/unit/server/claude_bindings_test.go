@@ -50,6 +50,12 @@ func (d documentRows) Delete(ctx context.Context, namespace, id string) error {
 // mode and whose bindings are stored in the harness database.
 func bindingsServer(t *testing.T) (*harness, *server.Server) {
 	t.Helper()
+	return bindingsServerWith(t, nil)
+}
+
+// bindingsServerWith is bindingsServer over a Desktop picker.
+func bindingsServerWith(t *testing.T, picker appintegration.DesktopPicker) (*harness, *server.Server) {
+	t.Helper()
 	t.Setenv("CODEX_HOME", t.TempDir())
 	h := newHarness(t)
 	paths := h.integrationPaths()
@@ -61,7 +67,7 @@ func bindingsServer(t *testing.T) (*harness, *server.Server) {
 			Paths: platform.NewPathResolver(paths), Agents: platform.NewAgentRegistry(),
 			Files: platform.NewClientFiles(paths), Processes: platform.NewAgentProcesses(),
 			Wire: platform.NewWireCodec(), Store: platform.NewIntegrationStore(h.db),
-			Catalog: h.catalog, Keys: h.keys, Now: h.clock.Now, Proxy: fakeIntercept{},
+			Catalog: h.catalog, Keys: h.keys, Now: h.clock.Now, Proxy: fakeIntercept{}, Picker: picker,
 			ClaudeAuth: func() appintegration.ClaudeAuth { return appintegration.ClaudeAuthLogin },
 		})
 		options.ClaudeBindings = claudebindings.New(claudebindings.Options{

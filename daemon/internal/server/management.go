@@ -160,6 +160,9 @@ func (s *Server) registerIntegrationRoutes(mux *http.ServeMux) {
 	mux.HandleFunc("POST "+apiPrefix+"integrations/{id}/mode", s.handleIntegrationMode)
 	mux.HandleFunc("GET "+apiPrefix+"integrations/{id}/bindings", s.handleGetBindings)
 	mux.HandleFunc("POST "+apiPrefix+"integrations/{id}/bindings", s.handleSetBindings)
+	mux.HandleFunc("GET "+apiPrefix+"integrations/claude-desktop/picker", s.handleGetPicker)
+	mux.HandleFunc("PUT "+apiPrefix+"integrations/claude-desktop/picker", s.handleSetPicker)
+	mux.HandleFunc("DELETE "+apiPrefix+"integrations/claude-desktop/picker/trust", s.handleRemovePickerTrust)
 	mux.HandleFunc("POST "+apiPrefix+"integrations/{id}/repair", s.handleRepairIntegration)
 	mux.HandleFunc("GET "+apiPrefix+"integrations/{id}/model-config", s.handleGetClaudeModelConfig)
 	mux.HandleFunc("POST "+apiPrefix+"integrations/{id}/model-config", s.handleSetClaudeModelConfig)
@@ -384,6 +387,7 @@ func generalServiceStatus(err error) (int, string) {
 	case errors.Is(err, appcatalog.ErrCatalogConflict), errors.Is(err, appaccount.ErrDuplicateAccount),
 		errors.Is(err, appcatalog.ErrListAuthoritative),
 		errors.Is(err, appintegration.ErrProxyOwnerNeeded), errors.Is(err, appintegration.ErrProxyInUse),
+		errors.Is(err, appintegration.ErrPickerInUse),
 		appintegration.RefusalCode(err) == appintegration.CodeForeignKey:
 		return http.StatusConflict, "conflict"
 	case errors.Is(err, appintegration.ErrRestoreBlocked):

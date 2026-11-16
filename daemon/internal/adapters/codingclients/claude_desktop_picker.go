@@ -111,19 +111,25 @@ func ApplyDesktopPickerProfile(library, stateDir string, port int) error {
 	if applied != "" && applied != desktopPickerID {
 		previous = applied
 	}
-	content := []byte(`{"egressProxyUrl":"` + DesktopPickerEgressURL(port) + `"}` + "\n")
+	if err := writePickerFiles(library, stateDir, port, previous); err != nil {
+		return err
+	}
+	document["entries"] = upsertPickerEntry(entries)
+	document["appliedId"] = desktopPickerID
+	return writeDesktopMeta(library, document)
+}
+
+// writePickerFiles writes the profile and the selection it replaced, before the
+// library's own metadata names the profile.
+func writePickerFiles(library, stateDir string, port int, previous string) error {
 	if err := os.MkdirAll(stateDir, 0o700); err != nil {
 		return err
 	}
 	if err := writePickerState(stateDir, pickerState{PreviousAppliedID: previous}); err != nil {
 		return err
 	}
-	if err := WriteFileAtomic(DesktopPickerProfilePath(library), content, 0o600); err != nil {
-		return err
-	}
-	document["entries"] = upsertPickerEntry(entries)
-	document["appliedId"] = desktopPickerID
-	return writeDesktopMeta(library, document)
+	content := []byte(`{"egressProxyUrl":"` + DesktopPickerEgressURL(port) + `"}` + "\n")
+	return WriteFileAtomic(DesktopPickerProfilePath(library), content, 0o600)
 }
 
 func writePickerState(stateDir string, state pickerState) error {
@@ -156,13 +162,7 @@ func RemoveDesktopPickerProfile(library, stateDir string) error {
 	if err != nil {
 		return err
 	}
-	entries := desktopEntries(document)
-	kept := make([]map[string]any, 0, len(entries))
-	for _, entry := range entries {
-		if !isPickerEntry(entry) {
-			kept = append(kept, entry)
-		}
-	}
+	kept := withoutPicker(desktopEntries(document))
 	if desktopString(document["appliedId"]) == desktopPickerID {
 		if next := desktopRestoredID(kept, state.PreviousAppliedID); next != "" {
 			document["appliedId"] = next
@@ -180,6 +180,16 @@ func RemoveDesktopPickerProfile(library, stateDir string) error {
 		}
 	}
 	return nil
+}
+
+func withoutPicker(entries []map[string]any) []map[string]any {
+	kept := make([]map[string]any, 0, len(entries))
+	for _, entry := range entries {
+		if !isPickerEntry(entry) {
+			kept = append(kept, entry)
+		}
+	}
+	return kept
 }
 
 // InspectDesktopPickerProfile reports how the library stands against the picker
