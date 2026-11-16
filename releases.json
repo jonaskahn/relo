@@ -1,5 +1,5 @@
 {
-  "generated": "2026-11-16T16:33:09Z",
+  "generated": "2026-11-16T16:33:38Z",
   "latest": "v0.2.13",
   "latest_beta": "v0.2.13-beta.141.ea9afaf8",
   "install": {
@@ -660,12 +660,12 @@
     {
       "tag": "v0.2.13",
       "version": "0.2.13",
-      "name": "v0.2.13 - Bean nuts 🥜",
+      "name": "🚀 v0.2.13 — 2026-11-14",
       "channel": "stable",
       "draft": false,
       "published_at": "2026-11-15T10:25:45Z",
       "page": "https://github.com/jonaskahn/relo/releases/tag/v0.2.13",
-      "notes": "## What's Changed\r\n* Relax, I just fix small bug",
+      "notes": "# 🚀 v0.2.13 — 2026-11-14\n\n### ✨ Improvements\n\n- ☕ The support link points at Ko-fi.\n\n### 🐛 Fixes\n\n- 🧬 Every Gemini array schema gets an `items`.\n- 🏷️ Antigravity names the account's SKU for a collapsed Claude model.\n",
       "install": {
         "script": "curl -fsSL https://relo.ifelse.one/install.sh | sh -s -- --version 0.2.13",
         "powershell": "& ([scriptblock]::Create((irm https://relo.ifelse.one/install.ps1))) -Version 0.2.13",
@@ -1052,12 +1052,12 @@
     {
       "tag": "v0.2.12",
       "version": "0.2.12",
-      "name": "v0.2.12 - Popcorn Times 🍿",
+      "name": "🚀 v0.2.12 — 2026-11-14",
       "channel": "stable",
       "draft": false,
       "published_at": "2026-11-14T13:38:36Z",
       "page": "https://github.com/jonaskahn/relo/releases/tag/v0.2.12",
-      "notes": "## 14-11-2026\r\n- Support new Google Antigravity's Gemini Models",
+      "notes": "# 🚀 v0.2.12 — 2026-11-14\n\n### ✨ Improvements\n\n- ✨ Antigravity serves the Gemini 4 argon, hydrogen, and carbon models, with an extra-high band name.\n\n### 🐛 Fixes\n\n- 🚫 Antigravity's vendor-disabled ids stay off the roster.\n",
       "install": {
         "script": "curl -fsSL https://relo.ifelse.one/install.sh | sh -s -- --version 0.2.12",
         "powershell": "& ([scriptblock]::Create((irm https://relo.ifelse.one/install.ps1))) -Version 0.2.12",
@@ -1364,12 +1364,12 @@
     {
       "tag": "v0.2.11",
       "version": "0.2.11",
-      "name": "v0.2.11 - Old days 🍂",
+      "name": "🚀 v0.2.11 — 2026-11-13",
       "channel": "stable",
       "draft": false,
       "published_at": "2026-11-13T17:26:32Z",
       "page": "https://github.com/jonaskahn/relo/releases/tag/v0.2.11",
-      "notes": "## What's Changed\r\n* Fix opencode free does not work with ClaudeCode/ClaudeDesktop 🎇",
+      "notes": "# 🚀 v0.2.11 — 2026-11-13\n\n### 🐛 Fixes\n\n- 🅿️ A model limit parks the model, not the whole connection.\n- 🔤 Free lane: tool names that read as another client's are broken up.\n",
       "install": {
         "script": "curl -fsSL https://relo.ifelse.one/install.sh | sh -s -- --version 0.2.11",
         "powershell": "& ([scriptblock]::Create((irm https://relo.ifelse.one/install.ps1))) -Version 0.2.11",
@@ -1756,12 +1756,12 @@
     {
       "tag": "v0.2.10",
       "version": "0.2.10",
-      "name": "v0.2.10 - New land ❄️",
+      "name": "🚀 v0.2.10 — 2026-11-12",
       "channel": "stable",
       "draft": false,
       "published_at": "2026-11-12T18:51:55Z",
       "page": "https://github.com/jonaskahn/relo/releases/tag/v0.2.10",
-      "notes": "## 13-11-2026\r\n\r\n### 🧩 OpenCode free lane\r\n\r\n- 🎭 The lane now carries the OpenCode environment block (<env> + working directory) the gateway checks for, so clients other than OpenCode's own (Codex, Claude Code…) are served instead of refused. The block is rendered from the client's real workspace, never a captured prompt.\r\n- 🧰 A tool-free turn stays tool-free — the placeholder tool declarations are now added only beside a turn that already declares tools (adding them is what turned native title requests into refusals).\r\n- 🪪 The lane's TLS client hello now matches the captured native one byte for byte — post-quantum hybrid share (X25519MLKEM768 → X25519 fallback), Bun's cipher/extension order — and a test compares the hello on the wire with the capture.\r\n- 🆔 Free-lane session ids are minted fresh from the clock instead of derived from the lane.\r\n\r\n### 🚫 Refusal vs. exhaustion\r\n\r\n- 🚦 A refused free-lane request is no longer read as a spent quota: the lane is not marked spent, nothing cools, and the route fails over to another provider.\r\n- ⏳ A spent lane's cooldown is never shortened by a later refusal on the same connection.\r\n- 🧪 Integration test turns skip the OpenCode free lane — its models are dropped from the list and a turn naming one is refused up front.\r\n- 📝 The refusal copy no longer advertises the gateway's Retry-After as a wait that helps (all 22 languages).\r\n\r\n### 📊 Quota readings\r\n\r\n- 🪣 Windows that measure one pool of a larger allowance are flagged as such, so a full pool (e.g. Cursor's API meter at 100%) no longer reads as a spent account.\r\n- 🕰️ A window whose period has ended constrains nothing, and an unreadable reset moment reads as \"no reset\" instead of \"since the year one\".\r\n- 🧹 Removing an account now takes its quota rows and history with it (plus a migration for rows left by earlier builds).\r\n\r\n### 🖥️ Console\r\n\r\n- 📈 A connection reads Ready while any of its accounts can still serve; only a connection whose every account is spent shows \"limit reached\". A spent account is marked on its own dot.\r\n- 🛠️ The add-connection review step now names the signed-out OpenCode lane and the restriction it carries.\r\n\r\n### 🧪 Quality\r\n\r\n- 🧷 New coverage for the free-lane prompt gate, refusal wording, quota pools, rolled windows, and connection-level quota reading.\r\n- 📚 Documented the two-gate free-lane rule, the prompt forge, and what a connection's quota means.\r\n",
+      "notes": "# 🚀 v0.2.10 — 2026-11-12\n\n### ✨ Improvements\n\n- 📐 A connection's quota says which window is a pool of a larger allowance.\n\n### 🐛 Fixes\n\n- 🛡️ OpenCode free lane: tool-free requests stay tool-free, a spent lane is told from a refused fingerprint, and a spent lane's wait survives another account failing.\n- 📏 Quota: read the way the connection serves it; ended windows stop constraining; a removed account's quota goes with it; an unreadable reset moment is left out.\n",
       "install": {
         "script": "curl -fsSL https://relo.ifelse.one/install.sh | sh -s -- --version 0.2.10",
         "powershell": "& ([scriptblock]::Create((irm https://relo.ifelse.one/install.ps1))) -Version 0.2.10",
@@ -2548,12 +2548,12 @@
     {
       "tag": "v0.2.9",
       "version": "0.2.9",
-      "name": "v0.2.9 - Winter ❄️",
+      "name": "🚀 v0.2.9 — 2026-11-11",
       "channel": "stable",
       "draft": false,
       "published_at": "2026-11-10T18:50:20Z",
       "page": "https://github.com/jonaskahn/relo/releases/tag/v0.2.9",
-      "notes": "## 11-11-2026 \r\n* **Bring Opencode Free back** 💐\r\n* Fix layout break in some cases",
+      "notes": "# 🚀 v0.2.9 — 2026-11-11\n\n### ✨ Improvements\n\n- 🧩 Claude Code: documented subagent aliases, and model preferences editable from its manage dialog.\n- 🛣️ A rate limit is held inside a route.\n- 🗓️ models.dev is downloaded on a schedule and by the connections refresh button.\n\n### 🐛 Fixes\n\n- 🆓 A free-only connection stays on free models.\n- 🧊 A learned denial stays on the model it names.\n- 🚦 OpenCode free lane: spent, refused, and rate-limited answers are told apart and relayed correctly.\n- 🧠 A connection remembers why it cooled.\n",
       "install": {
         "script": "curl -fsSL https://relo.ifelse.one/install.sh | sh -s -- --version 0.2.9",
         "powershell": "& ([scriptblock]::Create((irm https://relo.ifelse.one/install.ps1))) -Version 0.2.9",
