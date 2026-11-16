@@ -6,6 +6,7 @@
 	import { addConnectionHref } from '$lib/connections-view';
 	import { navDrawer } from '$lib/nav-drawer.svelte';
 	import AppearancePopover from '$lib/components/shell/appearance-popover.svelte';
+	import GithubStar from '$lib/components/shell/github-star.svelte';
 	import HealthPill from '$lib/components/shell/health-pill.svelte';
 	import SupportMenu from '$lib/components/shell/support-menu.svelte';
 	import Icon from '$lib/components/ui/icon.svelte';
@@ -40,8 +41,6 @@
 				: $t('ui.topbar.collapseMenu')
 	);
 	const menuExpanded = $derived((navDrawer.pinned && !navDrawer.compact) || navDrawer.overlay);
-
-	const REPO_URL = 'https://github.com/jonaskahn/relo';
 </script>
 
 <header
@@ -71,15 +70,7 @@
 
 	<HealthPill class="hidden sm:inline-flex" />
 	<!-- Hidden on a phone, where the topbar has no room for a label. -->
-	<Button
-		variant="outline"
-		size="sm"
-		class="hidden sm:inline-flex"
-		onclick={() => window.open(REPO_URL, '_blank', 'noopener,noreferrer')}
-	>
-		<Icon name="brand-github" size={16} />
-		{$t('ui.topbar.starOnGithub')}
-	</Button>
+	<GithubStar class="hidden sm:inline-flex" />
 	<SupportMenu />
 
 	<DropdownMenu.Root>
