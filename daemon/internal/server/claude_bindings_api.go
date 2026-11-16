@@ -38,9 +38,15 @@ type officialModelDTO struct {
 	Source string `json:"source"`
 }
 
+type targetOptionDTO struct {
+	bindingTargetDTO
+	Label string `json:"label"`
+}
+
 type bindingsResponse struct {
 	Bindings []bindingEntryDTO  `json:"bindings"`
 	Official []officialModelDTO `json:"official"`
+	Targets  []targetOptionDTO  `json:"targets"`
 }
 
 type bindingsRequest struct {
@@ -52,6 +58,15 @@ func toBindingsResponse(view claudebindings.View) bindingsResponse {
 	response := bindingsResponse{
 		Bindings: make([]bindingEntryDTO, 0, len(view.Entries)),
 		Official: make([]officialModelDTO, 0, len(view.Official)),
+		Targets:  make([]targetOptionDTO, 0, len(view.Targets)),
+	}
+	for _, option := range view.Targets {
+		response.Targets = append(response.Targets, targetOptionDTO{
+			bindingTargetDTO: bindingTargetDTO{
+				Kind: option.Kind, GroupID: option.GroupID, ProviderID: option.ProviderID, ModelID: option.ModelID,
+			},
+			Label: option.Label,
+		})
 	}
 	for _, entry := range view.Entries {
 		response.Bindings = append(response.Bindings, bindingEntryDTO{

@@ -95,10 +95,18 @@ type Official struct {
 	Source string
 }
 
+// TargetOption is one Relo route or model a binding can point at, with the
+// label an operator reads.
+type TargetOption struct {
+	Target
+	Label string
+}
+
 // View is everything the bindings screen shows for one integration.
 type View struct {
 	Entries  []Entry
 	Official []Official
+	Targets  []TargetOption
 }
 
 // Sources an official id is learned from.
@@ -115,7 +123,7 @@ func (s *Service) View(ctx context.Context, integrationID string) (View, error) 
 		return View{}, err
 	}
 	snapshot := s.snapshot()
-	view := View{Official: s.official(snapshot, document)}
+	view := View{Official: s.official(snapshot, document), Targets: targets(snapshot)}
 	for _, binding := range document.Bindings {
 		view.Entries = append(view.Entries, Entry{Binding: binding, State: stateOf(snapshot, binding)})
 	}
@@ -238,4 +246,36 @@ func (s *Service) official(snapshot *catalog.Snapshot, document Document) []Offi
 		add(binding.NativeID, SourceBinding)
 	}
 	return listed
+}
+
+// targets lists what a binding can point at now: every route that has a member
+// able to answer, then every model a connection can serve.
+func targets(snapshot *catalog.Snapshot) []TargetOption {
+	if snapshot == nil {
+		return nil
+	}
+	var options []TargetOption
+	for _, group := range snapshot.Groups {
+		if group.Enabled && len(snapshot.GroupModels(group)) > 0 {
+			options = append(options, TargetOption{
+				Target: Target{Kind: TargetRoute, GroupID: group.ID}, Label: group.Label,
+			})
+		}
+	}
+	for _, host := range snapshot.Providers {
+		for _, model := range snapshot.Models(host.ID) {
+			if !snapshot.Eligible(model, catalog.Requirements{}) {
+				continue
+			}
+			name := model.Name
+			if name == "" {
+				name = model.ID
+			}
+			options = append(options, TargetOption{
+				Target: Target{Kind: TargetModel, ProviderID: host.ID, ModelID: model.ID},
+				Label:  host.Label + " / " + name,
+			})
+		}
+	}
+	return options
 }

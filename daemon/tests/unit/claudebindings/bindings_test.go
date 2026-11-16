@@ -257,3 +257,19 @@ func TestTooManyBindingsAreRefused(t *testing.T) {
 		t.Fatalf("Apply() error = %v, want %v", err, claudebindings.ErrTooMany)
 	}
 }
+
+func TestViewListsTheRoutesAndModelsABindingCanPointAt(t *testing.T) {
+	f := newFixture(t)
+	view, err := f.service.View(context.Background(), "claude-code")
+	if err != nil {
+		t.Fatalf("View() error = %v", err)
+	}
+	var route, model bool
+	for _, option := range view.Targets {
+		route = route || option.Kind == claudebindings.TargetRoute && option.GroupID == "cheap"
+		model = model || option.Kind == claudebindings.TargetModel && option.ProviderID == "openai" && option.ModelID == "alpha"
+	}
+	if !route || !model {
+		t.Fatalf("targets = %+v, want the route and the model", view.Targets)
+	}
+}
