@@ -1,6 +1,7 @@
 package server
 
 import (
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -29,6 +30,8 @@ func TestServiceStatusMapsRecoverableFailures(t *testing.T) {
 		{name: "unsupported list", err: catalog.ErrListUnsupported, status: http.StatusBadGateway, code: "upstream_unavailable"},
 		{name: "desktop needs claude code", err: appintegration.ErrProxyOwnerNeeded, status: http.StatusConflict, code: "proxy_owner_needed"},
 		{name: "proxy still serves desktop", err: appintegration.ErrProxyInUse, status: http.StatusConflict, code: "proxy_in_use"},
+		{name: "picker certificate refusal", err: fmt.Errorf("claude-desktop: %w", &appintegration.PickerError{Reason: appintegration.PickerCoworkTrustRemains}),
+			status: http.StatusConflict, code: "cowork_trust_remains"},
 		{name: "free consent", err: appcatalog.ErrFreeConnectionsDisabled, status: http.StatusForbidden, code: "free_connections_disabled"},
 		{name: "duplicate free connection", err: appcatalog.ErrFreeConnectionExists, status: http.StatusConflict, code: "free_connection_exists"},
 	}

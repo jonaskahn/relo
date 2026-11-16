@@ -27,6 +27,21 @@ type pickerCoworkResponse struct {
 	Enabled bool   `json:"enabled"`
 	Armed   bool   `json:"armed"`
 	Reason  string `json:"reason"`
+	// Trust is the OS's system-wide trust of Relo's root.
+	Trust string `json:"trust"`
+	// Manual is how to install or remove the certificate by hand.
+	Manual *pickerManualResponse `json:"manual"`
+}
+
+type pickerManualResponse struct {
+	OS       string `json:"os"`
+	CertPath string `json:"cert_path"`
+	SHA1     string `json:"sha1"`
+	SHA256   string `json:"sha256"`
+	DocsURL  string `json:"docs_url"`
+	Install  string `json:"install"`
+	Remove   string `json:"remove"`
+	Check    string `json:"check"`
 }
 
 type pickerHostResponse struct {
@@ -53,10 +68,21 @@ func toPickerResponse(view appintegration.PickerView) pickerResponse {
 		Supported: view.Supported, Enabled: view.Enabled, Armed: view.Armed, Trust: view.Trust,
 		Profile: view.Profile, Fingerprint: view.Fingerprint, Address: view.Address, Reason: string(view.Reason),
 		Connections: pickerConnectionsResponse{Hosts: hosts, RefusedPeers: view.Connections.RefusedPeers},
-		Cowork: pickerCoworkResponse{
-			Enabled: view.Cowork.Enabled, Armed: view.Cowork.Armed, Reason: string(view.Cowork.Reason),
-		},
+		Cowork:      toCoworkResponse(view.Cowork),
 	}
+}
+
+func toCoworkResponse(cowork appintegration.PickerCowork) pickerCoworkResponse {
+	response := pickerCoworkResponse{
+		Enabled: cowork.Enabled, Armed: cowork.Armed, Reason: string(cowork.Reason), Trust: cowork.Trust,
+	}
+	if manual := cowork.Manual; manual != nil {
+		response.Manual = &pickerManualResponse{
+			OS: manual.OS, CertPath: manual.CertPath, SHA1: manual.SHA1, SHA256: manual.SHA256,
+			DocsURL: manual.DocsURL, Install: manual.Install, Remove: manual.Remove, Check: manual.Check,
+		}
+	}
+	return response
 }
 
 // picker answers the picker, or reports the build has none.
@@ -119,6 +145,16 @@ func (s *Server) handleSetPickerCowork(w http.ResponseWriter, r *http.Request) {
 		action = picker.EnableCowork
 	}
 	s.answerPicker(w, r, action)
+}
+
+// handleRemoveCoworkTrust takes Relo's root out of the system-wide trust, which
+// is the one thing left to do after Cowork routing is turned off.
+func (s *Server) handleRemoveCoworkTrust(w http.ResponseWriter, r *http.Request) {
+	picker, ok := s.picker(w, r)
+	if !ok {
+		return
+	}
+	s.answerPicker(w, r, picker.RemoveSystemTrust)
 }
 
 func (s *Server) handleRemovePickerTrust(w http.ResponseWriter, r *http.Request) {

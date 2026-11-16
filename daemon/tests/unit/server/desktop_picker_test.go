@@ -38,6 +38,12 @@ func (f *fakePicker) EnableCowork(context.Context) (appintegration.PickerView, e
 func (f *fakePicker) DisableCowork(context.Context) (appintegration.PickerView, error) {
 	return f.act("disable-cowork")
 }
+func (f *fakePicker) RemoveSystemTrust(context.Context) (appintegration.PickerView, error) {
+	return f.act("remove-system-trust")
+}
+func (f *fakePicker) Retire(context.Context) (appintegration.PickerView, error) {
+	return f.act("retire")
+}
 
 func TestThePickerIsReadWithoutChangingAnything(t *testing.T) {
 	picker := &fakePicker{view: appintegration.PickerView{Supported: true, Trust: "untrusted", Fingerprint: "AB12", Reason: appintegration.PickerOff}}
@@ -114,7 +120,7 @@ func TestCoworkRoutingIsSwitchedByItsOwnPut(t *testing.T) {
 	}}
 	h, served := bindingsServerWith(t, picker)
 	status, body := call(t, h, served, http.MethodPut, "/api/v1/integrations/claude-desktop/picker/cowork", `{"enabled":true}`)
-	if status != http.StatusOK || !strings.Contains(body, `"cowork":{"enabled":true,"armed":true,"reason":"cowork_restart_required"}`) {
+	if status != http.StatusOK || !strings.Contains(body, `"cowork":{"enabled":true,"armed":true,"reason":"cowork_restart_required","trust":"","manual":null}`) {
 		t.Fatalf("PUT cowork on = %d %s, want the Cowork block with its reason", status, body)
 	}
 	if status, _ := call(t, h, served, http.MethodPut, "/api/v1/integrations/claude-desktop/picker/cowork", `{"enabled":false}`); status != http.StatusOK {
@@ -138,5 +144,56 @@ func TestCoworkRefusalCarriesItsReasonAndThePicker(t *testing.T) {
 	status, body := call(t, h, served, http.MethodPut, "/api/v1/integrations/claude-desktop/picker/cowork", `{"enabled":true}`)
 	if status != http.StatusConflict || !strings.Contains(body, `"code":"cowork_trust_missing"`) {
 		t.Fatalf("PUT cowork without trust = %d %s, want a conflict naming the reason", status, body)
+	}
+}
+
+func TestTheCoworkBlockCarriesTheSystemTrustAndTheManualSteps(t *testing.T) {
+	picker := &fakePicker{view: appintegration.PickerView{
+		Supported: true, Enabled: true, Armed: true,
+		Cowork: appintegration.PickerCowork{
+			Trust: "untrusted", Reason: appintegration.PickerCoworkTrustDeclined,
+			Manual: &appintegration.PickerManual{
+				OS: "darwin", CertPath: "/Users/x/.relo/ca/ca.pem", SHA256: "AB12", DocsURL: "https://example.test/guide",
+				Install: "sudo security add-trusted-cert", Remove: "sudo security remove-trusted-cert",
+			},
+		},
+	}}
+	h, served := bindingsServerWith(t, picker)
+	status, body := call(t, h, served, http.MethodGet, "/api/v1/integrations/claude-desktop/picker", "")
+	if status != http.StatusOK {
+		t.Fatalf("GET picker = %d %s", status, body)
+	}
+	for _, want := range []string{
+		`"trust":"untrusted"`, `"reason":"cowork_trust_declined"`, `"cert_path":"/Users/x/.relo/ca/ca.pem"`,
+		`"sha256":"AB12"`, `"install":"sudo security add-trusted-cert"`, `"docs_url":"https://example.test/guide"`,
+	} {
+		if !strings.Contains(body, want) {
+			t.Fatalf("body = %s, want %q", body, want)
+		}
+	}
+	bare := &fakePicker{view: appintegration.PickerView{Supported: true}}
+	h, served = bindingsServerWith(t, bare)
+	if _, body := call(t, h, served, http.MethodGet, "/api/v1/integrations/claude-desktop/picker", ""); !strings.Contains(body, `"manual":null`) {
+		t.Fatalf("body = %s, want no manual steps when there are none", body)
+	}
+}
+
+func TestTheSystemTrustIsRemovedByItsOwnDelete(t *testing.T) {
+	picker := &fakePicker{view: appintegration.PickerView{Supported: true}}
+	h, served := bindingsServerWith(t, picker)
+	if status, body := call(t, h, served, http.MethodDelete, "/api/v1/integrations/claude-desktop/picker/cowork/trust", ""); status != http.StatusOK {
+		t.Fatalf("DELETE cowork trust = %d %s", status, body)
+	}
+	if strings.Join(picker.calls, ",") != "remove-system-trust" {
+		t.Fatalf("calls = %v, want only the system trust removed", picker.calls)
+	}
+	refusing := &fakePicker{
+		view: appintegration.PickerView{Supported: true, Cowork: appintegration.PickerCowork{Trust: "trusted"}},
+		err:  &appintegration.PickerError{Reason: appintegration.PickerCoworkTrustRemains},
+	}
+	h, served = bindingsServerWith(t, refusing)
+	status, body := call(t, h, served, http.MethodDelete, "/api/v1/integrations/claude-desktop/picker/cowork/trust", "")
+	if status != http.StatusConflict || !strings.Contains(body, `"code":"cowork_trust_remains"`) || !strings.Contains(body, `"trust":"trusted"`) {
+		t.Fatalf("DELETE refused = %d %s, want a conflict with the reason and the picker beside it", status, body)
 	}
 }

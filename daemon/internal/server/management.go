@@ -163,6 +163,7 @@ func (s *Server) registerIntegrationRoutes(mux *http.ServeMux) {
 	mux.HandleFunc("GET "+apiPrefix+"integrations/claude-desktop/picker", s.handleGetPicker)
 	mux.HandleFunc("PUT "+apiPrefix+"integrations/claude-desktop/picker", s.handleSetPicker)
 	mux.HandleFunc("PUT "+apiPrefix+"integrations/claude-desktop/picker/cowork", s.handleSetPickerCowork)
+	mux.HandleFunc("DELETE "+apiPrefix+"integrations/claude-desktop/picker/cowork/trust", s.handleRemoveCoworkTrust)
 	mux.HandleFunc("DELETE "+apiPrefix+"integrations/claude-desktop/picker/trust", s.handleRemovePickerTrust)
 	mux.HandleFunc("POST "+apiPrefix+"integrations/{id}/repair", s.handleRepairIntegration)
 	mux.HandleFunc("GET "+apiPrefix+"integrations/{id}/model-config", s.handleGetClaudeModelConfig)
@@ -368,15 +369,26 @@ func serviceStatus(err error) (int, string) {
 	if errors.Is(err, appcatalog.ErrFreeConnectionExists) {
 		return http.StatusConflict, "free_connection_exists"
 	}
-	// Claude Desktop and Claude Code share one proxy wiring, and the console
-	// words each refusal about it by its code.
-	if errors.Is(err, appintegration.ErrProxyOwnerNeeded) {
-		return http.StatusConflict, "proxy_owner_needed"
-	}
-	if errors.Is(err, appintegration.ErrProxyInUse) {
-		return http.StatusConflict, "proxy_in_use"
+	if status, code, named := integrationRefusal(err); named {
+		return status, code
 	}
 	return generalServiceStatus(err)
+}
+
+// integrationRefusal names the refusals the console words itself by their code:
+// Claude Desktop and Claude Code share one proxy wiring, and the picker reports
+// why a certificate could not be installed or removed.
+func integrationRefusal(err error) (int, string, bool) {
+	var picker *appintegration.PickerError
+	switch {
+	case errors.Is(err, appintegration.ErrProxyOwnerNeeded):
+		return http.StatusConflict, "proxy_owner_needed", true
+	case errors.Is(err, appintegration.ErrProxyInUse):
+		return http.StatusConflict, "proxy_in_use", true
+	case errors.As(err, &picker):
+		return http.StatusConflict, string(picker.Reason), true
+	}
+	return 0, "", false
 }
 
 func generalServiceStatus(err error) (int, string) {
@@ -395,7 +407,6 @@ func generalServiceStatus(err error) (int, string) {
 		return http.StatusServiceUnavailable, "service_unavailable"
 	case errors.Is(err, appcatalog.ErrCatalogConflict), errors.Is(err, appaccount.ErrDuplicateAccount),
 		errors.Is(err, appcatalog.ErrListAuthoritative),
-		errors.Is(err, appintegration.ErrPickerInUse),
 		appintegration.RefusalCode(err) == appintegration.CodeForeignKey:
 		return http.StatusConflict, "conflict"
 	case errors.Is(err, appintegration.ErrRestoreBlocked):
