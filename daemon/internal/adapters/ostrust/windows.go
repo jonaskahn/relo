@@ -7,8 +7,34 @@ import (
 )
 
 // windowsStore trusts a root in the current user's Root store, which Windows
-// answers with its own confirmation dialog. It never touches the machine store.
+// answers with its own confirmation dialog, or in the machine's Root store for
+// every user, which Windows answers with its own administrator approval.
 type windowsStore struct{ run Runner }
+
+// store is the certificate store a scope's trust lives in.
+func store(scope Scope) string {
+	if scope == ScopeSystem {
+		return `Cert:\LocalMachine\Root`
+	}
+	return `Cert:\CurrentUser\Root`
+}
+
+// elevated runs a script as the administrator through Windows' own approval
+// dialog. The script crosses as an encoded command, so it needs no quoting of
+// its own, and its exit code comes back. Declining the dialog is ErrDeclined.
+func (w *windowsStore) elevated(ctx context.Context, script string) error {
+	outer := fmt.Sprintf(`$ErrorActionPreference='Stop'
+$p = Start-Process -FilePath 'powershell.exe' -Verb RunAs -Wait -PassThru -WindowStyle Hidden -ArgumentList '-NoProfile','-NonInteractive','-EncodedCommand','%s'
+exit $p.ExitCode`, encodePowerShell(script))
+	result, err := w.powershell(ctx, outer)
+	switch {
+	case err != nil:
+		return ErrUnavailable
+	case result.Code != 0:
+		return ErrDeclined
+	}
+	return nil
+}
 
 func (w *windowsStore) powershell(ctx context.Context, script string) (Result, error) {
 	return w.run(ctx, "powershell.exe", "-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-Command", script)
@@ -26,13 +52,13 @@ func (w *windowsStore) Inspect(ctx context.Context, root Root) State {
 	}
 	defer cleanup()
 	script := fmt.Sprintf(`$ErrorActionPreference='Stop'
-if (-not (Test-Path 'Cert:\CurrentUser\Root\%s')) { Write-Output 'absent'; exit 0 }
+if (-not (Test-Path '%s\%s')) { Write-Output 'absent'; exit 0 }
 $leaf = New-Object System.Security.Cryptography.X509Certificates.X509Certificate2 (%s)
 $chain = New-Object System.Security.Cryptography.X509Certificates.X509Chain
 $chain.ChainPolicy.RevocationMode = 'NoCheck'
 if (-not $chain.Build($leaf)) { Write-Output 'broken'; exit 0 }
 $top = $chain.ChainElements[$chain.ChainElements.Count - 1].Certificate.Thumbprint
-if ($top -eq '%s') { Write-Output 'trusted' } else { Write-Output 'broken' }`, root.SHA1, quote(leaf), root.SHA1)
+if ($top -eq '%s') { Write-Output 'trusted' } else { Write-Output 'broken' }`, store(root.Scope), root.SHA1, quote(leaf), root.SHA1)
 	result, err := w.powershell(ctx, script)
 	if err != nil || result.Code != 0 {
 		return Unknown
@@ -53,7 +79,10 @@ func (w *windowsStore) Trust(ctx context.Context, root Root) error {
 		return err
 	}
 	defer cleanup()
-	script := fmt.Sprintf(`$ErrorActionPreference='Stop'; Import-Certificate -FilePath %s -CertStoreLocation 'Cert:\CurrentUser\Root' | Out-Null`, quote(file))
+	script := fmt.Sprintf(`$ErrorActionPreference='Stop'; Import-Certificate -FilePath %s -CertStoreLocation '%s' | Out-Null`, quote(file), store(root.Scope))
+	if root.Scope == ScopeSystem {
+		return w.elevated(ctx, script)
+	}
 	result, err := w.powershell(ctx, script)
 	if err != nil || result.Code != 0 {
 		return ErrDeclined
@@ -64,9 +93,12 @@ func (w *windowsStore) Trust(ctx context.Context, root Root) error {
 // Untrust removes the root from the current user's Root store, by thumbprint.
 func (w *windowsStore) Untrust(ctx context.Context, root Root) error {
 	script := fmt.Sprintf(`$ErrorActionPreference='Stop'
-$path = 'Cert:\CurrentUser\Root\%s'
+$path = '%s\%s'
 if (Test-Path $path) { Remove-Item -LiteralPath $path -Force }
-if (Test-Path $path) { exit 3 }`, root.SHA1)
+if (Test-Path $path) { exit 3 }`, store(root.Scope), root.SHA1)
+	if root.Scope == ScopeSystem {
+		return w.elevated(ctx, script)
+	}
 	result, err := w.powershell(ctx, script)
 	if err != nil || result.Code != 0 {
 		return ErrDeclined

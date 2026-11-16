@@ -32,14 +32,34 @@ var ErrDeclined = errors.New("the operating system did not trust the certificate
 // ErrUnsupported reports an OS Relo does not install trust on.
 var ErrUnsupported = errors.New("trusting a certificate is not supported on this operating system")
 
+// ErrUnavailable reports an install that nothing on this machine can do by
+// itself: no way to ask for the administrator approval it needs, or no tool for
+// the store. The operator installs the certificate by hand instead.
+var ErrUnavailable = errors.New("this machine has no way to install the certificate automatically")
+
+// Scope is how widely a root is trusted. The user's own store reaches the apps
+// that user runs; the system store reaches every app and every user, which is
+// where a virtual machine's host-trust copy is read from, and it needs an
+// administrator's approval to change.
+type Scope string
+
+// The scopes a root is trusted in.
+const (
+	ScopeUser   Scope = ""
+	ScopeSystem Scope = "system"
+)
+
 // Root is the certificate an OS is asked to trust, and a leaf it issued, which
 // is what proves the trust works for the host the root is for.
 type Root struct {
 	PEM        []byte
 	SHA1       string
+	SHA256     string
 	CommonName string
 	Host       string
 	LeafPEM    []byte
+	// Scope is where the root is trusted. The zero value is the user's own store.
+	Scope Scope
 }
 
 // Store reads and changes the OS's trust of a root.
@@ -88,6 +108,8 @@ func New(goos, home string, run Runner) Store {
 		return &keychain{home: home, run: run}
 	case "windows":
 		return &windowsStore{run: run}
+	case "linux":
+		return &linuxStore{home: home, run: run}
 	default:
 		return unsupported{}
 	}

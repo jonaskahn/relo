@@ -194,7 +194,7 @@ func TestWindowsReadsTrustFromTheChainNotJustPresence(t *testing.T) {
 
 func TestAnUnsupportedOSChangesNothing(t *testing.T) {
 	s := &script{}
-	store := ostrust.New("linux", "", s.run)
+	store := ostrust.New("plan9", "", s.run)
 	if got := store.Inspect(context.Background(), root); got != ostrust.Unsupported {
 		t.Fatalf("state = %q, want unsupported", got)
 	}
