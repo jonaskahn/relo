@@ -83,6 +83,8 @@ type Proxy struct {
 	// conns are the tunnels still open, so a shutdown closes them rather than
 	// waiting for a client that keeps its connection pooled.
 	conns sync.Map
+	// seen holds the clients already named in the log, so each is named once.
+	seen sync.Map
 }
 
 // New returns an intercept pair over the given options.

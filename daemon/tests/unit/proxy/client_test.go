@@ -26,6 +26,22 @@ func TestClientOfTellsDesktopSpawnedProcessesFromTheTerminal(t *testing.T) {
 	}
 }
 
+func TestEntrypointOfKeepsOnlyTheEntrypointWord(t *testing.T) {
+	cases := map[string]string{
+		"claude-cli/2.1.0 (external, cli)":                        "cli",
+		"claude-cli/2.1.0 (external, claude-desktop, agent-sdk)":  "claude-desktop",
+		"claude-cli/2.1.0 (external, local-agent, agent-sdk/0.2)": "local-agent",
+		"claude-cli/2.1.0 (external, Some Thing, x)":              "unknown",
+		"curl/8.0 secret-token-in-agent":                          "unknown",
+		"":                                                        "unknown",
+	}
+	for agent, want := range cases {
+		if got := proxy.EntrypointOf(agent); got != want {
+			t.Errorf("EntrypointOf(%q) = %q, want %q", agent, got, want)
+		}
+	}
+}
+
 // clientGate runs one intercept whose routing is admitted for the clients in
 // the set, and answers where a request from a given user-agent landed.
 type clientGate struct {

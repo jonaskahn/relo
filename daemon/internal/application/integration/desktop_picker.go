@@ -31,6 +31,22 @@ const (
 	PickerCleanupIncomplete PickerReason = "cleanup_incomplete"
 )
 
+// PickerHost is how many connections one host has asked the picker's egress
+// proxy for. Only the hosts Relo intercepts are named; every other is counted
+// together as "other".
+type PickerHost struct {
+	Host       string
+	Count      int
+	LastSeenMs int64
+}
+
+// PickerConnections is what the egress proxy has been asked since it started.
+type PickerConnections struct {
+	Hosts []PickerHost
+	// RefusedPeers counts connections from an address that is not loopback.
+	RefusedPeers int
+}
+
 // PickerView is where the picker stands.
 type PickerView struct {
 	// Supported is whether this OS can trust Relo's root at all.
@@ -51,6 +67,9 @@ type PickerView struct {
 	// Address is where the egress proxy listens, empty while it is down.
 	Address string
 	Reason  PickerReason
+	// Connections is what the egress proxy has been asked, so an operator can see
+	// whether an app's traffic reaches it at all.
+	Connections PickerConnections
 }
 
 // PickerError is a refusal with the reason a console shows.

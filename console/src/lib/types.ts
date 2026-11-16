@@ -796,6 +796,11 @@ export interface DesktopPicker {
 	readonly fingerprint: string;
 	readonly address: string;
 	readonly reason: string;
+	/** What the egress proxy has been asked, as counts. */
+	readonly connections: {
+		readonly hosts: readonly { host: string; count: number; last_seen_ms: number }[];
+		readonly refused_peers: number;
+	};
 }
 
 /** The body that sets or removes bindings. */

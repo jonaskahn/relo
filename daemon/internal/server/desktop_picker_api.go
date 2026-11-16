@@ -18,6 +18,19 @@ type pickerResponse struct {
 	Fingerprint string `json:"fingerprint"`
 	Address     string `json:"address"`
 	Reason      string `json:"reason"`
+	// Connections is what the egress proxy has been asked, as counts.
+	Connections pickerConnectionsResponse `json:"connections"`
+}
+
+type pickerHostResponse struct {
+	Host       string `json:"host"`
+	Count      int    `json:"count"`
+	LastSeenMs int64  `json:"last_seen_ms"`
+}
+
+type pickerConnectionsResponse struct {
+	Hosts        []pickerHostResponse `json:"hosts"`
+	RefusedPeers int                  `json:"refused_peers"`
 }
 
 type pickerRequest struct {
@@ -25,9 +38,14 @@ type pickerRequest struct {
 }
 
 func toPickerResponse(view appintegration.PickerView) pickerResponse {
+	hosts := make([]pickerHostResponse, 0, len(view.Connections.Hosts))
+	for _, host := range view.Connections.Hosts {
+		hosts = append(hosts, pickerHostResponse{Host: host.Host, Count: host.Count, LastSeenMs: host.LastSeenMs})
+	}
 	return pickerResponse{
 		Supported: view.Supported, Enabled: view.Enabled, Armed: view.Armed, Trust: view.Trust,
 		Profile: view.Profile, Fingerprint: view.Fingerprint, Address: view.Address, Reason: string(view.Reason),
+		Connections: pickerConnectionsResponse{Hosts: hosts, RefusedPeers: view.Connections.RefusedPeers},
 	}
 }
 

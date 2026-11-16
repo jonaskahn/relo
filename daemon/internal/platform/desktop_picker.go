@@ -119,6 +119,7 @@ func (p *DesktopPicker) view(ctx context.Context, reason appintegration.PickerRe
 	}
 	if p.pair != nil {
 		view.Address = p.pair.Addr()
+		view.Connections = pickerConnections(p.pair.Connections())
 	}
 	if !view.Supported {
 		view.Trust = string(ostrust.Unsupported)
@@ -135,6 +136,16 @@ func (p *DesktopPicker) view(ctx context.Context, reason appintegration.PickerRe
 	}
 	view.Reason = p.reasonFor(view, reason)
 	return view
+}
+
+func pickerConnections(seen proxy.Connections) appintegration.PickerConnections {
+	out := appintegration.PickerConnections{RefusedPeers: seen.RefusedPeers}
+	for _, host := range seen.Hosts {
+		out.Hosts = append(out.Hosts, appintegration.PickerHost{
+			Host: host.Host, Count: host.Count, LastSeenMs: host.LastUnixMs,
+		})
+	}
+	return out
 }
 
 func (p *DesktopPicker) reasonFor(view appintegration.PickerView, given appintegration.PickerReason) appintegration.PickerReason {

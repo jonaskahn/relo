@@ -116,6 +116,7 @@ func rewriteModel(body []byte, model string) []byte {
 // own surface, everything else is relayed to the vendor verbatim, and a plan
 // with a second side asks it once when the first refuses before answering.
 func (p *Proxy) handle(w http.ResponseWriter, r *http.Request) {
+	p.noteClient(r)
 	if p.opts.Catalog != nil {
 		if kind := catalogKindOf(r); kind != notCatalog {
 			p.serveCatalog(w, r, kind)
@@ -138,6 +139,17 @@ func (p *Proxy) handle(w http.ResponseWriter, r *http.Request) {
 	copyHeaders(w.Header(), response.Header)
 	w.WriteHeader(response.StatusCode)
 	flush(w, response.Body)
+}
+
+// noteClient names a client the first time the intercept sees it: the class the
+// gate uses and the entrypoint word of its user-agent, so an operator can tell
+// which client a request came from. Nothing else of the request is kept.
+func (p *Proxy) noteClient(r *http.Request) {
+	agent := r.Header.Get("User-Agent")
+	client, entrypoint := ClientOf(agent), EntrypointOf(agent)
+	if _, known := p.seen.LoadOrStore(client+"/"+entrypoint, struct{}{}); !known {
+		p.opts.Logger.Info("proxy client seen", "client", client, "entrypoint", entrypoint)
+	}
 }
 
 func readBody(w http.ResponseWriter, r *http.Request) ([]byte, bool) {

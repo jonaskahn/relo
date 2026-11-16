@@ -17,6 +17,21 @@ const (
 // different integration with their own mode, bindings and key.
 var desktopEntrypoint = regexp.MustCompile(`^claude-cli/\S+ \(external, (claude-desktop|claude-desktop-3p|local-agent)[,)]`)
 
+// entrypointToken reads the entrypoint a Claude Code user-agent names, the word
+// in `(external, <entrypoint>)`. Only that short token is ever kept.
+var entrypointToken = regexp.MustCompile(`^claude-cli/\S+ \(external, ([a-z0-9-]{1,32})[,)]`)
+
+// EntrypointOf is the entrypoint word a Claude Code user-agent carries, such as
+// `cli` or `local-agent`, and "unknown" for any other shape. It is what an
+// operator reads to learn which client a request came from, so it never carries
+// more of the user-agent than that one word.
+func EntrypointOf(userAgent string) string {
+	if match := entrypointToken.FindStringSubmatch(userAgent); match != nil {
+		return match[1]
+	}
+	return "unknown"
+}
+
 // ClientOf names the client a user-agent belongs to. Anything that is not a
 // process Claude Desktop started is Claude Code's.
 func ClientOf(userAgent string) string {

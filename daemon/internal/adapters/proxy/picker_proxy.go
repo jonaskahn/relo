@@ -52,6 +52,7 @@ type PickerProxy struct {
 	handler  http.Handler
 	servers  sync.WaitGroup
 	conns    sync.Map
+	stats    connectionStats
 }
 
 // NewPicker returns a picker proxy over the given options.
@@ -142,6 +143,7 @@ func (p *PickerProxy) serveConn(conn net.Conn) {
 		_ = conn.Close()
 	}()
 	if !loopbackPeer(conn) {
+		p.noteRefusedPeer(conn)
 		return
 	}
 	_ = conn.SetDeadline(time.Now().Add(handshakeTimeout))
@@ -150,21 +152,65 @@ func (p *PickerProxy) serveConn(conn net.Conn) {
 	if err != nil {
 		return
 	}
-	conn = &bufferedConn{Conn: conn, reader: buffered}
+	p.route(&bufferedConn{Conn: conn, reader: buffered}, request)
+}
+
+// route answers a parsed request: only a CONNECT to a host that is not on this
+// machine is served, and it is either terminated or spliced through.
+func (p *PickerProxy) route(conn net.Conn, request *http.Request) {
 	if request.Method != http.MethodConnect {
 		writeProxyStatus(conn, http.StatusMethodNotAllowed)
 		return
 	}
 	if refuseLoopbackTarget(request.Host) != nil {
+		p.note(request.Host, "refused")
 		writeProxyStatus(conn, http.StatusForbidden)
 		return
 	}
 	_ = conn.SetDeadline(time.Time{})
 	if p.terminates(request.Host) {
+		p.note(request.Host, "terminate")
 		p.terminate(conn)
 		return
 	}
+	p.note(request.Host, "blind")
 	p.blind(conn, request.Host)
+}
+
+// note counts one connection and logs it when the host is one Relo intercepts.
+// Any other host is counted under one label and never named, so the log holds no
+// record of where the app has been.
+func (p *PickerProxy) note(target, decision string) {
+	label, count := p.stats.record(targetHost(target), time.Now())
+	if label != otherHost {
+		p.opts.Logger.Info("picker connect", "host", label, "decision", decision, "count", count)
+	}
+}
+
+// noteRefusedPeer logs the first few connections from an address that is not
+// loopback, with the address, because the operator needs it to see where a
+// virtual machine's traffic comes from.
+func (p *PickerProxy) noteRefusedPeer(conn net.Conn) {
+	count := p.stats.refusePeer()
+	if count > maxLoggedRefusals {
+		return
+	}
+	peer := ""
+	if address, ok := conn.RemoteAddr().(*net.TCPAddr); ok {
+		peer = address.IP.String()
+	}
+	p.opts.Logger.Info("picker refused a peer that is not loopback", "peer", peer, "count", count)
+}
+
+// Connections reports what the proxy has been asked, as counts.
+func (p *PickerProxy) Connections() Connections { return p.stats.snapshot() }
+
+// targetHost is the host part of a CONNECT target.
+func targetHost(target string) string {
+	if host, _, err := net.SplitHostPort(target); err == nil {
+		return host
+	}
+	return target
 }
 
 func loopbackPeer(conn net.Conn) bool {
@@ -173,11 +219,7 @@ func loopbackPeer(conn net.Conn) bool {
 }
 
 func (p *PickerProxy) terminates(target string) bool {
-	host, _, err := net.SplitHostPort(target)
-	if err != nil {
-		host = target
-	}
-	return strings.EqualFold(host, HostClaudeAI) && p.armed()
+	return strings.EqualFold(targetHost(target), HostClaudeAI) && p.armed()
 }
 
 func (p *PickerProxy) blind(conn net.Conn, target string) {

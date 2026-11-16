@@ -1,16 +1,19 @@
 package proxy_test
 
 import (
+	"bytes"
 	"context"
 	"crypto/tls"
 	"crypto/x509"
 	"encoding/json"
 	"io"
+	"log/slog"
 	"net"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
 	"strings"
+	"sync"
 	"sync/atomic"
 	"testing"
 	"time"
@@ -23,7 +26,26 @@ const desktopBootstrap = `{"model_selector_config":[
  {"id":"ccr","models":[{"id":"claude-sonnet-4-5","name":"Sonnet","section":"main"}]},
  {"id":"chat","models":[{"id":"claude-sonnet-4-5","name":"Sonnet","section":"main"}]}],"other":1}`
 
+// lockedBuffer is a log sink the proxy's goroutines write and a test reads.
+type lockedBuffer struct {
+	mu  sync.Mutex
+	buf bytes.Buffer
+}
+
+func (b *lockedBuffer) Write(p []byte) (int, error) {
+	b.mu.Lock()
+	defer b.mu.Unlock()
+	return b.buf.Write(p)
+}
+
+func (b *lockedBuffer) String() string {
+	b.mu.Lock()
+	defer b.mu.Unlock()
+	return b.buf.String()
+}
+
 type pickerRig struct {
+	logs     lockedBuffer
 	upstream *httptest.Server
 	proxy    *proxy.PickerProxy
 	armed    atomic.Bool
@@ -58,6 +80,7 @@ func newPickerRig(t *testing.T, bootstrap string) *pickerRig {
 		Upstream: rig.upstream.URL, Authority: authority,
 		Catalog: func() []proxy.CatalogRow { return rig.rows.Load().([]proxy.CatalogRow) },
 		Armed:   rig.armed.Load,
+		Logger:  slog.New(slog.NewTextHandler(&rig.logs, nil)),
 		Dial: func(_ context.Context, _, address string) (net.Conn, error) {
 			rig.dialed.Store(address)
 			return net.Dial("tcp", rig.upstream.Listener.Addr().String())
@@ -223,5 +246,44 @@ func TestThePickerIsNotADoorIntoThisMachine(t *testing.T) {
 		if !strings.Contains(string(answer), want) {
 			t.Fatalf("%q answered %q, want %s", request, answer, want)
 		}
+	}
+}
+
+// TestPickerCountsWhatItIsAskedAndNamesOnlyTheHostsRelloIntercepts is the probe's
+// promise: an operator can read which of Relo's hosts an app asked for, and a
+// host Relo does not intercept is counted under one label and never named.
+func TestPickerCountsWhatItIsAskedAndNamesOnlyTheHostsReloIntercepts(t *testing.T) {
+	rig := newPickerRig(t, desktopBootstrap)
+	client := rig.client(false)
+	// One connection per request, so each GET is one CONNECT.
+	client.Transport.(*http.Transport).DisableKeepAlives = true
+	get(t, client, "https://claude.ai/api/bootstrap")
+	get(t, client, "https://claude.ai/api/bootstrap")
+	// A host the picker does not terminate is spliced to the upstream the rig
+	// dials; the answer does not matter here, only that it was counted.
+	other, err := client.Get("https://telemetry.example.test/ping")
+	if err == nil {
+		_ = other.Body.Close()
+	}
+
+	counted := map[string]int{}
+	for _, host := range rig.proxy.Connections().Hosts {
+		counted[host.Host] = host.Count
+		if host.LastUnixMs == 0 {
+			t.Errorf("host %q has no last-seen time", host.Host)
+		}
+	}
+	if counted["claude.ai"] != 2 {
+		t.Fatalf("counts = %v, want claude.ai counted twice", counted)
+	}
+	if counted["other"] == 0 {
+		t.Fatalf("counts = %v, want the other host counted under one label", counted)
+	}
+	logs := rig.logs.String()
+	if !strings.Contains(logs, "host=claude.ai") || !strings.Contains(logs, "decision=terminate") {
+		t.Fatalf("log = %s, want the claude.ai connection named with its decision", logs)
+	}
+	if strings.Contains(logs, "example.test") || strings.Contains(logs, "app-session") || strings.Contains(logs, "/api/bootstrap") {
+		t.Fatalf("log = %s, want no other host, credential or path in it", logs)
 	}
 }
