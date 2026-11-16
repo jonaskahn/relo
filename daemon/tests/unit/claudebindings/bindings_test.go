@@ -279,6 +279,39 @@ func TestViewListsTheRoutesAndModelsABindingCanPointAt(t *testing.T) {
 	}
 }
 
+func TestARouteWithoutALabelIsOfferedUnderItsId(t *testing.T) {
+	f := newFixture(t)
+	for id, label := range map[string]string{"coder-free": "", "planner": "  "} {
+		if err := sqlite.NewCatalogRepo(f.db).SaveRoute(context.Background(), catalog.RouteRecord{
+			ID: id, Label: label, Strategy: string(catalog.StrategyPriority), Enabled: true, Listed: true,
+			Members: []catalog.RouteMemberRecord{{
+				ProviderID: "openai", ModelID: "alpha", Kind: catalog.MemberKindModel, Weight: 1, Enabled: true,
+			}},
+		}); err != nil {
+			t.Fatalf("save route %s: %v", id, err)
+		}
+	}
+	if err := f.catalog.Reload(context.Background()); err != nil {
+		t.Fatalf("reload the catalog: %v", err)
+	}
+	view, err := f.service.View(context.Background(), "claude-code")
+	if err != nil {
+		t.Fatalf("View() error = %v", err)
+	}
+	labels := map[string]string{}
+	for _, option := range view.Targets {
+		if strings.TrimSpace(option.Label) == "" {
+			t.Fatalf("targets = %+v, want no blank label", view.Targets)
+		}
+		if option.Kind == claudebindings.TargetRoute {
+			labels[option.GroupID] = option.Label
+		}
+	}
+	if labels["coder-free"] != "coder-free" || labels["planner"] != "planner" {
+		t.Fatalf("route labels = %v, want the ids of the unlabeled routes", labels)
+	}
+}
+
 func TestTheMillionTokenMarkerTravelsWithTheRewrite(t *testing.T) {
 	f := newFixture(t)
 	apply(t, f, modelBinding("claude-haiku-4-5"))

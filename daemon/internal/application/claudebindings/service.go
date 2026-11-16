@@ -258,7 +258,7 @@ func targets(snapshot *catalog.Snapshot) []TargetOption {
 	for _, group := range snapshot.Groups {
 		if group.Enabled && len(snapshot.GroupModels(group)) > 0 {
 			options = append(options, TargetOption{
-				Target: Target{Kind: TargetRoute, GroupID: group.ID}, Label: group.Label,
+				Target: Target{Kind: TargetRoute, GroupID: group.ID}, Label: labelOr(group.Label, group.ID),
 			})
 		}
 	}
@@ -267,15 +267,20 @@ func targets(snapshot *catalog.Snapshot) []TargetOption {
 			if !snapshot.Eligible(model, catalog.Requirements{}) {
 				continue
 			}
-			name := model.Name
-			if name == "" {
-				name = model.ID
-			}
 			options = append(options, TargetOption{
 				Target: Target{Kind: TargetModel, ProviderID: host.ID, ModelID: model.ID},
-				Label:  host.Label + " / " + name,
+				Label:  labelOr(host.Label, host.ID) + " / " + labelOr(model.Name, model.ID),
 			})
 		}
 	}
 	return options
+}
+
+// labelOr is the label an operator reads: the given one, or the id when the
+// label was left empty, which a route or connection may be.
+func labelOr(label, id string) string {
+	if trimmed := strings.TrimSpace(label); trimmed != "" {
+		return trimmed
+	}
+	return id
 }
