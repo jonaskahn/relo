@@ -431,6 +431,12 @@ func (m *Manager) modelsStale(agent Agent, record Record, files []FileRecord) bo
 	case "codex":
 		return !m.files.CodexCatalogLists(m.files.CodexCatalogPath(m.paths.CodexConfig()), models)
 	case "claude-code":
+		// Proxy mode keeps no gateway picker cache, on purpose: the picker is the
+		// vendor's list with Relo's rows added on the wire, so there is no file
+		// to fall behind the published models.
+		if mode, _ := NormalizeMode(record.Mode); mode == ModeProxy {
+			return false
+		}
 		return !m.files.GatewayCacheLists(m.paths.ClaudeConfigDir(), m.paths.BaseURL(agent.Protocol), models)
 	case "claude-desktop":
 		// The rendered profile decides, because a behavior mapping can change

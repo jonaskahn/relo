@@ -40,6 +40,12 @@ func (f *fakeProxy) Retire(id string) error {
 
 func proxyHarness(t *testing.T, runtime integration.ProxyRuntime) *harness {
 	t.Helper()
+	return proxyHarnessWith(t, runtime, nil)
+}
+
+// proxyHarnessWith is proxyHarness over the model list Relo publishes.
+func proxyHarnessWith(t *testing.T, runtime integration.ProxyRuntime, models func() []integration.ModelRef) *harness {
+	t.Helper()
 	home := t.TempDir()
 	state := t.TempDir()
 	claudeHome := filepath.Join(home, ".claude")
@@ -54,7 +60,7 @@ func proxyHarness(t *testing.T, runtime integration.ProxyRuntime) *harness {
 		Files: platform.NewClientFiles(paths),
 		Store: built, Now: func() time.Time { return time.Unix(1_700_000_000, 0) },
 		ClaudeAuth: func() integration.ClaudeAuth { return integration.ClaudeAuthLogin },
-		Proxy:      runtime,
+		Proxy:      runtime, Models: models, ClaudeModels: models,
 	})
 	return &harness{manager: manager, paths: paths, files: platform.NewClientFiles(paths), store: built}
 }
@@ -163,6 +169,34 @@ func TestARefreshKeepsProxyModeAndFollowsTheInterceptsNewAddress(t *testing.T) {
 	settings := readSettings(t, h)
 	if !strings.Contains(settings, runtime.env.URL) || strings.Contains(settings, ":51999") || strings.Contains(settings, "ANTHROPIC_BASE_URL") {
 		t.Fatalf("settings = %s, want the new address only and no settings-mode keys", settings)
+	}
+}
+
+// TestProxyModeNeverReportsAStalePickerCache pins the banner that said Relo
+// published new models after every repair: proxy mode deletes the gateway
+// picker cache by design, so its absence is not a model change.
+func TestProxyModeNeverReportsAStalePickerCache(t *testing.T) {
+	window := int64(200000)
+	models := func() []integration.ModelRef {
+		return []integration.ModelRef{{ID: "claude-relo-openai--alpha", Name: "Alpha", ContextWindow: &window}}
+	}
+	h := proxyHarnessWith(t, &fakeProxy{env: proxyEnvFixture()}, models)
+	ctx := context.Background()
+	if _, err := h.manager.Enable(ctx, "claude-code", "rlo_ak_test"); err != nil {
+		t.Fatalf("Enable() error = %v", err)
+	}
+	if view, err := h.manager.Inspect(ctx, "claude-code"); err != nil || view.ModelsStale {
+		t.Fatalf("settings mode: stale = %v error = %v, want a fresh cache after enabling", view.ModelsStale, err)
+	}
+	if _, err := h.manager.SetMode(ctx, "claude-code", integration.ModeProxy); err != nil {
+		t.Fatalf("SetMode(proxy) error = %v", err)
+	}
+	view, err := h.manager.Repair(ctx, "claude-code", "rlo_ak_test")
+	if err != nil {
+		t.Fatalf("Repair() error = %v", err)
+	}
+	if view.ModelsStale || len(view.Reasons) != 0 {
+		t.Fatalf("view = stale %v reasons %+v, want no model change reported in proxy mode", view.ModelsStale, view.Reasons)
 	}
 }
 
