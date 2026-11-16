@@ -48,8 +48,8 @@ func resolve(document Document, snapshot *catalog.Snapshot, model string) Resolu
 }
 
 // spell answers the name Relo's data plane resolves for a target, and whether
-// the target can serve a request now. The million-token marker is kept only
-// when the target answers to it.
+// the target can serve a request now. A request that carried the million-token
+// marker keeps it, and the data plane reads it as it does on any Relo alias.
 func spell(snapshot *catalog.Snapshot, target Target, million bool) (string, bool) {
 	if million {
 		window := int64(catalog.MillionContext)

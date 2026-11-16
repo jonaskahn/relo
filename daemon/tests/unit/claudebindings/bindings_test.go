@@ -3,6 +3,7 @@ package claudebindings_test
 import (
 	"context"
 	"errors"
+	"strings"
 	"testing"
 	"time"
 
@@ -46,7 +47,11 @@ type fixture struct {
 	catalog *catalog.Catalog
 	service *claudebindings.Service
 	changed []string
+	docs    *docstore.Collection[claudebindings.Document]
 }
+
+// documents is the collection the service reads, so a second service can share it.
+func (f *fixture) documents() *docstore.Collection[claudebindings.Document] { return f.docs }
 
 func newFixture(t *testing.T) *fixture {
 	t.Helper()
@@ -62,7 +67,7 @@ func newFixture(t *testing.T) *fixture {
 	collection := docstore.NewCollection(documentAdapter{repo: sqlite.NewDocuments(db)}, claudebindings.Namespace,
 		docstore.Codec[claudebindings.Document]{Decode: claudebindings.Decode, Encode: claudebindings.Encode},
 		docstore.Options{})
-	f := &fixture{db: db, catalog: built}
+	f := &fixture{db: db, catalog: built, docs: collection}
 	f.service = claudebindings.New(claudebindings.Options{
 		Documents: collection, Catalog: snapshots{built},
 		OnChange: func(_ context.Context, id string) { f.changed = append(f.changed, id) },
@@ -271,5 +276,88 @@ func TestViewListsTheRoutesAndModelsABindingCanPointAt(t *testing.T) {
 	}
 	if !route || !model {
 		t.Fatalf("targets = %+v, want the route and the model", view.Targets)
+	}
+}
+
+func TestTheMillionTokenMarkerTravelsWithTheRewrite(t *testing.T) {
+	f := newFixture(t)
+	apply(t, f, modelBinding("claude-haiku-4-5"))
+	if rewrite := f.service.Resolve("claude-code", "claude-haiku-4-5[1m]").Rewrite; rewrite != "claude-relo-openai--alpha[1m]" {
+		t.Fatalf("rewrite = %q, want the marker kept", rewrite)
+	}
+}
+
+func TestReloadReadsWhatAnotherWriterStored(t *testing.T) {
+	f := newFixture(t)
+	if err := f.service.Load(context.Background()); err != nil {
+		t.Fatalf("Load() error = %v", err)
+	}
+	body := `{"bindings":[{"native_id":"claude-opus-5","target":{"kind":"model","provider_id":"openai","model_id":"alpha"},"enabled":true}]}`
+	if err := sqlite.NewDocuments(f.db).Put(context.Background(), claudebindings.Namespace,
+		sqlite.DocumentRow{ID: "claude-code", Version: claudebindings.SchemaVersion, Body: []byte(body)}, 1); err != nil {
+		t.Fatalf("store the document: %v", err)
+	}
+	if f.service.Resolve("claude-code", "claude-opus-5").Matched {
+		t.Fatal("a document stored behind the service's back was read before a reload")
+	}
+	if err := f.service.Reload(context.Background()); err != nil {
+		t.Fatalf("Reload() error = %v", err)
+	}
+	if !f.service.Resolve("claude-code", "claude-opus-5").Matched {
+		t.Fatal("the stored document is not served after a reload")
+	}
+}
+
+func TestWithoutACatalogABindingIsLeftToTheVendor(t *testing.T) {
+	f := newFixture(t)
+	apply(t, f, modelBinding("claude-haiku-4-5"))
+	bare := claudebindings.New(claudebindings.Options{Documents: f.documents()})
+	if resolution := bare.Resolve("claude-code", "claude-haiku-4-5"); resolution.Matched || resolution.Reason != claudebindings.ReasonDangling {
+		t.Fatalf("Resolve() = %+v, want a dangling binding left alone", resolution)
+	}
+	view, err := bare.View(context.Background(), "claude-code")
+	if err != nil || len(view.Targets) != 0 || view.Entries[0].State != claudebindings.StateDangling {
+		t.Fatalf("View() = %+v, %v, want no targets and a dangling binding", view, err)
+	}
+}
+
+func TestTheRefusalNamesTheRouteThatIsMissing(t *testing.T) {
+	f := newFixture(t)
+	err := f.service.Apply(context.Background(), "claude-code", claudebindings.Change{Set: []claudebindings.Binding{{
+		NativeID: "claude-opus-5", Enabled: true,
+		Target: claudebindings.Target{Kind: claudebindings.TargetRoute, GroupID: "nothing"},
+	}}})
+	if err == nil || !strings.Contains(err.Error(), "route nothing") {
+		t.Fatalf("Apply() error = %v, want the missing route named", err)
+	}
+}
+
+func TestAClaudeConnectionAddsTheIDsItLists(t *testing.T) {
+	f := newFixture(t)
+	upstream := testkit.MockUpstream(t, map[string]string{})
+	testkit.CustomProvider(t, f.db, testkit.Upstream{
+		ID: "claude", Label: "Claude", APIFormat: catalog.FormatAnthropic,
+		BaseURL: upstream.URL, Auth: catalog.AuthAPIKey, ModelsFormat: catalog.ModelsNone,
+		Models: []string{"claude-future-7", "not-a-claude-id"},
+	})
+	if _, err := f.db.SQL().Exec("UPDATE providers SET template_id = 'claude' WHERE id = 'claude'"); err != nil {
+		t.Fatalf("set provider template: %v", err)
+	}
+	if err := f.catalog.Reload(context.Background()); err != nil {
+		t.Fatalf("reload catalog: %v", err)
+	}
+	view, err := f.service.View(context.Background(), "claude-code")
+	if err != nil {
+		t.Fatalf("View() error = %v", err)
+	}
+	sources := map[string]string{}
+	for _, official := range view.Official {
+		sources[official.ID] = official.Source
+	}
+	if sources["claude-future-7"] != claudebindings.SourceConnection {
+		t.Fatalf("official = %v, want the connection's Claude id", sources)
+	}
+	if _, listed := sources["not-a-claude-id"]; listed {
+		t.Fatal("a model that is not a Claude id was offered for binding")
 	}
 }
