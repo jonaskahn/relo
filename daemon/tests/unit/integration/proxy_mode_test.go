@@ -46,6 +46,12 @@ func proxyHarness(t *testing.T, runtime integration.ProxyRuntime) *harness {
 // proxyHarnessWith is proxyHarness over the model list Relo publishes.
 func proxyHarnessWith(t *testing.T, runtime integration.ProxyRuntime, models func() []integration.ModelRef) *harness {
 	t.Helper()
+	return proxyHarnessFull(t, runtime, models, nil)
+}
+
+// proxyHarnessFull is proxyHarnessWith over a Desktop picker.
+func proxyHarnessFull(t *testing.T, runtime integration.ProxyRuntime, models func() []integration.ModelRef, picker integration.DesktopPicker) *harness {
+	t.Helper()
 	home := t.TempDir()
 	state := t.TempDir()
 	claudeHome := filepath.Join(home, ".claude")
@@ -60,7 +66,7 @@ func proxyHarnessWith(t *testing.T, runtime integration.ProxyRuntime, models fun
 		Files: platform.NewClientFiles(paths),
 		Store: built, Now: func() time.Time { return time.Unix(1_700_000_000, 0) },
 		ClaudeAuth: func() integration.ClaudeAuth { return integration.ClaudeAuthLogin },
-		Proxy:      runtime, Models: models, ClaudeModels: models,
+		Proxy:      runtime, Models: models, ClaudeModels: models, Picker: picker,
 	})
 	return &harness{manager: manager, paths: paths, files: platform.NewClientFiles(paths), store: built}
 }

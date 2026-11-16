@@ -1194,6 +1194,9 @@ type ServiceOptions struct {
 	Proxy ProxyRuntime
 	// ProxyShutdown ends every running intercept when the daemon stops.
 	ProxyShutdown func()
+	// Picker runs Claude Desktop's own model picker. Nil means this build
+	// offers none.
+	Picker DesktopPicker
 }
 
 // enableRequest is one setup request: which client, which mode, and whether
@@ -1219,6 +1222,7 @@ type Service struct {
 	now        func() time.Time
 	claudeAuth func() ClaudeAuth
 	proxy      ProxyRuntime
+	picker     DesktopPicker
 	// proxyShutdown ends the intercepts when the daemon stops.
 	proxyShutdown func()
 	// running holds the action each agent has in flight, so a second run of
@@ -1242,8 +1246,13 @@ func NewService(options ServiceOptions) *Service {
 		store: options.Store, keys: options.Keys,
 		catalog: options.Catalog, logger: logger, now: now,
 		claudeAuth: options.ClaudeAuth, proxy: options.Proxy,
-		proxyShutdown: options.ProxyShutdown,
+		proxyShutdown: options.ProxyShutdown, picker: options.Picker,
 	}
+}
+
+// Picker is Claude Desktop's own model picker, or nil in a build with none.
+func (s *Service) Picker() DesktopPicker {
+	return s.picker
 }
 
 // Shutdown stops every proxy-mode intercept this daemon started, so a stop
@@ -1444,7 +1453,7 @@ func (s *Service) manager() (*Manager, error) {
 		Paths: s.paths, Agents: s.agents, Files: s.files,
 		Store: s.store, Logger: s.logger, Now: s.now,
 		Models: s.publishedModels, ClaudeModels: s.claudePickerModels,
-		ClaudeAuth: s.claudeAuth, Proxy: s.proxy,
+		ClaudeAuth: s.claudeAuth, Proxy: s.proxy, Picker: s.picker,
 	}), nil
 }
 

@@ -175,6 +175,9 @@ type Options struct {
 	// Proxy runs the intercept proxy mode points a client at. Nil means this
 	// build offers no proxy mode.
 	Proxy ProxyRuntime
+	// Picker runs Claude Desktop's own model picker. Nil means this build
+	// offers none.
+	Picker DesktopPicker
 }
 
 // Manager owns every write an integration makes.
@@ -189,6 +192,7 @@ type Manager struct {
 	claudeModels func() []ModelRef
 	claudeAuth   func() ClaudeAuth
 	proxy        ProxyRuntime
+	picker       DesktopPicker
 }
 
 // New returns a manager over the given paths and store.
@@ -205,7 +209,7 @@ func New(options Options) *Manager {
 		paths: options.Paths, agents: options.Agents, files: options.Files,
 		store: options.Store, logger: logger, now: now,
 		models: options.Models, claudeModels: options.ClaudeModels, claudeAuth: options.ClaudeAuth,
-		proxy: options.Proxy,
+		proxy: options.Proxy, picker: options.Picker,
 	}
 }
 
@@ -927,6 +931,9 @@ func (m *Manager) agentToRetire(ctx context.Context, id string) (Agent, error) {
 	agent, found := m.agents.AgentFor(id)
 	if !found {
 		return Agent{}, fmt.Errorf("%s: %w", id, ErrUnknownAgent)
+	}
+	if err := m.requirePickerOff(ctx, agent); err != nil {
+		return Agent{}, err
 	}
 	return agent, m.requireNoProxyDependents(ctx, agent)
 }

@@ -17,11 +17,16 @@ import (
 // answers the gateway profile's path, which is where Desktop's env mode lives.
 func desktopProxyHarness(t *testing.T) (*harness, *fakeProxy, string) {
 	t.Helper()
+	return desktopProxyHarnessWith(t, nil)
+}
+
+func desktopProxyHarnessWith(t *testing.T, picker integration.DesktopPicker) (*harness, *fakeProxy, string) {
+	t.Helper()
 	if runtime.GOOS == "windows" {
 		t.Skip("the Desktop directory is resolved from APPDATA on Windows")
 	}
 	runtimeProxy := &fakeProxy{env: proxyEnvFixture()}
-	h := proxyHarness(t, runtimeProxy)
+	h := proxyHarnessFull(t, runtimeProxy, nil, picker)
 	t.Setenv("CLAUDE_USER_DATA_DIR", "")
 	support := filepath.Join(h.paths.Home, ".config")
 	if runtime.GOOS == "darwin" {
@@ -170,5 +175,43 @@ func TestRestoringDesktopLeavesClaudeCodesProxyWiringInPlace(t *testing.T) {
 	}
 	if len(runtimeProxy.retired) != 0 {
 		t.Fatalf("retired = %v, want the intercept left running", runtimeProxy.retired)
+	}
+}
+
+// onPicker is a Desktop picker that is on, which is all the manager asks.
+type onPicker struct{ enabled bool }
+
+func (p *onPicker) View(context.Context) integration.PickerView {
+	return integration.PickerView{Enabled: p.enabled}
+}
+func (p *onPicker) Enable(context.Context) (integration.PickerView, error) {
+	return integration.PickerView{}, nil
+}
+func (p *onPicker) Disable(context.Context) (integration.PickerView, error) {
+	return integration.PickerView{}, nil
+}
+func (p *onPicker) RemoveTrust(context.Context) (integration.PickerView, error) {
+	return integration.PickerView{}, nil
+}
+
+// TestDesktopStaysInProxyModeWhileItsPickerIsOn keeps the picker from being
+// stranded: it rides Desktop's wiring, so every way out is refused until it is off.
+func TestDesktopStaysInProxyModeWhileItsPickerIsOn(t *testing.T) {
+	picker := &onPicker{enabled: true}
+	h, _, _ := desktopProxyHarnessWith(t, picker)
+	enableBoth(t, h, integration.ModeProxy)
+	ctx := context.Background()
+	if _, err := h.manager.SetMode(ctx, "claude-desktop", integration.ModeEnv); !errors.Is(err, integration.ErrPickerInUse) {
+		t.Fatalf("SetMode(desktop, env) error = %v, want %v", err, integration.ErrPickerInUse)
+	}
+	if _, err := h.manager.Restore(ctx, "claude-desktop", false); !errors.Is(err, integration.ErrPickerInUse) {
+		t.Fatalf("Restore(desktop) error = %v, want %v", err, integration.ErrPickerInUse)
+	}
+	if _, err := h.manager.Disable(ctx, "claude-desktop"); !errors.Is(err, integration.ErrPickerInUse) {
+		t.Fatalf("Disable(desktop) error = %v, want %v", err, integration.ErrPickerInUse)
+	}
+	picker.enabled = false
+	if _, err := h.manager.SetMode(ctx, "claude-desktop", integration.ModeEnv); err != nil {
+		t.Fatalf("SetMode(desktop, env) with the picker off error = %v", err)
 	}
 }

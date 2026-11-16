@@ -37,6 +37,8 @@ type ProxyRuntime struct {
 	invalidate func()
 
 	mu      sync.Mutex
+	authMu  sync.Mutex
+	root    *proxy.Authority
 	running map[string]*runningProxy
 	// cancelled ends every pair when the daemon stops.
 	cancelled context.Context
@@ -86,7 +88,7 @@ func (r *ProxyRuntime) Ensure(ctx context.Context, id string, target appintegrat
 		return running.env, nil
 	}
 	dir := filepath.Join(r.home, "proxy-mode", id)
-	authority, err := r.authority()
+	authority, err := r.Authority()
 	if err != nil {
 		return appintegration.ProxyEnv{}, err
 	}
@@ -111,6 +113,21 @@ func (r *ProxyRuntime) Ensure(ctx context.Context, id string, target appintegrat
 // shares it, so there is a single root to trust and a single one to remove.
 func AuthorityDir(home string) string {
 	return filepath.Join(home, "ca")
+}
+
+// Authority is Relo's root, shared by every client and loaded once.
+func (r *ProxyRuntime) Authority() (*proxy.Authority, error) {
+	r.authMu.Lock()
+	defer r.authMu.Unlock()
+	if r.root != nil {
+		return r.root, nil
+	}
+	authority, err := r.authority()
+	if err != nil {
+		return nil, err
+	}
+	r.root = authority
+	return authority, nil
 }
 
 // authority loads Relo's root, creating it on first use. A root left in an

@@ -72,6 +72,7 @@ type deps struct {
 	catalogSvc       *appcatalog.Service
 	integrations     *appintegration.Service
 	bindings         *claudebindings.Service
+	picker           *DesktopPicker
 	accounts         *appaccount.Service
 	status           *appstatus.Service
 	keys             *appaccess.Keys
@@ -284,13 +285,17 @@ func (w *wiring) proxyRuntime(bindings *claudebindings.Service, dropCatalog func
 	})
 }
 
-func (w *wiring) integrations() {
-	clientPaths := codingclients.Paths{
+func (w *wiring) clientPaths() codingclients.Paths {
+	return codingclients.Paths{
 		Home:      homeDirectory(""),
 		StateHome: w.options.Home,
 		Relo:      reloPath(""),
 		DataPlane: func(protocol string) string { return dataPlaneBaseURL(w.cfg, protocol) },
 	}
+}
+
+func (w *wiring) integrations() {
+	clientPaths := w.clientPaths()
 	dropCatalog := func() { codingclients.DropServedCatalog(clientPaths.ClaudeConfigDir()) }
 	bindings := w.claudeBindings(func(context.Context, string) { dropCatalog() })
 	w.built.bindings = bindings
@@ -298,15 +303,21 @@ func (w *wiring) integrations() {
 	// the runtime that serves them.
 	var pickerModels func() []appintegration.ModelRef
 	proxyRuntime := w.proxyRuntime(bindings, dropCatalog, func() []appintegration.ModelRef { return pickerModels() })
+	store := NewIntegrationStore(w.db)
+	picker := newDesktopPicker(desktopPickerParts{
+		home: w.options.Home, paths: clientPaths, runtime: proxyRuntime, store: store, logger: w.logger,
+		catalog: proxyCatalogRows(func() []appintegration.ModelRef { return pickerModels() }),
+	})
+	w.built.picker = picker
 	integrationSvc := appintegration.NewService(appintegration.ServiceOptions{
 		Paths:     NewPathResolver(clientPaths),
 		Agents:    NewAgentRegistry(),
 		Files:     NewClientFiles(clientPaths),
 		Processes: NewAgentProcesses(),
 		Wire:      NewWireCodec(),
-		Store:     NewIntegrationStore(w.db), Keys: w.built.keys, Catalog: w.models,
+		Store:     store, Keys: w.built.keys, Catalog: w.models,
 		Logger: w.logger, Now: w.clk.Now, Proxy: proxyRuntime,
-		ProxyShutdown: proxyRuntime.Stop,
+		ProxyShutdown: proxyRuntime.Stop, Picker: picker,
 	})
 	pickerModels = integrationSvc.ClaudePickerModels
 	w.refreshClaude = func(ctx context.Context) {

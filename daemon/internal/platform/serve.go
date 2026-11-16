@@ -232,6 +232,15 @@ func startServeWorkers(ctx context.Context, wired wired) {
 	startQuota(ctx, wired.deps)
 	warnOnMissingClientKeys(ctx, wired.deps)
 	refreshOutdatedFiles(ctx, wired.deps)
+	startDesktopPicker(ctx, wired.deps)
+}
+
+// startDesktopPicker restores a Desktop picker the operator turned on before the
+// daemon stopped. A picker that is off costs nothing and starts nothing.
+func startDesktopPicker(ctx context.Context, built deps) {
+	if built.picker != nil {
+		go built.picker.Run(ctx)
+	}
 }
 
 // refreshOutdatedFiles heals the client files an upgrade left outdated, so the

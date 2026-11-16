@@ -318,6 +318,9 @@ func (m *Manager) guardModeSwitch(ctx context.Context, agent Agent, record Recor
 		return m.requireProxyOwner(ctx, agent)
 	}
 	if current, _ := NormalizeMode(record.Mode); current == ModeProxy {
+		if err := m.requirePickerOff(ctx, agent); err != nil {
+			return err
+		}
 		return m.requireNoProxyDependents(ctx, agent)
 	}
 	return nil
