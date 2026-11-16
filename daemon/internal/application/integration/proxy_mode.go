@@ -97,6 +97,20 @@ func (m *Manager) proxyState(agent Agent, files []FileRecord) ProxyModeState {
 	return m.files.InspectClaudeProxySettings(content, env)
 }
 
+// claudeSettingsDrifted reports whether Claude Code's settings no longer carry
+// the wiring of the mode the integration runs in. Proxy mode is judged by the
+// intercept's address, never by the keys settings mode writes: a file wired
+// through the intercept would otherwise always read as out of date, and a
+// refresh would turn it back into a settings-mode file.
+func (m *Manager) claudeSettingsDrifted(agent Agent, content string) bool {
+	if mode, err := m.Mode(context.Background(), agent.ID); err == nil && mode == ModeProxy {
+		env, err := m.proxyEnv(context.Background(), agent)
+		return err == nil && !m.files.ClaudeProxySettingsPointAt(content, env)
+	}
+	installHelper := m.claudeMode() != ClaudeAuthLogin
+	return !m.files.ClaudeSettingsPointAt(content, m.paths.BaseURL(agent.Protocol), m.paths.HelperFile(agent.ID), installHelper)
+}
+
 func (m *Manager) settingsRecord(agent Agent, files []FileRecord) (FileRecord, bool) {
 	for _, file := range files {
 		if file.Kind == KindClaudeSettings {

@@ -137,6 +137,35 @@ func TestProxyModeSwitchesBackAndRestoresTheSettings(t *testing.T) {
 	}
 }
 
+// TestARefreshKeepsProxyModeAndFollowsTheInterceptsNewAddress pins the
+// restart: the startup refresh must not write the settings mode's keys over a
+// client wired through the intercept, and the new port replaces the old one.
+func TestARefreshKeepsProxyModeAndFollowsTheInterceptsNewAddress(t *testing.T) {
+	runtime := &fakeProxy{env: proxyEnvFixture()}
+	h := proxyHarness(t, runtime)
+	ctx := context.Background()
+	if _, err := h.manager.Enable(ctx, "claude-code", "rlo_ak_test"); err != nil {
+		t.Fatalf("Enable() error = %v", err)
+	}
+	if _, err := h.manager.SetMode(ctx, "claude-code", integration.ModeProxy); err != nil {
+		t.Fatalf("SetMode(proxy) error = %v", err)
+	}
+	if err := h.manager.RefreshOutdatedFiles(ctx, "claude-code", "rlo_ak_test"); err != nil {
+		t.Fatalf("RefreshOutdatedFiles() error = %v", err)
+	}
+	if settings := readSettings(t, h); strings.Contains(settings, "ANTHROPIC_BASE_URL") || strings.Contains(settings, integration.ClaudeGatewayDiscoveryEnv) {
+		t.Fatalf("settings = %s, want no key the settings mode wrote after a refresh", settings)
+	}
+	runtime.env.URL = "http://relo:secret@127.0.0.1:52000"
+	if err := h.manager.RefreshOutdatedFiles(ctx, "claude-code", "rlo_ak_test"); err != nil {
+		t.Fatalf("RefreshOutdatedFiles() after a restart error = %v", err)
+	}
+	settings := readSettings(t, h)
+	if !strings.Contains(settings, runtime.env.URL) || strings.Contains(settings, ":51999") || strings.Contains(settings, "ANTHROPIC_BASE_URL") {
+		t.Fatalf("settings = %s, want the new address only and no settings-mode keys", settings)
+	}
+}
+
 // TestProxyModeRefusesWhenTheInterceptCannotStart keeps a failed bind from
 // half-wiring the client: nothing is written when the runtime refuses.
 func TestProxyModeRefusesWhenTheInterceptCannotStart(t *testing.T) {

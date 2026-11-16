@@ -624,7 +624,13 @@ func (m *Manager) RefreshOutdatedFiles(ctx context.Context, id, token string) er
 	if agent.ID == "claude-desktop" {
 		return m.refreshClaudeDesktopModels(ctx, agent)
 	}
-	if err := m.provisionAgentFiles(ctx, agent, token, EnableOptions{}); err != nil {
+	mode, err := m.Mode(ctx, id)
+	if err != nil {
+		return err
+	}
+	// The stored mode is kept: a refresh that stated none would write the
+	// settings file's keys over a client wired through the intercept.
+	if err := m.provisionAgentFiles(ctx, agent, token, EnableOptions{Mode: mode}); err != nil {
 		return err
 	}
 	if err := m.rememberModels(ctx, agent); err != nil {
@@ -691,8 +697,7 @@ func (m *Manager) contributionDrifted(agent Agent, file FileRecord, content stri
 	case KindCodexConfig:
 		return !m.files.CodexConfigPointsAt(content, m.paths.BaseURL(agent.Protocol), m.paths.HelperFile(agent.ID))
 	case KindClaudeSettings:
-		installHelper := m.claudeMode() != ClaudeAuthLogin
-		return !m.files.ClaudeSettingsPointAt(content, m.paths.BaseURL(agent.Protocol), m.paths.HelperFile(agent.ID), installHelper)
+		return m.claudeSettingsDrifted(agent, content)
 	case FileOpenCode, FileHermes, FileOpenClaw:
 		return !m.files.ProviderPointsAt(agent.ID, content, m.paths.BaseURL(agent.Protocol), m.modelList())
 	case KindClaudeDesktop:
