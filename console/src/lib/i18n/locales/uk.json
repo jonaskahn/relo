@@ -1885,7 +1885,23 @@
         "verifyCheckSettings": "Файли налаштувань",
         "verifyCheckConfig": "Блок конфігурації",
         "verifyRegenerated": "Створено заново",
-        "overwriteAction": "Замінити наявний"
+        "overwriteAction": "Замінити наявний",
+        "modeDiagram": {
+          "title": "Шлях запитів",
+          "intercept": "Перехоплення",
+          "connections": "Підключення",
+          "subClient": "файл налаштувань",
+          "subRelo": "площина даних",
+          "subConnections": "ваші моделі",
+          "subAnthropic": "ваш вхід",
+          "subNotUsed": "не використовується",
+          "bound": "до Relo",
+          "native": "до Anthropic",
+          "captionEnv": "Claude Code надсилає кожен запит на адресу Relo, яку задає ANTHROPIC_BASE_URL у налаштуваннях. Anthropic не на шляху, тож вхід claude.ai не використовується.",
+          "captionProxy": "Claude Code, як і раніше, звертається до api.anthropic.com через HTTPS_PROXY. Перехоплення Relo надсилає прив’язані моделі до Relo з власним ключем Relo, а все інше передає до Anthropic з вашим входом без змін.",
+          "idle": "Підключення не застосовано, тож нічого не рухається.",
+          "preview": "Попередній перегляд. Нічого не записується, доки ви не підтвердите."
+        }
       },
       "chatPage": {
         "title": "Чат",

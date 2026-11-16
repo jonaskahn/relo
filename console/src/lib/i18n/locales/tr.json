@@ -1885,7 +1885,23 @@
         "verifyCheckSettings": "Ayar dosyaları",
         "verifyCheckConfig": "Yapılandırma bloğu",
         "verifyRegenerated": "Yeniden oluşturuldu",
-        "overwriteAction": "Mevcut olanı değiştir"
+        "overwriteAction": "Mevcut olanı değiştir",
+        "modeDiagram": {
+          "title": "İsteklerin yolu",
+          "intercept": "Yakalayıcı",
+          "connections": "Bağlantılar",
+          "subClient": "ayar dosyası",
+          "subRelo": "veri düzlemi",
+          "subConnections": "modelleriniz",
+          "subAnthropic": "girişiniz",
+          "subNotUsed": "kullanılmıyor",
+          "bound": "Relo'ya",
+          "native": "Anthropic'e",
+          "captionEnv": "Claude Code her isteği, ayarlarında ANTHROPIC_BASE_URL ile belirlenen Relo adresine gönderir. Anthropic yolda değildir, bu yüzden claude.ai girişi kullanılmaz.",
+          "captionProxy": "Claude Code, HTTPS_PROXY üzerinden api.anthropic.com ile konuşmaya devam eder. Relo'nun yakalayıcısı, bağladığınız modelleri Relo'nun kendi anahtarıyla Relo'ya gönderir; geri kalan her şeyi kendi girişinizle, değiştirmeden Anthropic'e aktarır.",
+          "idle": "Bağlantı uygulanmadı, bu yüzden hiçbir şey hareket etmiyor.",
+          "preview": "Önizleme. Onaylayana kadar hiçbir şey yazılmaz."
+        }
       },
       "chatPage": {
         "title": "Sohbet",

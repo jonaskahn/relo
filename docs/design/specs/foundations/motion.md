@@ -6,8 +6,8 @@ requires: []
 
 # Motion
 
-Motion answers an action or shows what changed. Three ambient moments are allowed: the daemon dot, the live-tail
-equalizer, and the dashboard's route flow, each only while its own state runs.
+Motion answers an action or shows what changed. Four ambient moments are allowed: the daemon dot, the live-tail
+equalizer, the dashboard's route flow, and the agent modal's mode flow, each only while its own state runs.
 
 | Moment                                        | Spec                                                                                       | Reduced motion          |
 |-----------------------------------------------|--------------------------------------------------------------------------------------------|-------------------------|
@@ -30,6 +30,7 @@ equalizer, and the dashboard's route flow, each only while its own state runs.
 | Tunnel node joins a rail                      | fade in 240ms, no travel                                                                   | no transition           |
 | Tunnel takes new traffic (a refresh)          | rows slide 400ms, a joining node fades in 240ms, a leaving one fades out 160ms             | no transition           |
 | Route flow (dashboard, newest route)          | a line of dots travels the newest route, only while the live tail runs             | a plain accent line    |
+| Mode flow (agent modal, mode diagram)         | dots travel each line of the diagram, only while that mode's wiring is applied; a mode switch morphs shared lines 400ms and fades joining nodes in 240ms, leaving ones out 160ms | a plain accent line    |
 | Daemon running dot                            | 2.4s soft ring, only while running                                                         | removed                 |
 | Live-tail equalizer (logs, dashboard)         | four rounded bars pump on a staggered seamless loop, only while the tail runs              | removed                 |
 
@@ -41,6 +42,8 @@ sheet and nav drawer), `card-layout-motion` (card grid re-solve), `popover-motio
 motion of the shared control it renders and never animates its own cards or panels.
 
 - A control that re-solves a grid animates it once; a card never animates on its own.
+- The mode diagram is a drawing, not a shared control: it reuses `card-layout-motion`'s `reducedMotion`, the
+  tunnel's dot flow and morph timings, and adds none of its own.
 - Every popup opens with `popoverMotion`; a native select popup is drawn by the OS and does not animate.
 
 ## Rules

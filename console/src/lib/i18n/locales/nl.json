@@ -1885,7 +1885,23 @@
         "verifyCheckSettings": "Instellingenbestanden",
         "verifyCheckConfig": "Configuratieblok",
         "verifyRegenerated": "Opnieuw aangemaakt",
-        "overwriteAction": "Bestaande vervangen"
+        "overwriteAction": "Bestaande vervangen",
+        "modeDiagram": {
+          "title": "Route van verzoeken",
+          "intercept": "Interceptor",
+          "connections": "Verbindingen",
+          "subClient": "instellingenbestand",
+          "subRelo": "dataplane",
+          "subConnections": "jouw modellen",
+          "subAnthropic": "jouw login",
+          "subNotUsed": "niet gebruikt",
+          "bound": "naar Relo",
+          "native": "naar Anthropic",
+          "captionEnv": "Claude Code stuurt elk verzoek naar het adres van Relo, dat ANTHROPIC_BASE_URL in de instellingen vastlegt. Anthropic ligt niet op de route, dus een claude.ai-login wordt niet gebruikt.",
+          "captionProxy": "Claude Code blijft met api.anthropic.com praten via HTTPS_PROXY. De interceptor van Relo stuurt de aan Relo gebonden modellen met de eigen sleutel van Relo naar Relo en geeft al het andere ongewijzigd door aan Anthropic met jouw eigen login.",
+          "idle": "De bedrading is niet toegepast, dus er beweegt niets.",
+          "preview": "Voorbeeld. Er wordt niets geschreven tot je bevestigt."
+        }
       },
       "chatPage": {
         "title": "Chat",

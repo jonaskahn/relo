@@ -1885,7 +1885,23 @@
         "verifyCheckSettings": "Soubory nastavení",
         "verifyCheckConfig": "Blok konfigurace",
         "verifyRegenerated": "Obnoveno",
-        "overwriteAction": "Nahradit stávající"
+        "overwriteAction": "Nahradit stávající",
+        "modeDiagram": {
+          "title": "Cesta požadavků",
+          "intercept": "Zachycení",
+          "connections": "Připojení",
+          "subClient": "soubor nastavení",
+          "subRelo": "datová rovina",
+          "subConnections": "vaše modely",
+          "subAnthropic": "vaše přihlášení",
+          "subNotUsed": "nepoužito",
+          "bound": "do Relo",
+          "native": "do Anthropic",
+          "captionEnv": "Claude Code posílá každý požadavek na adresu Relo, kterou v nastavení určuje ANTHROPIC_BASE_URL. Anthropic na cestě není, takže se přihlášení ke claude.ai nepoužívá.",
+          "captionProxy": "Claude Code dál komunikuje s api.anthropic.com přes HTTPS_PROXY. Zachycení Relo posílá svázané modely do Relo s vlastním klíčem Relo a vše ostatní předává Anthropic s vaším přihlášením beze změny.",
+          "idle": "Zapojení není použito, takže se nic nehýbe.",
+          "preview": "Náhled. Nic se nezapíše, dokud nepotvrdíte."
+        }
       },
       "chatPage": {
         "title": "Chat",

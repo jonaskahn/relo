@@ -1885,7 +1885,23 @@
         "verifyCheckSettings": "Tệp cài đặt",
         "verifyCheckConfig": "Khối cấu hình",
         "verifyRegenerated": "Đã tạo lại",
-        "overwriteAction": "Thay thế hiện có"
+        "overwriteAction": "Thay thế hiện có",
+        "modeDiagram": {
+          "title": "Đường đi của yêu cầu",
+          "intercept": "Chặn",
+          "connections": "Kết nối",
+          "subClient": "tệp cài đặt",
+          "subRelo": "data plane",
+          "subConnections": "mô hình của bạn",
+          "subAnthropic": "tài khoản của bạn",
+          "subNotUsed": "không dùng",
+          "bound": "tới Relo",
+          "native": "tới Anthropic",
+          "captionEnv": "Claude Code gửi mọi yêu cầu tới địa chỉ của Relo, do ANTHROPIC_BASE_URL đặt trong cài đặt. Anthropic không nằm trên đường đi, nên đăng nhập claude.ai không được dùng.",
+          "captionProxy": "Claude Code vẫn nói chuyện với api.anthropic.com qua HTTPS_PROXY. Bộ chặn của Relo gửi các mô hình bạn đã gắn tới Relo bằng khóa riêng của Relo, và chuyển tiếp mọi thứ còn lại tới Anthropic bằng đăng nhập của bạn, không đổi.",
+          "idle": "Việc nối chưa được áp dụng, nên không có gì chuyển động.",
+          "preview": "Xem trước. Không có gì được ghi cho tới khi bạn xác nhận."
+        }
       },
       "chatPage": {
         "title": "Trò chuyện",

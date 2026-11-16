@@ -1885,7 +1885,23 @@
         "verifyCheckSettings": "सेटिंग्स फ़ाइलें",
         "verifyCheckConfig": "कॉन्फ़िग ब्लॉक",
         "verifyRegenerated": "पुनः बनाया गया",
-        "overwriteAction": "मौजूदा को बदलें"
+        "overwriteAction": "मौजूदा को बदलें",
+        "modeDiagram": {
+          "title": "अनुरोधों का मार्ग",
+          "intercept": "इंटरसेप्ट",
+          "connections": "कनेक्शन",
+          "subClient": "सेटिंग फ़ाइल",
+          "subRelo": "डेटा प्लेन",
+          "subConnections": "आपके मॉडल",
+          "subAnthropic": "आपका लॉगिन",
+          "subNotUsed": "उपयोग में नहीं",
+          "bound": "Relo को",
+          "native": "Anthropic को",
+          "captionEnv": "Claude Code हर अनुरोध Relo के उस पते पर भेजता है जिसे ANTHROPIC_BASE_URL उसकी सेटिंग में तय करता है। Anthropic रास्ते में नहीं है, इसलिए claude.ai लॉगिन उपयोग नहीं होता।",
+          "captionProxy": "Claude Code HTTPS_PROXY के ज़रिए api.anthropic.com से बात करता रहता है। Relo का इंटरसेप्ट आपके बाँधे गए मॉडल Relo की अपनी कुंजी के साथ Relo को भेजता है और बाकी सब कुछ आपके अपने लॉगिन के साथ, बिना बदलाव के Anthropic को आगे भेजता है।",
+          "idle": "वायरिंग लागू नहीं है, इसलिए कुछ नहीं चल रहा।",
+          "preview": "पूर्वावलोकन। पुष्टि करने तक कुछ नहीं लिखा जाता।"
+        }
       },
       "chatPage": {
         "title": "चैट",

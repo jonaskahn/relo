@@ -1885,7 +1885,23 @@
         "openCodeV1Desc": "Legacy singular provider block",
         "openCodeV1Unsupported": "Legacy format. New setup supports V2 only.",
         "openCodeV2": "V2",
-        "openCodeV2Desc": "Current plural providers block"
+        "openCodeV2Desc": "Current plural providers block",
+        "modeDiagram": {
+          "title": "How requests travel",
+          "intercept": "Intercept",
+          "connections": "Connections",
+          "subClient": "settings file",
+          "subRelo": "data plane",
+          "subConnections": "your models",
+          "subAnthropic": "your login",
+          "subNotUsed": "not used",
+          "bound": "to Relo",
+          "native": "to Anthropic",
+          "captionEnv": "Claude Code sends every request to Relo's address, which ANTHROPIC_BASE_URL sets in its settings. Anthropic is not in the path, so a claude.ai login is not used.",
+          "captionProxy": "Claude Code keeps talking to api.anthropic.com through HTTPS_PROXY. Relo's intercept sends the models you bound to Relo under Relo's own key and relays everything else to Anthropic with your own login, untouched.",
+          "idle": "The wiring is not applied, so nothing is moving.",
+          "preview": "Preview. Nothing is written until you confirm."
+        }
       },
       "chatPage": {
         "title": "Chat",

@@ -1885,7 +1885,23 @@
         "verifyCheckSettings": "設定檔",
         "verifyCheckConfig": "設定區塊",
         "verifyRegenerated": "已重新產生",
-        "overwriteAction": "取代現有項目"
+        "overwriteAction": "取代現有項目",
+        "modeDiagram": {
+          "title": "請求的路徑",
+          "intercept": "攔截",
+          "connections": "連線",
+          "subClient": "設定檔",
+          "subRelo": "資料平面",
+          "subConnections": "你的模型",
+          "subAnthropic": "你的登入",
+          "subNotUsed": "未使用",
+          "bound": "至 Relo",
+          "native": "至 Anthropic",
+          "captionEnv": "Claude Code 會把每個請求送往 Relo 的位址，該位址由設定中的 ANTHROPIC_BASE_URL 指定。Anthropic 不在路徑上，因此不會使用 claude.ai 登入。",
+          "captionProxy": "Claude Code 仍透過 HTTPS_PROXY 與 api.anthropic.com 通訊。Relo 的攔截會把你綁定的模型用 Relo 自己的金鑰送給 Relo，其餘一切以你自己的登入原樣轉送給 Anthropic。",
+          "idle": "接線尚未套用，所以沒有任何流動。",
+          "preview": "預覽。確認之前不會寫入任何內容。"
+        }
       },
       "chatPage": {
         "title": "聊天",

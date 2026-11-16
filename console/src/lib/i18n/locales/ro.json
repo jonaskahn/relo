@@ -1885,7 +1885,23 @@
         "verifyCheckSettings": "Fișiere de setări",
         "verifyCheckConfig": "Bloc de configurare",
         "verifyRegenerated": "Regenerat",
-        "overwriteAction": "Înlocuiește existența"
+        "overwriteAction": "Înlocuiește existența",
+        "modeDiagram": {
+          "title": "Traseul cererilor",
+          "intercept": "Interceptor",
+          "connections": "Conexiuni",
+          "subClient": "fișier de setări",
+          "subRelo": "plan de date",
+          "subConnections": "modelele tale",
+          "subAnthropic": "autentificarea ta",
+          "subNotUsed": "nefolosit",
+          "bound": "către Relo",
+          "native": "către Anthropic",
+          "captionEnv": "Claude Code trimite fiecare cerere la adresa Relo, setată de ANTHROPIC_BASE_URL în setări. Anthropic nu este pe traseu, deci o autentificare claude.ai nu este folosită.",
+          "captionProxy": "Claude Code continuă să vorbească cu api.anthropic.com prin HTTPS_PROXY. Interceptorul Relo trimite către Relo modelele asociate, cu cheia proprie a Relo, și retransmite tot restul către Anthropic cu autentificarea ta, nemodificat.",
+          "idle": "Conexiunea nu este aplicată, deci nimic nu se mișcă.",
+          "preview": "Previzualizare. Nu se scrie nimic până nu confirmi."
+        }
       },
       "chatPage": {
         "title": "Chat",

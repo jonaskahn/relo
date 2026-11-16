@@ -1885,7 +1885,23 @@
         "verifyCheckSettings": "설정 파일",
         "verifyCheckConfig": "구성 블록",
         "verifyRegenerated": "재생성됨",
-        "overwriteAction": "기존 항목 바꾸기"
+        "overwriteAction": "기존 항목 바꾸기",
+        "modeDiagram": {
+          "title": "요청 경로",
+          "intercept": "인터셉트",
+          "connections": "연결",
+          "subClient": "설정 파일",
+          "subRelo": "데이터 플레인",
+          "subConnections": "내 모델",
+          "subAnthropic": "내 로그인",
+          "subNotUsed": "사용 안 함",
+          "bound": "Relo로",
+          "native": "Anthropic으로",
+          "captionEnv": "Claude Code는 모든 요청을 설정의 ANTHROPIC_BASE_URL이 가리키는 Relo 주소로 보냅니다. Anthropic은 경로에 없으므로 claude.ai 로그인은 사용되지 않습니다.",
+          "captionProxy": "Claude Code는 HTTPS_PROXY를 거쳐 계속 api.anthropic.com과 통신합니다. Relo의 인터셉트는 연결해 둔 모델을 Relo 자체 키로 Relo에 보내고, 나머지는 내 로그인 그대로 변경 없이 Anthropic으로 중계합니다.",
+          "idle": "연결이 적용되지 않아 아무것도 움직이지 않습니다.",
+          "preview": "미리보기. 확인하기 전까지는 아무것도 기록되지 않습니다."
+        }
       },
       "chatPage": {
         "title": "채팅",

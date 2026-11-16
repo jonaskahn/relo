@@ -69,9 +69,22 @@ never reorders a card an operator is looking at.
 
 ### Step: view
 
-One column: the wiring. A verification result, when there is one, sits above it as a single status line.
+Two panes side by side where the client has a connection mode (Claude Code), stacking under the dock breakpoint with the
+wiring first; every other agent shows the wiring alone. A verification result, when there is one, sits above both as a
+single status line.
 
-**The wiring:**
+**Right — the mode diagram** (Claude Code, while it is set up), a `--sunken` panel with a title, the drawing, and one
+caption sentence that says the same path in words:
+
+- Environment: `Claude Code` → `Relo` → connections. `Anthropic` stands dashed and dim, "not used".
+- Proxy: `Claude Code` → `Intercept` → forks. The branch for models bound to Relo goes to `Relo` (chip "to Relo"), the
+  rest goes to `Anthropic` (chip "to Anthropic") with the caller's own login, untouched.
+- Dots travel the lines only while that mode's wiring is applied (proxy: `proxy_state` is `applied`); otherwise the
+  lines stand still and the panel says the wiring is not applied. Reduced motion draws the lines alone. While the proxy
+  warning is open the panel previews proxy mode, static, and says nothing is written until the operator confirms.
+- On a narrow panel the path stacks in a column. Node and chip widths follow the words of the operator's language.
+
+**Left — the wiring:**
 
 - **Client key**: the hint in a read-only `.mono-data` field, an eye that reads the stored secret on demand, copy while
   revealed. Under it: the env-var note when the client's own file names a reference, else "Relo manages this key". An

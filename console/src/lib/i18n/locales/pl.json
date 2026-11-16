@@ -1885,7 +1885,23 @@
         "verifyCheckSettings": "Pliki ustawień",
         "verifyCheckConfig": "Blok konfiguracji",
         "verifyRegenerated": "Odtworzono",
-        "overwriteAction": "Zastąp istniejący"
+        "overwriteAction": "Zastąp istniejący",
+        "modeDiagram": {
+          "title": "Droga żądań",
+          "intercept": "Przechwytywanie",
+          "connections": "Połączenia",
+          "subClient": "plik ustawień",
+          "subRelo": "płaszczyzna danych",
+          "subConnections": "twoje modele",
+          "subAnthropic": "twoje logowanie",
+          "subNotUsed": "nieużywane",
+          "bound": "do Relo",
+          "native": "do Anthropic",
+          "captionEnv": "Claude Code wysyła każde żądanie na adres Relo, który ustawia ANTHROPIC_BASE_URL w ustawieniach. Anthropic nie leży na tej drodze, więc logowanie do claude.ai nie jest używane.",
+          "captionProxy": "Claude Code nadal komunikuje się z api.anthropic.com przez HTTPS_PROXY. Przechwytywanie Relo wysyła powiązane modele do Relo z własnym kluczem Relo, a resztę przekazuje do Anthropic z twoim własnym logowaniem, bez zmian.",
+          "idle": "Okablowanie nie jest zastosowane, więc nic się nie rusza.",
+          "preview": "Podgląd. Nic nie jest zapisywane, dopóki nie potwierdzisz."
+        }
       },
       "chatPage": {
         "title": "Czat",

@@ -42,6 +42,7 @@
 	import ClaudeBindingsSection from '$lib/components/agents/claude-bindings-section.svelte';
 	import ClaudeModeSection from '$lib/components/agents/claude-mode-section.svelte';
 	import ClaudeModelPreferences from '$lib/components/agents/claude-model-preferences.svelte';
+	import ModeDiagram from '$lib/components/agents/mode-diagram.svelte';
 	import CardLayoutToggle from '$lib/components/providers/card-layout-toggle.svelte';
 	import Button from '$lib/components/ui/button.svelte';
 	import IconAction from '$lib/components/ui/icon-action.svelte';
@@ -110,6 +111,8 @@
 	// is pointed at. The model preferences read them.
 	let models = $state<IntegrationModel[]>([]);
 	let modelsState = $state<'idle' | 'loading' | 'ready' | 'failed'>('idle');
+	// The proxy warning is being read, so the diagram draws proxy before it is written.
+	let previewingProxy = $state(false);
 	let verifying = $state(false);
 	let verifyRead = $state<{ ok: boolean; copy: string } | null>(null);
 
@@ -154,6 +157,19 @@
 		dataPlane = status.status === 'fulfilled' ? (status.value.data_plane ?? []) : [];
 	}
 
+	// The diagram follows the mode the client is wired for, or proxy while its warning is
+	// open. Its dots run only while that wiring is applied.
+	const diagramMode = $derived(
+		previewingProxy || (detail?.mode ?? 'env') === 'proxy' ? 'proxy' : 'env'
+	);
+	const diagramLive = $derived(
+		!previewingProxy &&
+			!!detail?.enabled &&
+			stateTone(detail) === 'pass' &&
+			(diagramMode === 'env' || detail.proxy_state === 'applied')
+	);
+	const showDiagram = $derived(!!detail?.enabled && detail.id === 'claude-code');
+
 	function message(error: unknown): string {
 		return error instanceof Error ? error.message : String(error);
 	}
@@ -165,6 +181,7 @@
 		confirmFailure = '';
 		revealCopied = false;
 		verifyRead = null;
+		previewingProxy = false;
 		resetKey();
 		resetModels();
 		detailOpen = true;
@@ -626,36 +643,46 @@
 						{verifyRead.copy}
 					</p>
 				{/if}
-				<div class="flex min-w-0 flex-col gap-6">
-					<AgentKeySection
-						agent={detail}
-						visible={keyVisible}
-						token={keyToken}
-						loading={keyLoading}
-						copied={keyCopied}
-						failure={keyFailure}
-						busy={blocked(running, detail)}
-						ontoggle={() => void toggleKey()}
-						oncopy={() => void copyKey()}
-					/>
-					<AgentWiringSection agent={detail} />
-					{#if detail.enabled && detail.id === 'claude-code'}
-						<ClaudeModeSection
+				<!-- The wiring on the left. Where the client has a mode, the diagram of how
+				     its requests travel sits beside it and stacks below on a narrow sheet. -->
+				<div class={cn('grid gap-6', showDiagram && 'lg:grid-cols-2')}>
+					<div class="flex min-w-0 flex-col gap-6">
+						<AgentKeySection
 							agent={detail}
-							onchanged={(next) => {
-								agents = patchAgent(agents, next);
-								detail = next;
-							}}
+							visible={keyVisible}
+							token={keyToken}
+							loading={keyLoading}
+							copied={keyCopied}
+							failure={keyFailure}
+							busy={blocked(running, detail)}
+							ontoggle={() => void toggleKey()}
+							oncopy={() => void copyKey()}
 						/>
-						{#if (detail.mode ?? 'env') === 'proxy'}
-							<ClaudeBindingsSection agent={detail} />
-						{:else}
-							<ClaudeModelPreferences
+						<AgentWiringSection agent={detail} />
+						{#if detail.enabled && detail.id === 'claude-code'}
+							<ClaudeModeSection
 								agent={detail}
-								{models}
-								modelsReady={modelsState === 'ready'}
+								onpreview={(value) => (previewingProxy = value)}
+								onchanged={(next) => {
+									agents = patchAgent(agents, next);
+									detail = next;
+								}}
 							/>
+							{#if (detail.mode ?? 'env') === 'proxy'}
+								<ClaudeBindingsSection agent={detail} />
+							{:else}
+								<ClaudeModelPreferences
+									agent={detail}
+									{models}
+									modelsReady={modelsState === 'ready'}
+								/>
+							{/if}
 						{/if}
+					</div>
+					{#if showDiagram}
+						<div class="min-w-0 self-start lg:sticky lg:top-0">
+							<ModeDiagram mode={diagramMode} live={diagramLive} preview={previewingProxy} />
+						</div>
 					{/if}
 				</div>
 			{:else if result}

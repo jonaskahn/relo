@@ -1885,7 +1885,23 @@
         "verifyCheckSettings": "ملفات الإعدادات",
         "verifyCheckConfig": "كتلة الإعداد",
         "verifyRegenerated": "أُعيد إنشاؤه",
-        "overwriteAction": "استبدال الموجود"
+        "overwriteAction": "استبدال الموجود",
+        "modeDiagram": {
+          "title": "مسار الطلبات",
+          "intercept": "الاعتراض",
+          "connections": "الاتصالات",
+          "subClient": "ملف الإعدادات",
+          "subRelo": "مستوى البيانات",
+          "subConnections": "نماذجك",
+          "subAnthropic": "تسجيل دخولك",
+          "subNotUsed": "غير مستخدم",
+          "bound": "إلى Relo",
+          "native": "إلى Anthropic",
+          "captionEnv": "يرسل Claude Code كل طلب إلى عنوان Relo الذي يحدده ANTHROPIC_BASE_URL في إعداداته. لا تقع Anthropic في المسار، لذا لا يُستخدم تسجيل الدخول إلى claude.ai.",
+          "captionProxy": "يواصل Claude Code الحديث مع api.anthropic.com عبر HTTPS_PROXY. يرسل اعتراض Relo النماذج التي ربطتها إلى Relo بمفتاح Relo الخاص، ويمرر كل ما عداها إلى Anthropic بتسجيل دخولك دون تعديل.",
+          "idle": "لم يُطبَّق التوصيل، لذا لا شيء يتحرك.",
+          "preview": "معاينة. لا يُكتب شيء حتى تؤكد."
+        }
       },
       "chatPage": {
         "title": "الدردشة",

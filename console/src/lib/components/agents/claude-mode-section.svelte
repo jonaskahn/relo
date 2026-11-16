@@ -13,13 +13,21 @@
 	interface Props {
 		agent: IntegrationView;
 		onchanged: (agent: IntegrationView) => void;
+		// Tells the mode diagram the operator is reading the proxy warning, so it draws
+		// the mode before it is written.
+		onpreview?: (previewing: boolean) => void;
 	}
 
-	let { agent, onchanged }: Props = $props();
+	let { agent, onchanged, onpreview }: Props = $props();
 
 	let busy = $state(false);
 	let failure = $state('');
 	let confirmProxy = $state(false);
+
+	function confirming(value: boolean) {
+		confirmProxy = value;
+		onpreview?.(value);
+	}
 
 	const mode = $derived(agent.mode === 'proxy' ? 'proxy' : 'env');
 	const proxyState = $derived(agent.proxy_state ?? '');
@@ -29,7 +37,7 @@
 		if (next === 'proxy' && !confirmProxy) {
 			// The warning is the point of this step: an operator turning proxy
 			// mode on reads what it does to their account before it is written.
-			confirmProxy = true;
+			confirming(true);
 			return;
 		}
 		busy = true;
@@ -39,7 +47,7 @@
 				method: 'POST',
 				body: JSON.stringify({ mode: next })
 			});
-			confirmProxy = false;
+			confirming(false);
 			onchanged(answer);
 		} catch (error) {
 			failure = error instanceof Error ? error.message : String(error);
@@ -121,7 +129,7 @@
 				<Button size="sm" disabled={busy} onclick={() => void choose('proxy')}>
 					{$t('ui.pages.integrationsPage.claudeModeProxyConfirm')}
 				</Button>
-				<Button size="sm" variant="ghost" disabled={busy} onclick={() => (confirmProxy = false)}>
+				<Button size="sm" variant="ghost" disabled={busy} onclick={() => confirming(false)}>
 					{$t('ui.common.cancel')}
 				</Button>
 			</div>

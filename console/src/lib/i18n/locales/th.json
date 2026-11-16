@@ -1885,7 +1885,23 @@
         "verifyCheckSettings": "ไฟล์การตั้งค่า",
         "verifyCheckConfig": "บล็อกการกำหนดค่า",
         "verifyRegenerated": "สร้างใหม่แล้ว",
-        "overwriteAction": "แทนที่รายการเดิม"
+        "overwriteAction": "แทนที่รายการเดิม",
+        "modeDiagram": {
+          "title": "เส้นทางของคำขอ",
+          "intercept": "ตัวดักจับ",
+          "connections": "การเชื่อมต่อ",
+          "subClient": "ไฟล์การตั้งค่า",
+          "subRelo": "data plane",
+          "subConnections": "โมเดลของคุณ",
+          "subAnthropic": "การเข้าสู่ระบบของคุณ",
+          "subNotUsed": "ไม่ได้ใช้",
+          "bound": "ไปยัง Relo",
+          "native": "ไปยัง Anthropic",
+          "captionEnv": "Claude Code ส่งทุกคำขอไปยังที่อยู่ของ Relo ซึ่ง ANTHROPIC_BASE_URL กำหนดไว้ในการตั้งค่า Anthropic ไม่อยู่ในเส้นทาง จึงไม่ใช้การเข้าสู่ระบบ claude.ai",
+          "captionProxy": "Claude Code ยังคุยกับ api.anthropic.com ผ่าน HTTPS_PROXY ตัวดักจับของ Relo ส่งโมเดลที่คุณผูกไว้ไปยัง Relo ด้วยคีย์ของ Relo เอง และส่งต่อทุกอย่างที่เหลือไปยัง Anthropic ด้วยการเข้าสู่ระบบของคุณโดยไม่แก้ไข",
+          "idle": "ยังไม่ได้ใช้การเชื่อมต่อ จึงไม่มีอะไรเคลื่อนไหว",
+          "preview": "ตัวอย่าง จะยังไม่เขียนอะไรจนกว่าคุณจะยืนยัน"
+        }
       },
       "chatPage": {
         "title": "แชต",

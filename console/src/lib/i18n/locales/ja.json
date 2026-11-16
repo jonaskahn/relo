@@ -1885,7 +1885,23 @@
         "verifyCheckSettings": "設定ファイル",
         "verifyCheckConfig": "設定ブロック",
         "verifyRegenerated": "再生成済み",
-        "overwriteAction": "既存を置換"
+        "overwriteAction": "既存を置換",
+        "modeDiagram": {
+          "title": "リクエストの経路",
+          "intercept": "インターセプト",
+          "connections": "接続",
+          "subClient": "設定ファイル",
+          "subRelo": "データプレーン",
+          "subConnections": "あなたのモデル",
+          "subAnthropic": "あなたのログイン",
+          "subNotUsed": "未使用",
+          "bound": "Relo へ",
+          "native": "Anthropic へ",
+          "captionEnv": "Claude Code はすべてのリクエストを、設定内の ANTHROPIC_BASE_URL が指す Relo のアドレスへ送ります。Anthropic は経路に入らないため、claude.ai のログインは使われません。",
+          "captionProxy": "Claude Code は HTTPS_PROXY を通じて引き続き api.anthropic.com と通信します。Relo のインターセプトは、紐付けたモデルを Relo 自身のキーで Relo に送り、それ以外はあなた自身のログインのまま変更せずに Anthropic へ中継します。",
+          "idle": "配線が適用されていないため、何も動いていません。",
+          "preview": "プレビュー。確認するまで何も書き込まれません。"
+        }
       },
       "chatPage": {
         "title": "チャット",
