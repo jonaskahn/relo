@@ -4,6 +4,7 @@ package codingclients
 
 import (
 	"fmt"
+	"regexp"
 	"strings"
 )
 
@@ -41,7 +42,7 @@ func MergeClaudeProxySettings(existing string, env ProxyEnv) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	if current, ok := settings[ProxyEnvHTTPS].(string); ok && current != "" && current != env.URL {
+	if current, ok := settings[ProxyEnvHTTPS].(string); ok && current != "" && current != env.URL && !sameIntercept(current, env.URL) {
 		return "", fmt.Errorf("claude-code: %w (HTTPS_PROXY is already set to another proxy)", ErrUnrecognisedFile)
 	}
 	settings[ProxyEnvHTTPS] = env.URL
@@ -62,7 +63,7 @@ func StripClaudeProxySettings(existing string, env ProxyEnv) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	if value, ok := settings[ProxyEnvHTTPS].(string); ok && value == env.URL {
+	if value, ok := settings[ProxyEnvHTTPS].(string); ok && (value == env.URL || sameIntercept(value, env.URL)) {
 		delete(settings, ProxyEnvHTTPS)
 	}
 	if value, ok := settings[ProxyEnvCA].(string); ok && value == env.CAPath {
@@ -99,6 +100,19 @@ func ClaudeProxySettingsPointAt(content string, env ProxyEnv) bool {
 	proxy, _ := settings[ProxyEnvHTTPS].(string)
 	ca, _ := settings[ProxyEnvCA].(string)
 	return proxy == env.URL && ca == env.CAPath
+}
+
+var trailingPort = regexp.MustCompile(`:\d+$`)
+
+// sameIntercept reports whether a proxy address is one Relo's own intercept
+// carried before a restart: the same credential on the same loopback host, on
+// the port the kernel picked then. The port changes on every start, so such an
+// address is stale, not another proxy the operator set.
+func sameIntercept(current, url string) bool {
+	if !strings.HasPrefix(current, "http://relo:") || !strings.HasPrefix(url, "http://relo:") {
+		return false
+	}
+	return trailingPort.ReplaceAllString(current, "") == trailingPort.ReplaceAllString(url, "")
 }
 
 // proxyNoProxy joins Relo's loopback bypass onto whatever the operator
@@ -173,7 +187,7 @@ func InspectClaudeProxySettings(content string, env ProxyEnv) ProxySettingsState
 	switch {
 	case proxy == "":
 		return ProxyStateAbsent
-	case proxy != env.URL:
+	case proxy != env.URL && !sameIntercept(proxy, env.URL):
 		return ProxyStateForeign
 	case ClaudeProxySettingsPointAt(content, env):
 		return ProxyStateApplied

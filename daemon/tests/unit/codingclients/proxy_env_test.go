@@ -52,6 +52,31 @@ func TestMergeClaudeProxySettingsRefusesAForeignProxy(t *testing.T) {
 	}
 }
 
+// TestAnAddressFromBeforeARestartIsStaleNotForeign pins the restart case: the
+// intercept binds a new port on every start, so the address its own earlier run
+// wrote is replaced, while another proxy on the same host still is not.
+func TestAnAddressFromBeforeARestartIsStaleNotForeign(t *testing.T) {
+	env := proxyTestEnv()
+	older := `{"env":{"HTTPS_PROXY":"http://relo:secret@127.0.0.1:49000","NODE_EXTRA_CA_CERTS":"` + env.CAPath + `"}}`
+	if state := codingclients.InspectClaudeProxySettings(older, env); state != codingclients.ProxyStateStale {
+		t.Fatalf("state = %q, want %q", state, codingclients.ProxyStateStale)
+	}
+	merged, err := codingclients.MergeClaudeProxySettings(older, env)
+	if err != nil || !codingclients.ClaudeProxySettingsPointAt(merged, env) || strings.Contains(merged, ":49000") {
+		t.Fatalf("merged = %s (%v), want the new address in place of the old one", merged, err)
+	}
+	stripped, err := codingclients.StripClaudeProxySettings(older, env)
+	if err != nil || strings.Contains(stripped, "HTTPS_PROXY") {
+		t.Fatalf("stripped = %s (%v), want the earlier address removed too", stripped, err)
+	}
+	for _, other := range []string{"http://relo:other@127.0.0.1:49000", "http://elsewhere:secret@127.0.0.1:49000"} {
+		content := `{"env":{"HTTPS_PROXY":"` + other + `"}}`
+		if _, err := codingclients.MergeClaudeProxySettings(content, env); err == nil {
+			t.Fatalf("MergeClaudeProxySettings(%s) error = nil, want another proxy refused", other)
+		}
+	}
+}
+
 // TestStripClaudeProxySettingsKeepsTheOperatorsOwnBypass restores a NO_PROXY
 // the merge joined onto, and removes only the keys the merge wrote.
 func TestStripClaudeProxySettingsKeepsTheOperatorsOwnBypass(t *testing.T) {
