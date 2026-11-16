@@ -34,7 +34,7 @@
 	});
 
 	// The body names what is wrong, with the values only that status knows.
-	const values = $derived.by(() => {
+	const values = $derived.by((): Record<string, string | number> => {
 		switch (status.name) {
 			case 'needsSetup':
 				return { names: (provider.needs_setup ?? []).join(', ') };
