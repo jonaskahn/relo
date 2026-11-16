@@ -21,6 +21,7 @@ export type IntegrationAction =
 	| 'context'
 	| 'modelConfig'
 	| 'mode'
+	| 'bindings'
 	| 'token';
 
 // integrationEndpoints is the daemon route each page action calls. Every value
@@ -39,6 +40,7 @@ const integrationEndpoints: Record<IntegrationAction, string> = {
 	context: 'context',
 	modelConfig: 'model-config',
 	mode: 'mode',
+	bindings: 'bindings',
 	token: 'token'
 };
 

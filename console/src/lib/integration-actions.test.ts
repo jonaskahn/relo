@@ -27,7 +27,8 @@ const daemonRoutes = [
 	'models',
 	'chat',
 	'context',
-	'token'
+	'token',
+	'bindings'
 ];
 
 const actions: IntegrationAction[] = [
@@ -63,6 +64,7 @@ describe('the integration actions', () => {
 			'/integrations/claude-code/model-config'
 		);
 		expect(integrationEndpoint('modelConfig')).toBe('model-config');
+		expect(integrationPath('claude-code', 'bindings')).toBe('/integrations/claude-code/bindings');
 	});
 
 	test('a missing install blocks set-up, and a foreign provider can be replaced', () => {

@@ -39,6 +39,7 @@
 	import AgentResultStep from '$lib/components/agents/agent-result-step.svelte';
 	import AgentTestPane from '$lib/components/agents/agent-test-pane.svelte';
 	import AgentWiringSection from '$lib/components/agents/agent-wiring-section.svelte';
+	import ClaudeBindingsSection from '$lib/components/agents/claude-bindings-section.svelte';
 	import ClaudeModeSection from '$lib/components/agents/claude-mode-section.svelte';
 	import ClaudeModelPreferences from '$lib/components/agents/claude-model-preferences.svelte';
 	import CardLayoutToggle from '$lib/components/providers/card-layout-toggle.svelte';
@@ -673,7 +674,9 @@
 									detail = next;
 								}}
 							/>
-							{#if (detail.mode ?? 'env') !== 'proxy'}
+							{#if (detail.mode ?? 'env') === 'proxy'}
+								<ClaudeBindingsSection agent={detail} />
+							{:else}
 								<ClaudeModelPreferences
 									agent={detail}
 									{models}

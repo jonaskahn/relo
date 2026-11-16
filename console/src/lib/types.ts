@@ -745,6 +745,53 @@ export interface ClaudeModelConfigUpdate {
 	readonly auto_compact: string;
 }
 
+/** What a Claude model binding points at: a Relo route, or one connection's model. */
+export interface ClaudeBindingTarget {
+	readonly kind: 'route' | 'model';
+	readonly group_id?: string;
+	readonly provider_id?: string;
+	readonly model_id?: string;
+}
+
+/** Sends one native Claude id to a Relo route or model while Claude Code is in proxy mode. */
+export interface ClaudeBinding {
+	readonly native_id: string;
+	readonly target: ClaudeBindingTarget;
+	readonly direction: 'replace' | 'fallback';
+	readonly on_failure: 'none' | 'native';
+	readonly enabled: boolean;
+}
+
+/** A binding as the daemon reports it, with where it stands against the live catalog. */
+export interface ClaudeBindingEntry extends ClaudeBinding {
+	readonly state: 'bound' | 'dangling' | 'disabled';
+}
+
+/** One native Claude id an operator may bind. */
+export interface ClaudeOfficialModel {
+	readonly id: string;
+	readonly family: string;
+	readonly source: string;
+}
+
+/** One route or model a binding can point at, with the label an operator reads. */
+export interface ClaudeTargetOption extends ClaudeBindingTarget {
+	readonly label: string;
+}
+
+/** Everything the bindings section shows. */
+export interface ClaudeBindings {
+	readonly bindings: readonly ClaudeBindingEntry[];
+	readonly official: readonly ClaudeOfficialModel[];
+	readonly targets: readonly ClaudeTargetOption[];
+}
+
+/** The body that sets or removes bindings. */
+export interface ClaudeBindingsUpdate {
+	readonly set?: readonly ClaudeBinding[];
+	readonly remove?: readonly string[];
+}
+
 /** One test turn sent through an integration's own key. */
 export interface IntegrationChat {
 	readonly ok: boolean;
