@@ -56,8 +56,12 @@ type Options struct {
 	// Bind answers what a native model id is bound to. A bound id is not
 	// Relo's by name, so it is read before Routes; an id it does not bind
 	// falls through to Routes and then to the vendor.
-	Bind   func(model string) (Binding, bool)
-	Logger *slog.Logger
+	Bind func(model string) (Binding, bool)
+	// Catalog answers the Relo models added to the model picker the vendor's
+	// catalog describes. Nil, or an empty answer, leaves every catalog as the
+	// vendor sent it.
+	Catalog func() []CatalogRow
+	Logger  *slog.Logger
 	// Dial dials the vendor. Nil dials the network.
 	Dial func(ctx context.Context, network, address string) (net.Conn, error)
 }

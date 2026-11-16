@@ -112,6 +112,12 @@ func rewriteModel(body []byte, model string) []byte {
 // own surface, everything else is relayed to the vendor verbatim, and a plan
 // with a second side asks it once when the first refuses before answering.
 func (p *Proxy) handle(w http.ResponseWriter, r *http.Request) {
+	if p.opts.Catalog != nil {
+		if kind := catalogKindOf(r); kind != notCatalog {
+			p.serveCatalog(w, r, kind)
+			return
+		}
+	}
 	body, ok := readBody(w, r)
 	if !ok {
 		return
