@@ -4,7 +4,6 @@ package proxy
 
 import (
 	"bufio"
-	"bytes"
 	"context"
 	"crypto/subtle"
 	"crypto/tls"
@@ -54,6 +53,10 @@ type Options struct {
 	// Routes reports whether a model is one Relo answers. A model it does not
 	// claim is relayed to the vendor with the caller's own credential.
 	Routes func(model string) bool
+	// Bind answers what a native model id is bound to. A bound id is not
+	// Relo's by name, so it is read before Routes; an id it does not bind
+	// falls through to Routes and then to the vendor.
+	Bind   func(model string) (Binding, bool)
 	Logger *slog.Logger
 	// Dial dials the vendor. Nil dials the network.
 	Dial func(ctx context.Context, network, address string) (net.Conn, error)
@@ -263,82 +266,6 @@ func (p *Proxy) dial(network, address string) (net.Conn, error) {
 		return p.opts.Dial(context.Background(), network, address)
 	}
 	return net.DialTimeout(network, address, handshakeTimeout)
-}
-
-// handle answers one intercepted request: a model Relo serves is rewritten to
-// Relo's own surface, and everything else is relayed to the vendor verbatim.
-func (p *Proxy) handle(w http.ResponseWriter, r *http.Request) {
-	body, err := io.ReadAll(io.LimitReader(r.Body, maxBodyBytes+1))
-	if err != nil {
-		writeError(w, http.StatusBadRequest, "the request could not be read")
-		return
-	}
-	if len(body) > maxBodyBytes {
-		writeError(w, http.StatusRequestEntityTooLarge, "the request is too large")
-		return
-	}
-	if r.Method == http.MethodPost && p.opts.DataPlaneURL != "" && p.routes(r.URL.Path, body) {
-		p.relayToDataPlane(w, r, body)
-		return
-	}
-	p.relayToVendor(w, r, body)
-}
-
-func (p *Proxy) routes(path string, body []byte) bool {
-	if path != messagesPath && path != countTokensPath {
-		return false
-	}
-	if p.opts.Routes == nil {
-		return false
-	}
-	var probe struct {
-		Model string `json:"model"`
-	}
-	if err := json.Unmarshal(body, &probe); err != nil {
-		return false
-	}
-	return p.opts.Routes(strings.TrimSpace(probe.Model))
-}
-
-func (p *Proxy) relayToDataPlane(w http.ResponseWriter, r *http.Request, body []byte) {
-	target := strings.TrimRight(p.opts.DataPlaneURL, "/") + r.URL.Path
-	outbound, err := http.NewRequestWithContext(r.Context(), r.Method, target, bytes.NewReader(body))
-	if err != nil {
-		writeError(w, http.StatusBadGateway, "the data plane is unavailable")
-		return
-	}
-	copyHeaders(outbound.Header, r.Header)
-	outbound.Header.Del("Authorization")
-	outbound.Header.Del("X-Api-Key")
-	if p.opts.DataPlaneKey != nil {
-		if key := p.opts.DataPlaneKey(); key != "" {
-			outbound.Header.Set("X-Api-Key", key)
-		}
-	}
-	p.roundTrip(w, outbound)
-}
-
-func (p *Proxy) relayToVendor(w http.ResponseWriter, r *http.Request, body []byte) {
-	target := strings.TrimRight(p.opts.Upstream, "/") + r.URL.RequestURI()
-	outbound, err := http.NewRequestWithContext(r.Context(), r.Method, target, bytes.NewReader(body))
-	if err != nil {
-		writeError(w, http.StatusBadGateway, "the upstream is unavailable")
-		return
-	}
-	copyHeaders(outbound.Header, r.Header)
-	p.roundTrip(w, outbound)
-}
-
-func (p *Proxy) roundTrip(w http.ResponseWriter, outbound *http.Request) {
-	response, err := p.client.Do(outbound)
-	if err != nil {
-		writeError(w, http.StatusBadGateway, "the upstream is unavailable")
-		return
-	}
-	defer func() { _ = response.Body.Close() }()
-	copyHeaders(w.Header(), response.Header)
-	w.WriteHeader(response.StatusCode)
-	flush(w, response.Body)
 }
 
 func copyHeaders(dst, src http.Header) {
