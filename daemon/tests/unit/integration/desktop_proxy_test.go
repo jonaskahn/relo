@@ -193,6 +193,12 @@ func (p *onPicker) Disable(context.Context) (integration.PickerView, error) {
 func (p *onPicker) RemoveTrust(context.Context) (integration.PickerView, error) {
 	return integration.PickerView{}, nil
 }
+func (p *onPicker) EnableCowork(context.Context) (integration.PickerView, error) {
+	return integration.PickerView{}, nil
+}
+func (p *onPicker) DisableCowork(context.Context) (integration.PickerView, error) {
+	return integration.PickerView{}, nil
+}
 
 // TestDesktopStaysInProxyModeWhileItsPickerIsOn keeps the picker from being
 // stranded: it rides Desktop's wiring, so every way out is refused until it is off.

@@ -20,6 +20,13 @@ type pickerResponse struct {
 	Reason      string `json:"reason"`
 	// Connections is what the egress proxy has been asked, as counts.
 	Connections pickerConnectionsResponse `json:"connections"`
+	Cowork      pickerCoworkResponse      `json:"cowork"`
+}
+
+type pickerCoworkResponse struct {
+	Enabled bool   `json:"enabled"`
+	Armed   bool   `json:"armed"`
+	Reason  string `json:"reason"`
 }
 
 type pickerHostResponse struct {
@@ -46,6 +53,9 @@ func toPickerResponse(view appintegration.PickerView) pickerResponse {
 		Supported: view.Supported, Enabled: view.Enabled, Armed: view.Armed, Trust: view.Trust,
 		Profile: view.Profile, Fingerprint: view.Fingerprint, Address: view.Address, Reason: string(view.Reason),
 		Connections: pickerConnectionsResponse{Hosts: hosts, RefusedPeers: view.Connections.RefusedPeers},
+		Cowork: pickerCoworkResponse{
+			Enabled: view.Cowork.Enabled, Armed: view.Cowork.Armed, Reason: string(view.Cowork.Reason),
+		},
 	}
 }
 
@@ -88,6 +98,25 @@ func (s *Server) handleSetPicker(w http.ResponseWriter, r *http.Request) {
 	action := picker.Disable
 	if request.Enabled {
 		action = picker.Enable
+	}
+	s.answerPicker(w, r, action)
+}
+
+// handleSetPickerCowork turns Cowork routing on or off. Turning it on is a
+// deliberate PUT of its own, because it is the request that makes Relo terminate
+// TLS for the vendor API.
+func (s *Server) handleSetPickerCowork(w http.ResponseWriter, r *http.Request) {
+	picker, ok := s.picker(w, r)
+	if !ok {
+		return
+	}
+	var request pickerRequest
+	if !s.decodeJSON(w, r, &request) {
+		return
+	}
+	action := picker.DisableCowork
+	if request.Enabled {
+		action = picker.EnableCowork
 	}
 	s.answerPicker(w, r, action)
 }

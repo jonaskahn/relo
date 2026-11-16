@@ -18,13 +18,20 @@ import (
 // fakeTrust is an OS trust store the test controls: it answers the state it is
 // left in, changes it only when asked, and records every call.
 type fakeTrust struct {
-	state     ostrust.State
+	state ostrust.State
+	// byHost overrides the state for a root read through one host's leaf.
+	byHost    map[string]ostrust.State
 	declines  bool
 	untrustOK bool
 	calls     []string
 }
 
-func (f *fakeTrust) Inspect(context.Context, ostrust.Root) ostrust.State { return f.state }
+func (f *fakeTrust) Inspect(_ context.Context, root ostrust.Root) ostrust.State {
+	if state, ok := f.byHost[root.Host]; ok {
+		return state
+	}
+	return f.state
+}
 
 func (f *fakeTrust) Trust(context.Context, ostrust.Root) error {
 	f.calls = append(f.calls, "trust")
@@ -60,13 +67,15 @@ type pickerRig struct {
 	library string
 	home    string
 	wired   bool
+	// interceptUp is whether the vendor API's intercept answers.
+	interceptUp bool
 }
 
 func newPickerRig(t *testing.T) *pickerRig {
 	t.Helper()
 	home := t.TempDir()
 	rig := &pickerRig{
-		trust: &fakeTrust{state: ostrust.Untrusted, untrustOK: true}, home: home, wired: true,
+		trust: &fakeTrust{state: ostrust.Untrusted, untrustOK: true}, home: home, wired: true, interceptUp: true,
 		library: filepath.Join(t.TempDir(), "configLibrary"),
 	}
 	if err := os.MkdirAll(rig.library, 0o755); err != nil {
@@ -87,6 +96,7 @@ func (r *pickerRig) build(t *testing.T, goos string) *platform.DesktopPicker {
 		Installed: func() error { return nil }, Authority: func() (*proxy.Authority, error) { return authority, nil },
 		Trust: r.trust, Catalog: func() []proxy.CatalogRow { return nil },
 		DesktopWired: func(context.Context) bool { return r.wired },
+		Intercept:    func() (string, string, bool) { return "127.0.0.1:1", "token", r.interceptUp },
 		Upstream:     "http://127.0.0.1:1", Transport: http.DefaultTransport,
 	})
 }

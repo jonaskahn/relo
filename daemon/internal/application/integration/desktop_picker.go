@@ -29,6 +29,11 @@ const (
 	PickerCAUnverified      PickerReason = "ca_unverified"
 	PickerProxyUnavailable  PickerReason = "proxy_unavailable"
 	PickerCleanupIncomplete PickerReason = "cleanup_incomplete"
+	// The reasons Cowork routing reports, beside the picker's own.
+	PickerCoworkNeedsPicker  PickerReason = "cowork_needs_picker"
+	PickerCoworkTrustMissing PickerReason = "cowork_trust_missing"
+	PickerCoworkRestart      PickerReason = "cowork_restart_required"
+	PickerCoworkActive       PickerReason = "cowork_active"
 )
 
 // PickerHost is how many connections one host has asked the picker's egress
@@ -45,6 +50,17 @@ type PickerConnections struct {
 	Hosts []PickerHost
 	// RefusedPeers counts connections from an address that is not loopback.
 	RefusedPeers int
+}
+
+// PickerCowork is where Cowork routing stands: whether Claude Desktop's Cowork
+// virtual machine has its api.anthropic.com traffic handed to Relo's intercept.
+type PickerCowork struct {
+	// Enabled is whether the operator turned it on.
+	Enabled bool
+	// Armed is whether traffic is being handed on right now, which needs the
+	// picker armed and the OS to trust Relo's root for the vendor API host too.
+	Armed  bool
+	Reason PickerReason
 }
 
 // PickerView is where the picker stands.
@@ -70,6 +86,8 @@ type PickerView struct {
 	// Connections is what the egress proxy has been asked, so an operator can see
 	// whether an app's traffic reaches it at all.
 	Connections PickerConnections
+	// Cowork is where Cowork routing stands, which rides the picker.
+	Cowork PickerCowork
 }
 
 // PickerError is a refusal with the reason a console shows.
@@ -104,6 +122,11 @@ type DesktopPicker interface {
 	// RemoveTrust takes Relo's root out of the OS trust store, which is what is
 	// left to do when Disable could not.
 	RemoveTrust(ctx context.Context) (PickerView, error)
+	// EnableCowork hands Cowork's vendor API traffic to the intercept. It needs the
+	// picker on and armed and asks the OS for nothing.
+	EnableCowork(ctx context.Context) (PickerView, error)
+	// DisableCowork stops handing it on, at once.
+	DisableCowork(ctx context.Context) (PickerView, error)
 }
 
 // pickerEnabled reports whether Desktop's picker is on. A build with no picker

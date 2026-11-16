@@ -48,7 +48,10 @@ type DesktopPickerOptions struct {
 	// DesktopWired reports whether Desktop is on and in proxy mode, which is what
 	// the picker rides.
 	DesktopWired func(ctx context.Context) bool
-	Logger       *slog.Logger
+	// Intercept answers the loopback address and token of the intercept that
+	// serves the vendor API, for Cowork routing to hand a connection to.
+	Intercept func() (address, token string, ok bool)
+	Logger    *slog.Logger
 	// Upstream, Transport and Dial are for a test; the defaults reach claude.ai.
 	Upstream  string
 	Transport http.RoundTripper
@@ -59,6 +62,8 @@ type DesktopPickerOptions struct {
 type DesktopPicker struct {
 	opts  DesktopPickerOptions
 	armed atomic.Bool
+	// cowork is whether the vendor API's connections are handed to the intercept.
+	cowork atomic.Bool
 
 	mu     sync.Mutex
 	pair   *proxy.PickerProxy
@@ -92,15 +97,22 @@ func (p *DesktopPicker) supported() bool {
 	return p.opts.Platform == "darwin" || p.opts.Platform == "windows"
 }
 
-// root describes Relo's root to the OS, with a leaf that proves the trust.
+// root describes Relo's root to the OS, with a leaf that proves the trust for
+// claude.ai, which is what arms the picker.
 func (p *DesktopPicker) root(authority *proxy.Authority) (ostrust.Root, error) {
-	leaf, err := authority.LeafPEM(proxy.HostClaudeAI)
+	return p.rootFor(authority, proxy.HostClaudeAI)
+}
+
+// rootFor describes the same root with a leaf for one host, so the OS is asked
+// whether it trusts the root for that host.
+func (p *DesktopPicker) rootFor(authority *proxy.Authority, host string) (ostrust.Root, error) {
+	leaf, err := authority.LeafPEM(host)
 	if err != nil {
 		return ostrust.Root{}, err
 	}
 	return ostrust.Root{
 		PEM: authority.PEM(), SHA1: authority.SHA1(), CommonName: proxy.CommonName,
-		Host: proxy.HostClaudeAI, LeafPEM: leaf,
+		Host: host, LeafPEM: leaf,
 	}, nil
 }
 
@@ -115,7 +127,8 @@ func (p *DesktopPicker) View(ctx context.Context) appintegration.PickerView {
 func (p *DesktopPicker) view(ctx context.Context, reason appintegration.PickerReason) appintegration.PickerView {
 	view := appintegration.PickerView{
 		Supported: p.supported(), Enabled: p.enabled(), Armed: p.armed.Load(),
-		Trust: string(ostrust.Unknown), Profile: string(codingclients.DesktopPickerAbsent),
+		Cowork: p.coworkView(),
+		Trust:  string(ostrust.Unknown), Profile: string(codingclients.DesktopPickerAbsent),
 	}
 	if p.pair != nil {
 		view.Address = p.pair.Addr()
@@ -310,6 +323,7 @@ func (p *DesktopPicker) start(ctx context.Context, authority *proxy.Authority) e
 		Upstream: p.opts.Upstream, Authority: authority, Catalog: p.opts.Catalog,
 		Armed: p.armed.Load, PreferredAddr: p.lastAddress(), Logger: p.opts.Logger,
 		Dial: p.opts.Dial, Transport: p.opts.Transport,
+		Chain: p.opts.Intercept, CoworkArmed: p.cowork.Load,
 	})
 	if err != nil {
 		return err
@@ -345,6 +359,7 @@ func (p *DesktopPicker) rememberAddress(address string) {
 // while it closes is spliced rather than answered with a certificate.
 func (p *DesktopPicker) stop() {
 	p.armed.Store(false)
+	p.cowork.Store(false)
 	pair, cancel := p.pair, p.cancel
 	p.pair, p.cancel = nil, nil
 	if cancel != nil {
@@ -363,6 +378,9 @@ func (p *DesktopPicker) Disable(ctx context.Context) (appintegration.PickerView,
 	p.mu.Lock()
 	defer p.mu.Unlock()
 	p.armed.Store(false)
+	if err := p.dropCowork(); err != nil {
+		return p.view(ctx, appintegration.PickerCleanupIncomplete), fail(appintegration.PickerCleanupIncomplete, err)
+	}
 	if err := codingclients.RemoveDesktopPickerProfile(p.opts.Library(), p.stateDir()); err != nil {
 		return p.view(ctx, appintegration.PickerCleanupIncomplete), fail(appintegration.PickerCleanupIncomplete, err)
 	}
@@ -445,6 +463,7 @@ func (p *DesktopPicker) restore(ctx context.Context) {
 		p.opts.Logger.Warn("point Desktop at the picker proxy", "error", err)
 	}
 	p.armed.Store(p.trusted(ctx, authority))
+	p.armCowork(ctx, authority)
 }
 
 func (p *DesktopPicker) recheck(ctx context.Context) {
@@ -455,6 +474,11 @@ func (p *DesktopPicker) recheck(ctx context.Context) {
 	}
 	authority, err := p.opts.Authority()
 	p.armed.Store(err == nil && p.trusted(ctx, authority))
+	if err != nil {
+		p.cowork.Store(false)
+		return
+	}
+	p.armCowork(ctx, authority)
 }
 
 func (p *DesktopPicker) trusted(ctx context.Context, authority *proxy.Authority) bool {

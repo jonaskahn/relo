@@ -32,6 +32,12 @@ func (f *fakePicker) Disable(context.Context) (appintegration.PickerView, error)
 func (f *fakePicker) RemoveTrust(context.Context) (appintegration.PickerView, error) {
 	return f.act("remove-trust")
 }
+func (f *fakePicker) EnableCowork(context.Context) (appintegration.PickerView, error) {
+	return f.act("enable-cowork")
+}
+func (f *fakePicker) DisableCowork(context.Context) (appintegration.PickerView, error) {
+	return f.act("disable-cowork")
+}
 
 func TestThePickerIsReadWithoutChangingAnything(t *testing.T) {
 	picker := &fakePicker{view: appintegration.PickerView{Supported: true, Trust: "untrusted", Fingerprint: "AB12", Reason: appintegration.PickerOff}}
@@ -98,5 +104,39 @@ func TestABuildWithNoPickerSaysSo(t *testing.T) {
 	h, served := bindingsServer(t)
 	if status, _ := call(t, h, served, http.MethodGet, "/api/v1/integrations/claude-desktop/picker", ""); status != http.StatusServiceUnavailable {
 		t.Fatalf("status = %d, want 503", status)
+	}
+}
+
+func TestCoworkRoutingIsSwitchedByItsOwnPut(t *testing.T) {
+	picker := &fakePicker{view: appintegration.PickerView{
+		Supported: true, Enabled: true, Armed: true,
+		Cowork: appintegration.PickerCowork{Enabled: true, Armed: true, Reason: appintegration.PickerCoworkRestart},
+	}}
+	h, served := bindingsServerWith(t, picker)
+	status, body := call(t, h, served, http.MethodPut, "/api/v1/integrations/claude-desktop/picker/cowork", `{"enabled":true}`)
+	if status != http.StatusOK || !strings.Contains(body, `"cowork":{"enabled":true,"armed":true,"reason":"cowork_restart_required"}`) {
+		t.Fatalf("PUT cowork on = %d %s, want the Cowork block with its reason", status, body)
+	}
+	if status, _ := call(t, h, served, http.MethodPut, "/api/v1/integrations/claude-desktop/picker/cowork", `{"enabled":false}`); status != http.StatusOK {
+		t.Fatalf("PUT cowork off = %d", status)
+	}
+	if status, _ := call(t, h, served, http.MethodPut, "/api/v1/integrations/claude-desktop/picker", `{"enabled":true}`); status != http.StatusOK {
+		t.Fatalf("PUT picker = %d", status)
+	}
+	want := []string{"enable-cowork", "disable-cowork", "enable"}
+	if strings.Join(picker.calls, ",") != strings.Join(want, ",") {
+		t.Fatalf("calls = %v, want %v: the picker's own switch never turns Cowork on", picker.calls, want)
+	}
+}
+
+func TestCoworkRefusalCarriesItsReasonAndThePicker(t *testing.T) {
+	picker := &fakePicker{
+		view: appintegration.PickerView{Supported: true, Enabled: true},
+		err:  &appintegration.PickerError{Reason: appintegration.PickerCoworkTrustMissing},
+	}
+	h, served := bindingsServerWith(t, picker)
+	status, body := call(t, h, served, http.MethodPut, "/api/v1/integrations/claude-desktop/picker/cowork", `{"enabled":true}`)
+	if status != http.StatusConflict || !strings.Contains(body, `"code":"cowork_trust_missing"`) {
+		t.Fatalf("PUT cowork without trust = %d %s, want a conflict naming the reason", status, body)
 	}
 }

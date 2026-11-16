@@ -162,6 +162,7 @@ func (s *Server) registerIntegrationRoutes(mux *http.ServeMux) {
 	mux.HandleFunc("POST "+apiPrefix+"integrations/{id}/bindings", s.handleSetBindings)
 	mux.HandleFunc("GET "+apiPrefix+"integrations/claude-desktop/picker", s.handleGetPicker)
 	mux.HandleFunc("PUT "+apiPrefix+"integrations/claude-desktop/picker", s.handleSetPicker)
+	mux.HandleFunc("PUT "+apiPrefix+"integrations/claude-desktop/picker/cowork", s.handleSetPickerCowork)
 	mux.HandleFunc("DELETE "+apiPrefix+"integrations/claude-desktop/picker/trust", s.handleRemovePickerTrust)
 	mux.HandleFunc("POST "+apiPrefix+"integrations/{id}/repair", s.handleRepairIntegration)
 	mux.HandleFunc("GET "+apiPrefix+"integrations/{id}/model-config", s.handleGetClaudeModelConfig)

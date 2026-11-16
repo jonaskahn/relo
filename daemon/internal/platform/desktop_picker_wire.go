@@ -29,7 +29,7 @@ func newDesktopPicker(parts desktopPickerParts) *DesktopPicker {
 		Installed: parts.paths.DesktopInstalled, Authority: parts.runtime.Authority,
 		Trust: ostrust.New(runtime.GOOS, homeDirectory(""), nil), Catalog: parts.catalog,
 		DesktopWired: func(ctx context.Context) bool { return desktopInProxyMode(ctx, parts.store) },
-		Logger:       parts.logger,
+		Intercept:    parts.runtime.Intercept, Logger: parts.logger,
 	})
 }
 

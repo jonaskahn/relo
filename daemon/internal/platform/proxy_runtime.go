@@ -8,6 +8,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"log/slog"
+	"net/url"
 	"os"
 	"path/filepath"
 	"strings"
@@ -107,6 +108,24 @@ func (r *ProxyRuntime) Ensure(ctx context.Context, id string, target appintegrat
 	r.dropCatalog()
 	r.logger.Info("proxy mode intercept listening", "integration", id, "address", pair.Addr())
 	return env, nil
+}
+
+// Intercept answers the loopback address of the intercept that serves the
+// vendor API and the token it asks for, which is what the picker's proxy needs
+// to hand a connection on. It is false while that intercept is not running.
+func (r *ProxyRuntime) Intercept() (address, token string, ok bool) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	running, found := r.running[appintegration.ProxyOwner]
+	if !found {
+		return "", "", false
+	}
+	parsed, err := url.Parse(running.env.URL)
+	if err != nil || parsed.User == nil {
+		return "", "", false
+	}
+	secret, _ := parsed.User.Password()
+	return running.proxy.Addr(), secret, secret != ""
 }
 
 // AuthorityDir is where Relo's one certificate authority lives. Every client
