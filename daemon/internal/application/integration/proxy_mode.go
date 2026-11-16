@@ -13,13 +13,22 @@ import (
 // host a client sends through the proxy is spliced to the network untouched.
 const ProxyHost = "api.anthropic.com"
 
+// ProxyOwner is the integration the shared intercept is kept under. Claude
+// Code's settings file carries the proxy address, and a process Claude Desktop
+// starts reads the same file, so one intercept serves both.
+const ProxyOwner = "claude-code"
+
 // ProxyTarget names what one intercept points at: the vendor host it
 // terminates TLS for, Relo's own surface, and the key a routed request
 // presents there.
 type ProxyTarget struct {
 	Host         string
 	DataPlaneURL string
-	Key          func() string
+	// Key answers the key one client's routed request presents to Relo.
+	Key func(client string) string
+	// Admits reports whether a client is in proxy mode, which is what lets its
+	// requests be routed. A client that is not has every request relayed.
+	Admits func(client string) bool
 }
 
 // ProxyRuntime runs the intercept one integration is pointed at. The
@@ -51,16 +60,29 @@ func (m *Manager) ensureProxyMode(agent Agent) error {
 
 // proxyKey answers the client key a routed request presents to Relo, read from
 // the key file instead of being held: the value a restart never has to mint
-// again, and one an operator can see on disk beside the intercept's own.
-func (m *Manager) proxyKey(agent Agent) func() string {
-	path := m.paths.KeyFile(agent.ID)
-	return func() string {
-		content, err := m.files.ReadFileOrEmpty(path)
-		if err != nil {
-			return ""
-		}
-		return strings.TrimSpace(content)
+// again, and one an operator can see on disk beside the intercept's own. Each
+// client presents its own key, so its traffic is attributed to it.
+func (m *Manager) proxyKey(client string) string {
+	if _, known := m.agents.AgentFor(client); !known {
+		return ""
 	}
+	content, err := m.files.ReadFileOrEmpty(m.paths.KeyFile(client))
+	if err != nil {
+		return ""
+	}
+	return strings.TrimSpace(content)
+}
+
+// proxyAdmits reports whether a client is enabled and wired through the
+// intercept. The mode is read from the store, so a switch takes effect on the
+// next request without restarting anything.
+func (m *Manager) proxyAdmits(client string) bool {
+	record, found, err := m.store.Integration(context.Background(), client)
+	if err != nil || !found || !record.Enabled {
+		return false
+	}
+	mode, _ := NormalizeMode(record.Mode)
+	return mode == ModeProxy
 }
 
 // proxyEnv answers the environment proxy mode writes for one integration,
@@ -73,8 +95,8 @@ func (m *Manager) proxyEnv(ctx context.Context, agent Agent) (ProxyEnv, error) {
 	if baseURL == "" {
 		return ProxyEnv{}, fmt.Errorf("%s: %w (%s)", agent.ID, ErrSurfaceDisabled, agent.Protocol)
 	}
-	return m.proxy.Ensure(ctx, agent.ID, ProxyTarget{
-		Host: ProxyHost, DataPlaneURL: baseURL, Key: m.proxyKey(agent),
+	return m.proxy.Ensure(ctx, ProxyOwner, ProxyTarget{
+		Host: ProxyHost, DataPlaneURL: baseURL, Key: m.proxyKey, Admits: m.proxyAdmits,
 	})
 }
 

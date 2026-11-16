@@ -32,9 +32,6 @@ const (
 var (
 	modelSelectorPath = regexp.MustCompile(`^/api/(?:organizations/[^/]+/)?model_selector/cc/?$`)
 	bootstrapPath     = regexp.MustCompile(`^/api/claude_cli/bootstrap/?$`)
-	// desktopEntrypoint matches the processes Claude Desktop starts. They share
-	// the catalog file a plain `claude` reads, but Relo's rows are not for them.
-	desktopEntrypoint = regexp.MustCompile(`^claude-cli/\S+ \(external, (claude-desktop|claude-desktop-3p|local-agent)[,)]`)
 	// strippedRowKeys are what a cloned row must not inherit from the model it
 	// was copied from: they describe that model, not the one added.
 	strippedRowKeys = []string{
@@ -61,7 +58,7 @@ func catalogKindOf(r *http.Request) catalogKind {
 	}
 	switch {
 	case modelSelectorPath.MatchString(r.URL.Path):
-		if desktopEntrypoint.MatchString(r.Header.Get("User-Agent")) {
+		if ClientOf(r.Header.Get("User-Agent")) == ClientDesktop {
 			return notCatalog
 		}
 		return kindModelSelector

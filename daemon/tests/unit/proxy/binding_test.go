@@ -66,10 +66,10 @@ func newBound(t *testing.T, binding proxy.Binding) *bound {
 	pair, err := proxy.New(proxy.Options{
 		Host: "api.anthropic.com", Upstream: b.vendor.server.URL, DataPlaneURL: b.dataPlane.server.URL,
 		Token: "token", Authority: authority,
-		Bind: func(model string) (proxy.Binding, bool) {
+		Bind: func(_, model string) (proxy.Binding, bool) {
 			return binding, strings.HasPrefix(model, "claude-haiku")
 		},
-		DataPlaneKey: func() string { return "relo-client-key" },
+		DataPlaneKey: func(string) string { return "relo-client-key" },
 	})
 	if err != nil {
 		t.Fatalf("New() error = %v", err)

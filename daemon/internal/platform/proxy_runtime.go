@@ -28,8 +28,8 @@ type ProxyRuntime struct {
 	// routes reports whether a model is one Relo answers. A model it does not
 	// claim is relayed to the vendor with the caller's own credential.
 	routes func(model string) bool
-	// bind answers what a native model id is bound to for one integration.
-	bind func(integrationID, model string) (proxy.Binding, bool)
+	// bind answers what a native model id is bound to for one client.
+	bind func(client, model string) (proxy.Binding, bool)
 	// catalog answers the models the picker gains, and invalidate drops the
 	// catalog a client cached, which is stale whenever the intercept starts or
 	// stops.
@@ -90,7 +90,7 @@ func (r *ProxyRuntime) Ensure(ctx context.Context, id string, target appintegrat
 	if err != nil {
 		return appintegration.ProxyEnv{}, err
 	}
-	pair, err := r.pair(id, dir, target, authority)
+	pair, err := r.pair(dir, target, authority)
 	if err != nil {
 		return appintegration.ProxyEnv{}, err
 	}
@@ -109,19 +109,15 @@ func (r *ProxyRuntime) Ensure(ctx context.Context, id string, target appintegrat
 // pair builds one intercept over the certificate and the token in dir. The
 // token is read from disk rather than held, so the address a client carries
 // survives a restart.
-func (r *ProxyRuntime) pair(id, dir string, target appintegration.ProxyTarget, authority *proxy.Authority) (*proxy.Proxy, error) {
+func (r *ProxyRuntime) pair(dir string, target appintegration.ProxyTarget, authority *proxy.Authority) (*proxy.Proxy, error) {
 	token, err := proxyToken(dir)
 	if err != nil {
 		return nil, err
 	}
-	var bind func(model string) (proxy.Binding, bool)
-	if r.bind != nil {
-		bind = func(model string) (proxy.Binding, bool) { return r.bind(id, model) }
-	}
 	return proxy.New(proxy.Options{
 		Host: target.Host, Upstream: "https://" + target.Host, DataPlaneURL: target.DataPlaneURL,
-		Token: token, Authority: authority, Routes: r.routes, Bind: bind, Catalog: r.catalog, Logger: r.logger,
-		DataPlaneKey: target.Key,
+		Token: token, Authority: authority, Routes: r.routes, Bind: r.bind, Catalog: r.catalog, Logger: r.logger,
+		DataPlaneKey: target.Key, Admits: target.Admits,
 	})
 }
 

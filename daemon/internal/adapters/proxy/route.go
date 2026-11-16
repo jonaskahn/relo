@@ -55,6 +55,10 @@ type plan struct {
 
 func (p *Proxy) planFor(r *http.Request, body []byte) plan {
 	routed := plan{first: sideVendor, dataBody: body, reason: "native"}
+	client := ClientOf(r.Header.Get("User-Agent"))
+	if p.opts.Admits != nil && !p.opts.Admits(client) {
+		return routed
+	}
 	if r.Method != http.MethodPost || p.opts.DataPlaneURL == "" ||
 		(r.URL.Path != messagesPath && r.URL.Path != countTokensPath) {
 		return routed
@@ -67,7 +71,7 @@ func (p *Proxy) planFor(r *http.Request, body []byte) plan {
 	}
 	model := strings.TrimSpace(probe.Model)
 	if p.opts.Bind != nil {
-		if binding, bound := p.opts.Bind(model); bound {
+		if binding, bound := p.opts.Bind(client, model); bound {
 			return bindingPlan(binding, body)
 		}
 	}
@@ -191,7 +195,7 @@ func (p *Proxy) send(r *http.Request, body []byte, route plan, to side) (*http.R
 		outbound.Header.Del("Authorization")
 		outbound.Header.Del("X-Api-Key")
 		if p.opts.DataPlaneKey != nil {
-			if key := p.opts.DataPlaneKey(); key != "" {
+			if key := p.opts.DataPlaneKey(ClientOf(r.Header.Get("User-Agent"))); key != "" {
 				outbound.Header.Set("X-Api-Key", key)
 			}
 		}

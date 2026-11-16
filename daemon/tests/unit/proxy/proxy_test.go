@@ -113,7 +113,7 @@ func TestProxyRoutesAClaimedModelAndRelaysTheRest(t *testing.T) {
 		Host: "api.anthropic.com", Upstream: vendor.URL, DataPlaneURL: dataPlane.URL,
 		Token: "token", Authority: authority,
 		Routes:       func(model string) bool { return strings.HasPrefix(model, "claude-relo-") },
-		DataPlaneKey: func() string { return "relo-client-key" },
+		DataPlaneKey: func(string) string { return "relo-client-key" },
 	})
 	if err != nil {
 		t.Fatalf("New() error = %v", err)

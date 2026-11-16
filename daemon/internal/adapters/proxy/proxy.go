@@ -45,7 +45,7 @@ type Options struct {
 	// DataPlaneKey answers the client key a routed request presents. The
 	// caller's own credential belongs to the vendor, so it is replaced rather
 	// than forwarded: Relo never holds it, and the vendor never sees it.
-	DataPlaneKey func() string
+	DataPlaneKey func(client string) string
 	// Token is the secret a client authenticates to the proxy with.
 	Token string
 	// Authority issues the certificate presented for Host.
@@ -53,10 +53,14 @@ type Options struct {
 	// Routes reports whether a model is one Relo answers. A model it does not
 	// claim is relayed to the vendor with the caller's own credential.
 	Routes func(model string) bool
-	// Bind answers what a native model id is bound to. A bound id is not
+	// Bind answers what a native model id is bound to for one client. A bound id is not
 	// Relo's by name, so it is read before Routes; an id it does not bind
 	// falls through to Routes and then to the vendor.
-	Bind func(model string) (Binding, bool)
+	Bind func(client, model string) (Binding, bool)
+	// Admits reports whether a client's requests are Relo's to route. A client
+	// it refuses is relayed to the vendor untouched, whatever it asks for. Nil
+	// admits every client.
+	Admits func(client string) bool
 	// Catalog answers the Relo models added to the model picker the vendor's
 	// catalog describes. Nil, or an empty answer, leaves every catalog as the
 	// vendor sent it.
