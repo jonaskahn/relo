@@ -145,14 +145,7 @@ func (r *ProxyRuntime) Status(id string) (string, bool) {
 // Retire stops one integration's intercept and removes the certificate a
 // client was told to trust, so a removed integration leaves nothing behind.
 func (r *ProxyRuntime) Retire(id string) error {
-	r.mu.Lock()
-	running, found := r.running[id]
-	delete(r.running, id)
-	r.mu.Unlock()
-	if found {
-		running.cancel()
-		running.proxy.Wait()
-	}
+	r.halt(id)
 	r.dropCatalog()
 	dir := filepath.Join(r.home, "proxy-mode", id)
 	if err := os.RemoveAll(dir); err != nil && !errors.Is(err, os.ErrNotExist) {
@@ -161,7 +154,21 @@ func (r *ProxyRuntime) Retire(id string) error {
 	return nil
 }
 
-// Stop ends every intercept, which is what a daemon shutdown does.
+// halt stops one integration's listener and waits for its connections.
+func (r *ProxyRuntime) halt(id string) {
+	r.mu.Lock()
+	running, found := r.running[id]
+	delete(r.running, id)
+	r.mu.Unlock()
+	if found {
+		running.cancel()
+		running.proxy.Wait()
+	}
+}
+
+// Stop ends every intercept, which is what a daemon shutdown does. The token
+// and the certificate stay on disk: the client's settings carry that token and
+// trust that certificate, so the next start must find both again.
 func (r *ProxyRuntime) Stop() {
 	r.mu.Lock()
 	ids := make([]string, 0, len(r.running))
@@ -170,7 +177,7 @@ func (r *ProxyRuntime) Stop() {
 	}
 	r.mu.Unlock()
 	for _, id := range ids {
-		_ = r.Retire(id)
+		r.halt(id)
 	}
 }
 

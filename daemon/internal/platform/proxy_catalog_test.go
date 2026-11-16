@@ -2,6 +2,9 @@ package platform
 
 import (
 	"context"
+	"os"
+	"path/filepath"
+	"strings"
 	"testing"
 
 	appintegration "github.com/jonaskahn/relo/internal/application/integration"
@@ -18,6 +21,36 @@ func TestProxyCatalogRowsCarryThePickerIDNameAndWindow(t *testing.T) {
 	if len(rows) != 2 || rows[0].ID != "claude-relo-openai--alpha" || rows[0].ContextWindow != window ||
 		rows[1].ID != "claude-reloc-cheap" || rows[1].ContextWindow != 0 || rows[0].Name == "" {
 		t.Fatalf("rows = %+v, want one row per model with the window when known", rows)
+	}
+}
+
+// A daemon shutdown must keep the token and certificate the client's settings
+// carry; only turning the integration off removes them.
+func TestAShutdownKeepsTheTokenAndCertificateButRetireRemovesThem(t *testing.T) {
+	home := t.TempDir()
+	runtime := NewProxyRuntime(ProxyRuntimeOptions{Home: home})
+	target := appintegration.ProxyTarget{Host: "api.anthropic.com", DataPlaneURL: "http://127.0.0.1:1"}
+	first, err := runtime.Ensure(context.Background(), "claude-code", target)
+	if err != nil {
+		t.Fatalf("Ensure() error = %v", err)
+	}
+	runtime.Stop()
+	if _, running := runtime.Status("claude-code"); running {
+		t.Fatal("Stop() left the intercept running")
+	}
+	again := NewProxyRuntime(ProxyRuntimeOptions{Home: home})
+	second, err := again.Ensure(context.Background(), "claude-code", target)
+	if err != nil {
+		t.Fatalf("Ensure() after a restart error = %v", err)
+	}
+	if strings.SplitN(first.URL, "@", 2)[0] != strings.SplitN(second.URL, "@", 2)[0] || first.CAPath != second.CAPath {
+		t.Fatalf("restart gave %q / %q, want the same credential and certificate", second.URL, second.CAPath)
+	}
+	if err := again.Retire("claude-code"); err != nil {
+		t.Fatalf("Retire() error = %v", err)
+	}
+	if _, err := os.Stat(filepath.Join(home, "proxy-mode", "claude-code")); !os.IsNotExist(err) {
+		t.Fatalf("Retire() left the intercept's directory behind: %v", err)
 	}
 }
 
