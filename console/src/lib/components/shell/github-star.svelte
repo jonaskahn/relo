@@ -2,7 +2,7 @@
 	import { onMount } from 'svelte';
 	import { locale, t } from 'svelte-i18n';
 
-	import { formatStars, loadStars, STAR_URL } from '$lib/github-stars';
+	import { formatStars, isSad, loadStars, STAR_URL } from '$lib/github-stars';
 	import { buttonVariants } from '$lib/components/ui/button.svelte';
 	import Icon from '$lib/components/ui/icon.svelte';
 	import { cn } from '$lib/utils';
@@ -34,6 +34,7 @@
 	{#if stars !== null}
 		<span class="border-l border-primary-foreground/30 pl-2 tabular-nums">
 			{formatStars(stars, $locale ?? 'en')}
+			{#if isSad(stars)}<span aria-hidden="true">😢</span>{/if}
 		</span>
 	{/if}
 </a>

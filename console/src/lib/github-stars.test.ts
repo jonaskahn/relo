@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { formatStars, loadStars, STAR_URL } from './github-stars';
+import { formatStars, isSad, loadStars, STAR_URL } from './github-stars';
 
 class Memory {
 	data = new Map<string, string>();
@@ -68,5 +68,15 @@ describe('STAR_URL', () => {
 		const url = new URL(STAR_URL);
 		expect(url.origin + url.pathname).toBe('https://github.com/jonaskahn/relo');
 		expect(url.searchParams.get('ref')).toBe('relo-console');
+	});
+});
+
+describe('isSad', () => {
+	it('is sad below 200 stars and only once the count is known', () => {
+		expect(isSad(0)).toBe(true);
+		expect(isSad(199)).toBe(true);
+		expect(isSad(200)).toBe(false);
+		expect(isSad(5000)).toBe(false);
+		expect(isSad(null)).toBe(false);
 	});
 });

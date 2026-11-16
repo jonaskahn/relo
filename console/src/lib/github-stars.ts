@@ -85,3 +85,10 @@ export function formatStars(count: number, locale: string): string {
 		return String(count);
 	}
 }
+
+// Below this many stars the link wears a sad face, which is the nudge to add one.
+export const SAD_BELOW = 200;
+
+export function isSad(count: number | null): boolean {
+	return count !== null && count < SAD_BELOW;
+}
