@@ -1,5 +1,5 @@
 {
-  "generated": "2026-11-16T16:35:46Z",
+  "generated": "2026-11-16T16:35:59Z",
   "latest": "v0.2.13",
   "latest_beta": "v0.2.13-beta.141.ea9afaf8",
   "install": {
@@ -660,7 +660,7 @@
     {
       "tag": "v0.2.13",
       "version": "0.2.13",
-      "name": "🚀 v0.2.13 — 2026-11-14",
+      "name": "v0.2.13 - Bean nuts 🥜",
       "channel": "stable",
       "draft": false,
       "published_at": "2026-11-15T10:25:45Z",
@@ -1052,7 +1052,7 @@
     {
       "tag": "v0.2.12",
       "version": "0.2.12",
-      "name": "🚀 v0.2.12 — 2026-11-14",
+      "name": "v0.2.12 - Popcorn Times 🍿",
       "channel": "stable",
       "draft": false,
       "published_at": "2026-11-14T13:38:36Z",
@@ -1364,7 +1364,7 @@
     {
       "tag": "v0.2.11",
       "version": "0.2.11",
-      "name": "🚀 v0.2.11 — 2026-11-13",
+      "name": "v0.2.11 - Old days 🍂",
       "channel": "stable",
       "draft": false,
       "published_at": "2026-11-13T17:26:32Z",
@@ -1756,7 +1756,7 @@
     {
       "tag": "v0.2.10",
       "version": "0.2.10",
-      "name": "🚀 v0.2.10 — 2026-11-12",
+      "name": "v0.2.10 - New land ❄️",
       "channel": "stable",
       "draft": false,
       "published_at": "2026-11-12T18:51:55Z",
@@ -2548,7 +2548,7 @@
     {
       "tag": "v0.2.9",
       "version": "0.2.9",
-      "name": "🚀 v0.2.9 — 2026-11-11",
+      "name": "v0.2.9 - Winter ❄️",
       "channel": "stable",
       "draft": false,
       "published_at": "2026-11-10T18:50:20Z",
