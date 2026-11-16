@@ -1907,7 +1907,32 @@
         },
         "claudeModeDesktopHint": "Välj hur Claude Desktop når Relo. Läget gäller appen och den Code-flik den startar.",
         "claudeModeDesktopEnvHint": "Claude Desktop körs som Relo-klient via en gatewayprofil. Inloggningen på claude.ai används inte.",
-        "claudeModeDesktopProxyHint": "Claude Desktop behåller sin inloggning. Code-fliken går via Relos interceptor; Chat och modellväljaren förblir Anthropics. Kräver Claude Code i proxyläge."
+        "claudeModeDesktopProxyHint": "Claude Desktop behåller sin inloggning. Code-fliken går via Relos interceptor; Chat och modellväljaren förblir Anthropics. Kräver Claude Code i proxyläge.",
+        "desktopPicker": {
+          "title": "Modellväljare i Desktop",
+          "hint": "Lägger till Relos modeller i modellväljaren på Code-fliken i Claude Desktop.",
+          "warning": "Detta lägger till ett Relo-certifikat i operativsystemets förtroendelager, begränsat till claude.ai, och Relo avslutar TLS för claude.ai på den här datorn. Anthropics villkor kan se det som ett brott och ett konto kan stängas av. Claude Desktop måste avslutas helt och öppnas igen, och når nätverket bara medan Relo körs. Slå på det bara om du accepterar den risken.",
+          "enable": "Slå på väljaren",
+          "confirm": "Jag accepterar risken, slå på",
+          "disable": "Slå av",
+          "removeTrust": "Ta bort förtroende",
+          "fingerprint": "Certifikatets fingeravtryck (SHA-256)",
+          "trust": "Systemförtroende",
+          "trustTrusted": "Betrott",
+          "trustUntrusted": "Inte betrott",
+          "trustUnknown": "Okänt",
+          "reasonOff": "Av.",
+          "reasonActive": "På. Code-fliken i Claude Desktop listar Relos modeller.",
+          "reasonRestart": "På. Avsluta Claude Desktop helt och öppna det igen.",
+          "reasonUnsupported": "Inte tillgängligt på det här operativsystemet.",
+          "reasonNotInstalled": "Claude Desktop är inte installerat på den här datorn.",
+          "reasonNeedsProxy": "Sätt först Claude Desktop i proxyläge.",
+          "reasonTrustPending": "Väntar på att systemet ska lita på Relos certifikat. Tills dess passerar claude.ai orört.",
+          "reasonTrustDeclined": "Systemet litade inte på certifikatet, så inget ändrades.",
+          "reasonTrustRemains": "Systemet litar fortfarande på Relos certifikat. Ta bort det med knappen nedan.",
+          "reasonCaUnverified": "Relos certifikat klarade inte säkerhetskontrollen och användes därför inte.",
+          "reasonFailed": "Ett steg misslyckades och ångrades så långt det gick. Försök igen."
+        }
       },
       "chatPage": {
         "title": "Chatt",

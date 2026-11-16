@@ -1907,7 +1907,32 @@
         },
         "claudeModeDesktopHint": "Scegli come Claude Desktop raggiunge Relo. La modalità vale per l'app e per la scheda Code che avvia.",
         "claudeModeDesktopEnvHint": "Claude Desktop funziona come client di Relo tramite un profilo gateway. L'accesso a claude.ai non viene usato.",
-        "claudeModeDesktopProxyHint": "Claude Desktop mantiene il suo accesso. La scheda Code passa dall'intercettore di Relo; Chat e selettore dei modelli restano di Anthropic. Richiede Claude Code in modalità proxy."
+        "claudeModeDesktopProxyHint": "Claude Desktop mantiene il suo accesso. La scheda Code passa dall'intercettore di Relo; Chat e selettore dei modelli restano di Anthropic. Richiede Claude Code in modalità proxy.",
+        "desktopPicker": {
+          "title": "Selettore modelli di Desktop",
+          "hint": "Aggiunge i modelli di Relo al selettore modelli della scheda Code di Claude Desktop.",
+          "warning": "Questo aggiunge un certificato Relo all'archivio di attendibilità del sistema operativo, limitato a claude.ai, e Relo termina TLS per claude.ai su questo computer. I termini di Anthropic possono considerarlo una violazione e un account può essere sospeso. Claude Desktop va chiuso del tutto e riaperto, e raggiunge la rete solo mentre Relo è in esecuzione. Attivalo solo se accetti questo rischio.",
+          "enable": "Attiva il selettore",
+          "confirm": "Accetto il rischio, attiva",
+          "disable": "Disattiva",
+          "removeTrust": "Rimuovi l'attendibilità",
+          "fingerprint": "Impronta del certificato (SHA-256)",
+          "trust": "Attendibilità del sistema",
+          "trustTrusted": "Attendibile",
+          "trustUntrusted": "Non attendibile",
+          "trustUnknown": "Sconosciuto",
+          "reasonOff": "Disattivato.",
+          "reasonActive": "Attivo. La scheda Code di Claude Desktop elenca i modelli di Relo.",
+          "reasonRestart": "Attivo. Chiudi del tutto Claude Desktop e riaprilo.",
+          "reasonUnsupported": "Non disponibile su questo sistema operativo.",
+          "reasonNotInstalled": "Claude Desktop non è installato su questo computer.",
+          "reasonNeedsProxy": "Metti prima Claude Desktop in modalità proxy.",
+          "reasonTrustPending": "In attesa che il sistema consideri attendibile il certificato di Relo. Fino ad allora claude.ai passa senza modifiche.",
+          "reasonTrustDeclined": "Il sistema non ha considerato attendibile il certificato, quindi nulla è cambiato.",
+          "reasonTrustRemains": "Il sistema considera ancora attendibile il certificato di Relo. Rimuovilo con il pulsante qui sotto.",
+          "reasonCaUnverified": "Il certificato di Relo non ha superato il controllo di sicurezza, quindi non è stato usato.",
+          "reasonFailed": "Un passaggio non è riuscito ed è stato annullato dove possibile. Riprova."
+        }
       },
       "chatPage": {
         "title": "Chat",

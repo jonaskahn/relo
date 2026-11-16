@@ -219,6 +219,21 @@ restored while Desktop uses it. Each client has its own bindings list and presen
 is not in proxy mode has every request relayed to Anthropic untouched. Desktop's own model picker and the Chat tab are
 not routed.
 
+#### Desktop picker (proxy mode, macOS and Windows)
+
+Under Desktop's bindings, one section adds Relo's models to the model picker of Desktop's own Code tab. It is off by
+default and is the only control that asks the operating system to trust a certificate, so **Turn on the picker** opens
+the risk warning in place and writes nothing until the operator confirms with "I accept the risk, turn it on". The
+warning has one owner, the message the section renders: Relo adds a certificate limited to claude.ai to the system trust
+store and terminates TLS for claude.ai on this machine; Anthropic's terms may treat that as a violation and an account
+can be suspended; Desktop must be quit and reopened and reaches the network only while Relo runs.
+
+The section reads the daemon's reason code as one sentence (off, on, restart needed, trust pending, trust declined, trust
+remains, and the refusals), shows the system's trust of the certificate and the certificate's SHA-256, and offers **Turn
+off** while it is on. **Remove trust** appears only while the picker is off and the certificate is still trusted, which
+is what is left when turning it off could not remove it. On a system Relo cannot trust a certificate on, the section
+says so and offers nothing. The one certificate is the one every client shares; there is no per-client certificate.
+
 ### Model bindings (proxy mode)
 
 In proxy mode Claude Code keeps its own model names, so the section that replaces the model preferences binds a

@@ -1907,7 +1907,32 @@
         },
         "claudeModeDesktopHint": "Chọn cách Claude Desktop tới Relo. Chế độ áp dụng cho ứng dụng và tab Code mà nó khởi chạy.",
         "claudeModeDesktopEnvHint": "Claude Desktop chạy như một máy khách của Relo qua hồ sơ cổng. Đăng nhập claude.ai không được dùng.",
-        "claudeModeDesktopProxyHint": "Claude Desktop giữ đăng nhập của nó. Tab Code đi qua bộ chặn của Relo; Chat và bộ chọn mô hình vẫn thuộc Anthropic. Cần Claude Code ở chế độ proxy."
+        "claudeModeDesktopProxyHint": "Claude Desktop giữ đăng nhập của nó. Tab Code đi qua bộ chặn của Relo; Chat và bộ chọn mô hình vẫn thuộc Anthropic. Cần Claude Code ở chế độ proxy.",
+        "desktopPicker": {
+          "title": "Bộ chọn mô hình của Desktop",
+          "hint": "Thêm các mô hình của Relo vào bộ chọn mô hình ở tab Code của Claude Desktop.",
+          "warning": "Thao tác này thêm một chứng chỉ Relo vào kho tin cậy của hệ điều hành, giới hạn cho claude.ai, và Relo kết thúc TLS cho claude.ai trên máy này. Điều khoản của Anthropic có thể coi đó là vi phạm, và tài khoản có thể bị đình chỉ. Claude Desktop phải được thoát hoàn toàn và mở lại, và chỉ ra mạng khi Relo đang chạy. Chỉ bật nếu bạn chấp nhận rủi ro đó.",
+          "enable": "Bật bộ chọn",
+          "confirm": "Tôi chấp nhận rủi ro, bật",
+          "disable": "Tắt",
+          "removeTrust": "Gỡ tin cậy",
+          "fingerprint": "Dấu vân tay chứng chỉ (SHA-256)",
+          "trust": "Tin cậy của hệ thống",
+          "trustTrusted": "Được tin cậy",
+          "trustUntrusted": "Không được tin cậy",
+          "trustUnknown": "Không rõ",
+          "reasonOff": "Đang tắt.",
+          "reasonActive": "Đang bật. Tab Code của Claude Desktop liệt kê các mô hình của Relo.",
+          "reasonRestart": "Đang bật. Thoát hoàn toàn Claude Desktop rồi mở lại.",
+          "reasonUnsupported": "Không khả dụng trên hệ điều hành này.",
+          "reasonNotInstalled": "Claude Desktop chưa được cài trên máy này.",
+          "reasonNeedsProxy": "Hãy đưa Claude Desktop vào chế độ proxy trước.",
+          "reasonTrustPending": "Đang chờ hệ thống tin cậy chứng chỉ của Relo. Cho tới lúc đó claude.ai đi qua không đổi.",
+          "reasonTrustDeclined": "Hệ thống không tin cậy chứng chỉ, nên không có gì thay đổi.",
+          "reasonTrustRemains": "Hệ thống vẫn tin cậy chứng chỉ của Relo. Gỡ bằng nút bên dưới.",
+          "reasonCaUnverified": "Chứng chỉ của Relo không qua kiểm tra an toàn nên không được dùng.",
+          "reasonFailed": "Một bước thất bại và đã được hoàn tác khi có thể. Hãy thử lại."
+        }
       },
       "chatPage": {
         "title": "Trò chuyện",

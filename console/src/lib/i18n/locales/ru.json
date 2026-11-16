@@ -1907,7 +1907,32 @@
         },
         "claudeModeDesktopHint": "Выберите, как Claude Desktop обращается к Relo. Режим относится к приложению и к запускаемой им вкладке Code.",
         "claudeModeDesktopEnvHint": "Claude Desktop работает как клиент Relo через профиль шлюза. Вход в claude.ai не используется.",
-        "claudeModeDesktopProxyHint": "Claude Desktop сохраняет свой вход. Вкладка Code идёт через перехват Relo; чат и выбор модели остаются за Anthropic. Требуется Claude Code в режиме прокси."
+        "claudeModeDesktopProxyHint": "Claude Desktop сохраняет свой вход. Вкладка Code идёт через перехват Relo; чат и выбор модели остаются за Anthropic. Требуется Claude Code в режиме прокси.",
+        "desktopPicker": {
+          "title": "Выбор модели в Desktop",
+          "hint": "Добавляет модели Relo в выбор модели на вкладке Code в Claude Desktop.",
+          "warning": "Это добавляет сертификат Relo в хранилище доверенных сертификатов операционной системы, ограниченный claude.ai, а Relo завершает TLS для claude.ai на этом компьютере. Условия Anthropic могут расценить это как нарушение, и аккаунт могут заблокировать. Claude Desktop нужно полностью закрыть и открыть заново, и он выходит в сеть, только пока работает Relo. Включайте только если принимаете этот риск.",
+          "enable": "Включить выбор модели",
+          "confirm": "Принимаю риск, включить",
+          "disable": "Выключить",
+          "removeTrust": "Убрать доверие",
+          "fingerprint": "Отпечаток сертификата (SHA-256)",
+          "trust": "Доверие системы",
+          "trustTrusted": "Доверенный",
+          "trustUntrusted": "Не доверенный",
+          "trustUnknown": "Неизвестно",
+          "reasonOff": "Выключено.",
+          "reasonActive": "Включено. Вкладка Code в Claude Desktop показывает модели Relo.",
+          "reasonRestart": "Включено. Полностью закройте Claude Desktop и откройте его снова.",
+          "reasonUnsupported": "Недоступно в этой операционной системе.",
+          "reasonNotInstalled": "Claude Desktop не установлен на этом компьютере.",
+          "reasonNeedsProxy": "Сначала переведите Claude Desktop в режим прокси.",
+          "reasonTrustPending": "Ожидание, пока система начнёт доверять сертификату Relo. До этого claude.ai проходит без изменений.",
+          "reasonTrustDeclined": "Система не стала доверять сертификату, поэтому ничего не изменено.",
+          "reasonTrustRemains": "Система всё ещё доверяет сертификату Relo. Уберите его кнопкой ниже.",
+          "reasonCaUnverified": "Сертификат Relo не прошёл проверку безопасности, поэтому не использовался.",
+          "reasonFailed": "Шаг не удался и был отменён, где это возможно. Повторите попытку."
+        }
       },
       "chatPage": {
         "title": "Чат",

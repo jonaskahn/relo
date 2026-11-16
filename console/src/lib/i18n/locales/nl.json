@@ -1907,7 +1907,32 @@
         },
         "claudeModeDesktopHint": "Kies hoe Claude Desktop Relo bereikt. De modus geldt voor de app en voor het Code-tabblad dat ze start.",
         "claudeModeDesktopEnvHint": "Claude Desktop draait als Relo-client via een gatewayprofiel. De claude.ai-login wordt niet gebruikt.",
-        "claudeModeDesktopProxyHint": "Claude Desktop behoudt zijn login. Het Code-tabblad loopt via de interceptor van Relo; Chat en de modelkiezer blijven van Anthropic. Vereist Claude Code in proxymodus."
+        "claudeModeDesktopProxyHint": "Claude Desktop behoudt zijn login. Het Code-tabblad loopt via de interceptor van Relo; Chat en de modelkiezer blijven van Anthropic. Vereist Claude Code in proxymodus.",
+        "desktopPicker": {
+          "title": "Modelkiezer van Desktop",
+          "hint": "Voegt de modellen van Relo toe aan de modelkiezer van het Code-tabblad van Claude Desktop.",
+          "warning": "Dit voegt een Relo-certificaat toe aan het vertrouwensarchief van je besturingssysteem, beperkt tot claude.ai, en Relo beëindigt TLS voor claude.ai op deze computer. De voorwaarden van Anthropic kunnen dat als overtreding zien en een account kan worden geschorst. Claude Desktop moet helemaal worden afgesloten en opnieuw geopend en bereikt het netwerk alleen zolang Relo draait. Zet het alleen aan als je dat risico accepteert.",
+          "enable": "Kiezer aanzetten",
+          "confirm": "Ik accepteer het risico, aanzetten",
+          "disable": "Uitzetten",
+          "removeTrust": "Vertrouwen intrekken",
+          "fingerprint": "Vingerafdruk van het certificaat (SHA-256)",
+          "trust": "Systeemvertrouwen",
+          "trustTrusted": "Vertrouwd",
+          "trustUntrusted": "Niet vertrouwd",
+          "trustUnknown": "Onbekend",
+          "reasonOff": "Uit.",
+          "reasonActive": "Aan. Het Code-tabblad van Claude Desktop toont de modellen van Relo.",
+          "reasonRestart": "Aan. Sluit Claude Desktop helemaal af en open het opnieuw.",
+          "reasonUnsupported": "Niet beschikbaar op dit besturingssysteem.",
+          "reasonNotInstalled": "Claude Desktop is niet geïnstalleerd op deze computer.",
+          "reasonNeedsProxy": "Zet Claude Desktop eerst in proxymodus.",
+          "reasonTrustPending": "Wachten tot het systeem het certificaat van Relo vertrouwt. Tot dan loopt claude.ai ongewijzigd door.",
+          "reasonTrustDeclined": "Het systeem vertrouwde het certificaat niet, dus er is niets gewijzigd.",
+          "reasonTrustRemains": "Het systeem vertrouwt het certificaat van Relo nog. Verwijder het met de knop hieronder.",
+          "reasonCaUnverified": "Het certificaat van Relo kwam niet door de veiligheidscontrole en is niet gebruikt.",
+          "reasonFailed": "Een stap is mislukt en is waar mogelijk teruggedraaid. Probeer het opnieuw."
+        }
       },
       "chatPage": {
         "title": "Chat",

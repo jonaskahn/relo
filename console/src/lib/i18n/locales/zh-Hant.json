@@ -1907,7 +1907,32 @@
         },
         "claudeModeDesktopHint": "選擇 Claude Desktop 如何連到 Relo。此模式適用於應用程式本身及其啟動的 Code 分頁。",
         "claudeModeDesktopEnvHint": "Claude Desktop 透過閘道設定檔作為 Relo 用戶端執行，不使用 claude.ai 登入。",
-        "claudeModeDesktopProxyHint": "Claude Desktop 保留自己的登入。其 Code 分頁經過 Relo 的攔截；聊天與模型選擇器仍歸 Anthropic。需要 Claude Code 處於代理模式。"
+        "claudeModeDesktopProxyHint": "Claude Desktop 保留自己的登入。其 Code 分頁經過 Relo 的攔截；聊天與模型選擇器仍歸 Anthropic。需要 Claude Code 處於代理模式。",
+        "desktopPicker": {
+          "title": "Desktop 模型選擇器",
+          "hint": "把 Relo 的模型加入 Claude Desktop 的 Code 分頁的模型選擇器。",
+          "warning": "這會把一份僅限 claude.ai 的 Relo 憑證加入作業系統的信任存放區，並由 Relo 在這台機器上終止 claude.ai 的 TLS。Anthropic 的條款可能視此為違規，帳號可能被停用。必須徹底結束並重新開啟 Claude Desktop，且只有在 Relo 執行時它才能連上網路。只有在你接受這項風險時才開啟。",
+          "enable": "開啟選擇器",
+          "confirm": "我接受風險，開啟",
+          "disable": "關閉",
+          "removeTrust": "移除信任",
+          "fingerprint": "憑證指紋 (SHA-256)",
+          "trust": "系統信任",
+          "trustTrusted": "已信任",
+          "trustUntrusted": "未信任",
+          "trustUnknown": "未知",
+          "reasonOff": "已關閉。",
+          "reasonActive": "已開啟。Claude Desktop 的 Code 分頁會列出 Relo 的模型。",
+          "reasonRestart": "已開啟。請徹底結束 Claude Desktop 並重新開啟。",
+          "reasonUnsupported": "此作業系統無法使用。",
+          "reasonNotInstalled": "這台機器上沒有安裝 Claude Desktop。",
+          "reasonNeedsProxy": "請先把 Claude Desktop 設為代理模式。",
+          "reasonTrustPending": "正在等待系統信任 Relo 的憑證。在此之前 claude.ai 原樣通過。",
+          "reasonTrustDeclined": "系統沒有信任該憑證，所以沒有任何變更。",
+          "reasonTrustRemains": "系統仍然信任 Relo 的憑證。請用下方的按鈕移除。",
+          "reasonCaUnverified": "Relo 的憑證未通過安全檢查，因此沒有使用。",
+          "reasonFailed": "某一步失敗了，並已盡可能復原。請重試。"
+        }
       },
       "chatPage": {
         "title": "聊天",

@@ -39,6 +39,7 @@
 	import AgentKeySection from '$lib/components/agents/agent-key-section.svelte';
 	import AgentResultStep from '$lib/components/agents/agent-result-step.svelte';
 	import AgentWiringSection from '$lib/components/agents/agent-wiring-section.svelte';
+	import DesktopPickerSection from '$lib/components/agents/desktop-picker-section.svelte';
 	import ClaudeBindingsSection from '$lib/components/agents/claude-bindings-section.svelte';
 	import ClaudeModeSection from '$lib/components/agents/claude-mode-section.svelte';
 	import ClaudeModelPreferences from '$lib/components/agents/claude-model-preferences.svelte';
@@ -674,6 +675,9 @@
 						/>
 						{#if (detail.mode ?? 'env') === 'proxy'}
 							<ClaudeBindingsSection agent={detail} />
+							{#if detail.id === 'claude-desktop'}
+								<DesktopPickerSection />
+							{/if}
 						{:else if detail.id === 'claude-code'}
 							<ClaudeModelPreferences
 								agent={detail}

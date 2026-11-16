@@ -1907,7 +1907,32 @@
         },
         "claudeModeDesktopHint": "Claude Desktop'ın Relo'ya nasıl ulaşacağını seçin. Mod, uygulamaya ve başlattığı Code sekmesine uygulanır.",
         "claudeModeDesktopEnvHint": "Claude Desktop, bir ağ geçidi profiliyle Relo istemcisi olarak çalışır. claude.ai girişi kullanılmaz.",
-        "claudeModeDesktopProxyHint": "Claude Desktop kendi girişini korur. Code sekmesi Relo'nun araya girme katmanından geçer; Sohbet ve model seçici Anthropic'te kalır. Claude Code'un proxy modunda olması gerekir."
+        "claudeModeDesktopProxyHint": "Claude Desktop kendi girişini korur. Code sekmesi Relo'nun araya girme katmanından geçer; Sohbet ve model seçici Anthropic'te kalır. Claude Code'un proxy modunda olması gerekir.",
+        "desktopPicker": {
+          "title": "Desktop model seçici",
+          "hint": "Relo'nun modellerini Claude Desktop'ın Code sekmesindeki model seçiciye ekler.",
+          "warning": "Bu, işletim sisteminin güven deposuna claude.ai ile sınırlı bir Relo sertifikası ekler ve Relo bu makinede claude.ai için TLS'yi sonlandırır. Anthropic'in şartları bunu ihlal sayabilir ve bir hesap askıya alınabilir. Claude Desktop tamamen kapatılıp yeniden açılmalıdır ve yalnızca Relo çalışırken ağa erişir. Yalnızca bu riski kabul ediyorsanız açın.",
+          "enable": "Seçiciyi aç",
+          "confirm": "Riski kabul ediyorum, aç",
+          "disable": "Kapat",
+          "removeTrust": "Güveni kaldır",
+          "fingerprint": "Sertifika parmak izi (SHA-256)",
+          "trust": "Sistem güveni",
+          "trustTrusted": "Güvenilir",
+          "trustUntrusted": "Güvenilmiyor",
+          "trustUnknown": "Bilinmiyor",
+          "reasonOff": "Kapalı.",
+          "reasonActive": "Açık. Claude Desktop'ın Code sekmesi Relo'nun modellerini listeler.",
+          "reasonRestart": "Açık. Claude Desktop'ı tamamen kapatıp yeniden açın.",
+          "reasonUnsupported": "Bu işletim sisteminde kullanılamaz.",
+          "reasonNotInstalled": "Claude Desktop bu makinede kurulu değil.",
+          "reasonNeedsProxy": "Önce Claude Desktop'ı proxy moduna alın.",
+          "reasonTrustPending": "Sistemin Relo'nun sertifikasına güvenmesi bekleniyor. O zamana kadar claude.ai değiştirilmeden geçer.",
+          "reasonTrustDeclined": "Sistem sertifikaya güvenmedi, bu yüzden hiçbir şey değişmedi.",
+          "reasonTrustRemains": "Sistem hâlâ Relo'nun sertifikasına güveniyor. Aşağıdaki düğmeyle kaldırın.",
+          "reasonCaUnverified": "Relo'nun sertifikası güvenlik denetimini geçemedi, bu yüzden kullanılmadı.",
+          "reasonFailed": "Bir adım başarısız oldu ve mümkün olduğunca geri alındı. Yeniden deneyin."
+        }
       },
       "chatPage": {
         "title": "Sohbet",

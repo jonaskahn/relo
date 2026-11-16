@@ -1907,7 +1907,32 @@
         },
         "claudeModeDesktopHint": "Claude Desktop이 Relo에 도달하는 방식을 선택합니다. 이 모드는 앱과 앱이 시작하는 Code 탭에 적용됩니다.",
         "claudeModeDesktopEnvHint": "Claude Desktop은 게이트웨이 프로필을 통해 Relo 클라이언트로 동작합니다. claude.ai 로그인은 사용되지 않습니다.",
-        "claudeModeDesktopProxyHint": "Claude Desktop은 자체 로그인을 유지합니다. Code 탭은 Relo의 인터셉트를 거치고, 채팅과 모델 선택기는 Anthropic 그대로입니다. Claude Code가 프록시 모드여야 합니다."
+        "claudeModeDesktopProxyHint": "Claude Desktop은 자체 로그인을 유지합니다. Code 탭은 Relo의 인터셉트를 거치고, 채팅과 모델 선택기는 Anthropic 그대로입니다. Claude Code가 프록시 모드여야 합니다.",
+        "desktopPicker": {
+          "title": "Desktop 모델 선택기",
+          "hint": "Relo의 모델을 Claude Desktop Code 탭의 모델 선택기에 추가합니다.",
+          "warning": "이 작업은 claude.ai로 제한된 Relo 인증서를 운영체제 신뢰 저장소에 추가하며, Relo가 이 컴퓨터에서 claude.ai의 TLS를 종료합니다. Anthropic의 약관은 이를 위반으로 볼 수 있고 계정이 정지될 수 있습니다. Claude Desktop은 완전히 종료한 뒤 다시 열어야 하며, Relo가 실행 중일 때만 네트워크에 접근합니다. 이 위험을 감수할 때만 켜세요.",
+          "enable": "선택기 켜기",
+          "confirm": "위험을 감수하고 켜기",
+          "disable": "끄기",
+          "removeTrust": "신뢰 제거",
+          "fingerprint": "인증서 지문 (SHA-256)",
+          "trust": "시스템 신뢰",
+          "trustTrusted": "신뢰함",
+          "trustUntrusted": "신뢰하지 않음",
+          "trustUnknown": "알 수 없음",
+          "reasonOff": "꺼짐.",
+          "reasonActive": "켜짐. Claude Desktop의 Code 탭에 Relo의 모델이 표시됩니다.",
+          "reasonRestart": "켜짐. Claude Desktop을 완전히 종료한 뒤 다시 여세요.",
+          "reasonUnsupported": "이 운영체제에서는 사용할 수 없습니다.",
+          "reasonNotInstalled": "이 컴퓨터에 Claude Desktop이 설치되어 있지 않습니다.",
+          "reasonNeedsProxy": "먼저 Claude Desktop을 프록시 모드로 전환하세요.",
+          "reasonTrustPending": "시스템이 Relo의 인증서를 신뢰하기를 기다리는 중입니다. 그때까지 claude.ai는 변경 없이 통과합니다.",
+          "reasonTrustDeclined": "시스템이 인증서를 신뢰하지 않아 아무것도 변경되지 않았습니다.",
+          "reasonTrustRemains": "시스템이 아직 Relo의 인증서를 신뢰합니다. 아래 버튼으로 제거하세요.",
+          "reasonCaUnverified": "Relo의 인증서가 안전 검사를 통과하지 못해 사용되지 않았습니다.",
+          "reasonFailed": "한 단계가 실패했고 가능한 만큼 되돌렸습니다. 다시 시도하세요."
+        }
       },
       "chatPage": {
         "title": "채팅",

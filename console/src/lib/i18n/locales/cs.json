@@ -1907,7 +1907,32 @@
         },
         "claudeModeDesktopHint": "Vyberte, jak se Claude Desktop připojuje k Relo. Režim platí pro aplikaci i pro kartu Code, kterou spouští.",
         "claudeModeDesktopEnvHint": "Claude Desktop běží jako klient Relo přes profil brány. Přihlášení ke claude.ai se nepoužívá.",
-        "claudeModeDesktopProxyHint": "Claude Desktop si ponechává své přihlášení. Karta Code jde přes zachycení Relo; Chat a výběr modelu zůstávají u Anthropic. Vyžaduje Claude Code v režimu proxy."
+        "claudeModeDesktopProxyHint": "Claude Desktop si ponechává své přihlášení. Karta Code jde přes zachycení Relo; Chat a výběr modelu zůstávají u Anthropic. Vyžaduje Claude Code v režimu proxy.",
+        "desktopPicker": {
+          "title": "Výběr modelu v Desktopu",
+          "hint": "Přidá modely Relo do výběru modelu na kartě Code v Claude Desktop.",
+          "warning": "Tím se do úložiště důvěryhodných certifikátů operačního systému přidá certifikát Relo, omezený na claude.ai, a Relo na tomto počítači ukončuje TLS pro claude.ai. Podmínky Anthropic to mohou považovat za porušení a účet může být pozastaven. Claude Desktop je nutné úplně ukončit a znovu otevřít a k síti se dostane jen tehdy, když Relo běží. Zapněte to jen tehdy, pokud toto riziko přijímáte.",
+          "enable": "Zapnout výběr",
+          "confirm": "Přijímám riziko, zapnout",
+          "disable": "Vypnout",
+          "removeTrust": "Odebrat důvěru",
+          "fingerprint": "Otisk certifikátu (SHA-256)",
+          "trust": "Důvěra systému",
+          "trustTrusted": "Důvěryhodný",
+          "trustUntrusted": "Nedůvěryhodný",
+          "trustUnknown": "Neznámé",
+          "reasonOff": "Vypnuto.",
+          "reasonActive": "Zapnuto. Karta Code v Claude Desktop uvádí modely Relo.",
+          "reasonRestart": "Zapnuto. Claude Desktop úplně ukončete a znovu otevřete.",
+          "reasonUnsupported": "V tomto operačním systému není dostupné.",
+          "reasonNotInstalled": "Claude Desktop není na tomto počítači nainstalován.",
+          "reasonNeedsProxy": "Nejprve přepněte Claude Desktop do režimu proxy.",
+          "reasonTrustPending": "Čekám, až systém bude důvěřovat certifikátu Relo. Do té doby claude.ai prochází beze změny.",
+          "reasonTrustDeclined": "Systém certifikátu nedůvěřoval, takže se nic nezměnilo.",
+          "reasonTrustRemains": "Systém stále důvěřuje certifikátu Relo. Odeberte ho tlačítkem níže.",
+          "reasonCaUnverified": "Certifikát Relo neprošel bezpečnostní kontrolou, a proto nebyl použit.",
+          "reasonFailed": "Krok selhal a byl vrácen, kde to šlo. Zkuste to znovu."
+        }
       },
       "chatPage": {
         "title": "Chat",

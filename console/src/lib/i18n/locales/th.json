@@ -1907,7 +1907,32 @@
         },
         "claudeModeDesktopHint": "เลือกวิธีที่ Claude Desktop เข้าถึง Relo โหมดนี้ใช้กับแอปและแท็บ Code ที่แอปเปิดขึ้น",
         "claudeModeDesktopEnvHint": "Claude Desktop ทำงานเป็นไคลเอนต์ของ Relo ผ่านโปรไฟล์เกตเวย์ ไม่ใช้การเข้าสู่ระบบ claude.ai",
-        "claudeModeDesktopProxyHint": "Claude Desktop ยังใช้การเข้าสู่ระบบของตัวเอง แท็บ Code ผ่านตัวดักจับของ Relo ส่วนแชตและตัวเลือกโมเดลยังเป็นของ Anthropic ต้องให้ Claude Code อยู่ในโหมดพร็อกซี"
+        "claudeModeDesktopProxyHint": "Claude Desktop ยังใช้การเข้าสู่ระบบของตัวเอง แท็บ Code ผ่านตัวดักจับของ Relo ส่วนแชตและตัวเลือกโมเดลยังเป็นของ Anthropic ต้องให้ Claude Code อยู่ในโหมดพร็อกซี",
+        "desktopPicker": {
+          "title": "ตัวเลือกโมเดลของ Desktop",
+          "hint": "เพิ่มโมเดลของ Relo ลงในตัวเลือกโมเดลของแท็บ Code ใน Claude Desktop",
+          "warning": "การทำนี้เพิ่มใบรับรองของ Relo ลงในที่เก็บความเชื่อถือของระบบปฏิบัติการ จำกัดเฉพาะ claude.ai และ Relo จะสิ้นสุด TLS สำหรับ claude.ai บนเครื่องนี้ ข้อกำหนดของ Anthropic อาจถือว่าเป็นการละเมิด และบัญชีอาจถูกระงับ ต้องปิด Claude Desktop ให้หมดแล้วเปิดใหม่ และจะเข้าถึงเครือข่ายได้เฉพาะตอนที่ Relo ทำงานอยู่ เปิดใช้เฉพาะเมื่อคุณยอมรับความเสี่ยงนี้",
+          "enable": "เปิดตัวเลือก",
+          "confirm": "ฉันยอมรับความเสี่ยง เปิดใช้",
+          "disable": "ปิด",
+          "removeTrust": "ถอนความเชื่อถือ",
+          "fingerprint": "ลายนิ้วมือใบรับรอง (SHA-256)",
+          "trust": "ความเชื่อถือของระบบ",
+          "trustTrusted": "เชื่อถือ",
+          "trustUntrusted": "ไม่เชื่อถือ",
+          "trustUnknown": "ไม่ทราบ",
+          "reasonOff": "ปิดอยู่",
+          "reasonActive": "เปิดอยู่ แท็บ Code ของ Claude Desktop แสดงโมเดลของ Relo",
+          "reasonRestart": "เปิดอยู่ ปิด Claude Desktop ให้หมดแล้วเปิดใหม่",
+          "reasonUnsupported": "ไม่พร้อมใช้งานบนระบบปฏิบัติการนี้",
+          "reasonNotInstalled": "ยังไม่ได้ติดตั้ง Claude Desktop บนเครื่องนี้",
+          "reasonNeedsProxy": "ให้ตั้ง Claude Desktop เป็นโหมดพร็อกซีก่อน",
+          "reasonTrustPending": "กำลังรอให้ระบบเชื่อถือใบรับรองของ Relo จนกว่าจะถึงตอนนั้น claude.ai จะผ่านไปโดยไม่เปลี่ยนแปลง",
+          "reasonTrustDeclined": "ระบบไม่เชื่อถือใบรับรอง จึงไม่มีอะไรเปลี่ยนแปลง",
+          "reasonTrustRemains": "ระบบยังเชื่อถือใบรับรองของ Relo อยู่ ถอนออกด้วยปุ่มด้านล่าง",
+          "reasonCaUnverified": "ใบรับรองของ Relo ไม่ผ่านการตรวจความปลอดภัย จึงไม่ได้ใช้",
+          "reasonFailed": "ขั้นตอนหนึ่งล้มเหลวและถูกย้อนกลับเท่าที่ทำได้ ลองอีกครั้ง"
+        }
       },
       "chatPage": {
         "title": "แชต",

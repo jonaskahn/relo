@@ -1907,7 +1907,32 @@
         },
         "claudeModeDesktopHint": "اختر كيف يصل Claude Desktop إلى Relo. ينطبق الوضع على التطبيق وعلى تبويب Code الذي يشغّله.",
         "claudeModeDesktopEnvHint": "يعمل Claude Desktop كعميل لـ Relo عبر ملف تعريف بوابة. لا يُستخدم تسجيل الدخول إلى claude.ai.",
-        "claudeModeDesktopProxyHint": "يحتفظ Claude Desktop بتسجيل دخوله. يمر تبويب Code عبر اعتراض Relo؛ أما المحادثة ومحدد النماذج فيبقيان لدى Anthropic. يتطلب أن يكون Claude Code في وضع الوكيل."
+        "claudeModeDesktopProxyHint": "يحتفظ Claude Desktop بتسجيل دخوله. يمر تبويب Code عبر اعتراض Relo؛ أما المحادثة ومحدد النماذج فيبقيان لدى Anthropic. يتطلب أن يكون Claude Code في وضع الوكيل.",
+        "desktopPicker": {
+          "title": "محدد النماذج في Desktop",
+          "hint": "يضيف نماذج Relo إلى محدد النماذج في تبويب Code في Claude Desktop.",
+          "warning": "يضيف هذا شهادة من Relo إلى مخزن الثقة في نظام التشغيل، مقيّدة بـ claude.ai، ويُنهي Relo بروتوكول TLS لـ claude.ai على هذا الجهاز. قد تعدّ شروط Anthropic ذلك مخالفة، وقد يُعلَّق الحساب. يجب إغلاق Claude Desktop كليًا وإعادة فتحه، ولا يصل إلى الشبكة إلا أثناء تشغيل Relo. فعّله فقط إن كنت تقبل هذه المخاطرة.",
+          "enable": "تشغيل المحدد",
+          "confirm": "أقبل المخاطرة، شغّل",
+          "disable": "إيقاف",
+          "removeTrust": "إزالة الثقة",
+          "fingerprint": "بصمة الشهادة (SHA-256)",
+          "trust": "ثقة النظام",
+          "trustTrusted": "موثوقة",
+          "trustUntrusted": "غير موثوقة",
+          "trustUnknown": "غير معروفة",
+          "reasonOff": "متوقف.",
+          "reasonActive": "قيد التشغيل. يعرض تبويب Code في Claude Desktop نماذج Relo.",
+          "reasonRestart": "قيد التشغيل. أغلق Claude Desktop كليًا ثم افتحه من جديد.",
+          "reasonUnsupported": "غير متاح على نظام التشغيل هذا.",
+          "reasonNotInstalled": "Claude Desktop غير مثبّت على هذا الجهاز.",
+          "reasonNeedsProxy": "ضع Claude Desktop في وضع الوكيل أولًا.",
+          "reasonTrustPending": "بانتظار أن يثق النظام بشهادة Relo. حتى ذلك الحين يمر claude.ai دون تغيير.",
+          "reasonTrustDeclined": "لم يثق النظام بالشهادة، لذا لم يتغير شيء.",
+          "reasonTrustRemains": "ما زال النظام يثق بشهادة Relo. أزلها بالزر أدناه.",
+          "reasonCaUnverified": "فشلت شهادة Relo في فحص الأمان، لذا لم تُستخدم.",
+          "reasonFailed": "فشلت خطوة وتم التراجع عنها قدر الإمكان. حاول مرة أخرى."
+        }
       },
       "chatPage": {
         "title": "الدردشة",

@@ -1907,7 +1907,32 @@
         },
         "claudeModeDesktopHint": "Pilih cara Claude Desktop menjangkau Relo. Mode ini berlaku untuk aplikasi dan tab Code yang dijalankannya.",
         "claudeModeDesktopEnvHint": "Claude Desktop berjalan sebagai klien Relo melalui profil gateway. Login claude.ai tidak dipakai.",
-        "claudeModeDesktopProxyHint": "Claude Desktop mempertahankan loginnya. Tab Code melewati intersep Relo; Chat dan pemilih model tetap milik Anthropic. Memerlukan Claude Code dalam mode proxy."
+        "claudeModeDesktopProxyHint": "Claude Desktop mempertahankan loginnya. Tab Code melewati intersep Relo; Chat dan pemilih model tetap milik Anthropic. Memerlukan Claude Code dalam mode proxy.",
+        "desktopPicker": {
+          "title": "Pemilih model Desktop",
+          "hint": "Menambahkan model Relo ke pemilih model di tab Code Claude Desktop.",
+          "warning": "Ini menambahkan sertifikat Relo ke penyimpanan kepercayaan sistem operasi Anda, dibatasi untuk claude.ai, dan Relo mengakhiri TLS untuk claude.ai di mesin ini. Ketentuan Anthropic dapat menganggapnya pelanggaran, dan akun dapat ditangguhkan. Claude Desktop harus ditutup sepenuhnya dan dibuka kembali, dan hanya menjangkau jaringan selama Relo berjalan. Aktifkan hanya jika Anda menerima risiko itu.",
+          "enable": "Aktifkan pemilih",
+          "confirm": "Saya terima risikonya, aktifkan",
+          "disable": "Matikan",
+          "removeTrust": "Hapus kepercayaan",
+          "fingerprint": "Sidik jari sertifikat (SHA-256)",
+          "trust": "Kepercayaan sistem",
+          "trustTrusted": "Dipercaya",
+          "trustUntrusted": "Tidak dipercaya",
+          "trustUnknown": "Tidak diketahui",
+          "reasonOff": "Mati.",
+          "reasonActive": "Aktif. Tab Code Claude Desktop menampilkan model Relo.",
+          "reasonRestart": "Aktif. Tutup Claude Desktop sepenuhnya lalu buka lagi.",
+          "reasonUnsupported": "Tidak tersedia di sistem operasi ini.",
+          "reasonNotInstalled": "Claude Desktop belum terpasang di mesin ini.",
+          "reasonNeedsProxy": "Letakkan Claude Desktop dalam mode proxy terlebih dahulu.",
+          "reasonTrustPending": "Menunggu sistem memercayai sertifikat Relo. Sampai saat itu claude.ai lewat tanpa diubah.",
+          "reasonTrustDeclined": "Sistem tidak memercayai sertifikat, jadi tidak ada yang diubah.",
+          "reasonTrustRemains": "Sistem masih memercayai sertifikat Relo. Hapus dengan tombol di bawah.",
+          "reasonCaUnverified": "Sertifikat Relo gagal pemeriksaan keamanan, jadi tidak digunakan.",
+          "reasonFailed": "Satu langkah gagal dan dibatalkan sejauh bisa. Coba lagi."
+        }
       },
       "chatPage": {
         "title": "Obrolan",

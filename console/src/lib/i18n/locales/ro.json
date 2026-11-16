@@ -1907,7 +1907,32 @@
         },
         "claudeModeDesktopHint": "Alege cum ajunge Claude Desktop la Relo. Modul se aplică aplicației și filei Code pe care o pornește.",
         "claudeModeDesktopEnvHint": "Claude Desktop rulează ca client Relo printr-un profil de gateway. Autentificarea claude.ai nu este folosită.",
-        "claudeModeDesktopProxyHint": "Claude Desktop își păstrează autentificarea. Fila Code trece prin interceptorul Relo; Chat și selectorul de modele rămân ale Anthropic. Necesită Claude Code în modul proxy."
+        "claudeModeDesktopProxyHint": "Claude Desktop își păstrează autentificarea. Fila Code trece prin interceptorul Relo; Chat și selectorul de modele rămân ale Anthropic. Necesită Claude Code în modul proxy.",
+        "desktopPicker": {
+          "title": "Selector de modele din Desktop",
+          "hint": "Adaugă modelele Relo în selectorul de modele din fila Code a Claude Desktop.",
+          "warning": "Aceasta adaugă un certificat Relo în depozitul de încredere al sistemului de operare, limitat la claude.ai, iar Relo încheie TLS pentru claude.ai pe acest computer. Termenii Anthropic pot considera asta o încălcare și un cont poate fi suspendat. Claude Desktop trebuie închis complet și redeschis și ajunge la rețea doar cât timp rulează Relo. Activează-l doar dacă accepți acest risc.",
+          "enable": "Activează selectorul",
+          "confirm": "Accept riscul, activează",
+          "disable": "Dezactivează",
+          "removeTrust": "Elimină încrederea",
+          "fingerprint": "Amprenta certificatului (SHA-256)",
+          "trust": "Încrederea sistemului",
+          "trustTrusted": "De încredere",
+          "trustUntrusted": "Fără încredere",
+          "trustUnknown": "Necunoscut",
+          "reasonOff": "Dezactivat.",
+          "reasonActive": "Activ. Fila Code din Claude Desktop listează modelele Relo.",
+          "reasonRestart": "Activ. Închide complet Claude Desktop și deschide-l din nou.",
+          "reasonUnsupported": "Indisponibil pe acest sistem de operare.",
+          "reasonNotInstalled": "Claude Desktop nu este instalat pe acest computer.",
+          "reasonNeedsProxy": "Pune mai întâi Claude Desktop în modul proxy.",
+          "reasonTrustPending": "Se așteaptă ca sistemul să aibă încredere în certificatul Relo. Până atunci claude.ai trece nemodificat.",
+          "reasonTrustDeclined": "Sistemul nu a avut încredere în certificat, deci nu s-a schimbat nimic.",
+          "reasonTrustRemains": "Sistemul încă se încrede în certificatul Relo. Elimină-l cu butonul de mai jos.",
+          "reasonCaUnverified": "Certificatul Relo a picat verificarea de siguranță și nu a fost folosit.",
+          "reasonFailed": "Un pas a eșuat și a fost anulat unde s-a putut. Încearcă din nou."
+        }
       },
       "chatPage": {
         "title": "Chat",

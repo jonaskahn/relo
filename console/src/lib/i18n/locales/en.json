@@ -1907,7 +1907,32 @@
         },
         "claudeModeDesktopHint": "Choose how Claude Desktop reaches Relo. The mode applies to the app and to the Code tab it starts.",
         "claudeModeDesktopEnvHint": "Claude Desktop runs as a Relo client through a gateway profile. The claude.ai login is not used.",
-        "claudeModeDesktopProxyHint": "Claude Desktop keeps its login. Its Code tab goes through Relo's intercept; Chat and the model picker stay Anthropic's. Needs Claude Code in proxy mode."
+        "claudeModeDesktopProxyHint": "Claude Desktop keeps its login. Its Code tab goes through Relo's intercept; Chat and the model picker stay Anthropic's. Needs Claude Code in proxy mode.",
+        "desktopPicker": {
+          "title": "Desktop model picker",
+          "hint": "Add Relo's models to the model picker of Claude Desktop's Code tab.",
+          "warning": "This adds a Relo certificate to your operating system's trust store, limited to claude.ai, and Relo terminates TLS for claude.ai on this machine. Anthropic's terms may treat that as a violation, and an account can be suspended. Claude Desktop must be quit completely and reopened, and it reaches the network only while Relo is running. Turn it on only if you accept that risk.",
+          "enable": "Turn on the picker",
+          "confirm": "I accept the risk, turn it on",
+          "disable": "Turn off",
+          "removeTrust": "Remove trust",
+          "fingerprint": "Certificate fingerprint (SHA-256)",
+          "trust": "System trust",
+          "trustTrusted": "Trusted",
+          "trustUntrusted": "Not trusted",
+          "trustUnknown": "Unknown",
+          "reasonOff": "Off.",
+          "reasonActive": "On. Claude Desktop's Code tab lists Relo's models.",
+          "reasonRestart": "On. Quit Claude Desktop completely and open it again.",
+          "reasonUnsupported": "Not available on this operating system.",
+          "reasonNotInstalled": "Claude Desktop is not installed on this machine.",
+          "reasonNeedsProxy": "Put Claude Desktop in proxy mode first.",
+          "reasonTrustPending": "Waiting for the system to trust Relo's certificate. Until then claude.ai passes through untouched.",
+          "reasonTrustDeclined": "The system did not trust the certificate, so nothing was changed.",
+          "reasonTrustRemains": "The system still trusts Relo's certificate. Remove it with the button below.",
+          "reasonCaUnverified": "Relo's certificate failed its safety check, so it was not used.",
+          "reasonFailed": "A step failed and was undone where it could be. Try again."
+        }
       },
       "chatPage": {
         "title": "Chat",

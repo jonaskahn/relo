@@ -786,6 +786,18 @@ export interface ClaudeBindings {
 	readonly targets: readonly ClaudeTargetOption[];
 }
 
+/** Where Claude Desktop's own model picker stands. */
+export interface DesktopPicker {
+	readonly supported: boolean;
+	readonly enabled: boolean;
+	readonly armed: boolean;
+	readonly trust: 'trusted' | 'untrusted' | 'unknown' | 'unsupported';
+	readonly profile: string;
+	readonly fingerprint: string;
+	readonly address: string;
+	readonly reason: string;
+}
+
 /** The body that sets or removes bindings. */
 export interface ClaudeBindingsUpdate {
 	readonly set?: readonly ClaudeBinding[];

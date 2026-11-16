@@ -1907,7 +1907,32 @@
         },
         "claudeModeDesktopHint": "Claude Desktop が Relo に到達する方法を選びます。このモードはアプリと、アプリが起動する Code タブに適用されます。",
         "claudeModeDesktopEnvHint": "Claude Desktop はゲートウェイプロファイルを通じて Relo のクライアントとして動作します。claude.ai のログインは使われません。",
-        "claudeModeDesktopProxyHint": "Claude Desktop は自分のログインを保ちます。Code タブは Relo のインターセプトを通り、チャットとモデルピッカーは Anthropic のままです。Claude Code がプロキシモードである必要があります。"
+        "claudeModeDesktopProxyHint": "Claude Desktop は自分のログインを保ちます。Code タブは Relo のインターセプトを通り、チャットとモデルピッカーは Anthropic のままです。Claude Code がプロキシモードである必要があります。",
+        "desktopPicker": {
+          "title": "Desktop のモデルピッカー",
+          "hint": "Relo のモデルを Claude Desktop の Code タブのモデルピッカーに追加します。",
+          "warning": "これは claude.ai に限定した Relo の証明書をオペレーティングシステムの信頼ストアに追加し、Relo がこのマシンで claude.ai の TLS を終端します。Anthropic の規約はこれを違反とみなす可能性があり、アカウントが停止されることがあります。Claude Desktop は完全に終了して開き直す必要があり、Relo が動いている間だけネットワークに到達します。このリスクを受け入れる場合にのみ有効にしてください。",
+          "enable": "ピッカーをオンにする",
+          "confirm": "リスクを受け入れてオンにする",
+          "disable": "オフにする",
+          "removeTrust": "信頼を削除",
+          "fingerprint": "証明書のフィンガープリント (SHA-256)",
+          "trust": "システムの信頼",
+          "trustTrusted": "信頼済み",
+          "trustUntrusted": "信頼されていません",
+          "trustUnknown": "不明",
+          "reasonOff": "オフ。",
+          "reasonActive": "オン。Claude Desktop の Code タブに Relo のモデルが表示されます。",
+          "reasonRestart": "オン。Claude Desktop を完全に終了してから開き直してください。",
+          "reasonUnsupported": "このオペレーティングシステムでは利用できません。",
+          "reasonNotInstalled": "このマシンには Claude Desktop がインストールされていません。",
+          "reasonNeedsProxy": "先に Claude Desktop をプロキシモードにしてください。",
+          "reasonTrustPending": "システムが Relo の証明書を信頼するのを待っています。それまで claude.ai はそのまま通過します。",
+          "reasonTrustDeclined": "システムが証明書を信頼しなかったため、何も変更されていません。",
+          "reasonTrustRemains": "システムはまだ Relo の証明書を信頼しています。下のボタンで削除してください。",
+          "reasonCaUnverified": "Relo の証明書が安全性の確認に失敗したため、使用されませんでした。",
+          "reasonFailed": "ある手順が失敗し、可能な範囲で元に戻しました。もう一度お試しください。"
+        }
       },
       "chatPage": {
         "title": "チャット",

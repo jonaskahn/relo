@@ -1907,7 +1907,32 @@
         },
         "claudeModeDesktopHint": "चुनें कि Claude Desktop, Relo तक कैसे पहुँचे। यह मोड ऐप और उसके खोले Code टैब पर लागू होता है।",
         "claudeModeDesktopEnvHint": "Claude Desktop, गेटवे प्रोफ़ाइल के ज़रिए Relo के क्लाइंट की तरह चलता है। claude.ai लॉगिन इस्तेमाल नहीं होता।",
-        "claudeModeDesktopProxyHint": "Claude Desktop अपना लॉगिन बनाए रखता है। उसका Code टैब Relo के इंटरसेप्ट से गुज़रता है; चैट और मॉडल चयनकर्ता Anthropic के ही रहते हैं। इसके लिए Claude Code का प्रॉक्सी मोड में होना ज़रूरी है।"
+        "claudeModeDesktopProxyHint": "Claude Desktop अपना लॉगिन बनाए रखता है। उसका Code टैब Relo के इंटरसेप्ट से गुज़रता है; चैट और मॉडल चयनकर्ता Anthropic के ही रहते हैं। इसके लिए Claude Code का प्रॉक्सी मोड में होना ज़रूरी है।",
+        "desktopPicker": {
+          "title": "Desktop मॉडल चयनकर्ता",
+          "hint": "Relo के मॉडल को Claude Desktop के Code टैब के मॉडल चयनकर्ता में जोड़ता है।",
+          "warning": "यह आपके ऑपरेटिंग सिस्टम के ट्रस्ट स्टोर में Relo का एक प्रमाणपत्र जोड़ता है, जो केवल claude.ai तक सीमित है, और Relo इस मशीन पर claude.ai के लिए TLS समाप्त करता है। Anthropic की शर्तें इसे उल्लंघन मान सकती हैं, और खाता निलंबित हो सकता है। Claude Desktop को पूरी तरह बंद करके दोबारा खोलना होगा, और वह नेटवर्क तक तभी पहुँचता है जब Relo चल रहा हो। इसे तभी चालू करें जब आप यह जोखिम स्वीकार करते हों।",
+          "enable": "चयनकर्ता चालू करें",
+          "confirm": "मैं जोखिम स्वीकार करता हूँ, चालू करें",
+          "disable": "बंद करें",
+          "removeTrust": "भरोसा हटाएँ",
+          "fingerprint": "प्रमाणपत्र फ़िंगरप्रिंट (SHA-256)",
+          "trust": "सिस्टम का भरोसा",
+          "trustTrusted": "भरोसेमंद",
+          "trustUntrusted": "भरोसेमंद नहीं",
+          "trustUnknown": "अज्ञात",
+          "reasonOff": "बंद।",
+          "reasonActive": "चालू। Claude Desktop का Code टैब Relo के मॉडल दिखाता है।",
+          "reasonRestart": "चालू। Claude Desktop को पूरी तरह बंद करके फिर खोलें।",
+          "reasonUnsupported": "इस ऑपरेटिंग सिस्टम पर उपलब्ध नहीं।",
+          "reasonNotInstalled": "Claude Desktop इस मशीन पर इंस्टॉल नहीं है।",
+          "reasonNeedsProxy": "पहले Claude Desktop को प्रॉक्सी मोड में रखें।",
+          "reasonTrustPending": "सिस्टम के Relo के प्रमाणपत्र पर भरोसा करने की प्रतीक्षा है। तब तक claude.ai बिना बदले गुज़रता है।",
+          "reasonTrustDeclined": "सिस्टम ने प्रमाणपत्र पर भरोसा नहीं किया, इसलिए कुछ नहीं बदला।",
+          "reasonTrustRemains": "सिस्टम अब भी Relo के प्रमाणपत्र पर भरोसा करता है। नीचे के बटन से इसे हटाएँ।",
+          "reasonCaUnverified": "Relo का प्रमाणपत्र सुरक्षा जाँच में विफल रहा, इसलिए उपयोग नहीं हुआ।",
+          "reasonFailed": "एक चरण विफल हुआ और जहाँ संभव था वापस कर दिया गया। फिर कोशिश करें।"
+        }
       },
       "chatPage": {
         "title": "चैट",
