@@ -30,6 +30,11 @@ type ProxyRuntime struct {
 	routes func(model string) bool
 	// bind answers what a native model id is bound to for one integration.
 	bind func(integrationID, model string) (proxy.Binding, bool)
+	// catalog answers the models the picker gains, and invalidate drops the
+	// catalog a client cached, which is stale whenever the intercept starts or
+	// stops.
+	catalog    func() []proxy.CatalogRow
+	invalidate func()
 
 	mu      sync.Mutex
 	running map[string]*runningProxy
@@ -50,8 +55,12 @@ type ProxyRuntimeOptions struct {
 	// Routes reports whether a model is one Relo serves.
 	Routes func(model string) bool
 	// Bind answers what a native model id is bound to for one integration.
-	Bind   func(integrationID, model string) (proxy.Binding, bool)
-	Logger *slog.Logger
+	Bind func(integrationID, model string) (proxy.Binding, bool)
+	// Catalog answers the models added to Claude Code's picker.
+	Catalog func() []proxy.CatalogRow
+	// Invalidate drops the catalog Claude Code cached.
+	Invalidate func()
+	Logger     *slog.Logger
 }
 
 // NewProxyRuntime returns the intercept runtime.
@@ -62,6 +71,7 @@ func NewProxyRuntime(options ProxyRuntimeOptions) *ProxyRuntime {
 	}
 	return &ProxyRuntime{
 		home: options.Home, logger: logger, routes: options.Routes, bind: options.Bind,
+		catalog: options.Catalog, invalidate: options.Invalidate,
 		running: map[string]*runningProxy{}, cancelled: context.Background(),
 	}
 }
@@ -91,6 +101,7 @@ func (r *ProxyRuntime) Ensure(ctx context.Context, id string, target appintegrat
 	}
 	env := appintegration.ProxyEnv{URL: pair.URL(), CAPath: authority.CAPathFile()}
 	r.running[id] = &runningProxy{proxy: pair, cancel: cancel, env: env}
+	r.dropCatalog()
 	r.logger.Info("proxy mode intercept listening", "integration", id, "address", pair.Addr())
 	return env, nil
 }
@@ -109,9 +120,15 @@ func (r *ProxyRuntime) pair(id, dir string, target appintegration.ProxyTarget, a
 	}
 	return proxy.New(proxy.Options{
 		Host: target.Host, Upstream: "https://" + target.Host, DataPlaneURL: target.DataPlaneURL,
-		Token: token, Authority: authority, Routes: r.routes, Bind: bind, Logger: r.logger,
+		Token: token, Authority: authority, Routes: r.routes, Bind: bind, Catalog: r.catalog, Logger: r.logger,
 		DataPlaneKey: target.Key,
 	})
+}
+
+func (r *ProxyRuntime) dropCatalog() {
+	if r.invalidate != nil {
+		r.invalidate()
+	}
 }
 
 // Status reports the intercept's loopback address, and whether it is up.
@@ -136,6 +153,7 @@ func (r *ProxyRuntime) Retire(id string) error {
 		running.cancel()
 		running.proxy.Wait()
 	}
+	r.dropCatalog()
 	dir := filepath.Join(r.home, "proxy-mode", id)
 	if err := os.RemoveAll(dir); err != nil && !errors.Is(err, os.ErrNotExist) {
 		return err

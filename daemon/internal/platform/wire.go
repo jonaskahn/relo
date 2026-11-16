@@ -264,17 +264,24 @@ func (w *wiring) newCatalogService(edges *AccountEdges, accounts *appaccount.Ser
 
 // claudeBindings builds the native-id bindings of proxy mode, loaded into
 // memory so a request is resolved without touching the database.
-func (w *wiring) claudeBindings() *claudebindings.Service {
+func (w *wiring) claudeBindings(onChange func(context.Context, string)) *claudebindings.Service {
 	service := claudebindings.New(claudebindings.Options{
 		Documents: docstore.NewCollection(newDocumentStore(w.db), claudebindings.Namespace,
 			docstore.Codec[claudebindings.Document]{Decode: claudebindings.Decode, Encode: claudebindings.Encode},
 			docstore.Options{Logger: w.logger, Now: w.clk.Now}),
-		Catalog: w.models,
+		Catalog: w.models, OnChange: onChange,
 	})
 	if err := service.Load(w.ctx); err != nil {
 		w.logger.Warn("claude bindings are not loaded yet", "error", err)
 	}
 	return service
+}
+
+func (w *wiring) proxyRuntime(bindings *claudebindings.Service, dropCatalog func(), models func() []appintegration.ModelRef) *ProxyRuntime {
+	return NewProxyRuntime(ProxyRuntimeOptions{
+		Home: w.options.Home, Logger: w.logger, Routes: proxyRouteClaim(w.models),
+		Bind: proxyBinding(bindings), Catalog: proxyCatalogRows(models), Invalidate: dropCatalog,
+	})
 }
 
 func (w *wiring) integrations() {
@@ -284,12 +291,13 @@ func (w *wiring) integrations() {
 		Relo:      reloPath(""),
 		DataPlane: func(protocol string) string { return dataPlaneBaseURL(w.cfg, protocol) },
 	}
-	bindings := w.claudeBindings()
+	dropCatalog := func() { codingclients.DropServedCatalog(clientPaths.ClaudeConfigDir()) }
+	bindings := w.claudeBindings(func(context.Context, string) { dropCatalog() })
 	w.built.bindings = bindings
-	proxyRuntime := NewProxyRuntime(ProxyRuntimeOptions{
-		Home: w.options.Home, Logger: w.logger, Routes: proxyRouteClaim(w.models),
-		Bind: proxyBinding(bindings),
-	})
+	// The picker rows come from the integration service, which is built after
+	// the runtime that serves them.
+	var pickerModels func() []appintegration.ModelRef
+	proxyRuntime := w.proxyRuntime(bindings, dropCatalog, func() []appintegration.ModelRef { return pickerModels() })
 	integrationSvc := appintegration.NewService(appintegration.ServiceOptions{
 		Paths:     NewPathResolver(clientPaths),
 		Agents:    NewAgentRegistry(),
@@ -300,6 +308,7 @@ func (w *wiring) integrations() {
 		Logger: w.logger, Now: w.clk.Now, Proxy: proxyRuntime,
 		ProxyShutdown: proxyRuntime.Stop,
 	})
+	pickerModels = integrationSvc.ClaudePickerModels
 	w.refreshClaude = func(ctx context.Context) {
 		integrationSvc.RefreshClaudeGateway(ctx)
 		integrationSvc.RefreshCodexCatalog(ctx)

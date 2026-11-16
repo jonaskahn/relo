@@ -1475,6 +1475,12 @@ func (s *Service) publishedModels() []ModelRef {
 	return models
 }
 
+// ClaudePickerModels is the roster Claude Code's picker lists, under the ids
+// it accepts.
+func (s *Service) ClaudePickerModels() []ModelRef {
+	return s.claudePickerModels()
+}
+
 func (s *Service) claudePickerModels() []ModelRef {
 	snap, err := s.snapshot()
 	if err != nil {
