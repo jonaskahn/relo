@@ -18,6 +18,11 @@ const (
 
 const (
 	breakerCeiling = 5 * time.Hour
+	// breakerTrialIdle bounds how long one half-open trial may stay out
+	// without an answer. It is longer than the longest call the relay
+	// tolerates, so a trial that is still streaming is never taken back, and
+	// short enough that a lost report cannot hold an account out for good.
+	breakerTrialIdle = 30 * time.Minute
 )
 
 // DefaultFailoverBackoff is the shipped escalating denylist, one wait per
@@ -74,7 +79,10 @@ type Breaker struct {
 	backoff  time.Duration
 	until    time.Time
 	trialOut bool
-	steps    []time.Duration
+	// trialAt is when the half-open trial was handed out, which is what
+	// tells a trial still streaming from one whose report was lost.
+	trialAt time.Time
+	steps   []time.Duration
 }
 
 // NewBreaker returns a closed breaker that reads time from clk and walks the
@@ -113,6 +121,7 @@ func (b *Breaker) SetFailoverBackoff(steps []time.Duration) {
 		b.backoff = 0
 		b.until = time.Time{}
 		b.trialOut = false
+		b.trialAt = time.Time{}
 		return
 	}
 	clamped := make([]time.Duration, 0, len(steps))
@@ -131,6 +140,7 @@ func (b *Breaker) RecordSuccess() {
 	b.backoff = 0
 	b.until = time.Time{}
 	b.trialOut = false
+	b.trialAt = time.Time{}
 }
 
 // RecordFailure records one upstream answer and reports what it means.
@@ -142,6 +152,7 @@ func (b *Breaker) RecordSuccess() {
 func (b *Breaker) RecordFailure(status int, retryAfter time.Duration) CredentialVerdict {
 	verdict := ClassifyStatus(status)
 	if verdict != VerdictRetry {
+		b.clearTrial()
 		return verdict
 	}
 	b.mu.Lock()
@@ -158,13 +169,32 @@ func (b *Breaker) RecordFailure(status int, retryAfter time.Duration) Credential
 		b.backoff = 0
 		b.until = time.Time{}
 		b.trialOut = false
+		b.trialAt = time.Time{}
 		return VerdictRetry
 	}
 	b.state = BreakerOpen
 	b.backoff = wait
 	b.until = b.clock.Now().Add(wait)
 	b.trialOut = false
+	b.trialAt = time.Time{}
 	return VerdictRetry
+}
+
+// clearTrial ends the half-open trial an answer about the request landed on.
+// Such an answer says nothing about the credential, so it must not hold the
+// account out of rotation; the failures that earned the wait stay counted, so
+// the next rate limit still walks the ladder from where it was.
+func (b *Breaker) clearTrial() {
+	b.mu.Lock()
+	defer b.mu.Unlock()
+	if b.state != BreakerHalfOpen {
+		return
+	}
+	b.state = BreakerClosed
+	b.backoff = 0
+	b.until = time.Time{}
+	b.trialOut = false
+	b.trialAt = time.Time{}
 }
 
 // IsAvailable reports whether the credential may take a request now, and
@@ -181,6 +211,7 @@ func (b *Breaker) IsAvailable() bool {
 			return false
 		}
 		b.trialOut = true
+		b.trialAt = b.clock.Now()
 		return true
 	default:
 		return true
@@ -229,11 +260,31 @@ func (b *Breaker) Snapshot() BreakerSnapshot {
 }
 
 func (b *Breaker) settle() {
-	if b.state != BreakerOpen || b.clock.Now().Before(b.until) {
+	now := b.clock.Now()
+	if b.state == BreakerHalfOpen && b.trialOut && now.Sub(b.trialAt) >= b.trialIdle() {
+		// The trial was handed out and never answered. Waiting on a report
+		// that will not come holds the credential out of rotation for good, so
+		// the trial is taken back and the credential walks one wait of its
+		// ladder again.
+		b.state = BreakerOpen
+		b.until = now.Add(b.backoff)
+		b.trialOut = false
+		b.trialAt = time.Time{}
+		return
+	}
+	if b.state != BreakerOpen || now.Before(b.until) {
 		return
 	}
 	b.state = BreakerHalfOpen
 	b.trialOut = false
+	b.trialAt = time.Time{}
+}
+
+// trialIdle is how long one trial may stay out unanswered. A breaker with no
+// wait keeps the shipped bound, so an account is never hidden behind a
+// zero-length ladder.
+func (b *Breaker) trialIdle() time.Duration {
+	return max(b.backoff, breakerTrialIdle)
 }
 
 func (b *Breaker) nextBackoffLocked(retryAfter time.Duration) time.Duration {

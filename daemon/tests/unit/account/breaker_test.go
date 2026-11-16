@@ -605,6 +605,81 @@ func TestManagerSharing(t *testing.T) {
 	})
 }
 
+// trialIdle is the shipped bound on an unanswered half-open trial: the
+// longer of the credential's own wait and the relay's trial window, which is
+// thirty minutes for the fifteen-minute ladder these tests walk.
+const trialIdle = 30 * time.Minute
+
+// TestTrialIsNotHeldOutForever pins the half-open trial against the two ways
+// it can be lost: a report that never arrives, and an answer about the
+// request rather than the account.
+func TestTrialIsNotHeldOutForever(t *testing.T) {
+	t.Run("a trial whose report never arrives reopens the breaker", func(t *testing.T) {
+		clock := testkit.NewFakeClock(time.Now())
+		breaker := openBreaker(t, clock)
+		clock.Add(16 * time.Minute)
+		if !breaker.IsAvailable() {
+			t.Fatal("the trial was not offered after the backoff")
+		}
+		clock.Add(trialIdle + time.Minute)
+		snapshot := breaker.Snapshot()
+		if snapshot.State != account.BreakerOpen {
+			t.Fatalf("State() = %q, want an unanswered trial to walk one wait again", snapshot.State)
+		}
+		if !snapshot.Until.After(clock.Now()) {
+			t.Fatalf("Until = %v, want a wait after now", snapshot.Until)
+		}
+		clock.Add(16 * time.Minute)
+		if !breaker.IsAvailable() {
+			t.Fatal("the credential never came back after its unanswered trial")
+		}
+	})
+
+	t.Run("a trial still streaming keeps the credential out", func(t *testing.T) {
+		clock := testkit.NewFakeClock(time.Now())
+		breaker := openBreaker(t, clock)
+		clock.Add(16 * time.Minute)
+		if !breaker.IsAvailable() {
+			t.Fatal("the trial was not offered after the backoff")
+		}
+		clock.Add(trialIdle / 2)
+		if breaker.IsAvailable() {
+			t.Fatal("a second request got through while the trial was still streaming")
+		}
+	})
+
+	t.Run("a refusal about the request does not wedge the trial", func(t *testing.T) {
+		clock := testkit.NewFakeClock(time.Now())
+		breaker := openBreaker(t, clock)
+		clock.Add(16 * time.Minute)
+		if !breaker.IsAvailable() {
+			t.Fatal("the trial was not offered after the backoff")
+		}
+		if verdict := breaker.RecordFailure(400, 0); verdict != account.VerdictHealthy {
+			t.Fatalf("verdict = %v, want the request refusal to say nothing about the account", verdict)
+		}
+		if got := breaker.State(); got != account.BreakerClosed {
+			t.Fatalf("State() = %q, want the request refusal to close the trial", got)
+		}
+		if snapshot := breaker.Snapshot(); snapshot.Failures != 1 {
+			t.Fatalf("Failures = %d, want the earlier rate limit still counted", snapshot.Failures)
+		}
+	})
+
+	t.Run("a client abort does not wedge the trial", func(t *testing.T) {
+		clock := testkit.NewFakeClock(time.Now())
+		breaker := openBreaker(t, clock)
+		clock.Add(16 * time.Minute)
+		if !breaker.IsAvailable() {
+			t.Fatal("the trial was not offered after the backoff")
+		}
+		breaker.RecordFailure(499, 0)
+		if got := breaker.State(); got != account.BreakerClosed {
+			t.Fatalf("State() = %q, want the abort to close the trial", got)
+		}
+	})
+}
+
 // fixedWait is a one-step ladder: every failure waits the same fifteen
 // minutes, which is what the single-wait tests assert.
 var fixedWait = []time.Duration{15 * time.Minute}
