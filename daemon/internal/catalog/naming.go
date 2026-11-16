@@ -301,7 +301,7 @@ func NativeMillionContext(modelID string, window *int64) bool {
 	if window == nil || *window < MillionContext {
 		return false
 	}
-	return nativeMillionContext[nativeModelKey(modelID)]
+	return nativeMillionContext[NativeModelKey(modelID)]
 }
 
 // ProviderMillionMarker reports whether an upstream identifier already names
@@ -331,7 +331,10 @@ func StripContextMarker(modelID string) string {
 	return trimmed[:len(trimmed)-len(ContextSuffix)]
 }
 
-func nativeModelKey(modelID string) string {
+// NativeModelKey is the undated spelling of a Claude model id: a trailing
+// release date such as -20250929 is taken off, so a dated id names the same
+// model as the undated one.
+func NativeModelKey(modelID string) string {
 	name := strings.TrimSpace(modelID)
 	cut := len(name) - releaseDateLength
 	if cut > 0 && name[cut] == '-' && isDigits(name[cut+1:]) {
