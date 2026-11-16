@@ -1,4 +1,4 @@
-// The management API for a Claude Code integration's model bindings.
+// The management API for the model bindings of the integrations proxy mode wires.
 package server
 
 import (
@@ -8,9 +8,11 @@ import (
 	appintegration "github.com/jonaskahn/relo/internal/application/integration"
 )
 
-// bindingsIntegration is the one integration that has bindings: Claude Code,
-// the client proxy mode wires.
-const bindingsIntegration = "claude-code"
+// hasBindings reports whether an integration has model bindings: the two
+// clients proxy mode wires, each with a list of its own.
+func hasBindings(id string) bool {
+	return id == appintegration.ProxyOwner || id == appintegration.ProxyDesktop
+}
 
 type bindingTargetDTO struct {
 	Kind       string `json:"kind"`
@@ -105,7 +107,7 @@ func toChange(request bindingsRequest) claudebindings.Change {
 	return change
 }
 
-// bindingsOrRefuse answers the service when the request names the integration
+// bindingsOrRefuse answers the service when the request names an integration
 // that has bindings, and refuses it otherwise.
 func (s *Server) bindingsOrRefuse(w http.ResponseWriter, r *http.Request) (*claudebindings.Service, bool) {
 	if s.opts.ClaudeBindings == nil {
@@ -114,7 +116,7 @@ func (s *Server) bindingsOrRefuse(w http.ResponseWriter, r *http.Request) (*clau
 		})
 		return nil, false
 	}
-	if r.PathValue("id") != bindingsIntegration {
+	if !hasBindings(r.PathValue("id")) {
 		s.writeIntegrationError(w, r, appintegration.ErrUnknownIntegration)
 		return nil, false
 	}
@@ -126,7 +128,7 @@ func (s *Server) handleGetBindings(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	view, err := bindings.View(r.Context(), bindingsIntegration)
+	view, err := bindings.View(r.Context(), r.PathValue("id"))
 	if err != nil {
 		s.writeIntegrationError(w, r, err)
 		return
@@ -146,11 +148,11 @@ func (s *Server) handleSetBindings(w http.ResponseWriter, r *http.Request) {
 	if !s.decodeJSON(w, r, &request) {
 		return
 	}
-	if err := bindings.Apply(r.Context(), bindingsIntegration, toChange(request)); err != nil {
+	if err := bindings.Apply(r.Context(), r.PathValue("id"), toChange(request)); err != nil {
 		s.writeIntegrationError(w, r, err)
 		return
 	}
-	view, err := bindings.View(r.Context(), bindingsIntegration)
+	view, err := bindings.View(r.Context(), r.PathValue("id"))
 	if err != nil {
 		s.writeIntegrationError(w, r, err)
 		return
@@ -158,21 +160,21 @@ func (s *Server) handleSetBindings(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, toBindingsResponse(view))
 }
 
-// requireProxyMode refuses a write while Claude Code is not wired through the
-// intercept. A binding only means something there, so writing one in settings
+// requireProxyMode refuses a write while the integration is not wired through
+// the intercept. A binding only means something there, so writing one in settings
 // mode is refused rather than stored where nothing reads it.
 func (s *Server) requireProxyMode(w http.ResponseWriter, r *http.Request) bool {
 	manager, ok := s.integrationsOrUnavailable(w, r)
 	if !ok {
 		return false
 	}
-	integration, err := manager.Integration(r.Context(), bindingsIntegration)
+	integration, err := manager.Integration(r.Context(), r.PathValue("id"))
 	if err != nil {
 		s.writeIntegrationError(w, r, err)
 		return false
 	}
 	if !integration.Enabled || integration.Mode != appintegration.ModeProxy {
-		writeError(w, http.StatusConflict, "conflict", "model bindings apply to Claude Code in proxy mode only")
+		writeError(w, http.StatusConflict, "conflict", "model bindings apply in proxy mode only")
 		return false
 	}
 	return true

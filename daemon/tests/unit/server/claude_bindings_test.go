@@ -100,13 +100,28 @@ func TestBindingsAreListedWithTheOfficialIDsAnOperatorCanBind(t *testing.T) {
 	}
 }
 
-func TestBindingsBelongToClaudeCodeOnly(t *testing.T) {
+func TestBindingsBelongToTheTwoProxyClientsOnly(t *testing.T) {
 	h, served := bindingsServer(t)
 	for _, method := range []string{http.MethodGet, http.MethodPost} {
 		status, _ := call(t, h, served, method, "/api/v1/integrations/codex/bindings", `{}`)
 		if status != http.StatusNotFound {
 			t.Fatalf("%s bindings of codex = %d, want 404", method, status)
 		}
+	}
+}
+
+// TestDesktopHasItsOwnBindingsList pins that the two clients do not share a
+// list: Desktop's is readable, refused outside proxy mode, and empty while
+// Claude Code's holds its own.
+func TestDesktopHasItsOwnBindingsList(t *testing.T) {
+	h, served := bindingsServer(t)
+	if status, body := call(t, h, served, http.MethodGet, "/api/v1/integrations/claude-desktop/bindings", ""); status != http.StatusOK {
+		t.Fatalf("GET Desktop bindings = %d %s", status, body)
+	}
+	status, body := call(t, h, served, http.MethodPost, "/api/v1/integrations/claude-desktop/bindings",
+		`{"set":[{"native_id":"claude-haiku-4-5","target":{"kind":"model","provider_id":"openai","model_id":"gpt-4o"},"enabled":true}]}`)
+	if status != http.StatusNotFound && status != http.StatusConflict {
+		t.Fatalf("POST Desktop bindings while it is off = %d %s, want a refusal", status, body)
 	}
 }
 

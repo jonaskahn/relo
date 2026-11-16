@@ -425,6 +425,24 @@ func (m *Manager) modelsFor(agent Agent) []ModelRef {
 	}
 }
 
+// desktopProfileStale reports whether Claude Desktop's gateway profile has
+// fallen behind the models Relo publishes. A proxy-mode Desktop keeps no
+// profile, so there is nothing to fall behind.
+func (m *Manager) desktopProfileStale(agent Agent, record Record, models []ModelRef) bool {
+	if mode, _ := NormalizeMode(record.Mode); mode == ModeProxy {
+		return false
+	}
+	// The rendered profile decides, because a behavior mapping can change
+	// without the published roster changing.
+	content, err := os.ReadFile(m.files.DesktopProfilePath(m.paths.DesktopLibrary()))
+	if err != nil {
+		// A missing profile is reported as its own reason, not as a model
+		// change; rewriting it stays an explicit Repair.
+		return false
+	}
+	return !m.files.DesktopProfileLists(string(content), m.paths.BaseURL(agent.Protocol), models)
+}
+
 func (m *Manager) modelsStale(agent Agent, record Record, files []FileRecord) bool {
 	models := m.modelsFor(agent)
 	switch agent.ID {
@@ -439,15 +457,7 @@ func (m *Manager) modelsStale(agent Agent, record Record, files []FileRecord) bo
 		}
 		return !m.files.GatewayCacheLists(m.paths.ClaudeConfigDir(), m.paths.BaseURL(agent.Protocol), models)
 	case "claude-desktop":
-		// The rendered profile decides, because a behavior mapping can change
-		// without the published roster changing.
-		content, err := os.ReadFile(m.files.DesktopProfilePath(m.paths.DesktopLibrary()))
-		if err != nil {
-			// A missing profile is reported as its own reason, not as a
-			// model change; rewriting it stays an explicit Repair.
-			return false
-		}
-		return !m.files.DesktopProfileLists(string(content), m.paths.BaseURL(agent.Protocol), models)
+		return m.desktopProfileStale(agent, record, models)
 	}
 	// The stored digest is only a hint for the other clients: a fingerprint
 	// written by an older Relo can differ while the file on disk already
@@ -522,7 +532,7 @@ func (m *Manager) Inspect(ctx context.Context, id string) (View, error) {
 	}
 	view.Mode, _ = NormalizeMode(record.Mode)
 	if view.Mode == ModeProxy && found {
-		view.ProxyState = m.proxyState(agent, files)
+		view.ProxyState = m.ridingProxyState(ctx, agent, files)
 	}
 	view = m.inspectFiles(agent, files, view)
 	if record.Enabled {
@@ -848,8 +858,8 @@ func (m *Manager) modeFor(ctx context.Context, agent Agent, requested string) (s
 		return "", err
 	}
 	if strings.TrimSpace(requested) != "" {
-		if mode == ModeProxy && agent.ID != "claude-code" {
-			return "", fmt.Errorf("%s: proxy mode wires Claude Code only", agent.ID)
+		if mode == ModeProxy && !supportsProxy(agent) {
+			return "", fmt.Errorf("%s: proxy mode wires Claude Code and Claude Desktop only", agent.ID)
 		}
 		return mode, nil
 	}
@@ -911,13 +921,23 @@ func (m *Manager) publishAgentEnv(ctx context.Context, agent Agent) error {
 	return nil
 }
 
+// agentToRetire resolves an integration that is about to be taken out, and
+// refuses when another integration still depends on what it wires.
+func (m *Manager) agentToRetire(ctx context.Context, id string) (Agent, error) {
+	agent, found := m.agents.AgentFor(id)
+	if !found {
+		return Agent{}, fmt.Errorf("%s: %w", id, ErrUnknownAgent)
+	}
+	return agent, m.requireNoProxyDependents(ctx, agent)
+}
+
 // Disable removes everything Relo contributed and leaves the rest of the
 // operator's files as they are. The snapshots stay on disk, so nothing Relo
 // saw is lost by turning an integration off.
 func (m *Manager) Disable(ctx context.Context, id string) (View, error) {
-	agent, found := m.agents.AgentFor(id)
-	if !found {
-		return View{}, fmt.Errorf("%s: %w", id, ErrUnknownAgent)
+	agent, err := m.agentToRetire(ctx, id)
+	if err != nil {
+		return View{}, err
 	}
 	files, err := m.store.Files(ctx, id)
 	if err != nil {
@@ -969,8 +989,10 @@ func (m *Manager) Rotate(ctx context.Context, id, token string) (View, error) {
 		}
 	}
 	if agent.ID == "claude-desktop" {
-		if err := m.writeClaudeDesktop(ctx, agent, token); err != nil {
-			return View{}, err
+		if mode, _ := m.Mode(ctx, id); mode != ModeProxy {
+			if err := m.writeClaudeDesktop(ctx, agent, token); err != nil {
+				return View{}, err
+			}
 		}
 	}
 	if err := m.files.PublishEnv(agent); err != nil {
@@ -1001,9 +1023,9 @@ func (m *Manager) Repair(ctx context.Context, id, token string) (View, error) {
 // takes Relo's own contribution out of each file it cannot put back, which is
 // what an operator who no longer holds the snapshot is left with.
 func (m *Manager) Restore(ctx context.Context, id string, force bool) (View, error) {
-	agent, found := m.agents.AgentFor(id)
-	if !found {
-		return View{}, fmt.Errorf("%s: %w", id, ErrUnknownAgent)
+	agent, err := m.agentToRetire(ctx, id)
+	if err != nil {
+		return View{}, err
 	}
 	files, err := m.store.Files(ctx, id)
 	if err != nil {
@@ -1118,10 +1140,10 @@ func (m *Manager) clearRestoredState(ctx context.Context, agent Agent, id string
 	if err := m.removeCodexCache(agent); err != nil {
 		return err
 	}
-	if mode, err := m.Mode(ctx, id); err == nil && mode == ModeProxy && m.proxy != nil {
+	if mode, err := m.Mode(ctx, id); err == nil && mode == ModeProxy && m.proxy != nil && id == ProxyOwner {
 		// A removed integration must not leave a listener behind, nor the
 		// certificate file the client was told to trust.
-		if err := m.proxy.Retire(id); err != nil {
+		if err := m.proxy.Retire(ProxyOwner); err != nil {
 			return err
 		}
 	}
@@ -1198,7 +1220,7 @@ func (m *Manager) writeClientFiles(ctx context.Context, agent Agent, token strin
 	case "claude-code":
 		return m.writeClaudeClient(ctx, agent, opts)
 	case "claude-desktop":
-		return m.writeClaudeDesktop(ctx, agent, token)
+		return m.writeDesktopClient(ctx, agent, token, opts)
 	case ClientOpenCode, ClientHermes, ClientOpenClaw:
 		return m.writeManaged(ctx, agent, opts)
 	default:
@@ -1491,6 +1513,24 @@ func (m *Manager) writeClaudeDesktop(ctx context.Context, agent Agent, token str
 		return err
 	}
 	return m.files.SelectDesktopProfile(library)
+}
+
+// writeDesktopClient wires Claude Desktop for the mode this setup runs in: the
+// gateway profile that makes it a third-party client, or nothing at all, because
+// in proxy mode its processes read Claude Code's settings and the app keeps its
+// own login. The two are exclusive on disk, so entering proxy mode takes the
+// profile out and the previous selection back.
+func (m *Manager) writeDesktopClient(ctx context.Context, agent Agent, token string, opts EnableOptions) error {
+	if opts.Mode == ModeProxy {
+		if err := m.removeDesktopProfile(agent); err != nil {
+			return err
+		}
+		return m.store.DeleteFile(ctx, agent.ID, KindClaudeDesktop)
+	}
+	if token == "" {
+		token = m.proxyKey(agent.ID)
+	}
+	return m.writeClaudeDesktop(ctx, agent, token)
 }
 
 func (m *Manager) removeDesktopProfile(agent Agent) error {

@@ -46,6 +46,58 @@ type ProxyRuntime interface {
 	Retire(id string) error
 }
 
+// ProxyDesktop is the other integration proxy mode wires: the processes Claude
+// Desktop starts, which read Claude Code's settings file and so ride the same
+// intercept.
+const ProxyDesktop = "claude-desktop"
+
+var (
+	// ErrProxyOwnerNeeded reports Claude Desktop asked for proxy mode while
+	// Claude Code is not in it. The intercept's address lives in Claude Code's
+	// settings file, which Desktop's processes read, so it must be there first.
+	ErrProxyOwnerNeeded = errors.New("proxy mode for Claude Desktop rides Claude Code's: put Claude Code in proxy mode first")
+	// ErrProxyInUse reports Claude Code asked to leave proxy mode while Claude
+	// Desktop is still wired through it.
+	ErrProxyInUse = errors.New("this proxy still serves Claude Desktop: switch Claude Desktop back first")
+)
+
+// supportsProxy reports whether proxy mode wires this agent at all.
+func supportsProxy(agent Agent) bool {
+	return agent.ID == ProxyOwner || agent.ID == ProxyDesktop
+}
+
+// requireProxyOwner refuses a Desktop proxy request that has no intercept to
+// ride. Every other agent owns its own wiring and needs nothing.
+func (m *Manager) requireProxyOwner(ctx context.Context, agent Agent) error {
+	if agent.ID != ProxyDesktop {
+		return nil
+	}
+	record, found, err := m.store.Integration(ctx, ProxyOwner)
+	if err != nil {
+		return err
+	}
+	if mode, _ := NormalizeMode(record.Mode); !found || !record.Enabled || mode != ModeProxy {
+		return fmt.Errorf("%s: %w", agent.ID, ErrProxyOwnerNeeded)
+	}
+	return nil
+}
+
+// requireNoProxyDependents refuses taking the intercept's wiring away from
+// Claude Code while Desktop's processes still depend on it.
+func (m *Manager) requireNoProxyDependents(ctx context.Context, agent Agent) error {
+	if agent.ID != ProxyOwner {
+		return nil
+	}
+	record, found, err := m.store.Integration(ctx, ProxyDesktop)
+	if err != nil {
+		return err
+	}
+	if mode, _ := NormalizeMode(record.Mode); found && record.Enabled && mode == ModeProxy {
+		return fmt.Errorf("%s: %w", agent.ID, ErrProxyInUse)
+	}
+	return nil
+}
+
 // ErrProxyUnavailable reports proxy mode asked for without a runtime that can
 // run an intercept, which is a build or wiring mistake rather than an
 // operator's.
@@ -54,6 +106,9 @@ var ErrProxyUnavailable = errors.New("proxy mode is not available in this build"
 // ensureProxyMode starts the intercept this integration will be pointed at,
 // so a port that cannot bind refuses before any file is written.
 func (m *Manager) ensureProxyMode(agent Agent) error {
+	if err := m.requireProxyOwner(context.Background(), agent); err != nil {
+		return err
+	}
 	_, err := m.proxyEnv(context.Background(), agent)
 	return err
 }
@@ -124,6 +179,24 @@ func (m *Manager) proxyState(agent Agent, files []FileRecord) ProxyModeState {
 // intercept's address, never by the keys settings mode writes: a file wired
 // through the intercept would otherwise always read as out of date, and a
 // refresh would turn it back into a settings-mode file.
+// ridingProxyState is the proxy state of an integration that has its own
+// settings record, or, for Desktop, the state of the Claude Code wiring it
+// rides: Desktop writes no file of its own.
+func (m *Manager) ridingProxyState(ctx context.Context, agent Agent, files []FileRecord) ProxyModeState {
+	if agent.ID != ProxyDesktop {
+		return m.proxyState(agent, files)
+	}
+	owner, found := m.agents.AgentFor(ProxyOwner)
+	if !found {
+		return ProxyStateAbsent
+	}
+	ownerFiles, err := m.store.Files(ctx, ProxyOwner)
+	if err != nil {
+		return ProxyStateUnreadable
+	}
+	return m.proxyState(owner, ownerFiles)
+}
+
 func (m *Manager) claudeSettingsDrifted(agent Agent, content string) bool {
 	if mode, err := m.Mode(context.Background(), agent.ID); err == nil && mode == ModeProxy {
 		env, err := m.proxyEnv(context.Background(), agent)
@@ -176,7 +249,7 @@ func (m *Manager) writeClaudeProxySettings(ctx context.Context, agent Agent) err
 // retireClaudeProxySettings takes the intercept's environment back out of
 // Claude Code's settings, leaving a proxy the operator set alone.
 func (m *Manager) retireClaudeProxySettings(agent Agent) error {
-	if m.proxy == nil {
+	if m.proxy == nil || agent.ID != ProxyOwner {
 		return nil
 	}
 	env, err := m.proxyEnv(context.Background(), agent)
@@ -217,8 +290,8 @@ func (m *Manager) SetMode(ctx context.Context, id, mode string) (View, error) {
 	if err != nil {
 		return View{}, err
 	}
-	if requested == ModeProxy && agent.ID != "claude-code" {
-		return View{}, fmt.Errorf("%s: proxy mode wires Claude Code only", id)
+	if err := m.guardModeSwitch(ctx, agent, record, requested); err != nil {
+		return View{}, err
 	}
 	if err := m.switchMode(ctx, agent, record, requested); err != nil {
 		m.recordFailure(ctx, agent, err)
@@ -232,6 +305,22 @@ func (m *Manager) SetMode(ctx context.Context, id, mode string) (View, error) {
 	}
 	m.appendOp(ctx, id, "mode", requested)
 	return m.Inspect(ctx, id)
+}
+
+// guardModeSwitch refuses a switch the two proxy clients cannot make
+// independently: only they have a proxy mode, Desktop needs Claude Code's
+// wiring to be there, and Claude Code cannot take it away from Desktop.
+func (m *Manager) guardModeSwitch(ctx context.Context, agent Agent, record Record, to string) error {
+	if to == ModeProxy {
+		if !supportsProxy(agent) {
+			return fmt.Errorf("%s: proxy mode wires Claude Code and Claude Desktop only", agent.ID)
+		}
+		return m.requireProxyOwner(ctx, agent)
+	}
+	if current, _ := NormalizeMode(record.Mode); current == ModeProxy {
+		return m.requireNoProxyDependents(ctx, agent)
+	}
+	return nil
 }
 
 // storedRecord reads one enabled integration, which is the only state a mode
@@ -257,7 +346,7 @@ func (m *Manager) switchMode(ctx context.Context, agent Agent, record Record, to
 	if err := m.writeClientFiles(ctx, agent, "", EnableOptions{Mode: to, Overwrite: true}); err != nil {
 		return err
 	}
-	if current != ModeProxy {
+	if current != ModeProxy || agent.ID != ProxyOwner {
 		return nil
 	}
 	if err := m.retireClaudeProxySettings(agent); err != nil {
@@ -266,5 +355,5 @@ func (m *Manager) switchMode(ctx context.Context, agent Agent, record Record, to
 	if m.proxy == nil {
 		return nil
 	}
-	return m.proxy.Retire(agent.ID)
+	return m.proxy.Retire(ProxyOwner)
 }

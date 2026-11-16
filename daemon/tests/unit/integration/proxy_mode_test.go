@@ -218,9 +218,9 @@ func TestProxyModeRefusesWhenTheInterceptCannotStart(t *testing.T) {
 	}
 }
 
-// TestProxyModeIsClaudeCodeOnly keeps a mode with no meaning for a client out
-// of its stored record.
-func TestProxyModeIsClaudeCodeOnly(t *testing.T) {
+// TestProxyModeIsRefusedForOtherClients keeps a mode with no meaning for a
+// client out of its stored record: only Claude Code and Claude Desktop have one.
+func TestProxyModeIsRefusedForOtherClients(t *testing.T) {
 	runtime := &fakeProxy{env: proxyEnvFixture()}
 	h := proxyHarness(t, runtime)
 	ctx := context.Background()

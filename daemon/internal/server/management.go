@@ -383,6 +383,7 @@ func generalServiceStatus(err error) (int, string) {
 		return http.StatusServiceUnavailable, "service_unavailable"
 	case errors.Is(err, appcatalog.ErrCatalogConflict), errors.Is(err, appaccount.ErrDuplicateAccount),
 		errors.Is(err, appcatalog.ErrListAuthoritative),
+		errors.Is(err, appintegration.ErrProxyOwnerNeeded), errors.Is(err, appintegration.ErrProxyInUse),
 		appintegration.RefusalCode(err) == appintegration.CodeForeignKey:
 		return http.StatusConflict, "conflict"
 	case errors.Is(err, appintegration.ErrRestoreBlocked):
