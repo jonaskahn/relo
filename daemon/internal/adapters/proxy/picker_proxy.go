@@ -9,6 +9,7 @@ import (
 	"bytes"
 	"context"
 	"crypto/tls"
+	"encoding/base64"
 	"errors"
 	"fmt"
 	"io"
@@ -43,6 +44,14 @@ type PickerOptions struct {
 	Dial func(ctx context.Context, network, address string) (net.Conn, error)
 	// Transport relays claude.ai's requests. Nil is a verified HTTPS client.
 	Transport http.RoundTripper
+	// Chain answers the intercept that serves the vendor API: its loopback
+	// address and the token that proxy asks for. With CoworkArmed it is how a
+	// connection for api.anthropic.com is handed to that intercept instead of
+	// being spliced to the network.
+	Chain func() (address, token string, ok bool)
+	// CoworkArmed reports whether api.anthropic.com is handed to the intercept at
+	// all. Nil, or false, splices it through like every other host.
+	CoworkArmed func() bool
 }
 
 // PickerProxy is one running picker proxy.
@@ -173,8 +182,71 @@ func (p *PickerProxy) route(conn net.Conn, request *http.Request) {
 		p.terminate(conn)
 		return
 	}
+	if p.chains(request.Host) {
+		p.note(request.Host, "chain")
+		p.chain(conn)
+		return
+	}
 	p.note(request.Host, "blind")
 	p.blind(conn, request.Host)
+}
+
+// chains reports whether a CONNECT is for the vendor API on its one port while
+// the chain is armed. Only that host is ever handed on, and the host the
+// connection names never becomes the address it is handed to.
+func (p *PickerProxy) chains(target string) bool {
+	if p.opts.Chain == nil || p.opts.CoworkArmed == nil || !p.opts.CoworkArmed() {
+		return false
+	}
+	_, port, err := net.SplitHostPort(target)
+	return strings.EqualFold(targetHost(target), HostAnthropicAPI) && (err != nil || port == "443")
+}
+
+// chain opens a CONNECT for the vendor API through the intercept, with the
+// token that proxy asks for, and splices the app's connection onto it. The
+// intercept then speaks TLS for the host and routes each request itself. When it
+// cannot be reached the app is told so, because answering from here would mean
+// presenting a certificate this proxy does not hold for that host.
+func (p *PickerProxy) chain(conn net.Conn) {
+	address, token, ok := p.opts.Chain()
+	if !ok {
+		writeProxyStatus(conn, http.StatusBadGateway)
+		return
+	}
+	upstream, err := net.DialTimeout("tcp", address, handshakeTimeout)
+	if err != nil {
+		writeProxyStatus(conn, http.StatusBadGateway)
+		return
+	}
+	defer func() { _ = upstream.Close() }()
+	reader, ok := openChain(upstream, token)
+	if !ok {
+		writeProxyStatus(conn, http.StatusBadGateway)
+		return
+	}
+	if _, err := io.WriteString(conn, "HTTP/1.1 200 Connection Established\r\n\r\n"); err != nil {
+		return
+	}
+	splice(conn, &bufferedConn{Conn: upstream, reader: reader})
+}
+
+// openChain asks the intercept for a tunnel to the vendor API and answers the
+// reader that holds whatever the intercept sent after its answer.
+func openChain(upstream net.Conn, token string) (*bufio.Reader, bool) {
+	_ = upstream.SetDeadline(time.Now().Add(handshakeTimeout))
+	credential := base64.StdEncoding.EncodeToString([]byte("relo:" + token))
+	target := HostAnthropicAPI + ":443"
+	if _, err := fmt.Fprintf(upstream, "CONNECT %s HTTP/1.1\r\nHost: %s\r\nProxy-Authorization: Basic %s\r\n\r\n",
+		target, target, credential); err != nil {
+		return nil, false
+	}
+	reader := bufio.NewReader(upstream)
+	response, err := http.ReadResponse(reader, &http.Request{Method: http.MethodConnect})
+	if err != nil || response.StatusCode != http.StatusOK {
+		return nil, false
+	}
+	_ = upstream.SetDeadline(time.Time{})
+	return reader, true
 }
 
 // note counts one connection and logs it when the host is one Relo intercepts.
