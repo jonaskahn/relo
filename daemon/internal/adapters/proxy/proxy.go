@@ -17,6 +17,7 @@ import (
 	"net/http"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 )
 
@@ -85,6 +86,8 @@ type Proxy struct {
 	conns sync.Map
 	// seen holds the clients already named in the log, so each is named once.
 	seen sync.Map
+	// handshakeFailures counts the tunnels whose client refused the certificate.
+	handshakeFailures atomic.Int32
 }
 
 // New returns an intercept pair over the given options.
@@ -275,6 +278,7 @@ func (p *Proxy) terminate(conn net.Conn) {
 		NextProtos:     []string{"http/1.1"},
 	})
 	if err := tlsConn.Handshake(); err != nil {
+		p.noteHandshakeFailure(err)
 		return
 	}
 	server := &http.Server{
@@ -285,6 +289,18 @@ func (p *Proxy) terminate(conn net.Conn) {
 	// directly, so the tunnel hands over an opaque wrapper: the handshake
 	// above is the only one.
 	_ = server.Serve(newTunnelListener(tlsConn))
+}
+
+// noteHandshakeFailure logs the first few tunnels whose client did not accept
+// the certificate, with the reason it gave. A client that does not trust Relo's
+// root says so in its alert, which is how an operator learns the route cannot
+// work for it. Only the error text is logged, never any certificate or byte of
+// the stream.
+func (p *Proxy) noteHandshakeFailure(err error) {
+	count := p.handshakeFailures.Add(1)
+	if count <= maxLoggedRefusals {
+		p.opts.Logger.Info("intercept handshake failed", "error", err.Error(), "count", count)
+	}
 }
 
 func (p *Proxy) dial(network, address string) (net.Conn, error) {

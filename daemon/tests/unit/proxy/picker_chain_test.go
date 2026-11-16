@@ -5,12 +5,14 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"io"
+	"log/slog"
 	"net"
 	"net/http"
 	"net/url"
 	"strings"
 	"sync/atomic"
 	"testing"
+	"time"
 
 	"github.com/jonaskahn/relo/internal/adapters/proxy"
 )
@@ -191,4 +193,53 @@ func TestOnlyTheVendorHostIsChained(t *testing.T) {
 			t.Fatalf("hosts = %+v, want no vendor connection counted", rig.picker.Connections().Hosts)
 		}
 	}
+}
+
+// TestAClientThatDoesNotTrustTheRootIsNamedInTheLog is how the operator learns
+// that a client, such as the Cowork VM, rejects Relo's certificate: the failed
+// handshake is logged with the reason the client gave, and nothing else.
+func TestAClientThatDoesNotTrustTheRootIsNamedInTheLog(t *testing.T) {
+	logs := &lockedBuffer{}
+	authority, err := proxy.LoadOrCreateAuthority(t.TempDir(), proxy.InterceptHosts...)
+	if err != nil {
+		t.Fatalf("LoadOrCreateAuthority() error = %v", err)
+	}
+	intercept, err := proxy.New(proxy.Options{
+		Host: proxy.HostAnthropicAPI, Upstream: "http://127.0.0.1:1", DataPlaneURL: "http://127.0.0.1:1",
+		Token: "token", Authority: authority, Logger: slog.New(slog.NewTextHandler(logs, nil)),
+	})
+	if err != nil {
+		t.Fatalf("New() error = %v", err)
+	}
+	ctx, cancel := context.WithCancel(context.Background())
+	if err := intercept.Start(ctx); err != nil {
+		t.Fatalf("Start() error = %v", err)
+	}
+	t.Cleanup(func() { cancel(); intercept.Wait() })
+
+	proxyURL, _ := url.Parse("http://relo:token@" + intercept.Addr())
+	client := &http.Client{Transport: &http.Transport{
+		Proxy:             http.ProxyURL(proxyURL),
+		TLSClientConfig:   &tls.Config{RootCAs: x509.NewCertPool(), MinVersion: tls.VersionTLS12},
+		DisableKeepAlives: true,
+	}}
+	if response, err := client.Get("https://api.anthropic.com/"); err == nil {
+		_ = response.Body.Close()
+		t.Fatal("the request succeeded without trusting the root")
+	}
+	waitForLog(t, logs, "intercept handshake failed")
+	if got := logs.String(); !strings.Contains(got, "count=1") || strings.Contains(got, "BEGIN") {
+		t.Fatalf("log = %s, want one counted failure and no certificate in it", got)
+	}
+}
+
+func waitForLog(t *testing.T, logs *lockedBuffer, want string) {
+	t.Helper()
+	for attempt := 0; attempt < 200; attempt++ {
+		if strings.Contains(logs.String(), want) {
+			return
+		}
+		time.Sleep(10 * time.Millisecond)
+	}
+	t.Fatalf("log = %s, want %q", logs.String(), want)
 }
