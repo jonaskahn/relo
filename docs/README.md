@@ -12,6 +12,7 @@
 | [Svelte conventions](conventions/svelte.md)   | Rules for `console/`                                           |
 | [Product context](design/PRODUCT.md)          | Who Relo is for and what it promises                           |
 | [Design system](design/DESIGN.md)             | Console visual language                                        |
+| [Trust the certificate](guides/trust-the-relo-certificate.md) | Installing or removing Relo's certificate by hand  |
 
 See also [CONTRIBUTING.md](../CONTRIBUTING.md), [SECURITY.md](../SECURITY.md),
 and [THIRD_PARTY_NOTICES.md](../THIRD_PARTY_NOTICES.md).

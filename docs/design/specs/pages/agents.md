@@ -265,14 +265,36 @@ says so and offers nothing. The one certificate is the one every client shares; 
 While the picker is on and armed, a nested **Route Cowork** control hands the connections Cowork's virtual machine makes
 to `api.anthropic.com` to Relo's intercept, so a model bound for Desktop applies there too. Cowork does not read the
 settings file the Code tab does; Desktop points the VM's network at the picker's proxy, and the proxy chains that one
-host to the intercept. It is off by default, asks the operating system for nothing, and has its own warning and confirm:
-Relo terminates TLS for api.anthropic.com for Cowork's traffic, the certificate the system already trusts covers that
-host, Anthropic's terms may treat it as a violation, bound models leave Anthropic, Desktop must be quit and a new Cowork
-session started, and a certificate error in Cowork means the switch should be turned off. The control shows its reason
-as one sentence (off, on, restart needed, needs the picker, trust missing) and how many connections to the vendor API the
-picker's proxy has been asked for, which is what tells the operator whether Cowork's traffic reaches Relo. Turning the
-picker off turns Cowork routing off first. Desktop copies only administrator-trusted roots into the Cowork VM, so this
-route is verified on a machine by sending one Cowork message, not assumed.
+host to the intercept. The VM also copies the system's trust when it starts, and it reads the **system-wide** store,
+not the user's own, so the control needs Relo's certificate trusted system-wide.
+
+It is off by default and has its own warning and confirm. Turning it on asks the operating system for that trust, once,
+through the system's own approval dialog (an administrator dialog on macOS, UAC on Windows, polkit or a sudo that needs
+no password on Linux); Relo never sees a password. The warning says: Relo terminates TLS for api.anthropic.com for
+Cowork's traffic; the certificate is trusted for every app and every user, limited to claude.ai and api.anthropic.com;
+anything running as the user can read its private key file; the trust stays until removed and is removed automatically
+when Desktop leaves proxy mode, is removed, or Relo is uninstalled; Anthropic's terms may treat it as a violation; bound
+models leave Anthropic; Desktop must be quit and a new Cowork session started; and a certificate error in Cowork means
+the switch should be turned off.
+
+**Turn off** only stops routing. The trust stays until the operator presses **Remove system-wide trust**, which shows
+beside it while the trust is present and routing is off. The control shows its reason as one sentence (off, on, restart
+needed, needs the picker, trust missing, declined, unavailable, trust remains), the system-wide trust, and how many
+connections to the vendor API the picker's proxy has been asked for, which is what tells the operator whether Cowork's
+traffic reaches Relo.
+
+When Relo cannot install the trust (the dialog was declined, the machine has no way to ask) or cannot remove it, a
+**Do it yourself** panel appears inside the control: the certificate file and its SHA-256, the commands for this system
+(from the daemon, never built in the console), a link to the instructions page in `docs/guides/`, **Check again** (a
+read that changes nothing), and **Copy a prompt for your coding agent**. The prompt names the file, the fingerprint to
+verify first and the commands, and tells the agent to trust or remove only that certificate and to ask before running
+anything that needs administrator rights.
+
+Leaving proxy mode, disabling or restoring Desktop, and uninstalling Relo take the picker and both trusts out first. If
+the trust cannot be removed the change is refused with the reason and Desktop stays as it was, so a certificate is never
+left trusted on a machine Relo no longer serves. Turning the picker off turns Cowork routing off first and leaves the
+system-wide trust. Windows and Linux are implemented behind the same interface and verified with fake command runners
+only; macOS is the one verified on a machine.
 
 ### Model bindings (proxy mode)
 
