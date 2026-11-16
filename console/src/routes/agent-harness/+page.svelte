@@ -28,6 +28,7 @@
 		stateTone
 	} from '$lib/agent-state';
 	import { api } from '$lib/api';
+	import { cn } from '$lib/utils';
 	import CenteredModal from '$lib/components/ui/centered-modal.svelte';
 	import Icon, { type IconName } from '$lib/components/ui/icon.svelte';
 	import PageHeader from '$lib/components/ui/page-header.svelte';
@@ -37,7 +38,6 @@
 	import AddAgentModal from '$lib/components/agents/add-agent-modal.svelte';
 	import AgentKeySection from '$lib/components/agents/agent-key-section.svelte';
 	import AgentResultStep from '$lib/components/agents/agent-result-step.svelte';
-	import AgentTestPane from '$lib/components/agents/agent-test-pane.svelte';
 	import AgentWiringSection from '$lib/components/agents/agent-wiring-section.svelte';
 	import ClaudeBindingsSection from '$lib/components/agents/claude-bindings-section.svelte';
 	import ClaudeModeSection from '$lib/components/agents/claude-mode-section.svelte';
@@ -52,7 +52,6 @@
 	import { toast } from 'svelte-sonner';
 	import type {
 		DataPlaneAddress,
-		IntegrationChat,
 		IntegrationModel,
 		IntegrationModels,
 		IntegrationResult,
@@ -107,17 +106,10 @@
 	// confirmation stays open and asks the same question with the force flag.
 	let forcingRemove = $state(false);
 
-	// The test side: the models the agent's own key reaches and one turn sent
-	// through it. Both travel the data plane the agent is pointed at.
+	// The models the agent's own key reaches, read through the data plane the agent
+	// is pointed at. The model preferences read them.
 	let models = $state<IntegrationModel[]>([]);
 	let modelsState = $state<'idle' | 'loading' | 'ready' | 'failed'>('idle');
-	let modelsMessage = $state('');
-	let modelQuery = $state('');
-	let modelProvider = $state('');
-	let testModel = $state('');
-	let testPrompt = $state('');
-	let testing = $state(false);
-	let testAnswer = $state<IntegrationChat | null>(null);
 	let verifying = $state(false);
 	let verifyRead = $state<{ ok: boolean; copy: string } | null>(null);
 
@@ -174,7 +166,7 @@
 		revealCopied = false;
 		verifyRead = null;
 		resetKey();
-		resetTest();
+		resetModels();
 		detailOpen = true;
 		if (agent.enabled) void loadModels();
 	}
@@ -194,16 +186,10 @@
 		keyFailure = '';
 	}
 
-	// A second agent never shows the first agent's models or answer.
-	function resetTest() {
+	// A second agent never shows the first agent's models.
+	function resetModels() {
 		models = [];
 		modelsState = 'idle';
-		modelsMessage = '';
-		testModel = '';
-		testPrompt = '';
-		testAnswer = null;
-		modelQuery = '';
-		modelProvider = '';
 	}
 
 	// The list keeps its order and the open step survives, so the page never
@@ -293,9 +279,9 @@
 		}
 	}
 
-	// The proof is reported beside the wiring it proves: a line in the test pane,
-	// never a toast. A passing proof reloads the model list, so the pane stays
-	// fresh without its own control.
+	// The proof is reported beside the wiring it proves: a line above the wiring,
+	// never a toast. A passing proof reloads the model list, so the model
+	// preferences stay fresh without their own control.
 	async function verifyNow() {
 		if (!detail?.enabled || verifying) return;
 		verifying = true;
@@ -375,40 +361,13 @@
 	async function loadModels() {
 		if (!detail || modelsState === 'loading') return;
 		modelsState = 'loading';
-		modelsMessage = '';
 		try {
 			const read = await api<IntegrationModels>(integrationPath(detail.id, 'models'));
 			models = read.models ?? [];
-			modelsMessage = read.message;
 			modelsState = read.ok ? 'ready' : 'failed';
-			if (!models.some((model) => model.id === testModel)) testModel = models[0]?.id ?? '';
-		} catch (error) {
+		} catch {
 			models = [];
-			modelsMessage = message(error);
 			modelsState = 'failed';
-		}
-	}
-
-	async function sendTest() {
-		if (!detail || testing || !testModel || testPrompt.trim() === '') return;
-		testing = true;
-		testAnswer = null;
-		try {
-			testAnswer = await api<IntegrationChat>(integrationPath(detail.id, 'chat'), {
-				method: 'POST',
-				body: JSON.stringify({ model: testModel, prompt: testPrompt.trim() })
-			});
-		} catch (error) {
-			testAnswer = {
-				ok: false,
-				status: 0,
-				model: testModel,
-				text: '',
-				error: message(error),
-				duration_ms: 0
-			};
-		} finally {
-			testing = false;
 		}
 	}
 
@@ -474,7 +433,7 @@
 				agentAttention.set(agents);
 				detail = agents.find((entry) => entry.id === agent.id) ?? null;
 				resetKey();
-				resetTest();
+				resetModels();
 				void load(true);
 				toast.success(
 					$t(
@@ -629,8 +588,7 @@
 	{/if}
 </div>
 
-<!-- One modal for one agent. Its body and footer swap per step: the wiring and the
-     test pane, the result of an action, and the one-time key an action minted. -->
+<!-- One modal for one agent. Its body and footer swap per step: the wiring, the result of an action, and the one-time key an action minted. -->
 <CenteredModal
 	bind:open={detailOpen}
 	onOpenChange={(value) => {
@@ -650,61 +608,55 @@
 						{detail.last_error}
 					</p>
 				{/if}
-				<!-- Two sides: what Relo wired, and what the key actually does. The
-				     columns stack below the dock breakpoint with the wiring first. -->
-				<div class="grid gap-6 lg:grid-cols-2">
-					<div class="flex min-w-0 flex-col gap-6">
-						<AgentKeySection
-							agent={detail}
-							visible={keyVisible}
-							token={keyToken}
-							loading={keyLoading}
-							copied={keyCopied}
-							failure={keyFailure}
-							busy={blocked(running, detail)}
-							ontoggle={() => void toggleKey()}
-							oncopy={() => void copyKey()}
+				<!-- Verification reports beside the wiring it proves, as a line rather than
+				     a toast. The check itself runs from the modal footer. -->
+				{#if verifyRead?.copy}
+					<p
+						class={cn(
+							'mb-4 flex items-start gap-2 text-sm',
+							verifyRead.ok ? 'text-ok' : 'text-danger'
+						)}
+						role="status"
+					>
+						<Icon
+							name={verifyRead.ok ? 'circle-check' : 'circle-x'}
+							size={15}
+							class="mt-0.5 shrink-0"
 						/>
-						<AgentWiringSection agent={detail} />
-						{#if detail.enabled && detail.id === 'claude-code'}
-							<ClaudeModeSection
-								agent={detail}
-								onchanged={(next) => {
-									agents = patchAgent(agents, next);
-									detail = next;
-								}}
-							/>
-							{#if (detail.mode ?? 'env') === 'proxy'}
-								<ClaudeBindingsSection agent={detail} />
-							{:else}
-								<ClaudeModelPreferences
-									agent={detail}
-									{models}
-									modelsReady={modelsState === 'ready'}
-								/>
-							{/if}
-						{/if}
-					</div>
-					<AgentTestPane
+						{verifyRead.copy}
+					</p>
+				{/if}
+				<div class="flex min-w-0 flex-col gap-6">
+					<AgentKeySection
 						agent={detail}
-						{models}
-						state={modelsState}
-						message={modelsMessage}
-						query={modelQuery}
-						provider={modelProvider}
-						selected={testModel}
-						prompt={testPrompt}
-						{testing}
-						answer={testAnswer}
-						verify={verifying || verifyRead
-							? { running: verifying, ok: verifyRead?.ok ?? true, copy: verifyRead?.copy ?? '' }
-							: null}
-						onquery={(value) => (modelQuery = value)}
-						onprovider={(value) => (modelProvider = value)}
-						onselect={(value) => (testModel = value)}
-						onprompt={(value) => (testPrompt = value)}
-						onsend={() => void sendTest()}
+						visible={keyVisible}
+						token={keyToken}
+						loading={keyLoading}
+						copied={keyCopied}
+						failure={keyFailure}
+						busy={blocked(running, detail)}
+						ontoggle={() => void toggleKey()}
+						oncopy={() => void copyKey()}
 					/>
+					<AgentWiringSection agent={detail} />
+					{#if detail.enabled && detail.id === 'claude-code'}
+						<ClaudeModeSection
+							agent={detail}
+							onchanged={(next) => {
+								agents = patchAgent(agents, next);
+								detail = next;
+							}}
+						/>
+						{#if (detail.mode ?? 'env') === 'proxy'}
+							<ClaudeBindingsSection agent={detail} />
+						{:else}
+							<ClaudeModelPreferences
+								agent={detail}
+								{models}
+								modelsReady={modelsState === 'ready'}
+							/>
+						{/if}
+					{/if}
 				</div>
 			{:else if result}
 				<AgentResultStep

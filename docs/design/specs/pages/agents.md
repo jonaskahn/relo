@@ -69,9 +69,9 @@ never reorders a card an operator is looking at.
 
 ### Step: view
 
-Two panes side by side, stacking under the dock breakpoint with the wiring first.
+One column: the wiring. A verification result, when there is one, sits above it as a single status line.
 
-**Left — the wiring:**
+**The wiring:**
 
 - **Client key**: the hint in a read-only `.mono-data` field, an eye that reads the stored secret on demand, copy while
   revealed. Under it: the env-var note when the client's own file names a reference, else "Relo manages this key". An
@@ -98,16 +98,6 @@ Two panes side by side, stacking under the dock breakpoint with the wiring first
   rather than being replaced. A line under the controls says an open Claude Code session keeps the previous choice
   until it is started again. Claude Desktop and every other agent omit this section.
 
-**Right — the test pane**, a `--sunken` panel:
-
-- The models this agent's own key reaches, read in the shape its protocol answers with, plus a reload action.
-- While the agent is off, one line says the pane needs a key; it never reads as a failure of the client.
-- Filters: search and provider, offering only the providers the listing actually names.
-- A model select, and under it the chosen model's window and the connection it came from.
-- A prompt, **Send test** (the pane's one primary while nothing is running), and the answer: status and duration in
-  `.mono-data`, the text in a scrollable `<pre>`, and any Relo doubts as warn pills. A failed turn stays in the pane
-  with its reason.
-
 **Footer** — summary above (name, status pill, coverage tag) and the shared `.modal-footer` below, so the actions
 stack full-width with the safe-area inset on a sheet:
 
@@ -120,7 +110,7 @@ stack full-width with the safe-area inset on a sheet:
 | —                           | —          | Remove (labeled destructive button, first in the group) |
 
 One primary per view. A blocked Set up stays disabled with its refusal already visible above it. Verification reports
-inline in the test pane (`--ok` with an icon on pass, `--danger` with the reason on fail) rather than as a toast.
+inline as a status line above the wiring (`--ok` with an icon on pass, `--danger` with the reason on fail) rather than as a toast.
 
 OpenCode's modal also offers **Reload** and **Restart service**. Reload asks the running server to reread its
 configuration; Restart service replaces its startup environment and key, and is the right action when Relo just
@@ -186,9 +176,8 @@ Every action reports its result before the flow ends, and a failure stays next t
 | Reload     | the acting control spins, label reads "Reloading…"  | toast                        | inline on the card              | patched in place   |
 | 1M context | the acting toggle                                   | toast                        | inline on the card              | patched in place   |
 | Mode       | the chosen card                                     | the other card reads chosen  | inline in the section           | patched in place   |
-| Verify     | the acting control                                  | inline line in the test pane | inline in the pane with the fix | —                  |
+| Verify     | the acting control                                  | status line above the wiring | inline, with the fix            | —                  |
 | Reveal key | the eye spins                                       | the field shows the secret   | inline beside the hint          | cached until close |
-| Send test  | **Send test** spins                                 | the answer in the pane       | inline in the pane              | —                  |
 
 ## Connection mode (Claude Code only)
 
