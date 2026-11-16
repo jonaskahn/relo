@@ -21,17 +21,18 @@
 </script>
 
 <!-- A real link, not a button: it navigates, so it opens in a new tab and can
-     be copied or middle-clicked. -->
+     be copied or middle-clicked. It takes the accent fill on purpose: it is the
+     one call to action in the topbar, so it stands out from the outline controls. -->
 <a
 	href={STAR_URL}
 	target="_blank"
 	rel="noopener noreferrer"
-	class={cn(buttonVariants({ variant: 'outline', size: 'sm' }), className)}
+	class={cn(buttonVariants({ variant: 'default', size: 'sm' }), className)}
 >
 	<Icon name="brand-github" size={16} />
 	{$t('ui.topbar.starOnGithub')}
 	{#if stars !== null}
-		<span class="border-l border-border pl-2 tabular-nums text-muted-foreground">
+		<span class="border-l border-primary-foreground/30 pl-2 tabular-nums">
 			{formatStars(stars, $locale ?? 'en')}
 		</span>
 	{/if}
