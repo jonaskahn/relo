@@ -41,6 +41,7 @@ internal/adapters/wire/openairesponses	internal/adapters/wire/openairesponses/..
 internal/adapters/wire/sse	tests/unit/wire/sse/...
 internal/adapters/antigravity	tests/unit/quota/...,internal/adapters/antigravity/...	79
 internal/adapters/cursor	internal/adapters/cursor/...	78
+internal/adapters/ostrust	tests/unit/ostrust/...	73
 internal/platform	tests/unit/cli/...,tests/unit/platform/...,internal/platform/...	53
 internal/capture	internal/capture/...
 internal/catalog	internal/catalog/...,tests/unit/routing/...,tests/unit/service/...,tests/unit/sqlite/...	70

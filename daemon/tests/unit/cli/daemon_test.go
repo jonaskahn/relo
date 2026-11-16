@@ -97,7 +97,7 @@ func startedHome(t *testing.T) (string, int) {
 	t.Helper()
 	home := testkit.TempHome(t)
 	useFreePorts(t, home)
-	port := freePort(t)
+	port := daemonPort(t)
 	// A daemon that has served once has published the admin token the stop
 	// request authenticates with.
 	if _, err := server.EnsureToken(server.TokenPath(home, server.AdminTokenFile)); err != nil {

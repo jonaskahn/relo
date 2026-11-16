@@ -153,6 +153,23 @@ func freePort(t *testing.T) int {
 	return listener.Addr().(*net.TCPAddr).Port
 }
 
+// daemonPort returns a port outside the kernel's ephemeral range, where no
+// other test package's port-0 listener can land. A lifecycle test releases
+// it immediately before start binds it.
+func daemonPort(t *testing.T) int {
+	t.Helper()
+	for port := 24000; port < 25000; port++ {
+		listener, err := net.Listen("tcp", net.JoinHostPort("127.0.0.1", strconv.Itoa(port)))
+		if err != nil {
+			continue
+		}
+		_ = listener.Close()
+		return port
+	}
+	t.Fatal("no daemon test port is available")
+	return 0
+}
+
 func portOf(t *testing.T, rawURL string) string {
 	t.Helper()
 	parsed, err := url.Parse(rawURL)
