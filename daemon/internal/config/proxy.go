@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"io/fs"
+	"net"
 	"net/http"
 	"net/url"
 	"os"
@@ -28,17 +29,51 @@ type outboundProxyKey struct{}
 var proxyHeader = regexp.MustCompile(`^\s*\[proxy\]\s*(?:#.*)?$`)
 var proxyKey = regexp.MustCompile(`^(\s*)url(\s*=\s*)(?:"[^"]*"|'[^']*'|[^#\r\n]*)(\s*(?:#.*)?)(\r?\n?)$`)
 
-// ValidateProxyURL accepts an empty URL or an HTTP or HTTPS URL with a host.
-func ValidateProxyURL(raw string) error {
+// NormalizeProxyURL turns a proxy address into the canonical form the relay
+// stores and reads. It accepts a full URL ("http://user:pass@host:port"), a
+// "host:port" pair, a "host:port:user:pass" quartet, or a "user:pass@host:port"
+// shorthand. An empty string is the "no proxy" value. Anything else is refused.
+func NormalizeProxyURL(raw string) (string, error) {
 	raw = strings.TrimSpace(raw)
 	if raw == "" {
-		return nil
+		return "", nil
 	}
-	parsed, err := url.Parse(raw)
+	candidate := raw
+	if !strings.Contains(candidate, "://") {
+		if strings.Contains(candidate, "@") {
+			candidate = "http://" + candidate
+		} else {
+			parts := strings.Split(candidate, ":")
+			switch len(parts) {
+			case 2, 4:
+				host := parts[0]
+				if net.ParseIP(host) == nil {
+					// A bare hostname is not a proxy address; the operator must
+					// name a scheme ("http://proxy.example:8080"). This keeps the
+					// URL parse's rule for a host that looks like a scheme.
+					return "", ErrInvalidProxy
+				}
+				if len(parts) == 4 {
+					candidate = "http://" + parts[2] + ":" + parts[3] + "@" + host + ":" + parts[1]
+				} else {
+					candidate = "http://" + candidate
+				}
+			default:
+				return "", ErrInvalidProxy
+			}
+		}
+	}
+	parsed, err := url.Parse(candidate)
 	if err != nil || (parsed.Scheme != "http" && parsed.Scheme != "https") || parsed.Host == "" {
-		return ErrInvalidProxy
+		return "", ErrInvalidProxy
 	}
-	return nil
+	return parsed.String(), nil
+}
+
+// ValidateProxyURL accepts an empty URL or any address NormalizeProxyURL accepts.
+func ValidateProxyURL(raw string) error {
+	_, err := NormalizeProxyURL(raw)
+	return err
 }
 
 // ReadProxyURL reads the proxy URL from the startup file. A missing file is
@@ -58,16 +93,18 @@ func ReadProxyURL(path string) (string, error) {
 		return "", err
 	}
 	raw := strings.TrimSpace(file.Proxy.URL)
-	if err := ValidateProxyURL(raw); err != nil {
+	normalized, err := NormalizeProxyURL(raw)
+	if err != nil {
 		return "", err
 	}
-	return raw, nil
+	return normalized, nil
 }
 
 // UpdateProxyURL stores the proxy URL, keeping the rest of the startup file.
 func UpdateProxyURL(path, raw string) error {
 	raw = strings.TrimSpace(raw)
-	if err := ValidateProxyURL(raw); err != nil {
+	normalized, err := NormalizeProxyURL(raw)
+	if err != nil {
 		return err
 	}
 	appearanceMu.Lock()
@@ -76,7 +113,7 @@ func UpdateProxyURL(path, raw string) error {
 	if err != nil && !errors.Is(err, fs.ErrNotExist) {
 		return err
 	}
-	updated := replaceProxy(string(data), raw)
+	updated := replaceProxy(string(data), normalized)
 	return writeFileAtomically(path, updated)
 }
 

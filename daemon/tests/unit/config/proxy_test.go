@@ -20,6 +20,8 @@ func TestValidateProxyURLAcceptsOnlyHTTP(t *testing.T) {
 	for _, valid := range []string{
 		"", "   ", "http://proxy.example:8080", "https://proxy.example",
 		"http://127.0.0.1:1080", "HTTP://proxy.example",
+		"5.38.107.97:6014", "5.38.107.97:6014:qlbemiyv:yaqk9qja51i6",
+		"qlbemiyv:yaqk9qja51i6@5.38.107.97:6014",
 	} {
 		if err := config.ValidateProxyURL(valid); err != nil {
 			t.Errorf("ValidateProxyURL(%q) = %v, want accepted", valid, err)
@@ -27,7 +29,7 @@ func TestValidateProxyURLAcceptsOnlyHTTP(t *testing.T) {
 	}
 	for _, invalid := range []string{
 		"socks5://127.0.0.1:1080", "ftp://proxy.example", "proxy.example:8080",
-		"http://", "://nohost", "http://[::1",
+		"http://", "://nohost", "http://[::1", "1.2.3.4:6014:user",
 	} {
 		if err := config.ValidateProxyURL(invalid); !errors.Is(err, config.ErrInvalidProxy) {
 			t.Errorf("ValidateProxyURL(%q) = %v, want ErrInvalidProxy", invalid, err)
@@ -123,6 +125,53 @@ func TestReadProxyURLAcceptsAnAbsentFileAndRefusesABrokenOne(t *testing.T) {
 	}
 	if _, err := config.ReadProxyURL(invalid); !errors.Is(err, config.ErrInvalidProxy) {
 		t.Fatalf("ReadProxyURL() = %v, want ErrInvalidProxy", err)
+	}
+}
+
+// TestNormalizeProxyURLCoversTheShorthands pins the address shapes an operator
+// may paste into the console and the canonical URL each one stores.
+func TestNormalizeProxyURLCoversTheShorthands(t *testing.T) {
+	for raw, want := range map[string]string{
+		"":                                       "",
+		"  ":                                     "",
+		"http://proxy.example:8080":              "http://proxy.example:8080",
+		"https://u:p@proxy.example:8443":         "https://u:p@proxy.example:8443",
+		"5.38.107.97:6014":                       "http://5.38.107.97:6014",
+		"5.38.107.97:6014:qlbemiyv:yaqk9qja51i6": "http://qlbemiyv:yaqk9qja51i6@5.38.107.97:6014",
+		"qlbemiyv:yaqk9qja51i6@5.38.107.97:6014": "http://qlbemiyv:yaqk9qja51i6@5.38.107.97:6014",
+	} {
+		got, err := config.NormalizeProxyURL(raw)
+		if err != nil {
+			t.Errorf("NormalizeProxyURL(%q) error = %v, want accepted", raw, err)
+			continue
+		}
+		if got != want {
+			t.Errorf("NormalizeProxyURL(%q) = %q, want %q", raw, got, want)
+		}
+	}
+}
+
+// TestUpdateProxyURLStoresTheCanonicalForm covers the shape the console sends:
+// the file keeps the normalized URL so the relay reads it back as the same one.
+func TestUpdateProxyURLStoresTheCanonicalForm(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "config.toml")
+	if err := os.WriteFile(path, []byte("[server]\nport = 12345\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if err := config.UpdateProxyURL(path, "5.38.107.97:6014:qlbemiyv:yaqk9qja51i6"); err != nil {
+		t.Fatalf("UpdateProxyURL() error = %v", err)
+	}
+	data, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := `url = "http://qlbemiyv:yaqk9qja51i6@5.38.107.97:6014"`
+	if !strings.Contains(string(data), want) {
+		t.Fatalf("stored proxy is not canonical:\n%s", data)
+	}
+	raw, err := config.ReadProxyURL(path)
+	if err != nil || raw != "http://qlbemiyv:yaqk9qja51i6@5.38.107.97:6014" {
+		t.Fatalf("ReadProxyURL() = %q, %v, want the canonical proxy", raw, err)
 	}
 }
 

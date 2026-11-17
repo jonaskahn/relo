@@ -455,8 +455,8 @@ func (s *Service) SaveNetwork(server ServerSettings) (ServerSettings, error) {
 // directories: the outbound proxy, the model directory, and the call,
 // retry, and failover waits.
 func (s *Service) SaveProviders(input ProvidersSettings) (ProvidersSettings, error) {
-	proxyURL := strings.TrimSpace(input.ProxyURL)
-	if err := config.ValidateProxyURL(proxyURL); err != nil {
+	proxyURL, err := config.NormalizeProxyURL(input.ProxyURL)
+	if err != nil {
 		return ProvidersSettings{}, fmt.Errorf("%w: %v", ErrInvalidWrite, err)
 	}
 	timeout, attempts, cooldown, err := validatedProviderWaits(input)
