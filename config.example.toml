@@ -24,7 +24,10 @@
 
 # ── Reach out: how Relo gets to providers and their directories ────────────
 [proxy]
-  url = ""            # the outbound HTTP(S) proxy for opted-in connections; empty goes direct
+  # A legacy single outbound proxy. Relo moves a non-empty value into the
+  # managed pool on the next start and clears this key; manage the pool in the
+  # console's Providers card. Empty goes direct.
+  url = ""
 
 # How long one provider call may stay silent before it is cancelled and
 # retried, how many times a failing account is retried before the request

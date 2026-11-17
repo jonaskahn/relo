@@ -107,8 +107,9 @@ type Options struct {
 	// TemplatePrefixes names the stored model families one template's roster
 	// keeps. Nil keeps the template default.
 	TemplatePrefixes func(ctx context.Context, templateID string) ([]string, bool)
-	// ProxyURL is the outbound proxy from Settings. Empty means no proxy.
-	ProxyURL func() string
+	// ProxyURL is one healthy outbound proxy from the pool. Empty means the
+	// pool has nothing to use.
+	ProxyURL func(ctx context.Context) string
 	// AfterReload runs after a successful rebuild. The composition root uses
 	// it to refresh files that mirror the listing. It must not fail the reload.
 	AfterReload func(ctx context.Context)
@@ -132,7 +133,7 @@ type Service struct {
 	templates        Templates
 	templatePrefixes func(ctx context.Context, templateID string) ([]string, bool)
 	logger           *slog.Logger
-	proxyURL         func() string
+	proxyURL         func(context.Context) string
 	afterReload      func(ctx context.Context)
 	lifetime         context.Context
 	probes           sync.Map // probeID -> *probeSession

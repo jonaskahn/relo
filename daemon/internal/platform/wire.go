@@ -38,6 +38,7 @@ import (
 	"github.com/jonaskahn/relo/internal/clock"
 	"github.com/jonaskahn/relo/internal/config"
 	"github.com/jonaskahn/relo/internal/dashboard"
+	appproxy "github.com/jonaskahn/relo/internal/proxy"
 	// Login items are stored next to the tray code; the daemon uses them
 	// without importing the desktop surface.
 	"github.com/jonaskahn/relo/internal/i18n"
@@ -78,6 +79,7 @@ type deps struct {
 	keys             *appaccess.Keys
 	routes           *approuting.Service
 	settings         *appsettings.Service
+	proxies          *appproxy.Service
 	templateSettings *apptemplates.Service
 	events           *server.EventBus
 	traffic          *trafficLog
@@ -109,6 +111,7 @@ type wiring struct {
 	models           *catalog.Catalog
 	edges            *AccountEdges
 	refreshClaude    func(context.Context)
+	proxyPool        *appproxy.Service
 }
 
 func buildDeps(ctx context.Context, cfg *config.Config, options Options, db *sqlite.DB, logger *slog.Logger) (wired, error) {
@@ -154,12 +157,21 @@ func (w *wiring) foundation() error {
 		return err
 	}
 	w.built.secrets, w.built.usage, w.built.clock = secrets, usage, clk
+	w.proxyPool = newProxyPool(sqlite.NewProxyStore(w.db), w.options.Home, secrets, clk)
+	w.built.proxies = w.proxyPool
 	w.built.pools, w.built.adminToken = pools, adminToken
 	w.built.callbacks = oauth.NewCallbackBroker(oauth.CallbackBrokerOptions{
 		ManagementPort: w.cfg.Server.Port,
 	})
 	w.clk = clk
 	return nil
+}
+
+func (w *wiring) proxyURL(ctx context.Context) string {
+	if w.proxyPool == nil {
+		return ""
+	}
+	return w.proxyPool.FirstURL(ctx)
 }
 
 func newPoolManager(db *sqlite.DB, secrets secrets.SecretStore, clk clock.Clock, cfg *config.Config) *account.Manager {
@@ -248,13 +260,7 @@ func (w *wiring) newCatalogService(edges *AccountEdges, accounts *appaccount.Ser
 			}
 			return prefixes, true
 		}, Logger: w.logger, Lifetime: w.ctx,
-		ProxyURL: func() string {
-			raw, err := config.ReadProxyURL(config.ConfigPath(w.options.Home))
-			if err != nil {
-				return ""
-			}
-			return raw
-		},
+		ProxyURL: func(ctx context.Context) string { return w.proxyURL(ctx) },
 		AfterReload: func(ctx context.Context) {
 			if w.refreshClaude != nil {
 				w.refreshClaude(ctx)
@@ -341,9 +347,10 @@ func (w *wiring) statusLayer() error {
 		Secrets: NewSecretView(w.built.secrets), Entries: w.credRepo, Quotas: NewQuotaStore(w.db),
 		Keys: w.built.keys, Accounts: w.built.accounts, Catalog: w.models, Home: w.options.Home,
 		StartupLog: w.options.StartupLog, Traffic: traffic, Clock: w.clk,
+		Proxies: ProxyPoolStatus{Pool: w.proxyPool},
 	})
 	w.built.traffic = traffic
-	settings := newSettings(w.db, w.options.Home, w.clk, w.logger, drain, traffic)
+	settings := newSettings(w.db, w.options.Home, w.clk, w.logger, drain, traffic, w.proxyPool)
 	templateAPI := newTemplateSettings(w.templateSettings, w.models, w.clk)
 	catalogs, err := i18n.Load()
 	if err != nil {
@@ -361,12 +368,13 @@ func (w *wiring) statusLayer() error {
 
 type seedAdapter struct{}
 
-func newSettings(db *sqlite.DB, home string, clk clock.Clock, logger *slog.Logger, drain sqlite.DrainProbe, traffic *trafficLog) *appsettings.Service {
+func newSettings(db *sqlite.DB, home string, clk clock.Clock, logger *slog.Logger, drain sqlite.DrainProbe, traffic *trafficLog, proxies *appproxy.Service) *appsettings.Service {
 	return appsettings.New(appsettings.Options{
 		Retention: sqlite.NewRetentionSettings(db, sqlite.RetentionOptions{
 			Logger: logger, Now: clk.Now, Drain: drain,
 		}),
 		QuotaDisplay: sqlite.NewQuotaDisplaySettings(db),
+		ProxyPool:    ProxyPoolSummary{Pool: proxies},
 		ConfigPath:   config.ConfigPath(home),
 		Clock:        clk,
 		ApplyAutostart: func(enabled bool) {
@@ -701,6 +709,7 @@ func coreServerOptions(built deps, captures *sqlite.CaptureStore) server.Options
 		Templates:       NewTemplateSource(),
 		CaptureRedactor: NewCaptureRedactor(),
 		Traffic:         built.traffic,
+		Proxies:         built.proxies,
 		Pools:           built.pools,
 		Secrets:         secretModeSource(built.secrets),
 		Usage:           built.usage,

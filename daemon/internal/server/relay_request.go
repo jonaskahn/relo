@@ -16,6 +16,7 @@ import (
 	appcatalog "github.com/jonaskahn/relo/internal/application/catalog"
 	"github.com/jonaskahn/relo/internal/catalog"
 	"github.com/jonaskahn/relo/internal/config"
+	appproxy "github.com/jonaskahn/relo/internal/proxy"
 	"github.com/jonaskahn/relo/internal/routing"
 )
 
@@ -47,8 +48,14 @@ type attemptSpec struct {
 	// holdRateLimit reports that this attempt belongs to a route, so a rate
 	// limit is answered by the next member rather than by the client.
 	holdRateLimit bool
+	// proxy is the pool entry this attempt rides, chosen once per attempt so
+	// the relay can report a transport failure against it.
+	proxy appproxy.Selection
+	// proxyExclude names entries this request already cooled.
+	proxyExclude []string
 }
 
+// nolint:funlen
 func (s *Server) attempt(w http.ResponseWriter, spec attemptSpec, tried map[string][]string, final bool) (Result, error) {
 	host, authorized, err := s.resolveAttemptCandidate(spec, tried)
 	if err != nil {
@@ -71,8 +78,14 @@ func (s *Server) attempt(w http.ResponseWriter, spec attemptSpec, tried map[stri
 		return Result{CredentialID: spec.authorized.CredentialID}, err
 	}
 	s.announceAttempt(w, spec)
-	result, err := s.opts.Relay.Execute(s.proxyContext(spec.request, spec.host.UseProxy), exchange, w)
+	proxy, err := s.selectProxy(spec.request.Context(), spec.host.UseProxy, spec.proxyExclude)
+	if err != nil {
+		return Result{Status: http.StatusServiceUnavailable}, err
+	}
+	spec.proxy = proxy
+	result, err := s.opts.Relay.Execute(s.proxyContext(spec.request.Context(), proxy), exchange, w)
 	result.CredentialID = spec.authorized.CredentialID
+	result.ProxyID = proxy.ID
 	if err != nil {
 		// Nothing reached the client, so the warning belongs to no answer.
 		w.Header().Del(warningHeader)
@@ -468,18 +481,6 @@ func codexIdentityHeaders(request *http.Request) map[string]string {
 		}
 	}
 	return headers
-}
-
-func (s *Server) proxyContext(r *http.Request, use bool) context.Context {
-	ctx := r.Context()
-	if !use || s.opts.Settings == nil {
-		return ctx
-	}
-	raw, err := s.opts.Settings.ProxyURL()
-	if err != nil || raw == "" {
-		return ctx
-	}
-	return config.WithOutboundProxy(ctx, raw)
 }
 
 func (s *Server) callWait(host catalog.Provider) time.Duration {

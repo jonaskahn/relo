@@ -73,7 +73,7 @@ func (s *Service) withProxy(ctx context.Context, use bool) context.Context {
 	if !use || s.proxyURL == nil {
 		return ctx
 	}
-	return config.WithOutboundProxy(ctx, s.proxyURL())
+	return config.WithOutboundProxy(ctx, s.proxyURL(ctx))
 }
 
 func (s *Service) probeUsesProxy(ctx context.Context, templateID, providerID string) bool {

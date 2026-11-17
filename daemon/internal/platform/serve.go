@@ -24,6 +24,7 @@ import (
 	"github.com/jonaskahn/relo/internal/adapters/upstream"
 	"github.com/jonaskahn/relo/internal/config"
 	"github.com/jonaskahn/relo/internal/inference"
+	appproxy "github.com/jonaskahn/relo/internal/proxy"
 	// Login items are stored next to the tray code; the daemon uses them
 	// without importing the desktop surface.
 	"github.com/jonaskahn/relo/internal/platform/autostart"
@@ -136,6 +137,7 @@ func executeServe(ctx context.Context, options Options, cfg *config.Config, logg
 		return err
 	}
 	defer func() { _ = wired.deps.usage.Close() }()
+	backfillLegacyProxy(ctx, wired.deps.proxies, options.Home, logger)
 	// Proxy mode's intercepts live as long as the daemon does, so they are
 	// closed with it rather than left holding a loopback port.
 	defer func() {
@@ -144,6 +146,27 @@ func executeServe(ctx context.Context, options Options, cfg *config.Config, logg
 		}
 	}()
 	return serveWired(ctx, wired, cfg, logger, cause)
+}
+
+func legacyProxyURL(home string) string {
+	raw, err := config.ReadProxyURL(config.ConfigPath(home))
+	if err != nil {
+		return ""
+	}
+	return raw
+}
+
+// backfillLegacyProxy moves a one-time [proxy] url into the managed pool and
+// clears it only after the entry and its secret are stored.
+func backfillLegacyProxy(ctx context.Context, pool *appproxy.Service, home string, logger *slog.Logger) {
+	if pool == nil {
+		return
+	}
+	if _, err := pool.Backfill(ctx, legacyProxyURL(home), func() error {
+		return config.UpdateProxyURL(config.ConfigPath(home), "")
+	}); err != nil {
+		logger.Warn("could not move the legacy proxy into the pool", "error", err)
+	}
 }
 
 func serveLogger(options Options, cfg *config.Config) (*slog.Logger, error) {

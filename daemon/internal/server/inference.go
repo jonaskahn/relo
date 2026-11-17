@@ -23,6 +23,7 @@ import (
 	"github.com/jonaskahn/relo/internal/catalog"
 	"github.com/jonaskahn/relo/internal/config"
 	"github.com/jonaskahn/relo/internal/inference"
+	appproxy "github.com/jonaskahn/relo/internal/proxy"
 	"github.com/jonaskahn/relo/internal/routing"
 )
 
@@ -228,6 +229,25 @@ func (s *Server) send(spec relaySpec, plan routing.Plan, outcome *requestOutcome
 		budget: s.sendBudget(plan),
 	}
 	driver.run()
+	if driver.proxyReplayRequested && driver.attempts < driver.budget && !driver.wroteAnswer() {
+		replay := &sendDriver{
+			s: s, w: spec.writer, r: spec.request, plan: plan, inbound: spec.inbound,
+			outcome: outcome, anthropic: anthropic,
+			tried:           map[string][]string{},
+			budget:          driver.budget,
+			attempts:        driver.attempts,
+			proxyExclude:    append([]string(nil), driver.proxyExclude...),
+			proxyReplayUsed: true,
+			limitRetryAfter: driver.limitRetryAfter,
+		}
+		replay.run()
+	}
+}
+
+// wroteAnswer reports that the first walk already put bytes on the wire, so
+// the proxy replay must not write a second answer.
+func (d *sendDriver) wroteAnswer() bool {
+	return d.outcome != nil && d.outcome.answer != nil && d.outcome.answer.status != 0
 }
 
 type sendDriver struct {
@@ -249,6 +269,14 @@ type sendDriver struct {
 	// limitRetryAfter is the longest wait a member's rate limit named, which
 	// is what the route answers with once every member is spent.
 	limitRetryAfter time.Duration
+	// Proxy rotation is request-local and finite: one immediate replay for a
+	// transport failure, then at most one replay of a walk that ended in a
+	// rate limit or server fault.
+	proxyExclude         []string
+	proxyReplayUsed      bool
+	proxyReplayRequested bool
+	proxyImmediateUsed   bool
+	lastProxyID          string
 }
 
 type walkAction int
@@ -272,9 +300,13 @@ type memberWalk struct {
 	retries int
 }
 
+// nolint:funlen
 func (d *sendDriver) run() {
 	for index, candidate := range d.plan.Candidates {
 		if !d.runMember(candidate, index == len(d.plan.Candidates)-1, d.reserveAfter(index)) {
+			if d.proxyReplayRequested {
+				break
+			}
 			return
 		}
 	}
@@ -288,13 +320,16 @@ func (d *sendDriver) run() {
 		d.s.record(context.WithoutCancel(d.r.Context()), d.outcome, Result{Status: http.StatusServiceUnavailable})
 		return
 	}
+	if d.last == nil {
+		d.last = skipCause(d.plan)
+	}
+	if d.scheduleProxyReplay() {
+		return
+	}
 	if d.groupLimited() {
 		d.s.writeGroupExhausted(d, d.groupExhausted())
 		d.s.record(context.WithoutCancel(d.r.Context()), d.outcome, Result{Status: http.StatusTooManyRequests})
 		return
-	}
-	if d.last == nil {
-		d.last = skipCause(d.plan)
 	}
 	if errors.Is(d.last, appcatalog.ErrFreeConnectionsDisabled) {
 		d.s.failInference(d.w, d.r, d.last, d.anthropic)
@@ -303,6 +338,19 @@ func (d *sendDriver) run() {
 	}
 	d.s.failInference(d.w, d.r, fmt.Errorf("%w: %v", routing.ErrNoRoute, d.last), d.anthropic)
 	d.s.record(context.WithoutCancel(d.r.Context()), d.outcome, Result{Status: http.StatusServiceUnavailable})
+}
+
+// scheduleProxyReplay asks the caller to replay the whole plan once on the
+// next healthy proxy after a walk ends in a rate limit or server fault.
+func (d *sendDriver) scheduleProxyReplay() bool {
+	if !connectionSpent(Result{Status: d.upstreamStatus}) || d.lastProxyID == "" ||
+		d.proxyReplayUsed || d.proxyImmediateUsed || d.attempts >= d.budget {
+		return false
+	}
+	d.proxyReplayRequested = true
+	d.s.coolProxy(d.r.Context(), appproxy.Selection{ID: d.lastProxyID}, d.limitRetryAfter)
+	d.proxyExclude = append(d.proxyExclude, d.lastProxyID)
+	return true
 }
 
 // reserveAfter keeps one attempt for every member the walk has not reached,
@@ -369,6 +417,7 @@ func (d *sendDriver) blockedMember(candidate routing.Candidate, lastCandidate bo
 	return walkContinue
 }
 
+// nolint:funlen
 func (d *sendDriver) stepAttempt(candidate routing.Candidate, lastCandidate bool, allowance int, walk *memberWalk) walkAction {
 	// An attempt is final only when no attempt follows it: the last
 	// send this request may spend. Anything earlier reports its
@@ -378,6 +427,7 @@ func (d *sendDriver) stepAttempt(candidate routing.Candidate, lastCandidate bool
 	d.attempts++
 	spec := attemptSpec{
 		request: d.r, candidate: candidate, inbound: d.inbound, outcome: d.outcome,
+		proxyExclude: d.proxyExclude,
 		// A rate limit inside a route belongs to the route: the attempt
 		// reports it and the next member answers, never the client.
 		holdRateLimit: d.plan.Kind == routing.KindGroup,
@@ -392,10 +442,15 @@ func (d *sendDriver) stepAttempt(candidate routing.Candidate, lastCandidate bool
 	}
 	result, err := d.s.attempt(d.w, spec, d.tried, final)
 	d.keepAttempt(candidate, result, err)
+	result, err = d.immediateProxyReplay(candidate, spec, result, err)
 	if result.Status != 0 {
 		d.upstreamStatus = result.Status
 	}
 	if err == nil {
+		if result.ProxyID != "" {
+			d.s.pinProxy(d.r.Context(), result.ProxyID)
+			d.s.opts.Proxies.MarkServed(result.ProxyID)
+		}
 		d.s.opts.Router.Record(candidate, result.HeaderLatency)
 		d.s.opts.Router.Pin(d.s.conversationAnchor(d.outcome, d.r), routing.PinPrefix(d.plan), candidate)
 		d.s.opts.Router.MarkSucceeded(candidate)
@@ -408,6 +463,30 @@ func (d *sendDriver) stepAttempt(candidate routing.Candidate, lastCandidate bool
 	return d.handleAttemptFailure(failedAttempt{
 		candidate: candidate, lastCandidate: lastCandidate, allowance: allowance, walk: walk, result: result,
 	}, err)
+}
+
+// immediateProxyReplay retries the same account once on the next proxy when
+// the send failed before any response arrived, or the proxy itself refused.
+func (d *sendDriver) immediateProxyReplay(candidate routing.Candidate, spec attemptSpec, result Result, err error) (Result, error) {
+	if result.ProxyID != "" {
+		d.lastProxyID = result.ProxyID
+	}
+	if (!result.TransportFailure && !result.ProxyFailure) || result.ProxyID == "" ||
+		d.proxyImmediateUsed || d.attempts >= d.budget {
+		return result, err
+	}
+	d.proxyImmediateUsed = true
+	d.proxyReplayUsed = true
+	d.s.coolProxy(d.r.Context(), appproxy.Selection{ID: result.ProxyID}, result.RetryAfter)
+	d.proxyExclude = append(d.proxyExclude, result.ProxyID)
+	spec.proxyExclude = d.proxyExclude
+	d.attempts++
+	replayed, replayErr := d.s.attempt(d.w, spec, d.tried, d.attempts == d.budget)
+	d.keepAttempt(candidate, replayed, replayErr)
+	if replayed.ProxyID != "" {
+		d.lastProxyID = replayed.ProxyID
+	}
+	return replayed, replayErr
 }
 
 // keepAttempt keeps one attempt's outcome with its request, and hands the
@@ -432,10 +511,14 @@ type failedAttempt struct {
 	result        Result
 }
 
+// nolint:funlen
 func (d *sendDriver) handleAttemptFailure(failed failedAttempt, err error) walkAction {
 	d.last = err
 	d.rememberLimitWait(failed.result)
 	d.rotateWire(failed)
+	if d.refuseAllCooling(err) {
+		return walkAnswered
+	}
 	if failed.result.LaneExhausted {
 		return d.leaveSpentLane(failed, err)
 	}
@@ -467,6 +550,16 @@ func (d *sendDriver) handleAttemptFailure(failed failedAttempt, err error) walkA
 		return walkContinue
 	}
 	return d.leaveAccount(failed)
+}
+
+// refuseAllCooling answers Relo's own 503 when the pool had no healthy proxy.
+func (d *sendDriver) refuseAllCooling(err error) bool {
+	if !errors.Is(err, appproxy.ErrAllCooling) {
+		return false
+	}
+	d.s.proxyCoolingRefusal(d.w, d.r, d.anthropic, err)
+	d.s.record(context.WithoutCancel(d.r.Context()), d.outcome, Result{Status: http.StatusServiceUnavailable})
+	return true
 }
 
 // leaveSpentLane moves past a free lane whose shared allowance is spent. The
@@ -609,6 +702,13 @@ func (d *sendDriver) leaveAccount(failed failedAttempt) walkAction {
 		d.s.markModelUnavailable(candidate.ProviderID, candidate.ModelID, result.RetryAfter)
 	}
 	d.s.markCandidateFailed(candidate, result)
+	if connectionSpent(result) && d.lastProxyID != "" && !d.proxyReplayUsed &&
+		!d.proxyImmediateUsed && d.attempts < d.budget {
+		d.proxyReplayRequested = true
+		d.s.coolProxy(d.r.Context(), appproxy.Selection{ID: d.lastProxyID}, result.RetryAfter)
+		d.proxyExclude = append(d.proxyExclude, d.lastProxyID)
+		return walkAnswered
+	}
 	if failed.lastCandidate || !memberSwitchAllowed(d.plan, result) {
 		d.s.answerFailed(d, d.outcome, result, d.last)
 		return walkAnswered

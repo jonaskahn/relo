@@ -6,6 +6,7 @@ import (
 	"io"
 	"log/slog"
 	"path/filepath"
+	"time"
 
 	"github.com/jonaskahn/relo/internal/account"
 	"github.com/jonaskahn/relo/internal/adapters/codingclients"
@@ -24,6 +25,7 @@ import (
 	"github.com/jonaskahn/relo/internal/catalog"
 	"github.com/jonaskahn/relo/internal/clock"
 	"github.com/jonaskahn/relo/internal/config"
+	appproxy "github.com/jonaskahn/relo/internal/proxy"
 )
 
 // Management is one offline management session: the use cases every command
@@ -89,10 +91,11 @@ func newManagement(ctx context.Context, home string, db *sqlite.DB, logger *slog
 		return nil, err
 	}
 	w.services()
+	proxyPool := newProxyPool(sqlite.NewProxyStore(db), home, w.secrets, w.clk)
 	return &Management{
 		catalog: w.catalogSvc, accounts: w.accounts,
 		keys:     appaccess.NewKeys(sqlite.NewAccessKeyStore(db), w.clk),
-		settings: newSettings(db, home, w.clk, logger, nil, nil), db: db,
+		settings: newSettings(db, home, w.clk, logger, nil, nil, proxyPool), db: db,
 	}, nil
 }
 
@@ -170,12 +173,21 @@ func (w *managementWiring) newManagementCatalog(edges *AccountEdges) *appcatalog
 			}
 			return prefixes, true
 		}, Logger: w.logger, Lifetime: w.ctx,
-		ProxyURL: func() string {
-			raw, err := config.ReadProxyURL(config.ConfigPath(w.home))
-			if err != nil {
-				return ""
+		ProxyURL: func(ctx context.Context) string {
+			pool := appproxy.New(appproxy.Options{
+				Store: sqlite.NewProxyStore(w.db), Secrets: NewProxySecrets(w.secrets), Clock: w.clk,
+				Backoff: func() []time.Duration {
+					seconds, err := config.ReadUpstreamFailoverCooldown(config.ConfigPath(w.home))
+					if err != nil {
+						return config.FailoverBackoff(0)
+					}
+					return config.FailoverBackoff(seconds)
+				},
+			})
+			if selected, err := pool.Select(ctx, nil); err == nil {
+				return selected.URL
 			}
-			return raw
+			return ""
 		},
 		AfterReload: func(ctx context.Context) {
 			if refreshClaude != nil {

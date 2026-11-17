@@ -86,6 +86,7 @@ func relayResult(result upstream.Result) server.Result {
 		RetryAfter:  result.RetryAfter,
 		RelayedBody: result.RelayedBody, RateLimits: result.RateLimits,
 		RefreshSettled: result.RefreshSettled, RotateWire: result.RotateWire,
+		TransportFailure: result.TransportFailure, ProxyFailure: result.ProxyFailure,
 	}
 	if result.Capture != nil {
 		capture := *result.Capture

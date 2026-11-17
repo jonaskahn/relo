@@ -274,6 +274,7 @@ func (e *Executor) failRead(att attempt, action string, cause error) (Result, er
 		fmt.Errorf("%w: %s: %w", ErrUpstreamFailed, action, cause))
 }
 
+// nolint:funlen
 func (e *Executor) relayRejection(att attempt, response *http.Response) (Result, error) {
 	body, err := io.ReadAll(io.LimitReader(response.Body, maxErrorBodyBytes))
 	if err != nil {
@@ -287,6 +288,9 @@ func (e *Executor) relayRejection(att attempt, response *http.Response) (Result,
 		Credential: att.exchange.CredentialLabel, HeaderLatency: att.latency,
 		RetryAfter:  preferredWait(retryAfter(response), info.RetryAfter),
 		ModelAccess: modelAccessRefusal(response.StatusCode, info, att.exchange.Request.Model),
+	}
+	if response.StatusCode == http.StatusProxyAuthRequired {
+		return proxyRefusal(result, response.StatusCode, info.Message)
 	}
 	if freeLaneRefused(att.exchange, response.StatusCode, info) {
 		// The gateway serves its signed-out lane to OpenCode's own client
@@ -308,6 +312,14 @@ func (e *Executor) relayRejection(att attempt, response *http.Response) (Result,
 	writeFailure(att.writer, att.exchange.Inbound, info, response.Header)
 	result.Wrote = true
 	return result, fmt.Errorf("%w: %d %s", ErrUpstreamStatus, response.StatusCode, info.Message)
+}
+
+// proxyRefusal reports a status the proxy itself answered, which another
+// proxy may serve.
+func proxyRefusal(result Result, status int, message string) (Result, error) {
+	result.ProxyFailure = true
+	result.Retryable = true
+	return result, fmt.Errorf("%w: %d %s", ErrUpstreamStatus, status, message)
 }
 
 // FreeUsageLimitCode is the error type the OpenCode free gateway reports for

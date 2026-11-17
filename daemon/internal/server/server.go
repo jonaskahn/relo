@@ -32,6 +32,7 @@ import (
 	"github.com/jonaskahn/relo/internal/clock"
 	"github.com/jonaskahn/relo/internal/config"
 	"github.com/jonaskahn/relo/internal/i18n"
+	appproxy "github.com/jonaskahn/relo/internal/proxy"
 	"github.com/jonaskahn/relo/internal/routing"
 	"github.com/jonaskahn/relo/internal/updates"
 	"github.com/tiktoken-go/tokenizer"
@@ -71,6 +72,8 @@ type Options struct {
 	Settings *appsettings.Service
 	// TemplateSettings is the Claude connection choices the settings tab writes.
 	TemplateSettings *apptemplates.Service
+	// Proxies is the managed outbound proxy pool the relay rotates through.
+	Proxies *appproxy.Service
 	// Activity is the usage reads the management API answers.
 	Activity *appactivity.Service
 	// Accounts is the credential lifecycle the management API reads and writes.
@@ -456,7 +459,10 @@ func (s *Server) publishListeners(bound []boundListener) ([]*http.Server, func(A
 	management := ""
 	for _, item := range bound {
 		server := &http.Server{Handler: item.handler, ReadHeaderTimeout: readHeaderTimeout,
-			BaseContext: func(net.Listener) context.Context { return s.lifetime }}
+			BaseContext: func(net.Listener) context.Context { return s.lifetime },
+			ConnContext: func(ctx context.Context, conn net.Conn) context.Context {
+				return withProxyConn(ctx, conn)
+			}}
 		servers = append(servers, server)
 		management = item.listener.Addr().String()
 	}

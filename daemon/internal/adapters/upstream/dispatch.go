@@ -198,6 +198,11 @@ type Result struct {
 	// conversation, such as Cursor's failed_precondition on a rebuilt state.
 	// The next request for this conversation belongs on a fresh wire id.
 	RotateWire bool
+	// TransportFailure reports a send that failed before any response arrived,
+	// so the failure belongs to the proxy when one was in use.
+	TransportFailure bool
+	// ProxyFailure reports a status a proxy itself answers, such as 407.
+	ProxyFailure bool
 }
 
 // Executor sends canonical requests upstream and relays their responses.
@@ -360,11 +365,15 @@ func (e *Executor) failDispatchSend(att attempt, clock *headerClock, ctx context
 	headerExpired := clock.defused()
 	clock.release()
 	if headerExpired && ctx.Err() == nil {
-		return e.failDispatch(att, http.StatusGatewayTimeout, "header_timeout",
+		result, err := e.failDispatch(att, http.StatusGatewayTimeout, "header_timeout",
 			fmt.Errorf("%w: no response headers within %s", ErrUpstreamFailed, att.exchange.CallWait))
+		result.TransportFailure = true
+		return result, err
 	}
-	return e.failDispatch(att, http.StatusBadGateway, "upstream_unavailable",
+	result, err := e.failDispatch(att, http.StatusBadGateway, "upstream_unavailable",
 		fmt.Errorf("%w: %w", ErrUpstreamFailed, err))
+	result.TransportFailure = true
+	return result, err
 }
 
 func (e *Executor) settleDispatchPass(ctx context.Context, pass dispatchPass, num int) (bool, bool, Result, error) {

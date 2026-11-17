@@ -74,6 +74,19 @@ type DoctorCheck struct {
 	Detail string
 }
 
+// ProxyPoolSummary is the managed proxy count the doctor reads.
+type ProxyPoolSummary struct {
+	Total      int
+	Enabled    int
+	Cooling    int
+	AllCooling bool
+}
+
+// ProxyPool reports the managed outbound proxy pool's state.
+type ProxyPool interface {
+	ProxyPoolSummary(ctx context.Context) (ProxyPoolSummary, error)
+}
+
 // Database is the state file the doctor checks.
 type Database interface {
 	Health(ctx context.Context) error
@@ -121,6 +134,7 @@ type Options struct {
 	Keys      *appaccess.Keys
 	Accounts  *appaccount.Service
 	Catalog   *catalog.Catalog
+	Proxies   ProxyPool
 	Home      string
 	// StartupLog is the boot transcript this run writes, which marks the
 	// current start in the transcript list. Empty for a run with none.
@@ -141,6 +155,7 @@ type Service struct {
 	keys       *appaccess.Keys
 	accounts   *appaccount.Service
 	catalog    *catalog.Catalog
+	proxies    ProxyPool
 	home       string
 	startupLog string
 	clock      clock.Clock
@@ -156,7 +171,7 @@ func New(options Options) *Service {
 		db: options.DB, retention: options.Retention, secrets: options.Secrets,
 		entries: options.Entries, quotas: options.Quotas, keys: options.Keys,
 		accounts: options.Accounts, catalog: options.Catalog, home: options.Home,
-		startupLog: options.StartupLog, traffic: options.Traffic, clock: clk,
+		startupLog: options.StartupLog, traffic: options.Traffic, clock: clk, proxies: options.Proxies,
 	}
 }
 
@@ -234,7 +249,33 @@ func (s *Service) Doctor(ctx context.Context) []DoctorCheck {
 		s.checkAccessKeys(ctx),
 		s.checkRetention(ctx),
 		s.checkTraffic(ctx),
+		s.checkProxyPool(ctx),
 	}
+}
+
+func (s *Service) checkProxyPool(ctx context.Context) DoctorCheck {
+	const name = "Outbound proxies"
+	if s.proxies == nil {
+		return DoctorCheck{Name: name, Status: CheckWarn, Detail: "the proxy pool is not configured"}
+	}
+	summary, err := s.proxies.ProxyPoolSummary(ctx)
+	if err != nil {
+		return DoctorCheck{Name: name, Status: CheckFail, Detail: err.Error()}
+	}
+	if summary.Total == 0 {
+		return DoctorCheck{Name: name, Status: CheckWarn, Detail: "no proxies are configured; connections that ask for one go direct"}
+	}
+	if summary.Enabled == 0 {
+		return DoctorCheck{Name: name, Status: CheckWarn, Detail: "every proxy is disabled; connections that ask for one go direct"}
+	}
+	detail := fmt.Sprintf("%d of %d enabled", summary.Enabled, summary.Total)
+	if summary.Cooling > 0 {
+		detail += fmt.Sprintf(", %d cooling", summary.Cooling)
+	}
+	if summary.AllCooling {
+		return DoctorCheck{Name: name, Status: CheckWarn, Detail: detail + ": every enabled proxy is cooling"}
+	}
+	return DoctorCheck{Name: name, Status: CheckPass, Detail: detail}
 }
 
 func (s *Service) checkTraffic(ctx context.Context) DoctorCheck {

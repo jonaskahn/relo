@@ -184,4 +184,10 @@ type Result struct {
 	// RotateWire reports a refusal that may only belong to the reused
 	// upstream conversation, so the next request rebuilds on a fresh one.
 	RotateWire bool
+	// TransportFailure reports a send that failed before any response arrived.
+	TransportFailure bool
+	// ProxyFailure reports a proxy-issued status such as 407.
+	ProxyFailure bool
+	// ProxyID names the pool entry the attempt rode, empty when it went direct.
+	ProxyID string
 }
