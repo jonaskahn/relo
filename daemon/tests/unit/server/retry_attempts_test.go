@@ -104,7 +104,13 @@ func TestAProviderWaitLongerThanARetryMovesOn(t *testing.T) {
 		strings.NewReader(body))
 
 	if response.Code != http.StatusTooManyRequests {
-		t.Fatalf("status = %d, body = %s, want the provider's own refusal", response.Code, response.Body.String())
+		t.Fatalf("status = %d, body = %s, want Relo's own refusal", response.Code, response.Body.String())
+	}
+	if response.Header().Get("Retry-After") == "" {
+		t.Fatal("the exhausted connection names no Retry-After")
+	}
+	if strings.Contains(response.Body.String(), "1625156") {
+		t.Fatalf("body = %s, want Relo's answer without the vendor body", response.Body.String())
 	}
 	if got := h.upstream.requestCount() - before; got != 2 {
 		t.Fatalf("upstream requests = %d, want one per account and no long retry", got)

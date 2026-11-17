@@ -269,6 +269,9 @@ type sendDriver struct {
 	// limitRetryAfter is the longest wait a member's rate limit named, which
 	// is what the route answers with once every member is spent.
 	limitRetryAfter time.Duration
+	// accountRetryAfter is the shortest wait one connection's accounts named,
+	// which is when another account of it may answer again.
+	accountRetryAfter time.Duration
 	// Proxy rotation is request-local and finite: one immediate replay for a
 	// transport failure, then at most one replay of a walk that ended in a
 	// rate limit or server fault.
@@ -525,6 +528,9 @@ func (d *sendDriver) handleAttemptFailure(failed failedAttempt, err error) walkA
 	if failed.result.LaneRefused {
 		return d.leaveRefusedLane(failed, err)
 	}
+	if failed.result.Status == http.StatusTooManyRequests && failed.result.RetryAfter > retryWaitHigh {
+		return d.leaveLimitedAccount(failed, err)
+	}
 	if retryAnotherCandidate(err) {
 		return d.tryAnotherCandidate(failed)
 	}
@@ -593,6 +599,35 @@ func (d *sendDriver) leaveRefusedLane(failed failedAttempt, err error) walkActio
 	return walkAnswered
 }
 
+// leaveLimitedAccount moves past an account whose wait will not fit inside
+// this request. Its refusal already opened the account's breaker, so the next
+// account serves now. Once every account has answered, the connection is spent.
+func (d *sendDriver) leaveLimitedAccount(failed failedAttempt, err error) walkAction {
+	candidate, allowance, result := failed.candidate, failed.allowance, failed.result
+	credential := credentialKeyOf(result)
+	if credential != "" && !slices.Contains(d.tried[candidate.ProviderID], credential) {
+		d.tried[candidate.ProviderID] = append(d.tried[candidate.ProviderID], credential)
+	}
+	failed.walk.account, failed.walk.retries = "", 0
+	if len(d.tried[candidate.ProviderID]) < allowance {
+		return walkContinue
+	}
+	if failed.lastCandidate || !memberSwitchAllowed(d.plan, result) {
+		if d.plan.Kind == routing.KindGroup {
+			d.s.answerFailed(d, d.outcome, failed.result, d.last)
+		} else {
+			d.s.writeAccountExhausted(d.w, d.r, d.anthropic, d.accountRetryAfter)
+			d.s.record(context.WithoutCancel(d.r.Context()), d.outcome, Result{
+				Status: http.StatusTooManyRequests, RetryAfter: d.accountRetryAfter,
+			})
+		}
+		return walkAnswered
+	}
+	d.s.opts.Router.Unpin(d.s.conversationAnchor(d.outcome, d.r), routing.PinPrefix(d.plan))
+	failed.walk.marked = true
+	return walkNextMember
+}
+
 // rememberLimitWait keeps the wait a rate-limited member named, so the
 // route's own refusal can name it without holding the request open.
 func (d *sendDriver) rememberLimitWait(result Result) {
@@ -601,6 +636,9 @@ func (d *sendDriver) rememberLimitWait(result Result) {
 	}
 	if result.RetryAfter > d.limitRetryAfter {
 		d.limitRetryAfter = result.RetryAfter
+	}
+	if d.accountRetryAfter <= 0 || result.RetryAfter < d.accountRetryAfter {
+		d.accountRetryAfter = result.RetryAfter
 	}
 }
 
@@ -916,6 +954,24 @@ func (s *Server) writeUnwritten(d *sendDriver, upstreamStatus int, cause error) 
 		return
 	}
 	s.fail(d.w, d.r, refusal{Status: status, Code: unwrittenCode(cause, local), Detail: cause})
+}
+
+// writeAccountExhausted answers a spent connection with Relo's own rate limit
+// and the wait its accounts named. The vendor body stays out of the answer.
+func (s *Server) writeAccountExhausted(w http.ResponseWriter, r *http.Request, anthropic bool, wait time.Duration) {
+	if wait > 0 {
+		w.Header().Set("Retry-After", strconv.Itoa(max(1, int(wait.Seconds()+0.5))))
+	}
+	data := map[string]any{"Wait": wait.Round(time.Second).String()}
+	if anthropic {
+		s.writeAnthropicDocument(w, http.StatusTooManyRequests, "rate_limit_error",
+			s.translator(r).Text("api.connections.account_exhausted", data))
+		return
+	}
+	s.fail(w, r, refusal{
+		Status: http.StatusTooManyRequests, Code: "account_exhausted",
+		Message: "api.connections.account_exhausted", Data: data,
+	})
 }
 
 // writeFreeLaneExhausted answers a spent free lane with Relo's own refusal and

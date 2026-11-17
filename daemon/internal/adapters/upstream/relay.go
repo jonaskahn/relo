@@ -302,6 +302,12 @@ func (e *Executor) relayRejection(att attempt, response *http.Response) (Result,
 		result.Retryable = true
 		return result, fmt.Errorf("%w: %d %s", ErrUpstreamStatus, response.StatusCode, info.Message)
 	}
+	if response.StatusCode == http.StatusTooManyRequests {
+		// A rate limit belongs to the account that earned it. The walk decides
+		// which account answers the client, so no vendor body travels here.
+		result.Retryable = true
+		return result, fmt.Errorf("%w: %d %s", ErrUpstreamStatus, response.StatusCode, info.Message)
+	}
 	switchable := att.exchange.Policy.Switchable(response.StatusCode)
 	if retriedElsewhere(att.exchange, response.StatusCode, switchable) ||
 		(!att.exchange.Final && result.ModelAccess) {
