@@ -54,6 +54,7 @@ internal/platform/autostart	tests/unit/platform/autostart/...	81
 internal/i18n	tests/unit/i18n/...	81
 internal/adapters/codingclients	tests/unit/codingclients/...,tests/unit/integration/...,internal/adapters/codingclients/...	82
 internal/adapters/proxy	tests/unit/proxy/...	70
+internal/proxy	internal/proxy/...	64
 internal/application/integration	tests/unit/integration/...,tests/unit/service/...,internal/application/integration/...	75
 internal/application/access	tests/unit/access/...,tests/unit/service/...,tests/unit/server/...	78
 internal/application/account	tests/unit/service/...,tests/unit/server/...	82
