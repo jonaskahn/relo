@@ -16,8 +16,15 @@ func TestProxyURLRejectsANonHTTPAddress(t *testing.T) {
 	if err := ValidateProxyURL("http://127.0.0.1:7890"); err != nil {
 		t.Fatalf("http URL error = %v", err)
 	}
-	if err := ValidateProxyURL("socks5://127.0.0.1:1080"); err == nil {
-		t.Fatal("a socks URL was accepted")
+	if err := ValidateProxyURL("socks5://127.0.0.1:1080"); err != nil {
+		t.Fatalf("socks5 URL error = %v", err)
+	}
+	normalized, err := NormalizeProxyURL("socks5h://user:pass@127.0.0.1:1080")
+	if err != nil || normalized != "socks5://user:pass@127.0.0.1:1080" {
+		t.Fatalf("socks5h normalization = %q, %v", normalized, err)
+	}
+	if err := ValidateProxyURL("ftp://127.0.0.1:21"); err == nil {
+		t.Fatal("an ftp URL was accepted")
 	}
 }
 

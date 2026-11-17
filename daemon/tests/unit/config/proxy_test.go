@@ -28,7 +28,7 @@ func TestValidateProxyURLAcceptsOnlyHTTP(t *testing.T) {
 		}
 	}
 	for _, invalid := range []string{
-		"socks5://127.0.0.1:1080", "ftp://proxy.example", "proxy.example:8080",
+		"ftp://proxy.example", "proxy.example:8080",
 		"http://", "://nohost", "http://[::1", "1.2.3.4:6014:user",
 	} {
 		if err := config.ValidateProxyURL(invalid); !errors.Is(err, config.ErrInvalidProxy) {
@@ -117,10 +117,10 @@ func TestReadProxyURLAcceptsAnAbsentFileAndRefusesABrokenOne(t *testing.T) {
 	}
 
 	// A stored proxy the rules reject is refused rather than ignored: an
-	// operator who wrote socks5:// asked for something Relo cannot do, and
-	// quietly connecting direct would hide that.
+	// operator who wrote an unsupported scheme asked for something Relo cannot
+	// do, and quietly connecting direct would hide that.
 	invalid := filepath.Join(dir, "invalid.toml")
-	if err := os.WriteFile(invalid, []byte("[proxy]\nurl = \"socks5://127.0.0.1:1080\"\n"), 0o600); err != nil {
+	if err := os.WriteFile(invalid, []byte("[proxy]\nurl = \"ftp://127.0.0.1:21\"\n"), 0o600); err != nil {
 		t.Fatal(err)
 	}
 	if _, err := config.ReadProxyURL(invalid); !errors.Is(err, config.ErrInvalidProxy) {
@@ -183,7 +183,7 @@ func TestUpdateProxyURLRefusesAProxyItCannotUse(t *testing.T) {
 	if err := os.WriteFile(path, []byte(original), 0o600); err != nil {
 		t.Fatal(err)
 	}
-	if err := config.UpdateProxyURL(path, "socks5://127.0.0.1:1080"); !errors.Is(err, config.ErrInvalidProxy) {
+	if err := config.UpdateProxyURL(path, "ftp://127.0.0.1:21"); !errors.Is(err, config.ErrInvalidProxy) {
 		t.Fatalf("UpdateProxyURL() = %v, want ErrInvalidProxy", err)
 	}
 	data, err := os.ReadFile(path)

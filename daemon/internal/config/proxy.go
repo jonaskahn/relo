@@ -16,8 +16,9 @@ import (
 	"github.com/BurntSushi/toml"
 )
 
-// ErrInvalidProxy reports a proxy URL that is not an HTTP or HTTPS address.
-var ErrInvalidProxy = errors.New("proxy URL must be http or https")
+// ErrInvalidProxy reports a proxy URL that is not an HTTP, HTTPS, or SOCKS5
+// address.
+var ErrInvalidProxy = errors.New("proxy URL must be http, https, or socks5")
 
 // ProxyConfig is the outbound proxy stored in the startup file.
 type ProxyConfig struct {
@@ -26,48 +27,63 @@ type ProxyConfig struct {
 
 type outboundProxyKey struct{}
 
+type proxyRequiredKey struct{}
+
 var proxyHeader = regexp.MustCompile(`^\s*\[proxy\]\s*(?:#.*)?$`)
 var proxyKey = regexp.MustCompile(`^(\s*)url(\s*=\s*)(?:"[^"]*"|'[^']*'|[^#\r\n]*)(\s*(?:#.*)?)(\r?\n?)$`)
 
 // NormalizeProxyURL turns a proxy address into the canonical form the relay
 // stores and reads. It accepts a full URL ("http://user:pass@host:port"), a
 // "host:port" pair, a "host:port:user:pass" quartet, or a "user:pass@host:port"
-// shorthand. An empty string is the "no proxy" value. Anything else is refused.
+// shorthand. SOCKS5 and socks5h are accepted, and socks5h is stored as socks5.
+// An empty string is the "no proxy" value. Anything else is refused.
 func NormalizeProxyURL(raw string) (string, error) {
 	raw = strings.TrimSpace(raw)
 	if raw == "" {
 		return "", nil
 	}
-	candidate := raw
-	if !strings.Contains(candidate, "://") {
-		if strings.Contains(candidate, "@") {
-			candidate = "http://" + candidate
-		} else {
-			parts := strings.Split(candidate, ":")
-			switch len(parts) {
-			case 2, 4:
-				host := parts[0]
-				if net.ParseIP(host) == nil {
-					// A bare hostname is not a proxy address; the operator must
-					// name a scheme ("http://proxy.example:8080"). This keeps the
-					// URL parse's rule for a host that looks like a scheme.
-					return "", ErrInvalidProxy
-				}
-				if len(parts) == 4 {
-					candidate = "http://" + parts[2] + ":" + parts[3] + "@" + host + ":" + parts[1]
-				} else {
-					candidate = "http://" + candidate
-				}
-			default:
-				return "", ErrInvalidProxy
-			}
-		}
-	}
-	parsed, err := url.Parse(candidate)
-	if err != nil || (parsed.Scheme != "http" && parsed.Scheme != "https") || parsed.Host == "" {
+	candidate, ok := proxyCandidate(raw)
+	if !ok {
 		return "", ErrInvalidProxy
 	}
+	parsed, err := url.Parse(candidate)
+	if err != nil || parsed == nil {
+		return "", ErrInvalidProxy
+	}
+	scheme := strings.ToLower(parsed.Scheme)
+	if scheme == "socks5h" {
+		scheme = "socks5"
+	}
+	if (scheme != "http" && scheme != "https" && scheme != "socks5") || parsed.Host == "" {
+		return "", ErrInvalidProxy
+	}
+	parsed.Scheme = scheme
 	return parsed.String(), nil
+}
+
+// proxyCandidate applies the documented shorthands before the URL parse.
+func proxyCandidate(raw string) (string, bool) {
+	if strings.Contains(raw, "://") {
+		return raw, true
+	}
+	if strings.Contains(raw, "@") {
+		return "http://" + raw, true
+	}
+	parts := strings.Split(raw, ":")
+	switch len(parts) {
+	case 2:
+		if net.ParseIP(parts[0]) == nil {
+			return "", false
+		}
+		return "http://" + raw, true
+	case 4:
+		if net.ParseIP(parts[0]) == nil {
+			return "", false
+		}
+		return "http://" + parts[2] + ":" + parts[3] + "@" + parts[0] + ":" + parts[1], true
+	default:
+		return "", false
+	}
 }
 
 // ValidateProxyURL accepts an empty URL or any address NormalizeProxyURL accepts.
@@ -131,6 +147,18 @@ func WithOutboundProxy(ctx context.Context, raw string) context.Context {
 		return ctx
 	}
 	return context.WithValue(ctx, outboundProxyKey{}, raw)
+}
+
+// RequireProxy marks a context as one whose request must not fall back to a
+// direct connection when no pool entry is healthy.
+func RequireProxy(ctx context.Context) context.Context {
+	return context.WithValue(ctx, proxyRequiredKey{}, true)
+}
+
+// ProxyRequired reports whether a context was marked by RequireProxy.
+func ProxyRequired(ctx context.Context) bool {
+	required, _ := ctx.Value(proxyRequiredKey{}).(bool)
+	return required
 }
 
 // OutboundProxy returns the proxy URL a request opts into on its context, or
