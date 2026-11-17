@@ -718,3 +718,7 @@ other = "การเชื่อมต่อฟรีนี้ถูกเพ�
 
 [api.logs.provider_error_missing]
 other = "ไม่มีบันทึกข้อผิดพลาดผู้ให้บริการสำหรับคำขอนี้"
+
+[api.settings.proxies.all_cooling]
+description = "Refusal when every enabled proxy is cooling down"
+other = "พร็อกซีที่กำหนดค่าไว้ทั้งหมดกำลังพัก; ลองอีกครั้งในอีกสักครู่"

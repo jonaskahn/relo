@@ -720,3 +720,7 @@ other = "Această conexiune gratuită este deja adăugată."
 
 [api.logs.provider_error_missing]
 other = "Nu există o captură de eroare a furnizorului pentru această cerere."
+
+[api.settings.proxies.all_cooling]
+description = "Refusal when every enabled proxy is cooling down"
+other = "Toate proxy-urile configurate se răcesc; încearcă din nou în curând."

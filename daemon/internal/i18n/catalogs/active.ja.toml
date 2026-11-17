@@ -718,3 +718,7 @@ other = "この無料接続はすでに追加されています。"
 
 [api.logs.provider_error_missing]
 other = "このリクエストのプロバイダーエラー記録はありません。"
+
+[api.settings.proxies.all_cooling]
+description = "Refusal when every enabled proxy is cooling down"
+other = "設定済みのプロキシはすべてクールダウン中です。しばらくしてから再試行してください。"

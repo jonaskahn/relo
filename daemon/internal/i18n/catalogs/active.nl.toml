@@ -720,3 +720,7 @@ other = "Deze gratis verbinding is al toegevoegd."
 
 [api.logs.provider_error_missing]
 other = "Geen providerfout vastgelegd voor dit verzoek."
+
+[api.settings.proxies.all_cooling]
+description = "Refusal when every enabled proxy is cooling down"
+other = "Alle geconfigureerde proxys koelen af; probeer het zo opnieuw."

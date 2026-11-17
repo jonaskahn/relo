@@ -699,3 +699,7 @@ other = "Koneksi gratis ini sudah ditambahkan."
 
 [api.logs.provider_error_missing]
 other = "Tidak ada rekaman kesalahan penyedia untuk permintaan ini."
+
+[api.settings.proxies.all_cooling]
+description = "Refusal when every enabled proxy is cooling down"
+other = "Semua proxy yang dikonfigurasi sedang mendingin; coba lagi sebentar lagi."

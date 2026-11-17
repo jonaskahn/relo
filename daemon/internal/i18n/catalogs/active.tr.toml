@@ -720,3 +720,7 @@ other = "Bu ücretsiz bağlantı zaten eklenmiş."
 
 [api.logs.provider_error_missing]
 other = "Bu istek için sağlayıcı hata kaydı yok."
+
+[api.settings.proxies.all_cooling]
+description = "Refusal when every enabled proxy is cooling down"
+other = "Yapılandırılmış tüm proxy'ler soğuyor; birazdan tekrar deneyin."

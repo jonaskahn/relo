@@ -720,3 +720,7 @@ other = "Kết nối miễn phí này đã được thêm."
 
 [api.logs.provider_error_missing]
 other = "Không có bản ghi lỗi nhà cung cấp cho yêu cầu này."
+
+[api.settings.proxies.all_cooling]
+description = "Refusal when every enabled proxy is cooling down"
+other = "Tất cả proxy đã cấu hình đang nguội; thử lại sau ít phút."

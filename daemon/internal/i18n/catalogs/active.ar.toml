@@ -720,3 +720,7 @@ other = "تمت إضافة هذا الاتصال المجاني بالفعل."
 
 [api.logs.provider_error_missing]
 other = "لا يوجد تسجيل لخطأ موفر لهذا الطلب."
+
+[api.settings.proxies.all_cooling]
+description = "Refusal when every enabled proxy is cooling down"
+other = "كل الوكلاء المهيئين قيد التبريد؛ حاول مرة أخرى بعد قليل."

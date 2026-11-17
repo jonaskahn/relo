@@ -699,3 +699,7 @@ other = "यह मुफ़्त कनेक्शन पहले से ज
 
 [api.logs.provider_error_missing]
 other = "इस अनुरोध के लिए प्रदाता त्रुटि कैप्चर नहीं है।"
+
+[api.settings.proxies.all_cooling]
+description = "Refusal when every enabled proxy is cooling down"
+other = "सभी कॉन्फ़िगर किए गए प्रॉक्सी कूलिंग में हैं; थोड़ी देर में फिर प्रयास करें।"

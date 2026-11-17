@@ -720,3 +720,7 @@ other = "Toto bezplatné připojení je již přidáno."
 
 [api.logs.provider_error_missing]
 other = "Pro tento požadavek není zachycena chyba poskytovatele."
+
+[api.settings.proxies.all_cooling]
+description = "Refusal when every enabled proxy is cooling down"
+other = "Všechny nakonfigurované proxy chladnou; zkuste to za chvíli."

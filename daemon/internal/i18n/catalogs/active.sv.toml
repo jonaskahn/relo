@@ -720,3 +720,7 @@ other = "Den här gratisanslutningen är redan tillagd."
 
 [api.logs.provider_error_missing]
 other = "Ingen registrerad leverantörsfelrespons för denna begäran."
+
+[api.settings.proxies.all_cooling]
+description = "Refusal when every enabled proxy is cooling down"
+other = "Alla konfigurerade proxys kyls; försök igen om en stund."

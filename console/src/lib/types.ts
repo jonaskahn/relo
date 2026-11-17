@@ -1074,10 +1074,38 @@ export interface ServerSettings {
  *  models.dev document, the call wait, the retry count, and the failover wait. */
 export interface ProvidersSettings {
 	readonly catalog_url: string;
-	readonly proxy_url: string;
 	readonly timeout_seconds: number;
 	readonly retry_attempts: number;
 	readonly failover_cooldown_seconds: number;
+	readonly proxy_pool: ProxyPoolSummary;
+}
+
+/** One managed outbound proxy as the API reports it. Passwords are never returned. */
+export interface ProxyPoolEntry {
+	readonly id: string;
+	readonly label: string;
+	readonly scheme: 'http' | 'https' | 'socks5' | string;
+	readonly host: string;
+	readonly port: number;
+	readonly username: string;
+	readonly enabled: boolean;
+	readonly rank: number;
+	readonly has_password: boolean;
+	readonly state: 'ready' | 'cooling' | 'unverified' | 'unreachable' | string;
+	readonly cooling_until?: string;
+}
+
+/** The proxy counts the providers card and doctor read. */
+export interface ProxyPoolSummary {
+	readonly total: number;
+	readonly enabled: number;
+	readonly cooling: number;
+	readonly all_cooling: boolean;
+}
+
+export interface ProxyPoolPage {
+	readonly items: ProxyPoolEntry[];
+	readonly next_cursor: string;
 }
 
 /** Who may open the console. The sign-in choice is read-only here: it changes the sign-in model

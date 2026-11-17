@@ -718,3 +718,7 @@ other = "此免費連線已新增。"
 
 [api.logs.provider_error_missing]
 other = "此請求沒有供應商錯誤擷取。"
+
+[api.settings.proxies.all_cooling]
+description = "Refusal when every enabled proxy is cooling down"
+other = "所有已設定的代理都在冷卻中；請稍後再試。"

@@ -718,3 +718,7 @@ other = "이 무료 연결은 이미 추가되었습니다."
 
 [api.logs.provider_error_missing]
 other = "이 요청에 대한 공급자 오류 캡처가 없습니다."
+
+[api.settings.proxies.all_cooling]
+description = "Refusal when every enabled proxy is cooling down"
+other = "구성된 모든 프록시가 냉각 중입니다. 잠시 후 다시 시도하세요."

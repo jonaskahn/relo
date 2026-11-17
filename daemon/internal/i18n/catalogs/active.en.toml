@@ -720,3 +720,7 @@ other = "This free connection is already added."
 
 [api.logs.provider_error_missing]
 other = "No provider error capture exists for this request."
+
+[api.settings.proxies.all_cooling]
+description = "Refusal when every enabled proxy is cooling down"
+other = "Every configured proxy is cooling down; try again shortly."

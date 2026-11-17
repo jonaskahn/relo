@@ -719,3 +719,7 @@ other = "Questa connessione gratuita è già aggiunta."
 
 [api.logs.provider_error_missing]
 other = "Nessuna cattura di errore del fornitore per questa richiesta."
+
+[api.settings.proxies.all_cooling]
+description = "Refusal when every enabled proxy is cooling down"
+other = "Tutti i proxy configurati sono in raffreddamento; riprova tra poco."

@@ -716,3 +716,7 @@ other = "Це безкоштовне підключення вже додано.
 
 [api.logs.provider_error_missing]
 other = "Для цього запиту немає запису помилки провайдера."
+
+[api.settings.proxies.all_cooling]
+description = "Refusal when every enabled proxy is cooling down"
+other = "Усі налаштовані проксі охолоджуються; спробуйте ще раз трохи згодом."
