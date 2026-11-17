@@ -61,12 +61,12 @@ dependencies are bundled with them and carry their own licenses; run
 
 | Package             | Version | License |
 |---------------------|---------|---------|
-| `bits-ui`           | 2.19.3  | MIT     |
+| `bits-ui`           | 2.21.0  | MIT     |
 | `clsx`              | 2.1.1   | MIT     |
 | `svelte-i18n`       | 4.0.1   | MIT     |
-| `svelte-sonner`     | 1.2.1   | MIT     |
+| `svelte-sonner`     | 1.2.3   | MIT     |
 | `tailwind-merge`    | 3.7.0   | MIT     |
-| `tailwind-variants` | 3.3.1   | MIT     |
+| `tailwind-variants` | 4.0.2   | MIT     |
 
 Development tooling (Svelte, SvelteKit, Vite, Tailwind CSS, TypeScript,
 ESLint, Prettier, Vitest) is used to build the console and is not distributed
