@@ -78,7 +78,7 @@
 	});
 
 	const proxyDescription = $derived(
-		draft.useProxy && (globalSettings?.providers.proxy_url ?? '') === ''
+		draft.useProxy && (globalSettings?.providers.proxy_pool.enabled ?? 0) === 0
 			? $t('ui.pages.providersPage.settings.useProxyEmpty')
 			: $t('ui.pages.providersPage.settings.useProxyHint')
 	);

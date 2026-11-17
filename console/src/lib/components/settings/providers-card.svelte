@@ -7,6 +7,7 @@
 	import SettingsCard from './settings-card.svelte';
 	import SettingsRow from './settings-row.svelte';
 	import SettingsSave from './settings-save.svelte';
+	import ProxyPoolModal from './proxy-pool-modal.svelte';
 	import Button from '$lib/components/ui/button.svelte';
 	import Input from '$lib/components/ui/input.svelte';
 	import { cloneDraft, draftDirty } from '$lib/settings-draft';
@@ -35,6 +36,8 @@
 	let saved = $state(untrack(() => cloneDraft(value)));
 	let saving = $state(false);
 	let error = $state('');
+	let proxyModalOpen = $state(false);
+	let pool = $state(untrack(() => value.proxy_pool));
 
 	const dirty = $derived(draftDirty(draft, saved));
 	const catalogProblem = $derived(
@@ -46,9 +49,10 @@
 		saving = true;
 		error = '';
 		try {
+			const { proxy_pool: _pool, ...body } = draft;
 			const next = await api<ProvidersSettings>('/settings/providers', {
 				method: 'PATCH',
-				body: JSON.stringify(draft)
+				body: JSON.stringify(body)
 			});
 			draft = cloneDraft(next);
 			saved = cloneDraft(next);
@@ -85,14 +89,18 @@
 			/>
 		</SettingsRow>
 		<SettingsRow label={$t('ui.settingsPage.proxyURL')} hint={$t('ui.settingsPage.proxyHint')}>
-			<Input
-				id="proxy-url"
-				class="mono-data max-sm:h-11"
-				bind:value={draft.proxy_url}
-				disabled={saving}
-				aria-label={$t('ui.settingsPage.proxyURL')}
-				placeholder="http://127.0.0.1:7890"
-			/>
+			<div class="flex flex-wrap items-center gap-2">
+				<p class="text-sm text-muted-foreground">
+					{pool.total === 0
+						? $t('ui.settingsPage.proxies.none')
+						: $t('ui.settingsPage.proxies.summary', {
+								values: { enabled: pool.enabled, cooling: pool.cooling }
+							})}
+				</p>
+				<Button type="button" variant="outline" size="sm" onclick={() => (proxyModalOpen = true)}>
+					{$t('ui.settingsPage.proxies.manage')}
+				</Button>
+			</div>
 		</SettingsRow>
 		<SettingsRow
 			label={$t('ui.settingsPage.timeoutLabel')}
@@ -150,3 +158,5 @@
 		</SettingsRow>
 	</div>
 </SettingsCard>
+
+<ProxyPoolModal bind:open={proxyModalOpen} summary={pool} onchanged={(next) => (pool = next)} />
