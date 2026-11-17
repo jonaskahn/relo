@@ -704,6 +704,10 @@ other = "Salir — procesando…"
 description = "Inference refusal when a configured free connection is reached with consent off"
 other = "Las conexiones gratuitas requieren tu consentimiento. Activa las conexiones gratuitas y acepta el aviso de responsabilidad antes de usarlas."
 
+[api.connections.account_exhausted]
+description = "Inference refusal when every account of a connection is rate limited"
+other = "Se alcanzó el límite de uso de esta conexión. Vuelve a intentarlo en {{.Wait}} o cambia de modelo."
+
 [api.connections.free_lane_exhausted]
 description = "Inference refusal when a free connection's shared allowance is spent"
 other = "Se alcanzó el límite de uso gratuito de esta conexión. Vuelve a intentarlo cuando pase el tiempo indicado o cambia de modelo."

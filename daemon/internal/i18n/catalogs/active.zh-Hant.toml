@@ -704,6 +704,10 @@ other = "結束 — 處理中…"
 description = "Inference refusal when a configured free connection is reached with consent off"
 other = "免費連線需要你的同意。使用前請啟用免費連線並接受責任說明。"
 
+[api.connections.account_exhausted]
+description = "Inference refusal when every account of a connection is rate limited"
+other = "此連線已達到使用上限。請在 {{.Wait}} 後重試，或切換模型。"
+
 [api.connections.free_lane_exhausted]
 description = "Inference refusal when a free connection's shared allowance is spent"
 other = "此連線已達到免費使用上限。請在顯示的時間後重試，或切換模型。"
