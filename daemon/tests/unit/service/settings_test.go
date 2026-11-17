@@ -81,9 +81,6 @@ download = "https://example.test/releases"
 bind = "0.0.0.0"
 port = 12000
 
-[proxy]
-url = "https://proxy.example:8443"
-
 [upstream]
 timeout_seconds = 600
 retry_attempts = 5
@@ -122,11 +119,10 @@ key_file = "/tmp/other.key"
 		t.Fatalf("server = %+v, want %+v", settings.Server, wantServer)
 	}
 	wantProviders := appsettings.ProvidersSettings{
-		CatalogURL: "https://models.example.test/api.json", ProxyURL: "https://proxy.example:8443",
+		CatalogURL:     "https://models.example.test/api.json",
 		TimeoutSeconds: 600, RetryAttempts: 5,
 	}
 	if settings.Providers.CatalogURL != wantProviders.CatalogURL ||
-		settings.Providers.ProxyURL != wantProviders.ProxyURL ||
 		settings.Providers.TimeoutSeconds != wantProviders.TimeoutSeconds ||
 		settings.Providers.RetryAttempts != wantProviders.RetryAttempts {
 		t.Fatalf("providers = %+v, want %+v", settings.Providers, wantProviders)
@@ -149,27 +145,6 @@ func writeConfigFile(t *testing.T, home, body string) {
 	}
 }
 
-func TestSaveProvidersRejectsANonHTTPProxy(t *testing.T) {
-	harness := newHarness(t)
-	ctx := context.Background()
-	current, err := harness.settings.Read(ctx)
-	if err != nil {
-		t.Fatal(err)
-	}
-	current.Providers.ProxyURL = "socks5://127.0.0.1:1080"
-	if _, err := harness.settings.SaveProviders(current.Providers); !errors.Is(err, appsettings.ErrInvalidWrite) {
-		t.Fatalf("SaveProviders() error = %v, want an invalid write", err)
-	}
-	current.Providers.ProxyURL = "https://proxy.example:8443"
-	saved, err := harness.settings.SaveProviders(current.Providers)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if saved.ProxyURL != "https://proxy.example:8443" {
-		t.Fatalf("proxy = %q", saved.ProxyURL)
-	}
-}
-
 // TestSaveProvidersRejectsAnUnusableCatalogURL covers the model directory the
 // next fetch reads: an empty or non-HTTP address would leave the catalog with
 // nothing to fetch.
@@ -185,10 +160,6 @@ func TestSaveProvidersRejectsAnUnusableCatalogURL(t *testing.T) {
 		if _, err := harness.settings.SaveProviders(current.Providers); !errors.Is(err, appsettings.ErrInvalidWrite) {
 			t.Fatalf("SaveProviders(%q) error = %v, want an invalid write", bad, err)
 		}
-	}
-	current.Providers.ProxyURL = "https://proxy.example:8443"
-	if _, err := harness.settings.SaveProviders(current.Providers); !errors.Is(err, appsettings.ErrInvalidWrite) {
-		t.Fatalf("SaveProviders() error = %v, want an invalid write", err)
 	}
 	current.Providers.CatalogURL = "https://models.example.test/api.json"
 	if _, err := harness.settings.SaveProviders(current.Providers); err != nil {
@@ -211,38 +182,6 @@ func TestSaveRetentionRejections(t *testing.T) {
 	}
 	if _, _, err := sqlite.NewRetention(harness.db, sqlite.RetentionOptions{}).Config(ctx); err != nil {
 		t.Fatalf("Config() error = %v", err)
-	}
-}
-
-// TestProxyURLReadsTheStoredProxy covers the one setting the relay reads on
-// every upstream request rather than through Read: an install with no proxy
-// stored answers empty, and one with a proxy answers the URL it was given.
-func TestProxyURLReadsTheStoredProxy(t *testing.T) {
-	harness := newHarness(t)
-	ctx := context.Background()
-
-	raw, err := harness.settings.ProxyURL()
-	if err != nil {
-		t.Fatalf("ProxyURL() error = %v", err)
-	}
-	if raw != "" {
-		t.Fatalf("ProxyURL() = %q, want empty before one is stored", raw)
-	}
-
-	current, err := harness.settings.Read(ctx)
-	if err != nil {
-		t.Fatal(err)
-	}
-	current.Providers.ProxyURL = "https://proxy.example:8443"
-	if _, err := harness.settings.SaveProviders(current.Providers); err != nil {
-		t.Fatal(err)
-	}
-	raw, err = harness.settings.ProxyURL()
-	if err != nil {
-		t.Fatalf("ProxyURL() error = %v", err)
-	}
-	if raw != "https://proxy.example:8443" {
-		t.Fatalf("ProxyURL() = %q, want the proxy the save stored", raw)
 	}
 }
 

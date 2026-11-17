@@ -92,24 +92,34 @@ type serverSettingsRequest struct {
 }
 
 type providersSettingsResponse struct {
-	CatalogURL              string `json:"catalog_url"`
-	ProxyURL                string `json:"proxy_url"`
-	TimeoutSeconds          int    `json:"timeout_seconds"`
-	RetryAttempts           int    `json:"retry_attempts"`
-	FailoverCooldownSeconds int    `json:"failover_cooldown_seconds"`
+	CatalogURL              string            `json:"catalog_url"`
+	TimeoutSeconds          int               `json:"timeout_seconds"`
+	RetryAttempts           int               `json:"retry_attempts"`
+	FailoverCooldownSeconds int               `json:"failover_cooldown_seconds"`
+	ProxyPool               proxyPoolResponse `json:"proxy_pool"`
 }
 
-func toProvidersSettingsResponse(providers appsettings.ProvidersSettings) providersSettingsResponse {
+type proxyPoolResponse struct {
+	Total      int  `json:"total"`
+	Enabled    int  `json:"enabled"`
+	Cooling    int  `json:"cooling"`
+	AllCooling bool `json:"all_cooling"`
+}
+
+func toProvidersSettingsResponse(providers appsettings.ProvidersSettings, pool appsettings.ProxyPoolSummary) providersSettingsResponse {
 	return providersSettingsResponse{
-		CatalogURL: providers.CatalogURL, ProxyURL: providers.ProxyURL,
+		CatalogURL:     providers.CatalogURL,
 		TimeoutSeconds: providers.TimeoutSeconds, RetryAttempts: providers.RetryAttempts,
 		FailoverCooldownSeconds: providers.FailoverCooldownSeconds,
+		ProxyPool: proxyPoolResponse{
+			Total: pool.Total, Enabled: pool.Enabled, Cooling: pool.Cooling, AllCooling: pool.AllCooling,
+		},
 	}
 }
 
 func toProvidersSettings(request providersSettingsRequest) appsettings.ProvidersSettings {
 	return appsettings.ProvidersSettings{
-		CatalogURL: request.CatalogURL, ProxyURL: request.ProxyURL,
+		CatalogURL:     request.CatalogURL,
 		TimeoutSeconds: request.TimeoutSeconds, RetryAttempts: request.RetryAttempts,
 		FailoverCooldownSeconds: request.FailoverCooldownSeconds,
 	}
@@ -117,7 +127,6 @@ func toProvidersSettings(request providersSettingsRequest) appsettings.Providers
 
 type providersSettingsRequest struct {
 	CatalogURL              string `json:"catalog_url"`
-	ProxyURL                string `json:"proxy_url"`
 	TimeoutSeconds          int    `json:"timeout_seconds"`
 	RetryAttempts           int    `json:"retry_attempts"`
 	FailoverCooldownSeconds int    `json:"failover_cooldown_seconds"`
@@ -192,7 +201,7 @@ func toSettingsResponse(settings appsettings.Settings) settingsResponse {
 		Appearance:     toAppearanceSettingsResponse(settings.Appearance),
 		System:         toSystemSettingsResponse(settings.System),
 		Server:         toServerSettingsResponse(settings.Server),
-		Providers:      toProvidersSettingsResponse(settings.Providers),
+		Providers:      toProvidersSettingsResponse(settings.Providers, settings.ProxyPool),
 		Access:         toAccessSettingsResponse(settings.Access),
 		Secrets:        toSecretsSettingsResponse(settings.Secrets),
 		RestartPending: settings.RestartPending,

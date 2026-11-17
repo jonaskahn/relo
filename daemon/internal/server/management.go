@@ -22,6 +22,7 @@ import (
 	appstatus "github.com/jonaskahn/relo/internal/application/status"
 	apptemplates "github.com/jonaskahn/relo/internal/application/templatesettings"
 	"github.com/jonaskahn/relo/internal/catalog"
+	appproxy "github.com/jonaskahn/relo/internal/proxy"
 )
 
 const (
@@ -137,6 +138,12 @@ func (s *Server) registerSettingsRoutes(mux *http.ServeMux) {
 	mux.HandleFunc("PATCH "+apiPrefix+"settings/access", s.handlePatchAccess)
 	mux.HandleFunc("PATCH "+apiPrefix+"settings/network", s.handlePatchNetwork)
 	mux.HandleFunc("PATCH "+apiPrefix+"settings/providers", s.handlePatchProviders)
+	mux.HandleFunc("GET "+apiPrefix+"settings/proxies", s.handleListProxies)
+	mux.HandleFunc("POST "+apiPrefix+"settings/proxies", s.handleCreateProxy)
+	mux.HandleFunc("POST "+apiPrefix+"settings/proxies/import", s.handleImportProxies)
+	mux.HandleFunc("PATCH "+apiPrefix+"settings/proxies/{id}", s.handlePatchProxy)
+	mux.HandleFunc("DELETE "+apiPrefix+"settings/proxies/{id}", s.handleDeleteProxy)
+	mux.HandleFunc("POST "+apiPrefix+"settings/proxies/{id}/test", s.handleTestProxy)
 	mux.HandleFunc("PATCH "+apiPrefix+"settings/connections", s.handlePatchConnections)
 	mux.HandleFunc("PATCH "+apiPrefix+"settings/system", s.handlePatchSystem)
 	mux.HandleFunc("PATCH "+apiPrefix+"settings/language", s.handlePatchLanguage)
@@ -391,6 +398,7 @@ func integrationRefusal(err error) (int, string, bool) {
 	return 0, "", false
 }
 
+// nolint:funlen
 func generalServiceStatus(err error) (int, string) {
 	var portBusy *PortBusyError
 	switch {
@@ -405,6 +413,12 @@ func generalServiceStatus(err error) (int, string) {
 		return http.StatusNotFound, "not_found"
 	case errors.Is(err, appaccount.ErrNoSecretStore), errors.Is(err, catalog.ErrNoCatalog):
 		return http.StatusServiceUnavailable, "service_unavailable"
+	case errors.Is(err, appproxy.ErrNotFound):
+		return http.StatusNotFound, "not_found"
+	case errors.Is(err, appproxy.ErrDuplicate):
+		return http.StatusConflict, "conflict"
+	case errors.Is(err, appproxy.ErrInvalid):
+		return http.StatusBadRequest, "bad_request"
 	case errors.Is(err, appcatalog.ErrCatalogConflict), errors.Is(err, appaccount.ErrDuplicateAccount),
 		errors.Is(err, appcatalog.ErrListAuthoritative),
 		appintegration.RefusalCode(err) == appintegration.CodeForeignKey:

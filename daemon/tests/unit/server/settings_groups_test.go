@@ -57,10 +57,15 @@ type wireAppear struct {
 
 type wireProviders struct {
 	CatalogURL              string `json:"catalog_url"`
-	ProxyURL                string `json:"proxy_url"`
 	TimeoutSeconds          int    `json:"timeout_seconds"`
 	RetryAttempts           int    `json:"retry_attempts"`
 	FailoverCooldownSeconds int    `json:"failover_cooldown_seconds"`
+	ProxyPool               struct {
+		Total      int  `json:"total"`
+		Enabled    int  `json:"enabled"`
+		Cooling    int  `json:"cooling"`
+		AllCooling bool `json:"all_cooling"`
+	} `json:"proxy_pool"`
 }
 
 type wireSecrets struct {
@@ -217,20 +222,20 @@ func TestNetworkPatchStoresTheListeners(t *testing.T) {
 func TestProvidersPatchStoresTheDirectoryAndWaits(t *testing.T) {
 	h := newHarness(t)
 
-	patch := `{"catalog_url":"https://models.example.test/api.json","proxy_url":"https://proxy.example:8443",` +
+	patch := `{"catalog_url":"https://models.example.test/api.json",` +
 		`"timeout_seconds":600,"retry_attempts":5,"failover_cooldown_seconds":1800}`
 	saved := h.management(http.MethodPatch, "/api/v1/settings/providers", adminToken, strings.NewReader(patch))
 	if saved.Code != http.StatusOK {
 		t.Fatalf("PATCH providers status = %d, body = %s", saved.Code, saved.Body.String())
 	}
 	got := decodeGroup[wireProviders](t, saved.Body)
-	if got.CatalogURL != "https://models.example.test/api.json" || got.ProxyURL != "https://proxy.example:8443" ||
+	if got.CatalogURL != "https://models.example.test/api.json" ||
 		got.TimeoutSeconds != 600 || got.RetryAttempts != 5 || got.FailoverCooldownSeconds != 1800 {
 		t.Fatalf("providers = %+v, want the saved choices", got)
 	}
 
 	none := h.management(http.MethodPatch, "/api/v1/settings/providers", adminToken,
-		strings.NewReader(`{"catalog_url":"https://models.example.test/api.json","proxy_url":"","timeout_seconds":300,`+
+		strings.NewReader(`{"catalog_url":"https://models.example.test/api.json","timeout_seconds":300,`+
 			`"retry_attempts":3,"failover_cooldown_seconds":0}`))
 	if none.Code != http.StatusOK {
 		t.Fatalf("PATCH providers status = %d, body = %s, want no denylist stored", none.Code, none.Body.String())
@@ -240,12 +245,11 @@ func TestProvidersPatchStoresTheDirectoryAndWaits(t *testing.T) {
 	}
 
 	for name, body := range map[string]string{
-		"empty catalog": `{"catalog_url":"","proxy_url":"","timeout_seconds":300,"retry_attempts":3}`,
-		"bad catalog":   `{"catalog_url":"ftp://example.test","proxy_url":"","timeout_seconds":300,"retry_attempts":3}`,
-		"bad proxy":     `{"catalog_url":"https://models.example.test/api.json","proxy_url":"socks5://127.0.0.1:1","timeout_seconds":300,"retry_attempts":3}`,
-		"bad timeout":   `{"catalog_url":"https://models.example.test/api.json","proxy_url":"","timeout_seconds":150,"retry_attempts":3}`,
-		"bad attempts":  `{"catalog_url":"https://models.example.test/api.json","proxy_url":"","timeout_seconds":300,"retry_attempts":4,"failover_cooldown_seconds":900}`,
-		"bad cooldown":  `{"catalog_url":"https://models.example.test/api.json","proxy_url":"","timeout_seconds":300,"retry_attempts":3,"failover_cooldown_seconds":301}`,
+		"empty catalog": `{"catalog_url":"","timeout_seconds":300,"retry_attempts":3}`,
+		"bad catalog":   `{"catalog_url":"ftp://example.test","timeout_seconds":300,"retry_attempts":3}`,
+		"bad timeout":   `{"catalog_url":"https://models.example.test/api.json","timeout_seconds":150,"retry_attempts":3}`,
+		"bad attempts":  `{"catalog_url":"https://models.example.test/api.json","timeout_seconds":300,"retry_attempts":4,"failover_cooldown_seconds":900}`,
+		"bad cooldown":  `{"catalog_url":"https://models.example.test/api.json","timeout_seconds":300,"retry_attempts":3,"failover_cooldown_seconds":301}`,
 	} {
 		refused := h.management(http.MethodPatch, "/api/v1/settings/providers", adminToken, strings.NewReader(body))
 		if refused.Code != http.StatusBadRequest {
@@ -264,7 +268,7 @@ func TestNoneFailoverStepKeepsFirstRefusalsInRotation(t *testing.T) {
 	h.server = h.newServerWithCredentials(h.cfg.Server.Port, defaultEntry())
 
 	saved := h.management(http.MethodPatch, "/api/v1/settings/providers", adminToken,
-		strings.NewReader(`{"catalog_url":"https://models.example.test/api.json","proxy_url":"","timeout_seconds":300,`+
+		strings.NewReader(`{"catalog_url":"https://models.example.test/api.json","timeout_seconds":300,`+
 			`"retry_attempts":3,"failover_cooldown_seconds":0}`))
 	if saved.Code != http.StatusOK {
 		t.Fatalf("PATCH providers status = %d, body = %s", saved.Code, saved.Body.String())

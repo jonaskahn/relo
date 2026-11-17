@@ -152,8 +152,8 @@ func TestSettingsReportAStartupFileThatCannotBeRead(t *testing.T) {
 }
 
 // TestSettingsRefuseInvalidProviderWaits pins that a providers write names
-// the invalid field before touching the startup file: a bad proxy, timeout,
-// retry window, or denylist step each fails validation first.
+// the invalid field before touching the startup file: a bad timeout, retry
+// window, or denylist step each fails validation first.
 func TestSettingsRefuseInvalidProviderWaits(t *testing.T) {
 	service := appsettings.New(appsettings.Options{ConfigPath: filepath.Join(t.TempDir(), "config.toml")})
 	valid := appsettings.ProvidersSettings{
@@ -161,11 +161,6 @@ func TestSettingsRefuseInvalidProviderWaits(t *testing.T) {
 		RetryAttempts: 3, FailoverCooldownSeconds: 900,
 	}
 	cases := map[string]appsettings.ProvidersSettings{
-		"bad proxy": func() appsettings.ProvidersSettings {
-			next := valid
-			next.ProxyURL = "socks5://127.0.0.1:1"
-			return next
-		}(),
 		"bad timeout": func() appsettings.ProvidersSettings {
 			next := valid
 			next.TimeoutSeconds = 150

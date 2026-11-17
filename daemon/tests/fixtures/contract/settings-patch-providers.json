@@ -1,1 +1,1 @@
-{"catalog_url":"https://models.example.test/api.json","failover_cooldown_seconds":0,"proxy_url":"","retry_attempts":3,"timeout_seconds":300}
+{"catalog_url":"https://models.example.test/api.json","failover_cooldown_seconds":0,"proxy_pool":{"all_cooling":false,"cooling":0,"enabled":0,"total":0},"retry_attempts":3,"timeout_seconds":300}

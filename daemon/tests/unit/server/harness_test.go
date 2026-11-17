@@ -38,6 +38,7 @@ import (
 	"github.com/jonaskahn/relo/internal/catalog"
 	"github.com/jonaskahn/relo/internal/config"
 	"github.com/jonaskahn/relo/internal/platform"
+	appproxy "github.com/jonaskahn/relo/internal/proxy"
 	"github.com/jonaskahn/relo/internal/routing"
 	"github.com/jonaskahn/relo/internal/server"
 	"github.com/jonaskahn/relo/tests/testkit"
@@ -82,6 +83,7 @@ type harness struct {
 	providers     []sqlite.ProviderRow
 	providerSaved bool
 	secrets       map[string]string
+	proxyPool     *appproxy.Service
 	events        *server.EventBus
 	sessions      *server.Sessions
 	login         *stubLogin
@@ -138,10 +140,12 @@ func newHarness(t *testing.T) *harness {
 		secrets:   map[string]string{credentialRef: "sk-test"},
 		login:     &stubLogin{},
 	}
+	harness.proxyPool = harness.settingsPool()
 	harness.settingsPath = config.ConfigPath(t.TempDir())
 	harness.settings = appsettings.New(appsettings.Options{
 		Retention:    sqlite.NewRetentionSettings(harness.db, sqlite.RetentionOptions{Now: harness.clock.Now}),
 		QuotaDisplay: sqlite.NewQuotaDisplaySettings(harness.db),
+		ProxyPool:    appsettingsProxyPool{pool: harness.proxyPool},
 		ConfigPath:   harness.settingsPath,
 		Clock:        harness.clock,
 	})
@@ -244,6 +248,7 @@ func (h *harness) newServerWithOptions(cfg *config.Config, entries []account.Poo
 		Formats:    wireformats.New(),
 		Keys:       h.keys,
 		Settings:   h.settings,
+		Proxies:    h.proxyPool,
 		// The shipped retry waits are seconds long; tests run the same path
 		// with a millisecond so a retry costs nothing.
 		RetryDelay: func(int) time.Duration { return time.Millisecond },
@@ -280,6 +285,30 @@ func (h *harness) newServerWithOptions(cfg *config.Config, entries []account.Poo
 	// stub rather than a compiled console build.
 	served.SetDashboard(stubConsole())
 	return served
+}
+
+// settingsPool returns the proxy pool the harness's settings service and
+// server share.
+func (h *harness) settingsPool() *appproxy.Service {
+	return appproxy.New(appproxy.Options{
+		Store:   sqlite.NewProxyStore(h.db),
+		Secrets: platform.NewProxySecrets(testkit.SecretStore(h.secrets)),
+		Clock:   h.clock,
+		Check:   func(context.Context, string) error { return nil },
+	})
+}
+
+// appsettingsProxyPool adapts the harness pool to the settings summary.
+type appsettingsProxyPool struct{ pool *appproxy.Service }
+
+func (p appsettingsProxyPool) ProxyPoolSummary(ctx context.Context) (appsettings.ProxyPoolSummary, error) {
+	summary, err := p.pool.Summary(ctx)
+	if err != nil {
+		return appsettings.ProxyPoolSummary{}, err
+	}
+	return appsettings.ProxyPoolSummary{
+		Total: summary.Total, Enabled: summary.Enabled, Cooling: summary.Cooling, AllCooling: summary.AllCooling,
+	}, nil
 }
 
 func (h *harness) integrationPaths() codingclients.Paths {

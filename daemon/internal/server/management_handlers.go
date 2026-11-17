@@ -1076,7 +1076,12 @@ func (s *Server) handlePatchProviders(w http.ResponseWriter, r *http.Request) {
 		writeServiceError(w, err)
 		return
 	}
-	writeJSON(w, http.StatusOK, toProvidersSettingsResponse(saved))
+	stored, readErr := settings.Read(r.Context())
+	if readErr != nil {
+		writeServiceError(w, readErr)
+		return
+	}
+	writeJSON(w, http.StatusOK, toProvidersSettingsResponse(saved, stored.ProxyPool))
 }
 
 func (s *Server) handlePatchSystem(w http.ResponseWriter, r *http.Request) {

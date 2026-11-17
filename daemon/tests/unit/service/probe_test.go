@@ -442,7 +442,7 @@ func TestProbeOpenCodeFreeKeepsFreeModels(t *testing.T) {
 			},
 		},
 	})
-	h.proxyURL = func() string { return "http://127.0.0.1:9" }
+	h.proxyURL = func(context.Context) string { return "http://127.0.0.1:9" }
 	client := &http.Client{Timeout: 5 * time.Second, Transport: &http.Transport{
 		Proxy: func(r *http.Request) (*url.URL, error) {
 			if config.OutboundProxyFrom(r.Context()) != "" {

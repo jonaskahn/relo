@@ -39,6 +39,8 @@ type Settings struct {
 	Server ServerSettings
 	// Providers is how the daemon reaches providers and their directories.
 	Providers ProvidersSettings
+	// ProxyPool is the read-only count of the managed outbound proxy pool.
+	ProxyPool ProxyPoolSummary
 	// Access is who may open the console.
 	Access AccessSettings
 	// Secrets is where provider credentials live. Read-only: editing the
@@ -79,7 +81,6 @@ type ServerSettings struct {
 // directories.
 type ProvidersSettings struct {
 	CatalogURL string
-	ProxyURL   string
 	// TimeoutSeconds is how long a provider call waits for the next bytes
 	// before the relay cancels it and retries: the wait for headers, and then
 	// the silence between body bytes. A stream that keeps sending runs until
@@ -95,6 +96,14 @@ type ProvidersSettings struct {
 	// all. A body that omits the field reads as zero, so a partial write
 	// without it starts the ladder from the beginning.
 	FailoverCooldownSeconds int
+}
+
+// ProxyPoolSummary is the read-only count the providers card shows.
+type ProxyPoolSummary struct {
+	Total      int
+	Enabled    int
+	Cooling    int
+	AllCooling bool
 }
 
 // AccessSettings is who may open the console.
@@ -139,6 +148,12 @@ type QuotaDisplayStore interface {
 	SaveQuotaDisplay(ctx context.Context, display string, nowMs int64) error
 }
 
+// ProxyPool reports the managed outbound proxy counts the providers card
+// shows. It is optional; a build without one reports an empty pool summary.
+type ProxyPool interface {
+	ProxyPoolSummary(ctx context.Context) (ProxyPoolSummary, error)
+}
+
 // AppearancePatch changes only the named appearance fields.
 type AppearancePatch struct {
 	Theme        *string
@@ -152,6 +167,7 @@ type AppearancePatch struct {
 type Options struct {
 	Retention    RetentionStore
 	QuotaDisplay QuotaDisplayStore
+	ProxyPool    ProxyPool
 	ConfigPath   string
 	Clock        clock.Clock
 	// ApplyAutostart mirrors a changed start-at-login choice onto the
@@ -167,6 +183,7 @@ type Options struct {
 type Service struct {
 	retention        RetentionStore
 	quotaDisplay     QuotaDisplayStore
+	proxyPool        ProxyPool
 	configPath       string
 	clock            clock.Clock
 	applyAutostart   func(enabled bool)
@@ -180,7 +197,7 @@ func New(options Options) *Service {
 		clk = clock.New()
 	}
 	return &Service{
-		retention: options.Retention, quotaDisplay: options.QuotaDisplay,
+		retention: options.Retention, quotaDisplay: options.QuotaDisplay, proxyPool: options.ProxyPool,
 		configPath: options.ConfigPath, clock: clk,
 		applyAutostart: options.ApplyAutostart, onRetentionSaved: options.OnRetentionSaved,
 	}
@@ -203,6 +220,13 @@ func (s *Service) Read(ctx context.Context) (Settings, error) {
 	readSystemServer(&settings, file)
 	if err := s.readUpstream(&settings, file); err != nil {
 		return Settings{}, err
+	}
+	if s.proxyPool != nil {
+		summary, err := s.proxyPool.ProxyPoolSummary(ctx)
+		if err != nil {
+			return Settings{}, err
+		}
+		settings.ProxyPool = summary
 	}
 	if err := s.readAccessSecrets(&settings, file); err != nil {
 		return Settings{}, err
@@ -249,10 +273,6 @@ func readSystemServer(settings *Settings, file config.Config) {
 }
 
 func (s *Service) readUpstream(settings *Settings, file config.Config) error {
-	proxyURL, err := config.ReadProxyURL(s.configPath)
-	if err != nil {
-		return err
-	}
 	timeout, err := config.ReadUpstreamTimeout(s.configPath)
 	if err != nil {
 		return err
@@ -266,8 +286,7 @@ func (s *Service) readUpstream(settings *Settings, file config.Config) error {
 		return err
 	}
 	settings.Providers = ProvidersSettings{
-		CatalogURL: file.Catalog.ModelsDevURL,
-		ProxyURL:   proxyURL, TimeoutSeconds: timeout, RetryAttempts: attempts,
+		CatalogURL: file.Catalog.ModelsDevURL, TimeoutSeconds: timeout, RetryAttempts: attempts,
 		FailoverCooldownSeconds: cooldown,
 	}
 	return nil
@@ -308,11 +327,6 @@ func (s *Service) LogTraffic() bool {
 		return false
 	}
 	return on
-}
-
-// ProxyURL returns the outbound proxy stored in the startup file.
-func (s *Service) ProxyURL() (string, error) {
-	return config.ReadProxyURL(s.configPath)
 }
 
 // UpstreamTimeout returns the call wait one provider attempt runs under, in
@@ -452,22 +466,18 @@ func (s *Service) SaveNetwork(server ServerSettings) (ServerSettings, error) {
 }
 
 // SaveProviders stores how the daemon reaches providers and their
-// directories: the outbound proxy, the model directory, and the call,
-// retry, and failover waits.
+// directories: the model directory, the call wait, the retry count, and the
+// failover wait.
 func (s *Service) SaveProviders(input ProvidersSettings) (ProvidersSettings, error) {
-	proxyURL, err := config.NormalizeProxyURL(input.ProxyURL)
-	if err != nil {
-		return ProvidersSettings{}, fmt.Errorf("%w: %v", ErrInvalidWrite, err)
-	}
 	timeout, attempts, cooldown, err := validatedProviderWaits(input)
 	if err != nil {
 		return ProvidersSettings{}, err
 	}
-	if err := s.writeProviderConfig(input, proxyURL, timeout, attempts, cooldown); err != nil {
+	if err := s.writeProviderConfig(input, timeout, attempts, cooldown); err != nil {
 		return ProvidersSettings{}, err
 	}
 	return ProvidersSettings{
-		CatalogURL: strings.TrimSpace(input.CatalogURL), ProxyURL: proxyURL,
+		CatalogURL:     strings.TrimSpace(input.CatalogURL),
 		TimeoutSeconds: timeout, RetryAttempts: attempts,
 		FailoverCooldownSeconds: cooldown,
 	}, nil
@@ -495,10 +505,7 @@ func validatedProviderWaits(input ProvidersSettings) (int, int, int, error) {
 	return timeout, attempts, cooldown, nil
 }
 
-func (s *Service) writeProviderConfig(input ProvidersSettings, proxyURL string, timeout, attempts, cooldown int) error {
-	if err := config.UpdateProxyURL(s.configPath, proxyURL); err != nil {
-		return fmt.Errorf("%w: %v", ErrInvalidWrite, err)
-	}
+func (s *Service) writeProviderConfig(input ProvidersSettings, timeout, attempts, cooldown int) error {
 	if err := config.UpdateCatalogURL(s.configPath, strings.TrimSpace(input.CatalogURL)); err != nil {
 		if errors.Is(err, config.ErrInvalidURL) {
 			return fmt.Errorf("%w: %v", ErrInvalidWrite, err)

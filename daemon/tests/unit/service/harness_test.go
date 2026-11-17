@@ -39,7 +39,7 @@ type harness struct {
 	clock     *testkit.FakeClock
 	modelsDev *modelsdev.Directory
 	service   *appcatalog.Service
-	proxyURL  func() string
+	proxyURL  func(context.Context) string
 	accounts  *appaccount.Service
 	routes    *approuting.Service
 	keys      *appaccess.Keys
