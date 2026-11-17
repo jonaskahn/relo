@@ -3,6 +3,7 @@ package server_test
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"github.com/jonaskahn/relo/internal/inference"
 	"io"
 	"log/slog"
@@ -295,6 +296,17 @@ func (h *harness) settingsPool() *appproxy.Service {
 		Secrets: platform.NewProxySecrets(testkit.SecretStore(h.secrets)),
 		Clock:   h.clock,
 		Check:   func(context.Context, string) error { return nil },
+	})
+}
+
+// failingPool returns a pool whose connectivity check always fails, so the
+// API's unreachable branch can be measured.
+func (h *harness) failingPool() *appproxy.Service {
+	return appproxy.New(appproxy.Options{
+		Store:   sqlite.NewProxyStore(h.db),
+		Secrets: platform.NewProxySecrets(testkit.SecretStore(h.secrets)),
+		Clock:   h.clock,
+		Check:   func(context.Context, string) error { return errors.New("connection refused") },
 	})
 }
 
