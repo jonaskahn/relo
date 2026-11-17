@@ -9,7 +9,7 @@
 	import { cn } from '$lib/utils';
 	import UpdateDialog from '$lib/components/shell/update-dialog.svelte';
 	import WhatsNewDialog from '$lib/components/shell/whats-new-dialog.svelte';
-	import { browserStorage, shouldShowWhatsNew } from '$lib/whats-new';
+	import { browserStorage, markWhatsNewSeen, shouldShowWhatsNew } from '$lib/whats-new';
 
 	interface Props {
 		class?: string;
@@ -48,7 +48,9 @@
 			}
 			if (!whatsNewChecked && notice?.current) {
 				whatsNewChecked = true;
-				whatsNewOpen = shouldShowWhatsNew(browserStorage(), notice);
+				const storage = browserStorage();
+				whatsNewOpen = shouldShowWhatsNew(storage, notice);
+				if (whatsNewOpen) markWhatsNewSeen(storage, notice.current);
 			}
 		} finally {
 			polling = false;
@@ -118,7 +120,11 @@
 
 <UpdateDialog bind:open={updateOpen} {notice} />
 {#if whatsNewOpen && notice?.current}
-	<WhatsNewDialog open={whatsNewOpen} version={notice.current} notes={notice.current_notes ?? ''} />
+	<WhatsNewDialog
+		bind:open={whatsNewOpen}
+		version={notice.current}
+		notes={notice.current_notes ?? ''}
+	/>
 {/if}
 
 <style>

@@ -35,6 +35,20 @@ describe('shouldShowWhatsNew', () => {
 		expect(shouldShowWhatsNew(refused, notice)).toBe(true);
 		expect(shouldShowWhatsNew(undefined, notice)).toBe(true);
 	});
+
+	it('keeps one key across rebuilds of the same release', () => {
+		let stored: string | null = null;
+		const storage = {
+			getItem: (key: string) => (key === WHATS_NEW_KEY ? stored : null),
+			setItem: (_key: string, value: string) => (stored = value)
+		};
+		markWhatsNewSeen(storage, 'v0.3.1+b7df4346');
+		expect(stored).toBe('0.3.1');
+		expect(shouldShowWhatsNew(storage, { current: '0.3.1', current_notes: '# v' })).toBe(false);
+		expect(shouldShowWhatsNew(storage, { current: 'v0.3.1+other', current_notes: '# v' })).toBe(
+			false
+		);
+	});
 });
 
 describe('markWhatsNewSeen', () => {

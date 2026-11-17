@@ -62,11 +62,21 @@ func parseManifest(body []byte) (manifest, error) {
 
 func (m manifest) find(version string) (manifestRelease, bool) {
 	wanted := strings.TrimPrefix(strings.TrimSpace(version), "v")
+	// Build metadata ("+abc123") is not part of a published tag, so drop it
+	// before matching; otherwise a beta build's /status version never resolves
+	// to its catalog entry and its notes stay empty.
+	if i := strings.IndexByte(wanted, '+'); i >= 0 {
+		wanted = wanted[:i]
+	}
 	if wanted == "" {
 		return manifestRelease{}, false
 	}
 	for _, release := range m.Releases {
-		if release.Version == wanted || strings.TrimPrefix(release.Tag, "v") == wanted {
+		tag := strings.TrimPrefix(release.Tag, "v")
+		if i := strings.IndexByte(tag, '+'); i >= 0 {
+			tag = tag[:i]
+		}
+		if release.Version == wanted || tag == wanted {
 			return release, true
 		}
 	}
