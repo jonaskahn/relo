@@ -185,8 +185,9 @@ func sessionUUID(preimage, domain string) string {
 }
 
 // firstStep is where the endpoint expects a conversation's step count to
-// start, so the first turn reports itself as the second.
-const firstStep = 2
+// start: the first turn reports itself at index 0, so the step count is the
+// user turns the request carries rather than one more than them.
+const firstStep = 1
 
 // userTurns counts the user turns a request carries. It reads the request
 // rather than the encoded contents, which may have gained the synthetic
@@ -201,7 +202,7 @@ func userTurns(req *inference.Request) int {
 	if turns < 1 {
 		return firstStep
 	}
-	return turns + 1
+	return turns
 }
 
 func replayKey(model, session, name, args string) string {
@@ -277,13 +278,30 @@ func encodeAssist(req *inference.Request, anchor string) ([]content, error) {
 		}
 		index = next
 	}
-	if len(encoded) == 0 || encoded[len(encoded)-1].Role == roleModel {
+	if len(encoded) == 0 || continuesFrom(encoded[len(encoded)-1]) {
 		encoded = append(encoded, content{Role: roleUser, Parts: []part{{Text: continueText}}})
 	}
 	if forcedToolTurn(req) {
 		encoded = append(encoded, content{Role: roleUser, Parts: []part{{Text: forcedToolText}}})
 	}
 	return encoded, nil
+}
+
+// continuesFrom reports whether a turn ending in a model answer needs the
+// synthetic continue turn after it. A model turn that answered with a tool
+// call, or that carries the tool results themselves, is already an answer the
+// endpoint is waiting on, so a turn is not appended after it: a continued
+// conversation keeps the tool call and its answer in the same model turn.
+func continuesFrom(last content) bool {
+	if last.Role != roleModel {
+		return false
+	}
+	for _, item := range last.Parts {
+		if item.FunctionCall != nil || item.FunctionResponse != nil {
+			return false
+		}
+	}
+	return true
 }
 
 func encodeAssistMessage(req *inference.Request, index int, session string, names map[string]string, encoded *[]content) (int, error) {
@@ -308,7 +326,7 @@ func encodeAssistMessage(req *inference.Request, index int, session string, name
 		return index, nil
 	}
 	batch, next := toolBatch(req.Messages, index, names, claudeOnAntigravity(req.Model))
-	*encoded = append(*encoded, content{Role: roleUser, Parts: batch})
+	*encoded = append(*encoded, content{Role: roleModel, Parts: batch})
 	return next, nil
 }
 
@@ -494,6 +512,9 @@ type assistTurn struct {
 	anchor  string
 	session string
 	variant antigravity.Variant
+	// identity is the conversation and step the turn falls at, filled in once
+	// the envelope knows them so the labels are written from one place.
+	identity sessionIdentity
 }
 
 // sessionIdentity is the pair of conversation-scoped ids the envelope names,
@@ -505,7 +526,7 @@ type sessionIdentity struct {
 }
 
 func finishAssist(payload *requestPayload, req *inference.Request, turn assistTurn) sessionIdentity {
-	scrubBilling(payload.SystemInstruction)
+	scrubIdentity(payload.SystemInstruction)
 	if payload.SystemInstruction != nil {
 		payload.SystemInstruction.Role = roleUser
 	}
@@ -524,7 +545,8 @@ func finishAssist(payload *requestPayload, req *inference.Request, turn assistTu
 		step:       userTurns(req),
 	}
 	payload.SessionID = sessionID(preimage)
-	payload.Labels = assistLabels(req.Model, identity.trajectory, identity.step, turn)
+	turn.identity = identity
+	payload.Labels = assistLabels(req.Model, turn)
 	return identity
 }
 
@@ -532,15 +554,6 @@ func finishAssist(payload *requestPayload, req *inference.Request, turn assistTu
 // system prompt with. The endpoint answers any request carrying it with a 429
 // that reads as a spent quota, whatever the account's quota is.
 var billingHeader = regexp.MustCompile(`^x-anthropic-billing-header:(?:\s*\w+=[^;\s]*;)+\s*`)
-
-func scrubBilling(system *content) {
-	if system == nil {
-		return
-	}
-	for index := range system.Parts {
-		system.Parts[index].Text = billingHeader.ReplaceAllString(system.Parts[index].Text, "")
-	}
-}
 
 // applyAssistThinking gives each model family the thinking shape it accepts.
 // Claude thinks through nothing on this transport, so a stated effort never
@@ -582,18 +595,15 @@ func assistGeminiThinking(variant antigravity.Variant) *thinkingConfig {
 }
 
 // assistToolConfig reports the function-calling constraint a Cloud Code
-// Assist turn carries. Silence keeps the default — VALIDATED always for
-// Claude, VALIDATED for Gemini only while tools are declared — and an
-// explicit client choice wins over it; an explicit auto drops the constraint
-// entirely.
+// Assist turn carries. The first-party client sends no constraint of its own,
+// so a client that stated no choice gets none: synthesising one is a wire
+// difference the endpoint reads, and a turn it never sent is a turn Relo
+// invented. An explicit client choice travels as the mode it named.
 func assistToolConfig(req *inference.Request) *toolConfig {
 	if choice := req.ToolChoice; choice != nil && choice.Mode != "" {
 		return explicitToolConfig(choice)
 	}
-	if !claudeOnAntigravity(req.Model) && len(req.Tools) == 0 {
-		return nil
-	}
-	return &toolConfig{FunctionCallingConfig: &functionCallingConfig{Mode: assistToolMode}}
+	return nil
 }
 
 func explicitToolConfig(choice *inference.ToolChoice) *toolConfig {
@@ -629,15 +639,26 @@ func outputCeiling(req *inference.Request, variant antigravity.Variant) int {
 	return ceiling
 }
 
-func assistLabels(model, trajectory string, step int, turn assistTurn) map[string]string {
-	if step < 1 {
-		step = 1
+// assistLabels reports the labels the endpoint reads on a turn. The
+// first-party client names the cascade and the trajectory the turn belongs to,
+// the request inside that trajectory, the SKU in play, and whether the answer
+// came from a model other than Gemini. A label it reads and Relo drops is
+// telemetry that goes missing, so every one it sends is sent here.
+func assistLabels(model string, turn assistTurn) map[string]string {
+	identity := turn.identity
+	index := identity.step - 1
+	if index < 0 {
+		index = 0
 	}
 	labels := map[string]string{
-		"last_step_index":          strconv.Itoa(step - 1),
-		"trajectory_id":            trajectory,
+		"cascade_id":               identity.agent,
+		"root_cascade_id":          identity.agent,
+		"last_step_index":          strconv.Itoa(index),
+		"request_id":               identity.trajectory + "-" + strconv.Itoa(index),
+		"trajectory_id":            identity.trajectory,
 		"used_claude":              boolLabel(claudeOnAntigravity(model)),
 		"used_claude_conservative": "false",
+		"used_non_gemini_model":    boolLabel(claudeOnAntigravity(model)),
 	}
 	// The first turn has no execution to name back, so the label is left off
 	// rather than filled with an id the endpoint never issued.
