@@ -129,6 +129,15 @@ signed-out lane only, never dropping the tool, and restores the client's own
 name on every answer path. The paid Go lane keeps the client's names whole
 apart from the 64-character limit it has always applied.
 
+The gate also reads the system prompt, so a client's own identity is a refusal
+too. Claude Code leads with an Anthropic billing stamp and the Claude Code
+sentence; Codex, Cursor, Cline, Kilo, Windsurf, Roo, Aider, Gemini CLI, and
+Qwen Code stamp their own. Relo strips the stamp and replaces the identity
+sentence with the lane's neutral coding-assistant line, keeping the client's
+task and harness rules. Relaying the identity unchanged earns the lane's
+generic `FreeUsageLimitError`, which looks exactly like a spent allowance even
+when the account has quota left.
+
 Relo appends only the environment instruction to the first system message, or
 creates a system message when none exists. An existing valid environment block
 is preserved. No captured prompt or developer repository content is shipped.

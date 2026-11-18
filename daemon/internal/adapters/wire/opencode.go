@@ -407,6 +407,10 @@ func openCodeFreeRequest(req *inference.Request, format catalog.APIFormat, cutTo
 		return nil, nil
 	}
 	copied := *req
+	// A foreign client's identity is what the gateway refuses, so it is
+	// replaced before the environment instruction is appended. Only the
+	// task and the client's own rules travel.
+	copied.Messages = withFreeLaneIdentity(copied.Messages)
 	// Only the environment instruction is required; preserve the client's task.
 	if !HasOpenCodeSystemPrompt(req) {
 		copied.Messages = withOpenCodeSystemPrompt(copied.Messages, copied.WorkingDirectory)
