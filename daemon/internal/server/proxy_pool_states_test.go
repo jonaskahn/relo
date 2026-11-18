@@ -6,6 +6,7 @@ import (
 	"net"
 	"net/http"
 	"net/http/httptest"
+	"strconv"
 	"testing"
 	"time"
 
@@ -155,9 +156,43 @@ func TestProxyCoolingRefusalAnswersBothSurfaces(t *testing.T) {
 		t.Fatalf("anthropic status = %d, want 503", anthropic.Code)
 	}
 	// The document itself is the formats codec's, which a server without one
-	// leaves empty; what this refusal owns is the status and the wait.
-	if wait := anthropic.Header().Get("Retry-After"); wait != "90" {
-		t.Fatalf("Retry-After = %q, want the pool's 90 seconds", wait)
+	// leaves empty; what this refusal owns is the status and the wait. The wait
+	// is the cooldown rounded up to a whole second, never down, or the client
+	// retries before the pool is usable again.
+	seconds, err := strconv.Atoi(anthropic.Header().Get("Retry-After"))
+	if err != nil {
+		t.Fatalf("Retry-After = %q, want whole seconds", anthropic.Header().Get("Retry-After"))
+	}
+	if seconds < 90 {
+		t.Fatalf("Retry-After = %ds for a 90s cooldown, want at least 90", seconds)
+	}
+}
+
+// TestProxyCoolingRefusalRoundsUp covers the wait each cooldown produces. The
+// cause is built here rather than read from the pool, so the sub-second part
+// is fixed and the assertion cannot drift with the wall clock.
+func TestProxyCoolingRefusalRoundsUp(t *testing.T) {
+	server := New(Options{})
+	request := httptest.NewRequest(http.MethodPost, "/v1/messages", nil)
+	for _, testCase := range []struct {
+		name string
+		wait time.Duration
+		want string
+	}{
+		{name: "a whole second is kept", wait: 90 * time.Second, want: "90"},
+		{name: "a part second rounds up", wait: 89*time.Second + 500*time.Millisecond, want: "90"},
+		{name: "just over a second rounds up", wait: time.Second + time.Millisecond, want: "2"},
+		{name: "a sub-second wait still asks for one", wait: 10 * time.Millisecond, want: "1"},
+		{name: "no wait still asks for one", wait: 0, want: "1"},
+	} {
+		t.Run(testCase.name, func(t *testing.T) {
+			recorder := httptest.NewRecorder()
+			cause := &appproxy.AllCoolingError{RetryAfter: testCase.wait}
+			server.proxyCoolingRefusal(recorder, request, true, cause)
+			if got := recorder.Header().Get("Retry-After"); got != testCase.want {
+				t.Fatalf("Retry-After = %q for %v, want %q", got, testCase.wait, testCase.want)
+			}
+		})
 	}
 }
 

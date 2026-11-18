@@ -105,7 +105,9 @@ func (s *Server) proxyCoolingRefusal(w http.ResponseWriter, r *http.Request, ant
 	if errors.As(cause, &all) {
 		wait = all.RetryAfter
 	}
-	w.Header().Set("Retry-After", fmt.Sprintf("%d", max(1, int(wait.Seconds()+0.5))))
+	// Retry-After rounds up so a client never retries before the cooldown ends.
+	seconds := (wait + time.Second - 1) / time.Second
+	w.Header().Set("Retry-After", fmt.Sprintf("%d", max(1, int(seconds))))
 	if anthropic {
 		s.writeAnthropicDocument(w, http.StatusServiceUnavailable, "api_error", s.translator(r).Text("api.settings.proxies.all_cooling", nil))
 		return
