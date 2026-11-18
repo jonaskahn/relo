@@ -1,6 +1,6 @@
 {
-  "generated": "2026-11-17T14:59:21Z",
-  "latest": "v0.3.0",
+  "generated": "2026-11-18T02:38:34Z",
+  "latest": "v0.3.1",
   "latest_beta": "v0.3.1-beta.174.8da9ae63",
   "install": {
     "stable": {
@@ -17,6 +17,158 @@
     }
   },
   "releases": [
+    {
+      "tag": "v0.3.1",
+      "version": "0.3.1",
+      "name": "v0.3.1 - 🎥 Time",
+      "channel": "stable",
+      "draft": false,
+      "published_at": "2026-11-18T02:38:24Z",
+      "page": "https://github.com/jonaskahn/relo/releases/tag/v0.3.1",
+      "notes": "# 🚀 v0.3.1 — 2026-11-17\r\n\r\n### ✨ Improvements\r\n\r\n- 🧦 Outbound proxies are now a managed pool instead of one address. Paste a list or import a file, and Relo validates each line, skips duplicates and reports what it refused. Passwords are kept in the credential vault, so a row holds no secret.\r\n- 🎛️ Manage the pool from the Providers card: search, filter by enabled, cooling or disabled, page through it, then enable, edit, test or delete an entry. The card shows how many are enabled and how many are cooling.\r\n- 🔁 A connection keeps one proxy while it stays healthy, and rotates to another when it fails. A proxy that fails cools down for a backoff and returns on its own; when every enabled proxy is cooling, the refusal names how long to wait.\r\n- 🔐 SOCKS5 is accepted alongside HTTP and HTTPS, with `socks5h` stored as `socks5`. The `host:port:user:pass` shorthand that Settings already took now works here too.\r\n- ↗️ A `[proxy] url` left in the startup file is moved into the pool once, and cleared only after the entry and its password are stored.\r\n- 🩺 Doctor gains an **Outbound proxies** check, naming an unconfigured pool, a fully disabled one and one that is entirely cooling.\r\n- 🌍 The proxy pool is named in all 23 console catalogs.\r\n\r\n### 🐛 Fixes\r\n\r\n- ⏱️ A rate limit longer than one request can wait now moves to the next account of the connection instead of holding the request open. When every account has answered, the refusal carries Relo's own `Retry-After` and a translated explanation rather than the vendor's body.\r\n- 🆕 The what's-new dialog no longer reopens for the same release. Build metadata (`+b7df4346`) is dropped on both sides, so a beta rebuild and the catalog's spelling share one key.\r\n- 🧩 The console takes `tailwind-variants` 4, `bits-ui` 2.21 and SvelteKit 3.2, with the dependency notices updated.\r\n\r\n### 🧪 Quality\r\n\r\n- 🧪 The proxy pool is measured end to end: its storage failures, selection and both cooling refusals, every API route's error, each doctor answer, the SOCKS5 and shorthand parsing, and the legacy move. `internal/proxy` went from 64.0% to 96.5%, and the coverage gate now lists it.",
+      "install": {
+        "script": "curl -fsSL https://relo.ifelse.one/install.sh | sh -s -- --version 0.3.1",
+        "powershell": "& ([scriptblock]::Create((irm https://relo.ifelse.one/install.ps1))) -Version 0.3.1",
+        "npm": "npm i -g @jonaskahn/relo@0.3.1"
+      },
+      "files": [
+        {
+          "name": "checksums.txt",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.3.1/checksums.txt",
+          "size": 582,
+          "os": "any",
+          "arch": "any",
+          "kind": "checksums",
+          "format": "txt"
+        },
+        {
+          "name": "Relo-0.3.1-arm64.zip",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.3.1/Relo-0.3.1-arm64.zip",
+          "size": 16844834,
+          "os": "macos",
+          "arch": "arm64",
+          "kind": "app",
+          "format": "zip"
+        },
+        {
+          "name": "relo-0.3.1-darwin-amd64.tar.gz",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.3.1/relo-0.3.1-darwin-amd64.tar.gz",
+          "size": 16046344,
+          "os": "macos",
+          "arch": "amd64",
+          "kind": "archive",
+          "format": "tar.gz"
+        },
+        {
+          "name": "relo-0.3.1-darwin-arm64.tar.gz",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.3.1/relo-0.3.1-darwin-arm64.tar.gz",
+          "size": 15565051,
+          "os": "macos",
+          "arch": "arm64",
+          "kind": "archive",
+          "format": "tar.gz"
+        },
+        {
+          "name": "relo-0.3.1-linux-amd64.tar.gz",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.3.1/relo-0.3.1-linux-amd64.tar.gz",
+          "size": 15724135,
+          "os": "linux",
+          "arch": "amd64",
+          "kind": "archive",
+          "format": "tar.gz"
+        },
+        {
+          "name": "relo-0.3.1-linux-arm64.tar.gz",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.3.1/relo-0.3.1-linux-arm64.tar.gz",
+          "size": 14875988,
+          "os": "linux",
+          "arch": "arm64",
+          "kind": "archive",
+          "format": "tar.gz"
+        },
+        {
+          "name": "Relo-0.3.1-universal.zip",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.3.1/Relo-0.3.1-universal.zip",
+          "size": 33282856,
+          "os": "macos",
+          "arch": "universal",
+          "kind": "app",
+          "format": "zip"
+        },
+        {
+          "name": "relo-0.3.1-windows-amd64.tar.gz",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.3.1/relo-0.3.1-windows-amd64.tar.gz",
+          "size": 15674419,
+          "os": "windows",
+          "arch": "amd64",
+          "kind": "archive",
+          "format": "tar.gz"
+        },
+        {
+          "name": "relo-0.3.1-windows-arm64.tar.gz",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.3.1/relo-0.3.1-windows-arm64.tar.gz",
+          "size": 14726739,
+          "os": "windows",
+          "arch": "arm64",
+          "kind": "archive",
+          "format": "tar.gz"
+        },
+        {
+          "name": "Relo-Setup-0.3.1-amd64.deb",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.3.1/Relo-Setup-0.3.1-amd64.deb",
+          "size": 15998736,
+          "os": "linux",
+          "arch": "amd64",
+          "kind": "installer",
+          "format": "deb"
+        },
+        {
+          "name": "Relo-Setup-0.3.1-amd64.exe",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.3.1/Relo-Setup-0.3.1-amd64.exe",
+          "size": 11555959,
+          "os": "windows",
+          "arch": "amd64",
+          "kind": "installer",
+          "format": "exe"
+        },
+        {
+          "name": "Relo-Setup-0.3.1-amd64.rpm",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.3.1/Relo-Setup-0.3.1-amd64.rpm",
+          "size": 15956312,
+          "os": "linux",
+          "arch": "amd64",
+          "kind": "installer",
+          "format": "rpm"
+        },
+        {
+          "name": "Relo-Setup-0.3.1-arm64.deb",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.3.1/Relo-Setup-0.3.1-arm64.deb",
+          "size": 15232142,
+          "os": "linux",
+          "arch": "arm64",
+          "kind": "installer",
+          "format": "deb"
+        },
+        {
+          "name": "Relo-Setup-0.3.1-arm64.exe",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.3.1/Relo-Setup-0.3.1-arm64.exe",
+          "size": 10441500,
+          "os": "windows",
+          "arch": "arm64",
+          "kind": "installer",
+          "format": "exe"
+        },
+        {
+          "name": "Relo-Setup-0.3.1-arm64.rpm",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.3.1/Relo-Setup-0.3.1-arm64.rpm",
+          "size": 15159418,
+          "os": "linux",
+          "arch": "arm64",
+          "kind": "installer",
+          "format": "rpm"
+        }
+      ]
+    },
     {
       "tag": "v0.3.1-beta.174.8da9ae63",
       "version": "0.3.1-beta.174.8da9ae63",
