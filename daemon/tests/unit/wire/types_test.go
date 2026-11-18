@@ -131,6 +131,7 @@ func TestEventKindString(t *testing.T) {
 		{inference.EventUsage, "usage"},
 		{inference.EventTerminal, "terminal"},
 		{inference.EventError, "error"},
+		{inference.EventMessageStart, "message_start"},
 		{inference.EventKind(42), "unknown"},
 	}
 	for _, tt := range tests {

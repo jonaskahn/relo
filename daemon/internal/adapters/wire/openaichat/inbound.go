@@ -63,6 +63,10 @@ func (c *ChatCompletionsCodec) DecodeRequest(r *http.Request) (*inference.Reques
 // EncodeResponseEvent renders one canonical event as client SSE frames.
 func (c *ChatCompletionsCodec) EncodeResponseEvent(event inference.Event) ([]wire.SSEEvent, error) {
 	switch event.Kind {
+	case inference.EventMessageStart:
+		// The chat wire carries no message identity of its own, so an
+		// upstream's identity is not rendered here.
+		return nil, nil
 	case inference.EventTextDelta:
 		return c.deltaFrames(map[string]any{"content": event.Text})
 	case inference.EventReasoningDelta:
@@ -276,6 +280,8 @@ func newChatAssembler() *chatAssembler {
 
 func (a *chatAssembler) observe(event inference.Event) error {
 	switch event.Kind {
+	case inference.EventMessageStart:
+		return nil
 	case inference.EventTextDelta:
 		a.content.WriteString(event.Text)
 	case inference.EventReasoningDelta:

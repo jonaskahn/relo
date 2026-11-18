@@ -169,7 +169,10 @@ func (d *streamDecoder) messageStart(message *messageBody) []inference.Event {
 		return nil
 	}
 	d.mergeUsage(message.Usage)
-	return nil
+	if message.ID == "" {
+		return nil
+	}
+	return []inference.Event{{Kind: inference.EventMessageStart, MessageID: message.ID}}
 }
 
 func (d *streamDecoder) messageDelta(frame *streamFrame) []inference.Event {
@@ -324,7 +327,7 @@ func (d *streamDecoder) terminalReason() string {
 }
 
 func (d *streamDecoder) absorbMessage(message *messageBody) []inference.Event {
-	var events []inference.Event
+	events := d.messageStart(message)
 	for index := range message.Content {
 		events = append(events, d.blockEvents(&message.Content[index], index)...)
 	}

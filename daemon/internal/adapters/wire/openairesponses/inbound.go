@@ -95,6 +95,10 @@ func (i *Inbound) DecodeRequest(r *http.Request) (*inference.Request, error) {
 // EncodeResponseEvent renders one canonical event as Responses SSE frames.
 func (i *Inbound) EncodeResponseEvent(event inference.Event) ([]wire.SSEEvent, error) {
 	switch event.Kind {
+	case inference.EventMessageStart:
+		// The Responses wire names its own response identity, so an
+		// upstream's message identity is not rendered here.
+		return nil, nil
 	case inference.EventTextDelta:
 		return i.textFrames(event.Text), nil
 	case inference.EventReasoningDelta:

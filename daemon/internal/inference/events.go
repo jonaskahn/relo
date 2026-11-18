@@ -16,6 +16,10 @@ const (
 	EventUsage
 	EventTerminal
 	EventError
+	// EventMessageStart carries the upstream's own message identity. A
+	// same-family inbound echoes it so a client can continue the thread the
+	// upstream actually opened.
+	EventMessageStart
 )
 
 // EventReasonStop, EventReasonLength, and EventReasonToolUse are the
@@ -46,6 +50,8 @@ func (k EventKind) String() string {
 		return "terminal"
 	case EventError:
 		return "error"
+	case EventMessageStart:
+		return "message_start"
 	default:
 		return "unknown"
 	}
@@ -54,7 +60,10 @@ func (k EventKind) String() string {
 // Event is one event in a streaming response. Reasoning carries the
 // opaque reasoning state a family replays, alongside any reasoning text.
 type Event struct {
-	Kind      EventKind        `json:"kind"`
+	Kind EventKind `json:"kind"`
+	// MessageID is the upstream's message identity, set only on
+	// EventMessageStart.
+	MessageID string           `json:"message_id,omitempty"`
 	Text      string           `json:"text,omitempty"`
 	ToolCall  *ToolCallDelta   `json:"tool_call,omitempty"`
 	Usage     *UsageReport     `json:"usage,omitempty"`

@@ -29,6 +29,7 @@ const (
 type Inbound struct {
 	suffix     string
 	model      string
+	upstreamID string
 	native     []byte
 	seq        int
 	started    bool
@@ -85,6 +86,9 @@ func (i *Inbound) NativeBody() []byte {
 // EncodeResponseEvent renders one canonical event as Messages SSE frames.
 func (i *Inbound) EncodeResponseEvent(event inference.Event) ([]wire.SSEEvent, error) {
 	switch event.Kind {
+	case inference.EventMessageStart:
+		i.upstreamID = event.MessageID
+		return nil, nil
 	case inference.EventTextDelta:
 		return i.textFrames(event.Text), nil
 	case inference.EventReasoningDelta:
@@ -376,6 +380,9 @@ func (i *Inbound) usageObject() map[string]any {
 }
 
 func (i *Inbound) messageID() string {
+	if i.upstreamID != "" {
+		return i.upstreamID
+	}
 	return "msg_" + i.suffix
 }
 
