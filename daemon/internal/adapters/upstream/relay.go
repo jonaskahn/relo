@@ -288,6 +288,7 @@ func (e *Executor) relayRejection(att attempt, response *http.Response) (Result,
 		Credential: att.exchange.CredentialLabel, HeaderLatency: att.latency,
 		RetryAfter:  preferredWait(retryAfter(response), info.RetryAfter),
 		ModelAccess: modelAccessRefusal(response.StatusCode, info, att.exchange.Request.Model),
+		ThreadState: threadStateRefusal(response.StatusCode, info),
 	}
 	if response.StatusCode == http.StatusProxyAuthRequired {
 		return proxyRefusal(result, response.StatusCode, info.Message)
@@ -306,6 +307,14 @@ func (e *Executor) relayRejection(att attempt, response *http.Response) (Result,
 		// A rate limit belongs to the account that earned it. The walk decides
 		// which account answers the client, so no vendor body travels here.
 		result.Retryable = true
+		return result, fmt.Errorf("%w: %d %s", ErrUpstreamStatus, response.StatusCode, info.Message)
+	}
+	if result.ThreadState {
+		// The thread belongs to the account that opened it. Another account
+		// cannot continue it, so the vendor's refusal travels to the client
+		// instead of the walk burning every account on the same 404.
+		writeFailure(att.writer, att.exchange.Inbound, info, response.Header)
+		result.Wrote = true
 		return result, fmt.Errorf("%w: %d %s", ErrUpstreamStatus, response.StatusCode, info.Message)
 	}
 	switchable := att.exchange.Policy.Switchable(response.StatusCode)
@@ -346,12 +355,22 @@ func modelAccessRefusal(status int, info *inference.ErrorInfo, model string) boo
 		return false
 	}
 	if status == http.StatusNotFound {
-		return true
+		// A conversation-state 404 names the thread, not the model, so it
+		// never counts as model access.
+		return !threadStateRefusal(status, info)
 	}
 	if status != http.StatusForbidden {
 		return false
 	}
 	return strings.Contains(info.Message, model) || strings.Contains(info.Code, model)
+}
+
+// threadStateRefusal reports the upstream's refusal to continue a thread it
+// no longer holds. The answer names the thread, not the model or the account,
+// so another account cannot serve it and the client has to start over.
+func threadStateRefusal(status int, info *inference.ErrorInfo) bool {
+	return status == http.StatusNotFound && info != nil &&
+		strings.Contains(strings.ToLower(info.Message), "thread state")
 }
 
 func prepareStream(w http.ResponseWriter) {

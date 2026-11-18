@@ -522,6 +522,13 @@ func (d *sendDriver) handleAttemptFailure(failed failedAttempt, err error) walkA
 	if d.refuseAllCooling(err) {
 		return walkAnswered
 	}
+	if failed.result.ThreadState {
+		// The upstream lost the thread the account opened. Another account
+		// cannot continue it, so the client reads the refusal and starts a
+		// new thread rather than the walk burning every account.
+		d.s.answerFailed(d, d.outcome, failed.result, err)
+		return walkAnswered
+	}
 	if failed.result.LaneExhausted {
 		return d.leaveSpentLane(failed, err)
 	}

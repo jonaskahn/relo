@@ -168,6 +168,11 @@ type Result struct {
 	// to another account of the same connection rather than to another
 	// provider, and the account itself stays in rotation.
 	ModelAccess bool
+	// ThreadState reports a conversation-state refusal, which names the
+	// upstream thread rather than the account. The state belongs to the
+	// account that opened it, so another account cannot serve the request and
+	// the client has to start a new thread.
+	ThreadState bool
 	// ZeroTokens reports a 2xx that carried no token usage at all, which the
 	// relay turns into a retryable rate limit. The account's own health is
 	// not blamed for it.

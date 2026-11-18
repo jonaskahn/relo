@@ -157,6 +157,10 @@ type Result struct {
 	// to another account of the same connection rather than to another
 	// provider, and the account itself stays in rotation.
 	ModelAccess bool
+	// ThreadState reports a refusal to continue an upstream thread it no
+	// longer holds. The thread belongs to the account that opened it, so the
+	// walk must not ask another account and the client has to start over.
+	ThreadState bool
 	// ZeroTokens reports a 2xx that carried no token usage at all, which the
 	// relay turns into a retryable rate limit. The account's own health is
 	// not blamed for it.
