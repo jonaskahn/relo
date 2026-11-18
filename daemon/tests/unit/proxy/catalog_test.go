@@ -115,10 +115,13 @@ func TestTheCatalogGainsAClonedReloRowAndKeepsTheVendorsOwn(t *testing.T) {
 	if added["id"] != reloRow.ID || added["name"] != "Alpha" || added["section"] != "main" || added["short_name"] != "Alpha" {
 		t.Fatalf("added row = %v, want Relo's id and name", added)
 	}
-	for _, key := range []string{"description", "fast_mode", "min_claude_code_version"} {
+	for _, key := range []string{"description", "fast_mode"} {
 		if _, kept := added[key]; kept {
 			t.Fatalf("added row kept %q, which describes the model it was copied from: %v", key, added)
 		}
+	}
+	if added["min_claude_code_version"] != "0.0.0" {
+		t.Fatalf("added row min version = %v, want 0.0.0", added["min_claude_code_version"])
 	}
 	runtime := added["runtime"].(map[string]any)
 	if runtime["max_input_tokens"] != float64(400000) || runtime["family"] != "opus" {

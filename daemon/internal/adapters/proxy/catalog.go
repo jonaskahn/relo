@@ -41,6 +41,11 @@ var (
 	versionKey = regexp.MustCompile(`(?i)version`)
 )
 
+// clonedRowMinVersion marks a cloned row as known to Claude Code, which greys
+// out rows lacking a min_claude_code_version. Relo's rows have no real
+// minimum, so use a value no client is below (format: d.d.d).
+const clonedRowMinVersion = "0.0.0"
+
 type catalogKind int
 
 const (
@@ -299,6 +304,7 @@ func cloneRow(template map[string]any, row CatalogRow) map[string]any {
 		clone[key] = deepCopy(value)
 	}
 	clone["id"], clone["name"], clone["section"] = row.ID, row.Name, "main"
+	clone["min_claude_code_version"] = clonedRowMinVersion
 	if _, has := clone["short_name"]; has {
 		clone["short_name"] = row.Name
 	}
