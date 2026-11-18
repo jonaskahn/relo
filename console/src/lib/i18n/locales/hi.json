@@ -533,7 +533,8 @@
           "actionAddAccount": "खाता जोड़ें",
           "actionOpenAccounts": "खाते खोलें",
           "actionRefresh": "मॉडल, मेटाडेटा और कोटा ताज़ा करें",
-          "actionShowModels": "मॉडल दिखाएँ"
+          "actionShowModels": "मॉडल दिखाएँ",
+          "sunset": "Google ने इस सेवा को तृतीय-पक्ष क्लाइंट के लिए बंद कर दिया है, इसलिए सेवा की शर्तों के उल्लंघन के कारण अनुरोध अस्वीकार किए जा सकते हैं।"
         },
         "pane": {
           "enableToggle": "{label} चालू या बंद करें",
@@ -939,7 +940,8 @@
           "filterAll": "सभी",
           "filterFree": "मुफ़्त",
           "filterLabel": "कनेक्शन फ़िल्टर करें",
-          "freeAlreadyAdded": "यह मुफ़्त कनेक्शन पहले से जोड़ा गया है।"
+          "freeAlreadyAdded": "यह मुफ़्त कनेक्शन पहले से जोड़ा गया है।",
+          "sunsetHint": "Google द्वारा तृतीय-पक्ष क्लाइंट के लिए बंद"
         },
         "verify": {
           "title": "कनेक्शन जाँचें",

@@ -533,7 +533,8 @@
           "actionAddAccount": "Konto hinzufügen",
           "actionOpenAccounts": "Konten öffnen",
           "actionRefresh": "Modelle, Metadaten und Quota aktualisieren",
-          "actionShowModels": "Modelle anzeigen"
+          "actionShowModels": "Modelle anzeigen",
+          "sunset": "Google hat diesen Dienst für Drittanbieter-Clients geschlossen, daher können Anfragen wegen eines Verstoßes gegen die Nutzungsbedingungen abgelehnt werden."
         },
         "pane": {
           "enableToggle": "{label} ein- oder ausschalten",
@@ -939,7 +940,8 @@
           "filterAll": "Alle",
           "filterFree": "Kostenlos",
           "filterLabel": "Verbindungen filtern",
-          "freeAlreadyAdded": "Diese kostenlose Verbindung ist bereits hinzugefügt."
+          "freeAlreadyAdded": "Diese kostenlose Verbindung ist bereits hinzugefügt.",
+          "sunsetHint": "Von Google für Drittanbieter-Clients geschlossen"
         },
         "verify": {
           "title": "Verbindung prüfen",

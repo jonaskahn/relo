@@ -15,6 +15,7 @@
 		type TemplateRow
 	} from '$lib/provider-sections';
 	import { isExperimentalConnection } from '$lib/provider-experimental';
+	import { isSunsetConnection } from '$lib/provider-sunset';
 	import { FREE_TEMPLATE_COUNT, isSingleFreeConnection } from '$lib/provider-free';
 	import BillingChip from '$lib/components/providers/billing-chip.svelte';
 	import FreeAvailableChip from '$lib/components/providers/free-available-chip.svelte';
@@ -197,6 +198,10 @@
 				</span>
 				{#if row.disabledReason}
 					<span class="block truncate text-[0.7rem] text-warn">{row.disabledReason}</span>
+				{:else if isSunsetConnection(row.id)}
+					<span data-sunset-hint class="block truncate text-[0.7rem] text-warn">
+						{$t('ui.pages.providersPage.add.sunsetHint')}
+					</span>
 				{/if}
 			</span>
 			{#if chosen}

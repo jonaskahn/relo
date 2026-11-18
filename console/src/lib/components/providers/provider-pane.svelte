@@ -26,6 +26,7 @@
 	import type { ModelLabelFilter } from '$lib/model-filters';
 	import { providerStatus } from '$lib/provider-status';
 	import { isExperimentalConnection } from '$lib/provider-experimental';
+	import { sunsetNoticeKey } from '$lib/provider-sunset';
 	import BillingChip from './billing-chip.svelte';
 	import FreeAvailableChip from './free-available-chip.svelte';
 	import AllowOverridesButton from './allow-overrides-button.svelte';
@@ -88,6 +89,11 @@
 	const paidFree = $derived(splitsPaidFree(models));
 	// The lane logs what it is sent, so the header says so beside what it is.
 	const experimental = $derived(isExperimentalConnection(provider.template_id || provider.id));
+	// A connection the vendor has closed says so only while it is switched on:
+	// switched off it already reads as paused, and the reason is not news.
+	const sunsetKey = $derived(
+		provider.enabled ? sunsetNoticeKey(provider.template_id || provider.id) : ''
+	);
 	const quotaStale = $derived(windows.some((window) => window.stale));
 	// modelFilters lives here so search and the one filter menu can sit beside
 	// Back on the models tab while the list below keeps filtering.
@@ -380,6 +386,21 @@
 	</header>
 
 	<ProviderBanner {provider} onaction={(name) => onBanner(name)} />
+
+	{#if sunsetKey}
+		<div
+			data-sunset-notice
+			class="flex items-start gap-2 rounded-control border border-amber-500/40 bg-amber-500/5 py-2 px-2 mb-2 text-sm"
+			role="status"
+		>
+			<Icon
+				name="alert-triangle"
+				size={15}
+				class="mt-0.5 shrink-0 text-amber-700 dark:text-amber-400"
+			/>
+			<span class="min-w-0 flex-1 text-muted-foreground">{$t(sunsetKey)}</span>
+		</div>
+	{/if}
 
 	<Tabs.Root value={tab} onValueChange={ontab} class="flex flex-col">
 		<div class="provider-toolbar" data-tab={tab}>

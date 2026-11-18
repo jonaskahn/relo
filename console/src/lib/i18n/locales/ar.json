@@ -533,7 +533,8 @@
           "actionAddAccount": "إضافة حساب",
           "actionOpenAccounts": "فتح الحسابات",
           "actionRefresh": "تحديث النماذج والبيانات الوصفية والحصة",
-          "actionShowModels": "عرض النماذج"
+          "actionShowModels": "عرض النماذج",
+          "sunset": "أغلقت Google هذه الخدمة أمام عملاء الطرف الثالث، لذا قد تُرفض الطلبات بسبب مخالفة شروط الخدمة."
         },
         "pane": {
           "enableToggle": "شغّل {label} أو أوقفه",
@@ -939,7 +940,8 @@
           "filterAll": "الكل",
           "filterFree": "مجاني",
           "filterLabel": "تصفية الاتصالات",
-          "freeAlreadyAdded": "تمت إضافة هذا الاتصال المجاني بالفعل."
+          "freeAlreadyAdded": "تمت إضافة هذا الاتصال المجاني بالفعل.",
+          "sunsetHint": "أغلقتها Google أمام عملاء الطرف الثالث"
         },
         "verify": {
           "title": "فحص الاتصال",

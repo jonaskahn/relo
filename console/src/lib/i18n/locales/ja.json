@@ -533,7 +533,8 @@
           "actionAddAccount": "アカウントを追加",
           "actionOpenAccounts": "アカウントを開く",
           "actionRefresh": "モデル・メタデータ・クォータを更新",
-          "actionShowModels": "モデルを表示"
+          "actionShowModels": "モデルを表示",
+          "sunset": "Google はこのサービスをサードパーティクライアントに閉じたため、利用規約違反としてリクエストが拒否される場合があります。"
         },
         "pane": {
           "enableToggle": "オン・オフの切り替え：{label}",
@@ -939,7 +940,8 @@
           "filterAll": "すべて",
           "filterFree": "無料",
           "filterLabel": "接続を絞り込む",
-          "freeAlreadyAdded": "この無料接続はすでに追加されています。"
+          "freeAlreadyAdded": "この無料接続はすでに追加されています。",
+          "sunsetHint": "Google がサードパーティクライアント向けに閉鎖"
         },
         "verify": {
           "title": "接続を確認",

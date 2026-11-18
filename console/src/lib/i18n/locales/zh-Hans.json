@@ -533,7 +533,8 @@
           "actionAddAccount": "添加账号",
           "actionOpenAccounts": "打开账号",
           "actionRefresh": "刷新模型、元数据和配额",
-          "actionShowModels": "显示模型"
+          "actionShowModels": "显示模型",
+          "sunset": "Google 已对第三方客户端关闭此服务，请求可能因违反服务条款而被拒绝。"
         },
         "pane": {
           "enableToggle": "开启或关闭 {label}",
@@ -939,7 +940,8 @@
           "filterAll": "全部",
           "filterFree": "免费",
           "filterLabel": "筛选连接",
-          "freeAlreadyAdded": "此免费连接已添加。"
+          "freeAlreadyAdded": "此免费连接已添加。",
+          "sunsetHint": "Google 已对第三方客户端关闭"
         },
         "verify": {
           "title": "检查连接",

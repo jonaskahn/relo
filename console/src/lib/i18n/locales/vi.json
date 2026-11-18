@@ -533,7 +533,8 @@
           "actionAddAccount": "Thêm tài khoản",
           "actionOpenAccounts": "Mở tài khoản",
           "actionRefresh": "Làm mới mô hình, siêu dữ liệu và quota",
-          "actionShowModels": "Hiện mô hình"
+          "actionShowModels": "Hiện mô hình",
+          "sunset": "Google đã đóng dịch vụ này với các ứng dụng bên thứ ba, nên yêu cầu có thể bị từ chối vì vi phạm điều khoản dịch vụ."
         },
         "pane": {
           "enableToggle": "Bật hoặc tắt {label}",
@@ -939,7 +940,8 @@
           "filterAll": "Tất cả",
           "filterFree": "Miễn phí",
           "filterLabel": "Lọc kết nối",
-          "freeAlreadyAdded": "Kết nối miễn phí này đã được thêm."
+          "freeAlreadyAdded": "Kết nối miễn phí này đã được thêm.",
+          "sunsetHint": "Google đã đóng với ứng dụng bên thứ ba"
         },
         "verify": {
           "title": "Kiểm tra kết nối",

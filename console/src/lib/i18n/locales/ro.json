@@ -533,7 +533,8 @@
           "actionAddAccount": "Adaugă cont",
           "actionOpenAccounts": "Deschide conturile",
           "actionRefresh": "Reîmprospătează modelele, metadatele și quota",
-          "actionShowModels": "Arată modelele"
+          "actionShowModels": "Arată modelele",
+          "sunset": "Google a închis acest serviciu pentru clienții terți, așa că cererile pot fi refuzate pentru încălcarea termenilor serviciului."
         },
         "pane": {
           "enableToggle": "Pornește sau oprește {label}",
@@ -939,7 +940,8 @@
           "filterAll": "Toate",
           "filterFree": "Gratuit",
           "filterLabel": "Filtrează conexiunile",
-          "freeAlreadyAdded": "Această conexiune gratuită este deja adăugată."
+          "freeAlreadyAdded": "Această conexiune gratuită este deja adăugată.",
+          "sunsetHint": "Închis de Google pentru clienții terți"
         },
         "verify": {
           "title": "Verifică conexiunea",

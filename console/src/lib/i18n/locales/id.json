@@ -533,7 +533,8 @@
           "actionAddAccount": "Tambah akun",
           "actionOpenAccounts": "Buka akun",
           "actionRefresh": "Segarkan model, metadata, dan kuota",
-          "actionShowModels": "Tampilkan model"
+          "actionShowModels": "Tampilkan model",
+          "sunset": "Google menutup layanan ini untuk klien pihak ketiga, sehingga permintaan dapat ditolak karena pelanggaran ketentuan layanan."
         },
         "pane": {
           "enableToggle": "Aktifkan atau nonaktifkan {label}",
@@ -939,7 +940,8 @@
           "filterAll": "Semua",
           "filterFree": "Gratis",
           "filterLabel": "Filter koneksi",
-          "freeAlreadyAdded": "Koneksi gratis ini sudah ditambahkan."
+          "freeAlreadyAdded": "Koneksi gratis ini sudah ditambahkan.",
+          "sunsetHint": "Ditutup oleh Google untuk klien pihak ketiga"
         },
         "verify": {
           "title": "Periksa koneksi",

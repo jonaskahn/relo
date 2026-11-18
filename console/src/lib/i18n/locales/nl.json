@@ -533,7 +533,8 @@
           "actionAddAccount": "Account toevoegen",
           "actionOpenAccounts": "Accounts openen",
           "actionRefresh": "Modellen, metadata en quota verversen",
-          "actionShowModels": "Modellen tonen"
+          "actionShowModels": "Modellen tonen",
+          "sunset": "Google heeft deze dienst gesloten voor clients van derden, dus verzoeken kunnen worden geweigerd wegens schending van de servicevoorwaarden."
         },
         "pane": {
           "enableToggle": "{label} in- of uitschakelen",
@@ -939,7 +940,8 @@
           "filterAll": "Alles",
           "filterFree": "Gratis",
           "filterLabel": "Verbindingen filteren",
-          "freeAlreadyAdded": "Deze gratis verbinding is al toegevoegd."
+          "freeAlreadyAdded": "Deze gratis verbinding is al toegevoegd.",
+          "sunsetHint": "Door Google gesloten voor clients van derden"
         },
         "verify": {
           "title": "De verbinding controleren",

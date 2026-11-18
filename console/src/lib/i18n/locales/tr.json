@@ -533,7 +533,8 @@
           "actionAddAccount": "Hesap ekle",
           "actionOpenAccounts": "Hesapları aç",
           "actionRefresh": "Modelleri, meta verileri ve kotayı yenile",
-          "actionShowModels": "Modelleri göster"
+          "actionShowModels": "Modelleri göster",
+          "sunset": "Google bu hizmeti üçüncü taraf istemcilere kapattı, bu nedenle istekler hizmet koşulları ihlali nedeniyle reddedilebilir."
         },
         "pane": {
           "enableToggle": "{label} bağlantısını aç veya kapat",
@@ -939,7 +940,8 @@
           "filterAll": "Tümü",
           "filterFree": "Ücretsiz",
           "filterLabel": "Bağlantıları filtrele",
-          "freeAlreadyAdded": "Bu ücretsiz bağlantı zaten eklenmiş."
+          "freeAlreadyAdded": "Bu ücretsiz bağlantı zaten eklenmiş.",
+          "sunsetHint": "Google tarafından üçüncü taraf istemcilere kapatıldı"
         },
         "verify": {
           "title": "Bağlantıyı denetle",

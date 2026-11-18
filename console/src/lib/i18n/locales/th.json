@@ -533,7 +533,8 @@
           "actionAddAccount": "เพิ่มบัญชี",
           "actionOpenAccounts": "เปิดบัญชี",
           "actionRefresh": "รีเฟรชโมเดล ข้อมูลเมตา และโควตา",
-          "actionShowModels": "แสดงโมเดล"
+          "actionShowModels": "แสดงโมเดล",
+          "sunset": "Google ปิดบริการนี้สำหรับไคลเอนต์บุคคลที่สามแล้ว คำขอจึงอาจถูกปฏิเสธเนื่องจากละเมิดข้อกำหนดการให้บริการ"
         },
         "pane": {
           "enableToggle": "เปิดหรือปิด {label}",
@@ -939,7 +940,8 @@
           "filterAll": "ทั้งหมด",
           "filterFree": "ฟรี",
           "filterLabel": "กรองการเชื่อมต่อ",
-          "freeAlreadyAdded": "การเชื่อมต่อฟรีนี้ถูกเพิ่มแล้ว"
+          "freeAlreadyAdded": "การเชื่อมต่อฟรีนี้ถูกเพิ่มแล้ว",
+          "sunsetHint": "Google ปิดสำหรับไคลเอนต์บุคคลที่สาม"
         },
         "verify": {
           "title": "ตรวจสอบการเชื่อมต่อ",

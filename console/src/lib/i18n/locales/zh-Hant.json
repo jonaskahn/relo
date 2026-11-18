@@ -533,7 +533,8 @@
           "actionAddAccount": "新增賬號",
           "actionOpenAccounts": "開啟賬號",
           "actionRefresh": "重新整理模型、中繼資料與配額",
-          "actionShowModels": "顯示模型"
+          "actionShowModels": "顯示模型",
+          "sunset": "Google 已對第三方用戶端關閉此服務，請求可能因違反服務條款而被拒絕。"
         },
         "pane": {
           "enableToggle": "開啟或關閉 {label}",
@@ -939,7 +940,8 @@
           "filterAll": "全部",
           "filterFree": "免費",
           "filterLabel": "篩選連線",
-          "freeAlreadyAdded": "此免費連線已新增。"
+          "freeAlreadyAdded": "此免費連線已新增。",
+          "sunsetHint": "Google 已對第三方用戶端關閉"
         },
         "verify": {
           "title": "檢查連線",

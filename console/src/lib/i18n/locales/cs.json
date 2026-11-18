@@ -533,7 +533,8 @@
           "actionAddAccount": "Přidat účet",
           "actionOpenAccounts": "Otevřít účty",
           "actionRefresh": "Obnovit modely, metadata a kvótu",
-          "actionShowModels": "Zobrazit modely"
+          "actionShowModels": "Zobrazit modely",
+          "sunset": "Google uzavřel tuto službu klientům třetích stran, proto mohou být požadavky odmítnuty kvůli porušení podmínek služby."
         },
         "pane": {
           "enableToggle": "Zapnout nebo vypnout {label}",
@@ -939,7 +940,8 @@
           "filterAll": "Vše",
           "filterFree": "Zdarma",
           "filterLabel": "Filtrovat připojení",
-          "freeAlreadyAdded": "Toto bezplatné připojení je již přidáno."
+          "freeAlreadyAdded": "Toto bezplatné připojení je již přidáno.",
+          "sunsetHint": "Google uzavřel klientům třetích stran"
         },
         "verify": {
           "title": "Zkontrolovat připojení",

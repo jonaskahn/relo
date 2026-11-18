@@ -533,7 +533,8 @@
           "actionAddAccount": "Lägg till konto",
           "actionOpenAccounts": "Öppna konton",
           "actionRefresh": "Uppdatera modeller, metadata och kvot",
-          "actionShowModels": "Visa modeller"
+          "actionShowModels": "Visa modeller",
+          "sunset": "Google har stängt denna tjänst för tredjepartsklienter, så förfrågningar kan avvisas på grund av brott mot användarvillkoren."
         },
         "pane": {
           "enableToggle": "Slå på eller av {label}",
@@ -939,7 +940,8 @@
           "filterAll": "Alla",
           "filterFree": "Gratis",
           "filterLabel": "Filtrera anslutningar",
-          "freeAlreadyAdded": "Den här gratisanslutningen är redan tillagd."
+          "freeAlreadyAdded": "Den här gratisanslutningen är redan tillagd.",
+          "sunsetHint": "Stängd av Google för tredjepartsklienter"
         },
         "verify": {
           "title": "Kontrollera anslutningen",

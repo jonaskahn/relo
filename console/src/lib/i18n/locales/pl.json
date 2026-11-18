@@ -533,7 +533,8 @@
           "actionAddAccount": "Dodaj konto",
           "actionOpenAccounts": "Otwórz konta",
           "actionRefresh": "Odśwież modele, metadane i quota",
-          "actionShowModels": "Pokaż modele"
+          "actionShowModels": "Pokaż modele",
+          "sunset": "Google zamknął tę usługę dla klientów innych firm, więc żądania mogą zostać odrzucone z powodu naruszenia warunków usługi."
         },
         "pane": {
           "enableToggle": "Włącz lub wyłącz {label}",
@@ -939,7 +940,8 @@
           "filterAll": "Wszystkie",
           "filterFree": "Bezpłatne",
           "filterLabel": "Filtruj połączenia",
-          "freeAlreadyAdded": "To bezpłatne połączenie zostało już dodane."
+          "freeAlreadyAdded": "To bezpłatne połączenie zostało już dodane.",
+          "sunsetHint": "Zamknięte przez Google dla klientów innych firm"
         },
         "verify": {
           "title": "Sprawdź połączenie",

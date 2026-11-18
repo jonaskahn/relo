@@ -533,7 +533,8 @@
           "actionAddAccount": "계정 추가",
           "actionOpenAccounts": "계정 열기",
           "actionRefresh": "모델, 메타데이터, 쿼터 새로고침",
-          "actionShowModels": "모델 보기"
+          "actionShowModels": "모델 보기",
+          "sunset": "Google이 이 서비스를 타사 클라이언트에 대해 폐쇄했으므로, 서비스 약관 위반으로 요청이 거부될 수 있습니다."
         },
         "pane": {
           "enableToggle": "{label} 켜기/끄기",
@@ -939,7 +940,8 @@
           "filterAll": "전체",
           "filterFree": "무료",
           "filterLabel": "연결 필터",
-          "freeAlreadyAdded": "이 무료 연결은 이미 추가되었습니다."
+          "freeAlreadyAdded": "이 무료 연결은 이미 추가되었습니다.",
+          "sunsetHint": "Google이 타사 클라이언트에 대해 폐쇄"
         },
         "verify": {
           "title": "연결 확인",
