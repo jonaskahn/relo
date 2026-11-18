@@ -19,10 +19,10 @@ import (
 // Antigravity client. It is pinned here as well as in the package, so a change
 // that lets the version and the changelist drift apart fails the build: the
 // endpoint refuses a pair that no build ever shipped.
-const antigravityFingerprint = "antigravity/hub/2.23.0 (aidev_client; os_type=darwin; arch=arm64; cl=963137146)"
+const antigravityFingerprint = "antigravity/cli/1.5.11 (aidev_client; os_type=darwin; arch=arm64; cl=1024248524; auth_method=consumer)"
 
 func TestAntigravityFingerprint(t *testing.T) {
-	t.Run("the pinned user agent names the hub client family", func(t *testing.T) {
+	t.Run("the pinned user agent names the cli client family", func(t *testing.T) {
 		if got := antigravity.UserAgent(); got != antigravityFingerprint {
 			t.Fatalf("UserAgent() = %q, want %q", got, antigravityFingerprint)
 		}

@@ -16,9 +16,9 @@ import "fmt"
 // pairing the two was refused by every call that tried it. Raising either value
 // needs the changelist of the new build and a request-shape check against it.
 const (
-	clientFamily  = "hub"
-	clientVersion = "2.23.0"
-	changeList    = "963137146"
+	clientFamily  = "cli"
+	clientVersion = "1.5.11"
+	changeList    = "1024248524"
 
 	// The platform tokens mirror the build the manifest describes rather than
 	// this host's, because the backend compares the client family a credential
@@ -26,12 +26,17 @@ const (
 	clientOS     = "darwin"
 	clientArch   = "arm64"
 	clientDevice = "aidev_client"
+
+	// clientAuthMethod is the auth mode the first-party client names beside
+	// the platform tokens. The backend reads it as part of the fingerprint, so
+	// a call without it is a client build that never shipped.
+	clientAuthMethod = "consumer"
 )
 
 // UserAgent returns the User-Agent every Cloud Code Assist call sends:
 //
-//	antigravity/hub/2.23.0 (aidev_client; os_type=darwin; arch=arm64; cl=963137146)
+//	antigravity/cli/1.5.11 (aidev_client; os_type=darwin; arch=arm64; cl=1024248524; auth_method=consumer)
 func UserAgent() string {
-	return fmt.Sprintf("antigravity/%s/%s (%s; os_type=%s; arch=%s; cl=%s)",
-		clientFamily, clientVersion, clientDevice, clientOS, clientArch, changeList)
+	return fmt.Sprintf("antigravity/%s/%s (%s; os_type=%s; arch=%s; cl=%s; auth_method=%s)",
+		clientFamily, clientVersion, clientDevice, clientOS, clientArch, changeList, clientAuthMethod)
 }
