@@ -891,8 +891,8 @@ func TestCloudCodeAssistEnvelopeCarriesTheClientIdentity(t *testing.T) {
 	if parts[1] == parts[3] {
 		t.Fatalf("requestId = %q, want the agent and the trajectory to be separate identities", requestID)
 	}
-	if parts[4] != "2" {
-		t.Fatalf("requestId = %q, want the first turn to sit at step 2", requestID)
+	if parts[4] != "1" {
+		t.Fatalf("requestId = %q, want the first turn to sit at step 1", requestID)
 	}
 	inner, found := envelope["request"].(map[string]any)
 	if !found {
@@ -906,17 +906,17 @@ func TestCloudCodeAssistEnvelopeCarriesTheClientIdentity(t *testing.T) {
 		t.Fatalf("request = %v, want a session id", inner)
 	}
 	labels := inner["labels"].(map[string]any)
-	if labels["trajectory_id"] != parts[3] || labels["last_step_index"] != "1" {
-		t.Fatalf("labels = %v, want the trajectory from the envelope at step 1", labels)
+	if labels["trajectory_id"] != parts[3] || labels["last_step_index"] != "0" {
+		t.Fatalf("labels = %v, want the trajectory from the envelope at step index 0", labels)
 	}
-	if labels["used_claude"] != "false" {
+	if labels["used_claude"] != "false" || labels["used_non_gemini_model"] != "false" {
 		t.Fatalf("labels = %v, want a Gemini turn", labels)
 	}
 	// The vendor reads exactly these labels; one it never sends is a guess
 	// about what the endpoint watches, and a label it does read and Relo drops
 	// is telemetry that goes missing. A first turn has no execution to name
 	// back, so that one label joins the set rather than being filled in.
-	want := []string{"last_step_index", "trajectory_id", "used_claude", "used_claude_conservative"}
+	want := []string{"cascade_id", "root_cascade_id", "last_step_index", "request_id", "trajectory_id", "used_claude", "used_claude_conservative", "used_non_gemini_model"}
 	for _, name := range want {
 		if _, found := labels[name]; !found {
 			t.Fatalf("labels = %v, want it to carry %q", labels, name)
@@ -1279,9 +1279,12 @@ func TestCloudCodeAssistClaudeThinking(t *testing.T) {
 		}
 	})
 
-	t.Run("the tool mode is pinned with no tools", func(t *testing.T) {
-		if got := modeOf(inner("claude-sonnet-4-6", nil)); got != "VALIDATED" {
-			t.Fatalf("toolConfig mode = %q, want the pinned mode even with no tools", got)
+	t.Run("a silent claude turn states no tool mode", func(t *testing.T) {
+		// The first-party client sends no constraint of its own, so a silent
+		// turn must not invent one: a synthesised mode is a wire difference the
+		// endpoint reads.
+		if got := modeOf(inner("claude-sonnet-4-6", nil)); got != "" {
+			t.Fatalf("toolConfig mode = %q, want none while the client states none", got)
 		}
 	})
 
@@ -1294,8 +1297,8 @@ func TestCloudCodeAssistClaudeThinking(t *testing.T) {
 }
 
 // TestCloudCodeAssistToolChoice covers the tool constraint a turn carries:
-// silence keeps the VALIDATED default, and an explicit client choice wins
-// over it. A choice Gemini needs restated is also written into the
+// silence states none, and an explicit client choice travels as the mode it
+// named. A choice Gemini needs restated is also written into the
 // transcript, because the endpoint drops the wire constraint on its routes.
 func TestCloudCodeAssistToolChoice(t *testing.T) {
 	inner := func(model string, choice *inference.ToolChoice, tools []inference.Tool) map[string]any {
@@ -1330,9 +1333,9 @@ func TestCloudCodeAssistToolChoice(t *testing.T) {
 	}
 	weather := []inference.Tool{{Name: "get_weather", Parameters: json.RawMessage(`{"type":"object"}`)}}
 
-	t.Run("a silent gemini turn with tools stays validated", func(t *testing.T) {
-		if mode, _ := modeOf(inner("gemini-2.0-flash", nil, weather)); mode != "VALIDATED" {
-			t.Fatalf("mode = %q, want the default while tools are declared", mode)
+	t.Run("a silent gemini turn states no tool mode either", func(t *testing.T) {
+		if mode, _ := modeOf(inner("gemini-2.0-flash", nil, weather)); mode != "" {
+			t.Fatalf("mode = %q, want none while the client states none", mode)
 		}
 	})
 
@@ -1512,11 +1515,11 @@ func TestCloudCodeAssistSessionIdentity(t *testing.T) {
 	if firstTrajectory != secondTrajectory {
 		t.Fatalf("trajectory = %q then %q, want one identity for the conversation", firstTrajectory, secondTrajectory)
 	}
-	if firstStep != "1" || secondStep != "2" {
+	if firstStep != "0" || secondStep != "1" {
 		t.Fatalf("last_step_index = %q then %q, want the turn count to advance", firstStep, secondStep)
 	}
-	if step := strings.Split(secondID, "/")[4]; step != "3" {
-		t.Fatalf("requestId = %q, want the second turn at step 3", secondID)
+	if step := strings.Split(secondID, "/")[4]; step != "2" {
+		t.Fatalf("requestId = %q, want the second turn at step 2", secondID)
 	}
 
 	t.Run("another conversation gets its own identities", func(t *testing.T) {
@@ -1776,9 +1779,8 @@ func TestCloudCodeAssistSendMatchesTheClient(t *testing.T) {
 		if _, found := config["thinkingConfig"]; found {
 			t.Fatalf("generationConfig = %v, want no Gemini thinking config", config)
 		}
-		mode := body["toolConfig"].(map[string]any)["functionCallingConfig"].(map[string]any)["mode"]
-		if mode != "VALIDATED" {
-			t.Fatalf("toolConfig = %v, want validated calling", body["toolConfig"])
+		if config, found := body["toolConfig"]; found {
+			t.Fatalf("toolConfig = %v, want none while the client states no choice", config)
 		}
 		part := assistCall(t, claude, "get_weather", wire.CodecOpts{CredentialRef: "token", Project: "p", SessionAnchor: anchor})
 		if part["thoughtSignature"] != nil {
@@ -1827,7 +1829,10 @@ func TestCloudCodeAssistSendMatchesTheClient(t *testing.T) {
 		})
 		turns := assistBody(t, missing, wire.CodecOpts{CredentialRef: "token", Project: "p"})["contents"].([]any)
 		responseTurn := turns[len(turns)-1].(map[string]any)
-		if responseTurn["role"] != "user" {
+		// The endpoint reads a tool answer in the model's own turn, not the
+		// user's: a response filed under user is a second request rather than
+		// the answer to the call above it.
+		if responseTurn["role"] != "model" {
 			t.Fatalf("contents = %v, want the response beside the call", turns)
 		}
 		response := responseTurn["parts"].([]any)[0].(map[string]any)["functionResponse"].(map[string]any)
