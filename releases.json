@@ -1,6 +1,6 @@
 {
-  "generated": "2026-11-19T04:15:01Z",
-  "latest": "v0.3.1",
+  "generated": "2026-11-19T08:25:41Z",
+  "latest": "v0.3.2",
   "latest_beta": "v0.3.2-beta.183.8fa0504f",
   "install": {
     "stable": {
@@ -17,6 +17,158 @@
     }
   },
   "releases": [
+    {
+      "tag": "v0.3.2",
+      "version": "0.3.2",
+      "name": "v0.3.2 - Flu 😷",
+      "channel": "stable",
+      "draft": false,
+      "published_at": "2026-11-19T08:25:29Z",
+      "page": "https://github.com/jonaskahn/relo/releases/tag/v0.3.2",
+      "notes": " ## 🚀 v0.3.2 — 2026-11-19\r\n\r\n### ✨ Improvements\r\n\r\n- 🛑 The Google Antigravity connection now ships switched off. Google disabled Cloud Code Assist for accounts it finds behind a third-party client, so requests through it are refused with a terms-of-service violation whatever the account's quota is. The connection, its accounts, its models and its usage stay, and the pane says why when you switch it back on.\r\n- 🔓 Relo's own models are selectable in Claude Code and Claude Desktop in proxy mode. A row the picker greys out when it lacks a minimum version now carries one no client is below, so a custom model is no longer shown as unavailable.\r\n\r\n### 🐛 Fixes\r\n\r\n- 🆔 Antigravity requests carry the identity the current client sends — the `cli` family, its version, the matching changelist and the auth method. The previous version and changelist named a build the endpoint no longer serves.\r\n- 🏷️ A turn whose prompt claims another vendor's agent is rewritten to speak as this transport. Relo relays Claude Code, Codex, OpenCode, Cursor, Cline and Kilo, and a prompt leading with one of their names earned a 429 that read as a spent quota; the task and harness rules behind that claim still travel.\r\n- 📎 A tool answer travels in the model's turn, and a turn states no tool constraint the first-party client never sends. The envelope also labels its cascade, trajectory and request id and counts its step index from zero.\r\n- 🧾 A refusal names the vendor's reason code beside its status, so a disabled account reads `PERMISSION_DENIED (TOS_VIOLATION)` instead of a bare status that looked like an ordinary throttle.\r\n- 🧵 A lost thread is answered rather than retried. A 404 naming a thread is not a model refusal, and the thread belongs to the account that opened it, so the relay no longer spends every account of the connection on the same refusal.\r\n- 🔗 The Anthropic surface echoes the upstream message id. Claude Code continues a thread by the id it was answered with, so Relo minting its own named a message the upstream never saw and turned the next turn into a thread-state failure.\r\n- 🧬 The signed-out OpenCode lane rewrites a foreign agent identity too. A Claude Code prompt led with an Anthropic billing stamp, so the lane answered its generic usage-limit error, which reads as a spent quota.\r\n- ⏱️ A cooling refusal rounds its `Retry-After` up, so a 90-second cooldown no longer goes out as 89 seconds and invite a retry the pool cannot take.\r\n\r\n### 🧰 Maintenance\r\n\r\n- 🎨 The Prettier formatter packages are pinned. The lockfile is deliberately not committed, so CI resolved a newer `prettier-plugin-svelte` whose style change failed the format gate on 60 files.\r\n",
+      "install": {
+        "script": "curl -fsSL https://relo.ifelse.one/install.sh | sh -s -- --version 0.3.2",
+        "powershell": "& ([scriptblock]::Create((irm https://relo.ifelse.one/install.ps1))) -Version 0.3.2",
+        "npm": "npm i -g @jonaskahn/relo@0.3.2"
+      },
+      "files": [
+        {
+          "name": "checksums.txt",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.3.2/checksums.txt",
+          "size": 582,
+          "os": "any",
+          "arch": "any",
+          "kind": "checksums",
+          "format": "txt"
+        },
+        {
+          "name": "Relo-0.3.2-arm64.zip",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.3.2/Relo-0.3.2-arm64.zip",
+          "size": 16855747,
+          "os": "macos",
+          "arch": "arm64",
+          "kind": "app",
+          "format": "zip"
+        },
+        {
+          "name": "relo-0.3.2-darwin-amd64.tar.gz",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.3.2/relo-0.3.2-darwin-amd64.tar.gz",
+          "size": 16059933,
+          "os": "macos",
+          "arch": "amd64",
+          "kind": "archive",
+          "format": "tar.gz"
+        },
+        {
+          "name": "relo-0.3.2-darwin-arm64.tar.gz",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.3.2/relo-0.3.2-darwin-arm64.tar.gz",
+          "size": 15577467,
+          "os": "macos",
+          "arch": "arm64",
+          "kind": "archive",
+          "format": "tar.gz"
+        },
+        {
+          "name": "relo-0.3.2-linux-amd64.tar.gz",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.3.2/relo-0.3.2-linux-amd64.tar.gz",
+          "size": 15739434,
+          "os": "linux",
+          "arch": "amd64",
+          "kind": "archive",
+          "format": "tar.gz"
+        },
+        {
+          "name": "relo-0.3.2-linux-arm64.tar.gz",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.3.2/relo-0.3.2-linux-arm64.tar.gz",
+          "size": 14888988,
+          "os": "linux",
+          "arch": "arm64",
+          "kind": "archive",
+          "format": "tar.gz"
+        },
+        {
+          "name": "Relo-0.3.2-universal.zip",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.3.2/Relo-0.3.2-universal.zip",
+          "size": 33312444,
+          "os": "macos",
+          "arch": "universal",
+          "kind": "app",
+          "format": "zip"
+        },
+        {
+          "name": "relo-0.3.2-windows-amd64.tar.gz",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.3.2/relo-0.3.2-windows-amd64.tar.gz",
+          "size": 15695106,
+          "os": "windows",
+          "arch": "amd64",
+          "kind": "archive",
+          "format": "tar.gz"
+        },
+        {
+          "name": "relo-0.3.2-windows-arm64.tar.gz",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.3.2/relo-0.3.2-windows-arm64.tar.gz",
+          "size": 14736750,
+          "os": "windows",
+          "arch": "arm64",
+          "kind": "archive",
+          "format": "tar.gz"
+        },
+        {
+          "name": "Relo-Setup-0.3.2-amd64.deb",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.3.2/Relo-Setup-0.3.2-amd64.deb",
+          "size": 16009516,
+          "os": "linux",
+          "arch": "amd64",
+          "kind": "installer",
+          "format": "deb"
+        },
+        {
+          "name": "Relo-Setup-0.3.2-amd64.exe",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.3.2/Relo-Setup-0.3.2-amd64.exe",
+          "size": 11573084,
+          "os": "windows",
+          "arch": "amd64",
+          "kind": "installer",
+          "format": "exe"
+        },
+        {
+          "name": "Relo-Setup-0.3.2-amd64.rpm",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.3.2/Relo-Setup-0.3.2-amd64.rpm",
+          "size": 15965817,
+          "os": "linux",
+          "arch": "amd64",
+          "kind": "installer",
+          "format": "rpm"
+        },
+        {
+          "name": "Relo-Setup-0.3.2-arm64.deb",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.3.2/Relo-Setup-0.3.2-arm64.deb",
+          "size": 15243096,
+          "os": "linux",
+          "arch": "arm64",
+          "kind": "installer",
+          "format": "deb"
+        },
+        {
+          "name": "Relo-Setup-0.3.2-arm64.exe",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.3.2/Relo-Setup-0.3.2-arm64.exe",
+          "size": 10454653,
+          "os": "windows",
+          "arch": "arm64",
+          "kind": "installer",
+          "format": "exe"
+        },
+        {
+          "name": "Relo-Setup-0.3.2-arm64.rpm",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.3.2/Relo-Setup-0.3.2-arm64.rpm",
+          "size": 15175006,
+          "os": "linux",
+          "arch": "arm64",
+          "kind": "installer",
+          "format": "rpm"
+        }
+      ]
+    },
     {
       "tag": "v0.3.2-beta.183.8fa0504f",
       "version": "0.3.2-beta.183.8fa0504f",
