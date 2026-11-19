@@ -55,3 +55,88 @@ func TestOpenCodeFreeReplacesAnIdentityOnlySystemBlock(t *testing.T) {
 		t.Fatalf("system = %q, want the neutral identity", system)
 	}
 }
+
+// A system block that held nothing but the billing stamp also becomes the
+// lane's neutral identity rather than an empty message.
+func TestOpenCodeFreeReplacesAStampOnlySystemBlock(t *testing.T) {
+	original := &inference.Request{Messages: []inference.Message{
+		{Role: inference.RoleSystem, Content: []inference.ContentPart{{
+			Type: inference.ContentTypeText,
+			Text: "x-anthropic-billing-header: cc_version=1;",
+		}}},
+	}}
+	got, _ := wire.OpenCodeFreeRequest(original, catalog.FormatOpenAIChat)
+	if system := got.Messages[0].Content[0].Text; system != "You are a coding assistant." {
+		t.Fatalf("system = %q, want the neutral identity", system)
+	}
+}
+
+// A system block with no text part and a text part that loses only the
+// billing stamp keep their shape: the blank lookup returns before any copy,
+// the non-text part travels untouched, and a residual instruction is not
+// replaced by the neutral identity.
+func TestOpenCodeFreeKeepsUnrelatedAndNonTextSystemContent(t *testing.T) {
+	original := &inference.Request{Messages: []inference.Message{
+		{Role: inference.RoleSystem},
+		{Role: inference.RoleSystem, Content: []inference.ContentPart{
+			{Type: inference.ContentTypeImage, ImageURL: "data:image/png;base64,AA=="},
+			{Type: inference.ContentTypeText, Text: "keep this rule"},
+		}},
+	}}
+	got, _ := wire.OpenCodeFreeRequest(original, catalog.FormatOpenAIChat)
+	if len(got.Messages) != len(original.Messages) {
+		t.Fatalf("messages = %d, want %d", len(got.Messages), len(original.Messages))
+	}
+	if got.Messages[1].Content[0].Type != inference.ContentTypeImage || got.Messages[1].Content[0].ImageURL == "" {
+		t.Fatalf("part = %+v, want the image untouched", got.Messages[1].Content[0])
+	}
+	if got.Messages[1].Content[1].Text != "keep this rule" {
+		t.Fatalf("text = %q, want the instruction kept", got.Messages[1].Content[1].Text)
+	}
+}
+
+// The neutral identity is shared by every client name, so each pattern is
+// exercised through the request path rather than left as a separate literal.
+func TestOpenCodeFreeReplacesEveryForeignIdentity(t *testing.T) {
+	for _, identity := range []string{
+		"You are Codex, a coding agent.",
+		"You are OpenCode, the open-source agent.",
+		"You are Cursor.",
+		"You are Cline.",
+		"You are Kilo Code.",
+		"You are Windsurf.",
+		"You are Roo Code.",
+		"You are Aider.",
+		"You are Gemini CLI.",
+		"You are Qwen Code.",
+	} {
+		t.Run(identity, func(t *testing.T) {
+			original := &inference.Request{Messages: []inference.Message{{
+				Role:    inference.RoleSystem,
+				Content: []inference.ContentPart{{Type: inference.ContentTypeText, Text: identity + "\nKeep the task."}},
+			}}}
+			got, _ := wire.OpenCodeFreeRequest(original, catalog.FormatOpenAIChat)
+			text := got.Messages[0].Content[0].Text
+			if strings.Contains(text, identity) || !strings.HasPrefix(text, "You are a coding assistant.") {
+				t.Fatalf("system = %q, want the neutral identity", text)
+			}
+			if !strings.Contains(text, "Keep the task.") {
+				t.Fatalf("system = %q, want the task kept", text)
+			}
+		})
+	}
+}
+
+// The billing stamp is anchored to the system block's start, so a stamp a
+// user pasted later in the prompt is not deleted.
+func TestOpenCodeFreeLeavesALaterBillingStampAlone(t *testing.T) {
+	const text = "Rules first. x-anthropic-billing-header: cc_version=1;"
+	original := &inference.Request{Messages: []inference.Message{{
+		Role:    inference.RoleSystem,
+		Content: []inference.ContentPart{{Type: inference.ContentTypeText, Text: text}},
+	}}}
+	got, _ := wire.OpenCodeFreeRequest(original, catalog.FormatOpenAIChat)
+	if got.Messages[0].Content[0].Text != text {
+		t.Fatalf("system = %q, want an inner stamp kept", got.Messages[0].Content[0].Text)
+	}
+}

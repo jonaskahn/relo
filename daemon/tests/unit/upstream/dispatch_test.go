@@ -267,6 +267,34 @@ func TestExecuteFailures(t *testing.T) {
 	})
 }
 
+// TestLostThreadIsAnsweredNotRetried covers the vendor's 404 for a thread it
+// no longer holds: the client reads the refusal, the attempt is marked so the
+// walk does not ask another account, and the vendor body is the answer.
+func TestLostThreadIsAnsweredNotRetried(t *testing.T) {
+	origin := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusNotFound)
+		_, _ = w.Write([]byte(`{"type":"error","error":{"type":"not_found_error","message":"No thread state was found for the requested ` + "`previous_message_id`" + `."}}`))
+	}))
+	t.Cleanup(origin.Close)
+	recorder := httptest.NewRecorder()
+	exchange := completeExchange(origin.URL)
+	exchange.Final = false
+	result, err := newExecutor(t).Execute(context.Background(), exchange, recorder)
+	if !errors.Is(err, upstream.ErrUpstreamStatus) {
+		t.Fatalf("Execute() error = %v, want %v", err, upstream.ErrUpstreamStatus)
+	}
+	if !result.ThreadState || result.Retryable || result.ModelAccess {
+		t.Fatalf("result = %+v, want a written thread refusal that is not retryable", result)
+	}
+	if !result.Wrote || recorder.Code != http.StatusNotFound {
+		t.Fatalf("status = %d wrote = %v, want the vendor 404 written", recorder.Code, result.Wrote)
+	}
+	if !strings.Contains(recorder.Body.String(), "thread state") {
+		t.Fatalf("body = %q, want the vendor refusal", recorder.Body.String())
+	}
+}
+
 // TestExecuteAggregatesAStreamOnlyUpstream covers the connection whose
 // upstream refuses a one-shot request: the client asked for one complete
 // body, so the relay asks for the stream on its behalf and reassembles it.

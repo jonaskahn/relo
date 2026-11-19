@@ -53,10 +53,14 @@ func TestRelayExchangeCarriesTheCursorCallbacks(t *testing.T) {
 func TestRelayResultCarriesTheWireRotation(t *testing.T) {
 	result := relayResult(upstream.Result{
 		Status: 200, CredentialID: "cred-a", RefreshSettled: true, RotateWire: true,
+		ThreadState: true, ModelAccess: true, ZeroTokens: true, LaneExhausted: true, LaneRefused: true,
 		Usage: inference.UsageReport{InputTokens: 3, OutputTokens: 4},
 	})
 	if !result.RotateWire {
 		t.Fatal("the wire rotation did not cross the glue")
+	}
+	if !result.ThreadState || !result.ModelAccess || !result.ZeroTokens || !result.LaneExhausted || !result.LaneRefused {
+		t.Fatalf("result = %+v, want every attempt verdict preserved", result)
 	}
 	if !result.RefreshSettled || result.CredentialID != "cred-a" {
 		t.Fatalf("result = %+v, want the attempt's own verdicts", result)

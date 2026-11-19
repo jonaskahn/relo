@@ -654,6 +654,15 @@ func TestInboundEncode(t *testing.T) {
 			t.Fatalf("EncodeResponseEvent() error = %v, want the unknown event sentinel", err)
 		}
 	})
+
+	t.Run("an upstream message identity is not rendered", func(t *testing.T) {
+		frames, err := openairesponses.NewInbound().EncodeResponseEvent(inference.Event{
+			Kind: inference.EventMessageStart, MessageID: "msg_9",
+		})
+		if err != nil || len(frames) != 0 {
+			t.Fatalf("EncodeResponseEvent() = %+v, %v, want no frames", frames, err)
+		}
+	})
 }
 
 func TestModule(t *testing.T) {

@@ -209,6 +209,15 @@ func TestChatCompletionsEncodeTerminalFrames(t *testing.T) {
 		}
 	})
 
+	t.Run("an upstream message identity is not rendered", func(t *testing.T) {
+		frames, err := openaichat.NewChatCompletionsCodec().EncodeResponseEvent(inference.Event{
+			Kind: inference.EventMessageStart, MessageID: "msg_9",
+		})
+		if err != nil || len(frames) != 0 {
+			t.Fatalf("EncodeResponseEvent() = %+v, %v, want no frames", frames, err)
+		}
+	})
+
 	t.Run("relay failures are rendered for the client", func(t *testing.T) {
 		frames := openaichat.NewChatCompletionsCodec().EncodeError(errors.New("upstream vanished"))
 		if len(frames) != 2 || frames[1].Data != "[DONE]" {
@@ -221,6 +230,26 @@ func TestChatCompletionsEncodeTerminalFrames(t *testing.T) {
 }
 
 func TestChatCompletionsEncodeResponse(t *testing.T) {
+	t.Run("an upstream message identity is not assembled", func(t *testing.T) {
+		payload, err := openaichat.NewChatCompletionsCodec().EncodeResponse([]inference.Event{
+			{Kind: inference.EventMessageStart, MessageID: "msg_9"},
+			{Kind: inference.EventTextDelta, Text: "hi"},
+			{Kind: inference.EventTerminal, Terminal: &inference.TerminalInfo{Reason: inference.EventReasonStop}},
+		})
+		if err != nil {
+			t.Fatalf("EncodeResponse() error = %v", err)
+		}
+		completion := decodeJSON(t, payload)
+		if completion["object"] != "chat.completion" {
+			t.Fatalf("object = %v, want chat.completion", completion["object"])
+		}
+		choice := completion["choices"].([]any)[0].(map[string]any)
+		message := choice["message"].(map[string]any)
+		if message["content"] != "hi" {
+			t.Fatalf("message = %v, want the text only", message)
+		}
+	})
+
 	t.Run("text, tool calls, and usage are assembled", func(t *testing.T) {
 		events := []inference.Event{
 			{Kind: inference.EventTextDelta, Text: "The weather is "},

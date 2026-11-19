@@ -1100,6 +1100,36 @@ func TestInboundEncode(t *testing.T) {
 	})
 }
 
+// TestMessageStartCarriesTheUpstreamIdentity covers the identity a client
+// continues: both the streamed and the complete upstream shapes name the
+// message, and frames without an identity stay silent.
+func TestMessageStartCarriesTheUpstreamIdentity(t *testing.T) {
+	t.Run("a streamed message starts with the upstream id", func(t *testing.T) {
+		events := pushStreamData(t, anthropic.Module().NewStreamDecoder(),
+			`{"type":"message_start","message":{"id":"msg_011ChAHLY3ndrYTtPPeJo9H9","usage":{"input_tokens":3}}}`)
+		if len(events) != 1 || events[0].Kind != inference.EventMessageStart || events[0].MessageID != "msg_011ChAHLY3ndrYTtPPeJo9H9" {
+			t.Fatalf("events = %+v, want the upstream identity", events)
+		}
+	})
+
+	t.Run("a complete message names its identity", func(t *testing.T) {
+		events, err := anthropic.Module().DecodeResponse([]byte(`{"id":"msg_9","content":[]}`))
+		if err != nil {
+			t.Fatalf("DecodeResponse() error = %v", err)
+		}
+		if len(events) == 0 || events[0].Kind != inference.EventMessageStart || events[0].MessageID != "msg_9" {
+			t.Fatalf("events = %+v, want the message identity first", events)
+		}
+	})
+
+	t.Run("a frame without an identity stays silent", func(t *testing.T) {
+		events := pushStreamData(t, anthropic.Module().NewStreamDecoder(), `{"type":"message_start","message":{"usage":{"input_tokens":1}}}`)
+		if len(events) != 0 {
+			t.Fatalf("events = %+v, want no identity event", events)
+		}
+	})
+}
+
 func TestModule(t *testing.T) {
 	t.Run("the module satisfies the codec contract", func(t *testing.T) {
 		var module wire.Codec = anthropic.Module()
