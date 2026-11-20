@@ -14,7 +14,9 @@ Warnings scroll inside the card; Setup and Manage sit under the body. OpenCode, 
 and OMP carry a **Tested**
 pill in the head's right column; every other client carries **Not tested yet** (neutral pill). The detail modal
 shows the client key, managed-file status or manual setup steps, model choices and verification. Setup, repair and
-rotation report their result before the operator leaves; destructive changes ask for confirmation.
+rotation report their result before the operator leaves; destructive changes ask for confirmation. The
+**OpenAI-compatible** card is manual steps for any client that speaks the OpenAI Chat wire: it is **Not tested yet** and
+Relo writes no file for it.
 
 ## Page
 

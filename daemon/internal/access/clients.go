@@ -117,6 +117,18 @@ var clientProfiles = []ClientProfile{
 		},
 		Verify: "grok --model {{model}} \"say hello\"",
 	},
+	{
+		ID:       "openai-compatible",
+		Name:     "OpenAI-compatible",
+		Summary:  "Point any OpenAI-compatible client at the data plane",
+		Protocol: inference.ProtocolOpenAI,
+		Steps: []string{
+			"In the client's provider settings, set the OpenAI base URL to {{base_url}}/v1",
+			"Set the API key to {{token}}",
+			"Pick the model {{model}}",
+		},
+		Verify: "curl -sS {{base_url}}/v1/chat/completions -H \"Authorization: Bearer {{token}}\" -H \"Content-Type: application/json\" -d '{\"model\":\"{{model}}\",\"messages\":[{\"role\":\"user\",\"content\":\"hi\"}]}'",
+	},
 	// The export clients. Each reads a provider block of its own shape, so the
 	// steps name the file an operator edits, the address this machine serves,
 	// and the model identifier Relo publishes.

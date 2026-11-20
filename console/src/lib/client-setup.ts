@@ -44,6 +44,13 @@ export const CLIENT_OPTIONS: ClientOption[] = [
 		protocol: 'openai',
 		logoId: 'grok-build'
 	},
+	{
+		id: 'openai-compatible',
+		label: 'OpenAI-compatible',
+		kind: 'agent',
+		protocol: 'openai',
+		logoId: 'other'
+	},
 	// The clients Relo writes a provider block for. Their labels are the title
 	// the console shows, so an operator reads the same name the daemon reports.
 	{ id: 'opencode', label: 'Opencode', kind: 'agent', protocol: 'openai', logoId: 'opencode' },

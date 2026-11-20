@@ -48,6 +48,9 @@ const (
 	ClientRaycast   = "raycast"
 	ClientCline     = "cline"
 	ClientCodeBuddy = "codebuddy"
+	// ClientOpenAICompat is the manual-steps card for any client that speaks
+	// the OpenAI Chat wire under a base URL, key, and model id of its own.
+	ClientOpenAICompat = "openai-compatible"
 )
 
 // Agents is every integration this build knows, in the order a console lists
@@ -72,6 +75,8 @@ var agents = []Agent{
 		Summary: "Use Relo as an OpenAI-compatible endpoint in Cursor", EnvKey: EnvKeyName("cursor")},
 	{ID: "grok-build", Client: "grok-build", Protocol: inference.ProtocolOpenAI, Label: "Grok Build",
 		Summary: "Point Grok Build at the data plane", EnvKey: EnvKeyName("grok-build")},
+	{ID: ClientOpenAICompat, Client: ClientOpenAICompat, Protocol: inference.ProtocolOpenAI, Label: "OpenAI-compatible",
+		Summary: "Point any OpenAI-compatible client at Relo", EnvKey: EnvKeyName(ClientOpenAICompat)},
 
 	// Every integration publishes its own Relo-named variable, so two never
 	// share a secret. A client Relo writes a file for expands that variable.
