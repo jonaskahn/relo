@@ -697,6 +697,32 @@ func TestChatDropsEmptyThinkingFromAssistantContent(t *testing.T) {
 	}
 }
 
+// A tool result with no spoken text, such as a ToolSearch reference, encodes
+// to null and Chat upstreams refuse the whole request. The tool turn carries a
+// placeholder instead, while an assistant turn with only tool calls keeps its
+// null content.
+func TestChatSendsPlaceholderForAnEmptyToolResult(t *testing.T) {
+	request := &inference.Request{
+		Model: "deepseek-v4.1-flash",
+		Messages: []inference.Message{
+			{Role: inference.RoleAssistant, ToolCalls: []inference.ToolCall{{ID: "call_1", Name: "WebSearch", Arguments: "{}"}}},
+			{Role: inference.RoleTool, ToolCallID: "call_1"},
+		},
+	}
+	body := encodeChatBody(t, "https://opencode.ai/zen/go/v1", request)
+	tool := messageMap(t, body, 1)
+	content, ok := tool["content"].(string)
+	if !ok || content == "" {
+		t.Fatalf("tool content = %v, want a non-empty string", tool["content"])
+	}
+	if tool["tool_call_id"] != "call_1" {
+		t.Fatalf("tool_call_id = %v, want the call kept", tool["tool_call_id"])
+	}
+	if assistant := messageMap(t, body, 0); assistant["content"] != nil {
+		t.Fatalf("assistant content = %v, want null for a call-only turn", assistant["content"])
+	}
+}
+
 func messageMap(t *testing.T, body map[string]any, index int) map[string]any {
 	t.Helper()
 	messages, _ := body["messages"].([]any)

@@ -954,6 +954,18 @@ func TestInboundDecode(t *testing.T) {
 		}
 	})
 
+	t.Run("a tool result carrying only a tool reference keeps its call and no content", func(t *testing.T) {
+		body := []byte(`{"model":"claude-sonnet-4","max_tokens":8,"messages":[{"role":"user","content":[{"type":"tool_result","tool_use_id":"toolu_1","content":[{"type":"tool_reference","tool_name":"WebSearch"}]}]}]}`)
+		request := inboundRequest(t, body)
+		results := messagesWithRole(request.Messages, inference.RoleTool)
+		if len(results) != 1 || results[0].ToolCallID != "toolu_1" {
+			t.Fatalf("tool messages = %+v, want the result bound to its call", results)
+		}
+		if len(results[0].Content) != 0 {
+			t.Fatalf("result = %+v, want no content for a reference the Anthropic wire keeps", results[0].Content)
+		}
+	})
+
 	t.Run("malformed content and malformed bodies are rejected", func(t *testing.T) {
 		cases := []string{
 			"{not json",

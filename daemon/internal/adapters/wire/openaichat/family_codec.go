@@ -34,6 +34,10 @@ const (
 	// DeepSeek rejects a tool-using thinking request that omits reasoning_content,
 	// and rejects an empty string, so a missing chain is replayed as one space.
 	deepSeekMissingReasoning = " "
+
+	// Chat upstreams reject a tool message whose content is null, which is what
+	// a result carrying no spoken text encodes to. Replay it as a placeholder.
+	emptyToolResultText = "(no output)"
 )
 
 // Codec speaks the Chat Completions wire. One codec serves every request;
@@ -348,6 +352,9 @@ func encodeMessage(message inference.Message, replayReasoning bool) chatMessage 
 		return encoded
 	}
 	encoded.Content = encodeContent(parts)
+	if message.Role == inference.RoleTool && encoded.Content == nil {
+		encoded.Content = emptyToolResultText
+	}
 	return encoded
 }
 
