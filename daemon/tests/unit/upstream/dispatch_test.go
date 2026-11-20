@@ -15,6 +15,7 @@ import (
 	"github.com/jonaskahn/relo/internal/account"
 	"github.com/jonaskahn/relo/internal/adapters/upstream"
 	"github.com/jonaskahn/relo/internal/adapters/wire"
+	"github.com/jonaskahn/relo/internal/adapters/wire/anthropic"
 	"github.com/jonaskahn/relo/internal/adapters/wire/openaichat"
 	"github.com/jonaskahn/relo/internal/catalog"
 	"github.com/jonaskahn/relo/tests/testkit"
@@ -274,12 +275,14 @@ func TestLostThreadIsAnsweredNotRetried(t *testing.T) {
 	origin := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusNotFound)
-		_, _ = w.Write([]byte(`{"type":"error","error":{"type":"not_found_error","message":"No thread state was found for the requested ` + "`previous_message_id`" + `."}}`))
+		_, _ = w.Write([]byte(`{"type":"error","error":{"type":"not_found_error","message":"No thread state was found for the requested ` + "`previous_message_id`" + `.","details":{"error_code":"thread_not_found"}}}`))
 	}))
 	t.Cleanup(origin.Close)
 	recorder := httptest.NewRecorder()
 	exchange := completeExchange(origin.URL)
 	exchange.Final = false
+	exchange.ProviderID = "claude"
+	exchange.Codec = anthropic.NewCodec(origin.URL)
 	result, err := newExecutor(t).Execute(context.Background(), exchange, recorder)
 	if !errors.Is(err, upstream.ErrUpstreamStatus) {
 		t.Fatalf("Execute() error = %v, want %v", err, upstream.ErrUpstreamStatus)
