@@ -277,3 +277,16 @@ type InboundCodec interface {
 type NativeBodyCarrier interface {
 	NativeBody() []byte
 }
+
+// Turn is one finished reply a client may continue from.
+type Turn struct {
+	MessageID string
+	Assistant inference.Message
+}
+
+// TurnReporter is an inbound codec that hands every finished reply to a
+// listener before its closing frames are returned, so a client that continues
+// the thread the moment it reads the id finds the turn already stored.
+type TurnReporter interface {
+	RetainTurn(func(Turn))
+}

@@ -74,3 +74,10 @@ func freeLaneText(text string) string {
 	}
 	return stripped
 }
+
+// IsBillingStampOnly reports a system prompt that carries nothing but the
+// Anthropic subscription stamp. A client that continues a server-side thread
+// sends that stamp alone, which must not replace the thread's own prompt.
+func IsBillingStampOnly(text string) bool {
+	return strings.TrimSpace(freeBillingHeader.ReplaceAllString(text, "")) == ""
+}

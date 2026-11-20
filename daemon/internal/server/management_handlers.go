@@ -989,6 +989,33 @@ func (s *Server) handlePutRetention(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, toRetentionSettingsResponse(saved))
 }
 
+// handlePutThreads stores how long a continued Claude thread stays
+// rebuildable, which the Claude detail card sets. A zero window keeps every
+// stored thread.
+func (s *Server) handlePutThreads(w http.ResponseWriter, r *http.Request) {
+	settings, ok := s.settingsOrUnavailable(w, r)
+	if !ok {
+		return
+	}
+	var request threadRetentionRequest
+	if !s.decodeJSON(w, r, &request) {
+		return
+	}
+	saved, err := settings.SaveThreads(r.Context(), toThreadRetention(request))
+	if err != nil {
+		writeServiceError(w, err)
+		return
+	}
+	if s.opts.ThreadRetention != nil {
+		s.runOperation(func(ctx context.Context) {
+			if _, err := s.opts.ThreadRetention.Sweep(ctx); err != nil {
+				s.opts.Logger.Warn("apply the stored thread window", "error", err)
+			}
+		})
+	}
+	writeJSON(w, http.StatusOK, toThreadRetentionResponse(saved))
+}
+
 func (s *Server) handlePatchAccess(w http.ResponseWriter, r *http.Request) {
 	settings, ok := s.settingsOrUnavailable(w, r)
 	if !ok {

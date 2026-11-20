@@ -39,6 +39,22 @@ type retentionSettingsRequest struct {
 	MaxBytes  int64 `json:"max_bytes"`
 }
 
+type threadRetentionResponse struct {
+	Days int `json:"days"`
+}
+
+type threadRetentionRequest struct {
+	Days int `json:"days"`
+}
+
+func toThreadRetentionResponse(window appsettings.ThreadRetention) threadRetentionResponse {
+	return threadRetentionResponse{Days: window.Days}
+}
+
+func toThreadRetention(request threadRetentionRequest) appsettings.ThreadRetention {
+	return appsettings.ThreadRetention{Days: request.Days}
+}
+
 type systemSettingsResponse struct {
 	Autostart       bool   `json:"autostart"`
 	LogLevel        string `json:"log_level"`
@@ -181,22 +197,26 @@ func toAppearancePatch(request appearancePatchRequest) appsettings.AppearancePat
 }
 
 type settingsResponse struct {
-	Connections    connectionsSettingsResponse `json:"connections"`
-	Retention      retentionSettingsResponse   `json:"retention"`
-	Language       string                      `json:"language"`
-	Appearance     appearanceSettingsResponse  `json:"appearance"`
-	System         systemSettingsResponse      `json:"system"`
-	Server         serverSettingsResponse      `json:"server"`
-	Providers      providersSettingsResponse   `json:"providers"`
-	Access         accessSettingsResponse      `json:"access"`
-	Secrets        secretsSettingsResponse     `json:"secrets"`
-	RestartPending bool                        `json:"restart_pending"`
+	Connections connectionsSettingsResponse `json:"connections"`
+	Retention   retentionSettingsResponse   `json:"retention"`
+	// Threads is how long a continued Claude thread stays rebuildable,
+	// which the Claude detail card reads beside the mode it is stored for.
+	Threads        threadRetentionResponse    `json:"threads"`
+	Language       string                     `json:"language"`
+	Appearance     appearanceSettingsResponse `json:"appearance"`
+	System         systemSettingsResponse     `json:"system"`
+	Server         serverSettingsResponse     `json:"server"`
+	Providers      providersSettingsResponse  `json:"providers"`
+	Access         accessSettingsResponse     `json:"access"`
+	Secrets        secretsSettingsResponse    `json:"secrets"`
+	RestartPending bool                       `json:"restart_pending"`
 }
 
 func toSettingsResponse(settings appsettings.Settings) settingsResponse {
 	return settingsResponse{
 		Connections:    connectionsSettingsResponse{FreeEnabled: settings.Connections.FreeEnabled},
 		Retention:      toRetentionSettingsResponse(settings.Retention),
+		Threads:        toThreadRetentionResponse(settings.Threads),
 		Language:       settings.Language,
 		Appearance:     toAppearanceSettingsResponse(settings.Appearance),
 		System:         toSystemSettingsResponse(settings.System),

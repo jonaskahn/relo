@@ -45,6 +45,7 @@ import (
 	"github.com/jonaskahn/relo/internal/platform/autostart"
 	"github.com/jonaskahn/relo/internal/routing"
 	"github.com/jonaskahn/relo/internal/server"
+	"github.com/jonaskahn/relo/internal/threads"
 )
 
 type wired struct {
@@ -373,6 +374,7 @@ func newSettings(db *sqlite.DB, home string, clk clock.Clock, logger *slog.Logge
 		Retention: sqlite.NewRetentionSettings(db, sqlite.RetentionOptions{
 			Logger: logger, Now: clk.Now, Drain: drain,
 		}),
+		Threads:      sqlite.NewThreadRetention(db, clk),
 		QuotaDisplay: sqlite.NewQuotaDisplaySettings(db),
 		ProxyPool:    ProxyPoolSummary{Pool: proxies},
 		ConfigPath:   config.ConfigPath(home),
@@ -602,9 +604,19 @@ func startMaintenance(ctx context.Context, daemon *server.Server, built deps) {
 		Logger: built.logger, Drain: daemon,
 	})
 	refreshTrafficBudget(ctx, built, retention)
+	threadWindow := sqlite.NewThreadRetention(built.db, built.clock)
 	go func() {
 		retention.MaintainOnce(ctx)
-		if err := retention.Run(ctx, maintenanceInterval, func() { refreshTrafficBudget(ctx, built, retention) }); err != nil {
+		sweepThreads := func() {
+			if _, err := threadWindow.Sweep(ctx); err != nil {
+				built.logger.Warn("apply the stored thread window", "error", err)
+			}
+		}
+		sweepThreads()
+		if err := retention.Run(ctx, maintenanceInterval, func() {
+			refreshTrafficBudget(ctx, built, retention)
+			sweepThreads()
+		}); err != nil {
 			built.logger.Warn("retention stopped", "error", err)
 		}
 	}()
@@ -717,13 +729,15 @@ func coreServerOptions(built deps, captures *sqlite.CaptureStore) server.Options
 		Activity: appactivity.New(appactivity.Options{
 			Usage: sqlite.NewUsageQuery(built.db), Captures: captures,
 		}),
-		Formats:        wireformats.New(),
-		RequestConfigs: sqlite.NewCatalogRepo(built.db),
-		Ports:          NewPortInspector(),
-		Callbacks:      NewCallbackBridge(built.callbacks),
-		CallbackIcon:   oauth.CallbackIcon,
-		CallbackPorts:  oauth.DefaultRegistry(),
-		DeviceSeed:     deviceSeed(built.home),
+		Formats:         wireformats.New(),
+		RequestConfigs:  sqlite.NewCatalogRepo(built.db),
+		Ports:           NewPortInspector(),
+		Callbacks:       NewCallbackBridge(built.callbacks),
+		CallbackIcon:    oauth.CallbackIcon,
+		CallbackPorts:   oauth.DefaultRegistry(),
+		DeviceSeed:      deviceSeed(built.home),
+		Threads:         threads.NewHistory(sqlite.NewThreadTurns(built.db), built.clock.Now),
+		ThreadRetention: sqlite.NewThreadRetention(built.db, built.clock),
 	}
 }
 

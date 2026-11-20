@@ -115,19 +115,51 @@ func (s *Server) handleInference(surface inferenceSurface) http.HandlerFunc {
 		// The answer is kept beside the request it answers, so the log holds
 		// both halves of the exchange an operator debugs.
 		answer := newAgentAnswer(w, s.opts.CaptureRedactor, limit, tail)
-		inbound, found := s.inboundFor(surface)
-		if !found {
-			s.handleNotImplemented(w, r)
-			return
-		}
-		request, err := inbound.DecodeRequest(r)
-		if err != nil {
-			writeError(answer, http.StatusBadRequest, "bad_request", err.Error())
-			s.recordUnreadable(r, surface, captured, answer)
-			return
-		}
-		s.relay(relaySpec{writer: answer, request: r, surface: surface, inbound: inbound, canonical: request, origin: inference.OriginExternal, captured: captured, native: inboundNativeBody(inbound)})
+		exchange := inboundExchange{writer: answer, request: r, surface: surface, captured: captured}
+		s.relayInbound(exchange)
 	}
+}
+
+// relayInbound decodes one agent request, rebuilds the thread it continues,
+// and hands the expanded request to the relay.
+func (s *Server) relayInbound(exchange inboundExchange) {
+	r, surface, answer := exchange.request, exchange.surface, exchange.writer
+	inbound, found := s.inboundFor(surface)
+	if !found {
+		s.handleNotImplemented(answer, r)
+		return
+	}
+	request, err := inbound.DecodeRequest(r)
+	if err != nil {
+		writeError(answer, http.StatusBadRequest, "bad_request", err.Error())
+		s.recordUnreadable(r, surface, exchange.captured, answer)
+		return
+	}
+	turn, expanded, err := s.prepareThread(r, request)
+	if err != nil {
+		s.writeThreadRefusal(answer, err)
+		s.recordUnreadable(r, surface, exchange.captured, answer)
+		return
+	}
+	native := inboundNativeBody(inbound)
+	if expanded {
+		// The history the client held is no longer in its own body, so a
+		// same-family attempt has to be rebuilt from the expanded request.
+		native = nil
+	}
+	if surface.name == inference.SurfaceMessages && s.opts.Threads != nil {
+		installThreadRetainer(inbound, func(reply wire.Turn) { s.retainThread(r, turn, reply) })
+	}
+	s.relay(relaySpec{writer: answer, request: r, surface: surface, inbound: inbound, canonical: request, origin: inference.OriginExternal, captured: exchange.captured, native: native})
+}
+
+// inboundExchange is one agent request as it arrived, with the answer the log
+// keeps beside it.
+type inboundExchange struct {
+	writer   *agentAnswer
+	request  *http.Request
+	surface  inferenceSurface
+	captured *CapturedMessage
 }
 
 // inboundNativeBody returns the client body an inbound codec kept, which a

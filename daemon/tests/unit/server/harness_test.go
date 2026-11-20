@@ -42,6 +42,7 @@ import (
 	appproxy "github.com/jonaskahn/relo/internal/proxy"
 	"github.com/jonaskahn/relo/internal/routing"
 	"github.com/jonaskahn/relo/internal/server"
+	"github.com/jonaskahn/relo/internal/threads"
 	"github.com/jonaskahn/relo/tests/testkit"
 )
 
@@ -145,6 +146,7 @@ func newHarness(t *testing.T) *harness {
 	harness.settingsPath = config.ConfigPath(t.TempDir())
 	harness.settings = appsettings.New(appsettings.Options{
 		Retention:    sqlite.NewRetentionSettings(harness.db, sqlite.RetentionOptions{Now: harness.clock.Now}),
+		Threads:      sqlite.NewThreadRetention(harness.db, harness.clock),
 		QuotaDisplay: sqlite.NewQuotaDisplaySettings(harness.db),
 		ProxyPool:    appsettingsProxyPool{pool: harness.proxyPool},
 		ConfigPath:   harness.settingsPath,
@@ -262,9 +264,11 @@ func (h *harness) newServerWithOptions(cfg *config.Config, entries []account.Poo
 			Store:     platform.NewIntegrationStore(h.db), Catalog: h.catalog,
 			Keys: h.keys, Now: h.clock.Now,
 		}),
-		Events:   h.events,
-		Sessions: h.sessions,
-		Login:    h.login,
+		Events:          h.events,
+		Sessions:        h.sessions,
+		Login:           h.login,
+		Threads:         threads.NewHistory(sqlite.NewThreadTurns(h.db), h.clock.Now),
+		ThreadRetention: sqlite.NewThreadRetention(h.db, h.clock),
 	}
 	if apply != nil {
 		apply(&options)

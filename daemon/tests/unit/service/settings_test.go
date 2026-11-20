@@ -13,6 +13,7 @@ import (
 	appsettings "github.com/jonaskahn/relo/internal/application/settings"
 	"github.com/jonaskahn/relo/internal/config"
 	"github.com/jonaskahn/relo/internal/i18n"
+	"github.com/jonaskahn/relo/internal/threads"
 )
 
 func TestSettingsRoundTrip(t *testing.T) {
@@ -607,5 +608,96 @@ func TestSaveUsageMetricsRefusesAChoiceTheOverviewCannotShow(t *testing.T) {
 	}
 	if len(metrics) != len(config.DefaultOverviewMetrics()) {
 		t.Fatalf("UsageMetrics() = %v, want the defaults after every refused write", metrics)
+	}
+}
+
+// TestThreadRetentionRoundTrip covers the window that decides how long a
+// continued Claude thread stays rebuildable: an install that never stored one
+// reads the 30-day default, a save reads back, and a negative window is
+// refused rather than stored.
+func TestThreadRetentionRoundTrip(t *testing.T) {
+	harness := newHarness(t)
+	ctx := context.Background()
+
+	empty, err := harness.settings.Read(ctx)
+	if err != nil {
+		t.Fatalf("Read() error = %v", err)
+	}
+	if empty.Threads.Days != threads.DefaultRetentionDays {
+		t.Fatalf("threads.days = %d, want the default %d", empty.Threads.Days, threads.DefaultRetentionDays)
+	}
+
+	saved, err := harness.settings.SaveThreads(ctx, appsettings.ThreadRetention{Days: 7})
+	if err != nil {
+		t.Fatalf("SaveThreads() error = %v", err)
+	}
+	if saved.Days != 7 {
+		t.Fatalf("SaveThreads() = %+v, want the saved window", saved)
+	}
+	stored, _, err := sqlite.NewThreadRetention(harness.db, harness.clock).Days(ctx)
+	if err != nil || stored != 7 {
+		t.Fatalf("stored window = %d, error = %v, want 7", stored, err)
+	}
+	if _, err := harness.settings.SaveThreads(ctx, appsettings.ThreadRetention{Days: -1}); !errors.Is(err, appsettings.ErrInvalidWrite) {
+		t.Fatalf("SaveThreads(-1) error = %v, want an invalid write", err)
+	}
+}
+
+// failingThreads is a store that cannot answer, so the settings write and the
+// read both take their refusal path.
+type failingThreads struct{}
+
+func (failingThreads) Days(context.Context) (int, bool, error) {
+	return 0, false, errors.New("store down")
+}
+
+func (failingThreads) SaveDays(context.Context, int) error {
+	return errors.New("store down")
+}
+
+func (failingThreads) Preview(context.Context, int) (int64, error) {
+	return 0, nil
+}
+
+func TestThreadWindowReportsAStoreFailure(t *testing.T) {
+	service := appsettings.New(appsettings.Options{
+		Threads:    failingThreads{},
+		ConfigPath: t.TempDir() + "/config.toml",
+	})
+	if _, err := service.SaveThreads(context.Background(), appsettings.ThreadRetention{Days: 7}); !errors.Is(err, appsettings.ErrInvalidWrite) {
+		t.Fatalf("SaveThreads() error = %v, want an invalid write", err)
+	}
+}
+
+// emptyRetention answers a readable budget, so a test can reach the thread
+// read behind it.
+type emptyRetention struct{}
+
+func (emptyRetention) Budget(context.Context) (activity.RetentionBudget, bool, error) {
+	return activity.RetentionBudget{UsageDays: 3}, false, nil
+}
+
+func (emptyRetention) SaveBudget(context.Context, activity.RetentionBudget) error { return nil }
+
+func (emptyRetention) Preview(context.Context, activity.RetentionBudget) (activity.RetentionReport, error) {
+	return activity.RetentionReport{}, nil
+}
+
+func (emptyRetention) RunOnce(context.Context) (activity.RetentionReport, error) {
+	return activity.RetentionReport{}, nil
+}
+
+func (emptyRetention) Sweep(context.Context) (activity.CleanupReport, error) {
+	return activity.CleanupReport{}, nil
+}
+
+func TestThreadWindowReadReportsAStoreFailure(t *testing.T) {
+	service := appsettings.New(appsettings.Options{
+		Retention:  emptyRetention{},
+		Threads:    failingThreads{},
+		ConfigPath: t.TempDir() + "/config.toml",
+	})
+	if _, err := service.Read(context.Background()); err == nil {
+		t.Fatal("Read() = nil, want the thread store failure")
 	}
 }

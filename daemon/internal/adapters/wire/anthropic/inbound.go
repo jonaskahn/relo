@@ -31,6 +31,8 @@ type Inbound struct {
 	model      string
 	upstreamID string
 	native     []byte
+	retain     func(wire.Turn)
+	tained     bool
 	seq        int
 	started    bool
 	blockIndex int
@@ -81,6 +83,13 @@ func (i *Inbound) DecodeRequest(r *http.Request) (*inference.Request, error) {
 // on the Messages wire keeps the controls only the client's own shape carries.
 func (i *Inbound) NativeBody() []byte {
 	return i.native
+}
+
+// RetainTurn installs the listener a finished reply is handed to. The call
+// runs while the closing frames are built, before a client can read the reply
+// id and continue from it.
+func (i *Inbound) RetainTurn(retain func(wire.Turn)) {
+	i.retain = retain
 }
 
 // EncodeResponseEvent renders one canonical event as Messages SSE frames.
@@ -247,9 +256,30 @@ func (i *Inbound) terminalFrames(info *inference.TerminalInfo) []wire.SSEEvent {
 	if i.failure != nil {
 		return append(frames, i.frame(eventMessageStop, map[string]any{})...)
 	}
+	i.retainFinishedTurn()
 	delta := map[string]any{"stop_reason": stopReasonOf(i.reason), "stop_sequence": nil}
 	usage := i.frame(eventMessageDelta, map[string]any{"delta": delta, "usage": i.usageObject()})
 	return append(append(frames, usage...), i.frame(eventMessageStop, map[string]any{})...)
+}
+
+// retainFinishedTurn hands the reply to the thread store once, before the
+// frames that end it are returned to be written.
+func (i *Inbound) retainFinishedTurn() {
+	if i.retain == nil || i.tained {
+		return
+	}
+	i.tained = true
+	assistant := inference.Message{Role: inference.RoleAssistant}
+	if raw, err := json.Marshal(i.blocks); err == nil {
+		if turns, err := decodeMessage(inboundMessage{Role: inference.RoleAssistant, Content: raw}); err == nil {
+			for _, turn := range turns {
+				if turn.Role == inference.RoleAssistant {
+					assistant = turn
+				}
+			}
+		}
+	}
+	i.retain(wire.Turn{MessageID: i.messageID(), Assistant: assistant})
 }
 
 func (i *Inbound) failureFrames(failure *inference.ErrorInfo) []wire.SSEEvent {
@@ -419,6 +449,12 @@ type inboundRequest struct {
 	Temperature  *float64         `json:"temperature"`
 	Thinking     *thinkingDef     `json:"thinking"`
 	OutputConfig *outputConfig    `json:"output_config"`
+	Thread       *inboundThread   `json:"thread"`
+}
+
+type inboundThread struct {
+	Type              string `json:"type"`
+	PreviousMessageID string `json:"previous_message_id"`
 }
 
 type inboundMessage struct {
@@ -459,6 +495,7 @@ func (r inboundRequest) toCanonical() (*inference.Request, error) {
 		WorkingDirectory: r.GitState.Cwd,
 		Model:            r.Model,
 		Messages:         inference.MergeToolResults(messages),
+		Thread:           r.thread(),
 		Tools:            decodeTools(r.Tools),
 		ToolChoice:       decodeToolChoice(r.ToolChoice),
 		Stream:           r.Stream,
@@ -467,6 +504,20 @@ func (r inboundRequest) toCanonical() (*inference.Request, error) {
 		Reasoning:        decodeThinking(r.Thinking, r.OutputConfig),
 	}, nil
 }
+
+// thread reports the server-side thread a client continues. A create, an
+// unknown shape, or a continue with no id carries its own history, so it names
+// no thread.
+func (r inboundRequest) thread() *inference.ThreadRef {
+	if r.Thread == nil || r.Thread.Type != threadContinue || r.Thread.PreviousMessageID == "" {
+		return nil
+	}
+	return &inference.ThreadRef{Type: r.Thread.Type, PreviousID: r.Thread.PreviousMessageID}
+}
+
+// threadContinue is the shape a client sends for a follow-up whose history it
+// leaves on the server.
+const threadContinue = "continue"
 
 // The tool-choice modes the Messages wire names, which are its own names rather
 // than the Chat wire's.

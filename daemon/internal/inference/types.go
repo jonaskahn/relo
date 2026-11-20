@@ -48,7 +48,11 @@ type Request struct {
 	WorkingDirectory string    `json:"-"`
 	Model            string    `json:"model"`
 	Messages         []Message `json:"messages"`
-	Tools            []Tool    `json:"tools,omitempty"`
+	// Thread is the server-side thread a client continues, when it named one.
+	// It is client context, not an upstream wire field: the history it refers
+	// to is expanded into Messages before the request is routed.
+	Thread *ThreadRef `json:"-"`
+	Tools  []Tool     `json:"tools,omitempty"`
 	// ToolChoice carries the client's constraint on which tool the model calls.
 	// An empty value leaves the choice to the model, which is what a client
 	// that said nothing about it meant.
@@ -58,6 +62,14 @@ type Request struct {
 	Temperature *float64         `json:"temperature,omitempty"`
 	Reasoning   *ReasoningConfig `json:"reasoning,omitempty"`
 	Metadata    map[string]any   `json:"metadata,omitempty"`
+}
+
+// ThreadRef names the thread a client continues. A client that keeps its
+// history server-side sends only what is new, plus the id of the reply it is
+// answering; PreviousID is that reply.
+type ThreadRef struct {
+	Type       string `json:"type"`
+	PreviousID string `json:"previous_message_id"`
 }
 
 // Message is one turn of the conversation.

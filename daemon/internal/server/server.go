@@ -54,6 +54,13 @@ type Options struct {
 	// Sessions holds the synthetic session ids of conversations a client did
 	// not name, so one unlabelled conversation keeps one upstream identity.
 	SessionLeases *account.SessionLeases
+	// Threads keeps the replies a Claude client may continue from. A
+	// continued request sends only what is new, so the history it refers to
+	// must outlive the request that produced it.
+	Threads ThreadHistory
+	// ThreadRetention is the window stored threads are kept for, which the
+	// Claude detail card reads and writes.
+	ThreadRetention ThreadRetention
 	// DeviceSeed is the installation secret subscription device ids derive
 	// from. Empty leaves device attribution out of subscription requests.
 	DeviceSeed string

@@ -71,6 +71,7 @@ func newHarness(t *testing.T) *harness {
 	built.buildService(built.catalog, built.pools, store)
 	built.settings = appsettings.New(appsettings.Options{
 		Retention:    sqlite.NewRetentionSettings(built.db, sqlite.RetentionOptions{Now: built.clock.Now}),
+		Threads:      sqlite.NewThreadRetention(built.db, built.clock),
 		QuotaDisplay: sqlite.NewQuotaDisplaySettings(built.db),
 		ConfigPath:   config.ConfigPath(built.home),
 		Clock:        built.clock,

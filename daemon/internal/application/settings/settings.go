@@ -13,6 +13,7 @@ import (
 	"github.com/jonaskahn/relo/internal/clock"
 	"github.com/jonaskahn/relo/internal/config"
 	"github.com/jonaskahn/relo/internal/i18n"
+	"github.com/jonaskahn/relo/internal/threads"
 )
 
 // ErrInvalidWrite reports a settings write no store would accept.
@@ -26,12 +27,26 @@ type RetentionSettings struct {
 	MaxBytes  int64
 }
 
+// ThreadRetention is how long a Claude thread Relo rebuilds stays
+// continuable. The default is 30 days, and zero keeps every stored thread.
+type ThreadRetention struct{ Days int }
+
+// ThreadRetentionStore persists the thread window and applies it to stored
+// turns.
+type ThreadRetentionStore interface {
+	Days(ctx context.Context) (int, bool, error)
+	SaveDays(ctx context.Context, days int) error
+	Preview(ctx context.Context, days int) (int64, error)
+}
+
 // Settings is everything the settings page reads and writes.
 type Settings struct {
 	Connections ConnectionsSettings
 	Retention   RetentionSettings
-	Language    string
-	Appearance  AppearanceSettings
+	// Threads is the window a continued Claude thread stays rebuildable for.
+	Threads    ThreadRetention
+	Language   string
+	Appearance AppearanceSettings
 	// System is when the daemon runs, how it logs, and how it learns about
 	// newer builds.
 	System SystemSettings
@@ -166,6 +181,7 @@ type AppearancePatch struct {
 // path rather than through a store.
 type Options struct {
 	Retention    RetentionStore
+	Threads      ThreadRetentionStore
 	QuotaDisplay QuotaDisplayStore
 	ProxyPool    ProxyPool
 	ConfigPath   string
@@ -182,6 +198,7 @@ type Options struct {
 // Service is the settings use cases.
 type Service struct {
 	retention        RetentionStore
+	threads          ThreadRetentionStore
 	quotaDisplay     QuotaDisplayStore
 	proxyPool        ProxyPool
 	configPath       string
@@ -197,7 +214,8 @@ func New(options Options) *Service {
 		clk = clock.New()
 	}
 	return &Service{
-		retention: options.Retention, quotaDisplay: options.QuotaDisplay, proxyPool: options.ProxyPool,
+		retention: options.Retention, threads: options.Threads,
+		quotaDisplay: options.QuotaDisplay, proxyPool: options.ProxyPool,
 		configPath: options.ConfigPath, clock: clk,
 		applyAutostart: options.ApplyAutostart, onRetentionSaved: options.OnRetentionSaved,
 	}
@@ -207,6 +225,9 @@ func New(options Options) *Service {
 func (s *Service) Read(ctx context.Context) (Settings, error) {
 	settings := Settings{Language: i18n.Auto}
 	if err := s.readRetention(ctx, &settings); err != nil {
+		return Settings{}, err
+	}
+	if err := s.readThreads(ctx, &settings); err != nil {
 		return Settings{}, err
 	}
 	if err := s.readAppearanceLanguage(ctx, &settings); err != nil {
@@ -242,6 +263,21 @@ func (s *Service) readRetention(ctx context.Context, settings *Settings) error {
 	settings.Retention = RetentionSettings{
 		UsageDays: budget.UsageDays, MaxEvents: budget.MaxEvents, MaxBytes: budget.MaxBytes,
 	}
+	return nil
+}
+
+// readThreads answers the thread window the Claude detail card shows. An
+// install that never stored one reads the default, not unlimited.
+func (s *Service) readThreads(ctx context.Context, settings *Settings) error {
+	if s.threads == nil {
+		settings.Threads = ThreadRetention{Days: threads.DefaultRetentionDays}
+		return nil
+	}
+	days, _, err := s.threads.Days(ctx)
+	if err != nil {
+		return err
+	}
+	settings.Threads = ThreadRetention{Days: days}
 	return nil
 }
 
@@ -435,6 +471,21 @@ func (s *Service) SaveRetention(ctx context.Context, budget RetentionSettings) (
 		s.onRetentionSaved(stored)
 	}
 	return budget, nil
+}
+
+// SaveThreads stores the window a continued Claude thread stays rebuildable
+// for, refusing one the store cannot honour.
+func (s *Service) SaveThreads(ctx context.Context, window ThreadRetention) (ThreadRetention, error) {
+	if s.threads == nil {
+		return ThreadRetention{}, fmt.Errorf("%w: thread retention is unavailable", ErrInvalidWrite)
+	}
+	if window.Days < 0 {
+		return ThreadRetention{}, fmt.Errorf("%w: %v", ErrInvalidWrite, threads.ErrInvalidRetention)
+	}
+	if err := s.threads.SaveDays(ctx, window.Days); err != nil {
+		return ThreadRetention{}, fmt.Errorf("%w: %v", ErrInvalidWrite, err)
+	}
+	return window, nil
 }
 
 // SaveAccess stores the external-access choice, which the management guard

@@ -135,6 +135,7 @@ func (s *Server) registerSettingsRoutes(mux *http.ServeMux) {
 	mux.HandleFunc("PUT "+apiPrefix+"ui/usage-metrics", s.handleSaveUsageMetrics)
 	mux.HandleFunc("GET "+apiPrefix+"settings", s.handleGetSettings)
 	mux.HandleFunc("PUT "+apiPrefix+"settings/retention", s.handlePutRetention)
+	mux.HandleFunc("PUT "+apiPrefix+"settings/threads", s.handlePutThreads)
 	mux.HandleFunc("PATCH "+apiPrefix+"settings/access", s.handlePatchAccess)
 	mux.HandleFunc("PATCH "+apiPrefix+"settings/network", s.handlePatchNetwork)
 	mux.HandleFunc("PATCH "+apiPrefix+"settings/providers", s.handlePatchProviders)
