@@ -1965,7 +1965,10 @@
         "claudeModeUnsaved": "Not saved yet. Press Save to apply this mode.",
         "claudeModeDesktopOwnerNote": "Claude Desktop shares Claude Code's proxy wiring, so saving also moves Claude Code to proxy mode.",
         "claudeModeProxyInUse": "Claude Desktop still uses this proxy. Switch Claude Desktop back first.",
-        "claudeModeTrustRemains": "Relo could not remove the certificate it installed, so nothing was changed. Open the Desktop picker section, remove it with the steps shown, then try again."
+        "claudeModeTrustRemains": "Relo could not remove the certificate it installed, so nothing was changed. Open the Desktop picker section, remove it with the steps shown, then try again.",
+        "claudeThreadsTitle": "Thread history",
+        "claudeThreadsHint": "How long Relo keeps a continued Claude thread, so follow-up messages keep their context. When it expires, Claude Desktop asks you to resend the message.",
+        "claudeThreadsDays": "{count} days"
       },
       "chatPage": {
         "title": "Chat",

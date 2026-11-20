@@ -1965,7 +1965,10 @@
         "claudeModeUnsaved": "Chưa lưu. Nhấn Lưu để áp dụng chế độ này.",
         "claudeModeDesktopOwnerNote": "Claude Desktop dùng chung kết nối proxy của Claude Code, nên khi lưu, Claude Code cũng được chuyển sang chế độ proxy.",
         "claudeModeProxyInUse": "Claude Desktop vẫn đang dùng proxy này. Hãy chuyển Claude Desktop về trước.",
-        "claudeModeTrustRemains": "Relo không gỡ được chứng chỉ mà nó đã cài, nên chưa có gì thay đổi. Hãy mở phần bộ chọn của Desktop, gỡ bằng các bước được hiển thị rồi thử lại."
+        "claudeModeTrustRemains": "Relo không gỡ được chứng chỉ mà nó đã cài, nên chưa có gì thay đổi. Hãy mở phần bộ chọn của Desktop, gỡ bằng các bước được hiển thị rồi thử lại.",
+        "claudeThreadsTitle": "Lịch sử hội thoại",
+        "claudeThreadsHint": "Thời gian Relo giữ cuộc trò chuyện của một luồng Claude được tiếp tục, để các tin nhắn sau vẫn giữ ngữ cảnh. Khi hết hạn, Claude Desktop sẽ yêu cầu bạn gửi lại tin nhắn.",
+        "claudeThreadsDays": "{count} ngày"
       },
       "chatPage": {
         "title": "Trò chuyện",

@@ -1965,7 +1965,10 @@
         "claudeModeUnsaved": "Inte sparat än. Tryck på Spara för att tillämpa läget.",
         "claudeModeDesktopOwnerNote": "Claude Desktop delar Claude Codes proxykoppling, så att spara flyttar också Claude Code till proxyläge.",
         "claudeModeProxyInUse": "Claude Desktop använder fortfarande den här proxyn. Växla tillbaka Claude Desktop först.",
-        "claudeModeTrustRemains": "Relo kunde inte ta bort certifikatet som det installerade, så ingenting ändrades. Öppna avsnittet för Desktops modellväljare, ta bort det med stegen som visas och försök igen."
+        "claudeModeTrustRemains": "Relo kunde inte ta bort certifikatet som det installerade, så ingenting ändrades. Öppna avsnittet för Desktops modellväljare, ta bort det med stegen som visas och försök igen.",
+        "claudeThreadsTitle": "Trådhistorik",
+        "claudeThreadsHint": "Hur länge Relo behåller konversationen i en fortsatt Claude-tråd, så att följande meddelanden behåller sitt sammanhang. När tiden går ut ber Claude Desktop dig skicka meddelandet igen.",
+        "claudeThreadsDays": "{count} dagar"
       },
       "chatPage": {
         "title": "Chatt",

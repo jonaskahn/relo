@@ -1965,7 +1965,10 @@
         "claudeModeUnsaved": "ยังไม่ได้บันทึก กดบันทึกเพื่อใช้โหมดนี้",
         "claudeModeDesktopOwnerNote": "Claude Desktop ใช้การเชื่อมต่อพร็อกซีร่วมกับ Claude Code ดังนั้นการบันทึกจะย้าย Claude Code ไปโหมดพร็อกซีด้วย",
         "claudeModeProxyInUse": "Claude Desktop ยังใช้พร็อกซีนี้อยู่ โปรดสลับ Claude Desktop กลับก่อน",
-        "claudeModeTrustRemains": "Relo ลบใบรับรองที่ตัวเองติดตั้งไม่ได้ จึงไม่มีอะไรเปลี่ยนแปลง เปิดส่วนตัวเลือกโมเดลของ Desktop ลบด้วยขั้นตอนที่แสดง แล้วลองอีกครั้ง"
+        "claudeModeTrustRemains": "Relo ลบใบรับรองที่ตัวเองติดตั้งไม่ได้ จึงไม่มีอะไรเปลี่ยนแปลง เปิดส่วนตัวเลือกโมเดลของ Desktop ลบด้วยขั้นตอนที่แสดง แล้วลองอีกครั้ง",
+        "claudeThreadsTitle": "ประวัติเธรด",
+        "claudeThreadsHint": "ระยะเวลาที่ Relo เก็บบทสนทนาของเธรด Claude ที่ต่อเนื่องไว้ เพื่อให้ข้อความถัดไปยังมีบริบท เมื่อหมดอายุ Claude Desktop จะขอให้คุณส่งข้อความอีกครั้ง",
+        "claudeThreadsDays": "{count} วัน"
       },
       "chatPage": {
         "title": "แชต",

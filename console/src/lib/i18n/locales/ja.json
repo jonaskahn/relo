@@ -1965,7 +1965,10 @@
         "claudeModeUnsaved": "まだ保存されていません。保存を押すとこのモードが適用されます。",
         "claudeModeDesktopOwnerNote": "Claude Desktop は Claude Code のプロキシ配線を共有するため、保存すると Claude Code もプロキシモードに移ります。",
         "claudeModeProxyInUse": "Claude Desktop がまだこのプロキシを使っています。先に Claude Desktop を元に戻してください。",
-        "claudeModeTrustRemains": "Relo は自分でインストールした証明書を削除できなかったため、何も変更されていません。Desktop のピッカーの項目を開き、表示された手順で削除してから、もう一度お試しください。"
+        "claudeModeTrustRemains": "Relo は自分でインストールした証明書を削除できなかったため、何も変更されていません。Desktop のピッカーの項目を開き、表示された手順で削除してから、もう一度お試しください。",
+        "claudeThreadsTitle": "スレッド履歴",
+        "claudeThreadsHint": "Relo が継続した Claude スレッドの会話を保持する期間です。以降のメッセージが文脈を保ちます。期限が切れると、Claude Desktop はメッセージの再送を求めます。",
+        "claudeThreadsDays": "{count} 日"
       },
       "chatPage": {
         "title": "チャット",

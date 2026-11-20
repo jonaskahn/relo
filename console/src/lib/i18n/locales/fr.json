@@ -1965,7 +1965,10 @@
         "claudeModeUnsaved": "Pas encore enregistré. Appuyez sur Enregistrer pour appliquer ce mode.",
         "claudeModeDesktopOwnerNote": "Claude Desktop partage le câblage proxy de Claude Code : enregistrer fait donc aussi passer Claude Code en mode proxy.",
         "claudeModeProxyInUse": "Claude Desktop utilise encore ce proxy. Remettez d'abord Claude Desktop dans son mode précédent.",
-        "claudeModeTrustRemains": "Relo n'a pas pu retirer le certificat qu'il a installé, donc rien n'a changé. Ouvrez la section du sélecteur de Desktop, retirez-le avec les étapes affichées, puis réessayez."
+        "claudeModeTrustRemains": "Relo n'a pas pu retirer le certificat qu'il a installé, donc rien n'a changé. Ouvrez la section du sélecteur de Desktop, retirez-le avec les étapes affichées, puis réessayez.",
+        "claudeThreadsTitle": "Historique du fil",
+        "claudeThreadsHint": "Durée pendant laquelle Relo conserve la conversation d’un fil Claude continué, afin que les messages suivants gardent leur contexte. À l’expiration, Claude Desktop vous demande de renvoyer le message.",
+        "claudeThreadsDays": "{count} jours"
       },
       "chatPage": {
         "title": "Chat",

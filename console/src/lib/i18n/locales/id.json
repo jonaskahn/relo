@@ -1965,7 +1965,10 @@
         "claudeModeUnsaved": "Belum disimpan. Tekan Simpan untuk menerapkan mode ini.",
         "claudeModeDesktopOwnerNote": "Claude Desktop berbagi sambungan proxy Claude Code, jadi menyimpan juga memindahkan Claude Code ke mode proxy.",
         "claudeModeProxyInUse": "Claude Desktop masih memakai proxy ini. Kembalikan Claude Desktop terlebih dahulu.",
-        "claudeModeTrustRemains": "Relo tidak dapat menghapus sertifikat yang dipasangnya, jadi tidak ada yang diubah. Buka bagian pemilih Desktop, hapus dengan langkah yang ditampilkan, lalu coba lagi."
+        "claudeModeTrustRemains": "Relo tidak dapat menghapus sertifikat yang dipasangnya, jadi tidak ada yang diubah. Buka bagian pemilih Desktop, hapus dengan langkah yang ditampilkan, lalu coba lagi.",
+        "claudeThreadsTitle": "Riwayat utas",
+        "claudeThreadsHint": "Berapa lama Relo menyimpan percakapan utas Claude yang dilanjutkan, agar pesan berikutnya tetap memiliki konteks. Saat kedaluwarsa, Claude Desktop meminta Anda mengirim ulang pesan.",
+        "claudeThreadsDays": "{count} hari"
       },
       "chatPage": {
         "title": "Obrolan",

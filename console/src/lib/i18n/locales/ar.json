@@ -1965,7 +1965,10 @@
         "claudeModeUnsaved": "لم يُحفظ بعد. اضغط حفظ لتطبيق هذا الوضع.",
         "claudeModeDesktopOwnerNote": "يشارك Claude Desktop توصيل الوكيل الخاص بـ Claude Code، لذا يؤدي الحفظ إلى نقل Claude Code أيضًا إلى وضع الوكيل.",
         "claudeModeProxyInUse": "لا يزال Claude Desktop يستخدم هذا الوكيل. أعد Claude Desktop إلى وضعه السابق أولًا.",
-        "claudeModeTrustRemains": "تعذّر على Relo إزالة الشهادة التي ثبّتها، لذلك لم يتغير شيء. افتح قسم محدد Desktop، وأزلها بالخطوات المعروضة، ثم أعد المحاولة."
+        "claudeModeTrustRemains": "تعذّر على Relo إزالة الشهادة التي ثبّتها، لذلك لم يتغير شيء. افتح قسم محدد Desktop، وأزلها بالخطوات المعروضة، ثم أعد المحاولة.",
+        "claudeThreadsTitle": "سجل المحادثة",
+        "claudeThreadsHint": "المدة التي يحتفظ فيها Relo بمحادثة Claude المستمرة، لتحتفظ الرسائل اللاحقة بسياقها. وعند انتهائها يطلب منك Claude Desktop إعادة إرسال الرسالة.",
+        "claudeThreadsDays": "{count} أيام"
       },
       "chatPage": {
         "title": "الدردشة",

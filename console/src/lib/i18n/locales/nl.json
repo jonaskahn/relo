@@ -1965,7 +1965,10 @@
         "claudeModeUnsaved": "Nog niet opgeslagen. Druk op Opslaan om deze modus toe te passen.",
         "claudeModeDesktopOwnerNote": "Claude Desktop deelt de proxybedrading van Claude Code, dus opslaan zet ook Claude Code in proxymodus.",
         "claudeModeProxyInUse": "Claude Desktop gebruikt deze proxy nog. Zet Claude Desktop eerst terug.",
-        "claudeModeTrustRemains": "Relo kon het certificaat dat het had geïnstalleerd niet verwijderen, dus er is niets gewijzigd. Open het gedeelte van de modelkiezer van Desktop, verwijder het met de getoonde stappen en probeer het opnieuw."
+        "claudeModeTrustRemains": "Relo kon het certificaat dat het had geïnstalleerd niet verwijderen, dus er is niets gewijzigd. Open het gedeelte van de modelkiezer van Desktop, verwijder het met de getoonde stappen en probeer het opnieuw.",
+        "claudeThreadsTitle": "Gespreksgeschiedenis",
+        "claudeThreadsHint": "Hoe lang Relo het gesprek van een voortgezette Claude-thread bewaart, zodat volgende berichten hun context houden. Na afloop vraagt Claude Desktop je het bericht opnieuw te sturen.",
+        "claudeThreadsDays": "{count} dagen"
       },
       "chatPage": {
         "title": "Chat",

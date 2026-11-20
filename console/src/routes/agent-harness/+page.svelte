@@ -45,6 +45,7 @@
 	import ClaudeBindingsSection from '$lib/components/agents/claude-bindings-section.svelte';
 	import ClaudeModeSection from '$lib/components/agents/claude-mode-section.svelte';
 	import ClaudeModelPreferences from '$lib/components/agents/claude-model-preferences.svelte';
+	import ClaudeThreadRetention from '$lib/components/agents/claude-thread-retention.svelte';
 	import ModeDiagram from '$lib/components/agents/mode-diagram.svelte';
 	import CardLayoutToggle from '$lib/components/providers/card-layout-toggle.svelte';
 	import Button from '$lib/components/ui/button.svelte';
@@ -118,6 +119,9 @@
 	let modeFailure = $state('');
 	// The mode a set-up will write, chosen in the modal before anything is written.
 	let chosenMode = $state<'env' | 'proxy'>('env');
+	// How long a continued Claude thread stays rebuildable, read once for the
+	// detail card that sets it.
+	let threadDays = $state(30);
 	let verifying = $state(false);
 	let verifyRead = $state<{ ok: boolean; copy: string } | null>(null);
 
@@ -147,9 +151,10 @@
 		if (!silent) failure = '';
 		// The roster and the data plane are separate reads, so they go out
 		// together rather than one after the other.
-		const [roster, status] = await Promise.allSettled([
+		const [roster, status, settings] = await Promise.allSettled([
 			api<{ items: IntegrationView[] }>('/integrations'),
-			api<StatusResponse>('/status')
+			api<StatusResponse>('/status'),
+			api<{ threads?: { days?: number } }>('/settings')
 		]);
 		loading = false;
 		if (roster.status === 'fulfilled') {
@@ -160,6 +165,9 @@
 			failure = message(roster.reason);
 		}
 		dataPlane = status.status === 'fulfilled' ? (status.value.data_plane ?? []) : [];
+		if (settings.status === 'fulfilled' && settings.value.threads?.days !== undefined) {
+			threadDays = settings.value.threads.days;
+		}
 	}
 
 	// The mode the operator has picked but not yet saved, for an agent that is already set up.
@@ -747,6 +755,9 @@
 							live={diagramLive}
 							preview={!detail.enabled || modeDirty}
 						/>
+					{/if}
+					{#if detail.id === 'claude-code' || detail.id === 'claude-desktop'}
+						<ClaudeThreadRetention days={threadDays} onsaved={(days) => (threadDays = days)} />
 					{/if}
 					{#if detail.enabled && choosesMode(detail) && !modeDirty}
 						{#if (detail.mode ?? 'env') === 'proxy'}

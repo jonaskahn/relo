@@ -1042,6 +1042,9 @@ export type QuotaDisplay = 'used' | 'remaining';
 /** The whole management configuration the console edits. */
 export interface Settings {
 	readonly retention: RetentionSettings;
+	// threads is how long a continued Claude thread stays rebuildable. The
+	// Claude detail card reads and writes it where the mode is chosen.
+	readonly threads: { readonly days: number };
 	readonly language: string;
 	readonly appearance: { theme: ThemeChoice; accent: Accent; quota_display: QuotaDisplay };
 	readonly system: SystemSettings;

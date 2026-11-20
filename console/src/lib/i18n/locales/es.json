@@ -1965,7 +1965,10 @@
         "claudeModeUnsaved": "Aún sin guardar. Pulsa Guardar para aplicar este modo.",
         "claudeModeDesktopOwnerNote": "Claude Desktop comparte el cableado proxy de Claude Code, así que al guardar también se pasa Claude Code al modo proxy.",
         "claudeModeProxyInUse": "Claude Desktop todavía usa este proxy. Devuelve primero Claude Desktop a su modo anterior.",
-        "claudeModeTrustRemains": "Relo no pudo quitar el certificado que instaló, así que no se cambió nada. Abre la sección del selector de Desktop, quítalo con los pasos que se muestran y vuelve a intentarlo."
+        "claudeModeTrustRemains": "Relo no pudo quitar el certificado que instaló, así que no se cambió nada. Abre la sección del selector de Desktop, quítalo con los pasos que se muestran y vuelve a intentarlo.",
+        "claudeThreadsTitle": "Historial del hilo",
+        "claudeThreadsHint": "Cuánto tiempo conserva Relo la conversación de un hilo de Claude continuado, para que los mensajes siguientes mantengan su contexto. Al caducar, Claude Desktop te pide que reenvíes el mensaje.",
+        "claudeThreadsDays": "{count} días"
       },
       "chatPage": {
         "title": "Chat",

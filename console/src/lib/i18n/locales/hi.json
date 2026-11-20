@@ -1965,7 +1965,10 @@
         "claudeModeUnsaved": "अभी सहेजा नहीं गया। इस मोड को लागू करने के लिए सहेजें दबाएँ।",
         "claudeModeDesktopOwnerNote": "Claude Desktop, Claude Code की प्रॉक्सी वायरिंग साझा करता है, इसलिए सहेजने पर Claude Code भी प्रॉक्सी मोड में चला जाता है।",
         "claudeModeProxyInUse": "Claude Desktop अब भी इस प्रॉक्सी का उपयोग कर रहा है। पहले Claude Desktop को पिछले मोड में लौटाएँ।",
-        "claudeModeTrustRemains": "Relo अपना इंस्टॉल किया प्रमाणपत्र नहीं हटा सका, इसलिए कुछ नहीं बदला। Desktop चयनकर्ता वाला भाग खोलें, दिखाए चरणों से उसे हटाएँ और फिर कोशिश करें।"
+        "claudeModeTrustRemains": "Relo अपना इंस्टॉल किया प्रमाणपत्र नहीं हटा सका, इसलिए कुछ नहीं बदला। Desktop चयनकर्ता वाला भाग खोलें, दिखाए चरणों से उसे हटाएँ और फिर कोशिश करें।",
+        "claudeThreadsTitle": "थ्रेड इतिहास",
+        "claudeThreadsHint": "Relo कितने समय तक जारी Claude थ्रेड की बातचीत रखता है, ताकि आगे के संदेश अपना संदर्भ बनाए रखें। समाप्त होने पर Claude Desktop आपसे संदेश फिर भेजने को कहता है।",
+        "claudeThreadsDays": "{count} दिन"
       },
       "chatPage": {
         "title": "चैट",

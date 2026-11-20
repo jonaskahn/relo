@@ -122,6 +122,11 @@ mode section: a title, the drawing stretched across the row, and one caption sen
   modal's primary action. The current model stays selected when it is missing from the list, labelled as unavailable,
   rather than being replaced. A line under the controls says an open Claude Code session keeps the previous choice
   until it is started again. Claude Desktop and every other agent omit this section.
+- **Thread history** (Claude Code and Claude Desktop): under the mode choice, a window select from 1 to 365 days,
+  defaulting to 30, and a Save that writes inline. Claude Desktop continues a thread by sending only the new message
+  plus the id of the reply it answers, so Relo keeps each finished turn in the database and rebuilds the conversation
+  before routing. When the window passes, the next continuation is refused as a request error and the client resends.
+  The section is a preference, not part of the modal's primary Save.
 
 **Title row** — the status pill and the coverage tag ("Tested" or "Not tested yet") sit beside the title, at the top of
 the modal, as the modal's `titleAside`. The footer repeats neither them nor the name.

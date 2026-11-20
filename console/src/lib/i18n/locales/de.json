@@ -1965,7 +1965,10 @@
         "claudeModeUnsaved": "Noch nicht gespeichert. Mit Speichern wird dieser Modus angewendet.",
         "claudeModeDesktopOwnerNote": "Claude Desktop teilt die Proxy-Verdrahtung von Claude Code, daher stellt Speichern auch Claude Code auf den Proxy-Modus um.",
         "claudeModeProxyInUse": "Claude Desktop nutzt diesen Proxy noch. Stelle zuerst Claude Desktop zurück.",
-        "claudeModeTrustRemains": "Relo konnte das installierte Zertifikat nicht entfernen, daher wurde nichts geändert. Öffne den Abschnitt der Desktop-Modellauswahl, entferne es mit den gezeigten Schritten und versuche es dann erneut."
+        "claudeModeTrustRemains": "Relo konnte das installierte Zertifikat nicht entfernen, daher wurde nichts geändert. Öffne den Abschnitt der Desktop-Modellauswahl, entferne es mit den gezeigten Schritten und versuche es dann erneut.",
+        "claudeThreadsTitle": "Thread-Verlauf",
+        "claudeThreadsHint": "Wie lange Relo den Verlauf eines fortgesetzten Claude-Threads behält, damit Folgenachrichten ihren Kontext behalten. Nach Ablauf bittet Claude Desktop dich, die Nachricht erneut zu senden.",
+        "claudeThreadsDays": "{count} Tage"
       },
       "chatPage": {
         "title": "Chat",

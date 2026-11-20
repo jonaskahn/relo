@@ -1965,7 +1965,10 @@
         "claudeModeUnsaved": "尚未儲存。按下「儲存」即可套用此模式。",
         "claudeModeDesktopOwnerNote": "Claude Desktop 與 Claude Code 共用代理接線，因此儲存時也會把 Claude Code 切換到代理模式。",
         "claudeModeProxyInUse": "Claude Desktop 仍在使用此代理。請先把 Claude Desktop 切換回去。",
-        "claudeModeTrustRemains": "Relo 無法移除它安裝的憑證，所以沒有任何變更。請開啟 Desktop 選擇器區塊，依顯示的步驟移除後再試。"
+        "claudeModeTrustRemains": "Relo 無法移除它安裝的憑證，所以沒有任何變更。請開啟 Desktop 選擇器區塊，依顯示的步驟移除後再試。",
+        "claudeThreadsTitle": "執行緒歷史",
+        "claudeThreadsHint": "Relo 保留續接的 Claude 執行緒對話的時長，以便後續訊息保留上下文。到期後，Claude Desktop 會要求你重新傳送訊息。",
+        "claudeThreadsDays": "{count} 天"
       },
       "chatPage": {
         "title": "聊天",

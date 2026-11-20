@@ -1965,7 +1965,10 @@
         "claudeModeUnsaved": "Nesalvat încă. Apasă Salvează pentru a aplica acest mod.",
         "claudeModeDesktopOwnerNote": "Claude Desktop folosește aceeași conexiune proxy ca Claude Code, deci salvarea mută și Claude Code în modul proxy.",
         "claudeModeProxyInUse": "Claude Desktop folosește încă acest proxy. Mai întâi readu Claude Desktop la modul anterior.",
-        "claudeModeTrustRemains": "Relo nu a putut elimina certificatul pe care l-a instalat, deci nu s-a schimbat nimic. Deschide secțiunea selectorului din Desktop, elimină-l cu pașii afișați și încearcă din nou."
+        "claudeModeTrustRemains": "Relo nu a putut elimina certificatul pe care l-a instalat, deci nu s-a schimbat nimic. Deschide secțiunea selectorului din Desktop, elimină-l cu pașii afișați și încearcă din nou.",
+        "claudeThreadsTitle": "Istoricul firului",
+        "claudeThreadsHint": "Cât timp păstrează Relo conversația unui fir Claude continuat, ca mesajele următoare să își păstreze contextul. La expirare, Claude Desktop îți cere să retrimiți mesajul.",
+        "claudeThreadsDays": "{count} zile"
       },
       "chatPage": {
         "title": "Chat",

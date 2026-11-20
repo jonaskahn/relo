@@ -1965,7 +1965,10 @@
         "claudeModeUnsaved": "Jeszcze nie zapisano. Naciśnij Zapisz, aby zastosować ten tryb.",
         "claudeModeDesktopOwnerNote": "Claude Desktop korzysta z tego samego połączenia proxy co Claude Code, więc zapis przełącza też Claude Code w tryb proxy.",
         "claudeModeProxyInUse": "Claude Desktop nadal używa tego proxy. Najpierw przywróć poprzedni tryb Claude Desktop.",
-        "claudeModeTrustRemains": "Relo nie zdołał usunąć zainstalowanego certyfikatu, więc nic się nie zmieniło. Otwórz sekcję wyboru modelu w Desktop, usuń go według pokazanych kroków i spróbuj ponownie."
+        "claudeModeTrustRemains": "Relo nie zdołał usunąć zainstalowanego certyfikatu, więc nic się nie zmieniło. Otwórz sekcję wyboru modelu w Desktop, usuń go według pokazanych kroków i spróbuj ponownie.",
+        "claudeThreadsTitle": "Historia wątku",
+        "claudeThreadsHint": "Jak długo Relo przechowuje rozmowę kontynuowanego wątku Claude, aby kolejne wiadomości zachowały kontekst. Po upływie tego czasu Claude Desktop poprosi o ponowne wysłanie wiadomości.",
+        "claudeThreadsDays": "{count} dni"
       },
       "chatPage": {
         "title": "Czat",

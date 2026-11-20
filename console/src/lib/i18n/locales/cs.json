@@ -1965,7 +1965,10 @@
         "claudeModeUnsaved": "Zatím neuloženo. Stisknutím Uložit tento režim použijete.",
         "claudeModeDesktopOwnerNote": "Claude Desktop sdílí proxy zapojení Claude Code, takže uložení přepne do režimu proxy i Claude Code.",
         "claudeModeProxyInUse": "Claude Desktop tento proxy stále používá. Nejprve vraťte Claude Desktop zpět.",
-        "claudeModeTrustRemains": "Relo nedokázal odebrat certifikát, který nainstaloval, takže se nic nezměnilo. Otevřete sekci výběru modelu v Desktopu, odeberte ho podle zobrazených kroků a zkuste to znovu."
+        "claudeModeTrustRemains": "Relo nedokázal odebrat certifikát, který nainstaloval, takže se nic nezměnilo. Otevřete sekci výběru modelu v Desktopu, odeberte ho podle zobrazených kroků a zkuste to znovu.",
+        "claudeThreadsTitle": "Historie vlákna",
+        "claudeThreadsHint": "Jak dlouho Relo uchovává pokračující vlákno Claude, aby navazující zprávy měly svůj kontext. Po vypršení vás Claude Desktop požádá o opětovné odeslání zprávy.",
+        "claudeThreadsDays": "{count} dní"
       },
       "chatPage": {
         "title": "Chat",
