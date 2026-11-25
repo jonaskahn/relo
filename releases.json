@@ -1,5 +1,5 @@
 {
-  "generated": "2026-11-25T02:42:00Z",
+  "generated": "2026-11-25T02:46:25Z",
   "latest": "v0.3.4",
   "latest_beta": "v0.3.4-beta.188.9aacc70c",
   "install": {
@@ -25,7 +25,7 @@
       "draft": false,
       "published_at": "2026-11-25T02:41:25Z",
       "page": "https://github.com/jonaskahn/relo/releases/tag/v0.3.4",
-      "notes": "## What's Changed\r\n* chore: bump to 0.3.4 by @github-actions[bot] in https://github.com/jonaskahn/relo/pull/117\r\n\r\n\r\n**Full Changelog**: https://github.com/jonaskahn/relo/compare/v0.3.3...v0.3.4",
+      "notes": "# 🚀 v0.3.4 — 2026-11-20\r\n\r\n### ✨ Improvements\r\n\r\n- 🧵 Claude Desktop continues a thread by sending only the new message and the id of the reply it answers. Relo keeps each finished turn in its own table and rebuilds the system prompt, tools, and earlier messages before routing, so a follow-up keeps its context on every model, not only on Anthropic.\r\n- ⏳ The window a stored thread stays continuable is set on the Claude detail card, 30 days by default. The setting saves inline, and the daemon sweeps turns past it on its maintenance tick. A turn older than the window is refused as a request error, so the client can resend it.\r\n- 🤝 Agent Harness lists an **OpenAI-compatible** card for any client that speaks the OpenAI Chat wire. It hands over the base URL, key, and model in manual setup steps; Relo does not write that client's configuration file.\r\n\r\n### 🐛 Fixes\r\n\r\n- 📎 A tool result with no spoken text, such as the reference Claude Desktop's ToolSearch returns, is sent to Chat upstreams as a short placeholder instead of null content. Those upstreams rejected the whole request with \"tool message content must be a string…\", which Claude Desktop surfaced as a failed turn.\r\n- 🧬 Learned model denials left behind by a lost thread are discarded. Only denials attributable to one complete retained lost-thread provider response are erased; genuine denials, known account rosters, and exclusions without sufficient evidence are left alone. A model-list refresh alone did not repair the affected observations.",
       "install": {
         "script": "curl -fsSL https://relo.ifelse.one/install.sh | sh -s -- --version 0.3.4",
         "powershell": "& ([scriptblock]::Create((irm https://relo.ifelse.one/install.ps1))) -Version 0.3.4",
