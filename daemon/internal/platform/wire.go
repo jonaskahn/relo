@@ -607,11 +607,7 @@ func startMaintenance(ctx context.Context, daemon *server.Server, built deps) {
 	threadWindow := sqlite.NewThreadRetention(built.db, built.clock)
 	go func() {
 		retention.MaintainOnce(ctx)
-		sweepThreads := func() {
-			if _, err := threadWindow.Sweep(ctx); err != nil {
-				built.logger.Warn("apply the stored thread window", "error", err)
-			}
-		}
+		sweepThreads := func() { sweepThreadWindow(ctx, built.logger, threadWindow) }
 		sweepThreads()
 		if err := retention.Run(ctx, maintenanceInterval, func() {
 			refreshTrafficBudget(ctx, built, retention)
@@ -620,6 +616,13 @@ func startMaintenance(ctx context.Context, daemon *server.Server, built deps) {
 			built.logger.Warn("retention stopped", "error", err)
 		}
 	}()
+}
+
+// sweepThreadWindow applies the stored thread window to the turns table.
+func sweepThreadWindow(ctx context.Context, logger *slog.Logger, window *sqlite.ThreadRetention) {
+	if _, err := window.Sweep(ctx); err != nil {
+		logger.Warn("apply the stored thread window", "error", err)
+	}
 }
 
 // refreshTrafficBudget applies the stored retention budget to the traffic log

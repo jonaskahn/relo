@@ -70,9 +70,6 @@ func expandRequest(request *inference.Request, resolved threads.Resolved, system
 // retainThread records the finished reply so the next turn can continue from
 // it. The reply id is the key the client sends back.
 func (s *Server) retainThread(r *http.Request, turn pendingTurn, reply wire.Turn) {
-	if s.opts.Threads == nil {
-		return
-	}
 	keyID, _, _ := describeClient(r.Context())
 	stored := threads.Turn{
 		ClientKey: keyID, ID: reply.MessageID,
@@ -102,9 +99,6 @@ func splitSystem(messages []inference.Message) (*inference.Message, []inference.
 }
 
 func textOf(message *inference.Message) string {
-	if message == nil {
-		return ""
-	}
 	text := ""
 	for _, part := range message.Content {
 		if part.Type == inference.ContentTypeText {
@@ -121,12 +115,9 @@ func (s *Server) writeThreadRefusal(w http.ResponseWriter, err error) {
 }
 
 // installThreadRetainer makes the inbound codec report its finished reply to
-// the thread store. It reports false when the codec cannot.
-func installThreadRetainer(inbound wire.InboundCodec, retain func(wire.Turn)) bool {
-	reporter, ok := inbound.(wire.TurnReporter)
-	if !ok {
-		return false
+// the thread store.
+func installThreadRetainer(inbound wire.InboundCodec, retain func(wire.Turn)) {
+	if reporter, ok := inbound.(wire.TurnReporter); ok {
+		reporter.RetainTurn(retain)
 	}
-	reporter.RetainTurn(retain)
-	return true
 }
