@@ -114,6 +114,32 @@ func TestRetentionWindowDefaultsAndRejectsNegative(t *testing.T) {
 	if _, err := RetentionWindow(-1); err == nil {
 		t.Fatal("RetentionWindow(-1) = nil, want a refusal")
 	}
+	if days, err := RetentionWindow(7); err != nil || days != 7 {
+		t.Fatalf("RetentionWindow(7) = %d, %v, want the stored window", days, err)
+	}
+}
+
+// TestAnAbsentHistoryAnswersNothing keeps a build without a thread store
+// readable: a continuation it cannot rebuild is reported as missing instead of
+// panicking, and recording into it costs nothing.
+func TestAnAbsentHistoryAnswersNothing(t *testing.T) {
+	var absent *History
+	if _, found, err := absent.Resolve(context.Background(), "k", "msg_1"); err != nil || found {
+		t.Fatalf("Resolve() on an absent history = found %v, error %v", found, err)
+	}
+	if err := absent.Record(context.Background(), Turn{ID: "msg_1"}); err != nil {
+		t.Fatalf("Record() on an absent history error = %v", err)
+	}
+	history := NewHistory(nil, nil)
+	if _, found, err := history.Resolve(context.Background(), "k", "msg_1"); err != nil || found {
+		t.Fatalf("Resolve() without a store = found %v, error %v", found, err)
+	}
+	if _, found, err := history.Resolve(context.Background(), "k", ""); err != nil || found {
+		t.Fatalf("Resolve(empty id) = found %v, error %v", found, err)
+	}
+	if err := history.Record(context.Background(), Turn{ID: ""}); err != nil {
+		t.Fatalf("Record(empty id) error = %v, want nothing to do", err)
+	}
 }
 
 func TestCutoffIsMeasuredFromTheStartOfTheDay(t *testing.T) {

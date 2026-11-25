@@ -701,3 +701,12 @@ func TestThreadWindowReadReportsAStoreFailure(t *testing.T) {
 		t.Fatal("Read() = nil, want the thread store failure")
 	}
 }
+
+// TestThreadWindowSaveWithoutAStore covers a build that carries the settings
+// service but no thread store: the card's write is refused rather than lost.
+func TestThreadWindowSaveWithoutAStore(t *testing.T) {
+	service := appsettings.New(appsettings.Options{ConfigPath: t.TempDir() + "/config.toml"})
+	if _, err := service.SaveThreads(context.Background(), appsettings.ThreadRetention{Days: 7}); !errors.Is(err, appsettings.ErrInvalidWrite) {
+		t.Fatalf("SaveThreads() error = %v, want an invalid write", err)
+	}
+}

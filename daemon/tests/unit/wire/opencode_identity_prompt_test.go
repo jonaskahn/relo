@@ -140,3 +140,21 @@ func TestOpenCodeFreeLeavesALaterBillingStampAlone(t *testing.T) {
 		t.Fatalf("system = %q, want an inner stamp kept", got.Messages[0].Content[0].Text)
 	}
 }
+
+// A continued thread sends the subscription stamp alone as its system prompt,
+// which is not a prompt: recognizing it is what keeps the thread's own prompt.
+func TestBillingStampOnly(t *testing.T) {
+	const stamp = "x-anthropic-billing-header: cc_version=2.1.327; cc_entrypoint=cli; cch=84b7b;"
+	if !wire.IsBillingStampOnly(stamp) {
+		t.Fatalf("IsBillingStampOnly(%q) = false, want the stamp alone recognized", stamp)
+	}
+	if !wire.IsBillingStampOnly("  \n" + stamp + "\n ") {
+		t.Fatal("IsBillingStampOnly() = false, want the surrounding space ignored")
+	}
+	if wire.IsBillingStampOnly(stamp + "Answer in French.") {
+		t.Fatal("IsBillingStampOnly() = true, want a prompt after the stamp kept")
+	}
+	if wire.IsBillingStampOnly("Answer in French.") {
+		t.Fatal("IsBillingStampOnly() = true, want any prompt kept")
+	}
+}
