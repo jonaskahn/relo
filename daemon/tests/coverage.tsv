@@ -24,6 +24,7 @@ internal/adapters/awsauth	internal/adapters/awsauth/...	80
 internal/adapters/gcpauth	internal/adapters/gcpauth/...	76
 internal/adapters/modelsdev	internal/adapters/modelsdev/...	55
 internal/adapters/oauth	tests/unit/oauth/...,internal/adapters/oauth/...	89
+internal/adapters/muse	tests/unit/muse/...,internal/adapters/muse/...	81
 internal/adapters/quota	tests/unit/quota/...	79
 internal/adapters/secrets	tests/unit/secrets/...	85
 internal/adapters/sqlite	tests/unit/sqlite/...	63

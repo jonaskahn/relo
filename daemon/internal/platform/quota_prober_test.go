@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/jonaskahn/relo/internal/activity"
+	"github.com/jonaskahn/relo/internal/adapters/muse"
 	"github.com/jonaskahn/relo/internal/adapters/quota"
 	"github.com/jonaskahn/relo/internal/catalog"
 	"github.com/jonaskahn/relo/internal/clock"
@@ -83,6 +84,11 @@ func TestHostQuotaProber(t *testing.T) {
 			want: new(quota.ClaudeProber),
 		},
 		{
+			name: "Meta Muse reads its subscription quota by template",
+			host: catalog.Provider{ID: "muse", TemplateID: museTemplate, BaseURL: "https://api.meta.ai/v1"},
+			want: new(muse.QuotaProber),
+		},
+		{
 			name:     "a connection no lane speaks has no prober",
 			host:     catalog.Provider{ID: "local", TemplateID: "ollama", BaseURL: "http://localhost:11434"},
 			wantNone: true,
@@ -106,5 +112,15 @@ func TestHostQuotaProber(t *testing.T) {
 				t.Fatalf("hostQuotaProber() = %s, want %s", got, want)
 			}
 		})
+	}
+}
+
+func TestNamedQuotaProberResolvesMuseByTemplate(t *testing.T) {
+	prober, found := namedQuotaProber(museTemplate, "https://api.meta.ai/v1", clock.New())
+	if !found {
+		t.Fatal("no prober for a Muse connection")
+	}
+	if _, ok := prober.(*muse.QuotaProber); !ok {
+		t.Fatalf("prober = %T, want the Muse prober", prober)
 	}
 }

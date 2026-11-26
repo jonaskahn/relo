@@ -15,6 +15,7 @@ import (
 	"github.com/jonaskahn/relo/internal/adapters/codingclients"
 	"github.com/jonaskahn/relo/internal/adapters/discovery"
 	"github.com/jonaskahn/relo/internal/adapters/modelsdev"
+	"github.com/jonaskahn/relo/internal/adapters/muse"
 	"github.com/jonaskahn/relo/internal/adapters/oauth"
 	"github.com/jonaskahn/relo/internal/adapters/quota"
 	"github.com/jonaskahn/relo/internal/adapters/secrets"
@@ -818,6 +819,7 @@ const (
 	kimiTemplate        = "kimi"
 	claudeTemplate      = "claude"
 	devinTemplate       = "devin"
+	museTemplate        = "meta-muse"
 	// deepSeekAccountTemplate serves a DeepSeek account grant on the DeepSeek
 	// Anthropic host. It shares that host with the DeepSeek API-key connection,
 	// so the template decides the prober before the host does.
@@ -895,6 +897,8 @@ func templateQuotaProber(templateID, baseURL string, clk clock.Clock) (activity.
 		return quota.NewClaudeProber(quota.SignInProberOptions{}), true
 	case devinTemplate:
 		return quota.NewDevinProber(quota.SignInProberOptions{}), true
+	case museTemplate:
+		return muse.NewQuotaProber(muse.QuotaProberOptions{Now: clk.Now}), true
 	default:
 		return nil, false
 	}
@@ -934,6 +938,8 @@ func namedQuotaProber(providerID, baseURL string, clk clock.Clock) (activity.Quo
 		return quota.NewClaudeProber(quota.SignInProberOptions{}), true
 	case devinTemplate:
 		return quota.NewDevinProber(quota.SignInProberOptions{}), true
+	case museTemplate:
+		return muse.NewQuotaProber(muse.QuotaProberOptions{Now: clk.Now}), true
 	case deepSeekAccountTemplate:
 		return quota.NewDeepSeekAccountProber(quota.ProberOptions{}), true
 	default:

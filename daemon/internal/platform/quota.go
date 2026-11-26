@@ -9,6 +9,7 @@ import (
 
 	"github.com/jonaskahn/relo/internal/account"
 	"github.com/jonaskahn/relo/internal/activity"
+	"github.com/jonaskahn/relo/internal/adapters/muse"
 	"github.com/jonaskahn/relo/internal/adapters/oauth"
 	"github.com/jonaskahn/relo/internal/adapters/quota"
 	"github.com/jonaskahn/relo/internal/adapters/secrets"
@@ -184,6 +185,9 @@ func credentialExtras(credential oauth.Credential) map[string]string {
 	}
 	if base := credential.Value.Extra[oauth.ExtraAPIBaseURL]; base != "" {
 		extras["api_server_url"] = base
+	}
+	if account := credential.Value.Extra[muse.AccessTokenExtraKey]; account != "" {
+		extras[muse.AccessTokenExtraKey] = account
 	}
 	return extras
 }
