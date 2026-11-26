@@ -11,6 +11,7 @@ package darwin
 
 import (
 	"errors"
+	"runtime"
 	"sync"
 	"unsafe"
 
@@ -203,6 +204,7 @@ func GetClass(name string) Class {
 		unsafe.Pointer(&result),
 		[]unsafe.Pointer{unsafe.Pointer(&argBox.name)},
 	)
+	runtime.KeepAlive(cname)
 	if err != nil {
 		return 0
 	}
@@ -234,6 +236,7 @@ func RegisterSelector(name string) SEL {
 		unsafe.Pointer(&result),
 		[]unsafe.Pointer{unsafe.Pointer(&argBox.name)},
 	)
+	runtime.KeepAlive(cname)
 	if err != nil {
 		return 0
 	}
@@ -611,6 +614,7 @@ func AllocateClassPair(superclass Class, name string) Class {
 	); err != nil {
 		return 0
 	}
+	runtime.KeepAlive(nameBytes)
 	return Class(result)
 }
 
@@ -654,6 +658,7 @@ func ClassAddMethod(cls Class, sel SEL, imp uintptr, typeEncoding string) bool {
 	); err != nil {
 		return false
 	}
+	runtime.KeepAlive(typeBytes)
 	return result != 0
 }
 
@@ -734,8 +739,16 @@ func NewNSString(s string) ID {
 		return 0
 	}
 
+	// A raw uintptr argument is invisible to the collector, so the buffer
+	// must be pinned across the call: without KeepAlive the GC may reclaim
+	// it mid-flight and initWithUTF8String: reads freed memory, returning
+	// nil for a string that was never nil.
 	cstr := append([]byte(s), 0)
 	nsstr = nsstr.SendPtr(selInitWithUTF8String, uintptr(unsafe.Pointer(&cstr[0])))
+	runtime.KeepAlive(cstr)
+	if nsstr.IsNil() {
+		return 0
+	}
 
 	return nsstr
 }
@@ -758,10 +771,12 @@ func NewNSData(data []byte) ID {
 
 	selDataWithBytes := RegisterSelector("dataWithBytes:length:")
 
-	return MsgSendPtrPtr(ID(nsDataClass), selDataWithBytes,
+	result := MsgSendPtrPtr(ID(nsDataClass), selDataWithBytes,
 		uintptr(unsafe.Pointer(&data[0])),
 		uintptr(len(data)),
 	)
+	runtime.KeepAlive(data)
+	return result
 }
 
 // PostAppDefinedEvent creates an NSEvent of type NSApplicationDefined and
