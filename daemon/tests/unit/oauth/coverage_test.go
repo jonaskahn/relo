@@ -302,44 +302,51 @@ func TestKiroRefresh(t *testing.T) {
 
 func TestMetaMuseDeviceEdges(t *testing.T) {
 	t.Run("a minted response without a key is refused", func(t *testing.T) {
+		clock := testkit.NewFakeClock(time.Now())
 		server, _ := newProvider(t)
+		server.handle("/device/authorization", jsonHandler(`{"device_code":"d","user_code":"MUSE-1","interval":1}`))
+		server.handle("/device/token", jsonHandler(`{"access_token":"meta-account-token"}`))
 		server.handle("/muse-code/key", jsonHandler(`{"user_id":"user-1"}`))
-		flow := oauth.NewMetaMuseFlow(oauth.WithEndpoints(oauth.Endpoints{APIBaseURL: server.url("/muse-code/key")}))
-		_, err := flow.Refresh(context.Background(), &oauth.OAuthCredential{
-			Extra: map[string]string{"museOAuthAccessToken": "account-token"},
+		flow := oauth.NewMetaMuseFlow(oauth.WithClock(clock), oauth.WithEndpoints(oauth.Endpoints{
+			DeviceURL: server.url("/device/authorization"), DeviceTokenURL: server.url("/device/token"),
+			APIBaseURL: server.url("/muse-code/key"),
+		}))
+		var loginErr error
+		runWithClock(t, clock, 2*time.Second, func() error {
+			_, err := flow.Login(context.Background(), oauth.LoginOpts{Timeout: time.Minute})
+			loginErr = err
+			return nil
 		})
-		if !errors.Is(err, oauth.ErrMuseKeyMissing) {
-			t.Fatalf("Refresh() error = %v, want %v", err, oauth.ErrMuseKeyMissing)
+		if !errors.Is(loginErr, oauth.ErrMuseKeyMissing) {
+			t.Fatalf("Login() error = %v, want %v", loginErr, oauth.ErrMuseKeyMissing)
 		}
 	})
 
 	t.Run("a refused mint must log in again", func(t *testing.T) {
+		clock := testkit.NewFakeClock(time.Now())
 		server, _ := newProvider(t)
+		server.handle("/device/authorization", jsonHandler(`{"device_code":"d","user_code":"MUSE-1","interval":1}`))
+		server.handle("/device/token", jsonHandler(`{"access_token":"meta-account-token"}`))
 		server.handle("/muse-code/key", jsonHandler(`{"error":"unauthorized"}`, http.StatusUnauthorized))
-		flow := oauth.NewMetaMuseFlow(oauth.WithEndpoints(oauth.Endpoints{APIBaseURL: server.url("/muse-code/key")}))
-		_, err := flow.Refresh(context.Background(), &oauth.OAuthCredential{
-			Extra: map[string]string{"museOAuthAccessToken": "account-token"},
+		flow := oauth.NewMetaMuseFlow(oauth.WithClock(clock), oauth.WithEndpoints(oauth.Endpoints{
+			DeviceURL: server.url("/device/authorization"), DeviceTokenURL: server.url("/device/token"),
+			APIBaseURL: server.url("/muse-code/key"),
+		}))
+		var loginErr error
+		runWithClock(t, clock, 2*time.Second, func() error {
+			_, err := flow.Login(context.Background(), oauth.LoginOpts{Timeout: time.Minute})
+			loginErr = err
+			return nil
 		})
-		if !errors.Is(err, oauth.ErrRefreshRejected) {
-			t.Fatalf("Refresh() error = %v, want %v", err, oauth.ErrRefreshRejected)
+		if !errors.Is(loginErr, oauth.ErrRefreshRejected) {
+			t.Fatalf("Login() error = %v, want %v", loginErr, oauth.ErrRefreshRejected)
 		}
 	})
 
-	t.Run("a credential without an account token cannot be refreshed", func(t *testing.T) {
+	t.Run("a credential without a key cannot be refreshed", func(t *testing.T) {
 		flow := oauth.NewMetaMuseFlow()
 		if _, err := flow.Refresh(context.Background(), nil); !errors.Is(err, oauth.ErrNoRefreshToken) {
 			t.Fatalf("Refresh() error = %v, want %v", err, oauth.ErrNoRefreshToken)
-		}
-	})
-
-	t.Run("a raw keychain value is used as the key", func(t *testing.T) {
-		flow := oauth.NewMetaMuseFlow(
-			oauth.WithCredentialsPath(writeFile(t, "muse.json", `{"providers":{"meta":{"storage":"keychain"}}}`)),
-			oauth.WithKeychain(&fakeKeychain{value: "LLM|raw"}),
-		)
-		_, credential := loginManual(t, flow, "")
-		if credential.AccessToken != "LLM|raw" {
-			t.Fatalf("credential = %+v, want the raw keychain value", credential)
 		}
 	})
 }

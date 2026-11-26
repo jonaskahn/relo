@@ -343,7 +343,6 @@ func TestFlowOptions(t *testing.T) {
 			oauth.WithEndpoints(oauth.Endpoints{AuthURL: "https://auth.test/authorize", TokenURL: "https://auth.test/token"}),
 			oauth.WithWarn(func(string) {}),
 			oauth.WithLogger(nil),
-			oauth.WithKeychain(&fakeKeychain{value: "k"}),
 			oauth.WithKiroSessions(&fakeKiroSessions{}),
 		)
 		var loginErr error

@@ -125,7 +125,6 @@ type Options struct {
 	// line run with no daemon does.
 	Callbacks       *CallbackBroker
 	KiroSessions    KiroSessionReader
-	Keychain        KeychainReader
 	CredentialsPath string
 	Warn            func(message string)
 	Logger          *slog.Logger
@@ -206,11 +205,6 @@ func WithCallbacks(broker *CallbackBroker) Option {
 // WithKiroSessions reads installed Kiro sessions from reader.
 func WithKiroSessions(reader KiroSessionReader) Option {
 	return func(options *Options) { options.KiroSessions = reader }
-}
-
-// WithKeychain reads secrets a vendor CLI stored in the OS keychain.
-func WithKeychain(reader KeychainReader) Option {
-	return func(options *Options) { options.Keychain = reader }
 }
 
 // WithCredentialsPath points a flow at another local credential file.

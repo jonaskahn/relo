@@ -249,7 +249,7 @@ var signInTemplates = []signInTemplate{
 			ModelsSource:        "listing",
 			ModelsFormat:        catalog.ModelsOpenAI,
 			ModelsDevProviderID: "meta",
-			LoginMethods:        []LoginMethod{{Flow: oauth.FlowMetaMuse, Kind: LoginCLI}},
+			LoginMethods:        []LoginMethod{{Flow: oauth.FlowMetaMuse, Kind: LoginDevice}},
 			Headers: map[string]string{
 				"User-Agent":    "muse-build/1.3.0 (opencodex compatibility)",
 				"x-api-version": "1.0.0",

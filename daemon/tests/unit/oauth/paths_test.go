@@ -28,23 +28,6 @@ func TestLocalCredentialPaths(t *testing.T) {
 		}
 	})
 
-	t.Run("meta muse reads the pointer from home", func(t *testing.T) {
-		home := t.TempDir()
-		t.Setenv("HOME", home)
-		directory := filepath.Join(home, ".config", "muse")
-		if err := os.MkdirAll(directory, 0o700); err != nil {
-			t.Fatalf("create %s: %v", directory, err)
-		}
-		pointer := `{"providers":{"meta":{"storage":"keychain"}}}`
-		if err := os.WriteFile(filepath.Join(directory, "auth.json"), []byte(pointer), 0o600); err != nil {
-			t.Fatalf("write pointer: %v", err)
-		}
-		flow := oauth.NewMetaMuseFlow(oauth.WithKeychain(&fakeKeychain{value: "LLM|home-key"}))
-		_, credential := loginManual(t, flow, "")
-		if credential.AccessToken != "LLM|home-key" {
-			t.Fatalf("credential = %+v, want the keychain key", credential)
-		}
-	})
 }
 
 func TestXAIFlowValidate(t *testing.T) {
