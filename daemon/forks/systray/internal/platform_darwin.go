@@ -621,8 +621,10 @@ func (t *darwinTray) ShowMenu() error {
 	timer := darwin.NewTimer(0.02, t.target, darwin.RegisterSelector("drainUpdates:"))
 	runLoop := darwin.ID(darwin.GetClass("NSRunLoop")).Send(darwin.RegisterSelector("currentRunLoop"))
 	common := darwin.NewNSString("kCFRunLoopCommonModes")
-	darwin.MsgSendPtrPtr(runLoop, darwin.RegisterSelector("addTimer:forMode:"), timer.Ptr(), common.Ptr())
-	common.Send(darwinSels.release)
+	if !common.IsNil() {
+		darwin.MsgSendPtrPtr(runLoop, darwin.RegisterSelector("addTimer:forMode:"), timer.Ptr(), common.Ptr())
+		common.Send(darwinSels.release)
+	}
 	defer timer.Send(darwin.RegisterSelector("invalidate"))
 	t.statusItem.SendPtr(darwinSels.popUpStatusItemMenu, t.nsMenu.Ptr())
 	return nil
@@ -771,10 +773,29 @@ func (t *darwinTray) updateItem(item menuItemSnapshot) error {
 func (t *darwinTray) dispatchPendingUpdates() {
 	// Common modes include menu tracking; no mouse event should be needed to drain.
 	common := darwin.NewNSString("kCFRunLoopCommonModes")
+	if common.IsNil() {
+		// Building the modes array with a nil string raises an ObjC exception,
+		// which no Go caller can recover from. Drain on the default mode instead.
+		darwin.MsgSend3Ptr(t.target, darwinSels.performSelectorOnMainThread,
+			uintptr(darwin.RegisterSelector("drainUpdates:")), 0, 0)
+		t.postWakeEvent()
+		return
+	}
+	defer common.Send(darwinSels.release)
 	modes := darwin.ID(darwin.GetClass("NSArray")).SendPtr(darwin.RegisterSelector("arrayWithObject:"), common.Ptr())
-	darwin.MsgSend4Ptr(t.target, darwin.RegisterSelector("performSelectorOnMainThread:withObject:waitUntilDone:modes:"),
-		uintptr(darwin.RegisterSelector("drainUpdates:")), 0, 0, modes.Ptr())
-	common.Send(darwinSels.release)
+	if !modes.IsNil() {
+		darwin.MsgSend4Ptr(t.target, darwin.RegisterSelector("performSelectorOnMainThread:withObject:waitUntilDone:modes:"),
+			uintptr(darwin.RegisterSelector("drainUpdates:")), 0, 0, modes.Ptr())
+	} else {
+		darwin.MsgSend3Ptr(t.target, darwinSels.performSelectorOnMainThread,
+			uintptr(darwin.RegisterSelector("drainUpdates:")), 0, 0)
+	}
+	t.postWakeEvent()
+}
+
+// postWakeEvent nudges the application event loop so a queued drain runs
+// even when no user interaction is pending.
+func (t *darwinTray) postWakeEvent() {
 	trayRegistryMu.RLock()
 	nsApp := runningNSApp
 	trayRegistryMu.RUnlock()
@@ -965,6 +986,16 @@ func (t *darwinTray) Run() error {
 	// AppKit's selector queue was not serviced by NSApp.run through Go FFI.
 	// Drain from the event pump itself so removal never needs another click.
 	mode := darwin.NewNSString("kCFRunLoopDefaultMode")
+	if mode.IsNil() {
+		// nextEventMatchingMask: with a nil mode never returns, which would
+		// wedge the tray for the life of the process.
+		trayRegistryMu.Lock()
+		if runningNSApp == nsApp {
+			runningNSApp = 0
+		}
+		trayRegistryMu.Unlock()
+		return errors.New("darwin: failed to create the run loop mode")
+	}
 	defer mode.Send(darwinSels.release)
 	for drainDarwinTrays() {
 		pool := darwinClasses.NSAutoreleasePool.Send(darwinSels.alloc).Send(darwinSels.init)
