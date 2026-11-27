@@ -11,7 +11,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/jonaskahn/relo/internal/adapters/muse"
 	"github.com/jonaskahn/relo/internal/adapters/oauth"
 	"github.com/jonaskahn/relo/tests/testkit"
 )
@@ -420,24 +419,26 @@ func TestMetaMuseFlow(t *testing.T) {
 		}
 	})
 
-	t.Run("an inactive subscription is refused", func(t *testing.T) {
+	t.Run("an inactive subscription is still added", func(t *testing.T) {
 		clock := testkit.NewFakeClock(time.Now())
 		server, _ := newProvider(t)
 		server.handle("/device/authorization", jsonHandler(`{"device_code":"d","user_code":"MUSE-1","interval":1}`))
 		server.handle("/device/token", jsonHandler(`{"access_token":"meta-account-token"}`))
-		server.handle("/muse-code/key", jsonHandler(`{"is_subs_active":false}`))
+		server.handle("/muse-code/key", jsonHandler(`{"is_subs_active":false,"user_id":"u-1","user_email":"a@b.c"}`))
 		flow := oauth.NewMetaMuseFlow(oauth.WithClock(clock), oauth.WithEndpoints(oauth.Endpoints{
 			DeviceURL: server.url("/device/authorization"), DeviceTokenURL: server.url("/device/token"),
 			APIBaseURL: server.url("/muse-code/key"),
 		}))
 		var loginErr error
+		var cred *oauth.OAuthCredential
 		runWithClock(t, clock, 2*time.Second, func() error {
-			_, err := flow.Login(context.Background(), oauth.LoginOpts{Timeout: time.Minute})
+			c, err := flow.Login(context.Background(), oauth.LoginOpts{Timeout: time.Minute})
+			cred = c
 			loginErr = err
 			return nil
 		})
-		if !errors.Is(loginErr, muse.ErrSubscriptionInactive) {
-			t.Fatalf("Login() error = %v, want the inactive subscription", loginErr)
+		if loginErr != nil || cred == nil {
+			t.Fatalf("Login() = %v, %v, want a credential", cred, loginErr)
 		}
 	})
 

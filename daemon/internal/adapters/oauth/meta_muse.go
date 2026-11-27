@@ -123,10 +123,12 @@ func (f *metaMuseFlow) applyKey(response tokenResponse, credential *OAuthCredent
 	if err != nil {
 		return err
 	}
-	if payload.Inactive() {
-		return muse.ErrSubscriptionInactive
-	}
 	key := strings.TrimSpace(payload.APIKey)
+	// An inactive subscription is still added so the account shows up; Meta
+	// sends no key then, so the account token stands in until it is renewed.
+	if key == "" && payload.Inactive() {
+		key = credential.RefreshToken
+	}
 	if key == "" {
 		if payload.PaymentURL() != "" || payload.RequirePayment {
 			return fmt.Errorf("%s: %w", payload.PaymentURL(), muse.ErrPaymentRequired)
