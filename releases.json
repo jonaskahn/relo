@@ -1,6 +1,6 @@
 {
-  "generated": "2026-11-28T08:37:28Z",
-  "latest": "v0.3.4",
+  "generated": "2026-11-28T09:57:21Z",
+  "latest": "v0.3.5",
   "latest_beta": "v0.3.5-beta.197.16936f19",
   "install": {
     "stable": {
@@ -17,6 +17,158 @@
     }
   },
   "releases": [
+    {
+      "tag": "v0.3.5",
+      "version": "0.3.5",
+      "name": "v0.3.5 - Arul 🏡",
+      "channel": "stable",
+      "draft": false,
+      "published_at": "2026-11-28T09:57:10Z",
+      "page": "https://github.com/jonaskahn/relo/releases/tag/v0.3.5",
+      "notes": "# 🚀 v0.3.5 — 2026-11-28\r\n\r\n### ✨ Improvements\r\n\r\n- 🔐 The **Meta Muse Code** connection signs in with a Meta device code. Relo shows the code and approval link, then exchanges the granted account token for a Muse Model API key; the installed Muse CLI and its keychain credential are no longer needed. The key response also supplies the account id, email and tier, so the sign-in carries its own identity.\r\n- 📊 Meta Muse quota reads the vendor's rolling and weekly usage windows from that key response, with the reported reset times. A refused token triggers a sign-in refresh and marks the account for re-authentication; a failed probe leaves the last reading alone for five minutes.\r\n- 🧾 A Meta account with an inactive subscription can still be added. Meta sends no key then, so Relo keeps the account token until the subscription is renewed instead of refusing the sign-in.\r\n\r\n### 🐛 Fixes\r\n\r\n- 🔁 A half-open recovery trial is spent only on the account Relo actually selects. Choosing a healthy account no longer consumes a backup's trial, so a long rate limit on the primary can still fail over to that backup in the same request. A cooling account is skipped even when it is pinned, preferred or picked by the strategy.\r\n- 🍎 The macOS tray no longer aborts a menu refresh. Nil strings and run-loop modes never reach AppKit, and strings passed to Objective-C stay alive across the call so the collector cannot reclaim them while they are read. A nil run-loop mode now fails instead of waiting forever.\r\n\r\n### 🧪 Quality\r\n\r\n- 🧪 Coverage now exercises Meta Muse sign-in and key parsing, quota windows, recovered-account failover end to end, and thread history, retention and reply retention.",
+      "install": {
+        "script": "curl -fsSL https://relo.ifelse.one/install.sh | sh -s -- --version 0.3.5",
+        "powershell": "& ([scriptblock]::Create((irm https://relo.ifelse.one/install.ps1))) -Version 0.3.5",
+        "npm": "npm i -g @jonaskahn/relo@0.3.5"
+      },
+      "files": [
+        {
+          "name": "checksums.txt",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.3.5/checksums.txt",
+          "size": 582,
+          "os": "any",
+          "arch": "any",
+          "kind": "checksums",
+          "format": "txt"
+        },
+        {
+          "name": "Relo-0.3.5-arm64.zip",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.3.5/Relo-0.3.5-arm64.zip",
+          "size": 16910278,
+          "os": "macos",
+          "arch": "arm64",
+          "kind": "app",
+          "format": "zip"
+        },
+        {
+          "name": "relo-0.3.5-darwin-amd64.tar.gz",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.3.5/relo-0.3.5-darwin-amd64.tar.gz",
+          "size": 16112797,
+          "os": "macos",
+          "arch": "amd64",
+          "kind": "archive",
+          "format": "tar.gz"
+        },
+        {
+          "name": "relo-0.3.5-darwin-arm64.tar.gz",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.3.5/relo-0.3.5-darwin-arm64.tar.gz",
+          "size": 15632096,
+          "os": "macos",
+          "arch": "arm64",
+          "kind": "archive",
+          "format": "tar.gz"
+        },
+        {
+          "name": "relo-0.3.5-linux-amd64.tar.gz",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.3.5/relo-0.3.5-linux-amd64.tar.gz",
+          "size": 15788520,
+          "os": "linux",
+          "arch": "amd64",
+          "kind": "archive",
+          "format": "tar.gz"
+        },
+        {
+          "name": "relo-0.3.5-linux-arm64.tar.gz",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.3.5/relo-0.3.5-linux-arm64.tar.gz",
+          "size": 14935752,
+          "os": "linux",
+          "arch": "arm64",
+          "kind": "archive",
+          "format": "tar.gz"
+        },
+        {
+          "name": "Relo-0.3.5-universal.zip",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.3.5/Relo-0.3.5-universal.zip",
+          "size": 33420097,
+          "os": "macos",
+          "arch": "universal",
+          "kind": "app",
+          "format": "zip"
+        },
+        {
+          "name": "relo-0.3.5-windows-amd64.tar.gz",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.3.5/relo-0.3.5-windows-amd64.tar.gz",
+          "size": 15750358,
+          "os": "windows",
+          "arch": "amd64",
+          "kind": "archive",
+          "format": "tar.gz"
+        },
+        {
+          "name": "relo-0.3.5-windows-arm64.tar.gz",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.3.5/relo-0.3.5-windows-arm64.tar.gz",
+          "size": 14788929,
+          "os": "windows",
+          "arch": "arm64",
+          "kind": "archive",
+          "format": "tar.gz"
+        },
+        {
+          "name": "Relo-Setup-0.3.5-amd64.deb",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.3.5/Relo-Setup-0.3.5-amd64.deb",
+          "size": 16059458,
+          "os": "linux",
+          "arch": "amd64",
+          "kind": "installer",
+          "format": "deb"
+        },
+        {
+          "name": "Relo-Setup-0.3.5-amd64.exe",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.3.5/Relo-Setup-0.3.5-amd64.exe",
+          "size": 11618380,
+          "os": "windows",
+          "arch": "amd64",
+          "kind": "installer",
+          "format": "exe"
+        },
+        {
+          "name": "Relo-Setup-0.3.5-amd64.rpm",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.3.5/Relo-Setup-0.3.5-amd64.rpm",
+          "size": 16027605,
+          "os": "linux",
+          "arch": "amd64",
+          "kind": "installer",
+          "format": "rpm"
+        },
+        {
+          "name": "Relo-Setup-0.3.5-arm64.deb",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.3.5/Relo-Setup-0.3.5-arm64.deb",
+          "size": 15290224,
+          "os": "linux",
+          "arch": "arm64",
+          "kind": "installer",
+          "format": "deb"
+        },
+        {
+          "name": "Relo-Setup-0.3.5-arm64.exe",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.3.5/Relo-Setup-0.3.5-arm64.exe",
+          "size": 10498769,
+          "os": "windows",
+          "arch": "arm64",
+          "kind": "installer",
+          "format": "exe"
+        },
+        {
+          "name": "Relo-Setup-0.3.5-arm64.rpm",
+          "url": "https://github.com/jonaskahn/relo/releases/download/v0.3.5/Relo-Setup-0.3.5-arm64.rpm",
+          "size": 15220622,
+          "os": "linux",
+          "arch": "arm64",
+          "kind": "installer",
+          "format": "rpm"
+        }
+      ]
+    },
     {
       "tag": "v0.3.5-beta.197.16936f19",
       "version": "0.3.5-beta.197.16936f19",
