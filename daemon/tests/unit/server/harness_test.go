@@ -630,7 +630,10 @@ type upstreamServer struct {
 	// modelStatuses answers one model with its own status, so a test can rate
 	// limit one model and leave the others of the same connection alone.
 	modelStatuses map[string]int
-	requests      []string
+	// authStatuses answers one credential with its own status, so a test can
+	// limit the account that was asked first and let the failover account serve.
+	authStatuses map[string]int
+	requests     []string
 	// seen keeps each request's headers, which is how a test reads what the
 	// relay actually sent upstream.
 	seen []http.Header
@@ -656,12 +659,14 @@ func (u *upstreamServer) serve(w http.ResponseWriter, r *http.Request) {
 	fixture, rawBody, sse, status, delay := u.fixture, u.rawBody, u.sse, u.status, u.delay
 	headers := u.headers
 	modelStatuses := u.modelStatuses
+	authStatuses := u.authStatuses
 	waitForCancel, cancelled := u.waitForCancel, u.cancelled
 	u.requests = append(u.requests, r.URL.Path)
 	u.seen = append(u.seen, r.Header.Clone())
 	u.bodies = append(u.bodies, string(payload))
 	u.auths = append(u.auths, r.Header.Get("Authorization"))
 	u.mu.Unlock()
+	status = statusForAuth(r.Header.Get("Authorization"), authStatuses, status)
 	status = statusForModel(payload, modelStatuses, status)
 	if waitForCancel != nil {
 		close(waitForCancel)
@@ -693,6 +698,15 @@ func (u *upstreamServer) serve(w http.ResponseWriter, r *http.Request) {
 	}
 	w.WriteHeader(status)
 	_, _ = w.Write(body)
+}
+
+// statusForAuth reports the status the upstream answers one credential with,
+// so a test can rate limit the account asked first and let the next serve.
+func statusForAuth(auth string, statuses map[string]int, fallback int) int {
+	if status, found := statuses[auth]; found {
+		return status
+	}
+	return fallback
 }
 
 // statusForModel reports the status the upstream answers one model with, so a
@@ -761,6 +775,12 @@ func (u *upstreamServer) setHeaders(headers map[string]string) {
 	u.mu.Lock()
 	defer u.mu.Unlock()
 	u.headers = headers
+}
+
+func (u *upstreamServer) setAuthStatuses(statuses map[string]int) {
+	u.mu.Lock()
+	defer u.mu.Unlock()
+	u.authStatuses = statuses
 }
 
 func (u *upstreamServer) requestCount() int {
