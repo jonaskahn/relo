@@ -154,7 +154,7 @@ func (p *Pool) Entry(id string) (PoolEntry, bool) {
 // strategy prefers. A credential the caller excluded — the account that just
 // failed this request — is skipped while another account could serve it.
 func (p *Pool) Select(ctx Selection) (PoolEntry, error) {
-	usable := p.available()
+	usable := p.ready()
 	servable := p.servable(usable, ctx.Models)
 	if len(servable) == 0 {
 		if len(usable) > 0 {
@@ -163,31 +163,59 @@ func (p *Pool) Select(ctx Selection) (PoolEntry, error) {
 		return PoolEntry{}, ErrNoCredentials
 	}
 	if preferred, found := preferredEntry(servable, ctx.Prefer); found {
-		return preferred, nil
+		if p.Breaker(preferred.ID).IsAvailable() {
+			return preferred, nil
+		}
+		servable = withoutID(servable, preferred.ID)
 	}
-	candidates := withoutExcluded(servable, ctx.Exclude)
-	if len(candidates) == 0 {
-		// Every account that could serve the model is one this request has
-		// already tried. Answering with one of them again is worse than a
-		// fresh account and better than a local failure that would replace
-		// the provider's own answer.
-		candidates = servable
+	candidates := p.withRetryFallback(servable, ctx.Exclude)
+	return p.acquire(candidates, ctx)
+}
+
+func (p *Pool) withRetryFallback(servable []PoolEntry, exclude []string) []PoolEntry {
+	candidates := withoutExcluded(servable, exclude)
+	if len(candidates) > 0 {
+		return candidates
 	}
+	// Every account that could serve the model is one this request has
+	// already tried. Answering with one of them again is worse than a
+	// fresh account and better than a local failure that would replace
+	// the provider's own answer.
+	return servable
+}
+
+func (p *Pool) acquire(candidates []PoolEntry, ctx Selection) (PoolEntry, error) {
+	for len(candidates) > 0 {
+		chosen, pin, err := p.choose(candidates, ctx)
+		if err != nil {
+			return PoolEntry{}, err
+		}
+		if !p.Breaker(chosen.ID).IsAvailable() {
+			candidates = withoutID(candidates, chosen.ID)
+			continue
+		}
+		if pin {
+			// Using the pin renews it, so an active conversation never loses
+			// its account to the pin's age; a strategy choice creates one.
+			p.pins.Pin(ctx.ConversationID, chosen.ID)
+		}
+		return chosen, nil
+	}
+	return PoolEntry{}, ErrNoCredentials
+}
+
+func (p *Pool) choose(candidates []PoolEntry, ctx Selection) (PoolEntry, bool, error) {
 	if pinned, found := p.pinned(ctx.ConversationID, candidates); found {
-		// Using the pin renews it, so an active conversation never loses its
-		// account to the pin's age.
-		p.pins.Pin(ctx.ConversationID, pinned.ID)
-		return pinned, nil
+		return pinned, true, nil
 	}
 	if sticky, found := p.stickyEntry(candidates); found {
-		return sticky, nil
+		return sticky, false, nil
 	}
 	selected, err := p.currentStrategy().Select(candidates, ctx)
 	if err != nil {
-		return PoolEntry{}, err
+		return PoolEntry{}, false, err
 	}
-	p.pins.Pin(ctx.ConversationID, selected.ID)
-	return selected, nil
+	return selected, true, nil
 }
 
 func (p *Pool) servable(candidates []PoolEntry, modelIDs []string) []PoolEntry {
@@ -220,6 +248,16 @@ func withoutExcluded(entries []PoolEntry, exclude []string) []PoolEntry {
 	kept := make([]PoolEntry, 0, len(entries))
 	for _, entry := range entries {
 		if !containsID(exclude, entry.ID) {
+			kept = append(kept, entry)
+		}
+	}
+	return kept
+}
+
+func withoutID(entries []PoolEntry, id string) []PoolEntry {
+	kept := make([]PoolEntry, 0, len(entries))
+	for _, entry := range entries {
+		if entry.ID != id {
 			kept = append(kept, entry)
 		}
 	}
@@ -319,10 +357,6 @@ func (p *Pool) setStatus(id, status string) error {
 		}
 	}
 	return fmt.Errorf("%s: %w", id, ErrNotFound)
-}
-
-func (p *Pool) available() []PoolEntry {
-	return p.activeWhere(func(breaker *Breaker) bool { return breaker.IsAvailable() })
 }
 
 func (p *Pool) ready() []PoolEntry {
