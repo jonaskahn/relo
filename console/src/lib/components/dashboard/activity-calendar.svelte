@@ -27,8 +27,12 @@
 	// next turn starts. Reduced motion skips all of it.
 	const SNAKE_DELAY_MS = 1500;
 	const SNAKE_STEP_MS = 90;
-	// The snake hunts greedily, so a sparse year could run long; cap each turn.
-	const SNAKE_MAX_STEPS = 320;
+	// A year is up to 53 * 7 cells and the greedy hunt can revisit as it hunts, so a turn
+	// needs room for a full traversal before the dissolve.
+	const SNAKE_MAX_STEPS = 600;
+	// A long tail boxes the greedy hunt into a corner before it reaches the last days.
+	// Keeping a short trail lets it finish the board; the sweep needs no body at all.
+	const SNAKE_MAX_BODY = 8;
 	const DISSOLVE_TICK_MS = 45;
 	const DISSOLVE_TICKS = 16;
 	const FADE_IN_MS = 700;
@@ -57,11 +61,16 @@
 		const later = (fn: () => void, ms: number) => (timer = setTimeout(fn, ms));
 
 		const turn = () => {
-			const game = newSnake(open, food, weeks.length, Math.random() < 0.5);
+			// The coin flip still picks the hunt: a greedy chase or a full column sweep.
+			// Both cover every active day; the wandering strategies crash before they do.
+			const game = newSnake(open, food, weeks.length, Math.random() < 0.5, Math.random, 'sweep');
+			// The starting cell is never stepped onto, so count its day here.
+			if (game.body.length > 0 && food.has(game.body[0])) game.eaten.add(game.body[0]);
 			let steps = 0;
 			phase = 'play';
 			const move = () => {
 				stepSnake(game);
+				if (game.body.length > SNAKE_MAX_BODY) game.body.length = SNAKE_MAX_BODY;
 				steps += 1;
 				body = [...game.body];
 				eaten = new Set(game.eaten);
